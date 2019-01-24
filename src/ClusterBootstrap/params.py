@@ -526,9 +526,9 @@ default_config_parameters = {
     "dockerregistry": "mlcloudreg.westus.cloudapp.azure.com:5000/",
     "dockers": {
         # Hub is docker.io/
-        "hub": "dlws/",
+        "hub": "qianjiangyuan/",
         #"hub": "registry.docker-cn.com/dlws/",
-        "tag": "1.7q", # migrate docker to 1.7q for QianJiangYuan
+        "tag": "1.7", # migrate docker to 1.7q for QianJiangYuan
         "system": {
             "nginx": {},
             "zookeeper": {},

@@ -528,7 +528,7 @@ default_config_parameters = {
         # Hub is docker.io/
         "hub": "dlws/",
         #"hub": "registry.docker-cn.com/dlws/",
-        "tag": "1.6", # migrate docker to 1.6
+        "tag": "1.7q", # migrate docker to 1.7q for QianJiangYuan
         "system": {
             "nginx": {},
             "zookeeper": {},

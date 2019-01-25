@@ -547,7 +547,7 @@ default_config_parameters = {
             "tutorial-nlp": {},
             "tutorial-fastai": {},
             "tutorial-imagenet18": {},
-            "algorithm-bert": {}
+            "algorithm-bert": {},
             "gobld": {}, 
             "kubernetes": {}, 
         },

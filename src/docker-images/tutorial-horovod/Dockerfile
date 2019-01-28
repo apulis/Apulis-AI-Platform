@@ -93,6 +93,9 @@ ADD RecogServer /RecogServer
 # Add Glove vectors 
 RUN apt-get update -y && apt-get install -y zip unzip  
 
+# Install jupyter lab
+RUN pip install jupyterlab
+
 #Telemetry
 #--------------
 #The .NET Core tools collect usage data in order to improve your experience. The data is anonymous and does not include command-line arguments. The data is collected by Microsoft and shared with the community.

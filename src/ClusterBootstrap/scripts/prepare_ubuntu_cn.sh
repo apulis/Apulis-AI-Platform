@@ -41,7 +41,7 @@ sudo add-apt-repository "deb [arch=amd64] http://mirrors.aliyun.com/docker-ce/li
 sudo apt-get update
 # see https://github.com/NVIDIA/nvidia-docker/issues/643
 # during 1/14/2019 installation, docker-ce version needs to be pinned
-sudo apt-get install -y docker-ce=5:18.09.0~3-0~ubuntu-xenial
+sudo apt-get install -y docker-ce
 # sudo apt-get install -y docker-ce
 fi 
 
@@ -102,7 +102,7 @@ if  lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VG
         curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
         sudo apt-get update
 
-        sudo apt-get install -y nvidia-docker2=2.0.3+docker18.09.0-1
+        sudo apt-get install -y nvidia-docker2
         sudo pkill -SIGHUP dockerd
 
         # Test nvidia-smi

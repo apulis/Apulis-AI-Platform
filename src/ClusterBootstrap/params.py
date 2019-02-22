@@ -628,7 +628,7 @@ scriptblocks = {
         "-y updateworker",
         "kubernetes uncordon",
         "-y kubernetes labels",
-        "kubernetes start nvidia-device-plugin",
+        # "kubernetes start nvidia-device-plugin",
         "webui",
         "docker push restfulapi",
         "docker push webui",

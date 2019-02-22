@@ -1,5 +1,5 @@
 #FROM ubuntu:16.04
-FROM uber/horovod:0.13.0-tf1.8.0-torch0.4.0-py3.5
+FROM uber/horovod:0.15.2-tf1.12.0-torch1.0.0-py3.5
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 RUN umask 022
@@ -92,6 +92,9 @@ ADD RecogServer /RecogServer
 
 # Add Glove vectors 
 RUN apt-get update -y && apt-get install -y zip unzip  
+
+# Install jupyter lab
+RUN pip install jupyterlab
 
 #Telemetry
 #--------------

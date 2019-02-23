@@ -20,9 +20,6 @@ using Microsoft.Extensions.Logging;
 
 
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.IdentityModel.Clients;
-using Microsoft.Practices.EnterpriseLibrary.TransientFaultHandling;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.Globalization;
@@ -402,6 +399,7 @@ namespace WindowsAuth.Controllers
             }
         }
 
+        /*
         private async Task<AuthenticationResult> AcquireCredentialAsyncForApplication()
         {
             string aadInstance = Startup.Configuration["AzureAd:AadInstance"];
@@ -429,7 +427,7 @@ namespace WindowsAuth.Controllers
             var _assertionCredential = await policy.ExecuteAsync(() => _authContext.AcquireTokenAsync(resourceURL, _cred));
             // string authHeader = _assertionCredential.CreateAuthorizationHeader(); 
             return _assertionCredential;
-        }
+        }*/
 
         private async Task<UserEntry> AuthenticateByOneDB(string email, string tenantID, ClusterContext db, UserID userID)
         {
@@ -571,6 +569,7 @@ namespace WindowsAuth.Controllers
                     OpenIDAuthentication config;
                     var scheme = Startup.GetAuthentication(username, out config);
 
+                    /*
                     if (!Object.ReferenceEquals(config, null) && config._bUseAadGraph)
                     {
                         string requestUrl = String.Format("{0}/myorganization/me/memberOf?api-version={2}",
@@ -595,7 +594,7 @@ namespace WindowsAuth.Controllers
                         // var servicePointUri = new Uri(resourceURL);
                         // System.Uri serviceRoot = new Uri(servicePointUri, tenantID);
                         // var activeDirectoryClient = new ActiveDirectoryClient(serviceRoot, async => await _assertionCredential.AccessToken);
-                    }
+                    } */
                 }
             }
             // Mark user as unauthorized. 

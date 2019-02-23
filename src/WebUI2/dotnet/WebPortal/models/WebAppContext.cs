@@ -12,7 +12,7 @@ namespace WindowsAuth.models
         public DbSet<WebPortalEntity> Todoes { get; set; }
         public DbSet<Tenant> Tenants { get; set; }
         public DbSet<AADUserRecord> Users { get; set; }
-        public DbSet<PerWebUserCache> PerUserCacheList { get; set; }
+        // public DbSet<PerWebUserCache> PerUserCacheList { get; set; }
 
         public WebAppContext(DbContextOptions<WebAppContext> options) : base(options) { }
 

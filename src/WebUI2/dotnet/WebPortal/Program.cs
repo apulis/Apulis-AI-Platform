@@ -39,6 +39,7 @@ namespace WindowsAuth
 
             using (var scope = host.Services.CreateScope())
             {
+                /*
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<ApplicationDbContext>();
                 // context.Database.Migrate();
@@ -57,7 +58,7 @@ namespace WindowsAuth
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex.Message, "An error occurred seeding the DB.");
-                }
+                } */
             }
 
             host.Run();

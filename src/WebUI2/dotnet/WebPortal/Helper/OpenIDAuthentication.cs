@@ -284,3 +284,16 @@ namespace WebPortal.Helper
 }
 
 #endif
+
+using Microsoft.Extensions.Logging;
+
+namespace WebPortal.Helper
+{
+    public class OpenIDAuthentication 
+    {
+        public OpenIDAuthentication(string authenticationScheme, object config, ILoggerFactory logger)
+        {
+
+        }
+    }
+}

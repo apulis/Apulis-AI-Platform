@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if USE_OLD
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -158,3 +159,4 @@ namespace WindowsAuth.Services
         }
     }
 }
+#endif

@@ -86,8 +86,8 @@ namespace WindowsAuth
                        globalTags.Add("env", "stage");
                    });
             })
-                .AddHealthChecks()
-                .AddJsonSerialization();
+                .AddHealthChecks();
+                // .AddJsonSerialization();
 
             using (var stream = new FileStream("dashboardConfig.json", FileMode.Open))
             using (var reader = new StreamReader(stream))
@@ -139,15 +139,15 @@ namespace WindowsAuth
             });
 	    services.Configure<FamilyModel>(families => {});
             // Add Authentication services.
-            services.AddAuthentication(sharedOptions => sharedOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
+            // services.AddAuthentication(sharedOptions => sharedOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
 
             // Expose Azure AD configuration to controllers
             services.AddOptions();
 
             services.AddDbContext<WebAppContext>(options => options.UseSqlite(Configuration["Data:ConnectionString"]));
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-	    services.AddSingleton<IFamily, FamilyModel>();
-            services.AddScoped<IAzureAdTokenService, DbTokenCache>();
+	        services.AddSingleton<IFamily, FamilyModel>();
+            // services.AddScoped<IAzureAdTokenService, DbTokenCache>();
 
         }
 
@@ -458,7 +458,7 @@ namespace WindowsAuth
             // cookieOpt.CookieName = "dlws-auth";
             //cookieOpt.CookieSecure = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
             // cookieOpt.AuthenticationScheme = "Cookies";
-            app.UseCookieAuthentication(cookieOpt);
+            // app.UseCookieAuthentication(cookieOpt);
 
             var deployAuthenticationConfig  = ConfigurationParser.GetConfiguration("DeployAuthentications") as Dictionary<string, object>;
             var deployAuthentication = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
@@ -477,7 +477,7 @@ namespace WindowsAuth
                     var authenticationConfig = pair.Value;
                     var openIDOpt = new OpenIDAuthentication(authenticationScheme, authenticationConfig, loggerFactory);
                     AuthenticationSchemes[authenticationScheme] = openIDOpt;
-                    app.UseOpenIdConnectAuthentication(openIDOpt);
+                    // app.UseOpenIdConnectAuthentication(openIDOpt);
                 }
             }
             
@@ -496,11 +496,12 @@ namespace WindowsAuth
         {
             foreach (var pair in AuthenticationSchemes)
             {
+                /*
                 if (pair.Value.isAuthentication(email))
                 {
                     config = pair.Value;
                     return pair.Key; 
-                }
+                }*/
             }
             config = null;
             return OpenIdConnectDefaults.AuthenticationScheme; 

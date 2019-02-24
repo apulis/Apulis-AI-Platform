@@ -42,6 +42,7 @@ using Microsoft.AspNetCore.Identity;
 using WebPortal.Models;
 using Microsoft.AspNetCore.Authentication.WeChat;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace WindowsAuth
 {
@@ -546,6 +547,17 @@ namespace WindowsAuth
 
             // Configure error handling middleware.
             app.UseExceptionHandler("/Home/Error");
+
+            // https://stackoverflow.com/questions/43860128/asp-net-core-google-authentication/43878365
+            var forwardedHeadersOptions = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+                RequireHeaderSymmetry = false
+            };
+            forwardedHeadersOptions.KnownNetworks.Clear();
+            forwardedHeadersOptions.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(forwardedHeadersOptions);
 
             // Add static files to the request pipeline.
             app.UseStaticFiles();

@@ -43,6 +43,8 @@ using WebPortal.Models;
 using Microsoft.AspNetCore.Authentication.WeChat;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.DataProtection;
+using System.Security.Cryptography.X509Certificates;
 
 namespace WindowsAuth
 {
@@ -236,7 +238,18 @@ namespace WindowsAuth
                 // Configure may not have run at the moment, so this is console printout. 
 
             });
-	    services.Configure<FamilyModel>(families => {});
+
+            // https://github.com/aspnet/DataProtection/issues/189
+            // https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?tabs=aspnetcore2x&view=aspnetcore-2.2
+            services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(@"\\server\share\directory\"))
+                .ProtectKeysWithCertificate(
+                    new X509Certificate2("certificate.pfx", "password"))
+                    .UnprotectKeysWithAnyCertificate(
+                    new X509Certificate2("certificate_old_1.pfx", "password_1"),
+                    new X509Certificate2("certificate_old_2.pfx", "password_2"));
+
+            services.Configure<FamilyModel>(families => {});
             // Add Authentication services.
             // services.AddAuthentication(sharedOptions => sharedOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme);
 

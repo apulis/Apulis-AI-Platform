@@ -1,0 +1,64 @@
+{% if false %}
+apiVersion: v1
+kind: Service
+metadata:
+  name: webportal
+  namespace: default
+spec:
+  ports:
+  - port: {{cnf["webuiport"]}}
+  selector:
+    app: webportal
+---
+{% endif %}
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: webportal
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      webportal-node: pod
+  template:
+    metadata:
+      name: webportal
+      labels:
+        app: webportal
+        webportal-node: pod
+    spec:
+      {% if cnf["dnsPolicy"] %}    
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      nodeSelector:
+        webportal: active
+      {% if true %}  
+      hostNetwork: true
+      {% endif %}
+      containers:
+      - name: webportal
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}webui2:{{cnf["dockertag"]}}
+        imagePullPolicy: Always
+        {% if false %}
+        ports:
+          - name: webportal
+            containerPort: 80
+        {% endif %}
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /WebUI
+          name: webuiconfig
+        - mountPath: /var/log/webui
+          name: webuilog
+      volumes:
+      - name: webuiconfig
+        hostPath:
+          path: /etc/WebUI
+      - name: webuilog
+        hostPath:
+          path: /var/log/webui
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule            

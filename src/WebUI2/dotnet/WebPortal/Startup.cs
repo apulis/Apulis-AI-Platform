@@ -84,7 +84,8 @@ namespace WindowsAuth
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSession();
+            services.AddSession(opt => { opt.Cookie.IsEssential = true; }
+            );
             // AppMetrics. #https://al-hardy.blog/2017/04/28/asp-net-core-monitoring-with-influxdb-grafana/
             var metricsHostBuilder = services.AddMetrics(options =>
             {

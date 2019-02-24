@@ -8,7 +8,7 @@ ln -s /WebUI/Master-Templates.json .
 rm --force dashboardConfig.json
 ln -s /WebUI/dashboardConfig.json .
 
-# mkdir keys
+mkdir keys
 dotnet restore
 dotnet run
 /bin/sleep infinity

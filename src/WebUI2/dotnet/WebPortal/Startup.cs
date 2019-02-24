@@ -242,12 +242,12 @@ namespace WindowsAuth
             // https://github.com/aspnet/DataProtection/issues/189
             // https://docs.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?tabs=aspnetcore2x&view=aspnetcore-2.2
             services.AddDataProtection()
-                .PersistKeysToFileSystem(new DirectoryInfo(@"x509.keys"))
-                .ProtectKeysWithCertificate(
+                .PersistKeysToFileSystem(new DirectoryInfo(@"keys"));
+                /* .ProtectKeysWithCertificate(
                     new X509Certificate2("certificate.pfx", "password"))
                     .UnprotectKeysWithAnyCertificate(
                     new X509Certificate2("certificate_old_1.pfx", "password_1"),
-                    new X509Certificate2("certificate_old_2.pfx", "password_2"));
+                    new X509Certificate2("certificate_old_2.pfx", "password_2"));*/
 
             services.Configure<FamilyModel>(families => {});
             // Add Authentication services.

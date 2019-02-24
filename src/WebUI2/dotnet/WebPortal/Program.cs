@@ -23,7 +23,7 @@ namespace WindowsAuth
                 .Build();
 
             var host = WebHost.CreateDefaultBuilder(args)
-                .UseUrls("http://0.0.0.0:80")
+                // .UseUrls("http://0.0.0.0:3080")
                 .UseConfiguration(config)
                 .CaptureStartupErrors(true)
                 .UseKestrel(options =>

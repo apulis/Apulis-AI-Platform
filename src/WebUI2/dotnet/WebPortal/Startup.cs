@@ -84,6 +84,7 @@ namespace WindowsAuth
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSession();
             // AppMetrics. #https://al-hardy.blog/2017/04/28/asp-net-core-monitoring-with-influxdb-grafana/
             var metricsHostBuilder = services.AddMetrics(options =>
             {
@@ -230,7 +231,7 @@ namespace WindowsAuth
 
 
             services.AddDistributedMemoryCache(); // Adds a default in-memory implementation of IDistributedCache
-            services.AddSession();
+            
             //services.AddCors();
             services.Configure<AppSettings>(appSettings =>
             {
@@ -560,7 +561,18 @@ namespace WindowsAuth
             _logger.LogDebug("Default Cluster: {0}", defaultClusterName);
 
             // Configure error handling middleware.
-            app.UseExceptionHandler("/Home/Error");
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+                app.UseHsts();
+            }
+
+            app.UseHttpsRedirection();
 
             // https://stackoverflow.com/questions/43860128/asp-net-core-google-authentication/43878365
             var forwardedHeadersOptions = new ForwardedHeadersOptions

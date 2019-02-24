@@ -291,7 +291,7 @@ namespace WebPortal.Helper
 {
     public class OpenIDAuthentication 
     {
-        public OpenIDAuthentication(string authenticationScheme, object config, ILoggerFactory logger)
+        public OpenIDAuthentication(string authenticationScheme, object config)
         {
 
         }

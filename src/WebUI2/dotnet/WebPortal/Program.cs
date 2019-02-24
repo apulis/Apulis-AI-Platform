@@ -7,6 +7,8 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using WebPortal.Models;
 
 namespace WindowsAuth
 {
@@ -39,26 +41,25 @@ namespace WindowsAuth
 
             using (var scope = host.Services.CreateScope())
             {
-                /*
                 var services = scope.ServiceProvider;
-                var context = services.GetRequiredService<ApplicationDbContext>();
+                var context = services.GetRequiredService<ApplicatonDbContext>();
                 // context.Database.Migrate();
                 context.Database.EnsureCreated();
                 // requires using Microsoft.Extensions.Configuration;
-                var config = host.Services.GetRequiredService<IConfiguration>();
+                var appConfig = host.Services.GetRequiredService<IConfiguration>();
                 // Set password with the Secret Manager tool.
                 // dotnet user-secrets set SeedUserPW <pw>
 
-                var testUserPw = config["SeedUserPW"];
+                var testUserPw = appConfig["SeedUserPW"];
                 try
                 {
-                    SeedData.Initialize(services, testUserPw).Wait();
+                    // SeedData.Initialize(services, testUserPw).Wait();
                 }
                 catch (Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex.Message, "An error occurred seeding the DB.");
-                } */
+                } 
             }
 
             host.Run();

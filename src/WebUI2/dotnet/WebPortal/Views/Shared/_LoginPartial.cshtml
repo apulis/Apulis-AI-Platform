@@ -7,7 +7,7 @@
 {
     <ul class="nav navbar-nav navbar-right">
         <li><a asp-area="" asp-controller="Home" asp-action="AccountSettings">Hello, @ViewData["Username"]</a></li>
-        <li>@Html.ActionLink("Log Out", "LogOff", "Account")</li>
+        <li>@Html.ActionLink("Log Out", "LogOff", "AccountView")</li>
     </ul>
 }
 else
@@ -16,8 +16,9 @@ else
         <li><a>Login by: </a></li>
     @foreach (var pair in WindowsAuth.Startup.AuthenticationSchemes)
     {
-    <li>
-         @Html.ActionLink(pair.Key + " Account", "Login", "Account", routeValues: new { scheme = pair.Key }, htmlAttributes: new { id = "loginLink" }) 
+        <li>
+            @Html.ActionLink(pair.Key + " Account", "ExternalLogin", "Identity/Account", routeValues: new { provider = pair.Value }, htmlAttributes: new { id = "loginLink" })
+            <!-- @Html.ActionLink(pair.Key + " Account", "Login", "Account", routeValues: new { scheme = pair.Key }, htmlAttributes: new { id = "loginLink" }) -->
         </li>
         }
     

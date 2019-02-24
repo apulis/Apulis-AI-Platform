@@ -97,7 +97,7 @@ namespace WebPortal.Helper
                     if (Object.ReferenceEquals(root, null))
                     {
                         if (_first)
-                            _logger.LogError("Error in Configuration, Key = {0}, Value = {1}, conflict partial key exists... ", key, value);
+                            Console.WriteLine("Error in Configuration, Key = {0}, Value = {1}, conflict partial key exists... ", key, value);
                     }
                 }
                 else
@@ -114,7 +114,7 @@ namespace WebPortal.Helper
                     { 
                         root[entry] = value;
                         if ( _first )
-                            _logger.LogDebug("Configuration[{0}] = {1}", key, value);
+                            Console.WriteLine("Configuration[{0}] = {1}", key, value);
                     }
                 }
             }

@@ -28,22 +28,34 @@ using WindowsAuth;
 using WebPortal.Helper;
 using WindowsAuth.Services;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Identity;
 
 namespace WindowsAuth.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly IActionDescriptorCollectionProvider _provider; 
         private readonly AppSettings _appSettings;
         private readonly ILogger _logger;
-        private IAzureAdTokenService _tokenCache;
+        // private IAzureAdTokenService _tokenCache;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public HomeController(IOptions<AppSettings> appSettings, IAzureAdTokenService tokenCache, ILoggerFactory logger)
+        public HomeController(
+            IActionDescriptorCollectionProvider provider,
+            UserManager<IdentityUser> userManager,
+            IOptions<AppSettings> appSettings, 
+            // IAzureAdTokenService tokenCache, 
+            ILoggerFactory logger)
         {
+            _provider = provider;
+            _userManager = userManager; 
             _appSettings = appSettings.Value;
-            _tokenCache = tokenCache;
+            // _tokenCache = tokenCache;
             _logger = logger.CreateLogger("HomeController");
         }
 
+        
         private string ParseToUsername(string email)
         {
             string username = email;
@@ -91,11 +103,16 @@ namespace WindowsAuth.Controllers
 
             if (userEntry.isAuthorized == "true")
             {
-                var url = clusterInfo.Restapi + "/AddUser?userName=" + HttpContext.Session.GetString("Email") + "&userId=" + userEntry.uid;
-                using (var httpClient1 = new HttpClient())
+                try { 
+                    var url = clusterInfo.Restapi + "/AddUser?userName=" + HttpContext.Session.GetString("Email") + "&userId=" + userEntry.uid;
+                    using (var httpClient1 = new HttpClient())
+                    {
+                        var response2 = await httpClient1.GetAsync(url);
+                        var content1 = await response2.Content.ReadAsStringAsync();
+                    }
+                } catch(Exception ex)
                 {
-                    var response2 = await httpClient1.GetAsync(url);
-                    var content1 = await response2.Content.ReadAsStringAsync();
+                    _logger.LogInformation($"User {email} failed to be added via restful api {clusterInfo.Restapi}");
                 }
             }
             _logger.LogInformation("User {0} log in, Uid {1}, Gid {2}, isAdmin {3}, isAuthorized {4}",
@@ -562,14 +579,13 @@ namespace WindowsAuth.Controllers
 
 
             if (!String.IsNullOrEmpty(tenantID))
-            {
+            {   /*
                 var token = await _tokenCache.GetAccessTokenForAadGraph();
                 if (!String.IsNullOrEmpty(token))
                 {
                     OpenIDAuthentication config;
                     var scheme = Startup.GetAuthentication(username, out config);
 
-                    /*
                     if (!Object.ReferenceEquals(config, null) && config._bUseAadGraph)
                     {
                         string requestUrl = String.Format("{0}/myorganization/me/memberOf?api-version={2}",
@@ -594,8 +610,8 @@ namespace WindowsAuth.Controllers
                         // var servicePointUri = new Uri(resourceURL);
                         // System.Uri serviceRoot = new Uri(servicePointUri, tenantID);
                         // var activeDirectoryClient = new ActiveDirectoryClient(serviceRoot, async => await _assertionCredential.AccessToken);
-                    } */
-                }
+                    } 
+                } */
             }
             // Mark user as unauthorized. 
             // await AddUser(username, userID); 
@@ -629,9 +645,25 @@ namespace WindowsAuth.Controllers
             return 0;
         }*/
 
-#region ASP Controllers
+        #region ASP Controllers
+        [HttpGet]
+        // [Route("DebugRoute")]
+        public IActionResult DebugRoute()
+        {
+            var routes = _provider.ActionDescriptors.Items.Select(x => new {
+                Action = x.RouteValues["Action"],
+                Controller = x.RouteValues["Controller"],
+                Name = Object.ReferenceEquals(x.AttributeRouteInfo, null) ? "<null>" : x.AttributeRouteInfo.Name,
+                Template = Object.ReferenceEquals(x.AttributeRouteInfo, null) ? "<null>" : x.AttributeRouteInfo.Template,
+                Constraints = x.ActionConstraints
+            }).ToList();
+            return Ok(routes);
+        }
+
+
         public async Task<IActionResult> Index()
         {
+
             if (User.Identity.IsAuthenticated && !HttpContext.Session.Keys.Contains("uid"))
             {
                 string userObjectID = null;
@@ -679,7 +711,7 @@ namespace WindowsAuth.Controllers
                     var authorizedClusters = AuthenticateUserByGroupMembership(lst);
                     _logger.LogDebug("User {0} authorized clusters preDB {1}", email, string.Join(",", authorizedClusters.Keys.ToArray()));
                     var authorizationFinal = new Dictionary<string, UserEntry>();
-                    var ret = await AuthenticateByDB(upn, tenantID, username, authorizedClusters, authorizationFinal);
+                    var ret = await AuthenticateByDB(email, tenantID, username, authorizedClusters, authorizationFinal);
                     _logger.LogDebug("User {0} authorized clusters afterDB {1}", email, string.Join(",", authorizationFinal.Keys.ToArray()));
 
                     // bRet = await AuthenticateByAAD(userObjectID, username, tenantID, upn, endpoint);

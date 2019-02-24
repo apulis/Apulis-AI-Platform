@@ -38,7 +38,10 @@ using App.Metrics.Reporting.Interfaces;
 using Utils.Json;
 using System.Text;
 using MySql.Data.MySqlClient;
-
+using Microsoft.AspNetCore.Identity;
+using WebPortal.Models;
+using Microsoft.AspNetCore.Authentication.WeChat;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WindowsAuth
 {
@@ -67,7 +70,8 @@ namespace WindowsAuth
         }
 
         static public IConfigurationRoot Configuration { get; set; }
-        static public Dictionary<string, OpenIDAuthentication> AuthenticationSchemes;
+        static public Dictionary<string, string> AuthenticationSchemes;
+        static public Dictionary<string, bool> AuthenticationCallback;
         static public Dictionary<string, DLCluster> Clusters; 
         static public Dictionary<string, ClusterContext> Database;
         static public ClusterContext MasterDatabase;
@@ -125,9 +129,103 @@ namespace WindowsAuth
 
             var reportSetting = new InfluxDBReporterSettings();
 
+            // For identity
+            services.Configure<CookiePolicyOptions>(options =>
+            {
+                // This lambda determines whether user consent for non-essential cookies is needed for a given request.
+                options.CheckConsentNeeded = context => false;
+                options.MinimumSameSitePolicy = SameSiteMode.None;
+            });
+            //services.AddDefaultIdentity<IdentityUser>()
+            //    .AddEntityFrameworkStores<ApplicatonDbContext>();
+
+            //services.AddIdentity<IdentityUser, IdentityRole>()
+            //    .AddEntityFrameworkStores<ApplicatonDbContext>();
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                // Cookie settings
+                options.Cookie.HttpOnly = true;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(600);
+
+                options.LoginPath = "/Identity/Account/Login";
+                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+                options.SlidingExpiration = true;
+            });
+            var deployAuthenticationConfig = ConfigurationParser.GetConfiguration("DeployAuthentications") as Dictionary<string, object>;
+            var deployAuthentication = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in deployAuthenticationConfig)
+                deployAuthentication[pair.Value as string] = true;
+            int numDeployedAuthentication = deployAuthentication.Count;
+
+            var auth = services.AddAuthentication();
+            var authentication = ConfigurationParser.GetConfiguration("Authentications") as Dictionary<string, object>;
+            AuthenticationSchemes = new Dictionary<string, string>();
+            AuthenticationCallback = new Dictionary<string, bool>();
+            foreach (var pair in authentication)
+            {
+                bool bUse = (numDeployedAuthentication == 0 || deployAuthentication.ContainsKey(pair.Key));
+                if (bUse)
+                {
+                    var authenticationScheme = pair.Key;
+                    var authenticationConfig = pair.Value;
+
+                    var config = authenticationConfig as Dictionary<string, object>;
+                    if( Object.ReferenceEquals(config, null))
+                    {
+                        continue; 
+                    }
+
+                    if (authenticationScheme.IndexOf("WeChat", StringComparison.OrdinalIgnoreCase)>=0 )
+                    {
+                        auth.AddWeChat(wechatOptions =>
+                        {
+                            wechatOptions.AppId = config["AppId"] as string;
+                            wechatOptions.AppSecret = config["AppSecret"] as string;
+                        }
+                        );
+                        AuthenticationSchemes[authenticationScheme] = "WeChat";
+                    }
+
+                    if (authenticationScheme == "Microsoft") { 
+                        auth.AddMicrosoftAccount(microsoftOption =>
+                        {
+                            microsoftOption.ClientId = config["ClientId"] as string;
+                            microsoftOption.ClientSecret = config["ClientSecret"] as string;
+
+                        }
+                        );
+                        AuthenticationSchemes[authenticationScheme] = "Microsoft";
+                    }
+
+                    if (authenticationScheme == "Gmail") { 
+                        auth.AddGoogle(googleOptions => {
+                            googleOptions.ClientId = config["ClientId"] as string;
+                            googleOptions.ClientSecret = config["ClientSecret"] as string;
+                        });
+                        AuthenticationSchemes[authenticationScheme] = "Google";
+                        AuthenticationCallback["signin-google"] = true; 
+                    };
+
+                    // app.UseOpenIdConnectAuthentication(openIDOpt);
+                }
+            }
+
+
 
             // Add MVC services to the services container.
-            services.AddMvc( options => options.AddMetricsResourceFilter());
+            services.AddMvc( options => options.AddMetricsResourceFilter())
+                .AddRazorPagesOptions(options =>
+                {
+                    options.Conventions.AuthorizePage("/Manage");
+                    options.Conventions.AuthorizeFolder("/Private");
+                    options.Conventions.AllowAnonymousToPage("/Private/PublicPage");
+                    options.Conventions.AllowAnonymousToFolder("/Private/PublicPages");
+                })
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            // Authorization handlers.
+
+
             services.AddDistributedMemoryCache(); // Adds a default in-memory implementation of IDistributedCache
             services.AddSession();
             //services.AddCors();
@@ -460,27 +558,10 @@ namespace WindowsAuth
             // cookieOpt.AuthenticationScheme = "Cookies";
             // app.UseCookieAuthentication(cookieOpt);
 
-            var deployAuthenticationConfig  = ConfigurationParser.GetConfiguration("DeployAuthentications") as Dictionary<string, object>;
-            var deployAuthentication = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-            foreach (var pair in deployAuthenticationConfig)
-                deployAuthentication[pair.Value as string] = true;
-            int numDeployedAuthentication = deployAuthentication.Count;
 
-            var authentication = ConfigurationParser.GetConfiguration("Authentications") as Dictionary<string, object>;
-            AuthenticationSchemes = new Dictionary<string, OpenIDAuthentication>(); 
-            foreach (var pair in authentication)
-            {
-                bool bUse = (numDeployedAuthentication == 0 || deployAuthentication.ContainsKey(pair.Key));
-                if ( bUse )
-                { 
-                    var authenticationScheme = pair.Key;
-                    var authenticationConfig = pair.Value;
-                    var openIDOpt = new OpenIDAuthentication(authenticationScheme, authenticationConfig, loggerFactory);
-                    AuthenticationSchemes[authenticationScheme] = openIDOpt;
-                    // app.UseOpenIdConnectAuthentication(openIDOpt);
-                }
-            }
-            
+
+
+            app.UseAuthentication(); 
             // Configure the OWIN pipeline to use OpenID Connect auth.
             app.UseSession();
             // Configure MVC routes

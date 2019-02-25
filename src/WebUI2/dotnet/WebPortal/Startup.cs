@@ -222,6 +222,7 @@ namespace WindowsAuth
             services.AddMvc( options => options.AddMetricsResourceFilter())
                 .AddRazorPagesOptions(options =>
                 {
+                    options.Conventions.AddPageRoute("/Identity/Account", "account");
                     options.Conventions.AuthorizePage("/Manage");
                     options.Conventions.AuthorizeFolder("/Private");
                     options.Conventions.AllowAnonymousToPage("/Private/PublicPage");

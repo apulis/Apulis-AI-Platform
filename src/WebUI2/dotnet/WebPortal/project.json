@@ -1,0 +1,75 @@
+{
+    "buildOptions": {
+        "emitEntryPoint": true,
+        "preserveCompilationContext": true
+    },
+
+    "runtimeOptions": {
+        "gcServer": true
+    },
+
+  "dependencies": {
+    "App.Metrics.Extensions.Mvc": "1.2.1",
+    "App.Metrics.Extensions.Reporting.InfluxDB": "1.2.0",
+    "App.Metrics.Formatters.Json": "1.2.0",
+    "EnterpriseLibrary.TransientFaultHandling": "6.0.1304",
+    "Microsoft.AspNet.WebApi.Client": "5.2.2",
+    "Microsoft.AspNetCore": "1.1.1",
+    "Microsoft.AspNetCore.Authentication.Cookies": "1.0.2",
+    "Microsoft.AspNetCore.Authentication.OpenIdConnect": "1.0.2",
+    "Microsoft.AspNetCore.Mvc": "1.1.2",
+    "Microsoft.AspNetCore.Session": "1.1.1",
+    //"Microsoft.AspNetCore.Cors": "2.0.0",
+    "Microsoft.AspNetCore.StaticFiles": "1.0.2",
+    "Microsoft.EntityFrameworkCore.Design": "1.1.1",
+    "Microsoft.EntityFrameworkCore.Sqlite": "1.1.2",
+    "Microsoft.EntityFrameworkCore.SqlServer": "1.1.2",
+    "Microsoft.EntityFrameworkCore.SqlServer.Design": "1.1.1",
+    "Microsoft.Extensions.Caching.Memory": "1.1.1",
+    "Microsoft.Extensions.Configuration.Json": "1.1.2",
+    "Microsoft.Extensions.Logging.Console": "1.1.2",
+    "Microsoft.Extensions.Logging.Debug": "1.1.2",
+    "Microsoft.Extensions.Options.ConfigurationExtensions": "1.1.2",
+    "Microsoft.IdentityModel.Clients.ActiveDirectory": "3.13.9",
+    "Microsoft.VisualStudio.Web.BrowserLink": "1.1.0",
+    "Newtonsoft.Json": "10.0.2",
+    "Serilog.Extensions.Logging.File": "1.0.1",
+    "Pomelo.EntityFrameworkCore.MySql": "1.1.2",
+    "System.Private.DataContractSerialization": "4.3.0",
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.0"
+    }
+  },
+
+    "frameworks": {
+        "netcoreapp1.0": {
+            "imports": [
+                "dotnet5.6",
+                "dnxcore50",
+                "portable-net45+win8"
+            ]
+        }
+    },
+
+    "tools": {
+        "Microsoft.AspNetCore.Server.IISIntegration.Tools": {
+            "version": "1.0.0-preview2-final",
+            "imports": "portable-net45+win8+dnxcore50"
+        }
+    },
+
+    "publishOptions": {
+        "include": [
+            "wwwroot",
+            "Views",
+            "appsettings.json",
+            "web.config"
+        ]
+    },
+
+    "scripts": {
+        "prepublish": [ "npm install", "bower install", "gulp clean", "gulp min" ],
+        "postpublish": [ "dotnet publish-iis --publish-folder %publish:OutputPath%" ]
+    }
+}

@@ -1,0 +1,311 @@
+﻿@{
+    ViewData["Title"] = "View Jobs";
+}
+
+
+<script type="text/javascript">
+    function KillJob(jobId) {
+        $.ajax({
+            url: "/api/dlws/KillJob?jobId=" + jobId,
+            dataType: 'json',
+            timeout: 30000 //30 second timeout,
+        }).done(
+            function (json) {
+                layer.alert(json.result, { btn: 'Ok', title: 'Info' })
+                buildTables();
+            });
+    }
+
+    function ApproveJob(jobId) {
+        $.ajax({
+            url: "/api/dlws/ApproveJob?jobId=" + jobId,
+            dataType: 'json',
+            timeout: 30000 //30 second timeout,
+        }).done(
+            function (json) {
+                layer.alert(json.log, { btn: 'Ok', title: 'Info' })
+                buildTables();
+            });
+    }
+</script>
+
+
+<script>
+    var showAll = false;
+
+    function DatetoStr(date) {
+        var submitTimeStr = date.getFullYear() + "/" + (date.getMonth() + 1) + "/" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+        return submitTimeStr
+    }
+
+    function addJobRow(job, table, tableColumns) {
+        var tr
+        tr = $('<tr/>');
+        //Job ID
+        tr.append("<td> <a href='/Home/JobDetail/?jobId=" + job.jobId + "'>" + job.jobId + "</a></td>");
+        //Job Name
+        tr.append("<td>" + job.jobName + "</td>");
+        //Status
+        var statusMsg = ""
+        if (job.jobStatusDetail && job.jobStatusDetail.length > 0 && job.jobStatusDetail[0].message) {
+            statusMsg = job.jobStatusDetail[0].message
+        }
+
+
+
+
+        tr.append("<td title='" + statusMsg + "'>" + job.jobStatus + "  <a href='#' onclick=\"layer.tips('" + statusMsg + "','#infoicon" + job.jobId + "', {tips: [2, '#3090C7']});\" > <i id=\"infoicon" + job.jobId +"\" class=\"layui-icon\">&#xe60b;</i></a>  </td>");
+        //GPU
+        tr.append("<td>" + job.jobParams.resourcegpu + "</td>");
+        //Username
+        tr.append("<td>" + job.userName + "</td>");
+        //Submited Time
+        if (tableColumns.submitTime) {
+            var submitTimeDate = new Date(Date.parse(job.jobTime))
+            var submitTimeStr = DatetoStr(submitTimeDate)
+            tr.append("<td>" + submitTimeStr + "</td>");
+        }
+        //Started Time
+        if (tableColumns.startTime) {
+            var startedAtTime = "unknown";
+            if (job.jobStatusDetail && job.jobStatusDetail.length > 0 && job.jobStatusDetail[0].startedAt) {
+                var t = new Date(Date.parse(job.jobStatusDetail[0].startedAt))
+                startedAtTime = DatetoStr(t)
+            }
+            tr.append("<td>" + startedAtTime + "</td>");
+        }
+        //Finished Time
+        if (tableColumns.finishTime) {
+            var finishedAtTime = "unknown";
+            if (job.jobStatusDetail && job.jobStatusDetail.length > 0 && job.jobStatusDetail[0].finishedAt) {
+                var t = new Date(Date.parse(job.jobStatusDetail[0].finishedAt))
+                finishedAtTime = DatetoStr(t)
+            }
+            tr.append("<td>" + finishedAtTime + "</td>");
+        }
+        //Kill it
+        if (tableColumns.kill) {
+            tr.append("<td> <a href='#' class=\"Kill\" onclick=\"KillJob('" + job.jobId + "')\" > kill </a></td>");
+        }
+        //Approval
+        if (tableColumns.approval) {
+            if (job.jobStatus == "unapproved") {
+                tr.append("<td> <a href='#' class=\"Admin\" onclick=\"ApproveJob('" + job.jobId + "')\" >approve</a></td>");
+            }
+            else {
+                tr.append("<td><b class=\"Alias\" >NA</b></td>");
+            }
+        }
+
+        table.append(tr);
+    }
+
+    function buildTableHeader(table, tableColumns) {
+        var thead;
+        thead = $('<thead/>');
+        var tr;
+        tr = $('<tr/>');
+
+        tr.append("<th>Job ID</th>");
+        tr.append("<th>Job Name</th>");
+        tr.append("<th>Status</th>");
+        tr.append("<th>GPU</th>");
+        tr.append("<th>Username</th>");
+        if (tableColumns.submitTime)
+            tr.append("<th>Submited Time</th>");
+        if (tableColumns.startTime)
+            tr.append("<th>Started Time</th>");
+        if (tableColumns.finishTime)
+            tr.append("<th>Finished Time</th>");
+        if (tableColumns.kill)
+            tr.append("<th>Kill Job</th>");
+        if (tableColumns.approval)
+            tr.append("<th>Approval</th>");
+
+        thead.append(tr);
+        table.append(thead);
+    }
+
+    function buildJobTable(div, table, jobList, tableColumns) {
+        table.find("tr").remove();
+        table.find("thead").remove();
+        table.find("tbody").remove();
+        if (jobList.length <= 0) {
+            div.hide();
+        }
+        else {
+            div.show()
+            buildTableHeader(table, tableColumns)
+            var tbody;
+            tbody = $('<tbody/>');
+            for (var i = 0; i < jobList.length; i++) {
+                addJobRow(jobList[i], tbody, tableColumns);
+            }
+            table.append(tbody);
+        }
+    }
+
+    function buildTables() {
+        var apiurl = "/api/dlws/ListJobs"
+
+        if (!document.getElementById('chkArchivedJobs').checked) {
+            apiurl += "?num=20"
+        }
+
+        if (showAll)
+        {
+            apiurl = "/api/dlws/ListAllJobs"
+        }
+
+        $.ajax({
+            url: (apiurl),
+            dataType: 'json',
+            timeout: 15000
+        }).done(
+            function (json) {
+
+                buildJobTable($('#queued-job'), $("#queued-job-table"), json.queuedJobs, { submitTime: true, startTime: false, finishTime: false, kill: true, approval: showAll });
+                buildJobTable($('#running-job'), $("#running-job-table"), json.runningJobs, { submitTime: true, startTime: true, finishTime: false, kill: true });
+                buildJobTable($('#visualization-job'), $("#visualization-job-table"), json.visualizationJobs, { submitTime: false, startTime: true, finishTime: false, kill: true });
+                if (!showAll)
+                    buildJobTable($('#finished-job'), $("#finished-job-table"), json.finishedJobs, { submitTime: true, startTime: false, finishTime: true, kill: false });
+
+            });
+    }
+
+
+    function refreshJobs()
+    {
+        if (!document.getElementById('chkArchivedJobs').checked || showAll) {
+            buildTables();
+        }
+    }
+
+    $(document).ready(function () {
+        ChangeMode(false)
+        var refresh = setInterval(function () {
+            refreshJobs();
+        }, 15000);
+        $(document).tooltip({
+            track: true
+        });
+    });
+
+    function ChangeMode(all) {
+        showAll = all;
+
+        $('#queued-job').hide();
+        $('#running-job').hide();
+        $('#visualization-job').hide();
+        $('#finished-job').hide();
+
+        buildTables();
+
+        var allJobsTab = $('#all-jobs-tab');
+        var yourJobsTab = $('#your-jobs-tab');
+
+        allJobsTab.removeClass();
+        yourJobsTab.removeClass();
+        yourJobsTab.addClass("left-tab");
+        allJobsTab.addClass("right-tab");
+
+        yourJobsTab.addClass(all ? "inactive-tab" : "active-tab");
+        allJobsTab.addClass(all ? "active-tab" : "inactive-tab");
+    }
+
+</script>
+
+<br />
+<br />
+<br />
+<h1>View and Manage Jobs:</h1>
+
+@if(ViewData["isAdmin"].Equals("true"))
+{
+    <div role="navigation">
+        <a href="#" id="your-jobs-tab" role="tab" onclick="ChangeMode(false)"><b>View and Manage Your Jobs</b></a>
+        <a href="#" id="all-jobs-tab" role="tab" onclick="ChangeMode(true)"><b>View and Manage All Jobs</b></a>
+    </div>
+    <br/>
+    <br/>
+    <br/>
+}
+
+<div id="queued-job" hidden>
+    <p> <b>Queued Jobs</b></p>
+    <table id="queued-job-table" class="table table-bordered table-condensed table-hover table-striped">
+    </table>
+</div>
+
+<div id="running-job" hidden>
+    <p> <b>Running Jobs</b></p>
+    <table id="running-job-table" class="table table-bordered table-condensed table-hover table-striped">
+    </table>
+</div>
+
+<div id="visualization-job" hidden>
+    <p> <b>Visualization Jobs</b></p>
+    <table id="visualization-job-table" class="table table-bordered table-condensed table-hover table-striped">
+    </table>
+</div>
+
+<div id="finished-job" hidden>
+    <p>
+        <b>Finished Jobs</b>
+        <div style="float:right">
+            <input type="checkbox" id="chkArchivedJobs" onclick="buildTables()"/>
+            <label>
+                Show all finsihed jobs.
+            </label>
+        </div>
+    </p>
+    <table id="finished-job-table" class="table table-bordered table-condensed table-hover table-striped">
+    </table>
+</div>
+
+<style>
+    .inactive-tab {
+        background-color: transparent;
+        border: 1px solid #e1e4e8;
+        display: inline-block;
+        cursor: pointer;
+        color: #586069;
+        padding: 4px 8px;
+        text-decoration: none;
+        float: left;
+    }
+
+        .inactive-tab:hover, .inactive-tab:visited, .inactive-tab:active, .inactive-tab:link {
+            background-color: transparent;
+            color: #586069;
+            text-decoration: none;
+        }
+
+    .active-tab {
+        background-color: #0366d6;
+        border: 1px solid #0366d6;
+        display: inline-block;
+        cursor: pointer;
+        color: #ffffff;
+        padding: 4px 8px;
+        text-decoration: none;
+        float: left;
+    }
+
+        .active-tab:hover, .active-tab:visited, .active-tab:active, .active-tab:link {
+            background-color: #0366d6;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+    .left-tab {
+        border-top-left-radius: 3px;
+        border-bottom-left-radius: 3px;
+    }
+
+    .right-tab {
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+    }
+
+</style>

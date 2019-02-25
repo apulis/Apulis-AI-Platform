@@ -39,7 +39,7 @@ src/**/dotnet/WebPortal/configAuth.json
 src/**/dotnet/WebPortal/Master-Templates.json
 src/**/dotnet/WebPortal/hosting.json
 **package-lock.json
-**/wwwroot/*
+# **/wwwroot/*
 **/bin/Release/*
 **/bin/Debug/*
 **/obj/Release/*

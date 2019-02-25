@@ -316,9 +316,7 @@ namespace WindowsAuth
             // Add the console logger.
             loggerFactory.AddConsole(Configuration.GetSection("Logging")).AddDebug();
             loggerFactory.AddFile("/var/log/webui/webui-{Date}.txt");
-            app.UseMetrics();
-            // May need to be turned off if reporting server is not available
-            app.UseMetricsReporting(lifetime);
+            
             
             var _logger = loggerFactory.CreateLogger("Configure");
 
@@ -573,6 +571,10 @@ namespace WindowsAuth
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
+
+            app.UseMetrics();
+            // May need to be turned off if reporting server is not available
+            app.UseMetricsReporting(lifetime);
 
             app.UseHttpsRedirection();
 

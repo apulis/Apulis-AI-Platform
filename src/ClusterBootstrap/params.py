@@ -550,6 +550,7 @@ default_config_parameters = {
             "algorithm-bert": {},
             "gobld": {}, 
             "kubernetes": {}, 
+            "kaggle": {},
         },
         "external": {
             # These dockers are to be built by additional add ons.

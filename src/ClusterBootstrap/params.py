@@ -74,6 +74,7 @@ default_config_parameters = {
         ".js": True,
         ".swf": True,
         ".gzip": True,
+        ".tpl": True,
     },
     "render-by-copy": {
         # The following file will be copied (not rendered for configuration)

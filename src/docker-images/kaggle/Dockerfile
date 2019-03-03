@@ -5,6 +5,7 @@ FROM gcr.io/kaggle-images/python-tensorflow-whl:1.12.0-py36 as tensorflow_whl
 FROM gcr.io/kaggle-images/python:${BASE_TAG}
 
 ADD clean-layer.sh  /tmp/clean-layer.sh
+RUN chmod +x /tmp/clean-layer.sh
 
 # Cuda support
 COPY --from=nvidia /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/

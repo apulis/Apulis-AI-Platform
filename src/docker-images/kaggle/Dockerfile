@@ -74,7 +74,7 @@ RUN apt-get install -y openssh-server sudo screen
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
 RUN mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
 RUN sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list'
-RUN sudo add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
+RUN add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
 RUN apt-get update && apt-get install libicu55
 RUN apt-get install -y dotnet-sdk-2.2
 # RUN apt-get install -y aspnetcore-runtime-2.2  dotnet-runtime-2.2 dotnet-runtime-deps-2.2 dotnet-sdk-2.2

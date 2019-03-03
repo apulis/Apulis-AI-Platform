@@ -71,8 +71,9 @@ RUN apt-get install -y openssh-server sudo screen
 
 # netcore 2.0
 
-RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
-RUN sudo dpkg -i packages-microsoft-prod.deb
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+RUN mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+RUN sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list'
 RUN apt-get update && apt-get install -y dotnet-sdk-2.2
 
 ENV APACHE_RUN_USER www-data

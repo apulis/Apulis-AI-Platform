@@ -74,7 +74,7 @@ RUN apt-get install -y openssh-server sudo screen
 RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
 RUN sudo dpkg -i packages-microsoft-prod.deb
 RUN apt-get update
-RUN apt-get install -y dotnet-sdk-2.2
+RUN apt-get install -y dotnet-sdk-2.0.0 aspnetcore-store-2.0.0
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data

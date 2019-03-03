@@ -80,6 +80,12 @@ RUN apt-get update && apt-get install libicu55
 RUN apt-get install -y dotnet-sdk-2.2
 # RUN apt-get install -y aspnetcore-runtime-2.2  dotnet-runtime-2.2 dotnet-runtime-deps-2.2 dotnet-sdk-2.2
 
+# Gdal
+RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+RUN apt update -y
+RUN apt install -y libgdal-dev gdal-bin python-gdal python3-gdal 
+RUN pip install GDAL
+
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data
 ENV APACHE_LOG_DIR /var/log/apache2

@@ -92,8 +92,8 @@ RUN conda update -y jupyter
 RUN conda install -c conda-forge jupyterlab
 RUN conda create -n ipykernel_py2 python=2 ipykernel
 RUN conda create -n ipykernel_py3 python=3 ipykernel
-RUN source activate ipykernel_py2
-RUN source activate ipykernel_py3
+# RUN source activate ipykernel_py2
+# RUN source activate ipykernel_py3
 RUN python -m ipykernel install --user
 
 ENV APACHE_RUN_USER www-data

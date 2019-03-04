@@ -2873,7 +2873,7 @@ def run_kube_command_on_nodes( nargs ):
     if verb == "uncordon":
         for node in nodes:
             nodename = kubernetes_get_node_name(node)
-            run_kubectl( ["taint nodes %s kubernetes.io/master:NoSchedule-" % nodename])
+            run_kubectl( ["taint nodes %s node-role.kubernetes.io/master:NoSchedule-" % nodename])
     else:
         run_kube_command_node( verb, nodes)
 

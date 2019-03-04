@@ -84,8 +84,11 @@ RUN apt-get install -y dotnet-sdk-2.2
 # RUN add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
 # RUN apt update -y
 RUN apt install -y libgdal-dev gdal-bin python-gdal python3-gdal vim htop 
-RUN conda remove -y ipykernel
-RUN conda install -y gdal ipykernel jupyterlab 
+# RUN conda remove -y ipykernel
+# RUN conda install -y gdal ipykernel jupyterlab 
+RUN conda install -y gdal
+RUN conda update -y conda
+RUN conda update -y jupyter 
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data

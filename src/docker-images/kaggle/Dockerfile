@@ -89,6 +89,7 @@ RUN apt install -y libgdal-dev gdal-bin python-gdal python3-gdal vim htop
 RUN conda install -y gdal
 RUN conda update -y conda
 RUN conda update -y jupyter 
+RUN conda install -c conda-forge jupyterlab
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data

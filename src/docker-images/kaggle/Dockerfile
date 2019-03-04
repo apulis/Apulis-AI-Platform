@@ -95,6 +95,10 @@ RUN apt-get install -y dotnet-sdk-2.2
 # RUN source activate ipykernel_py2
 # RUN source activate ipykernel_py3
 # RUN python -m ipykernel install --user
+RUN apt-get update -y && apt-get install -y python3-pycurl locales ssh-askpass  python3-tk 
+RUN pip install --upgrade pip 
+RUN pip install mechanize
+
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data

@@ -597,6 +597,11 @@ default_config_parameters = {
 
 # These are super scripts
 scriptblocks = {
+    "restart-main": [
+        "mount", 
+        "kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml", 
+        "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics", 
+    ],
     "azure": [
         "runscriptonall ./scripts/prepare_vm_disk.sh",
         "nfs-server create",

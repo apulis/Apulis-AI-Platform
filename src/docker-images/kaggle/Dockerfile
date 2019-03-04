@@ -85,7 +85,7 @@ RUN apt-get install -y dotnet-sdk-2.2
 # RUN apt update -y
 RUN apt install -y libgdal-dev gdal-bin python-gdal python3-gdal vim htop 
 RUN conda remove -y ipykernel
-RUN conda install -y gdal ipykernel
+RUN conda install -y gdal ipykernel jupyterlab 
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data

@@ -86,15 +86,15 @@ RUN apt-get install -y dotnet-sdk-2.2
 RUN apt install -y libgdal-dev gdal-bin python-gdal python3-gdal vim htop 
 # RUN conda remove -y ipykernel
 # RUN conda install -y gdal ipykernel jupyterlab 
-RUN conda install -y gdal
-RUN conda update -y conda
-RUN conda update -y jupyter 
-RUN conda install -c conda-forge jupyterlab
-RUN conda create -n ipykernel_py2 python=2 ipykernel
-RUN conda create -n ipykernel_py3 python=3 ipykernel
+# RUN conda install -y gdal
+# RUN conda update -y conda
+# RUN conda update -y jupyter 
+# RUN conda install -c conda-forge jupyterlab
+# RUN conda create -n ipykernel_py2 python=2 ipykernel
+# RUN conda create -n ipykernel_py3 python=3 ipykernel
 # RUN source activate ipykernel_py2
 # RUN source activate ipykernel_py3
-RUN python -m ipykernel install --user
+# RUN python -m ipykernel install --user
 
 ENV APACHE_RUN_USER www-data
 ENV APACHE_RUN_GROUP www-data

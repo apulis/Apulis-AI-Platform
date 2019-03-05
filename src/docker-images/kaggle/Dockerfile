@@ -102,6 +102,9 @@ RUN apt-get install -y firefox unzip xvfb libxi6 libgconf-2-4 default-jdk
 RUN pip install selenium PyVirtualDisplay
 RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.14.0/geckodriver-v0.14.0-linux64.tar.gz -O /tmp/geckodriver.tar.gz && tar -C /opt -xzf /tmp/geckodriver.tar.gz
 
+# project file
+RUN pip3 uninstall pil
+RUN pip3 install youtube-dl face_recognition glob3 opencv-python pillow
 
 
 

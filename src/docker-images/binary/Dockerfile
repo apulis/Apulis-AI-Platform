@@ -2,7 +2,7 @@
 FROM ubuntu:16.04
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
-RUN apt-get update && apt-get install wget
+RUN apt-get update -y && apt-get install -y wget
 RUN mkdir /download
 WORKDIR /download 
 RUN wget http://ccsdatarepo.westus.cloudapp.azure.com/data/containernetworking/cni-amd64-v0.5.2.tgz

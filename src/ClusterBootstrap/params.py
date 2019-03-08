@@ -524,7 +524,7 @@ default_config_parameters = {
     # We will gradually migrate mroe and more docker in DLWorkspace to system
     # dockers
     "heketi-docker": "heketi/heketi:dev",
-    "dockerregistry": "mlcloudreg.westus.cloudapp.azure.com:5000/",
+    "dockerregistry": "qianjiangyuan/",
     "dockers": {
         # Hub is docker.io/
         "hub": "qianjiangyuan/",
@@ -552,6 +552,7 @@ default_config_parameters = {
             "gobld": {}, 
             "kubernetes": {}, 
             "kaggle": {},
+            "binary": {}
         },
         "external": {
             # These dockers are to be built by additional add ons.

@@ -218,6 +218,7 @@ default_config_mapping = {
     "postworkerdeploymentscript" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"post-worker-deploy.sh"),
     "workercleanupscript" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"cleanup-worker.sh"),
     "workerdeploymentlist" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"deploy.list"),
+    "cpuworkerdeploymentlist" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"deploy_cpu.list"),
     "pxeserverip": (["pxeserver"], lambda x: fetch_dictionary(x,["ip"])), 
     "pxeserverrootpasswd": (["pxeserver"], lambda x: get_root_passwd()), 
     "pxeoptions": (["pxeserver"], lambda x: "" if fetch_dictionary(x,["options"]) is None else fetch_dictionary(x,["options"])), 
@@ -883,7 +884,7 @@ def get_cni_binary():
 def get_kubectl_binary(force = False):
     get_hyperkube_docker(force = force)
     #os.system("mkdir -p ./deploy/bin")
-    urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/kube/kubelet/kubelet", "./deploy/bin/kubelet-old")
+    # urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/kube/kubelet/kubelet", "./deploy/bin/kubelet-old")
     #urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/kube/kubelet/kubectl", "./deploy/bin/kubectl")
     #os.system("chmod +x ./deploy/bin/*")
     get_cni_binary()
@@ -1180,7 +1181,12 @@ def update_worker_node(nodeIP):
     worker_ssh_user = config["admin_username"]
     utils.SSH_exec_script(config["ssh_cert"],worker_ssh_user, nodeIP, "./deploy/kubelet/%s" % config["preworkerdeploymentscript"])
 
-    with open("./deploy/kubelet/"+config["workerdeploymentlist"],"r") as f:
+    if "type" not in config["machines"][nodeIP] or config["machines"][nodeIP]["type"] != "cpu":
+        deploymentlist = config["workerdeploymentlist"]
+    else:
+        deploymentlist = config["cpuworkerdeploymentlist"]
+
+    with open("./deploy/kubelet/"+deploymentlist,"r") as f:
         deploy_files = [s.split(",") for s in f.readlines() if len(s.split(",")) == 2]
     for (source, target) in deploy_files:
         if (os.path.isfile(source.strip()) or os.path.exists(source.strip())):
@@ -3689,6 +3695,7 @@ Command:
   listmac   display mac address of the cluster notes
   checkconfig   display config items
   rendertemplate template_file target_file
+  copytoall     copy a file to remote destination for all nodes
   ''') )
     parser.add_argument("-y", "--yes", 
         help="Answer yes automatically for all prompt", 

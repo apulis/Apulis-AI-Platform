@@ -74,6 +74,7 @@ default_config_parameters = {
         ".js": True,
         ".swf": True,
         ".gzip": True,
+        ".tpl": True,
     },
     "render-by-copy": {
         # The following file will be copied (not rendered for configuration)
@@ -550,6 +551,7 @@ default_config_parameters = {
             "algorithm-bert": {},
             "gobld": {}, 
             "kubernetes": {}, 
+            "kaggle": {},
         },
         "external": {
             # These dockers are to be built by additional add ons.
@@ -595,6 +597,11 @@ default_config_parameters = {
 
 # These are super scripts
 scriptblocks = {
+    "restart-main": [
+        "mount", 
+        "kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml", 
+        "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics", 
+    ],
     "azure": [
         "runscriptonall ./scripts/prepare_vm_disk.sh",
         "nfs-server create",

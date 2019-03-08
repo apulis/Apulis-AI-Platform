@@ -93,8 +93,10 @@ ADD RecogServer /RecogServer
 # Add Glove vectors 
 RUN apt-get update -y && apt-get install -y zip unzip  
 
-# Install jupyter lab
+# Install jupyter lab, add jupyter2 kernel
 RUN pip install jupyterlab
+RUN python -m pip install ipykernel
+RUN python -m ipykernel install --user
 
 #Telemetry
 #--------------

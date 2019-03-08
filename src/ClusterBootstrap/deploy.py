@@ -2870,7 +2870,12 @@ def run_kube_command_on_nodes( nargs ):
         nodes = nargs[1:]
     else:
         nodes = get_ETCD_master_nodes(config["clusterId"])
-    run_kube_command_node( verb, nodes)
+    if verb == "uncordon":
+        for node in nodes:
+            nodename = kubernetes_get_node_name(node)
+            run_kubectl( ["taint nodes %s node-role.kubernetes.io/master:NoSchedule-" % nodename])
+    else:
+        run_kube_command_node( verb, nodes)
 
 def render_docker_images():
     if verbose:

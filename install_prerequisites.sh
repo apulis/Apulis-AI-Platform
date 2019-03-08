@@ -47,7 +47,10 @@ sudo pip install pyyaml jinja2 flask flask.restful tzlocal pycurl
 echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ wheezy main" | \
      sudo tee /etc/apt/sources.list.d/azure-cli.list
 
-sudo apt-key adv --keyserver packages.microsoft.com --recv-keys 417A0893
+sudo apt-key --keyring /etc/apt/trusted.gpg.d/Microsoft.gpg adv \
+     --keyserver packages.microsoft.com \
+     --recv-keys BC528686B50D79E339D3721CEB3E94ADBE1229CF
+
 sudo apt-get install apt-transport-https
 sudo apt-get update && sudo apt-get install azure-cli
 

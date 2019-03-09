@@ -461,7 +461,7 @@ default_config_parameters = {
             "GraphApiVersion": "1.6",  # API version,
             "Domains": ["microsoft.com"]
         },
-        "Live-Microsoft": {
+        "Live-Msft": {
             "DisplayName": "Microsoft Account (live.com)",
             "Tenant": "jinlmsfthotmail.onmicrosoft.com",
             "ClientId": "734cc6a7-e80c-4b89-a663-0b9512925b45",
@@ -491,6 +491,11 @@ default_config_parameters = {
             "Scope": "openid email",
             "Domains": ["gmail.com"]
         },
+        "Microsoft-Qjy": {
+            # For use at zhejianglab.com
+            "ClientId": "db3c8fdf-2539-4f17-b8ac-cd1a3e38a933",
+            "ClientSecret": "tlvQBQQB91509@*dualUB){"
+        }
 
     },
 

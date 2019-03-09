@@ -199,7 +199,7 @@ def get_root_passwd():
 # srcname: config name to be searched for (expressed as a list, see fetch_config)
 # lambda: lambda function to translate srcname to target name
 default_config_mapping = { 
-    "dockerprefix": (["cluster_name"], lambda x:x.lower()+"/"), 
+    "dockerprefix": (["cluster_name"], lambda x:x.lower()+"_"), 
     "infrastructure-dockerregistry": (["dockerregistry"], lambda x:x), 
     "worker-dockerregistry": (["dockerregistry"], lambda x:x),
     "glusterfs-device": (["glusterFS"], lambda x: "/dev/%s/%s" % (fetch_dictionary(x, ["volumegroup"]), fetch_dictionary(x, ["volumename"]) ) ),

@@ -491,12 +491,15 @@ default_config_parameters = {
             "Scope": "openid email",
             "Domains": ["gmail.com"]
         },
-        "Microsoft-Qjy": {
+        "Microsoft": {
             # For use at zhejianglab.com
             "ClientId": "db3c8fdf-2539-4f17-b8ac-cd1a3e38a933",
             "ClientSecret": "tlvQBQQB91509@*dualUB){"
-        }
-
+        }, 
+        "WeChat": {
+            "AppId": "wx9a56d5d3147bbfc6",
+            "AppSecret": "e9e21e5b6bd11e822abcc5dd87c67a09"
+        },
     },
 
     "Dashboards": {

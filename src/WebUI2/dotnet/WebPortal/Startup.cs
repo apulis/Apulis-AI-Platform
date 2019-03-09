@@ -180,6 +180,7 @@ namespace WindowsAuth
                     {
                         continue; 
                     }
+                    Console.WriteLine($"Examine authentication {authenticationScheme}");
 
                     if (authenticationScheme.IndexOf("WeChat", StringComparison.OrdinalIgnoreCase)>=0 )
                     {

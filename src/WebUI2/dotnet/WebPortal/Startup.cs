@@ -192,7 +192,7 @@ namespace WindowsAuth
                         AuthenticationSchemes[authenticationScheme] = "WeChat";
                     }
 
-                    if (authenticationScheme == "Microsoft") { 
+                    if (authenticationScheme.IndexOf( "Microsoft", StringComparison.OrdinalIgnoreCase) >= 0) { 
                         auth.AddMicrosoftAccount(microsoftOption =>
                         {
                             microsoftOption.ClientId = config["ClientId"] as string;
@@ -203,7 +203,7 @@ namespace WindowsAuth
                         AuthenticationSchemes[authenticationScheme] = "Microsoft";
                     }
 
-                    if (authenticationScheme == "Gmail") { 
+                    if (authenticationScheme.IndexOf( "Gmail", StringComparison.OrdinalIgnoreCase) >= 0) { 
                         auth.AddGoogle(googleOptions => {
                             googleOptions.ClientId = config["ClientId"] as string;
                             googleOptions.ClientSecret = config["ClientSecret"] as string;

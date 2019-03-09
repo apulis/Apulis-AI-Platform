@@ -189,6 +189,7 @@ namespace WindowsAuth
                             wechatOptions.AppSecret = config["AppSecret"] as string;
                         }
                         );
+                        Console.WriteLine("Add Wechat Authentication");
                         AuthenticationSchemes[authenticationScheme] = "WeChat";
                     }
 
@@ -200,6 +201,7 @@ namespace WindowsAuth
 
                         }
                         );
+                        Console.WriteLine("Add Microsoft Authentication");
                         AuthenticationSchemes[authenticationScheme] = "Microsoft";
                     }
 
@@ -208,6 +210,7 @@ namespace WindowsAuth
                             googleOptions.ClientId = config["ClientId"] as string;
                             googleOptions.ClientSecret = config["ClientSecret"] as string;
                         });
+                        Console.WriteLine("Add Google Authentication");
                         AuthenticationSchemes[authenticationScheme] = "Google";
                         AuthenticationCallback["signin-google"] = true; 
                     };

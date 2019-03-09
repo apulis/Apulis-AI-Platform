@@ -1307,6 +1307,8 @@ def deploy_webUI_on_node(ipAddress):
 
     if not os.path.exists("./deploy/WebUI"):
         os.system("mkdir -p ./deploy/WebUI")
+    if verbose:
+        print("Configuration == %s" % config)
 
     utils.render_template_directory("./template/WebUI","./deploy/WebUI", config)
     os.system("cp --verbose ./deploy/WebUI/*.json ../WebUI/dotnet/WebPortal/") # used for debugging, when deploy, it will be overwritten by mount from host, contains secret

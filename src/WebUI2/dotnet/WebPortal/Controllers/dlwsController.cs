@@ -135,6 +135,7 @@ namespace WindowsAuth.Controllers
                             HttpContext.Session.SetString("Username", username);
                             HttpContext.Session.SetString("uid", userEntry.uid);
                             HttpContext.Session.SetString("gid", userEntry.gid);
+                            HttpContext.Session.SetString("Password", userEntry.Password);
                             HttpContext.Session.SetString("isAdmin", userEntry.isAdmin);
                             HttpContext.Session.SetString("isAuthorized", userEntry.isAuthorized);
                             var clusterInfo = Startup.Clusters[clusterName];
@@ -388,9 +389,12 @@ namespace WindowsAuth.Controllers
             ViewData["Username"] = username;
             var uid = HttpContext.Session.GetString("uid");
             var gid = HttpContext.Session.GetString("gid");
+            var Password = HttpContext.Session.GetString("Password");
             var restapi = HttpContext.Session.GetString("Restapi");
             templateParams.Json = templateParams.Json.Replace("$$username$$", username).Replace("$$uid$$", uid).Replace("$$gid$$", gid);
+            templateParams.Json = templateParams.Json.Replace("$$password$$", Password).Replace("$$uid$$", uid).Replace("$$gid$$", gid);
             var jobObject = JObject.Parse(templateParams.Json);
+
             jobObject["userName"] = HttpContext.Session.GetString("Email");
             jobObject["userId"] = uid;
             jobObject["jobType"] = "training";
@@ -652,17 +656,61 @@ namespace WindowsAuth.Controllers
                 return String.Format( "Exception {0}", ex);
             }
         }
-        
-        //// PUT api/values/5
-        //[HttpPut("{id}")]
-        //public void Put(int id, [FromBody]string value)
-        //{
-        //}
 
-        //// DELETE api/values/5
-        //[HttpDelete("{id}")]
-        //public void Delete(int id)
-        //{
-        //}
-    }
+        private bool isAdmin()
+        {
+            if (!User.Identity.IsAuthenticated || HttpContext.Session.GetString("isAdmin").Equals("false"))
+            {
+                return false; 
+            } else
+            {
+                return true;
+            }
+            
+        }
+
+        private async Task GetUsersFromDB()
+        {
+            /*
+            JObject userObj = new JObject();
+            var currentCluster = HttpContext.Session.GetString("CurrentClusters");
+            if (Startup.Database.ContainsKey(currentCluster))
+            {
+                var db = Startup.Database[currentCluster];
+                if (!Object.ReferenceEquals(db, null))
+                {
+                    foreach (var user in db.User)
+                    {
+                        string accountType = (user.Email == user.Alias) ? GetAccountType(user.isAuthorized == "true", user.isAdmin == "true") : "Alias";
+                        string[] userString = new string[] { ParseToUsername(user.Alias), user.Email, accountType };
+                        userTable.Add(userString);
+                    }
+                    ViewData["Users"] = userTable;
+                }
+            }
+            return View();
+                        */
+
+        }
+
+        [HttpGet("GetUsers")]
+        public async Task<IActionResult> GetUsers()
+        {
+
+
+            return Ok(); 
+        }
+
+            //// PUT api/values/5
+            //[HttpPut("{id}")]
+            //public void Put(int id, [FromBody]string value)
+            //{
+            //}
+
+            //// DELETE api/values/5
+            //[HttpDelete("{id}")]
+            //public void Delete(int id)
+            //{
+            //}
+        }
 }

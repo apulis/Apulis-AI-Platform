@@ -91,6 +91,7 @@ namespace WindowsAuth.Controllers
             HttpContext.Session.SetString("Username", username);
             HttpContext.Session.SetString("uid", userEntry.uid);
             HttpContext.Session.SetString("gid", userEntry.gid);
+            HttpContext.Session.SetString("Password", userEntry.Password);
             HttpContext.Session.SetString("isAdmin", userEntry.isAdmin);
             HttpContext.Session.SetString("isAuthorized", userEntry.isAuthorized);
             var clusterInfo = Startup.Clusters[clusterName];
@@ -993,6 +994,11 @@ namespace WindowsAuth.Controllers
                 }
             }
             return View();
+        }
+
+        public async Task<IActionResult> ManageUser1()
+        {
+            return View(); 
         }
 
         public async Task<IActionResult> AccountSettings()

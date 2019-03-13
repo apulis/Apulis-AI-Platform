@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq; 
 
 
 namespace WindowsAuth.models
@@ -62,6 +63,35 @@ namespace WindowsAuth.models
             gid = userID.gid;
             isAdmin = userID.isAdmin;
             isAuthorized = userID.isAuthorized;
+        }
+        public JObject toJObject()
+        {
+            var ret = new JObject();
+            ret["Email"] = Email;
+            if ( !String.IsNullOrEmpty(Alias))
+            { 
+                ret["Alias"] = Alias;
+            }
+            if (!String.IsNullOrEmpty(Password))
+            {
+                ret["Password"] = Password;
+            }
+            if (!String.IsNullOrEmpty(uid))
+            {
+                ret["uid"] = uid;
+            }
+            if (!String.IsNullOrEmpty(uid))
+            {
+                ret["gid"] = gid;
+            }
+            ret["isAdmin"] = isAdmin.Equals("true");
+            ret["isAuthorized"] = isAuthorized.Equals("true");
+
+            return ret; 
+        }
+        static UserEntry Parse( obj: JObject )
+        {
+
         }
     }
 

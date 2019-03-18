@@ -1,6 +1,5 @@
 #!/bin/bash
 
-sudo addgroup --force-badname --gid {{cnf["inituser"]["gid"]}}  {{cnf["inituser"]]["group"]}}
 sudo adduser --force-badname --home /home/{{cnf["admin_username"]}} --shell /bin/bash --uid {{cnf["inituser"]["gid"]}} -gecos '' {{cnf["admin_username"]}}  --gid {{cnf["inituser"]["gid"]}} --disabled-password  
 sudo usermod -p $(echo {{cnf["inituser"]["password"]}} | openssl passwd -1 -stdin) {{cnf["admin_username"]}} 
 sudo adduser {{cnf["admin_username"]}} sudo 

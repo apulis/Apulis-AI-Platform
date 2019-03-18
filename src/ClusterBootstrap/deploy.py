@@ -189,7 +189,7 @@ def get_root_passwd():
             f.write(passwd)
             f.close()
     with open(fname,'r') as f:
-        rootpasswd = f.read()
+        rootpasswd = f.read().strip()
         f.close()
     return rootpasswd
 

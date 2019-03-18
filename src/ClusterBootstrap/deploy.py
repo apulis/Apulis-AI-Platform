@@ -1258,7 +1258,7 @@ def reset_worker_nodes():
         reset_worker_node(node)
 
 def gen_inituser_script():
-    password = get_root_password()
+    password = get_root_passwd()
     config["inituser"]["password"] = password
     with open("./deploy/sshkey/id_rsa.pub", "r") as f:
         publicKey = f.read()

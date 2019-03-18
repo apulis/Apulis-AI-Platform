@@ -1264,7 +1264,7 @@ def gen_inituser_script():
         publicKey = f.read()
         f.close()
     config["inituser"]["publickey"] = publicKey
-    utils.render_template_directory("./scripts/inituser.sh.template", "./deploy/etc/inituser.sh",config)
+    utils.render_template("./scripts/inituser.sh.template", "./deploy/etc/inituser.sh",config)
 
 def create_MYSQL_for_WebUI():
     #todo: create a mysql database, and set "mysql-hostname", "mysql-username", "mysql-password", "mysql-database"

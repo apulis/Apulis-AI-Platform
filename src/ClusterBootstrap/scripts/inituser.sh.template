@@ -1,10 +1,11 @@
 #!/bin/bash
 
+sudo addgroup --force-badname --gid {{cnf["inituser"]["gid"]}}  {{cnf["inituser"]["group"]}}
 sudo adduser --force-badname --home /home/{{cnf["admin_username"]}} --shell /bin/bash --uid {{cnf["inituser"]["gid"]}} -gecos '' {{cnf["admin_username"]}}  --gid {{cnf["inituser"]["gid"]}} --disabled-password  
 sudo usermod -p $(echo {{cnf["inituser"]["password"]}} | openssl passwd -1 -stdin) {{cnf["admin_username"]}} 
 sudo adduser {{cnf["admin_username"]}} sudo 
 sudo echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers 
 sudo mkdir -p /home/{{cnf["admin_username"]}}/.ssh
 sudo echo "/home/{{cnf["inituser"]["publickey"]}}" >> /home/{{cnf["admin_username"]}}/.ssh/authorized_keys
-sudo chown -R {{cnf["admin_username"]}}:{{cnf["inituser"]]["group"]}} /home/{{cnf["admin_username"]}}
+sudo chown -R {{cnf["admin_username"]}}:{{cnf["inituser"]["group"]}} /home/{{cnf["admin_username"]}}
 sudo chmod og-rx /home/{{cnf["admin_username"]}}/.ssh/authorized_keys

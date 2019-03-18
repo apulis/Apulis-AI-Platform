@@ -6,8 +6,8 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq; 
-
+using Newtonsoft.Json.Linq;
+using Utils.Json;
 
 namespace WindowsAuth.models
 {
@@ -80,7 +80,7 @@ namespace WindowsAuth.models
             {
                 ret["uid"] = uid;
             }
-            if (!String.IsNullOrEmpty(uid))
+            if (!String.IsNullOrEmpty(gid))
             {
                 ret["gid"] = gid;
             }
@@ -89,9 +89,40 @@ namespace WindowsAuth.models
 
             return ret; 
         }
-        static UserEntry Parse( obj: JObject )
+        static UserEntry Parse( JObject obj)
         {
-
+            var email = JsonUtils.GetString("Email", obj);
+            if ( String.IsNullOrEmpty(email))
+            {
+                return null; 
+            }
+            var entry = new UserEntry();
+            entry.Email = email; 
+            var Alias = JsonUtils.GetString("Alias", obj);
+            if (!String.IsNullOrEmpty(Alias))
+            {
+                entry.Alias = Alias; 
+            }
+            var Password = JsonUtils.GetString("Password", obj);
+            if (!String.IsNullOrEmpty(Password))
+            {
+                entry.Password = Password;
+            }
+            var uid = JsonUtils.GetString("uid", obj);
+            if (!String.IsNullOrEmpty(uid))
+            {
+                entry.uid = uid;
+            }
+            var gid = JsonUtils.GetString("gid", obj);
+            if (!String.IsNullOrEmpty(gid))
+            {
+                entry.gid = gid;
+            }
+            var isAdmin = JsonUtils.GetBool("isAdmin", obj);
+            entry.isAdmin = isAdmin ? "true" : "false";
+            var isAuthorized = JsonUtils.GetBool("isAuthorized", obj);
+            entry.isAuthorized = isAuthorized ? "true" : "false";
+            return entry;
         }
     }
 

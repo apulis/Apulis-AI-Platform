@@ -1263,7 +1263,7 @@ def gen_inituser_script():
     with open("./deploy/sshkey/id_rsa.pub", "r") as f:
         publicKey = f.read()
         f.close()
-    config["inituser"]["publickey"] = publickey
+    config["inituser"]["publickey"] = publicKey
     utils.render_template_directory("./script/inituser.sh.template", "./deploy/etc/inituser.sh",config)
 
 def create_MYSQL_for_WebUI():

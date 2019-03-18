@@ -3460,6 +3460,9 @@ def run_command( args, command, nargs, parser ):
     elif command == "kubectl":
         run_kubectl(nargs)
 
+    elif command == "inituser":
+        gen_inituser_script()
+
     elif command == "kubernetes":
         configuration( config, verbose )
         if len(nargs) >= 1: 
@@ -3705,6 +3708,7 @@ Command:
   checkconfig   display config items
   rendertemplate template_file target_file
   copytoall     copy a file to remote destination for all nodes
+  inituser  generatge script to initialize admin user for each node at ./deploy/etc/inituser.sh
   ''') )
     parser.add_argument("-y", "--yes", 
         help="Answer yes automatically for all prompt", 

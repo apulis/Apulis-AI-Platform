@@ -6,6 +6,6 @@ sudo usermod -p $(echo {{cnf["inituser"]["password"]}} | openssl passwd -1 -stdi
 sudo adduser {{cnf["admin_username"]}} sudo 
 sudo echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers 
 sudo mkdir -p /home/{{cnf["admin_username"]}}/.ssh
-sudo echo "/home/{{cnf["inituser"]["public_key"]}}" >> /home/{{cnf["admin_username"]}}/.ssh/authorized_keys
+sudo echo "/home/{{cnf["inituser"]["publickey"]}}" >> /home/{{cnf["admin_username"]}}/.ssh/authorized_keys
 sudo chown -R {{cnf["admin_username"]}}:{{cnf["inituser"]]["group"]}} /home/{{cnf["admin_username"]}}
 sudo chmod og-rx /home/{{cnf["admin_username"]}}/.ssh/authorized_keys

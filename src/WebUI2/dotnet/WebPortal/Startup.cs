@@ -454,6 +454,13 @@ namespace WindowsAuth
                 {
                     clusterInfo.DeployMounts = "[]";
                 }
+                if ( clusterConfig.ContainsKey("proxy"))
+                {
+                    clusterInfo.Proxy = clusterConfig["deploymounts"] as string;
+                } else
+                {
+                    clusterInfo.Proxy = null; 
+                }
 
                 var isDefault = clusterConfig.ContainsKey("Default") && (clusterConfig["Default"] as string).ToLower()=="true";
                 if (isDefault)

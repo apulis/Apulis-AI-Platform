@@ -1257,7 +1257,14 @@ def reset_worker_nodes():
     for node in workerNodes:
         reset_worker_node(node)
 
-
+def gen_inituser_script():
+    password = get_root_password()
+    config["inituser"]["password"] = password
+    with open("./deploy/sshkey/id_rsa.pub", "r") as f:
+        publicKey = f.read()
+        f.close()
+    config["inituser"]["publickey"] = publickey
+    utils.render_template_directory("./script/inituser.sh.template", "./deploy/etc/inituser.sh",config)
 
 def create_MYSQL_for_WebUI():
     #todo: create a mysql database, and set "mysql-hostname", "mysql-username", "mysql-password", "mysql-database"

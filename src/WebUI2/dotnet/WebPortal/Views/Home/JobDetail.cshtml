@@ -176,7 +176,7 @@
                     $('#templateselect').append(row);
                 }
             });
-    }
+    } 
 
     function DisplayDetail(payload) {
         if (payload.jobParams) {
@@ -214,9 +214,15 @@
             $('#endpoints').show();
 
             var endpointsStr = "";
+            
             for (var i = 0; i < payload.endpoints.length; i++) {
-
+                var hostname = payload.endpoints[i].hostName;
+                var proxy = "@ViewData["proxy"]";
+                if (proxy != "") {
+                    hostname = proxy;
+                }
                 if (payload.endpoints[i].containerPort == 22) {
+                    
                     endpointsStr += "To access the container via SSH, use command: ssh -i @ViewData["workPath"]" + ".ssh/id_rsa -p " + payload.endpoints[i].hostPort + " @ViewData["Username"]" + "@@" + payload.endpoints[i].hostName + "\n";
                 }
                 else {

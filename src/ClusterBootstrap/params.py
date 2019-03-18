@@ -315,6 +315,9 @@ default_config_parameters = {
     # Mount point to be deployed to container.
     "deploymounts": [],
 
+    # proxy used
+    "proxy": "",
+
 
     # folder where automatic share script will be located
     "folder_auto_share": "/opt/auto_share",
@@ -519,6 +522,13 @@ default_config_parameters = {
             "port": 8088,
         },
     },
+
+    # This section will be used to govern the initial user used by the cluster
+    "inituser": {
+        "gid": 500,
+        "uid": 500, 
+        "group": "dlwsadmin", 
+    }, 
 
     # There are two docker registries, one for infrastructure (used for pre-deployment)
     # and one for worker docker (pontentially in cluser)

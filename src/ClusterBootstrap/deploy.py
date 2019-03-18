@@ -1133,11 +1133,11 @@ def config_ubuntu():
 
 def create_PXE_ubuntu():
     config_ubuntu()
-    os.system("rm -r ./deploy/pxe")
-    os.system("mkdir -p ./deploy/pxe-ubuntu")
-    utils.render_template_directory("./template/pxe-ubuntu", "./deploy/pxe-ubuntu",config, verbose=verbose )
+    os.system("rm -r ./deploy/docker-images/pxe-ubuntu")
+    os.system("mkdir -p ./deploy/docker-images/pxe-ubuntu")
+    utils.render_template_directory("./template/pxe-ubuntu", "./deploy/docker-images/pxe-ubuntu",config, verbose=verbose )
 
-    dockername = push_one_docker("./deploy/pxe-ubuntu", config["dockerprefix"], config["dockertag"], "pxe-ubuntu", config )
+    dockername = push_one_docker("./deploy/docker-images/pxe-ubuntu", config["dockerprefix"], config["dockertag"], "pxe-ubuntu", config )
     # tarname = "deploy/docker/pxe-ubuntu.tar" 
 
     # os.system("docker save " + dockername + " > " + tarname )

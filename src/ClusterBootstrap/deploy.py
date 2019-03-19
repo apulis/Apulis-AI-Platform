@@ -2449,6 +2449,12 @@ def exec_on_all_with_output(nodes, args, supressWarning = False):
         print "Node: " + node
         print output
 
+def prepull_docker( nodes, dockers, supressWarning = False ):
+    for onedocker in dockers:
+        cmd = "docker pull %s" % onedocker 
+        for node in nodes:
+            utils.SSH_exec_cmd( config["ssh_cert"], config["admin_username"], node, cmd, supressWarning)
+
 # run a shell script on one remote node
 def run_script(node, args, sudo = False, supressWarning = False):
     if ".py" in args[0]:
@@ -3586,6 +3592,11 @@ def run_command( args, command, nargs, parser ):
             parser.print_help()
             print "Error: docker needs a subcommand"
             exit()
+
+    elif command == "prepull":
+        nodes = get_nodes(config["clusterId"])
+        prepull_docker(nodes, nargs)
+
     elif command == "rendertemplate":
         if len(nargs) != 2:
             parser.print_help()
@@ -3711,6 +3722,9 @@ Command:
   rendertemplate template_file target_file
   copytoall     copy a file to remote destination for all nodes
   inituser  generatge script to initialize admin user for each node at ./deploy/etc/inituser.sh
+  prepull  [args] prepull certain docker to speed up execution.
+            [args] can be a certain docker name
+            
   ''') )
     parser.add_argument("-y", "--yes", 
         help="Answer yes automatically for all prompt", 

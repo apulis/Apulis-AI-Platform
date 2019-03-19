@@ -105,13 +105,15 @@
             if (!(toshow[key].hasOwnProperty("supress")) && toshow[key].hasOwnProperty("servers") )
             {
                 $scope.dashboard[key] = toshow[key];
-                var server = tolist(toshow[key]["servers"])[0];
-                var url = "http://" + server;
-                if ($scope.dashboard[key]["https"])
-                    url = "https://" + server;
-                if ($scope.dashboard[key]["port"])
-                    url += ":" + $scope.dashboard[key]["port"];
-                $scope.dashboard[key]["url"] = url;
+                if (!$scope.dashboard[key].hasOwnProperty("url")) {
+                    var server = tolist(toshow[key]["servers"])[0];
+                    var url = "http://" + server;
+                    if ($scope.dashboard[key]["https"])
+                        url = "https://" + server;
+                    if ($scope.dashboard[key]["port"])
+                        url += ":" + $scope.dashboard[key]["port"];
+                    $scope.dashboard[key]["url"] = url;
+                }
             }
         };
         $log.log($scope.dashboard);

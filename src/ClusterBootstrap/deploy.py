@@ -2462,7 +2462,7 @@ def prepull_docker( nodes, dockers, supressWarning = False ):
     for onedocker in dockers:
         cmd = "docker pull %s" % onedocker 
         ops = RemoteOps(cmd)
-        pool = multiprocessing.Pool(processes=n_process)
+        pool = multiprocessing.Pool(processes=16)
         pool.map( ops, nodes ) 
 
 # run a shell script on one remote node

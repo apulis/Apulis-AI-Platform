@@ -16,12 +16,6 @@
 
     app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", function ($scope, $filter, $http, $log, $timeout, Upload) {
 
-        $scope.status = { selectPrefix: false };
-        $scope.selection = {
-            row: 0, col: 0, tag: "image", operation: {}
-        };
-        $scope.metadata = {};
-
         $scope.hasObject = function (obj) {
             if (obj == null) {
                 return false;
@@ -53,8 +47,8 @@
             delete $scope.errorMsg;
         };
 
-        $scope.getCurrent = function (onCompletion) {
-            $http.get('/api/Image/GetCurrent').then(function (response) {
+        $scope.getUsers = function (onCompletion) {
+            $http.get('/api/dlws/GetUsers').then(function (response) {
                 var current = response.data;
                 $scope.current = response.data;
                 $log.log($scope.current);

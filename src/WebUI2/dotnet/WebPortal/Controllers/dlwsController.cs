@@ -669,10 +669,12 @@ namespace WindowsAuth.Controllers
             
         }
 
-        private async Task GetUsersFromDB()
+        private async Task<JObject> GetUsersFromDB()
         {
-            /*
-            JObject userObj = new JObject();
+            var isAdmin = HttpContext.Session.GetString("isAdmin").Equals("true");
+            string username = HttpContext.Session.GetString("Email");
+
+            JArray userArr = new JArray();
             var currentCluster = HttpContext.Session.GetString("CurrentClusters");
             if (Startup.Database.ContainsKey(currentCluster))
             {
@@ -681,24 +683,25 @@ namespace WindowsAuth.Controllers
                 {
                     foreach (var user in db.User)
                     {
-                        string accountType = (user.Email == user.Alias) ? GetAccountType(user.isAuthorized == "true", user.isAdmin == "true") : "Alias";
-                        string[] userString = new string[] { ParseToUsername(user.Alias), user.Email, accountType };
-                        userTable.Add(userString);
+                        var bAdd = isAdmin || user.Email == username;
+                        if (bAdd)
+                        {
+                            userArr.Add(user.toJObject());
+                        }
                     }
-                    ViewData["Users"] = userTable;
                 }
             }
-            return View();
-                        */
-
+            var userObj = new JObject();
+            userObj["users"] = userArr;
+            return userObj;
         }
 
         [HttpGet("GetUsers")]
         public async Task<IActionResult> GetUsers()
         {
+            var userObj = await GetUsersFromDB();
 
-
-            return Ok(); 
+            return Content(userObj.ToString(), "application/json"); ; 
         }
 
             //// PUT api/values/5

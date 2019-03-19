@@ -24,7 +24,7 @@ spec:
         app: mysql
     spec:
       nodeSelector:
-        mysql: active
+        webportal: active
       hostNetwork: true    
       containers:
       - image: {{cnf["dockers"]["container"]["mysql"]["fullname"]}}

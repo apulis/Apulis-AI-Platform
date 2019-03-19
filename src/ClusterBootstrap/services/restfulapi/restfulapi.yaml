@@ -19,7 +19,7 @@ spec:
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
-        restfulapi: active
+        webportal: active
       hostNetwork: true        
       containers:
       - name: restfulapi

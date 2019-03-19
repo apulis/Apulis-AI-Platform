@@ -456,7 +456,8 @@ namespace WindowsAuth
                 }
                 if ( clusterConfig.ContainsKey("proxy"))
                 {
-                    clusterInfo.Proxy = clusterConfig["deploymounts"] as string;
+                    clusterInfo.Proxy = clusterConfig["proxy"] as string;
+                    _logger.LogInformation($"Use proxy .... {clusterInfo.Proxy}");
                 } else
                 {
                     clusterInfo.Proxy = null; 

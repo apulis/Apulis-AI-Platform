@@ -1,6 +1,7 @@
 ﻿@*
     For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 *@
+@using Microsoft.AspNetCore.Http;
 
 <script>
 
@@ -108,7 +109,7 @@
                                 }
                             });
                         }
-                        else 
+                        else
                         {
                             if (payload.log) {
                                 //console.log(payload.jobId);
@@ -176,7 +177,7 @@
                     $('#templateselect').append(row);
                 }
             });
-    } 
+    }
 
     function DisplayDetail(payload) {
         if (payload.jobParams) {
@@ -214,7 +215,7 @@
             $('#endpoints').show();
 
             var endpointsStr = "";
-            
+
             for (var i = 0; i < payload.endpoints.length; i++) {
                 var hostname = payload.endpoints[i].hostName;
                 var proxy = "@ViewData["proxy"]";
@@ -222,8 +223,10 @@
                     hostname = proxy;
                 }
                 if (payload.endpoints[i].containerPort == 22) {
-                    
-                    endpointsStr += "To access the container via SSH, use command: ssh -i @ViewData["workPath"]" + ".ssh/id_rsa -p " + payload.endpoints[i].hostPort + " @ViewData["Username"]" + "@@" + hostname + "\n";
+
+                    endpointsStr += "To access the container via SSH, use command: ssh -i @ViewData["workPath"]" + ".ssh/id_rsa -p " + payload.endpoints[i].hostPort + " @ViewData["Username"]" + "@@" + hostname;
+                    var password = "@Context.Session.GetString("Password")";
+                    endpointsStr += " [Password: " + password + " ]  \n"; 
                 }
                 else {
                     var svcurl = "http://" + hostname + ":" + payload.endpoints[i].hostPort;
@@ -299,7 +302,7 @@
 </script>
 
 <script>
-    function AlertCommandResult(payload) {       
+    function AlertCommandResult(payload) {
         alert(payload.result);
         $("#run-cmd-btn").attr("disabled", false);
     }
@@ -309,12 +312,12 @@
         console.log("Restful API Error: \n" + JSON.stringify(thrownError));
         $("#run-cmd-btn").attr("disabled", false);
     }
-    
+
     function RunCommand() {
         $("#run-cmd-btn").attr("disabled", true);
         var url = "/api/dlws/RunCommand?jobId=@ViewData["jobid"]&";
         url = url + "command=" + encodeURIComponent(document.getElementById("cmd-textbox").value);
-        $.ajax({ url: url, dataType: 'json', timeout: 10000,  error: AlertAPIError }).done(AlertCommandResult);       
+        $.ajax({ url: url, dataType: 'json', timeout: 10000,  error: AlertAPIError }).done(AlertCommandResult);
     }
 
     function UseTemplate(tempValue) {
@@ -322,7 +325,7 @@
         var cmdString = (temp.cmd) ? temp.cmd : "";
         document.getElementById("cmd-textbox").value = cmdString;
     }
-    
+
 </script>
 
 
@@ -334,7 +337,7 @@
 </div>
 
 <h2> Job Folder: </h2>
-<div id="jobfolderPanel" style="height: 20px;" readonly="" class="ng-binding grey-box">    
+<div id="jobfolderPanel" style="height: 20px;" readonly="" class="ng-binding grey-box">
 </div>
 
 <div id="endpoints" hidden>
@@ -356,7 +359,7 @@
         Auto-Refresh Job Logs (Refresh-Rate 5 Seconds)
     </label>
 
-    <input type="checkbox" id="chkTimestamp" checked="checked" onclick="RefreshDetail()"/>
+    <input type="checkbox" id="chkTimestamp" checked="checked" onclick="RefreshDetail()" />
     <label>
         Show timestamp in job logs
     </label>
@@ -373,7 +376,7 @@
     </div>
 
     <div id="commands-div" style="display:none">
-        <br/>
+        <br />
         <h4>Commands</h4>
         <table class="table table-bordered table-condensed table-hover table-striped">
             <thead>
@@ -383,7 +386,7 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody  id="command-table" ></tbody>
+            <tbody id="command-table"></tbody>
         </table>
     </div>
 </div>
@@ -397,7 +400,7 @@
     <h2> Job analytics and monitoring:</h2>
     <h3> GPU Usage: </h3>
     <iframe src="/grafana/dashboard/db/jobgpuusage?orgId=1&var-namespace=default&var-host=@ViewData["jobid"]&var-core=All" width="100%" height="1000" frameborder="0"></iframe>
-    
+
     <h3> System Resource Usage:</h3>
     <iframe src="/grafana/dashboard/db/kubernetes-pods?orgId=1&var-namespace=default&var-podname=@ViewData["jobid"]" width="100%" height="1000" frameborder="0"></iframe>
 </div>
@@ -423,7 +426,6 @@
     .cmd-textbox {
         width: 100%;
         max-width: none;
-
     }
 </style>
 

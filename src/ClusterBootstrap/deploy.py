@@ -2749,7 +2749,7 @@ def get_node_lists_for_service(service):
                 nodes = []
         elif nodetype == "all":
             nodes = config["worker_node"] + config["etcd_node"]
-        elif nodetype.startswith("node:")
+        elif nodetype.startswith("node:"):
             nodename = nodetype[5:]
             return [nodename]
         else:

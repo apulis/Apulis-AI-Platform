@@ -513,7 +513,12 @@ default_config_parameters = {
             # "servers": // Specify influxDBserver.
         },
         "grafana": {
+            "path" : "grafana", 
             "port": 3000,
+        },
+        "kubernetes": {
+            "path" : "k8s", 
+            "port": 1443,
         },
         "hdfs": {
             "port": 50070,

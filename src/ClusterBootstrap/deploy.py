@@ -1332,7 +1332,7 @@ def deploy_webUI_on_node(ipAddress):
         config["Dashboards"]["grafana"]["servers"] = masternodes[0]
 
     # Not showing kubernete API
-    # reportConfig = config["Dashboards"]
+    reportConfig = config["Dashboards"]
     # reportConfig["kuberneteAPI"] = {}
     # reportConfig["kuberneteAPI"]["url"] = "k8s"
     # reportConfig["kuberneteAPI"]["port"] = config["k8sAPIport"]

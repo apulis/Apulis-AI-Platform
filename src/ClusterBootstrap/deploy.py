@@ -17,6 +17,7 @@ import random
 import glob
 import copy
 import numbers
+import multiprocessing
 
 from os.path import expanduser
 
@@ -2449,11 +2450,20 @@ def exec_on_all_with_output(nodes, args, supressWarning = False):
         print "Node: " + node
         print output
 
+class RemoteOps(object):
+    def __init__(self, cmd, supressWarning = False ):
+        self.cmd = cmd
+        self.supressWarning = supressWarning
+    def __call__(self, node ):
+        output = utils.SSH_exec_cmd_with_output( config["ssh_cert"], config["admin_username"], node, self.cmd, self.supressWarning)
+        print ("Node %s: %s" %(node, output))
+
 def prepull_docker( nodes, dockers, supressWarning = False ):
     for onedocker in dockers:
         cmd = "docker pull %s" % onedocker 
-        for node in nodes:
-            utils.SSH_exec_cmd( config["ssh_cert"], config["admin_username"], node, cmd, supressWarning)
+        ops = RemoteOps(cmd)
+        pool = multiprocessing.Pool(processes=n_process)
+        pool.map( ops, nodes ) 
 
 # run a shell script on one remote node
 def run_script(node, args, sudo = False, supressWarning = False):

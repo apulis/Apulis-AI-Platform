@@ -1331,11 +1331,13 @@ def deploy_webUI_on_node(ipAddress):
     if ( "servers" not in config["Dashboards"]["grafana"]):
         config["Dashboards"]["grafana"]["servers"] = masternodes[0]
 
-    reportConfig = config["Dashboards"]
-    reportConfig["kuberneteAPI"] = {}
-    reportConfig["kuberneteAPI"]["port"] = config["k8sAPIport"]
-    reportConfig["kuberneteAPI"]["servers"] = masternodes
-    reportConfig["kuberneteAPI"]["https"] = True
+    # Not showing kubernete API
+    # reportConfig = config["Dashboards"]
+    # reportConfig["kuberneteAPI"] = {}
+    # reportConfig["kuberneteAPI"]["url"] = "k8s"
+    # reportConfig["kuberneteAPI"]["port"] = config["k8sAPIport"]
+    # reportConfig["kuberneteAPI"]["servers"] = masternodes
+    # reportConfig["kuberneteAPI"]["https"] = True
 
     with open("./deploy/WebUI/dashboardConfig.json","w") as fp:
         json.dump(reportConfig, fp)

@@ -102,7 +102,8 @@
         $scope.dashboard = {};
         for (var key in toshow)
         {
-            if (!(toshow[key].hasOwnProperty("supress")) && toshow[key].hasOwnProperty("servers") )
+            if (!(toshow[key].hasOwnProperty("supress")) && (toshow[key].hasOwnProperty("url")
+                || toshow[key].hasOwnProperty("servers")) )
             {
                 $scope.dashboard[key] = toshow[key];
                 if (!$scope.dashboard[key].hasOwnProperty("url")) {

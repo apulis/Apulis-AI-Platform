@@ -516,10 +516,6 @@ default_config_parameters = {
             "url" : "grafana", 
             "port": 3000,
         },
-        "kubernetes": {
-            "url" : "k8s", 
-            "port": 1443,
-        },
         "hdfs": {
             "port": 50070,
         },

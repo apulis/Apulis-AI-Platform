@@ -1926,9 +1926,11 @@ def link_fileshares(allmountpoints, bForce=False):
     ()
 
 def deploy_webUI():
-    masterIP = config["kubernetes_master_node"][0]
-    deploy_restful_API_on_node(masterIP)
-    deploy_webUI_on_node(masterIP)
+    nodes = get_node_lists_for_service("webportal")
+    # masterIP = config["kubernetes_master_node"][0]
+    for node in nodes:
+        deploy_restful_API_on_node(node)
+        deploy_webUI_on_node(node)
 
 
 def label_webUI(nodename):

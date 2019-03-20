@@ -35,7 +35,7 @@ import logging
 import logging.config
 
 
-nvidiaDriverPath = config["nvidiaDriverPath"]
+nvidiaDriverPath = config["nvidiaDriverPath"] if "nvidiaDriverPath" in config else "/usr/local/cuda/lib64"
 
 
 

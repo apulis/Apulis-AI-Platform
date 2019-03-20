@@ -921,6 +921,8 @@ def deploy_masters(force = False):
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     #temporary hard-coding, will be fixed after refactoring of config/render logic
     config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
+    if verbose:
+        print( "Restapi information == %s " % config["restapi"])
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     render_service_templates()
@@ -1302,6 +1304,8 @@ def deploy_restful_API_on_node(ipAddress):
     print "==============================================="
     print "restful api is running at: http://%s:%s" % (masterIP,config["restfulapiport"])
     config["restapi"] = "http://%s:%s" %  (masterIP,config["restfulapiport"])
+    if verbose:
+        print("Restapi === %s" % config["restapi"])
 
 def deploy_webUI_on_node(ipAddress):
 
@@ -1926,10 +1930,13 @@ def link_fileshares(allmountpoints, bForce=False):
     ()
 
 def deploy_webUI():
-    nodes = get_node_lists_for_service("webportal")
-    # masterIP = config["kubernetes_master_node"][0]
+    nodes = get_node_lists_for_service("restfulapi")
     for node in nodes:
         deploy_restful_API_on_node(node)
+
+    # masterIP = config["kubernetes_master_node"][0]
+    nodes = get_node_lists_for_service("webportal")
+    for node in nodes:
         deploy_webUI_on_node(node)
 
 def ufw_default_firewall_rule(node):

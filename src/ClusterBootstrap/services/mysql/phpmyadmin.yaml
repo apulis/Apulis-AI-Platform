@@ -24,7 +24,7 @@ spec:
         app: phpmyadmin
     spec:
       nodeSelector:
-        webportal: active
+        mysql: active
       containers:
       - image: {{cnf["dockers"]["container"]["phpmyadmin"]["fullname"]}}
         name: phpmyadmin

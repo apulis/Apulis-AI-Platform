@@ -1932,6 +1932,16 @@ def deploy_webUI():
         deploy_restful_API_on_node(node)
         deploy_webUI_on_node(node)
 
+def ufw_default_firewall_rule(node):
+    cmd = "sudo ufw enable 22/tcp\n"
+    cmd += "sudo ufw enable 80/tcp\n"
+    cmd += "sudo ufw enable 443/tcp\n"
+    cmd += "sudo ufw enable 443/tcp\n"
+    cmd += "sudo ufw allow proto tcp to any port 30000:32767\n"
+    cmd += "sudo ufw allow from 10.0.0.0/8 to any\n"
+    cmd += "sudo ufw allow from 192.0.0.0/8 to any\n"
+    cmd += "sudo ufw default deny\n"
+    cmd += "sudo ufw enable\n"
 
 def label_webUI(nodename):
     kubernetes_label_node("--overwrite", nodename, "webportal=active")

@@ -18,7 +18,7 @@ spec:
       {% endif %}
       hostNetwork: true    
       nodeSelector:
-        webportal: active
+        jobmanager: active
       containers:
       - name: jobmanager
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}{{cnf["restfulapi"]}}:{{cnf["dockertag"]}}

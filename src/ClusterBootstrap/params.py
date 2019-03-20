@@ -619,6 +619,7 @@ default_config_parameters = {
 scriptblocks = {
     "restart-main": [
         "mount", 
+        "kubernetes labels",
         "kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml", 
         "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics", 
     ],

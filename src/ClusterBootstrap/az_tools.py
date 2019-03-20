@@ -304,7 +304,8 @@ def create_vnet():
 
 
 def create_nsg():
-    # print config["cloud_config"]["dev_network"]
+    if verbose:
+        print ("Dev network config === %s" % config["cloud_config"]["dev_network"])
     if "source_addresses_prefixes" in config["cloud_config"]["dev_network"]:
         source_addresses_prefixes = config["cloud_config"][
             "dev_network"]["source_addresses_prefixes"]

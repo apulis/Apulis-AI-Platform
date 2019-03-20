@@ -17,6 +17,7 @@ import random
 import glob
 import copy
 import numbers
+import multiprocessing
 
 from os.path import expanduser
 
@@ -189,7 +190,7 @@ def get_root_passwd():
             f.write(passwd)
             f.close()
     with open(fname,'r') as f:
-        rootpasswd = f.read()
+        rootpasswd = f.read().strip()
         f.close()
     return rootpasswd
 
@@ -199,7 +200,7 @@ def get_root_passwd():
 # srcname: config name to be searched for (expressed as a list, see fetch_config)
 # lambda: lambda function to translate srcname to target name
 default_config_mapping = { 
-    "dockerprefix": (["cluster_name"], lambda x:x.lower()+"/"), 
+    "dockerprefix": (["cluster_name"], lambda x:x.lower()+"_"), 
     "infrastructure-dockerregistry": (["dockerregistry"], lambda x:x), 
     "worker-dockerregistry": (["dockerregistry"], lambda x:x),
     "glusterfs-device": (["glusterFS"], lambda x: "/dev/%s/%s" % (fetch_dictionary(x, ["volumegroup"]), fetch_dictionary(x, ["volumename"]) ) ),
@@ -218,6 +219,7 @@ default_config_mapping = {
     "postworkerdeploymentscript" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"post-worker-deploy.sh"),
     "workercleanupscript" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"cleanup-worker.sh"),
     "workerdeploymentlist" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"deploy.list"),
+    "cpuworkerdeploymentlist" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"deploy_cpu.list"),
     "pxeserverip": (["pxeserver"], lambda x: fetch_dictionary(x,["ip"])), 
     "pxeserverrootpasswd": (["pxeserver"], lambda x: get_root_passwd()), 
     "pxeoptions": (["pxeserver"], lambda x: "" if fetch_dictionary(x,["options"]) is None else fetch_dictionary(x,["options"])), 
@@ -883,7 +885,7 @@ def get_cni_binary():
 def get_kubectl_binary(force = False):
     get_hyperkube_docker(force = force)
     #os.system("mkdir -p ./deploy/bin")
-    urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/kube/kubelet/kubelet", "./deploy/bin/kubelet-old")
+    # urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/kube/kubelet/kubelet", "./deploy/bin/kubelet-old")
     #urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/kube/kubelet/kubectl", "./deploy/bin/kubectl")
     #os.system("chmod +x ./deploy/bin/*")
     get_cni_binary()
@@ -919,6 +921,8 @@ def deploy_masters(force = False):
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     #temporary hard-coding, will be fixed after refactoring of config/render logic
     config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
+    if verbose:
+        print( "Restapi information == %s " % config["restapi"])
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     render_service_templates()
@@ -1132,15 +1136,15 @@ def config_ubuntu():
 
 def create_PXE_ubuntu():
     config_ubuntu()
-    os.system("rm -r ./deploy/pxe")
-    os.system("mkdir -p ./deploy/docker")
-    utils.render_template_directory("./template/pxe-ubuntu", "./deploy/pxe-ubuntu",config, verbose=verbose )
+    os.system("rm -r ./deploy/docker-images/pxe-ubuntu")
+    os.system("mkdir -p ./deploy/docker-images/pxe-ubuntu")
+    utils.render_template_directory("./template/pxe-ubuntu", "./deploy/docker-images/pxe-ubuntu",config, verbose=verbose )
 
-    dockername = push_one_docker("./deploy/pxe-ubuntu", config["dockerprefix"], config["dockertag"], "pxe-ubuntu", config )
+    push_one_docker("./deploy/docker-images/pxe-ubuntu", config["dockerprefix"], config["dockertag"], "pxe-ubuntu", config )
     # tarname = "deploy/docker/pxe-ubuntu.tar" 
 
     # os.system("docker save " + dockername + " > " + tarname )
-    print ("A DL workspace docker is built at: "+ dockername)
+    print ("A new pxe-ubuntu docker is built ... ")
     # print ("It is also saved as a tar file to: "+ tarname)
 
 
@@ -1180,7 +1184,12 @@ def update_worker_node(nodeIP):
     worker_ssh_user = config["admin_username"]
     utils.SSH_exec_script(config["ssh_cert"],worker_ssh_user, nodeIP, "./deploy/kubelet/%s" % config["preworkerdeploymentscript"])
 
-    with open("./deploy/kubelet/"+config["workerdeploymentlist"],"r") as f:
+    if "type" not in config["machines"][nodeIP] or config["machines"][nodeIP]["type"] != "cpu":
+        deploymentlist = config["workerdeploymentlist"]
+    else:
+        deploymentlist = config["cpuworkerdeploymentlist"]
+
+    with open("./deploy/kubelet/"+deploymentlist,"r") as f:
         deploy_files = [s.split(",") for s in f.readlines() if len(s.split(",")) == 2]
     for (source, target) in deploy_files:
         if (os.path.isfile(source.strip()) or os.path.exists(source.strip())):
@@ -1251,7 +1260,14 @@ def reset_worker_nodes():
     for node in workerNodes:
         reset_worker_node(node)
 
-
+def gen_inituser_script():
+    password = get_root_passwd()
+    config["inituser"]["password"] = password
+    with open("./deploy/sshkey/id_rsa.pub", "r") as f:
+        publicKey = f.read()
+        f.close()
+    config["inituser"]["publickey"] = publicKey
+    utils.render_template("./scripts/inituser.sh.template", "./deploy/etc/inituser.sh",config)
 
 def create_MYSQL_for_WebUI():
     #todo: create a mysql database, and set "mysql-hostname", "mysql-username", "mysql-password", "mysql-database"
@@ -1288,6 +1304,8 @@ def deploy_restful_API_on_node(ipAddress):
     print "==============================================="
     print "restful api is running at: http://%s:%s" % (masterIP,config["restfulapiport"])
     config["restapi"] = "http://%s:%s" %  (masterIP,config["restfulapiport"])
+    if verbose:
+        print("Restapi === %s" % config["restapi"])
 
 def deploy_webUI_on_node(ipAddress):
 
@@ -1301,6 +1319,8 @@ def deploy_webUI_on_node(ipAddress):
 
     if not os.path.exists("./deploy/WebUI"):
         os.system("mkdir -p ./deploy/WebUI")
+    if verbose:
+        print("Configuration == %s" % config)
 
     utils.render_template_directory("./template/WebUI","./deploy/WebUI", config)
     os.system("cp --verbose ./deploy/WebUI/*.json ../WebUI/dotnet/WebPortal/") # used for debugging, when deploy, it will be overwritten by mount from host, contains secret
@@ -1316,11 +1336,13 @@ def deploy_webUI_on_node(ipAddress):
     if ( "servers" not in config["Dashboards"]["grafana"]):
         config["Dashboards"]["grafana"]["servers"] = masternodes[0]
 
+    # Not showing kubernete API
     reportConfig = config["Dashboards"]
-    reportConfig["kuberneteAPI"] = {}
-    reportConfig["kuberneteAPI"]["port"] = config["k8sAPIport"]
-    reportConfig["kuberneteAPI"]["servers"] = masternodes
-    reportConfig["kuberneteAPI"]["https"] = True
+    # reportConfig["kuberneteAPI"] = {}
+    # reportConfig["kuberneteAPI"]["url"] = "k8s"
+    # reportConfig["kuberneteAPI"]["port"] = config["k8sAPIport"]
+    # reportConfig["kuberneteAPI"]["servers"] = masternodes
+    # reportConfig["kuberneteAPI"]["https"] = True
 
     with open("./deploy/WebUI/dashboardConfig.json","w") as fp:
         json.dump(reportConfig, fp)
@@ -1908,10 +1930,25 @@ def link_fileshares(allmountpoints, bForce=False):
     ()
 
 def deploy_webUI():
-    masterIP = config["kubernetes_master_node"][0]
-    deploy_restful_API_on_node(masterIP)
-    deploy_webUI_on_node(masterIP)
+    nodes = get_node_lists_for_service("restfulapi")
+    for node in nodes:
+        deploy_restful_API_on_node(node)
 
+    # masterIP = config["kubernetes_master_node"][0]
+    nodes = get_node_lists_for_service("webportal")
+    for node in nodes:
+        deploy_webUI_on_node(node)
+
+def ufw_default_firewall_rule(node):
+    cmd = "sudo ufw enable 22/tcp\n"
+    cmd += "sudo ufw enable 80/tcp\n"
+    cmd += "sudo ufw enable 443/tcp\n"
+    cmd += "sudo ufw enable 443/tcp\n"
+    cmd += "sudo ufw allow proto tcp to any port 30000:32767\n"
+    cmd += "sudo ufw allow from 10.0.0.0/8 to any\n"
+    cmd += "sudo ufw allow from 192.0.0.0/8 to any\n"
+    cmd += "sudo ufw default deny\n"
+    cmd += "sudo ufw enable\n"
 
 def label_webUI(nodename):
     kubernetes_label_node("--overwrite", nodename, "webportal=active")
@@ -2432,6 +2469,21 @@ def exec_on_all_with_output(nodes, args, supressWarning = False):
         print "Node: " + node
         print output
 
+class RemoteOps(object):
+    def __init__(self, cmd, supressWarning = False ):
+        self.cmd = cmd
+        self.supressWarning = supressWarning
+    def __call__(self, node ):
+        output = utils.SSH_exec_cmd_with_output( config["ssh_cert"], config["admin_username"], node, self.cmd, self.supressWarning)
+        print ("Node %s: %s" %(node, output))
+
+def prepull_docker( nodes, dockers, supressWarning = False ):
+    for onedocker in dockers:
+        cmd = "docker pull %s" % onedocker 
+        ops = RemoteOps(cmd)
+        pool = multiprocessing.Pool(processes=16)
+        pool.map( ops, nodes ) 
+
 # run a shell script on one remote node
 def run_script(node, args, sudo = False, supressWarning = False):
     if ".py" in args[0]:
@@ -2716,6 +2768,9 @@ def get_node_lists_for_service(service):
                 nodes = []
         elif nodetype == "all":
             nodes = config["worker_node"] + config["etcd_node"]
+        elif nodetype.startswith("node:"):
+            nodename = nodetype[5:]
+            return [nodename]
         else:
             machines = fetch_config(config, ["machines"])
             if machines is None:
@@ -3445,6 +3500,9 @@ def run_command( args, command, nargs, parser ):
     elif command == "kubectl":
         run_kubectl(nargs)
 
+    elif command == "inituser":
+        gen_inituser_script()
+
     elif command == "kubernetes":
         configuration( config, verbose )
         if len(nargs) >= 1: 
@@ -3566,6 +3624,11 @@ def run_command( args, command, nargs, parser ):
             parser.print_help()
             print "Error: docker needs a subcommand"
             exit()
+
+    elif command == "prepull":
+        nodes = get_nodes(config["clusterId"])
+        prepull_docker(nodes, nargs)
+
     elif command == "rendertemplate":
         if len(nargs) != 2:
             parser.print_help()
@@ -3689,6 +3752,11 @@ Command:
   listmac   display mac address of the cluster notes
   checkconfig   display config items
   rendertemplate template_file target_file
+  copytoall     copy a file to remote destination for all nodes
+  inituser  generatge script to initialize admin user for each node at ./deploy/etc/inituser.sh
+  prepull  [args] prepull certain docker to speed up execution.
+            [args] can be a certain docker name
+            
   ''') )
     parser.add_argument("-y", "--yes", 
         help="Answer yes automatically for all prompt", 

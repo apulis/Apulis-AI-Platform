@@ -37,7 +37,10 @@
         "mountdescription" : "{{cnf["mountdescription"]}}",
         "mountpoints" : "{{cnf["mountpoints"]}}", 
         "mounthomefolder" : "{{cnf["mounthomefolder"]}}",
-        "deploymounts" : "{{cnf["deploymounts"]}}",
+        "deploymounts" : "{{cnf["deploymounts"]}}"
+        {% if cnf["proxy"] %}
+        , "proxy": "{{cnf["proxy"]}}"
+        {% endif %}
     },
   },
 

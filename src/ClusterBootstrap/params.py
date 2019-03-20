@@ -315,6 +315,9 @@ default_config_parameters = {
     # Mount point to be deployed to container.
     "deploymounts": [],
 
+    # proxy used
+    "proxy": "",
+
 
     # folder where automatic share script will be located
     "folder_auto_share": "/opt/auto_share",
@@ -461,7 +464,7 @@ default_config_parameters = {
             "GraphApiVersion": "1.6",  # API version,
             "Domains": ["microsoft.com"]
         },
-        "Live-Microsoft": {
+        "Live-Msft": {
             "DisplayName": "Microsoft Account (live.com)",
             "Tenant": "jinlmsfthotmail.onmicrosoft.com",
             "ClientId": "734cc6a7-e80c-4b89-a663-0b9512925b45",
@@ -491,7 +494,15 @@ default_config_parameters = {
             "Scope": "openid email",
             "Domains": ["gmail.com"]
         },
-
+        "Microsoft": {
+            # For use at zhejianglab.com
+            "ClientId": "db3c8fdf-2539-4f17-b8ac-cd1a3e38a933",
+            "ClientSecret": "tlvQBQQB91509@*dualUB){"
+        }, 
+        "WeChat": {
+            "AppId": "wx9a56d5d3147bbfc6",
+            "AppSecret": "e9e21e5b6bd11e822abcc5dd87c67a09"
+        },
     },
 
     "Dashboards": {
@@ -502,6 +513,7 @@ default_config_parameters = {
             # "servers": // Specify influxDBserver.
         },
         "grafana": {
+            "url" : "grafana", 
             "port": 3000,
         },
         "hdfs": {
@@ -511,6 +523,13 @@ default_config_parameters = {
             "port": 8088,
         },
     },
+
+    # This section will be used to govern the initial user used by the cluster
+    "inituser": {
+        "gid": 500,
+        "uid": 500, 
+        "group": "dlwsadmin", 
+    }, 
 
     # There are two docker registries, one for infrastructure (used for pre-deployment)
     # and one for worker docker (pontentially in cluser)
@@ -524,7 +543,7 @@ default_config_parameters = {
     # We will gradually migrate mroe and more docker in DLWorkspace to system
     # dockers
     "heketi-docker": "heketi/heketi:dev",
-    "dockerregistry": "mlcloudreg.westus.cloudapp.azure.com:5000/",
+    "dockerregistry": "qianjiangyuan/",
     "dockers": {
         # Hub is docker.io/
         "hub": "qianjiangyuan/",
@@ -552,6 +571,7 @@ default_config_parameters = {
             "gobld": {}, 
             "kubernetes": {}, 
             "kaggle": {},
+            "binary": {}
         },
         "external": {
             # These dockers are to be built by additional add ons.
@@ -599,6 +619,7 @@ default_config_parameters = {
 scriptblocks = {
     "restart-main": [
         "mount", 
+        "kubernetes labels",
         "kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml", 
         "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics", 
     ],

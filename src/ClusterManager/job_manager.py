@@ -35,7 +35,7 @@ import logging
 import logging.config
 
 
-nvidiaDriverPath = config["nvidiaDriverPath"]
+nvidiaDriverPath = config["nvidiaDriverPath"] if "nvidiaDriverPath" in config else "/usr/local/cuda/lib64"
 
 
 
@@ -541,7 +541,8 @@ def AutoApproveJob(job):
         if user["userName"] == jobUser:
             currentGPU = int(user["userGPU"])
 
-    if currentGPU == 0 or currentGPU + jobGPU <= 4:
+    # Default Auto approval changed to 2GPU
+    if currentGPU == 0 or currentGPU + jobGPU <= 2:
         ApproveJob(job)
 
 

@@ -91,6 +91,7 @@ namespace WindowsAuth.Controllers
             HttpContext.Session.SetString("Username", username);
             HttpContext.Session.SetString("uid", userEntry.uid);
             HttpContext.Session.SetString("gid", userEntry.gid);
+            HttpContext.Session.SetString("Password", userEntry.Password);
             HttpContext.Session.SetString("isAdmin", userEntry.isAdmin);
             HttpContext.Session.SetString("isAuthorized", userEntry.isAuthorized);
             var clusterInfo = Startup.Clusters[clusterName];
@@ -902,6 +903,17 @@ namespace WindowsAuth.Controllers
             ViewData["workPath"] = (workFolderAccessPoint + HttpContext.Session.GetString("Username") + "/").Replace("file:", "").Replace("\\", "/");
             ViewData["jobPath"] = workFolderAccessPoint.Replace("file:", "").Replace("\\", "/");
             AddViewData(message: "View and Manage Your Jobs.");
+            var currentCluster = HttpContext.Session.GetString("CurrentClusters");
+            ViewData["proxy"] = "";
+            if ( !String.IsNullOrEmpty(currentCluster))
+            {
+                var curCluster = Startup.Clusters[currentCluster];
+                if ( !String.IsNullOrEmpty(curCluster.Proxy))
+                {
+                    ViewData["proxy"] = curCluster.Proxy; 
+                } 
+            }
+
             return View();
         }
 
@@ -993,6 +1005,11 @@ namespace WindowsAuth.Controllers
                 }
             }
             return View();
+        }
+
+        public async Task<IActionResult> ManageUser1()
+        {
+            return View(); 
         }
 
         public async Task<IActionResult> AccountSettings()

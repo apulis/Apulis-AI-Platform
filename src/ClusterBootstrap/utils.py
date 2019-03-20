@@ -397,6 +397,7 @@ def execute_backup_and_encrypt(clusterName, fname, key):
     os.system("mkdir -p %s/clusterID" % backupdir)
     os.system("cp -r ./*.yaml %s" % backupdir)
     os.system("cp -r ./deploy/sshkey %s/sshkey" % backupdir)
+    os.system("cp -r ./deploy/etc %s/etc" % backupdir)
     os.system("cp -r ./deploy/ssl %s/ssl" % backupdir)
     os.system("cp -r ./deploy/clusterID.yml %s/clusterID/" % backupdir)
     if os.path.exists("./deploy/acs_kubeclusterconfig"):
@@ -423,6 +424,9 @@ def execute_restore_and_decrypt(fname, key):
     os.system("cp -v %s/*.yaml ." % (backupdir) )
     os.system("mkdir -p ./deploy/sshkey" )
     os.system("mkdir -p ./deploy/ssl" )
+    os.system("mkdir -p ./deploy/etc" )
+    if os.path.exists("%s/etc" % backupdir):
+        os.system("cp -r %s/etc/* ./deploy/etc" % backupdir)    
     os.system("cp -r %s/sshkey/* ./deploy/sshkey" % backupdir)
     if os.path.exists("%s/ssl/kubelet" %backupdir):
         os.system("cp -r %s/ssl/* ./deploy/ssl" % backupdir)

@@ -180,6 +180,7 @@ namespace WindowsAuth
                     {
                         continue; 
                     }
+                    Console.WriteLine($"Examine authentication {authenticationScheme}");
 
                     if (authenticationScheme.IndexOf("WeChat", StringComparison.OrdinalIgnoreCase)>=0 )
                     {
@@ -189,10 +190,11 @@ namespace WindowsAuth
                             wechatOptions.AppSecret = config["AppSecret"] as string;
                         }
                         );
+                        Console.WriteLine("Add Wechat Authentication");
                         AuthenticationSchemes[authenticationScheme] = "WeChat";
                     }
 
-                    if (authenticationScheme == "Microsoft") { 
+                    if (authenticationScheme.IndexOf( "Microsoft", StringComparison.OrdinalIgnoreCase) >= 0) { 
                         auth.AddMicrosoftAccount(microsoftOption =>
                         {
                             microsoftOption.ClientId = config["ClientId"] as string;
@@ -200,14 +202,16 @@ namespace WindowsAuth
 
                         }
                         );
+                        Console.WriteLine("Add Microsoft Authentication");
                         AuthenticationSchemes[authenticationScheme] = "Microsoft";
                     }
 
-                    if (authenticationScheme == "Gmail") { 
+                    if (authenticationScheme.IndexOf( "Gmail", StringComparison.OrdinalIgnoreCase) >= 0) { 
                         auth.AddGoogle(googleOptions => {
                             googleOptions.ClientId = config["ClientId"] as string;
                             googleOptions.ClientSecret = config["ClientSecret"] as string;
                         });
+                        Console.WriteLine("Add Google Authentication");
                         AuthenticationSchemes[authenticationScheme] = "Google";
                         AuthenticationCallback["signin-google"] = true; 
                     };
@@ -449,6 +453,14 @@ namespace WindowsAuth
                 else
                 {
                     clusterInfo.DeployMounts = "[]";
+                }
+                if ( clusterConfig.ContainsKey("proxy"))
+                {
+                    clusterInfo.Proxy = clusterConfig["proxy"] as string;
+                    _logger.LogInformation($"Use proxy .... {clusterInfo.Proxy}");
+                } else
+                {
+                    clusterInfo.Proxy = null; 
                 }
 
                 var isDefault = clusterConfig.ContainsKey("Default") && (clusterConfig["Default"] as string).ToLower()=="true";

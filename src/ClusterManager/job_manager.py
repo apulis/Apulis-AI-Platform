@@ -542,7 +542,8 @@ def AutoApproveJob(job):
             currentGPU = int(user["userGPU"])
 
     # Default Auto approval changed to 2GPU
-    if currentGPU == 0 or currentGPU + jobGPU <= 2:
+    # if currentGPU == 0 or currentGPU + jobGPU <= 2:
+    if currentGPU + jobGPU <= 1:
         ApproveJob(job)
 
 

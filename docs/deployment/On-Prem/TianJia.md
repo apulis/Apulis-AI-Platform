@@ -13,7 +13,7 @@
 将该GPU服务器主机加入DNS服务器，使其可以被使用。
 4. 在GPU服务器上安装NVidia驱动和NVidia-docker2，安装软件包。
 ```
-  ./deploy.py --node <name> runscriptonall ./script/prepare_ubuntu_cn.sh
+  ./deploy.py --node <name> runscriptonall ./scripts/prepare_ubuntu_cn.sh
 ```
 5. 将服务器加入 config.yaml 表中。
 6. 安装共享存储

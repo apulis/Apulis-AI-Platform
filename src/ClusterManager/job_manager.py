@@ -166,7 +166,7 @@ def SubmitRegularJob(job):
 
         userAlias = getAlias(jobParams["userName"])
 
-        mp = {"name":"sshkey","containerPath":"/home/%s/.ssh" % userAlias,"hostPath":os.path.join(config["storage-mount-path"], GetWorkPath(userAlias)+"/.ssh"), "readOnly":True, "enabled":True}
+        mp = {"name":"sshkey","containerPath":"/home/%s/.ssh" % userAlias,"hostPath":os.path.join(config["storage-mount-path"], GetWorkPath(userAlias)+"/.ssh"), "readOnly":True, "enabled":True} #  
         if CheckMountPoints(jobParams["mountpoints"],mp):
             jobParams["mountpoints"].append(mp)            
 
@@ -542,7 +542,8 @@ def AutoApproveJob(job):
             currentGPU = int(user["userGPU"])
 
     # Default Auto approval changed to 2GPU
-    if currentGPU == 0 or currentGPU + jobGPU <= 2:
+    # if currentGPU == 0 or currentGPU + jobGPU <= 2:
+    if currentGPU + jobGPU <= 1:
         ApproveJob(job)
 
 

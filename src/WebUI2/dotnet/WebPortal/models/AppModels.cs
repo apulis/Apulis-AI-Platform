@@ -45,6 +45,7 @@ namespace WindowsAuth.models
         public bool MountHomeFolder { get; set; }
         public string DeployMounts { get; set;  }
         public string Proxy { get; set; }
+        public string Domain { get; set; }
     }
 
     // Entity for keeping track of organizations onboarded as customers of the app

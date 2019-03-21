@@ -219,6 +219,10 @@
 
             for (var i = 0; i < payload.endpoints.length; i++) {
                 var hostname = payload.endpoints[i].hostName;
+                var domain = "@ViewData["domain"]";
+                if (domain != "") {
+                    hostname = hostname + "." + domain;
+                }
                 var hostnames = [hostname];
                 var proxy = "@ViewData["proxy"]";
                 if (proxy != "") {

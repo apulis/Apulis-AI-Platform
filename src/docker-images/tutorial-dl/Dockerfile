@@ -34,6 +34,7 @@ RUN cd /utils && \
 RUN cd /utils && git clone https://github.com/matterport/Mask_RCNN
 
 # For audio demo
+RUN sudo apt-get install -y software-properties-common
 RUN add-apt-repository ppa:jonathonf/ffmpeg-3 && apt-get update && apt-get install -y ffmpeg libav-tools x264 x265 
 
 # data for final task 

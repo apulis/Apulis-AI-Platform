@@ -215,28 +215,39 @@
             $('#endpoints').show();
 
             var endpointsStr = "";
+            var lines = 0; 
 
             for (var i = 0; i < payload.endpoints.length; i++) {
                 var hostname = payload.endpoints[i].hostName;
+                var domain = "@ViewData["domain"]";
+                if (domain != "") {
+                    hostname = hostname + "." + domain;
+                }
+                var hostnames = [hostname];
                 var proxy = "@ViewData["proxy"]";
                 if (proxy != "") {
-                    hostname = proxy;
+                    hostnames.push( proxy );
                 }
-                if (payload.endpoints[i].containerPort == 22) {
+                for (var j = 0; j < hostnames.length; j++) {
+                    var onehostname = hostnames[j];
+                    if (payload.endpoints[i].containerPort == 22) {
 
-                    endpointsStr += "To access the container via SSH, use command: ssh -i @ViewData["workPath"]" + ".ssh/id_rsa -p " + payload.endpoints[i].hostPort + " @ViewData["Username"]" + "@@" + hostname;
-                    var password = "@Context.Session.GetString("Password")";
-                    endpointsStr += " [Password: " + password + " ]  \n"; 
-                }
-                else {
-                    var svcurl = "http://" + hostname + ":" + payload.endpoints[i].hostPort;
-                    endpointsStr += "Container Port: " + payload.endpoints[i].containerPort + " is mapped to public ip: <a href='" + svcurl + "' target='_blank'> " + svcurl + "</a>  \n";
+                        endpointsStr += "To access the container via SSH, use command: ssh -i @ViewData["workPath"]" + ".ssh/id_rsa -p " + payload.endpoints[i].hostPort + " @ViewData["Username"]" + "@@" + onehostname;
+                        var password = "@Context.Session.GetString("Password")";
+                        endpointsStr += " [Password: " + password + " ]  \n"; 
+                        lines += 1; 
+                    }
+                    else {
+                        var svcurl = "http://" + onehostname + ":" + payload.endpoints[i].hostPort;
+                        endpointsStr += "Container Port: " + payload.endpoints[i].containerPort + " is mapped to public ip: <a href='" + svcurl + "' target='_blank'> " + svcurl + "</a>  \n";
+                        lines += 1; 
+                        }
                 }
             }
             var endpointsPanellDiv = document.getElementById('endpointsPanel');
             if (endpointsPanellDiv.innerHTML != endpointsStr) {
                 endpointsPanellDiv.innerHTML = endpointsStr;
-                var height = payload.endpoints.length * 15;
+                var height = lines * 18;
                 endpointsPanellDiv.style.height = height + "px";
             }
         }
@@ -344,6 +355,7 @@
     <h2> Mapped Endpoints: </h2>
     <h4>(Links to access interactive/visualization interface)</h4>
     <div id="endpointsPanel" style="height: 100px;" readonly="" class="ng-binding grey-box">
+        
     </div>
 </div>
 

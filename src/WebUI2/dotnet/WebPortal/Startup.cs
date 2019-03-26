@@ -462,7 +462,15 @@ namespace WindowsAuth
                 {
                     clusterInfo.Proxy = null; 
                 }
-
+                if (clusterConfig.ContainsKey("domain"))
+                {
+                    clusterInfo.Domain = clusterConfig["domain"] as string;
+                    _logger.LogInformation($"Use domain .... {clusterInfo.Domain}");
+                }
+                else
+                {
+                    clusterInfo.Domain = null;
+                }
                 var isDefault = clusterConfig.ContainsKey("Default") && (clusterConfig["Default"] as string).ToLower()=="true";
                 if (isDefault)
                     defaultClusterName = clusterName;

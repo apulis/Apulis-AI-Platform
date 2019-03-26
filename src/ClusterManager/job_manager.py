@@ -146,7 +146,7 @@ def SubmitRegularJob(job):
         if "mountpoints" not in jobParams:
             jobParams["mountpoints"] = []
         for onemount in jobParams["mountpoints"]:
-            onemount["name"] = onemount["containerPath"].replace("/","").replace(".","")
+            onemount["name"] = onemount["containerPath"].replace("/","").replace(".","").replace("_","-")
 
         # mp = {"name":"nvidia-driver","containerPath":"/usr/local/nvidia","hostPath":nvidiaDriverPath, "enabled":True}
         # if CheckMountPoints(jobParams["mountpoints"],mp):

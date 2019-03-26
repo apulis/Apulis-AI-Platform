@@ -41,6 +41,9 @@
         {% if cnf["proxy"] %}
         , "proxy": "{{cnf["proxy"]}}"
         {% endif %}
+        {% if cnf["network"]["domain"] %}
+        , "domain": "{{cnf["network"]["domain"]}}"
+        {% endif %}
     },
   },
 

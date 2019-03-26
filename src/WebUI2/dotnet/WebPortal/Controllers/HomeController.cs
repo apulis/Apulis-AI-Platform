@@ -904,6 +904,7 @@ namespace WindowsAuth.Controllers
             ViewData["jobPath"] = workFolderAccessPoint.Replace("file:", "").Replace("\\", "/");
             AddViewData(message: "View and Manage Your Jobs.");
             var currentCluster = HttpContext.Session.GetString("CurrentClusters");
+            ViewData["domain"] = "";
             ViewData["proxy"] = "";
             if ( !String.IsNullOrEmpty(currentCluster))
             {
@@ -911,7 +912,11 @@ namespace WindowsAuth.Controllers
                 if ( !String.IsNullOrEmpty(curCluster.Proxy))
                 {
                     ViewData["proxy"] = curCluster.Proxy; 
-                } 
+                }
+                if (!String.IsNullOrEmpty(curCluster.Domain))
+                {
+                    ViewData["domain"] = curCluster.Domain;
+                }
             }
 
             return View();

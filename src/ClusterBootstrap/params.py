@@ -568,10 +568,16 @@ default_config_parameters = {
             "tutorial-fastai": {},
             "tutorial-imagenet18": {},
             "algorithm-bert": {},
+            "algorithm-segmentation": {}, 
             "gobld": {}, 
             "kubernetes": {}, 
             "kaggle": {},
             "binary": {}
+        },
+        "customize": {
+            "webui": {},
+            "webui2": {}, 
+            "restfulapi": {}
         },
         "external": {
             # These dockers are to be built by additional add ons.

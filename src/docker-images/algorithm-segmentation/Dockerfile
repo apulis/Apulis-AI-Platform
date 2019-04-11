@@ -68,6 +68,10 @@ ENV PYTHONPATH $PYTHONPATH:/opt/tensorflow-models:/opt/tensorflow-models/researc
 # test (do this after container has been created)?
 #RUN python /opt/tensorflow-models/research/object_detection/builders/model_builder_test.py
 
+RUN pip install jupyterlab
+RUN python -m pip install ipykernel
+RUN python -m ipykernel install --user
+
 ###################
 # Set up our notebook config.
 WORKDIR /raid/

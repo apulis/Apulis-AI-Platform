@@ -1,4 +1,5 @@
-FROM qianjiangyuan/tutorial-horovod:1.7
+FROM nvidia/cuda:8.0-cudnn6-devel
+
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 ###################
@@ -53,6 +54,22 @@ RUN pip --no-cache-dir install \
     	&& \
     python -m ipykernel.kernelspec
 
+###################
+# Install TensorFlow GPU version.
+#pip install --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-0.12.1-cp27-none-linux_x86_64.whl
+#pip install --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.4.0-cp27-none-linux_x86_64.whl
+ARG TENSORFLOW_VERSION=1.4.1
+ARG TENSORFLOW_DEVICE=gpu
+ARG TENSORFLOW_APPEND=_gpu
+RUN pip --no-cache-dir install https://storage.googleapis.com/tensorflow/linux/${TENSORFLOW_DEVICE}/tensorflow${TENSORFLOW_APPEND}-${TENSORFLOW_VERSION}-cp27-none-linux_x86_64.whl
+
+
+###################
+# keras
+ARG KERAS_VERSION=2.0.6
+ENV KERAS_BACKEND=tensorflow
+RUN pip --no-cache-dir install --no-dependencies git+https://github.com/fchollet/keras.git@${KERAS_VERSION}
+
 
 ###################
 # object detection api
@@ -63,7 +80,7 @@ RUN git clone --branch r1.5 https://github.com/tensorflow/models.git /opt/tensor
 RUN cd /opt/tensorflow-models/research && \
     pip install -e . && \
     protoc object_detection/protos/*.proto --python_out=. 
-    
+
 ENV PYTHONPATH $PYTHONPATH:/opt/tensorflow-models:/opt/tensorflow-models/slim
 ENV PYTHONPATH $PYTHONPATH:/opt/tensorflow-models:/opt/tensorflow-models/research/slim
 # test (do this after container has been created)?

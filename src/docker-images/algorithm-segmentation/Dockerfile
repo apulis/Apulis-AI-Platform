@@ -60,9 +60,10 @@ RUN pip --no-cache-dir install \
 # git clone --branch my_abc http://git.abc.net/git/abc.git
 
 RUN git clone --branch r1.5 https://github.com/tensorflow/models.git /opt/tensorflow-models
-WORKDIR /opt/tensorflow-models/research
-RUN pip install -e .
-RUN protoc object_detection/protos/*.proto --python_out=.
+RUN cd /opt/tensorflow-models/research && \
+    pip install -e . && \
+    protoc object_detection/protos/*.proto --python_out=. 
+    
 ENV PYTHONPATH $PYTHONPATH:/opt/tensorflow-models:/opt/tensorflow-models/slim
 ENV PYTHONPATH $PYTHONPATH:/opt/tensorflow-models:/opt/tensorflow-models/research/slim
 # test (do this after container has been created)?

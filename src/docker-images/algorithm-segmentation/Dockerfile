@@ -73,7 +73,4 @@ RUN python -m pip install ipykernel
 RUN python -m ipykernel install --user
 
 ###################
-# Set up our notebook config.
-WORKDIR /raid/
 # TensorBoard
-RUN ["/bin/bash"]

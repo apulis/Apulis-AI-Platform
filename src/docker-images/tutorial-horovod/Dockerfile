@@ -17,7 +17,8 @@ RUN apt-get -y update && \
       unzip \
       openssh-server \
       sudo \
-      nodejs  
+      nodejs \
+      software-properties-common
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \

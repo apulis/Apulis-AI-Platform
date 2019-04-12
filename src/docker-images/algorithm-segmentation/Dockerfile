@@ -18,17 +18,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng12-dev \
         libzmq3-dev \
         pkg-config \
-        python-dev \
+        python3-dev \
         zlib1g-dev \
         libopencv-dev \
-        python-opencv \
-		python-tk \
+        python3-opencv \
+		python3-tk \
         build-essential autoconf libtool libcunit1-dev \
-        libproj-dev libgdal-dev libgeos-dev libjson0-dev vim python-gdal \
+        libproj-dev libgdal-dev libgeos-dev libjson0-dev vim python3-gdal \
     	# requirements for keras
-    	python-h5py \
-    	python-yaml \
-    	python-pydot \
+    	python3-h5py \
+    	python3-yaml \
+    	python3-pydot \
 		graphviz \
         && \
     apt-get clean && \
@@ -36,10 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ###################
 # python packages
-RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
-    python get-pip.py && \
-    rm get-pip.py
-RUN pip --no-cache-dir install \
+RUN sudo apt-get install python3-pip
+
+RUN pip3 --no-cache-dir install \
 		protobuf \
 		ipykernel \
     	jupyter \
@@ -52,7 +51,7 @@ RUN pip --no-cache-dir install \
 		h5py \
 		shapely \
     	&& \
-    python -m ipykernel.kernelspec
+    python3 -m ipykernel.kernelspec
 
 ###################
 # Install TensorFlow GPU version.
@@ -61,14 +60,14 @@ RUN pip --no-cache-dir install \
 ARG TENSORFLOW_VERSION=1.4.1
 ARG TENSORFLOW_DEVICE=gpu
 ARG TENSORFLOW_APPEND=_gpu
-RUN pip --no-cache-dir install https://storage.googleapis.com/tensorflow/linux/${TENSORFLOW_DEVICE}/tensorflow${TENSORFLOW_APPEND}-${TENSORFLOW_VERSION}-cp27-none-linux_x86_64.whl
+RUN pip3 --no-cache-dir install https://storage.googleapis.com/tensorflow/linux/${TENSORFLOW_DEVICE}/tensorflow${TENSORFLOW_APPEND}-${TENSORFLOW_VERSION}-cp35-none-linux_x86_64.whl
 
 
 ###################
 # keras
 ARG KERAS_VERSION=2.0.6
 ENV KERAS_BACKEND=tensorflow
-RUN pip --no-cache-dir install --no-dependencies git+https://github.com/fchollet/keras.git@${KERAS_VERSION}
+RUN pip3 --no-cache-dir install --no-dependencies git+https://github.com/fchollet/keras.git@${KERAS_VERSION}
 
 
 ###################
@@ -78,7 +77,7 @@ RUN pip --no-cache-dir install --no-dependencies git+https://github.com/fchollet
 
 RUN git clone --branch r1.5 https://github.com/tensorflow/models.git /opt/tensorflow-models
 RUN cd /opt/tensorflow-models/research && \
-    pip install -e . && \
+    pip3 install -e . && \
     protoc object_detection/protos/*.proto --python_out=. 
 
 ENV PYTHONPATH $PYTHONPATH:/opt/tensorflow-models:/opt/tensorflow-models/slim

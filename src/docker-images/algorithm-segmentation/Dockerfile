@@ -3,7 +3,7 @@ FROM qianjiangyuan/tutorial-horovod:1.8
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 ###################
-RUN rm -rf /var/lib/apt/lists/*
+RUN rm -rf /etc/apt/sources.list.d/
 RUN apt-get update && apt-get install -y --no-install-recommends \
     	protobuf-compiler \
       	build-essential \

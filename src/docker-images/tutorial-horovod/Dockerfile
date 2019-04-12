@@ -45,36 +45,38 @@ RUN python3 -m spacy download en
 # RUN sudo npm install bower -g 
 
 
-# ENV APACHE_RUN_USER www-data
-# ENV APACHE_RUN_GROUP www-data
-# ENV APACHE_LOG_DIR /var/log/apache2
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
 
-# #EXPOSE 80
-# #EXPOSE 5000
+#EXPOSE 80
+#EXPOSE 5000
 
-# RUN chmod -R 755 /var/www/html/
+RUN chmod -R 755 /var/www/html/
 
-# COPY wwwroot /var/www/html
+COPY wwwroot /var/www/html
 
-# # netcore 2.2
+# netcore 2.2
 # RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
-# RUN sudo dpkg -i packages-microsoft-prod.deb
-# RUN apt-get update -y && \
-#       apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
+#RUN sudo dpkg -i packages-microsoft-prod.deb
+#RUN apt-get update -y && \
+#      apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
+RUN apt-get update -y && \
+      apt-get install -y apache2 libapache2-mod-wsgi-py3 
 
-# RUN rm /etc/apache2/mods-enabled/mpm_*
-# COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
-# COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
-# COPY ports.conf /etc/apache2/ports.conf
-# RUN ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf
-# RUN ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load
-# COPY bingserver-restfulapi.wsgi /wsgi/bingserver-restfulapi.wsgi
-# ADD RestAPI /BingServer/src/RestAPI
+RUN rm /etc/apache2/mods-enabled/mpm_*
+COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY ports.conf /etc/apache2/ports.conf
+RUN ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf
+RUN ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load
+COPY bingserver-restfulapi.wsgi /wsgi/bingserver-restfulapi.wsgi
+ADD RestAPI /BingServer/src/RestAPI
 
-# #ADD utils /BingServer/src/RestAPI/utils
-# RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
-# ADD run.sh /run.sh
-# RUN chmod +x /run.sh
+#ADD utils /BingServer/src/RestAPI/utils
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+ADD run.sh /run.sh
+RUN chmod +x /run.sh
 
 
 # RUN mkdir -p /var/log/apache2

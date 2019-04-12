@@ -36,6 +36,8 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 ###################
 # python packages
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+RUN python3 get-pip.py --force-reinstall
 RUN pip3 install --upgrade pip
 RUN pip3 --no-cache-dir install \
 		protobuf \

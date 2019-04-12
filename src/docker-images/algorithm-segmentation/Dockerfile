@@ -86,9 +86,12 @@ ENV PYTHONPATH $PYTHONPATH:/opt/tensorflow-models:/opt/tensorflow-models/researc
 # test (do this after container has been created)?
 #RUN python /opt/tensorflow-models/research/object_detection/builders/model_builder_test.py
 
-RUN pip install jupyterlab
-RUN python -m pip install ipykernel
-RUN python -m ipykernel install --user
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install jupyter
+
+RUN pip3 install jupyterlab
+RUN python3 -m pip install ipykernel
+RUN python3 -m ipykernel install --user
 
 ###################
 # TensorBoard

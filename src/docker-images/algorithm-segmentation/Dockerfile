@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ###################
 # python packages
+RUN pip3 --install --upgrade pip
 RUN pip3 --no-cache-dir install \
 		protobuf \
 		ipykernel \
@@ -58,17 +59,18 @@ RUN pip3 --no-cache-dir install \
 # Install TensorFlow GPU version.
 #pip install --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-0.12.1-cp27-none-linux_x86_64.whl
 #pip install --upgrade https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-1.4.0-cp27-none-linux_x86_64.whl
-ARG TENSORFLOW_VERSION=1.4.1
-ARG TENSORFLOW_DEVICE=gpu
-ARG TENSORFLOW_APPEND=_gpu
-RUN pip3 --no-cache-dir install https://storage.googleapis.com/tensorflow/linux/${TENSORFLOW_DEVICE}/tensorflow${TENSORFLOW_APPEND}-${TENSORFLOW_VERSION}-cp35-none-linux_x86_64.whl
+# ARG TENSORFLOW_VERSION=1.4.1
+# ARG TENSORFLOW_DEVICE=gpu
+# ARG TENSORFLOW_APPEND=_gpu
+# RUN pip3 --no-cache-dir install https://storage.googleapis.com/tensorflow/linux/${TENSORFLOW_DEVICE}/tensorflow${TENSORFLOW_APPEND}-${TENSORFLOW_VERSION}-cp35-none-linux_x86_64.whl
+RUN pip3 --no-cache-dir install tensorflow-gpu keras
 
 
 ###################
 # keras
-ARG KERAS_VERSION=2.0.6
-ENV KERAS_BACKEND=tensorflow
-RUN pip3 --no-cache-dir install --no-dependencies git+https://github.com/fchollet/keras.git@${KERAS_VERSION}
+# ARG KERAS_VERSION=2.0.6
+# ENV KERAS_BACKEND=tensorflow
+# RUN pip3 --no-cache-dir install --no-dependencies git+https://github.com/fchollet/keras.git@${KERAS_VERSION}
 
 ###################
 # mxnet

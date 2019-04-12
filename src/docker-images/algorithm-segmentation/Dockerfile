@@ -3,8 +3,8 @@ FROM qianjiangyuan/tutorial-horovod:1.8
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 ###################
-RUN rm -rf /etc/apt/sources.list.d/
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# RUN rm -rf /etc/apt/sources.list.d/
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
     	protobuf-compiler \
       	build-essential \
         curl \
@@ -45,7 +45,7 @@ RUN apt-get install -y --no-install-recommends \
     	python3-pydot \
         python3-pip \
         python3-setuptools
-        
+
 ###################
 # python packages
 RUN pip3 install --upgrade pip

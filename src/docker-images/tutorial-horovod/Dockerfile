@@ -1,5 +1,4 @@
-#FROM ubuntu:16.04
-FROM uber/horovod:0.15.2-tf1.12.0-torch1.0.0-py3.5
+FROM horovod/horovod:0.16.1-tf1.12.0-torch1.0.0-mxnet1.4.0-py3.5
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 RUN umask 022

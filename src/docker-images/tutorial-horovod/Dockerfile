@@ -60,13 +60,13 @@ RUN chmod -R 755 /var/www/html/
 COPY wwwroot /var/www/html
 
 # netcore 2.2
-#RUN add-apt-repository ppa:graphics-drivers/ppa
-#RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
-#RUN sudo dpkg -i packages-microsoft-prod.deb
-#RUN apt-get update -y && \
-#      apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
+RUN add-apt-repository ppa:graphics-drivers/ppa
+RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+RUN sudo dpkg -i packages-microsoft-prod.deb
 RUN apt-get update -y && \
-      apt-get install -y apache2 libapache2-mod-wsgi-py3 
+      apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
+# RUN apt-get update -y && \
+#      apt-get install -y apache2 libapache2-mod-wsgi-py3 
 
 RUN rm /etc/apache2/mods-enabled/mpm_*
 COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
@@ -83,16 +83,16 @@ ADD run.sh /run.sh
 RUN chmod +x /run.sh
 
 
-# RUN mkdir -p /var/log/apache2
-# RUN chmod 0777 /var/log/apache2
-# RUN chmod -R 0777 /root
+RUN mkdir -p /var/log/apache2
+RUN chmod 0777 /var/log/apache2
+RUN chmod -R 0777 /root
 
 # # RUN apt-get update -y && apt-get install ssh-askpass rssh molly-guard ufw monkeysphere python3-ndg-httpsclient -y
 
 # ENV LD_LIBRARY_PATH /usr/local/nvidia/lib64/
 
-# EXPOSE 1380 180
-# ADD RecogServer /RecogServer
+EXPOSE 1380 180
+ADD RecogServer /RecogServer
 
 # Install jupyter lab, add jupyter2 kernel
 RUN pip3 install jupyterlab

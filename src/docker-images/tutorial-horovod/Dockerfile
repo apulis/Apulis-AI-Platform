@@ -27,8 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         htop      
 
 # netcore 2.2
-RUN wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
-RUN dpkg -i packages-microsoft-prod.deb
+RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+RUN sudo dpkg -i packages-microsoft-prod.deb
 RUN apt-get update -y && \
       apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
 

@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn6-devel
+FROM qianjiangyuan/tutorial-horovod:1.8
 
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 

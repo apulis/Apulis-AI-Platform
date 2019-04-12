@@ -63,7 +63,7 @@ RUN pip3 --no-cache-dir install \
 # ARG TENSORFLOW_DEVICE=gpu
 # ARG TENSORFLOW_APPEND=_gpu
 # RUN pip3 --no-cache-dir install https://storage.googleapis.com/tensorflow/linux/${TENSORFLOW_DEVICE}/tensorflow${TENSORFLOW_APPEND}-${TENSORFLOW_VERSION}-cp35-none-linux_x86_64.whl
-RUN pip3 --no-cache-dir install tensorflow-gpu keras
+#  RUN pip3 --no-cache-dir install tensorflow-gpu keras
 
 
 ###################
@@ -74,7 +74,7 @@ RUN pip3 --no-cache-dir install tensorflow-gpu keras
 
 ###################
 # mxnet
-RUN pip3 --no-cache-dir install mxnet-cu80mkl
+# RUN pip3 --no-cache-dir install mxnet-cu80mkl
 
 
 ###################

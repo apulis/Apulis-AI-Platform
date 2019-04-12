@@ -26,26 +26,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         screen \
         htop      
 
-# netcore 2.0
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-RUN mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
-RUN sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list'
-RUN apt-get update
-RUN apt-get install -y dotnet-sdk-2.0.0
-RUN apt-get install -y aspnetcore-store-2.0.0
+# netcore 2.2
+RUN wget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb
+RUN dpkg -i packages-microsoft-prod.deb
 RUN apt-get update -y && \
-    apt-get -y install apache2 libapache2-mod-wsgi-py3
+      apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
 
 RUN mkdir -p /var/www/html/
-RUN apt-get update -y && apt-get install -y python3-pycurl locales ssh-askpass  python3-tk screen
-RUN pip install --upgrade pip 
-RUN pip uninstall -y keras ; pip install keras
-RUN pip install setuptools 
-RUN pip install flask flask.restful 
-RUN pip install bs4 requests 
-RUN pip install -U flask-cors
-RUN pip install pandas jupyter matplotlib spacy sklearn scikit-image munch imgaug
-RUN python -m spacy download en
+RUN apt-get update -y && apt-get install -y python3-pycurl locales ssh-askpass  python3-tk screen python3-pip
+RUN pip3 install --upgrade pip 
+RUN pip3 install setuptools 
+RUN pip3 install flask flask.restful 
+RUN pip3 install bs4 requests 
+RUN pip3 install -U flask-cors
+RUN pip3 install pandas jupyter matplotlib spacy sklearn scikit-image munch imgaug
+RUN python3 -m spacy download en
 
 RUN apt-get update -y && apt-get install -y nodejs  
 # RUN sudo npm install bower -g 
@@ -93,9 +88,9 @@ ADD RecogServer /RecogServer
 RUN apt-get update -y && apt-get install -y zip unzip  
 
 # Install jupyter lab, add jupyter2 kernel
-RUN pip install jupyterlab
-RUN python -m pip install ipykernel
-RUN python -m ipykernel install --user
+RUN pip3 install jupyterlab
+RUN python3 -m pip install ipykernel
+RUN python3 -m ipykernel install --user
 
 #Telemetry
 #--------------

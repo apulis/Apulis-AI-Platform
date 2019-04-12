@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpng12-dev \
         libzmq3-dev \
         pkg-config \
-        python3-dev \
+        python3.5-dev \
         zlib1g-dev \
         libopencv-dev \
         python3-opencv \

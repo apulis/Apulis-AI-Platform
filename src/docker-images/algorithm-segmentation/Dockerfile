@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ###################
 # python packages
-RUN pip3 --install --upgrade pip
+RUN pip3 install --upgrade pip
 RUN pip3 --no-cache-dir install \
 		protobuf \
 		ipykernel \

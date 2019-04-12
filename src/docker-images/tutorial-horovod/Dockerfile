@@ -1,8 +1,9 @@
 FROM horovod/horovod:0.16.1-tf1.12.0-torch1.0.0-mxnet1.4.0-py3.5
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
+RUN rm -rf /var/lib/apt/lists/*
 RUN umask 022
-RUN apt-get -y update && \
+RUN apt-get -y update && \rm -rf /var/lib/apt/lists/*
     apt-get -y install \
       vim \
       wget \

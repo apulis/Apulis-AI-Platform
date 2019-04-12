@@ -99,5 +99,16 @@ RUN pip3 install jupyterlab
 RUN python3 -m pip install ipykernel
 RUN python3 -m ipykernel install --user
 
+################### 
+# Install cudnn. 
+RUN mkdir /download && cd /download && \
+    curl -O https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v7.5.0.56/prod/9.0_20190219/Ubuntu16_04-x64/libcudnn7_7.5.0.56-1%2Bcuda9.0_amd64.deb && \
+    curl -O https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v7.5.0.56/prod/9.0_20190219/Ubuntu16_04-x64/libcudnn7-dev_7.5.0.56-1%2Bcuda9.0_amd64.deb && \
+    curl -O https://developer.nvidia.com/compute/machine-learning/cudnn/secure/v7.5.0.56/prod/9.0_20190219/Ubuntu16_04-x64/libcudnn7-doc_7.5.0.56-1%2Bcuda9.0_amd64.deb && \
+    dpkg -i libcudnn7_7.5.0.56-1%2Bcuda9.0_amd64.deb && \
+    dpkg -i libcudnn7-dev_7.5.0.56-1%2Bcuda9.0_amd64.deb && \
+    dpkg -i libcudnn7-doc_7.5.0.56-1%2Bcuda9.0_amd64.deb && \
+    cd .. && rm -rf /download 
+
 ###################
 # TensorBoard

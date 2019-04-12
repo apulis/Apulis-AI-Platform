@@ -3,7 +3,7 @@ MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 RUN rm -rf /var/lib/apt/lists/*
 RUN umask 022
-RUN apt-get -y update && \rm -rf /var/lib/apt/lists/*
+RUN apt-get -y update && \
     apt-get -y install \
       vim \
       wget \

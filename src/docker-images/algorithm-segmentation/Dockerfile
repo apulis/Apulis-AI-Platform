@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3.5-dev \
         zlib1g-dev \
         libopencv-dev \
-        python3-opencv \
+        # python3-opencv \
 		python3-tk \
         build-essential autoconf libtool libcunit1-dev \
         libproj-dev libgdal-dev libgeos-dev libjson0-dev vim python3-gdal \
@@ -50,6 +50,7 @@ RUN pip3 --no-cache-dir install \
 		pandas \
 		h5py \
 		shapely \
+        opencv-python \
     	&& \
     python3 -m ipykernel.kernelspec
 

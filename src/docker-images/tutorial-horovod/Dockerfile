@@ -40,7 +40,7 @@ RUN pip3 install setuptools
 RUN pip3 install flask flask.restful 
 RUN pip3 install bs4 requests 
 RUN pip3 install -U flask-cors
-RUN pip3 uninstall -y numpy && pip install numpy==1.14.5
+# RUN pip3 uninstall -y numpy && pip install numpy==1.14.5
 RUN pip3 install pandas jupyter matplotlib spacy sklearn scikit-image munch imgaug
 RUN python3 -m spacy download en
 

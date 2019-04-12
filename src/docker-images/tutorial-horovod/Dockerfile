@@ -12,7 +12,12 @@ RUN apt-get -y update && \
       openssh-client \
       git \
       rsync \
-      sudo 
+      sudo \
+      zip \
+      unzip \
+      openssh-server \
+      sudo \
+      nodejs  
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -26,11 +31,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         screen \
         htop      
 
-# netcore 2.2
-RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
-RUN sudo dpkg -i packages-microsoft-prod.deb
-RUN apt-get update -y && \
-      apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
 
 RUN mkdir -p /var/www/html/
 RUN apt-get update -y && apt-get install -y python3-pycurl locales ssh-askpass  python3-tk screen python3-pip
@@ -42,7 +42,6 @@ RUN pip3 install -U flask-cors
 RUN pip3 install pandas jupyter matplotlib spacy sklearn scikit-image munch imgaug
 RUN python3 -m spacy download en
 
-RUN apt-get update -y && apt-get install -y nodejs  
 # RUN sudo npm install bower -g 
 
 
@@ -71,7 +70,11 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 ADD run.sh /run.sh
 RUN chmod +x /run.sh
 
-RUN apt-get update -y && apt-get install -y openssh-server sudo
+# netcore 2.2
+RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+RUN sudo dpkg -i packages-microsoft-prod.deb
+RUN apt-get update -y && \
+      apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
 
 RUN mkdir -p /var/log/apache2
 RUN chmod 0777 /var/log/apache2
@@ -83,9 +86,6 @@ ENV LD_LIBRARY_PATH /usr/local/nvidia/lib64/
 
 EXPOSE 1380 180
 ADD RecogServer /RecogServer
-
-# Add Glove vectors 
-RUN apt-get update -y && apt-get install -y zip unzip  
 
 # Install jupyter lab, add jupyter2 kernel
 RUN pip3 install jupyterlab

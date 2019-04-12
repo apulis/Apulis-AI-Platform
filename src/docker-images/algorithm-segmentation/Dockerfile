@@ -34,6 +34,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-setuptools \
 		graphviz 
 
+RUN apt-get install -y --no-install-recommends \
+    python3.5-dev \
+        # python3-opencv \
+		python3-tk \
+        python3-gdal \
+    	# requirements for keras
+    	python3-h5py \
+    	python3-yaml \
+    	python3-pydot \
+        python3-pip \
+        python3-setuptools
+        
 ###################
 # python packages
 RUN pip3 install --upgrade pip

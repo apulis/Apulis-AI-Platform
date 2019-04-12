@@ -70,6 +70,10 @@ ARG KERAS_VERSION=2.0.6
 ENV KERAS_BACKEND=tensorflow
 RUN pip3 --no-cache-dir install --no-dependencies git+https://github.com/fchollet/keras.git@${KERAS_VERSION}
 
+###################
+# mxnet
+RUN pip3 --no-cache-dir install mxnet-cu80mkl
+
 
 ###################
 # object detection api

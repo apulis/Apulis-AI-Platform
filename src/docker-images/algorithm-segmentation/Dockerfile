@@ -32,13 +32,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     	python3-pydot \
         python3-pip \
         python3-setuptools \
-		graphviz \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+		graphviz 
 
 ###################
 # python packages
+RUN pip3 install --upgrade pip
 RUN pip3 --no-cache-dir install \
 		protobuf \
 		ipykernel \

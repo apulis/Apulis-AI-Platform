@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     	python3-h5py \
     	python3-yaml \
     	python3-pydot \
+        python3-pip \
 		graphviz \
         && \
     apt-get clean && \
@@ -36,8 +37,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ###################
 # python packages
-RUN sudo apt-get install python3-pip
-
 RUN pip3 --no-cache-dir install \
 		protobuf \
 		ipykernel \

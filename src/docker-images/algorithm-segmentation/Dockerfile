@@ -15,7 +15,7 @@ RUN mkdir /download && cd /download && \
     dpkg -i libcudnn7-dev_7.5.0.56-1+cuda9.0_amd64.deb && \
     dpkg -i libcudnn7-doc_7.5.0.56-1+cuda9.0_amd64.deb && \
     cd .. && rm -rf /download 
-    
+
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     	protobuf-compiler \
       	build-essential \
@@ -111,7 +111,7 @@ RUN pip3 install jupyterlab
 RUN python3 -m pip install ipykernel
 RUN python3 -m ipykernel install --user
 
-
+RUN rm /usr/bin/python && ln -s /usr/bin/python3.5 /usr/bin/python
 
 ###################
 # TensorBoard

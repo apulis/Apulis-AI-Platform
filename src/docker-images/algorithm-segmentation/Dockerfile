@@ -4,6 +4,18 @@ MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 ###################
 RUN update-ca-certificates
+
+################### 
+# Install cudnn. 
+RUN mkdir /download && cd /download && \
+    wget https://github.com/zhejianglab/qjy-binary/releases/download/cudnn7.5-runtime/libcudnn7_7.5.0.56-1+cuda9.0_amd64.deb && \
+    wget https://github.com/zhejianglab/qjy-binary/releases/download/cudnn7.5-dev/libcudnn7-dev_7.5.0.56-1+cuda9.0_amd64.deb && \
+    wget https://github.com/zhejianglab/qjy-binary/releases/download/cudnn7.5-code/libcudnn7-doc_7.5.0.56-1+cuda9.0_amd64.deb && \
+    dpkg -i libcudnn7_7.5.0.56-1+cuda9.0_amd64.deb && \
+    dpkg -i libcudnn7-dev_7.5.0.56-1+cuda9.0_amd64.deb && \
+    dpkg -i libcudnn7-doc_7.5.0.56-1+cuda9.0_amd64.deb && \
+    cd .. && rm -rf /download 
+    
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     	protobuf-compiler \
       	build-essential \
@@ -99,16 +111,7 @@ RUN pip3 install jupyterlab
 RUN python3 -m pip install ipykernel
 RUN python3 -m ipykernel install --user
 
-################### 
-# Install cudnn. 
-RUN mkdir /download && cd /download && \
-    wget https://github.com/zhejianglab/qjy-binary/releases/download/cudnn7.5-runtime/libcudnn7_7.5.0.56-1+cuda9.0_amd64.deb && \
-    wget https://github.com/zhejianglab/qjy-binary/releases/download/cudnn7.5-dev/libcudnn7-dev_7.5.0.56-1+cuda9.0_amd64.deb && \
-    wget https://github.com/zhejianglab/qjy-binary/releases/download/cudnn7.5-code/libcudnn7-doc_7.5.0.56-1+cuda9.0_amd64.deb && \
-    dpkg -i libcudnn7_7.5.0.56-1+cuda9.0_amd64.deb && \
-    dpkg -i libcudnn7-dev_7.5.0.56-1+cuda9.0_amd64.deb && \
-    dpkg -i libcudnn7-doc_7.5.0.56-1+cuda9.0_amd64.deb && \
-    cd .. && rm -rf /download 
+
 
 ###################
 # TensorBoard

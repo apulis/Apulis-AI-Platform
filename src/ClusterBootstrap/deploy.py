@@ -1788,13 +1788,17 @@ def config_fqdn():
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)    
 
+def add_service_config():
+    if os.path.exists("deploy/etc/nginx/"):
+        os.system("cp deploy/etc/nginx/* deploy/services/nginx/")
+
+
 def config_nginx():
     all_nodes = get_nodes(config["clusterId"])
     template_dir = "services/nginx/"
     target_dir = "deploy/services/nginx/"
     utils.render_template_directory(template_dir, target_dir,config)
-    if os.path.exists("deploy/etc/nginx/"):
-        os.system("cp deploy/etc/nginx/* deploy/services/nginx/")
+    add_service_config()
     for node in all_nodes:   
         utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/","/etc/nginx/conf.other", config["admin_username"], node )
     # See https://github.com/kubernetes/examples/blob/master/staging/https-nginx/README.md
@@ -2686,6 +2690,7 @@ def render_service_templates():
     generate_hdfs_containermounts()
     # Multiple call of render_template will only render the directory once during execution. 
     utils.render_template_directory( "./services/", "./deploy/services/", config)
+    add_service_config()
 
 def get_all_services():
     render_service_templates()

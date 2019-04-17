@@ -1793,6 +1793,8 @@ def config_nginx():
     template_dir = "services/nginx/"
     target_dir = "deploy/services/nginx/"
     utils.render_template_directory(template_dir, target_dir,config)
+    if os.path.exists("deploy/etc/nginx/"):
+        shutil.copytree("deploy/etc/nginx/", "deploy/services/nginx/")
     for node in all_nodes:   
         utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/","/etc/nginx/conf.other", config["admin_username"], node )
     # See https://github.com/kubernetes/examples/blob/master/staging/https-nginx/README.md

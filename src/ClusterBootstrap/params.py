@@ -548,7 +548,7 @@ default_config_parameters = {
         # Hub is docker.io/
         "hub": "qianjiangyuan/",
         #"hub": "registry.docker-cn.com/dlws/",
-        "tag": "1.7", # migrate docker to 1.7q for QianJiangYuan
+        "tag": "1.8", # migrate docker to 1.8 for QianJiangYuan
         "system": {
             "nginx": {},
             "zookeeper": {},
@@ -568,10 +568,16 @@ default_config_parameters = {
             "tutorial-fastai": {},
             "tutorial-imagenet18": {},
             "algorithm-bert": {},
+            "algorithm-segmentation": {}, 
             "gobld": {}, 
             "kubernetes": {}, 
             "kaggle": {},
             "binary": {}
+        },
+        "customize": {
+            "webui": {},
+            "webui2": {}, 
+            "restfulapi": {}
         },
         "external": {
             # These dockers are to be built by additional add ons.

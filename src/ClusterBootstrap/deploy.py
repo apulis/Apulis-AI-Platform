@@ -876,7 +876,7 @@ def deploy_master(kubernetes_master):
 
 def get_cni_binary():
     os.system("mkdir -p ./deploy/bin")
-    urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/containernetworking/cni-amd64-v0.5.2.tgz", "./deploy/bin/cni-amd64-v0.5.2.tgz")
+    # urllib.urlretrieve ("http://ccsdatarepo.westus.cloudapp.azure.com/data/containernetworking/cni-amd64-v0.5.2.tgz", "./deploy/bin/cni-amd64-v0.5.2.tgz")
     if verbose:
         print "Extracting CNI binaries"
     os.system("tar -zxvf ./deploy/bin/cni-amd64-v0.5.2.tgz -C ./deploy/bin")
@@ -1183,11 +1183,13 @@ def update_worker_node(nodeIP):
 
     worker_ssh_user = config["admin_username"]
     utils.SSH_exec_script(config["ssh_cert"],worker_ssh_user, nodeIP, "./deploy/kubelet/%s" % config["preworkerdeploymentscript"])
-
-    if "type" not in config["machines"][nodeIP] or config["machines"][nodeIP]["type"] != "cpu":
-        deploymentlist = config["workerdeploymentlist"]
-    else:
-        deploymentlist = config["cpuworkerdeploymentlist"]
+    
+    print config['machines']
+    print nodeIP
+    # if "type" not in config["machines"][nodeIP] or config["machines"][nodeIP]["type"] != "cpu":
+    #    deploymentlist = config["workerdeploymentlist"]
+    # else:
+    deploymentlist = config["cpuworkerdeploymentlist"]
 
     with open("./deploy/kubelet/"+deploymentlist,"r") as f:
         deploy_files = [s.split(",") for s in f.readlines() if len(s.split(",")) == 2]

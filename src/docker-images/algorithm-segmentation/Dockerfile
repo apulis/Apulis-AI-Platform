@@ -113,5 +113,6 @@ RUN python3 -m ipykernel install --user
 
 RUN rm /usr/bin/python && ln -s /usr/bin/python3.5 /usr/bin/python
 
+RUN apt-get update -y && apt-get install -y gdal-bin
 ###################
 # TensorBoard

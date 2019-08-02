@@ -63,7 +63,7 @@ RUN pip3 --no-cache-dir install \
 		pandas \
 		h5py \
 		shapely \
-        opencv-python \
+        opencv-contrib-python \
     	&& \
     python3 -m ipykernel.kernelspec
 
@@ -113,6 +113,15 @@ RUN python3 -m ipykernel install --user
 
 RUN rm /usr/bin/python && ln -s /usr/bin/python3.5 /usr/bin/python
 
-RUN apt-get update -y && apt-get install -y gdal-bin
+RUN apt-get update -y && apt-get install -y gdal-bin xauth xfonts-base
+
+RUN mkdir /src
+WORKDIR /src
+RUN git clone https://github.com/opencv/opencv_contrib
+RUN git clone https://github.com/opencv/opencv
+WORKDIR /src/opencv_contrib
+RUN cmake -DOPENCV_EXTRA_MODULES_PATH=/src/opencv_contrib/modules /src/opencv -DOPENCV_ENABLE_NONFREE:BOOL=ON -DBUILD_EXAMPLES:BOOL=ON
+RUN make -j5
+
 ###################
 # TensorBoard

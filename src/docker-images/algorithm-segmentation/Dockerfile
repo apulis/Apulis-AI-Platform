@@ -64,6 +64,7 @@ RUN pip3 --no-cache-dir install \
 		h5py \
 		shapely \
         opencv-contrib-python \
+        imagehash \
     	&& \
     python3 -m ipykernel.kernelspec
 
@@ -120,29 +121,6 @@ WORKDIR /src
 RUN git clone https://github.com/opencv/opencv_contrib
 RUN git clone https://github.com/opencv/opencv
 RUN mkdir /src/opencv/build
-RUN cd /src/opencv/build && cmake -DOPENCV_EXTRA_MODULES_PATH=/src/opencv_contrib/modules /src/opencv \
-    -DOPENCV_ENABLE_NONFREE=ON \
-    -DBUILD_TIFF=ON \
-	-DBUILD_opencv_java=OFF \
-    -DWITH_CUDA=OFF \
-    -DENABLE_AVX=ON \
-    -DWITH_OPENGL=ON \
-    -DWITH_OPENCL=ON \
-    -DWITH_IPP=ON \
-    -DWITH_TBB=ON \
-    -DWITH_EIGEN=ON \
-    -DWITH_V4L=ON \
-    -DBUILD_TESTS=OFF \
-    -DBUILD_PERF_TESTS=OFF \
-    -DCMAKE_BUILD_TYPE=RELEASE \
-    -DBUILD_opencv_python3=ON \
-    -DCMAKE_INSTALL_PREFIX=$(python3 -c "import sys; print(sys.prefix)") \
-    -DPYTHON_EXECUTABLE=$(which python3) \
-    -DPYTHON_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
-    -DPYTHON_PACKAGES_PATH=$(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())") \
-    && make -j5 \
-    && make install \
-    && ldconfig 
 RUN cd /src/opencv/build && cmake -DOPENCV_EXTRA_MODULES_PATH=/src/opencv_contrib/modules /src/opencv \
     -DOPENCV_ENABLE_NONFREE=ON \
     -DBUILD_TIFF=ON \

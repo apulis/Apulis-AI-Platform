@@ -167,7 +167,8 @@ RUN cd /src/opencv/build && cmake -DOPENCV_EXTRA_MODULES_PATH=/src/opencv_contri
     && make -j5 \
     && make install \
     && ldconfig 
-RUN rm -rf /src/opencv \
+RUN rm -rf /usr/local/lib/python3.5/dist-packages/cv2 \
+    && rm -rf /src/opencv \
     && rm -rf /src/opencv_contrib
 
 ###################

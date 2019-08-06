@@ -21,6 +21,8 @@ class DataHandler:
     def __init__(self):
         start_time = timeit.default_timer()
         self.database = "DLWSCluster-%s" % config["clusterId"]
+        self.CreateDatabase()
+
         self.jobtablename = "jobs"
         self.identitytablename = "identity"
         self.acltablename = "acl"
@@ -28,22 +30,16 @@ class DataHandler:
         self.storagetablename = "storage"
         self.clusterstatustablename = "clusterstatus"
         self.commandtablename = "commands"
+        
         server = config["mysql"]["hostname"]
         username = config["mysql"]["username"]
         password = config["mysql"]["password"]
-
-
         self.conn = mysql.connector.connect(user=username, password=password,
                                             host=server, database=self.database)
-
-        self.CreateDatabase()
         self.CreateTable()
-
 
         elapsed = timeit.default_timer() - start_time
         logger.info("DataHandler initialization, time elapsed %f s" % elapsed)
-
-
 
     def CreateDatabase(self):
         if "initSQLDB" not in global_vars or not global_vars["initSQLDB"]:

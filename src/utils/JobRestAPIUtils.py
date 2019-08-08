@@ -407,6 +407,9 @@ def AddUser(username,uid,gid,groups):
         ret =  dataHandler.UpdateIdentityInfo(username,uid,gid,groups)
         ret = ret & dataHandler.UpdateAclIdentityId(username,uid)
         dataHandler.Close()
+    
+    AuthorizationManager.UpdateAce(username, 'Cluster/VC:qjy-dev', 1, False)
+    
     return ret
 
 

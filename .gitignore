@@ -65,3 +65,5 @@ cluster-autoscaler
 src/ClusterBootstrap/services/monitor/grafana-config.yaml
 src/ClusterBootstrap/services/monitor/prometheus-alerting.yaml
 src/ClusterBootstrap/services/monitor/alert-templates.yaml
+
+.vscode/*

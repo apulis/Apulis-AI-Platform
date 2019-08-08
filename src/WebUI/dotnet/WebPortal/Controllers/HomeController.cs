@@ -804,7 +804,7 @@ namespace WindowsAuth.Controllers
 
             if (HttpContext.Session.Keys.Contains("isAuthorized"))
             {
-                if (HttpContext.Session.GetString("isAuthorized") == "true")
+                if (HttpContext.Session.GetString("isAuthorized") == "true" || HttpContext.Session.GetString("isAuthorized") == true)
                 {
                     ViewData["isAuthorized"] = true;
                 }

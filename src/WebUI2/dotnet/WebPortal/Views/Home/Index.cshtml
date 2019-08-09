@@ -8,9 +8,8 @@
 @if (ViewData["isAuthorized"] != null && !(bool)ViewData["isAuthorized"])
 {
     <script>
-        var ALERT_TITLE = "Oops!";
+        var ALERT_TITLE = "注意";
         var ALERT_OK_BUTTON_TEXT = "Ok";
-        var ALERT_EMAIL_BUTTON_TEXT = "Ask for Access";
 
         if (document) {
             window.alert = function (txt) {
@@ -44,33 +43,14 @@
             btn.href = "#";
             btn.focus();
             btn.onclick = function () { removeCustomAlert(); return false; }
-
-            btn = alertObj.appendChild(d.createElement("a"));
-            btn.id = "closeBtn";
-            btn.appendChild(d.createTextNode(ALERT_EMAIL_BUTTON_TEXT));
-            btn.href = "#";
-            btn.focus();
-            btn.onclick = function () { sendMail(); return false; }
-
             alertObj.style.display = "block";
 
-        }
-
-        function sendMail() {
-            var emailcontact = "dltssupp@microsoft.com";
-            var username = "@ViewData["Username"]";
-            var subject = "invite" + " " + username + " to the group";
-            var messagecontact = "Hi" + "%0D%0A" + "Can you help me adding to the group ?" + "%0D%0A" + "Best regards" + "%0D%0A"+ username;
-            window.open(
-                `mailto:${emailcontact}?subject=${subject}&body=${messagecontact}`
-            );
-            document.getElementsByTagName("body")[0].removeChild(document.getElementById("modalContainer"));
         }
 
         function removeCustomAlert() {
             document.getElementsByTagName("body")[0].removeChild(document.getElementById("modalContainer"));
         }
-        alert("You are not the authorized user for this cluster, and please contact <a href='#' onclick='sendMail()'>dltssupp@microsoft.com</a> to get the access. ");
+         alert("您当前没有钱江源集群权限。请联系管理员<br>或发邮件到qianjiangyuan@aliyun.com申请相关权限");
     </script>
 }
 
@@ -310,10 +290,10 @@ else
 #alertBox #closeBtn {
 	display:inline-block;
 	position:relative;
-	margin:15px 13%;
+	margin:15px 35%;
 	padding:7px;
 	border:0 none;
-	width:24%;
+	width:30%;
 	font:0.7em verdana,arial;
 	text-transform:uppercase;
 	text-align:center;

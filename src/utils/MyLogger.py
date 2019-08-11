@@ -16,14 +16,14 @@ class MyLogger:
 
     def info(self, msg):
         self.init()
-        txt = str(thread.get_ident()) + " : "  + str(msg) 
+        txt = str(thread.get_ident()) + " : " + str(msg)
         #print txt
         if self.logger is not None:
             self.logger.info(txt)
 
     def error(self, msg):
         self.init()
-        txt = str(thread.get_ident()) + " : "  + msg 
+        txt = str(thread.get_ident()) + " : " + str(msg)
         #print msg
 
         if self.logger is not None:
@@ -31,7 +31,7 @@ class MyLogger:
 
     def warn(self, msg):
         self.init()
-        txt = str(thread.get_ident()) + " : "  + msg 
+        txt = str(thread.get_ident()) + " : " + str(msg)
         #print msg
 
         if self.logger is not None:

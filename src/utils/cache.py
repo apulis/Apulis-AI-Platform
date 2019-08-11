@@ -15,7 +15,7 @@ def fcache(TTLInSec=30):
         @wraps(func)
         def wrapped_function(*args, **kwargs):
             val = CacheManager.GetValue(func, TTLInSec, args)
-            if (None == val):               
+            if (True or None == val):
                 return func(*args)
             return copy.deepcopy(val[0])           
         return wrapped_function

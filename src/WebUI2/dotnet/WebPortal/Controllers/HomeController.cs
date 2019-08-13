@@ -479,8 +479,8 @@ namespace WindowsAuth.Controllers
                 {
                     string password = Guid.NewGuid().ToString().Substring(0, 8);
                     UserEntry userEntry = new UserEntry(userID, email, email, password);
-                    db.User.Add(userEntry);
-                    db.SaveChanges();
+                    await db.User.AddAsync(userEntry);
+                    await db.SaveChangesAsync();
                     return userEntry;
                 }
                 else
@@ -772,6 +772,7 @@ namespace WindowsAuth.Controllers
                     }
                     _logger.LogDebug("User {0} group memberships {1}", email, string.Join(",", lst.SelectMany(x => x.groups).ToArray()));
                     
+                    /*
                     var groups = lst.SelectMany(x => x.groups).ToList();
                     foreach (var userId in lst)
                     {
@@ -784,10 +785,22 @@ namespace WindowsAuth.Controllers
                             }
                         }
                     }
+                    */
 
                     var authorizedClusters = AuthenticateUserByGroupMembership(lst);
                     _logger.LogDebug("User {0} authorized clusters preDB {1}", email, string.Join(",", authorizedClusters.Keys.ToArray()));
+                    
+                    var groups = lst.SelectMany(x => x.groups).ToList();
+                    foreach (var pair in authorizedClusters)
+                    {
+                        if (pair.Key != "")
+                        {
+                            await AddUser(pair.Value, groups, pair.Key);
+                            _logger.LogInformation("User {0} is called add user to cluster {1}", email, pair.Key);
+                        }
+                    }
 
+                    
                     var authorizationFinal = new Dictionary<string, UserEntry>();
                     var ret = await AuthenticateByDB(email, tenantID, username, authorizedClusters, authorizationFinal);
                     _logger.LogDebug("User {0} authorized clusters afterDB {1}", email, string.Join(",", authorizationFinal.Keys.ToArray()));

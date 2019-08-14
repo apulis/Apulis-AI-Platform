@@ -338,10 +338,10 @@ class ListJobs(Resource):
 
             job["jobParams"] = json.loads(base64.b64decode(job["jobParams"]))
 
-            if "endpoints" in job and job["endpoints"] is not None  and (job["endpoints"].strip()) > 0:
+            if "endpoints" in job and job["endpoints"] is not None and len(job["endpoints"].strip()) > 0:
                 job["endpoints"] = json.loads(job["endpoints"])
 
-            if "jobStatusDetail" in job and job["jobStatusDetail"] is not None  and (job["jobStatusDetail"].strip()) > 0:
+            if "jobStatusDetail" in job and job["jobStatusDetail"] is not None and len(job["jobStatusDetail"].strip()) > 0:
                 try:
                     s = job["jobStatusDetail"]
                     s = base64.b64decode(s)
@@ -545,9 +545,9 @@ class GetJobDetail(Resource):
         userName = args["userName"]
         job = JobRestAPIUtils.GetJobDetail(userName, jobId)
         job["jobParams"] = json.loads(base64.b64decode(job["jobParams"]))
-        if "endpoints" in job and job["endpoints"] is not None and (job["endpoints"].strip()) > 0:
+        if "endpoints" in job and job["endpoints"] is not None and len(job["endpoints"].strip()) > 0:
             job["endpoints"] = json.loads(job["endpoints"])
-        if "jobStatusDetail" in job and job["jobStatusDetail"] is not None  and (job["jobStatusDetail"].strip()) > 0:
+        if "jobStatusDetail" in job and job["jobStatusDetail"] is not None and len(job["jobStatusDetail"].strip()) > 0:
             try:
                 job["jobStatusDetail"] = Json.loads(base64.b64decode(job["jobStatusDetail"]))
             except Exception as e:

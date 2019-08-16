@@ -1,34 +1,14 @@
-FROM qianjiangyuan/algorithm-segmentation:1.8
-MAINTAINER Jin Li <jinlmsft@hotmail.com>
+# from https://github.com/jinlmsft/mmdetection/blob/master/docker/Dockerfile
+ARG PYTORCH="1.1.0"
+ARG CUDA="10.0"
+ARG CUDNN="7.5"
 
-# Add sudo
-RUN apt-get -y install sudo
+FROM pytorch/pytorch:${PYTORCH}-cuda${CUDA}-cudnn${CUDNN}-devel
 
-# Add user ubuntu with no password, add to sudo group
-RUN adduser --disabled-password --gecos '' ubuntu
-RUN adduser ubuntu sudo
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-USER ubuntu
-WORKDIR /home/ubuntu/
-RUN chmod a+rwx /home/ubuntu/
+RUN apt-get update && apt-get install -y libglib2.0-0 libsm6 libxrender-dev libxext6
 
-# Anaconda installing
-RUN wget https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh
-RUN bash Anaconda3-5.0.1-Linux-x86_64.sh -b
-RUN rm Anaconda3-5.0.1-Linux-x86_64.sh
-
-# Set path to conda
-#ENV PATH /root/anaconda3/bin:$PATH
-ENV PATH /home/ubuntu/anaconda3/bin:$PATH
-
-# Updating Anaconda packages
-RUN conda update conda
-RUN conda update anaconda
-RUN conda update --all
-
-RUN conda create -n open-mmlab python=3.7 -y
-RUN conda activate open-mmlab
-
-RUN git clone https://github.com/open-mmlab/mmdetection.git
-WORKDIR /home/ubuntu/mmdetection
-RUN python setup.py develop
+# Install mmdetection
+RUN conda install cython -y
+RUN git clone https://github.com/open-mmlab/mmdetection.git /mmdetection
+WORKDIR /mmdetection
+RUN pip install -e .

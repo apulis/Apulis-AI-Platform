@@ -18,15 +18,7 @@ This document describes the procedure to deploy DL workspace cluster on a off-pr
 
 5. Config shared file system to be used in the cluster, following instructions in [Storage](../Storage/Readme.md) and the [configuration](../Storage/nfs.md).
 
-6. Install sshkey to all nodes.
-..* in config.yaml, insert entry of the admin_username of cluster 
-    admin_username: <admin_user_name> 
-..* insert admin password to 
-    ./deploy/sshkey/rootpasswd
-..* install sshkey via:
-    ./deploy.py sshkey install
-
-7. Configure the information of the servers used in the cluster. Please write the following entries in config.yaml. 
+6. Configure the information of the servers used in the cluster. Please write the following entries in config.yaml. 
 
   ```
   network:
@@ -46,17 +38,23 @@ This document describes the procedure to deploy DL workspace cluster on a off-pr
   ```
   If you are building a high availability cluster, please include multiple infrastructure nodes. The number of infrastructure nodes should be odd, e.g., 1, 3, 5. 3 infrastructure nodes tolerate 1 failure. 5 infrastructure nodes tolerate 2 failures. 
 
-8. Build Ubuntu PXE-server via:
+7. Build Ubuntu PXE-server via:
   ```
   ./deploy.py -y build 
   ./deploy.py build pxe-ubuntu
   ```
 
-9. Start Ubuntu PXE-server. You will need to point DHCP server to the Ubuntu PXE-server. 
+8. Start Ubuntu PXE-server. You will need to point DHCP server to the Ubuntu PXE-server. 
   ```
   ./deploy.py docker run pxe-ubuntu
   ```
   Reboot each machine to be deployed. In each boot screen, select to install Ubuntu 16.04. 
+
+9. Install sshkey to all nodes.
+..* in config.yaml, insert entry of the admin_username of cluster 
+    admin_username: <admin_user_name> 
+..* insert admin password to 
+    ./deploy/sshkey/rootpasswd
 
 10. After the machines is reimaged to Ubuntu, install sshkey. (optional: If you ignore step 2,3 and choose to use an existing ubuntu cluster, you may put root username and password to files: ./deploy/sshkey/rootuser and ./deploy/sshkey/rootpasswd. In this case, the root user should be able to run "sudo" without password.)
   ```
@@ -75,7 +73,7 @@ This document describes the procedure to deploy DL workspace cluster on a off-pr
 12. If apt-get gives a crash error, the issue is caused by:
   https://askubuntu.com/questions/942895/e-problem-executing-scripts-aptupdatepost-invoke-success
   ```
-  ./deploy.py execonall sudo apt-get remove libappstream3
+  ./deploy.py execonall -v sudo apt-get -y remove libappstream3
   ```
 
 

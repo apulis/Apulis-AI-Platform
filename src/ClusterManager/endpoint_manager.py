@@ -14,6 +14,19 @@ import re
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 
+import yaml
+import logging
+import logging.config
+
+
+def create_log( logdir = '/var/log/dlworkspace' ):
+    if not os.path.exists( logdir ):
+        os.system("mkdir -p " + logdir )
+    with open('logging.yaml') as f:
+        logging_config = yaml.load(f)
+        f.close()
+        logging_config["handlers"]["file"]["filename"] = logdir+"/endpointmanager.log"
+        logging.config.dictConfig(logging_config)
 
 def is_ssh_server_ready(pod_name):
     bash_script = "sudo service ssh status"
@@ -48,6 +61,7 @@ def start_ssh_server(pod_name, user_name, host_network=False, ssh_port=22):
     # output = k8sUtils.kubectl_exec("exec %s %s" % (jobId, " -- " + bash_script), 1)
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
+        logging.error("Failed to setup ssh server in container. JobId: %s " % pod_name)
         raise Exception("Failed to setup ssh server in container. JobId: %s " % pod_name)
     return ssh_port
 
@@ -76,33 +90,34 @@ spec:
     targetPort: {4}
     port: {4}
 """.format(job_id, pod_name, endpoint_id, name, target_port)
-    print("endpointDescription: %s" % endpoint_description)
+    logging.info("endpointDescription: %s" % endpoint_description)
     return endpoint_description
 
 
 def create_node_port(endpoint):
     endpoint_description = generate_node_port_service(endpoint["jobId"], endpoint["podName"], endpoint["id"], endpoint["name"], endpoint["podPort"])
     endpoint_description_path = os.path.join(config["storage-mount-path"], endpoint["endpointDescriptionPath"])
-    print("endpointDescriptionPath: %s" % endpoint_description_path)
+    logging.info("endpointDescriptionPath: %s" % endpoint_description_path)
     with open(endpoint_description_path, 'w') as f:
         f.write(endpoint_description)
 
     result = k8sUtils.kubectl_create(endpoint_description_path)
     if result == "":
+        logging.error("Failed to create NodePort for ssh. JobId: %s " % endpoint["jobId"])
         raise Exception("Failed to create NodePort for ssh. JobId: %s " % endpoint["jobId"])
 
-    print("Submitted endpoint %s to k8s, returned with status %s" % (endpoint["jobId"], result))
+    logging.info("Submitted endpoint %s to k8s, returned with status %s" % (endpoint["jobId"], result))
 
 
 def setup_ssh_server(user_name, pod_name, host_network=False):
     '''Setup ssh server on pod and return the port'''
     # setup ssh server only is the ssh server is not up
     if not is_ssh_server_ready(pod_name):
-        print("Ssh server is not ready for pod: %s. Setup ..." % pod_name)
+        logging.info("Ssh server is not ready for pod: %s. Setup ..." % pod_name)
         ssh_port = start_ssh_server(pod_name, user_name, host_network)
     else:
         ssh_port = query_ssh_port(pod_name)
-    print("Ssh server is ready for pod: %s. Ssh listen on %s" % (pod_name, ssh_port))
+        logging.info("Ssh server is ready for pod: %s. Ssh listen on %s" % (pod_name, ssh_port))
     return ssh_port
 
 
@@ -112,6 +127,7 @@ def setup_jupyter_server(user_name, pod_name):
     bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip install jupyter && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter notebook --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " &>/dev/null &\"'"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
+        logging.error("Failed to start jupyter server in container. JobId: %s " % pod_name)
         raise Exception("Failed to start jupyter server in container. JobId: %s " % pod_name)
     return jupyter_port
 
@@ -121,13 +137,14 @@ def setup_tensorboard(user_name, pod_name):
     bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; pip install tensorboard; runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --port=" + str(tensorboard_port) + " &>/dev/null &\"'"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
+        logging.error("Failed to start tensorboard in container. JobId: %s " % pod_name)
         raise Exception("Failed to start tensorboard in container. JobId: %s " % pod_name)
     return tensorboard_port
 
 
 def start_endpoint(endpoint):
     # pending, running, stopped
-    print("Starting endpoint: %s" % (endpoint))
+    logging.info("Starting endpoint: %s" % (endpoint))
 
     # podName
     pod_name = endpoint["podName"]
@@ -174,7 +191,7 @@ def start_endpoints():
                 endpoint_description_dir = re.search("(.*/)[^/\.]+.yaml", job["jobDescriptionPath"]).group(1)
                 endpoint["endpointDescriptionPath"] = os.path.join(endpoint_description_dir, endpoint_id + ".yaml")
 
-                print("\n\n\n\n\n\n----------------Begin to start endpoint %s" % endpoint["id"])
+                logging.info("----------------Begin to start endpoint %s" % endpoint["id"])
                 output = get_k8s_endpoint(endpoint["endpointDescriptionPath"])
                 if(output != ""):
                     endpoint_description = json.loads(output)
@@ -189,8 +206,10 @@ def start_endpoints():
                 endpoint["lastUpdated"] = datetime.datetime.now().isoformat()
                 data_handler.UpdateEndpoint(endpoint)
         except Exception as e:
+            logging.error(e)
             traceback.print_exc()
     except Exception as e:
+        logging.error(e)
         traceback.print_exc()
 
 
@@ -200,36 +219,40 @@ def cleanup_endpoints():
         try:
             dead_endpoints = data_handler.GetDeadEndpoints()
             for endpoint_id, dead_endpoint in dead_endpoints.items():
-                print("\n\n\n\n\n\n----------------Begin to cleanup endpoint %s" % endpoint_id)
+                logging.info("----------------Begin to cleanup endpoint %s" % endpoint_id)
                 endpoint_description_path = os.path.join(config["storage-mount-path"], dead_endpoint["endpointDescriptionPath"])
                 still_running = get_k8s_endpoint(endpoint_description_path)
                 # empty mean not existing
                 if still_running == "":
-                    print("Endpoint already gone %s" % endpoint_id)
+                    logging.info("Endpoint already gone %s" % endpoint_id)
                     status = "stopped"
                 else:
                     output = k8sUtils.kubectl_delete(endpoint_description_path)
                     # 0 for success
                     if output == 0:
                         status = "stopped"
-                        print("Succeed cleanup endpoint %s" % endpoint_id)
+                        logging.info("Succeed cleanup endpoint %s" % endpoint_id)
                     else:
                         # TODO will need to clean it up eventually
                         status = "unknown"
-                        print("Clean dead endpoint %s failed, endpoints: %s" % (endpoint_id, dead_endpoint))
+                        logging.info("Clean dead endpoint %s failed, endpoints: %s" % (endpoint_id, dead_endpoint))
 
                 dead_endpoint["status"] = status
                 dead_endpoint["lastUpdated"] = datetime.datetime.now().isoformat()
                 data_handler.UpdateEndpoint(dead_endpoint)
         except Exception as e:
+            logging.error(e)
             traceback.print_exc()
         finally:
             data_handler.Close()
     except Exception as e:
+        logging.error(e)
         traceback.print_exc()
 
 
 def Run():
+    create_log()
+    logging.info("start to update endpoint information ...")
     while True:
         # start endpoints
         start_endpoints()

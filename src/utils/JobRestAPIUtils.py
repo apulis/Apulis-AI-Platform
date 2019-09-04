@@ -387,7 +387,7 @@ def GetClusterStatus():
     return cluster_status,last_update_time
 
 
-def AddUser(username,uid,gid,groups):
+def AddUser(username, uid, gid, groups, isAdmin, isAuthorized):
     ret = None
     needToUpdateDB = False
 
@@ -408,8 +408,13 @@ def AddUser(username,uid,gid,groups):
         ret = ret & dataHandler.UpdateAclIdentityId(username,uid)
         dataHandler.Close()
     
-    vcList =  DataManager.ListVCs()
-    AuthorizationManager.UpdateAce(username, 'Cluster/VC:'+vcList[0]["vcName"], 1, False)
+    if isAdmin: 
+        permission = Permission.Admin
+    elif isAuthorized:
+        permission = Permission.User
+    else:
+        permission = Permission.Unauthorized
+    AuthorizationManager.UpdateAce(username, AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), permission, False)
     
     return ret
 

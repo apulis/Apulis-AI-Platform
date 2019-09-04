@@ -632,7 +632,7 @@ def UpdateJobStatus(job):
     result, detail = k8sUtils.GetJobStatus(job["jobId"])
     dataHandler.UpdateJobTextField(job["jobId"],"jobStatusDetail",base64.b64encode(json.dumps(detail)))
 
-    logging.info("job %s status: %s,%s" % (job["jobId"], result, json.dumps(detail)))
+    # logging.info("job %s status: %s,%s" % (job["jobId"], result, json.dumps(detail)))
 
     jobDescriptionPath = os.path.join(config["storage-mount-path"], job["jobDescriptionPath"]) if "jobDescriptionPath" in job else None
     if "userId" not in jobParams:
@@ -933,7 +933,7 @@ def Run():
                 logging.info("Updating status for %d jobs" % len(pendingJobs))
                 for job in pendingJobs:
                     try:
-                        logging.info("Processing job: %s, status: %s" % (job["jobId"], job["jobStatus"]))
+                        # logging.info("Processing job: %s, status: %s" % (job["jobId"], job["jobStatus"]))
                         if job["jobStatus"] == "killing":
                             KillJob(job, "killed")
                         elif job["jobStatus"] == "pausing":
@@ -943,7 +943,7 @@ def Run():
                         elif job["jobStatus"] == "unapproved":
                             AutoApproveJob(job)
                     except Exception as e:
-                        logging.info(e)
+                        logging.error(e)
             except Exception as e:
                 logging.error(e)
             finally:

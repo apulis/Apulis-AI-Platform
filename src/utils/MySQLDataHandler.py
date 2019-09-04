@@ -39,7 +39,7 @@ class DataHandler:
         self.CreateTable()
 
         elapsed = timeit.default_timer() - start_time
-        logger.info("DataHandler initialization, time elapsed %f s" % elapsed)
+        # logger.info("DataHandler initialization, time elapsed %f s" % elapsed)
 
     def CreateDatabase(self):
         if "initSQLDB" not in global_vars or not global_vars["initSQLDB"]:
@@ -957,7 +957,7 @@ class DataHandler:
         return ret
 
     def __del__(self):
-        logger.debug("********************** deleted a DataHandler instance *******************")
+        # logger.debug("********************** deleted a DataHandler instance *******************")
         self.Close()
 
     def Close(self):

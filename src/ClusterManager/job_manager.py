@@ -249,6 +249,13 @@ def SubmitRegularJob(job):
             user_info = dataHandler.GetIdentityInfo(jobParams["userName"])[0]
             jobParams["gid"] = user_info["gid"]
             jobParams["uid"] = user_info["uid"]
+
+            # password control
+            if "Password" in jobParams and jobParams["Password"]:
+                jobParams["Password"] = jobParams["Password"]
+            else:
+                jobParams["Password"] = 'tryme2019'W
+
             jobParams["user"] = userAlias
 
             template = ENV.get_template(os.path.abspath(jobTemp))

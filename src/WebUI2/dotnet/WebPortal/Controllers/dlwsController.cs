@@ -540,6 +540,7 @@ namespace WindowsAuth.Controllers
             jobObject["userId"] = uid;
             jobObject["jobType"] = "training";
             jobObject["vcName"] = team;
+            jobObject["Password"] = Password;
 
             var runningasroot = jobObject["runningasroot"];
             if (

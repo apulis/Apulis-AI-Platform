@@ -254,7 +254,7 @@ def SubmitRegularJob(job):
             if "Password" in jobParams and jobParams["Password"]:
                 jobParams["Password"] = jobParams["Password"]
             else:
-                jobParams["Password"] = 'tryme2019'W
+                jobParams["Password"] = 'tryme2019'
 
             jobParams["user"] = userAlias
 

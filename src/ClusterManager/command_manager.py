@@ -32,11 +32,12 @@ def create_log( logdir = '/var/log/dlworkspace' ):
 
 def RunCommand(command):
     dataHandler = DataHandler()
-    k8sUtils.kubectl_exec("exec %s %s" % (command["jobId"], command["command"]))
-    dataHandler.FinishCommand(command["id"])
+    logging.info("Job %s exec command: [%s]" % (command["jobId"], command["command"]))
+    output = k8sUtils.kubectl_exec("exec %s %s" % (command["jobId"], command["command"]))
+    logging.info("exec output:\n %s" % (output))
+    dataHandler.FinishCommand(command["id"], output)
     dataHandler.Close()
     return True
-
 
 def Run():
     create_log()
@@ -47,7 +48,6 @@ def Run():
             pendingCommands = dataHandler.GetPendingCommands()
             for command in pendingCommands:
                 try:
-                    logging.info("Processing command: %s" % (command["id"]))
                     RunCommand(command)
                 except Exception as e:
                     logging.error(e)

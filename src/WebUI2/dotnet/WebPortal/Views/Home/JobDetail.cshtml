@@ -225,9 +225,10 @@
                     if (endpoint.status == "running") {
                         var workPath = "@ViewData["workPath"]";
                         var sessionUserName = "@ViewData["Username"]";
+                        var password = "@ViewData["password"]";
                         var jobUserName = endpoint.username;
                         workPath = workPath.replace(sessionUserName, jobUserName);
-                        return taskInfo + " SSH: <span onclick='copy(this)' onmouseover='copyIconShow(this)' onmouseout='copyIconHidden(this)'>ssh -i " + workPath + ".ssh/id_rsa -p " + endpoint.port + " " + jobUserName + "@@" + endpoint.nodeName + "." + endpoint.domain + "</span>" + "\n";
+                        return taskInfo + " SSH: <span onclick='copy(this)'>ssh -i " + workPath + ".ssh/id_rsa -p " + endpoint.port + " " + jobUserName + "@@" + endpoint.nodeName + "." + endpoint.domain + "(password:"+ password + ")</span>" + "\n";
                     } else {
                         return;
                     }

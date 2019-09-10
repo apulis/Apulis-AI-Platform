@@ -39,7 +39,7 @@ class DataHandler:
         self.CreateTable()
 
         elapsed = timeit.default_timer() - start_time
-        logger.info("DataHandler initialization, time elapsed %f s" % elapsed)
+        # logger.info("DataHandler initialization, time elapsed %f s" % elapsed)
 
     def CreateDatabase(self):
         if "initSQLDB" not in global_vars or not global_vars["initSQLDB"]:
@@ -673,10 +673,10 @@ class DataHandler:
         logger.info("DataHandler: get pending command , time elapsed %f s" % (elapsed))
         return ret
 
-    def FinishCommand(self, commandId):
+    def FinishCommand(self, commandId, output):
         try:
             start_time = timeit.default_timer()
-            sql = """update `%s` set status = 'run' where `id` = '%s' """ % (self.commandtablename, commandId)
+            sql = """update `%s` set status = 'run', output='%s' where `id` = '%s' """ % (self.commandtablename, output, commandId)
             cursor = self.conn.cursor()
             cursor.execute(sql)
             self.conn.commit()
@@ -957,7 +957,7 @@ class DataHandler:
         return ret
 
     def __del__(self):
-        logger.debug("********************** deleted a DataHandler instance *******************")
+        # logger.debug("********************** deleted a DataHandler instance *******************")
         self.Close()
 
     def Close(self):

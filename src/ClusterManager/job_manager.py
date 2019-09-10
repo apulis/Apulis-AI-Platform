@@ -22,13 +22,11 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 from config import config, GetStoragePath, GetWorkPath
 from DataHandler import DataHandler
-from node_manager import create_log
 from node_manager import get_cluster_status
 import base64
 from ResourceInfo import ResourceInfo
 
 import re
-
 import thread
 import threading
 import random
@@ -40,25 +38,14 @@ import logging.config
 nvidiaDriverPath = config["nvidiaDriverPath"] if "nvidiaDriverPath" in config else "/usr/local/cuda/lib64"
 
 
-
-def printlog(msg):
-    print("%s - %s" % (datetime.datetime.utcnow().strftime("%x %X"),msg))
-
-def LoadJobParams(jobParamsJsonStr):
-    return json.loads(jobParamsJsonStr)
-
-def cmd_exec(cmdStr):
-    try:
-        output = subprocess.check_output(["bash","-c", cmdStr])
-    except Exception as e:
-        print(e)
-        output = ""
-    return output
-
-
-
-
-
+def create_log( logdir = '/var/log/dlworkspace' ):
+    if not os.path.exists( logdir ):
+        os.system("mkdir -p " + logdir )
+    with open('logging.yaml') as f:
+        logging_config = yaml.load(f)
+        f.close()
+        logging_config["handlers"]["file"]["filename"] = logdir+"/jobmanager.log"
+        logging.config.dictConfig(logging_config)
 
 def SubmitJob(job):
     jobParams = json.loads(base64.b64decode(job["jobParams"]))
@@ -187,7 +174,7 @@ def SubmitRegularJob(job):
         else:
             jobParams["usefreeflow"] = False
 
-        print ("Render Job: %s" % jobParams)
+        logging.info("Render Job: %s" % jobParams)
         jobDescriptionList = []
 
         pods = []
@@ -262,6 +249,13 @@ def SubmitRegularJob(job):
             user_info = dataHandler.GetIdentityInfo(jobParams["userName"])[0]
             jobParams["gid"] = user_info["gid"]
             jobParams["uid"] = user_info["uid"]
+
+            # password control
+            if "Password" in jobParams and jobParams["Password"]:
+                jobParams["Password"] = jobParams["Password"]
+            else:
+                jobParams["Password"] = 'tryme2019'
+
             jobParams["user"] = userAlias
 
             template = ENV.get_template(os.path.abspath(jobTemp))
@@ -305,7 +299,7 @@ def SubmitRegularJob(job):
         jobMetaStr = base64.b64encode(json.dumps(jobMeta))
         dataHandler.UpdateJobTextField(jobParams["jobId"],"jobMeta",jobMetaStr)
     except Exception as e:
-        print(e)
+        logging.error(e)
         ret["error"] = str(e)
         retries = dataHandler.AddandGetJobRetries(jobParams["jobId"])
         if retries >= 5:
@@ -550,7 +544,7 @@ sleep infinity
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print(e)
+        logging.error(e)
         ret["error"] = str(e)
         retries = dataHandler.AddandGetJobRetries(jobParams["jobId"])
         if retries >= 5:
@@ -634,7 +628,7 @@ def UpdateJobStatus(job):
                 try:
                     launch_ps_dist_job(jobParams)
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
             return
 
     jobPath,workPath,dataPath = GetStoragePath(jobParams["jobPath"],jobParams["workPath"],jobParams["dataPath"])
@@ -645,7 +639,7 @@ def UpdateJobStatus(job):
     result, detail = k8sUtils.GetJobStatus(job["jobId"])
     dataHandler.UpdateJobTextField(job["jobId"],"jobStatusDetail",base64.b64encode(json.dumps(detail)))
 
-    logging.info("job %s status: %s,%s" % (job["jobId"], result, json.dumps(detail)))
+    # logging.info("job %s status: %s,%s" % (job["jobId"], result, json.dumps(detail)))
 
     jobDescriptionPath = os.path.join(config["storage-mount-path"], job["jobDescriptionPath"]) if "jobDescriptionPath" in job else None
     if "userId" not in jobParams:
@@ -661,7 +655,7 @@ def UpdateJobStatus(job):
             dataHandler.UpdateJobTextField(job["jobId"],"jobStatus","running")
 
     elif result.strip() == "Failed":
-        printlog("Job %s fails, cleaning..." % job["jobId"])
+        logging.info("Job %s fails, cleaning..." % job["jobId"])
         joblog_manager.extract_job_log(job["jobId"],logPath,jobParams["userId"])
         dataHandler.UpdateJobTextField(job["jobId"],"jobStatus","failed")
         dataHandler.UpdateJobTextField(job["jobId"],"errorMsg",detail)
@@ -675,16 +669,16 @@ def UpdateJobStatus(job):
             del UnusualJobs[job["jobId"]]
             retries = dataHandler.AddandGetJobRetries(job["jobId"])
             if retries >= 5:
-                printlog("Job %s fails for more than 5 times, abort" % job["jobId"])
+                logging.info("Job %s fails for more than 5 times, abort" % job["jobId"])
                 dataHandler.UpdateJobTextField(job["jobId"],"jobStatus","error")
                 dataHandler.UpdateJobTextField(job["jobId"],"errorMsg","cannot launch the job.")
                 if jobDescriptionPath is not None and os.path.isfile(jobDescriptionPath):
                     k8sUtils.kubectl_delete(jobDescriptionPath)
             else:
-                printlog("Job %s fails in Kubernetes, delete and re-submit the job. Retries %d" % (job["jobId"] , retries))
+                logging.info("Job %s fails in Kubernetes, delete and re-submit the job. Retries %d" % (job["jobId"] , retries))
                 SubmitJob(job)
     elif result.strip() == "PendingHostPort":
-        printlog("Cannot find host ports for job :%s, re-launch the job with different host ports " % (job["jobId"]))
+        logging.info("Cannot find host ports for job :%s, re-launch the job with different host ports " % (job["jobId"]))
 
         SubmitJob(job)
 
@@ -695,7 +689,7 @@ def UpdateJobStatus(job):
 
 def run_dist_cmd_on_pod(podId, cmd, outputfile):
     remotecmd = "exec %s -- %s" % (podId,cmd)
-    print(remotecmd)
+    logging.info(remotecmd)
     k8sUtils.kubectl_exec_output_to_file(remotecmd,outputfile)
 
 
@@ -800,7 +794,7 @@ Host %s
     for [idx, pod] in enumerate(pods["items"]):
         pod_name = pod["metadata"]["name"]
         bash_script = "cat > /home/" + user_name + "/.ssh/config <<EOF " + sshconfigstr + "\nEOF"
-        print("override ssh client config: %s" % bash_script)
+        logging.info("override ssh client config: %s" % bash_script)
         k8sUtils.kubectl_exec("exec %s -- bash -c \'%s\' ; chown -R %s /home/%s/.ssh/config" % (pod_name, bash_script,user_name,user_name))
 
         # fix ~/.ssh/ folder permission
@@ -837,15 +831,6 @@ Host %s
     dataHandler = DataHandler()
     dataHandler.UpdateJobTextField(job_id, "jobStatus", "running")
     dataHandler.Close()
-
-def create_log( logdir = '/var/log/dlworkspace' ):
-    if not os.path.exists( logdir ):
-        os.system("mkdir -p " + logdir )
-    with open('logging.yaml') as f:
-        logging_config = yaml.load(f)
-        f.close()
-        logging_config["handlers"]["file"]["filename"] = logdir+"/jobmanager.log"
-        logging.config.dictConfig(logging_config)
 
 
 def JobInfoSorter(elem):
@@ -934,6 +919,8 @@ def TakeJobActions(jobs):
 
 
 def Run():
+    create_log()
+    logging.info("start to update job information ...")
 
     while True:
 
@@ -941,7 +928,7 @@ def Run():
             config["racks"] = k8sUtils.get_node_labels("rack")
             config["skus"] = k8sUtils.get_node_labels("sku")
         except Exception as e:
-            print(e)
+            logging.error(e)
 
         try:
             dataHandler = DataHandler()
@@ -953,7 +940,7 @@ def Run():
                 logging.info("Updating status for %d jobs" % len(pendingJobs))
                 for job in pendingJobs:
                     try:
-                        logging.info("Processing job: %s, status: %s" % (job["jobId"], job["jobStatus"]))
+                        # logging.info("Processing job: %s, status: %s" % (job["jobId"], job["jobStatus"]))
                         if job["jobStatus"] == "killing":
                             KillJob(job, "killed")
                         elif job["jobStatus"] == "pausing":
@@ -963,13 +950,13 @@ def Run():
                         elif job["jobStatus"] == "unapproved":
                             AutoApproveJob(job)
                     except Exception as e:
-                        logging.info(e)
+                        logging.error(e)
             except Exception as e:
-                print(str(e))
+                logging.error(e)
             finally:
                 dataHandler.Close()
         except Exception as e:
-            print(str(e))
+            logging.error(e)
 
         time.sleep(1)
 

@@ -37,17 +37,20 @@ class AuthorizationManager:
         start_time = timeit.default_timer()
         requestedAccess = '%s;%s;%s' % (str(identityName), resourceAclPath, str(permissions))
         try:           
-            identities = []
-            identities.extend(IdentityManager.GetIdentityInfoFromDB(identityName)["groups"])
+            identityGroups = []
+            identityGroups.extend(IdentityManager.GetIdentityInfoFromDB(identityName)["groups"])
 
             #TODO: handle isDeny
             while resourceAclPath:
                 #logger.debug('resourceAclPath ' + resourceAclPath)
                 acl = DataManager.GetResourceAcl(resourceAclPath)
                 for ace in acl:
-                    for identity in identities:
-                        #logger.debug('identity %s' % identity)
-                        if ace["identityName"] == identityName or (str(ace["identityId"]) == str(identity)  and (int(identity) < INVALID_RANGE_START or int(identity) > INVALID_RANGE_END)):
+                    for group in identityGroups:
+                        #logger.debug('identityGroup %s' % group)
+                        if ace["identityName"] == identityName or (
+                            str(ace["identityId"]) == str(group) and (
+                                int(group) < INVALID_RANGE_START or int(group) > INVALID_RANGE_END)
+                        ):
                             permissions = permissions & (~ace["permissions"])
                             if not permissions:
                                 logger.info('Yes for %s in time %s' % (requestedAccess, str(timeit.default_timer() - start_time)))
@@ -214,7 +217,4 @@ class IdentityManager:
             info["uid"] = INVALID_ID
             info["gid"] = INVALID_ID
             info["groups"] = [INVALID_ID]
-            
-            
-            
             return info

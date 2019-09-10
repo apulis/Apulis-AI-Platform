@@ -807,10 +807,10 @@ class DataHandler:
         return ret    
 
 
-    def FinishCommand(self,commandId):
+    def FinishCommand(self,commandId, output):
         try:
             start_time = timeit.default_timer()
-            sql = """update [%s] set status = 'run' where [id] = '%s' """ % (self.commandtablename, commandId)
+            sql = """update [%s] set status = 'run', output='%s' where [id] = '%s' """ % (self.commandtablename, output, commandId)
             cursor = self.conn.cursor()
             cursor.execute(sql)
             self.conn.commit()

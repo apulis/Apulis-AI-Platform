@@ -159,7 +159,9 @@
                         tr.append("<td>" + json[i].command + "</td>");
                         //Status
                         if (json[i].status === "run") {
-                            var resultButton = '<a href="#" onclick="alert(\'' + json[i].output + '\')">Display Result</a>';
+                            var msg = (json[i].output || 'null').toString().replace(/\n/g, "<br/>");
+                            var title = json[i].command.toString().replace(/\n/g, " ");
+                            var resultButton = '<a href="#" onclick="layer.alert(\'' + msg + '\',{ btn: \'Ok\', title: \'' + title + '\'}); return false;">Display Result</a>';
                             tr.append('<td><bold class="Admin">' + json[i].status + "</bold> | " + resultButton + '</td>');
                         }
                         else {
@@ -408,8 +410,9 @@
 </script>
 <script>
     function AlertCommandResult(payload) {
-        alert(payload.result);
+        layer.alert(payload.result, { btn: 'Ok', title: 'alert' });
         $("#run-cmd-btn").attr("disabled", false);
+        document.getElementById("cmd-textbox").value = '';
     }
 
     function AlertAPIError(xhr, ajaxOptions, thrownError) {
@@ -594,7 +597,7 @@
 </div>
 
 <div id="run-command" style="display: none">
-    <h2> Run Command:</h2>
+    <h2 style="margin-top:20px;"> Run Command:</h2>
     <label>Use Template: </label>
     <select onchange="UseTemplate(this.value)" id="templateselect"></select>
     <div style="display: block; position: relative; width: 100%;">
@@ -603,7 +606,7 @@
     </div>
     <div id="commands-div" style="display:none">
         <br />
-        <h4>Commands</h4>
+        <h3>Commands</h3>
         <table class="table table-bordered table-condensed table-hover table-striped">
             <thead>
                 <tr>

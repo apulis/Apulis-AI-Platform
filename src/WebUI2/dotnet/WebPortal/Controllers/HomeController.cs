@@ -1059,6 +1059,8 @@ namespace WindowsAuth.Controllers
             }
             ViewData["cluster"] = cluster;
             ViewData["jobid"] = HttpContext.Request.Query["jobId"];
+            // passwd
+            ViewData["password"] = HttpContext.Session.GetString("Password");
 
             var workFolderAccessPoint = Startup.Clusters[cluster].WorkFolderAccessPoint;
 

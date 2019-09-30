@@ -1,7 +1,8 @@
-FROM horovod/horovod:0.16.1-tf1.12.0-torch1.0.0-mxnet1.4.0-py3.5
+FROM horovod/horovod:0.18.1-tf1.14.0-torch1.2.0-mxnet1.5.0-py3.5
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 # RUN rm -rf /var/lib/apt/lists/*
+# Add network tools for debug
 RUN umask 022
 RUN apt-get -y update && \
     apt-get -y install \
@@ -19,7 +20,17 @@ RUN apt-get -y update && \
       openssh-server \
       sudo \
       nodejs \
-      software-properties-common
+      software-properties-common \
+      net-tools \
+      dnsutils \
+      openssh-server \
+      sudo 
+
+RUN echo $'# Add by Dockerfile\n\
+AddressFamily inet\n\
+AllowTcpForwarding yes\n\
+X11UseLocalhost yes\n\
+' > /etc/ssh/sshd_config
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \

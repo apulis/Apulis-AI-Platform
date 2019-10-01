@@ -28,16 +28,16 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
         zip \
         libcurl3-dev \
         libfreetype6-dev \
-        libpng12-dev \
+        libpng-dev \
         libzmq3-dev \
         pkg-config \
-        python3.5-dev \
+        python3.6-dev \
         zlib1g-dev \
         libopencv-dev \
         # python3-opencv \
 		python3-tk \
         build-essential autoconf libtool libcunit1-dev \
-        libproj-dev libgdal-dev libgeos-dev libjson0-dev vim python3-gdal \
+        libproj-dev libgdal-dev libgeos-dev libjson-c-dev vim python3-gdal \
     	# requirements for keras
     	python3-h5py \
     	python3-yaml \
@@ -112,7 +112,7 @@ RUN pip3 install jupyterlab
 RUN python3 -m pip install ipykernel
 RUN python3 -m ipykernel install --user
 
-RUN rm /usr/bin/python && ln -s /usr/bin/python3.5 /usr/bin/python
+RUN rm /usr/bin/python && ln -s /usr/bin/python3.6 /usr/bin/python
 
 RUN apt-get update -y && apt-get install -y gdal-bin xauth xfonts-base
 

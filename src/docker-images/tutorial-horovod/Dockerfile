@@ -1,9 +1,23 @@
-FROM horovod/horovod:0.18.1-tf1.14.0-torch1.2.0-mxnet1.5.0-py3.5
+FROM horovod/horovod:0.18.1-tf1.14.0-torch1.2.0-mxnet1.5.0-py3.6
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 # RUN rm -rf /var/lib/apt/lists/*
 # Add network tools for debug
 RUN umask 022
+
+## for apt to be noninteractive
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+
+## preesed tzdata, update package index, upgrade packages and install needed software
+RUN echo "tzdata tzdata/Areas select America" > /tmp/preseed.txt; \
+    echo "tzdata tzdata/Zones/America select Los_Angeles" >> /tmp/preseed.txt; \
+    debconf-set-selections /tmp/preseed.txt && \
+    # rm /etc/timezone && \
+    # rm /etc/localtime && \
+    apt-get update && \
+    apt-get install -y tzdata
+
 RUN apt-get -y update && \
     apt-get -y install \
       vim \
@@ -24,13 +38,15 @@ RUN apt-get -y update && \
       net-tools \
       dnsutils \
       openssh-server \
-      sudo 
+      sudo \
+      inetutils-ping inetutils-traceroute
 
 RUN echo $'# Add by Dockerfile\n\
 AddressFamily inet\n\
 AllowTcpForwarding yes\n\
 X11UseLocalhost yes\n\
-' > /etc/ssh/sshd_config
+X11DisplayOffset 10\n\
+' >> /etc/ssh/sshd_config
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -109,6 +125,7 @@ ADD RecogServer /RecogServer
 RUN pip3 install jupyterlab
 RUN python3 -m pip install ipykernel
 RUN python3 -m ipykernel install --user
+
 
 #Telemetry
 #--------------

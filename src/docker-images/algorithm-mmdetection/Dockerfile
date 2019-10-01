@@ -12,3 +12,6 @@ RUN conda install cython -y
 RUN git clone https://github.com/open-mmlab/mmdetection.git /mmdetection
 WORKDIR /mmdetection
 RUN pip install -e .
+RUN python3 -m pip install jupyter jupyterlab
+RUN python3 -m pip install ipykernel
+RUN python3 -m ipykernel install --user

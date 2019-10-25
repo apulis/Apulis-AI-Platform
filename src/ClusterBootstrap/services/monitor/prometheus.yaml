@@ -79,10 +79,21 @@ spec:
       labels:
         task: monitoring
         app: prometheus
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: '{{cnf["prometheus"]["reporter"]["port"]}}'
     spec:
       nodeSelector:
         prometheus: active
       hostNetwork: true
+      initContainers:
+      - name: init
+        image: bash:4
+        volumeMounts:
+        - name: prometheus-data
+          mountPath: /prometheus-data
+        command: ["chmod", "777", "/prometheus-data"] # newly create dir have permission 755, which makes prometheus container unable to write
       containers:
       - name: prometheus
         image: prom/prometheus:v2.1.0
@@ -96,6 +107,7 @@ spec:
           - '--web.listen-address=0.0.0.0:{{cnf["prometheus"]["port"]}}'
           - '--web.external-url=http://localhost:{{cnf["prometheus"]["port"]}}/prometheus/'
           - '--web.route-prefix=prometheus'
+          - '--storage.tsdb.path=/prometheus-data'
           - '--storage.tsdb.retention=31d'
         ports:
         - name: web
@@ -105,6 +117,20 @@ spec:
           mountPath: /etc/prometheus
         - name: rules-volume
           mountPath: /etc/prometheus-alert
+        - name: prometheus-data
+          mountPath: /prometheus-data
+      - name: gpu-reporter
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}gpu-reporter:{{cnf["dockertag"]}}
+        args:
+          - 'python'
+          - '/gpu-reporter/reporter.py'
+          - '--prometheus_url'
+          - 'http://localhost:{{cnf["prometheus"]["port"]}}'
+          - '--port'
+          - '{{cnf["prometheus"]["reporter"]["port"]}}'
+        ports:
+        - name: reporter
+          containerPort: {{cnf["prometheus"]["reporter"]["port"]}}
       volumes:
       - name: config-volume
         configMap:
@@ -112,6 +138,9 @@ spec:
       - name: rules-volume
         configMap:
           name: prometheus-alert
+      - name: prometheus-data
+        hostPath:
+          path: /data/prometheus/data
       tolerations:
       - key: node.kubernetes.io/memory-pressure
         operator: "Exists"

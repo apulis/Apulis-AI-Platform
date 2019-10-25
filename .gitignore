@@ -60,10 +60,11 @@ src/**/dotnet/WebPortal/hosting.json
 /.vs/ProjectSettings.json
 /.vs/VSWorkspaceState.json
 /.vs/DLWorkspace/v15/.suo
+.vscode/*
 
 cluster-autoscaler
 src/ClusterBootstrap/services/monitor/grafana-config.yaml
 src/ClusterBootstrap/services/monitor/prometheus-alerting.yaml
 src/ClusterBootstrap/services/monitor/alert-templates.yaml
-
-.vscode/*
+src/ClusterBootstrap/services/jobmanager/dlws-scripts.yaml
+src/ClusterBootstrap/services/monitor/alerting/kill-idle.rules

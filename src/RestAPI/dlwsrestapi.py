@@ -2,7 +2,7 @@ import sys
 import json
 import os
 
-from flask import Flask
+from flask import Flask, Response
 from flask_restful import reqparse, abort, Api, Resource
 from flask import request, jsonify
 import base64
@@ -28,18 +28,21 @@ import sys
 import traceback
 import threading
 
+import prometheus_client
+
+CONTENT_TYPE_LATEST = str("text/plain; version=0.0.4; charset=utf-8")
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with open(os.path.join(dir_path, 'logging.yaml'), 'r') as f:
     logging_config = yaml.load(f)
     dictConfig(logging_config)
 logger = logging.getLogger('restfulapi')
-global_vars["logger"] = logger
 
 app = Flask(__name__)
 api = Api(app)
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
-logger.info("%s" % config )
+logger.info("%s", config)
 
 if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     logger.info("===========Init Admin Access===============")
@@ -61,6 +64,35 @@ def _stacktraces():
    for line in code:
        print("_stacktrace: " + line)
 
+if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
+    logger.info("===========Init Admin Access===============")
+    global_vars["initAdminAccess"] = True
+    logger.info('setting admin access!')
+    AuthorizationManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, False)
+    logger.info('admin access given!')
+
+
+def _stacktraces():
+   code = []
+   for threadId, stack in sys._current_frames().items():
+       code.append("\n# ThreadID: %s" % threadId)
+       for filename, lineno, name, line in traceback.extract_stack(stack):
+           code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
+           if line:
+               code.append("  %s" % (line.strip()))
+
+   for line in code:
+       print("_stacktrace: " + line)
+
+
+def _WorkerThreadFunc():
+   while True:
+       _stacktraces()
+       time.sleep(60)
+
+#workerThread = threading.Thread(target=_WorkerThreadFunc, args=())
+#workerThread.daemon = True
+#workerThread.start()
 
 def _WorkerThreadFunc():
    while True:
@@ -255,9 +287,9 @@ class SubmitJob(Resource):
                                     if oneshare==alias:
                                         addcmd += "chown %s:%s %s ; " % ( params["userId"], "500000513", containerPath )
             if verbose and len(params["mountpoints"]) > 0:
-                logger.info("Mount path for job %s" % params )
+                logger.info("Mount path for job %s", params )
                 for mounts in params["mountpoints"]:
-                    logger.info( "Share %s, mount %s at %s" % (mounts["name"], mounts["hostPath"], mounts["containerPath"]) )
+                    logger.info( "Share %s, mount %s at %s", mounts["name"], mounts["hostPath"], mounts["containerPath"])
             if len(addcmd) > 0:
                 params["cmd"] = addcmd + params["cmd"]
             output = JobRestAPIUtils.SubmitJob(json.dumps(params))
@@ -285,8 +317,8 @@ class PostJob(Resource):
     def post(self):
         params = request.get_json(force=True)
         monitor = yaml.safe_dump(params, default_flow_style=False)
-        logger.info("Post Job" )
-        logger.info(monitor )
+        logger.info("Post Job")
+        logger.info(monitor)
         ret = {}
         if True:
             output = JobRestAPIUtils.SubmitJob(json.dumps(params))
@@ -298,7 +330,7 @@ class PostJob(Resource):
                     ret["error"] = "Cannot create job!" + output["error"]
                 else:
                     ret["error"] = "Cannot create job!"
-            logger.info("Submit job through restapi, output is %s, ret is %s" %(output, ret) )
+            logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -390,6 +422,8 @@ class KillJob(Resource):
         result = JobRestAPIUtils.KillJob(userName, jobId)
         ret = {}
         if result:
+            # NOTE "Success" prefix is used in reaper, please also update reaper code
+            # if need to change it.
             ret["result"] = "Success, the job is scheduled to be terminated."
         else:
             ret["result"] = "Cannot Kill the job. Job ID:" + jobId
@@ -641,8 +675,6 @@ class AddUser(Resource):
         parser.add_argument('uid')
         parser.add_argument('gid')
         parser.add_argument('groups')
-        parser.add_argument('isAdmin')
-        parser.add_argument('isAuthorized')
         args = parser.parse_args()
 
         ret = {}
@@ -661,18 +693,8 @@ class AddUser(Resource):
             groups = []
         else:
             groups = args["groups"]
-            
-        if args["isAdmin"] is None or args["isAdmin"].strip() != 'true':
-            isAdmin = False
-        else:
-            isAdmin = True
-            
-        if args["isAuthorized"] is None or args["isAuthorized"].strip() != 'true':
-            isAuthorized = False
-        else:
-            isAuthorized = True
 
-        ret["status"] = JobRestAPIUtils.AddUser(userName, uid, gid, groups, isAdmin, isAuthorized)
+        ret["status"] = JobRestAPIUtils.AddUser(userName, uid, gid, groups)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -1107,9 +1129,9 @@ class Endpoint(Resource):
                 endpoint_id = "e-" + pod_name + "-ssh"
 
                 if endpoint_exist(endpoint_id=endpoint_id):
-                    print("Endpoint {} exists. Skip.".format(endpoint_id))
+                    logger.info("Endpoint %s exists. Skip.", endpoint_id)
                     continue
-                print("Endpoint {} does not exist. Add.".format(endpoint_id))
+                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
 
                 endpoint = {
                     "id": endpoint_id,
@@ -1135,7 +1157,7 @@ class Endpoint(Resource):
             endpoint_id = "e-" + job_id + "-ipython"
 
             if not endpoint_exist(endpoint_id=endpoint_id):
-                print("Endpoint {} does not exist. Add.".format(endpoint_id))
+                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
                 endpoint = {
                     "id": endpoint_id,
                     "jobId": job_id,
@@ -1147,7 +1169,7 @@ class Endpoint(Resource):
                 }
                 endpoints[endpoint_id] = endpoint
             else:
-                print("Endpoint {} exists. Skip.".format(endpoint_id))
+                logger.info("Endpoint %s exists. Skip.", endpoint_id)
 
         # Only open tensorboard on the master
         if 'tensorboard' in requested_endpoints:
@@ -1162,7 +1184,7 @@ class Endpoint(Resource):
             endpoint_id = "e-" + job_id + "-tensorboard"
 
             if not endpoint_exist(endpoint_id=endpoint_id):
-                print("Endpoint {} does not exist. Add.".format(endpoint_id))
+                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
                 endpoint = {
                     "id": endpoint_id,
                     "jobId": job_id,
@@ -1174,7 +1196,7 @@ class Endpoint(Resource):
                 }
                 endpoints[endpoint_id] = endpoint
             else:
-                print("Endpoint {} exists. Skip.".format(endpoint_id))
+                logger.info("Endpoint %s exists. Skip.", endpoint_id)
 
         # interactive port
         for interactive_port in interactive_ports:
@@ -1188,7 +1210,7 @@ class Endpoint(Resource):
 
             endpoint_id = "e-" + job_id + "-" + interactive_port["name"]
             if not endpoint_exist(endpoint_id=endpoint_id):
-                print("Endpoint {} does not exist. Add.".format(endpoint_id))
+                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
                 endpoint = {
                     "id": endpoint_id,
                     "jobId": job_id,
@@ -1201,7 +1223,7 @@ class Endpoint(Resource):
                 }
                 endpoints[endpoint_id] = endpoint
             else:
-                print("Endpoint {} exists. Skip.".format(endpoint_id))
+                logger.info("Endpoint %s exists. Skip.", endpoint_id)
 
         data_handler = DataHandler()
         for [_, endpoint] in endpoints.items():
@@ -1217,6 +1239,130 @@ class Endpoint(Resource):
 ## Actually setup the Endpoint resource routing here
 ##
 api.add_resource(Endpoint, '/endpoints')
+
+
+class Templates(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('vcName', location="args")
+        parser.add_argument('userName', location="args")
+        args = parser.parse_args()
+        vcName = args["vcName"]
+        userName = args["userName"]
+
+        dataHandler = DataHandler()
+        ret = dataHandler.GetTemplates("master") or []
+        ret += dataHandler.GetTemplates("vc:" + vcName) or []
+        ret += dataHandler.GetTemplates("user:" + userName) or []
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('vcName', location="args")
+        parser.add_argument('userName', location="args")
+        parser.add_argument('database', location="args")
+        parser.add_argument('templateName', location="args")
+        args = parser.parse_args()
+        vcName = args["vcName"]
+        userName = args["userName"]
+        database = args["database"]
+        templateName = args["templateName"]
+
+        if database == 'master':
+            if AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+                scope = 'master'
+            else:
+                return 'access denied', 403;
+        elif database == 'vc':
+            if AuthorizationManager.HasAccess(userName, ResourceType.VC, vcName, Permission.Admin):
+                scope = 'vc:' + vcName
+            else:
+                return 'access denied', 403;
+        else:
+            scope = 'user:' + userName
+        template_json = request.json
+
+        if template_json is None:
+            return jsonify(result=False, message="Invalid JSON")
+
+        dataHandler = DataHandler()
+        ret = {}
+        ret["result"] = dataHandler.UpdateTemplate(templateName, scope, json.dumps(template_json))
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+    def delete(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('vcName', location="args")
+        parser.add_argument('userName', location="args")
+        parser.add_argument('database', location="args")
+        parser.add_argument('templateName', location="args")
+        args = parser.parse_args()
+        vcName = args["vcName"]
+        userName = args["userName"]
+        database = args["database"]
+        templateName = args["templateName"]
+
+        if database == 'master':
+            if AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+                scope = 'master'
+            else:
+                return 'access denied', 403;
+        elif database == 'vc':
+            if AuthorizationManager.HasAccess(userName, ResourceType.VC, vcName, Permission.Admin):
+                scope = 'vc:' + vcName
+            else:
+                return 'access denied', 403;
+        else:
+            scope = 'user:' + userName
+
+        dataHandler = DataHandler()
+        ret = {}
+        ret["result"] = dataHandler.DeleteTemplate(templateName, scope)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+api.add_resource(Templates, '/templates')
+
+
+class JobPriority(Resource):
+    def get(self):
+        job_priorites = JobRestAPIUtils.get_job_priorities()
+        resp = jsonify(job_priorites)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+    def post(self):
+        payload = request.get_json(silent=True)
+        success = JobRestAPIUtils.update_job_priorites(payload)
+        http_status = 200 if success else 400
+
+        job_priorites = JobRestAPIUtils.get_job_priorities()
+        resp = jsonify(job_priorites)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        resp.status_code = http_status
+        return resp
+
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(JobPriority, '/jobs/priorities')
+
+@app.route("/metrics")
+def metrics():
+    return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 if __name__ == '__main__':
     app.run(debug=False,host="0.0.0.0",threaded=True)

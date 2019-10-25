@@ -10,7 +10,7 @@ spec:
     image: {{cnf["dockers"]["container"]["hyperkube"]["fullname"]}}
     command:
     - /hyperkube      
-    - controller-manager
+    - kube-controller-manager
     - --master=http://127.0.0.1:8080
     - --leader-elect=true
     - --service-account-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
@@ -42,6 +42,3 @@ spec:
   - hostPath:
       path: /usr/share/ca-certificates
     name: ssl-certs-host
-  - name: resolv
-    hostPath:
-      path: /etc/resolv.conf

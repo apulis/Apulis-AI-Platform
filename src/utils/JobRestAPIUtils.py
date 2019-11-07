@@ -392,6 +392,11 @@ def GetClusterStatus():
     cluster_status,last_update_time =  DataManager.GetClusterStatus()
     return cluster_status,last_update_time
 
+def GetUser(username):
+    dataHandler = DataHandler()
+    ret = dataHandler.GetIdentityInfo(username)
+    dataHandler.Close()
+    return ret[0] if len(ret) > 0 else None
 
 def AddUser(username,uid,gid,groups):
     ret = None
@@ -602,10 +607,6 @@ def update_job_priorites(job_priorites):
     dataHandler.Close()
     return success
 
-def GetUser(userName):
-    dataHandler = DataHandler()
-    ret =  dataHandler.GetUser(userName)
-    return ret
 
 
 if __name__ == '__main__':

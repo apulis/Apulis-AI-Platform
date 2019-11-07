@@ -8,7 +8,7 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
   if ('email' in context.query && 'token' in context.query) {
     const { email, token } = context.query
     const user = context.state.user = User.fromToken(context, email, token)
-    await user.fillIdFromWinbind()
+    await user.getUserFromDb()
     context.log.info(user, 'Authenticated by token')
   } else if (context.cookies.get('token')) {
     try {

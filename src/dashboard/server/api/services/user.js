@@ -72,14 +72,29 @@ class User extends Service {
     return this._token
   }
 
-  // remove winbind, get info from db, todolist: add to db
   async fillIdFromWinbind() {
-    const cluster = new Cluster(this.context, clusterIds[0])
-    const data = await cluster.getUser(this.email)
-    this.familyName = data['familyName'];
-    this.givenName = data['givenName'];
+    const params = new URLSearchParams({ userName: this.email })
+    const url = `${winbind}/domaininfo/GetUserId?${params}`
+    this.context.log.info({ url }, 'Winbind request')
+    const response = await fetch(url)
+    const data = await response.json()
+    this.context.log.info({ data }, 'Winbind response')
+    
     this.uid = data['uid']
     this.gid = data['gid']
+    return data
+  }
+
+  async getUserFromDb() {
+    const params = new URLSearchParams(Object.assign({ userName: this.email }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/getUser?' + params)
+    const data = await response.json()
+
+    this.uid = data['uid']
+    this.gid = data['gid']
+    this.familyName = data['familyName'] || data['identityName']
+    this.givenName = data['givenName'] || ''
     return data
   }
 

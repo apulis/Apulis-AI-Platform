@@ -666,7 +666,22 @@ class AddCommand(Resource):
 ##
 api.add_resource(AddCommand, '/AddCommand')
 
+class GetUser(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+        ret = JobRestAPIUtils.GetUser(userName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
 
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetUser, '/getUser')
 
 class AddUser(Resource):
     def get(self):
@@ -1359,31 +1374,6 @@ class JobPriority(Resource):
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(JobPriority, '/jobs/priorities')
-
-
-# getUser
-class getUser(Resource):
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('email')
-        args = parser.parse_args()
-        results = JobRestAPIUtils.GetUser(args['email'])
-        ret={}
-        if len(results) == 1:
-            tmp = results[0]
-            ret = {
-                "userName":tmp[0],
-                "email":tmp[0],
-                'uid':tmp[1],
-                'gid':tmp[2],
-                'groups':tmp[3]
-            }
-        resp = jsonify(ret)
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        resp.headers["dataType"] = "json"
-        return resp
-
-api.add_resource(getUser, '/getUser')
 
 
 @app.route("/metrics")

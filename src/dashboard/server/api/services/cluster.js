@@ -342,19 +342,6 @@ class Cluster extends Service {
     return text
   }
 
-
-  /**
- * @param {string} email
- * @return {Promise}
- */
-  async getUser(email) {
-    const params = new URLSearchParams({ email })
-    const response = await this.fetch('/getUser?' + params)
-    this.context.assert(response.ok, 502)
-    const user = await response.json()
-    return user
-  }
-
   /**
    * @private
    * @param {string} path

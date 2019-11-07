@@ -1360,6 +1360,32 @@ class JobPriority(Resource):
 ##
 api.add_resource(JobPriority, '/jobs/priorities')
 
+
+# getUser
+class getUser(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('email')
+        args = parser.parse_args()
+        results = JobRestAPIUtils.GetUser(args['email'])
+        ret={}
+        if len(results) == 1:
+            tmp = results[0]
+            ret = {
+                "userName":tmp[0],
+                "email":tmp[0],
+                'uid':tmp[1],
+                'gid':tmp[2],
+                'groups':tmp[3]
+            }
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(getUser, '/getUser')
+
+
 @app.route("/metrics")
 def metrics():
     return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)

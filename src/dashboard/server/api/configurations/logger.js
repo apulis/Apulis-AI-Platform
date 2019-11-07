@@ -6,7 +6,8 @@ const logger = require('koa-pino-logger')
  */
 module.exports = (app) => {
   const prettyPrint = app.env === 'development'
-  const middleware = logger({ prettyPrint })
+  const level = 'warn'
+  const middleware = logger({ prettyPrint, level })
 
   // Log the config
   middleware.logger.info(config.util.toObject(), 'App config')

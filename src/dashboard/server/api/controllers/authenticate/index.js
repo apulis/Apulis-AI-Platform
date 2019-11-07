@@ -6,7 +6,7 @@ const User = require('../../services/user')
 
 const activeDirectoryConfig = config.get('activeDirectory')
 
-const OAUTH2_URL = `https://login.microsoftonline.com/${activeDirectoryConfig.tenant}/oauth2`
+const OAUTH2_URL = `https://login.microsoftonline.com/common/oauth2/v2.0`
 
 /**
  * @param {import('koa').Context} context

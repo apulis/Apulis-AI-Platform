@@ -1040,6 +1040,21 @@ class DataHandler(object):
         except Exception as e:
             pass
 
+    #new api
+    @record
+    def GetUser(self,userName):
+        cursor = self.conn.cursor()
+        query = "SELECT `identityName`,`uid`,`gid`,`groups` FROM `%s` WHERE `identityName` = '%s'" % (self.identitytablename, userName)
+        ret = []
+        try:
+            cursor.execute(query)
+            for (identityName,uid,gid,groups) in cursor:
+                ret.append((identityName,uid,gid,groups))
+        except Exception as e:
+            logger.error('Exception: %s', str(e))
+        self.conn.commit()
+        cursor.close()
+        return ret
 
 if __name__ == '__main__':
     TEST_INSERT_JOB = False

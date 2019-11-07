@@ -8,7 +8,7 @@ const Service = require('./service')
 const Cluster = require('./cluster')
 
 const sign = config.get('sign')
-const winbind = config.get('winbind')
+// const winbind = config.get('winbind')
 const masterToken = config.get('masterToken')
 const clusterIds = Object.keys(config.get('clusters'))
 
@@ -17,7 +17,7 @@ class User extends Service {
    * @param {import('koa').Context} context
    * @param {string} email
    */
-  constructor (context, email) {
+  constructor(context, email) {
     super(context)
     this.email = email
   }
@@ -27,8 +27,8 @@ class User extends Service {
    * @param {object} idToken
    * @return {User}
    */
-  static fromIdToken (context, idToken) {
-    const user = new User(context, idToken['upn'])
+  static fromIdToken(context, idToken) {
+    const user = new User(context, idToken['email'])
     user.givenName = idToken['given_name']
     user.familyName = idToken['family_name']
     return user
@@ -39,7 +39,7 @@ class User extends Service {
    * @param {object} idToken
    * @return {User}
    */
-  static fromToken (context, email, token) {
+  static fromToken(context, email, token) {
     const user = new User(context, email)
     const expectedToken = user.token
     const actualToken = Buffer.from(token, 'hex')
@@ -53,7 +53,7 @@ class User extends Service {
    * @param {string} token
    * @return {User}
    */
-  static fromCookie (context, token) {
+  static fromCookie(context, token) {
     const payload = jwt.verify(token, sign)
     const user = new User(context, payload['email'])
     user.givenName = payload['givenName']
@@ -63,7 +63,7 @@ class User extends Service {
     return user
   }
 
-  get token () {
+  get token() {
     if (this._token == null) {
       const hash = createHash('md5')
       hash.update(`${this.email}:${masterToken}`)
@@ -72,21 +72,18 @@ class User extends Service {
     return this._token
   }
 
-  async fillIdFromWinbind () {
-    const params = new URLSearchParams({ userName: this.email })
-    const url = `${winbind}/domaininfo/GetUserId?${params}`
-    this.context.log.info({ url }, 'Winbind request')
-    const response = await fetch(url)
-    const data = await response.json()
-    this.context.log.info({ data }, 'Winbind response')
-
+  // remove winbind, get info from db, todolist: add to db
+  async fillIdFromWinbind() {
+    const cluster = new Cluster(this.context, clusterIds[0])
+    const data = await cluster.getUser(this.email)
+    this.familyName = data['familyName'];
+    this.givenName = data['givenName'];
     this.uid = data['uid']
     this.gid = data['gid']
-
     return data
   }
 
-  async addUserToCluster (data) {
+  async addUserToCluster(data) {
     // Fix groups format
     if (Array.isArray(data['groups'])) {
       data['groups'] = JSON.stringify(data['groups'].map(e => String(e)))
@@ -100,8 +97,8 @@ class User extends Service {
   /**
    * @return {string}
    */
-  toCookie () {
-    console.log('token is ', this.token)
+  toCookie() {
+    // console.log('token is ', this.token)
     return jwt.sign({
       email: this.email,
       uid: this.uid,
@@ -110,6 +107,7 @@ class User extends Service {
       givenName: this.givenName
     }, sign)
   }
+
 }
 
 module.exports = User

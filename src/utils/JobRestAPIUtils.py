@@ -602,6 +602,11 @@ def update_job_priorites(job_priorites):
     dataHandler.Close()
     return success
 
+def GetUser(userName):
+    dataHandler = DataHandler()
+    ret =  dataHandler.GetUser(userName)
+    return ret
+
 
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False

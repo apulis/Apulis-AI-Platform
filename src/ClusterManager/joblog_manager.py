@@ -51,58 +51,16 @@ def extract_job_log(jobId,logPath,userId):
     try:
         dataHandler = DataHandler()
 
-        #logs = k8sUtils.GetLog(jobId)
-        logs = k8sUtils.getJobConsoleDetail(jobId)
+        logs = k8sUtils.GetLog(jobId)
+        # logs = k8sUtils.getJobConsoleDetail(jobId)
         jupyterLog = k8sUtils.getJupyterInfo(jobId)
-
+    
         jobLogDir = os.path.dirname(logPath)
         if not os.path.exists(jobLogDir):
             mkdirsAsUser(jobLogDir,userId)
         logStr = ""
         trimlogstr = ""
 
-        logStr += "=========================================================\n"
-        logStr += "=========================================================\n"
-        logStr += "=========================================================\n"
-        logStr += "        logs from pod: %s\n" % jobId
-        logStr += "=========================================================\n"
-        logStr += "=========================================================\n"
-        logStr += "=========================================================\n"
-        logStr += logs
-        logStr += jupyterLog
-        logStr += "\n\n\n"
-        logStr += "=========================================================\n"
-        logStr += "        end of logs from pod: %s\n" % jobId
-        logStr += "=========================================================\n"
-        logStr += "\n\n\n"
-
-        trimlogstr += "=========================================================\n"
-        trimlogstr += "=========================================================\n"
-        trimlogstr += "=========================================================\n"
-        trimlogstr += "        logs from pod: %s\n" % jobId
-        trimlogstr += "=========================================================\n"
-        trimlogstr += "=========================================================\n"
-        trimlogstr += "=========================================================\n"
-        logLines = logs.split('\n')
-        if (len(logLines) < 3000):
-            trimlogstr += logs
-            trimlogstr += jupyterLog
-            trimlogstr += "\n\n\n"
-            trimlogstr += "=========================================================\n"
-            trimlogstr += "        end of logs from pod: %s\n" % jobId
-            trimlogstr += "=========================================================\n"
-            trimlogstr += "\n\n\n"
-        else:
-            trimlogstr += "\n".join(logLines[-2000:])
-            trimlogstr += jupyterLog
-            trimlogstr += "\n\n\n"
-            trimlogstr += "=========================================================\n"
-            trimlogstr += "        end of logs from pod: %s\n" % jobId
-            trimlogstr += "        Note: the log is too long to display in the webpage.\n"
-            trimlogstr += "        Only the last 2000 lines are shown here.\n"
-            trimlogstr += "        Please check the log file (in Job Folder) for the full logs.\n"
-            trimlogstr += "=========================================================\n"
-            trimlogstr += "\n\n\n"
 
         for log in logs:
             if "podName" in log and "containerID" in log and "containerLog" in log:
@@ -114,6 +72,7 @@ def extract_job_log(jobId,logPath,userId):
                 logStr += "=========================================================\n"
                 logStr += "=========================================================\n"
                 logStr += log["containerLog"]
+                logStr += jupyterLog
                 logStr += "\n\n\n"
                 logStr += "=========================================================\n"
                 logStr += "        end of logs from pod: %s\n" % log["podName"] 
@@ -131,6 +90,7 @@ def extract_job_log(jobId,logPath,userId):
                 logLines = log["containerLog"].split('\n')
                 if (len(logLines) < 3000):
                     trimlogstr += log["containerLog"]
+                    trimlogstr += jupyterLog
                     trimlogstr += "\n\n\n"
                     trimlogstr += "=========================================================\n"
                     trimlogstr += "        end of logs from pod: %s\n" % log["podName"] 
@@ -138,6 +98,7 @@ def extract_job_log(jobId,logPath,userId):
                     trimlogstr += "\n\n\n"
                 else:
                     trimlogstr += "\n".join(logLines[-2000:])
+                    trimlogstr += jupyterLog
                     trimlogstr += "\n\n\n"
                     trimlogstr += "=========================================================\n"
                     trimlogstr += "        end of logs from pod: %s\n" % log["podName"] 

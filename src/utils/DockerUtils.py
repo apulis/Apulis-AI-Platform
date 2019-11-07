@@ -224,7 +224,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
             # print assemblename
             dockername, deploydir = tuple
             # if dockername in system_docker_dic:
-            if dockername not in customize_docker_dic:
+            if dockername.lower() not in customize_docker_dic:
                 # system docker 
                 tag = system_docker_dic[dockername]["tag"] if dockername in system_docker_dic and "tag" in system_docker_dic[dockername] else system_docker_tag
                 prefix = ""

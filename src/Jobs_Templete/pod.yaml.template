@@ -199,6 +199,8 @@ spec:
       value: "{{ job["gid"] }}"
     - name: DLWS_UID
       value: "{{ job["uid"] }}"
+    - name: PASSWORD
+      value: "{{ job["Password"] }}"
     - name: DLWS_USER_NAME
       value: "{{ job["user"] }}"
     - name: DLWS_USER_EMAIL

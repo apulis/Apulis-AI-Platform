@@ -54,6 +54,19 @@ def curl_get(url):
     curl.close()
     return responseStr
 
+def getJobConsoleDetail(podName):
+    bashScript = " -- cat /job/init_user_script.log"
+    output = kubectl_exec("exec %s %s" % (podName, bashScript))
+    if output=="":
+        print "get job console detail failed!"
+    return output
+
+def getJupyterInfo(podName):
+    bashScript = "-- cat /job/jupyter.log"
+    output = kubectl_exec("exec %s %s" % (podName, bashScript))
+    if output=="":
+        print "get jupyter info failed!"
+    return output
 
 def kubectl_create(jobfile, EXEC=True):
     if EXEC:

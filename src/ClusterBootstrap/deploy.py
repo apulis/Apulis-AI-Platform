@@ -200,7 +200,7 @@ def get_root_passwd():
 # srcname: config name to be searched for (expressed as a list, see fetch_config)
 # lambda: lambda function to translate srcname to target name
 default_config_mapping = {
-    "dockerprefix": (["cluster_name"], lambda x:x.lower()+"/"),
+    "dockerprefix": (["cluster_name"], lambda x:x.lower()+"_"),
     "infrastructure-dockerregistry": (["dockerregistry"], lambda x:x),
     "worker-dockerregistry": (["dockerregistry"], lambda x:x),
     "glusterfs-device": (["glusterFS"], lambda x: "/dev/%s/%s" % (fetch_dictionary(x, ["volumegroup"]), fetch_dictionary(x, ["volumename"]) ) ),
@@ -219,6 +219,7 @@ default_config_mapping = {
     "postworkerdeploymentscript" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"post-worker-deploy.sh"),
     "workercleanupscript" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"cleanup-worker.sh"),
     "workerdeploymentlist" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"deploy.list"),
+    "cpuworkerdeploymentlist" : (["platform-scripts"], lambda x: get_platform_script_directory(x)+"deploy_cpu.list"),
     "pxeserverip": (["pxeserver"], lambda x: fetch_dictionary(x,["ip"])),
     "pxeserverrootpasswd": (["pxeserver"], lambda x: get_root_passwd()),
     "pxeoptions": (["pxeserver"], lambda x: "" if fetch_dictionary(x,["options"]) is None else fetch_dictionary(x,["options"])),
@@ -889,7 +890,7 @@ def deploy_master(kubernetes_master):
 def get_cni_binary():
     os.system("mkdir -p ./deploy/bin")
     # This tar file contains binary build from https://github.com/containernetworking/cni which used by weave
-    urllib.urlretrieve("https://github.com/microsoft/DLWorkspace/releases/download/v1.2.0/cni-v0.7.1.tgz", "./deploy/bin/cni-v0.7.1.tgz")
+    urllib.urlretrieve("http://cdn.qjycloud.com/cni-v0.7.1.tgz", "./deploy/bin/cni-v0.7.1.tgz")
     if verbose:
         print "Extracting CNI binaries"
     os.system("tar -zxvf ./deploy/bin/cni-v0.7.1.tgz -C ./deploy/bin")
@@ -1834,6 +1835,10 @@ def config_fqdn():
     for node in all_nodes:
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+
+def add_service_config():
+    if os.path.exists("deploy/etc/nginx/"):
+        os.system("cp deploy/etc/nginx/* deploy/services/nginx/")
 
 def config_nginx():
     all_nodes = get_nodes(config["clusterId"])
@@ -3887,7 +3892,7 @@ def upgrade_worker_node(nodeIP):
 
     utils.SSH_exec_script(config["ssh_cert"],worker_ssh_user, nodeIP, "./deploy/kubelet/post-worker-upgrade.sh")
 
-def upgrade_workers(nargs, hypekube_url="gcr.io/google-containers/hyperkube:v1.15.2"):
+def upgrade_workers(nargs, hypekube_url="gcr.azk8s.cn/google-containers/hyperkube:v1.15.2"):
     config["dockers"]["external"]["hyperkube"]["fullname"] = hypekube_url
     config["dockers"]["container"]["hyperkube"]["fullname"] = hypekube_url
 
@@ -3937,7 +3942,7 @@ def upgrade_master(kubernetes_master):
 
     utils.SSH_exec_script(config["ssh_cert"],kubernetes_master_user, kubernetes_master, "./deploy/master/post-upgrade.sh")
 
-def upgrade_masters(hypekube_url="gcr.io/google-containers/hyperkube:v1.15.2"):
+def upgrade_masters(hypekube_url="gcr.azk8s.cn/google-containers/hyperkube:v1.15.2"):
     config["dockers"]["external"]["hyperkube"]["fullname"] = hypekube_url
     config["dockers"]["container"]["hyperkube"]["fullname"] = hypekube_url
 

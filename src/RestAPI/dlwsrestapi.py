@@ -690,6 +690,8 @@ class AddUser(Resource):
         parser.add_argument('uid')
         parser.add_argument('gid')
         parser.add_argument('groups')
+        parser.add_argument('isAdmin')
+        parser.add_argument('isAuthorized')
         args = parser.parse_args()
 
         ret = {}
@@ -708,8 +710,18 @@ class AddUser(Resource):
             groups = []
         else:
             groups = args["groups"]
+            
+        if args["isAdmin"] is None or args["isAdmin"].strip() != 'true':
+            isAdmin = False
+        else:
+            isAdmin = True
 
-        ret["status"] = JobRestAPIUtils.AddUser(userName, uid, gid, groups)
+        if args["isAuthorized"] is None or args["isAuthorized"].strip() != 'true':
+            isAuthorized = False
+        else:
+            isAuthorized = True
+
+        ret["status"] = JobRestAPIUtils.AddUser(userName, uid, gid, groups, isAdmin, isAuthorized)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

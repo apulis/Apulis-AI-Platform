@@ -398,7 +398,7 @@ def GetUser(username):
     dataHandler.Close()
     return ret[0] if len(ret) > 0 else None
 
-def AddUser(username,uid,gid,groups):
+def AddUser(username,uid,gid,groups,isAdmin,isAuthorized):
     ret = None
     needToUpdateDB = False
 
@@ -418,6 +418,14 @@ def AddUser(username,uid,gid,groups):
         ret =  dataHandler.UpdateIdentityInfo(username,uid,gid,groups)
         ret = ret & dataHandler.UpdateAclIdentityId(username,uid)
         dataHandler.Close()
+
+    if isAdmin: 
+        permission = Permission.Admin
+    elif isAuthorized:
+        permission = Permission.User
+    else:
+        permission = Permission.Unauthorized
+    AuthorizationManager.UpdateAce(username, AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), permission, False)
     return ret
 
 

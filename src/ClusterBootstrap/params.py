@@ -599,7 +599,8 @@ default_config_parameters = {
         "customize": {
             "webui": {},
             "webui2": {}, 
-            "restfulapi": {}
+            "restfulapi": {},
+            "gpu-reporter": {}
         },
         "external": {
             # These dockers are to be built by additional add ons.

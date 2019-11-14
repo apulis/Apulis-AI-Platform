@@ -14,7 +14,13 @@ const OAUTH2_URL = `https://login.microsoftonline.com/common/oauth2/v2.0`
  */
 const getUriWithoutQuery = context => {
   const originalUrl = context.req.originalUrl || context.request.originalUrl || ''
-  return (context.origin + originalUrl).split('?')[0]
+  if (/localhost/.test(context.origin)) {
+    return (context.origin + originalUrl).split('?')[0]
+  } else if (/127.0.0.1/.test(context.origin)) {
+    return 'https://dev.qjycloud.com/api/authenticate'
+  } else {
+    return (context.origin.replace('http', 'https') + originalUrl).split('?')[0]
+  }
 }
 
 /**

@@ -690,8 +690,6 @@ class AddUser(Resource):
         parser.add_argument('uid')
         parser.add_argument('gid')
         parser.add_argument('groups')
-        parser.add_argument('isAdmin')
-        parser.add_argument('isAuthorized')
         args = parser.parse_args()
 
         ret = {}
@@ -710,18 +708,8 @@ class AddUser(Resource):
             groups = []
         else:
             groups = args["groups"]
-            
-        if args["isAdmin"] is None or args["isAdmin"].strip() != 'true':
-            isAdmin = False
-        else:
-            isAdmin = True
 
-        if args["isAuthorized"] is None or args["isAuthorized"].strip() != 'true':
-            isAuthorized = False
-        else:
-            isAuthorized = True
-
-        ret["status"] = JobRestAPIUtils.AddUser(userName, uid, gid, groups, isAdmin, isAuthorized)
+        ret["status"] = JobRestAPIUtils.AddUser(userName, uid, gid, groups)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -732,6 +720,41 @@ class AddUser(Resource):
 ##
 api.add_resource(AddUser, '/AddUser')
 
+
+class Login(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('identityName')
+        parser.add_argument('Alias')
+        parser.add_argument('Group')
+        parser.add_argument('isAdmin')
+        parser.add_argument('isAuthorized')
+        
+        args = parser.parse_args()
+        identityName = args["identityName"]
+        Alias = args["Alias"]
+        Group = args["Group"]
+
+        if args["isAdmin"] is None or args["isAdmin"].strip() != 'true':
+            isAdmin = False
+        else:
+            isAdmin = True
+
+        if args["isAuthorized"] is None or args["isAuthorized"].strip() != 'true':
+            isAuthorized = False
+        else:
+            isAuthorized = True
+
+        ret = JobRestAPIUtils.Login(identityName, Alias, Group, isAdmin, isAuthorized)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(Login, '/login')
 
 class UpdateAce(Resource):
     def get(self):

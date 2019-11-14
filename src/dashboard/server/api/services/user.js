@@ -29,6 +29,7 @@ class User extends Service {
    */
   static fromIdToken(context, idToken) {
     const user = new User(context, idToken['email'])
+    user.name = idToken['name']
     user.givenName = idToken['given_name']
     user.familyName = idToken['family_name']
     return user
@@ -56,6 +57,7 @@ class User extends Service {
   static fromCookie(context, token) {
     const payload = jwt.verify(token, sign)
     const user = new User(context, payload['email'])
+    user.name = payload['name']
     user.givenName = payload['givenName']
     user.familyName = payload['familyName']
     user.uid = payload['uid']
@@ -93,6 +95,7 @@ class User extends Service {
 
     this.uid = data['uid']
     this.gid = data['gid']
+    this.name = data['Alias']
     this.familyName = data['familyName'] || data['identityName']
     this.givenName = data['givenName'] || ''
     return data
@@ -108,6 +111,27 @@ class User extends Service {
       new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
     }
   }
+  
+  async loginWithMicrosoft() {
+    const params = new URLSearchParams(Object.assign({
+      identityName: this.email,
+      Alias: this.name,
+      Group: "Microsoft",
+      isAdmin: true,
+      isAuthorized: true
+    }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
+    const data = await response.json()
+    this.context.log.warn(data, 'loginWithMicrosoft')
+
+    this.uid = data['uid']
+    this.gid = data['gid']
+    this.name = data['Alias']
+    this.familyName = data['Alias']
+    this.givenName = ''
+    return data
+  }
 
   /**
    * @return {string}
@@ -118,6 +142,7 @@ class User extends Service {
       email: this.email,
       uid: this.uid,
       gid: this.gid,
+      name: this.name,
       familyName: this.familyName,
       givenName: this.givenName
     }, sign)

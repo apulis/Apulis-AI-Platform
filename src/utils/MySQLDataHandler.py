@@ -44,6 +44,7 @@ class DataHandler(object):
     def __init__(self):
         start_time = timeit.default_timer()
         self.database = "DLWSCluster-%s" % config["clusterId"]
+        self.accounttablename = "account"
         self.jobtablename = "jobs"
         self.identitytablename = "identity"
         self.acltablename = "acl"
@@ -91,6 +92,29 @@ class DataHandler(object):
         if "initSQLTable" not in global_vars or not global_vars["initSQLTable"]:
             logger.info("===========init SQL Tables ===============")
             global_vars["initSQLTable"] = True
+            
+            sql = """
+                CREATE TABLE IF NOT EXISTS `%s`
+                (
+                    `uid` int(11) NOT NULL AUTO_INCREMENT,
+                    `gid` int(11) NOT NULL COMMENT '3001: Microsoft; 3002: Zhejianglab; 3003: Wechat;',
+                    `identityName` varchar(128) NOT NULL,
+                    `Alias` varchar(128) NOT NULL,
+                    `groups` varchar(255) NOT NULL,
+                    `Password` varchar(64) NOT NULL,
+                    `isAdmin` int(11) NOT NULL,
+                    `isAuthorized` int(11) NOT NULL,
+                    `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`uid`),
+                    UNIQUE KEY `identityName` (`identityName`)
+                ) AUTO_INCREMENT=30000;
+                """ % (self.accounttablename)
+
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            self.conn.commit()
+            cursor.close()
+
             sql = """
                 CREATE TABLE IF NOT EXISTS `%s`
                 (
@@ -412,6 +436,52 @@ class DataHandler(object):
             logger.error('Exception: %s', str(e))
             return False
 
+
+    @record
+    def GetAccountInfo(self, identityName):
+        cursor = self.conn.cursor()
+        query = "SELECT `uid`,`identityName`,`Alias`,`gid`,`groups`, `Password`,`isAdmin`,`isAuthorized` FROM `%s` where `identityName` = '%s'" % (self.accounttablename, identityName)
+        ret = []
+        try:
+            cursor.execute(query)
+            for (uid,identityName,Alias,gid,groups,Password,isAdmin,isAuthorized) in cursor:
+                record = {}
+                record["uid"] = uid
+                record["identityName"] = identityName
+                record["Alias"] = Alias
+                record["gid"] = gid
+                record["groups"] = groups
+                record["Password"] = Password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+        except Exception as e:
+            logger.error('GetAccountInfo Exception: %s', str(e))
+        self.conn.commit()
+        cursor.close()
+        return ret
+
+
+    @record
+    def UpdateAccountInfo(self, identityName, Alias, gid, groups, Password, isAdmin, isAuthorized):
+        try:
+            cursor = self.conn.cursor()
+            if (isinstance(groups, list)):
+                groups = json.dumps(groups)
+
+            if len(self.GetAccountInfo(identityName)) == 0:
+                sql = "INSERT INTO `"+self.accounttablename+"` (identityName, Alias, gid, groups, Password, isAdmin, isAuthorized) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+                cursor.execute(sql, (identityName, Alias, gid, groups, Password, isAdmin, isAuthorized))
+            else:
+                sql = "update `%s` set Alias = '%s', gid = '%s', groups = '%s', Password = '%s', isAdmin = '%s', isAuthorized = '%s' where `identityName` = '%s' "
+                cursor.execute(sql, (self.accounttablename, Alias, gid, groups, Password, isAdmin, isAuthorized, identityName))
+
+            self.conn.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+            return False
 
     @record
     def GetIdentityInfo(self, identityName):

@@ -599,6 +599,7 @@ default_config_parameters = {
         "customize": {
             "webui": {},
             "webui2": {}, 
+            "webui3": {}, 
             "restfulapi": {},
             "gpu-reporter": {}
         },

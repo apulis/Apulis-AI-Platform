@@ -17,3 +17,7 @@ The configuration schema (with description) is maintained in [config.schema.json
 5. For frontend development, run `yarn frontend`; for backend development, run `yarn build` and then `yarn backend`.
 6. Open <http://localhost:3000/> (may be automatically opened by script) to preview.
 7. For frontend development, local code changes will automatically refresh the browser; for backend development, local code changes will automatically restart the server.
+
+##　钱江源小组说明
+目前yarn build暂时没在dockerFile中执行，因为docker中部分包安装有问题，目前采用本地build，直接把build的文件挪到服务器上
+再去执行./deploy.py docker push webui3 && ./deploy.py kubernetes start webui3

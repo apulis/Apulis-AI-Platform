@@ -9,6 +9,8 @@ RUN yarn config set registry $registry
 
 COPY package.json ./
 RUN yarn --frozen-lockfile
+# RUN yarn build
+
 COPY . .
 EXPOSE 3081
-CMD node app.js
+CMD node server

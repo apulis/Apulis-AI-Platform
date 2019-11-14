@@ -1,0 +1,10 @@
+sign: "Sign key for JWT"
+winbind:  "Will call /domaininfo/GetUserId with userName query to get the user's id info"
+masterToken: "Access token of all users"
+activeDirectory: 
+  tenant: "6cd9643e-deed-4e94-a3d9-889e09d386b5"
+  clientId: "134bf48f-7e7f-42b9-9d14-cae067e22311"
+  clientSecret: "f[5/5lWfV_e4/jQ2rBKa@k6vQsZEl2d1" 
+clusters: 
+  qjytest:
+    restfulapi: 'http://10.5.18.85:5000/'

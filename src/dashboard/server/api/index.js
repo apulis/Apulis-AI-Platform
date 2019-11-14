@@ -11,5 +11,5 @@ app.use(router.routes())
 app.use(router.allowedMethods())
 
 if (require.main === module) {
-  app.listen(process.env.PORT || 3000, process.env.HOST)
+  app.listen(process.env.PORT || 3081, process.env.HOST)
 }

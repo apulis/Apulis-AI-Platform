@@ -5,6 +5,9 @@ import argparse
 import uuid
 import subprocess
 import sys
+import random
+import string
+
 from jobs_tensorboard import GenTensorboardMeta
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../storage"))
@@ -392,13 +395,7 @@ def GetClusterStatus():
     cluster_status,last_update_time =  DataManager.GetClusterStatus()
     return cluster_status,last_update_time
 
-def GetUser(username):
-    dataHandler = DataHandler()
-    ret = dataHandler.GetIdentityInfo(username)
-    dataHandler.Close()
-    return ret[0] if len(ret) > 0 else None
-
-def AddUser(username,uid,gid,groups,isAdmin,isAuthorized):
+def AddUser(username,uid,gid,groups):
     ret = None
     needToUpdateDB = False
 
@@ -418,16 +415,51 @@ def AddUser(username,uid,gid,groups,isAdmin,isAuthorized):
         ret =  dataHandler.UpdateIdentityInfo(username,uid,gid,groups)
         ret = ret & dataHandler.UpdateAclIdentityId(username,uid)
         dataHandler.Close()
-        
-        if isAdmin: 
-            permission = Permission.Admin
-        elif isAuthorized:
-            permission = Permission.User
-        else:
-            permission = Permission.Unauthorized
-        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-        AuthorizationManager.UpdateAce(username, resourceAclPath, permission, False)
+    return ret
 
+
+def Login(identityName, Alias = "", Group = [], isAdmin = False, isAuthorized = False):
+    try:
+        dataHandler = DataHandler()
+        lst = dataHandler.GetAccountInfo(identityName)
+        if len(lst) == 0: # Register
+            if Group == "Microsoft":
+                gid = 3001
+                groups = ["Microsoft"]
+            elif Group is None or Group == "":
+                gid = 3999
+                groups = []
+            Password = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+            dataHandler.UpdateAccountInfo(identityName, Alias, gid, groups, Password, isAdmin, isAuthorized)
+            lst = dataHandler.GetAccountInfo(identityName)
+        
+        if len(lst) > 0:
+            accountInfo = lst[0]
+            identityInfo = IdentityManager.GetIdentityInfoFromDB(identityName)
+            if identityInfo["uid"] == authorization.INVALID_ID:
+                dataHandler.UpdateIdentityInfo(identityName, accountInfo["uid"], gid, groups)
+                
+                permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
+                resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+                AuthorizationManager.UpdateAce(identityName, resourceAclPath, Permission.Admin, False)
+
+        dataHandler.Close()
+        return True
+    except Exception as e:
+        logger.error('Exception: %s', str(e))
+    return False
+
+
+def GetAccountInfo(identityName):
+    ret = None
+    try:
+        dataHandler = DataHandler()
+        lst = dataHandler.GetAccountInfo(identityName)
+        dataHandler.Close()
+        if len(lst) > 0:
+            ret = lst[0]
+    except Exception as e:
+        logger.error('Exception: %s', str(e))
     return ret
 
 

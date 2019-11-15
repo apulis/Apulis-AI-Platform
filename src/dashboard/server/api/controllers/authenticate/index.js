@@ -73,9 +73,13 @@ module.exports = async context => {
     context.log.info(idToken, 'Id token')
 
     const user = User.fromIdToken(context, idToken)
-    const data = await user.getUserFromDb()
-    user.addUserToCluster(data)
+    const succ = await user.loginWithMicrosoft()
+    if(!succ) {
+      context.log.error({ query: context.query }, 'Login With Microsoft failed')
+      return context.redirect('/')
+    }
 
+    await user.getAccountInfo()
     context.cookies.set('token', user.toCookie())
 
     return context.redirect('/')

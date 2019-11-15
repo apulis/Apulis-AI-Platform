@@ -51,5 +51,5 @@ RUN chmod +x /home/auto-reload-nginx.sh
 RUN chmod +x /etc/nginx/conf.d/default.conf
 
 RUN sudo apt-get install letsencrypt
-RUN sudo letsencrypt certonly --webroot -w /var/www/html -d test.qjycloud.com
+RUN sudo letsencrypt certonly --webroot -w /usr/share/nginx -d dev.qjycloud.com
 RUN sudo service nginx reload

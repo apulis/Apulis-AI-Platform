@@ -64,35 +64,6 @@ def _stacktraces():
    for line in code:
        print("_stacktrace: " + line)
 
-if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
-    logger.info("===========Init Admin Access===============")
-    global_vars["initAdminAccess"] = True
-    logger.info('setting admin access!')
-    AuthorizationManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, False)
-    logger.info('admin access given!')
-
-
-def _stacktraces():
-   code = []
-   for threadId, stack in sys._current_frames().items():
-       code.append("\n# ThreadID: %s" % threadId)
-       for filename, lineno, name, line in traceback.extract_stack(stack):
-           code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
-           if line:
-               code.append("  %s" % (line.strip()))
-
-   for line in code:
-       print("_stacktrace: " + line)
-
-
-def _WorkerThreadFunc():
-   while True:
-       _stacktraces()
-       time.sleep(60)
-
-#workerThread = threading.Thread(target=_WorkerThreadFunc, args=())
-#workerThread.daemon = True
-#workerThread.start()
 
 def _WorkerThreadFunc():
    while True:

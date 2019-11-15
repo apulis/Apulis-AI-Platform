@@ -666,23 +666,6 @@ class AddCommand(Resource):
 ##
 api.add_resource(AddCommand, '/AddCommand')
 
-class GetUser(Resource):
-    def get(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('userName')
-        args = parser.parse_args()
-        userName = args["userName"]
-        ret = JobRestAPIUtils.GetUser(userName)
-        resp = jsonify(ret)
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        resp.headers["dataType"] = "json"
-
-        return resp
-##
-## Actually setup the Api resource routing here
-##
-api.add_resource(GetUser, '/getUser')
-
 class AddUser(Resource):
     def get(self):
         parser = reqparse.RequestParser()
@@ -755,6 +738,25 @@ class Login(Resource):
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(Login, '/login')
+
+
+class GetAccountInfo(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('identityName')
+        args = parser.parse_args()
+        identityName = args["identityName"]
+        ret = JobRestAPIUtils.GetAccountInfo(identityName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAccountInfo, '/getAccountInfo')
+
 
 class UpdateAce(Resource):
     def get(self):

@@ -29,9 +29,7 @@ class User extends Service {
    */
   static fromIdToken(context, idToken) {
     const user = new User(context, idToken['email'])
-    user.name = idToken['name']
-    user.givenName = idToken['given_name']
-    user.familyName = idToken['family_name']
+    user.Alias = idToken['name']
     return user
   }
 
@@ -46,7 +44,7 @@ class User extends Service {
     const actualToken = Buffer.from(token, 'hex')
     context.assert(expectedToken.equals(actualToken), 403, 'Invalid token')
 
-    return user // No givenName nor familyName here
+    return user
   }
 
   /**
@@ -57,11 +55,14 @@ class User extends Service {
   static fromCookie(context, token) {
     const payload = jwt.verify(token, sign)
     const user = new User(context, payload['email'])
-    user.name = payload['name']
-    user.givenName = payload['givenName']
-    user.familyName = payload['familyName']
+
     user.uid = payload['uid']
     user.gid = payload['gid']
+    user.Alias = payload['Alias']
+    user.groups = payload['groups']
+    user.Password = payload['Password']
+    user.isAdmin = payload['isAdmin']
+    user.isAuthorized = payload['isAuthorized']
     return user
   }
 
@@ -87,20 +88,6 @@ class User extends Service {
     return data
   }
 
-  async getUserFromDb() {
-    const params = new URLSearchParams(Object.assign({ userName: this.email }))
-    const clusterId = clusterIds[0]
-    const response = await new Cluster(this.context, clusterId).fetch('/getUser?' + params)
-    const data = await response.json()
-
-    this.uid = data['uid']
-    this.gid = data['gid']
-    this.name = data['Alias']
-    this.familyName = data['familyName'] || data['identityName']
-    this.givenName = data['givenName'] || ''
-    return data
-  }
-
   async addUserToCluster(data) {
     // Fix groups format
     if (Array.isArray(data['groups'])) {
@@ -111,25 +98,34 @@ class User extends Service {
       new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
     }
   }
-  
+
   async loginWithMicrosoft() {
     const params = new URLSearchParams(Object.assign({
       identityName: this.email,
-      Alias: this.name,
+      Alias: this.Alias,
       Group: "Microsoft",
       isAdmin: true,
       isAuthorized: true
     }))
     const clusterId = clusterIds[0]
     const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
+    return await response.json()
+  }
+  
+  async getAccountInfo() {
+    const params = new URLSearchParams(Object.assign({ identityName: this.email }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/getAccountInfo?' + params)
     const data = await response.json()
-    this.context.log.warn(data, 'loginWithMicrosoft')
+    this.context.log.warn(data, 'getAccountInfo')
 
     this.uid = data['uid']
     this.gid = data['gid']
-    this.name = data['Alias']
-    this.familyName = data['Alias']
-    this.givenName = ''
+    this.Alias = data['Alias']
+    this.groups = data['groups']
+    this.Password = data['Password']
+    this.isAdmin = data['isAdmin']
+    this.isAuthorized = data['isAuthorized']
     return data
   }
 
@@ -142,9 +138,11 @@ class User extends Service {
       email: this.email,
       uid: this.uid,
       gid: this.gid,
-      name: this.name,
-      familyName: this.familyName,
-      givenName: this.givenName
+      Alias: this.Alias,
+      groups: this.groups,
+      Password: this.Password,
+      isAdmin: this.isAdmin,
+      isAuthorized: this.isAuthorized
     }, sign)
   }
 

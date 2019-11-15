@@ -29,8 +29,8 @@ const theme = createMuiTheme();
 interface BootstrapProps {
   email?: string;
   uid?: string;
-  familyName?: string;
-  givenName?: string;
+  Alias?: string;
+  Password?: string;
   _token?: any;
 }
 
@@ -40,9 +40,9 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ email, uid, familyName, givenName,_token ,children }) => (
+const Contexts: React.FC<BootstrapProps> = ({ email, uid, Alias, Password, _token ,children }) => (
   <BrowserRouter>
-    <UserProvider email={email} uid={uid} familyName={familyName} givenName={givenName} token={_token} >
+    <UserProvider email={email} uid={uid} Alias={Alias} Password={Password} token={_token} >
       <TeamProvider>
         <ClustersProvider>
           <ThemeProvider theme={theme}>

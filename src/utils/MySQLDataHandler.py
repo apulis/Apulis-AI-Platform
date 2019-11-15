@@ -107,7 +107,7 @@ class DataHandler(object):
                     `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (`uid`),
                     UNIQUE KEY `identityName` (`identityName`)
-                ) AUTO_INCREMENT=30000;
+                ) AUTO_INCREMENT=30001;
                 """ % (self.accounttablename)
 
             cursor = self.conn.cursor()

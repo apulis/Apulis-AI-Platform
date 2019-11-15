@@ -136,9 +136,9 @@ TeamMenu = () => {
 const UserButton: React.FC = () => {
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
-  const { givenName, familyName,email,token } = React.useContext(UserContext);
+  const { email, Alias, Password, token} = React.useContext(UserContext);
   const styles = useStyles();
-  const name = typeof email === 'string' ?  email.split('@', 1)[0] : email;
+  const Username = typeof email === 'string' ?  email.split('@', 1)[0] : email;
   const handleClose = () => {
     setOpenUserProfile(false);
   }
@@ -158,7 +158,7 @@ const UserButton: React.FC = () => {
     <main>
       <Button variant="outlined" color="inherit" onClick={showUserProfile} className={classes.userLabel}>
         <AccountBox className={styles.leftIcon}/>
-        {`${givenName} ${familyName}`}
+        {Alias}
       </Button>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>
         <AppBar>
@@ -178,11 +178,19 @@ const UserButton: React.FC = () => {
             </ListItem>
             <Divider />
             <ListItem button>
-              <ListItemText primary="Username" secondary={name}  onClick={()=>handleCopy(name)}/>
+              <ListItemText primary="Username" secondary={Username}  onClick={()=>handleCopy(Username)}/>
+            </ListItem>
+            <Divider />
+            <ListItem button>
+              <ListItemText primary="Alias" secondary={Alias}  onClick={()=>handleCopy(Alias)}/>
             </ListItem>
             <Divider />
             <ListItem button >
-              <ListItemText primary="Password" secondary={token} onClick={()=>handleCopy(token)}/>
+              <ListItemText primary="Password" secondary={Password} onClick={()=>handleCopy(Password)}/>
+            </ListItem>
+            <Divider />
+            <ListItem button >
+              <ListItemText primary="token" secondary={token} onClick={()=>handleCopy(token)}/>
             </ListItem>
           </List>
         </Box>

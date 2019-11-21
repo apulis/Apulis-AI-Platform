@@ -5,6 +5,11 @@ activeDirectory:
   tenant: "6cd9643e-deed-4e94-a3d9-889e09d386b5"
   clientId: "134bf48f-7e7f-42b9-9d14-cae067e22311"
   clientSecret: "f[5/5lWfV_e4/jQ2rBKa@k6vQsZEl2d1" 
-clusters: 
-  qjytest:
-    restfulapi: 'http://10.5.18.85:5000/'
+clusters:
+  qjydev:
+    restfulapi: http://10.5.18.85:5000/
+    title: "Grafana endpoint of the cluster"
+    workStorage: work
+    dataStorage: data
+    grafana: https://qjy-proxy03.zhejianglab.com/grafana/
+    prometheus: http://qjy-test02.zhejianglab.com:9091

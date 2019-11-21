@@ -4,7 +4,7 @@ import {
   TableHead,
   TableRow, TableCell, TableBody, Radio
 } from "@material-ui/core";
-import {checkObjIsEmpty, sumValues} from "../../../utlities/ObjUtlities";
+import { checkObjIsEmpty, sumValues } from "../../../utlities/ObjUtlities";
 import { TeamVCTitles } from "../../../Constants/TabsContants";
 
 interface TeamVC {
@@ -15,13 +15,13 @@ interface TeamVC {
 }
 
 export const TeamVirtualClusterStatus = (props: TeamVC) => {
-  const{vcStatus,selectedValue,handleChange} = props;
+  const { vcStatus, selectedValue, handleChange } = props;
   return (
     <Table size={"small"}>
       <TableHead>
         <TableRow>
           {
-            TeamVCTitles.map((teamVCTitle, index)=>(
+            TeamVCTitles.map((teamVCTitle, index) => (
               <TableCell key={index}>{teamVCTitle}</TableCell>
             ))
           }
@@ -29,43 +29,40 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
       </TableHead>
       <TableBody>
         {
-          vcStatus ? vcStatus.map(( vcs: any, index: number) => {
-            const gpuCapacity =  checkObjIsEmpty(Object.values(vcs['gpu_capacity'])) ? 0 : (Number)(sumValues(vcs['gpu_capacity']));
-            const gpuAvailable = checkObjIsEmpty (Object.values(vcs['gpu_avaliable'])) ? 0 : (Number)(sumValues(vcs['gpu_avaliable']));
-            const gpuUnschedulable = checkObjIsEmpty(Object.values(vcs['gpu_unschedulable'])) ? 0 : (Number)(sumValues(vcs['gpu_unschedulable'])) ;
-            const gpuUsed =  checkObjIsEmpty(Object.values(vcs['gpu_used'])) ? 0 :  (Number)(sumValues(vcs['gpu_used']));
+          vcStatus ? vcStatus.map((vcs: any, index: number) => {
+            const gpuCapacity = checkObjIsEmpty(Object.values(vcs['gpu_capacity'])) ? 0 : (Number)(sumValues(vcs['gpu_capacity']));
+            const gpuAvailable = checkObjIsEmpty(Object.values(vcs['gpu_avaliable'])) ? 0 : (Number)(sumValues(vcs['gpu_avaliable']));
+            const gpuUnschedulable = checkObjIsEmpty(Object.values(vcs['gpu_unschedulable'])) ? 0 : (Number)(sumValues(vcs['gpu_unschedulable']));
+            const gpuUsed = checkObjIsEmpty(Object.values(vcs['gpu_used'])) ? 0 : (Number)(sumValues(vcs['gpu_used']));
             return (
-              <>
-                <TableRow key={index}>
-                  <TableCell key={vcs['ClusterName']}>
-                    <Radio
-                      checked={selectedValue === vcs['ClusterName']}
-                      onChange={handleChange}
-                      value={vcs['ClusterName']}
-                      name={vcs['ClusterName']}/>
-                    {vcs['ClusterName']}
-                  </TableCell>
-                  <TableCell key={gpuCapacity}>
-                    {gpuCapacity}
-                  </TableCell>
-                  <TableCell key={gpuUnschedulable}>
-                    {gpuUnschedulable}
-                  </TableCell>
-                  <TableCell key={gpuUsed}>
-                    {gpuUsed}
-                  </TableCell>
-                  <TableCell key={gpuAvailable}>
-                    {gpuAvailable}
-                  </TableCell>
-                  <TableCell key={vcs['AvaliableJobNum']}>
-                    {vcs['AvaliableJobNum']}
-                  </TableCell>
-                </TableRow>
-              </>
+              <TableRow key={index}>
+                <TableCell>
+                  <Radio
+                    checked={selectedValue === vcs['ClusterName']}
+                    onChange={handleChange}
+                    value={vcs['ClusterName']}
+                    name={vcs['ClusterName']} />
+                  {vcs['ClusterName']}
+                </TableCell>
+                <TableCell>
+                  {gpuCapacity}
+                </TableCell>
+                <TableCell>
+                  {gpuUnschedulable}
+                </TableCell>
+                <TableCell>
+                  {gpuUsed}
+                </TableCell>
+                <TableCell>
+                  {gpuAvailable}
+                </TableCell>
+                <TableCell>
+                  {vcs['AvaliableJobNum']}
+                </TableCell>
+              </TableRow>
             )
           }) : null
         }
-
       </TableBody>
     </Table>
   )

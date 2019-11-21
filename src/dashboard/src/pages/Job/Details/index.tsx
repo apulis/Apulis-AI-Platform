@@ -1,16 +1,9 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-  Theme,
   useTheme,
-  Box,
-  Tab,
-  Tabs,
-  makeStyles,
-  createStyles,
-  AppBar,
   Container,
   CircularProgress,
-  useMediaQuery, Snackbar, SnackbarContent,
+  useMediaQuery, 
 } from '@material-ui/core';
 import { useGet } from 'use-http';
 
@@ -25,7 +18,6 @@ import SwipeableViews from "react-swipeable-views";
 import {DLTSTabs} from "../../CommonComponents/DLTSTabs";
 import {JobDetailTitles, readOnlyJobDetailTitles} from "../../../Constants/TabsContants";
 import {DLTSSnackbar} from "../../CommonComponents/DLTSSnackbar";
-import ClusterContext from "../../../contexts/Clusters";
 import TeamContext from "../../../contexts/Teams";
 interface Props {
   team: string;

@@ -19,5 +19,6 @@ The configuration schema (with description) is maintained in [config.schema.json
 7. For frontend development, local code changes will automatically refresh the browser; for backend development, local code changes will automatically restart the server.
 
 ##　钱江源小组说明
-目前yarn build暂时没在dockerFile中执行，因为docker中部分包安装有问题，目前采用本地build，直接把build的文件挪到服务器上
-再去执行./deploy.py docker push webui3 && ./deploy.py kubernetes start webui3
+docker-images/webui3中，Dockerfile，先把源码copy进工作目录，再yarn安装依赖，再build打包，最后生成docker镜像。
+具体操作：./deploy.py docker push webui3 
+服务启停：./deploy.py kubernetes start webui3

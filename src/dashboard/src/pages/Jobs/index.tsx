@@ -139,12 +139,12 @@ const Jobs: React.FC = (props: any) => {
   }
   const { put: setPriority } = usePut('/api');
   const [currentCluster, setCurrentCluster] = useState(props.match.params.cluster ? props.match.params.cluster : Array.isArray(_.map(clusters,'id') )?_.map(clusters,'id')[0] : '');
-  const [jobs, error] = useJobs();
-  const [allJobs, err] = useJobsAll();
+  const [jobs] = useJobs();
+  const [allJobs] = useJobsAll();
   const[isAdmin, setIsAdmin] = useState(clusters.filter((cluster) => cluster.id === currentCluster)[0].admin);
   const filterJobsByCluster = (jobs: any, clusterName: string) => {
     console.log(isAdmin);
-    if (clusterName == '-1' || clusterName === '') {
+    if (clusterName === '-1' || clusterName === '') {
       return Jobs;
     } else {
       return jobs.filter((job: any)=>job['cluster'] === clusterName)
@@ -292,7 +292,7 @@ const Jobs: React.FC = (props: any) => {
   const renderPrioritySet = (rowData: any) => {
     return (
       <TextField
-        error={warn && (currId == rowData.tableData.id)}
+        error={warn && (currId === rowData.tableData.id)}
         disabled={!isAdmin}
         key={rowData['jobId']}
         type="number"

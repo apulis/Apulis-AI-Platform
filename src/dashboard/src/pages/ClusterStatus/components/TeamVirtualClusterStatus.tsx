@@ -15,7 +15,7 @@ interface TeamVC {
 }
 
 export const TeamVirtualClusterStatus = (props: TeamVC) => {
-  const{vcStatus,selectedValue,handleChange, children} = props;
+  const{vcStatus,selectedValue,handleChange} = props;
   return (
     <Table size={"small"}>
       <TableHead>

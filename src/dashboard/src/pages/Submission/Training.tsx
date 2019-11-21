@@ -25,7 +25,6 @@ import {
   SvgIcon, useMediaQuery
 } from "@material-ui/core";
 import Tooltip from '@material-ui/core/Tooltip';
-import { makeStyles, createStyles } from "@material-ui/core/styles";
 import { Info, Delete, Add } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
@@ -39,10 +38,6 @@ import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
 import useFetch, {useDelete} from "use-http/dist";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid}  from "recharts";
-import Paper, { PaperProps } from '@material-ui/core/Paper';
-import Draggable from 'react-draggable'
-import {TransitionProps} from "@material-ui/core/transitions";
-import Slide from "@material-ui/core/Slide";
 import {green, grey, red} from "@material-ui/core/colors";
 import {DLTSDialog} from "../CommonComponents/DLTSDialog";
 import {
@@ -55,17 +50,6 @@ interface EnvironmentVariable {
   name: string;
   value: string;
 }
-
-const useStyles = makeStyles(() =>
-  createStyles({
-    container: {
-      margin: "auto"
-    },
-    submitButton: {
-      marginLeft: "auto"
-    }
-  })
-);
 
 const sanitizePath = (path: string) => {
   path = join('/', path);
@@ -369,7 +353,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const onTemplateChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
       setJson(event.target.value as string)
-      if (event.target.value == -1) {
+      if (event.target.value === -1) {
         setName("");
         setType("RegularJob");
         setGpus(0);

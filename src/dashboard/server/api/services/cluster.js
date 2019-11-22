@@ -363,6 +363,28 @@ class Cluster extends Service {
       throw error
     }
   }
+
+  /**
+ * @param {object} params
+ * @return {Promise<string>}
+ */
+  async addVc(params) {
+    const { vcName, quota, metadata, userName } = params
+    const response = await this.fetch(`/AddVC?vcName=${vcName}&quota=${quota}&metadata=${metadata}&userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    this.context.log.info({ data }, 'Got templates from %s', this.id)
+    return data
+  }
+
+  async listVc(params) {
+    const { userName } = params
+    const response = await this.fetch(`/ListVCs?userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    this.context.log.info({ data }, 'Got templates from %s', this.id)
+    return data
+  }
 }
 
 module.exports = Cluster

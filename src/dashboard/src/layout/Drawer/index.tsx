@@ -67,6 +67,9 @@ const NavigationList: React.FC = () => {
       <LinkListItem to="/cluster-status">
         <ListItemText>Cluster Status</ListItemText>
       </LinkListItem>
+      <LinkListItem to="/vc">
+        <ListItemText>vc</ListItemText>
+      </LinkListItem>
     </List>
   );
 };

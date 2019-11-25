@@ -395,6 +395,18 @@ def GetClusterStatus():
     cluster_status,last_update_time =  DataManager.GetClusterStatus()
     return cluster_status,last_update_time
 
+def ListUser():
+    dataHandler = DataHandler()
+    ret = dataHandler.ListUser()
+    dataHandler.Close()
+    return ret
+
+def updateUserPerm(identityName,isAdmin,isAuthorized):
+    dataHandler = DataHandler()
+    ret = dataHandler.UpdateIdentityInfoPerm(identityName,isAdmin,isAuthorized)
+    dataHandler.Close()
+    return ret
+
 def AddUser(username,uid,gid,groups):
     ret = None
     needToUpdateDB = False

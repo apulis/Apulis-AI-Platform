@@ -24,9 +24,9 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     textDecoration: "none"
   },
   drawerHeader: {
-    marginTop:64,
+    marginTop: 64,
     display: 'flex',
-    flexDirection:'column',
+    flexDirection: 'column',
     alignItems: 'center',
     padding: '0 8px',
     ...theme.mixins.toolbar,
@@ -35,7 +35,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 export const ListLink = React.forwardRef<Link, LinkProps>(
-  ({ to, ...props }, ref) => <Link ref={ref} to={to} {...props}/>
+  ({ to, ...props }, ref) => <Link ref={ref} to={to} {...props} />
 );
 
 const LinkListItem = withRouter<LinkProps & RouteComponentProps>(({ location, to, children }) => {
@@ -68,7 +68,10 @@ const NavigationList: React.FC = () => {
         <ListItemText>Cluster Status</ListItemText>
       </LinkListItem>
       <LinkListItem to="/vc">
-        <ListItemText>vc</ListItemText>
+        <ListItemText>Vc</ListItemText>
+      </LinkListItem>
+      <LinkListItem to="/user">
+        <ListItemText>User</ListItemText>
       </LinkListItem>
     </List>
   );
@@ -90,7 +93,7 @@ const DashboardDrawer: React.FC = () => {
       open={open}
       onClose={onClose}
     >
-      <Divider/>
+      <Divider />
       <NavigationList />
     </Drawer>
   );

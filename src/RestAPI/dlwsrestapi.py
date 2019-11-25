@@ -674,6 +674,35 @@ class AddUser(Resource):
 ##
 api.add_resource(AddUser, '/AddUser')
 
+class ListUser(Resource):
+    def get(self):
+        ret = {}
+        ret = JobRestAPIUtils.ListUser()
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+api.add_resource(ListUser, '/ListUser')
+
+class UpdateUserPerm(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('isAdmin')
+        parser.add_argument('isAuthorized')
+        parser.add_argument('identityName')
+        args = parser.parse_args()
+        identityName = args["identityName"]
+        isAdmin = args["isAdmin"]
+        isAuthorized = args["isAuthorized"]
+        ret = {}
+        ret["result"] = JobRestAPIUtils.updateUserPerm(identityName,isAdmin,isAuthorized)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+api.add_resource(UpdateUserPerm, '/UpdateUserPerm')
 
 class Login(Resource):
     def get(self):
@@ -827,7 +856,6 @@ class ListVCs(Resource):
         userName = args["userName"]
         ret = {}
         ret["result"] = JobRestAPIUtils.ListVCs(userName)
-
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -876,7 +904,6 @@ class AddVC(Resource):
         userName = args["userName"]
         ret = {}
         ret["result"] = JobRestAPIUtils.AddVC(userName, vcName, quota, metadata)
-
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

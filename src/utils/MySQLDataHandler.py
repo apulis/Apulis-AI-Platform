@@ -436,6 +436,29 @@ class DataHandler(object):
             logger.error('Exception: %s', str(e))
             return False
 
+    @record
+    def ListUser(self):
+        cursor = self.conn.cursor()
+        query = "SELECT `uid`,`identityName`,`Alias`,`gid`,`groups`, `Password`,`isAdmin`,`isAuthorized` FROM `%s`" % (self.accounttablename)
+        ret = []
+        try:
+            cursor.execute(query)
+            for (uid,identityName,Alias,gid,groups,Password,isAdmin,isAuthorized) in cursor:
+                record = {}
+                record["uid"] = uid
+                record["identityName"] = identityName
+                record["Alias"] = Alias
+                record["gid"] = gid
+                record["groups"] = groups
+                record["Password"] = Password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+        except Exception as e:
+            logger.error('GetAccountInfo Exception: %s', str(e))
+        self.conn.commit()
+        cursor.close()
+        return ret
 
     @record
     def GetAccountInfo(self, identityName):
@@ -460,7 +483,6 @@ class DataHandler(object):
         self.conn.commit()
         cursor.close()
         return ret
-
 
     @record
     def UpdateAccountInfo(self, identityName, Alias, gid, groups, Password, isAdmin, isAuthorized):
@@ -519,6 +541,19 @@ class DataHandler(object):
                 sql = """update `%s` set uid = '%s', gid = '%s', groups = '%s' where `identityName` = '%s' """ % (self.identitytablename, uid, gid, groups, identityName)
                 cursor.execute(sql)
 
+            self.conn.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+    @record
+    def UpdateIdentityInfoPerm(self, identityName, isAdmin, isAuthorized):
+        try:
+            cursor = self.conn.cursor()
+            sql = """update `%s` set isAdmin = '%s', isAuthorized = '%s' where `identityName` = '%s' """ % (self.accounttablename, isAdmin, isAuthorized, identityName)
+            cursor.execute(sql)
             self.conn.commit()
             cursor.close()
             return True

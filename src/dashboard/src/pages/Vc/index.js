@@ -115,7 +115,7 @@ export default class Vc extends React.Component {
           modifyFlag ?
             <div style={{ width: '50%', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
               <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
-              <form onSubmit={this.save}>
+              <form>
                 <Grid item xs={8}>
                   <TextField
                     required
@@ -147,7 +147,7 @@ export default class Vc extends React.Component {
                   />
                 </Grid>
                 <Grid item xs={8}>
-                  <Button variant="outlined" size="medium" color="primary" type="submit">Save</Button>
+                  <Button variant="outlined" size="medium" color="primary" type="button" onClick={this.save}>Save</Button>
                 </Grid>
               </form>
             </div>

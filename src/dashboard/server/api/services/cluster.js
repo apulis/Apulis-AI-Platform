@@ -365,15 +365,13 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {object} params
-   * @return {Promise<string>}
+   * VC
    */
   async addVc (params) {
     const { vcName, quota, metadata, userName } = params
     const response = await this.fetch(`/AddVC?vcName=${vcName}&quota=${quota}&metadata=${metadata}&userName=${userName}`)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    this.context.log.info({ data }, 'Got templates from %s', this.id)
     return data
   }
 
@@ -382,7 +380,6 @@ class Cluster extends Service {
     const response = await this.fetch(`/DeleteVC?vcName=${vcName}&userName=${userName}`)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    this.context.log.info({ data }, 'Got templates from %s', this.id)
     return data
   }
 
@@ -391,7 +388,6 @@ class Cluster extends Service {
     const response = await this.fetch(`/ListVCs?userName=${userName}`)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    this.context.log.info({ data }, 'Got templates from %s', this.id)
     return data
   }
 
@@ -400,7 +396,26 @@ class Cluster extends Service {
     const response = await this.fetch(`/UpdateVC?vcName=${vcName}&quota=${quota}&metadata=${metadata}&userName=${userName}`)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    this.context.log.info({ data }, 'Got templates from %s', this.id)
+    return data
+  }
+
+
+  /**
+   * USER
+   */
+  async listUser () {
+    const response = await this.fetch(`/ListUser`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
+  async updateUserPerm (params) {
+    const { identityName, isAdmin, isAuthorized } = params
+    const response = await this.fetch(`/UpdateUserPerm?isAdmin=${isAdmin}&isAuthorized=${isAuthorized}&identityName=${identityName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    console.log(data)
     return data
   }
 }

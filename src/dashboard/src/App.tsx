@@ -22,8 +22,9 @@ const SignIn = React.lazy(() => import('./pages/SignIn'));
 const Submission = React.lazy(() => import('./pages/Submission'));
 const Jobs = React.lazy(() => import('./pages/Jobs'));
 const Job = React.lazy(() => import('./pages/Job'));
-const ClusterStatus = React.lazy( () => import('./pages/ClusterStatus'));
-const Vc = React.lazy( () => import('./pages/Vc/index.js'));
+const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
+const Vc = React.lazy(() => import('./pages/Vc/index.js'));
+const User = React.lazy(() => import('./pages/User/index.js'));
 
 const theme = createMuiTheme();
 
@@ -37,11 +38,11 @@ interface BootstrapProps {
 
 const Loading = (
   <Box flex={1} display="flex" alignItems="center" justifyContent="center">
-    <CircularProgress/>
+    <CircularProgress />
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ email, uid, Alias, Password, _token ,children }) => (
+const Contexts: React.FC<BootstrapProps> = ({ email, uid, Alias, Password, _token, children }) => (
   <BrowserRouter>
     <UserProvider email={email} uid={uid} Alias={Alias} Password={Password} token={_token} >
       <TeamProvider>
@@ -72,18 +73,19 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
     <>
       <DrawerProvider>
         <Content>
-          <AppBar/>
-          <Drawer/>
+          <AppBar />
+          <Drawer />
           <React.Suspense fallback={Loading}>
             <Switch location={location}>
-              <Route exact path="/" component={Home}/>
-              <Route path="/submission" component={Submission}/>
-              <Route path="/jobs/:cluster" component={Jobs}/>
-              <Route path="/jobs" component={Jobs}/>
-              <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
-              <Route path="/cluster-status" component={ClusterStatus}/>
-              <Route path="/vc" component={Vc}/>
-              <Redirect to="/"/>
+              <Route exact path="/" component={Home} />
+              <Route path="/submission" component={Submission} />
+              <Route path="/jobs/:cluster" component={Jobs} />
+              <Route path="/jobs" component={Jobs} />
+              <Route path="/job/:team/:clusterId/:jobId" component={Job} />
+              <Route path="/cluster-status" component={ClusterStatus} />
+              <Route path="/vc" component={Vc} />
+              <Route path="/user" component={User} />
+              <Redirect to="/" />
             </Switch>
           </React.Suspense>
         </Content>
@@ -94,12 +96,12 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 
 const App: React.FC<BootstrapProps> = (props) => (
   <Contexts {...props}>
-    <CssBaseline/>
+    <CssBaseline />
     <Box display="flex" minHeight="100vh" maxWidth="100vw">
       <React.Suspense fallback={Loading}>
         <Switch>
-          <Route exact path="/sign-in" component={SignIn}/>
-          <Route component={Layout}/>
+          <Route exact path="/sign-in" component={SignIn} />
+          <Route component={Layout} />
         </Switch>
       </React.Suspense>
     </Box>

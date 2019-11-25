@@ -88,3 +88,9 @@ router.get('/:clusterId/listVc',
 router.get('/:clusterId/updateVc/:vcName/:quota/:metadata',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/updateVc'))
+
+router.get('/:clusterId/listUser',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/user/listUser'))
+router.get('/:clusterId/updateUserPerm/:isAdmin/:isAuthorized/:identityName',
+  require('./controllers/cluster/user/updateUser'))

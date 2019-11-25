@@ -15,10 +15,10 @@ const clustersConfig = config.get('clusters')
  */
 class Cluster extends Service {
   /**
-   * @param {import('koa').Context<State>} context
-   * @param {string} id
-   */
-  constructor(context, id) {
+     * @param {import('koa').Context<State>} context
+     * @param {string} id
+     */
+  constructor (context, id) {
     super(context)
     this.id = id
     this.config = clustersConfig[id]
@@ -26,11 +26,11 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} teamId
-   * @param {boolean} all
-   * @return {Promise<Array>}
-   */
-  async getJobs(teamId, all, limit) {
+     * @param {string} teamId
+     * @param {boolean} all
+     * @return {Promise<Array>}
+     */
+  async getJobs (teamId, all, limit) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.email,
@@ -52,10 +52,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} jobId
-   * @return {Promise}
-   */
-  async getJob(jobId) {
+     * @param {string} jobId
+     * @return {Promise}
+     */
+  async getJob (jobId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
@@ -69,10 +69,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {object} job
-   * @return {Promise<string>}
-   */
-  async addJob(job) {
+     * @param {object} job
+     * @return {Promise<string>}
+     */
+  async addJob (job) {
     const response = await this.fetch('/PostJob', {
       method: 'POST',
       headers: {
@@ -87,10 +87,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {object} job
-   * @return {Promise<string>}
-   */
-  async getJobStatus(jobId) {
+     * @param {object} job
+     * @return {Promise<string>}
+     */
+  async getJobStatus (jobId) {
     const params = new URLSearchParams({ jobId })
     const response = await this.fetch('/GetJobStatus?' + params)
     this.context.assert(response.ok, 502)
@@ -101,11 +101,11 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} jobId
-   * @param {'approved'|'killing'} status
-   * @return {Promise<string>}
-   */
-  async setJobStatus(jobId, status) {
+     * @param {string} jobId
+     * @param {'approved'|'killing'} status
+     * @return {Promise<string>}
+     */
+  async setJobStatus (jobId, status) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
@@ -141,9 +141,9 @@ class Cluster extends Service {
   }
 
   /**
-   * @return {Promise<object>}
-   */
-  async getJobsPriority() {
+     * @return {Promise<object>}
+     */
+  async getJobsPriority () {
     const response = await this.fetch('/jobs/priorities')
     this.context.assert(response.ok, 502)
     const data = await response.json()
@@ -152,11 +152,11 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} jobId
-   * @param {number} priority
-   * @return {Promise}
-   */
-  async setJobPriorty(jobId, priority) {
+     * @param {string} jobId
+     * @param {number} priority
+     * @return {Promise}
+     */
+  async setJobPriorty (jobId, priority) {
     const body = { [jobId]: priority }
     const response = await this.fetch('/jobs/priorities', {
       method: 'POST',
@@ -170,9 +170,9 @@ class Cluster extends Service {
   }
 
   /**
-   * @return {Promise<Array>}
-   */
-  async getTeams() {
+     * @return {Promise<Array>}
+     */
+  async getTeams () {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.email
@@ -186,10 +186,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} teamId
-   * @return {Promise}
-   */
-  async getTeam(teamId) {
+     * @param {string} teamId
+     * @return {Promise}
+     */
+  async getTeam (teamId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.email,
@@ -204,10 +204,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} jobId
-   * @return {Promise<Array>}
-   */
-  async getCommands(jobId) {
+     * @param {string} jobId
+     * @return {Promise<Array>}
+     */
+  async getCommands (jobId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
@@ -221,11 +221,11 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} jobId
-   * @param {string} command
-   * @return {Promise<string>}
-   */
-  async addCommand(jobId, command) {
+     * @param {string} jobId
+     * @param {string} command
+     * @return {Promise<string>}
+     */
+  async addCommand (jobId, command) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
@@ -241,10 +241,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} jobId
-   * @returns {Promise}
-   */
-  async getEndpoints(jobId) {
+     * @param {string} jobId
+     * @returns {Promise}
+     */
+  async getEndpoints (jobId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
@@ -260,11 +260,11 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} jobId
-   * @param {Array} endpoints
-   * @returns {Promise<string>}
-   */
-  async addEndpoint(jobId, endpoints) {
+     * @param {string} jobId
+     * @param {Array} endpoints
+     * @returns {Promise<string>}
+     */
+  async addEndpoint (jobId, endpoints) {
     const body = { jobId, endpoints }
     const response = await this.fetch('/endpoints', {
       method: 'POST',
@@ -278,10 +278,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} teamId
-   * @returns {Promise}
-   */
-  async getTemplates(teamId) {
+     * @param {string} teamId
+     * @returns {Promise}
+     */
+  async getTemplates (teamId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.email,
@@ -295,11 +295,11 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} templateName
-   * @param {object} template
-   * @return {Promise<string>}
-   */
-  async updateTemplate(database, teamId, templateName, template) {
+     * @param {string} templateName
+     * @param {object} template
+     * @return {Promise<string>}
+     */
+  async updateTemplate (database, teamId, templateName, template) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.email,
@@ -322,10 +322,10 @@ class Cluster extends Service {
   }
 
   /**
-   * @param {string} templateName
-   * @return {Promise<string>}
-   */
-  async deleteTemplate(database, teamId, templateName) {
+     * @param {string} templateName
+     * @return {Promise<string>}
+     */
+  async deleteTemplate (database, teamId, templateName) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.email,
@@ -343,12 +343,12 @@ class Cluster extends Service {
   }
 
   /**
-   * @private
-   * @param {string} path
-   * @param {import('node-fetch').RequestInit} init
-   * @returns {Promise<import('node-fetch').Response>}
-   */
-  async fetch(path, init) {
+     * @private
+     * @param {string} path
+     * @param {import('node-fetch').RequestInit} init
+     * @returns {Promise<import('node-fetch').Response>}
+     */
+  async fetch (path, init) {
     const url = new URL(path, this.config.restfulapi)
     const begin = Date.now()
     this.context.log.info({ url, init }, 'Cluster fetch request')
@@ -365,10 +365,10 @@ class Cluster extends Service {
   }
 
   /**
- * @param {object} params
- * @return {Promise<string>}
- */
-  async addVc(params) {
+   * @param {object} params
+   * @return {Promise<string>}
+   */
+  async addVc (params) {
     const { vcName, quota, metadata, userName } = params
     const response = await this.fetch(`/AddVC?vcName=${vcName}&quota=${quota}&metadata=${metadata}&userName=${userName}`)
     this.context.assert(response.ok, 502)
@@ -377,9 +377,27 @@ class Cluster extends Service {
     return data
   }
 
-  async listVc(params) {
+  async deleteVc (params) {
+    const { vcName, userName } = params
+    const response = await this.fetch(`/DeleteVC?vcName=${vcName}&userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    this.context.log.info({ data }, 'Got templates from %s', this.id)
+    return data
+  }
+
+  async listVc (params) {
     const { userName } = params
     const response = await this.fetch(`/ListVCs?userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    this.context.log.info({ data }, 'Got templates from %s', this.id)
+    return data
+  }
+
+  async updateVc (params) {
+    const { vcName, quota, metadata, userName } = params
+    const response = await this.fetch(`/UpdateVC?vcName=${vcName}&quota=${quota}&metadata=${metadata}&userName=${userName}`)
     this.context.assert(response.ok, 502)
     const data = await response.json()
     this.context.log.info({ data }, 'Got templates from %s', this.id)

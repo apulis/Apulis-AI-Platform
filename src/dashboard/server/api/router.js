@@ -76,10 +76,15 @@ router.delete('/teams/:teamId/templates/:templateName',
   require('./middlewares/user')(),
   require('./controllers/team/template.delete'))
 
-router.get('/addVc/:clusterId/:vcName/:quota/:metadata',
+router.get('/:clusterId/addVc/:vcName/:quota/:metadata',
   require('./middlewares/user')(),
-  require('./controllers/cluster/addvc'))
-
-router.get('/listVc/:clusterId',
+  require('./controllers/cluster/vc/addVc'))
+router.get('/:clusterId/deleteVc/:vcName',
   require('./middlewares/user')(),
-  require('./controllers/cluster/listvc'))
+  require('./controllers/cluster/vc/deleteVc'))
+router.get('/:clusterId/listVc',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/vc/listVc'))
+router.get('/:clusterId/updateVc/:vcName/:quota/:metadata',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/vc/updateVc'))

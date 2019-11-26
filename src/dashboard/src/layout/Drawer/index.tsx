@@ -73,6 +73,9 @@ const NavigationList: React.FC = () => {
       <LinkListItem to="/user">
         <ListItemText>User</ListItemText>
       </LinkListItem>
+      <LinkListItem to="/access">
+        <ListItemText>Access</ListItemText>
+      </LinkListItem>
     </List>
   );
 };

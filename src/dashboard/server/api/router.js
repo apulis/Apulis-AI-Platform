@@ -94,3 +94,13 @@ router.get('/:clusterId/listUser',
   require('./controllers/cluster/user/listUser'))
 router.get('/:clusterId/updateUserPerm/:isAdmin/:isAuthorized/:identityName',
   require('./controllers/cluster/user/updateUser'))
+
+router.get('/:clusterId/GetACL',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/access/GetACL'))
+router.get('/:clusterId/updateAce',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/access/updateAce'))
+router.get('/:clusterId/deleteAce',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/access/deleteAce'))

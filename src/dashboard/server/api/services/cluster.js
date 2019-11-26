@@ -418,6 +418,32 @@ class Cluster extends Service {
     console.log(data)
     return data
   }
+
+  async GetACL (params) {
+    const { userName } = params
+    const response = await this.fetch(`/GetACL?userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
+  async updateAce (params) {
+    const { userName, identityName, resourceType, resourceName, permissions } = params
+    const response = await this.fetch(`/UpdateAce?resourceType=${resourceType}&resourceName=${resourceName}&permissions=${permissions}&identityName=${identityName}&userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    console.log(data)
+    return data
+  }
+  
+  async deleteAce (params) {
+    const { userName, identityName, resourceType, resourceName } = params
+    const response = await this.fetch(`/DeleteAce?resourceType=${resourceType}&resourceName=${resourceName}&identityName=${identityName}&userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    console.log(data)
+    return data
+  }
 }
 
 module.exports = Cluster

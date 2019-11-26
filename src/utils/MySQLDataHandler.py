@@ -647,12 +647,13 @@ class DataHandler(object):
     @record
     def GetAcl(self):
         cursor = self.conn.cursor()
-        query = "SELECT `identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s`" % (self.acltablename)
+        query = "SELECT `id`,`identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s`" % (self.acltablename)
         ret = []
         try:
             cursor.execute(query)
-            for (identityName,identityId,resource,permissions,isDeny) in cursor:
+            for (id,identityName,identityId,resource,permissions,isDeny) in cursor:
                 record = {}
+                record["id"] = id
                 record["identityName"] = identityName
                 record["identityId"] = identityId
                 record["resource"] = resource

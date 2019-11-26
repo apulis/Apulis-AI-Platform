@@ -5,8 +5,8 @@
 
 /** @type {import('koa').Middleware<State>} */
 module.exports = async context => {
-  const { cluster } = context.state
-  const params = context.params
-  const ret = await cluster.updateUserPerm(params)
+  const { cluster, user } = context.state
+  const params = { userName: user.email }
+  const ret = await cluster.GetACL(params)
   context.body = ret
 }

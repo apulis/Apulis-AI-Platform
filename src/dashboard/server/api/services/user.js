@@ -38,6 +38,17 @@ class User extends Service {
    * @param {object} idToken
    * @return {User}
    */
+  static fromDingtalk(context, userinfo) {
+    const user = new User(context, userinfo['openid'])
+    user.Alias = userinfo['nick']
+    return user
+  }
+
+  /**
+   * @param {import('koa').Context} context
+   * @param {object} idToken
+   * @return {User}
+   */
   static fromToken(context, email, token) {
     const user = new User(context, email)
     const expectedToken = user.token
@@ -112,6 +123,20 @@ class User extends Service {
     return await response.json()
   }
   
+  async loginWithDingtalk() {
+    const params = new URLSearchParams(Object.assign({
+      identityName: this.email,
+      Alias: this.Alias,
+      Group: "DingTalk",
+      isAdmin: false,
+      isAuthorized: false
+    }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
+    return await response.json()
+  }
+  
+
   async getAccountInfo() {
     const params = new URLSearchParams(Object.assign({ identityName: this.email }))
     const clusterId = clusterIds[0]

@@ -430,17 +430,23 @@ def AddUser(username,uid,gid,groups):
     return ret
 
 
-def Login(identityName, Alias = "", Group = [], isAdmin = False, isAuthorized = False):
+def Login(identityName, Alias = "", Group = "Other", isAdmin = False, isAuthorized = False):
     try:
         dataHandler = DataHandler()
         lst = dataHandler.GetAccountInfo(identityName)
         if len(lst) == 0: # Register
-            if Group == "Microsoft":
-                gid = 3001
-                groups = ["Microsoft"]
-            elif Group is None or Group == "":
+            groupDict = {
+                "Microsoft": 3001,
+                "Zhejianglab": 3002,
+                "Wechat": 3003,
+                "DingTalk": 3004
+            }
+            if Group in groupDict:
+                groups = [Group]
+                gid = groupDict[Group]
+            else:
                 gid = 3999
-                groups = []
+                groups = ['Other']
             Password = ''.join(random.sample(string.ascii_letters + string.digits, 8))
             dataHandler.UpdateAccountInfo(identityName, Alias, gid, groups, Password, isAdmin, isAuthorized)
             lst = dataHandler.GetAccountInfo(identityName)

@@ -9,6 +9,8 @@ router.get('/authenticate',
   require('./controllers/authenticate'))
 router.get('/authenticate/logout',
   require('./controllers/authenticate/logout'))
+router.get('/authenticate/dingtalk',
+require('./controllers/authenticate/dingtalk'))
 
 router.param('clusterId',
   require('./middlewares/cluster'))

@@ -34,6 +34,7 @@ interface BootstrapProps {
   uid?: string;
   Alias?: string;
   Password?: string;
+  isAdmin?: boolean;
   _token?: any;
 }
 
@@ -43,9 +44,9 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ email, uid, Alias, Password, _token, children }) => (
+const Contexts: React.FC<BootstrapProps> = ({ email, uid, Alias, Password, isAdmin, _token, children }) => (
   <BrowserRouter>
-    <UserProvider email={email} uid={uid} Alias={Alias} Password={Password} token={_token} >
+    <UserProvider email={email} uid={uid} Alias={Alias} Password={Password} isAdmin={isAdmin} token={_token} >
       <TeamProvider>
         <ClustersProvider>
           <ThemeProvider theme={theme}>

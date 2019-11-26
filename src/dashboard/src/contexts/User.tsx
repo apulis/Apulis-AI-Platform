@@ -6,6 +6,7 @@ interface Context {
   Alias?: string;
   Password?: string;
   token?: any;
+  isAdmin?: boolean;
 }
 
 const Context = React.createContext<Context>({});
@@ -18,15 +19,16 @@ interface ProviderProps {
   Alias?: string;
   Password?: string;
   token?: any;
+  isAdmin?: boolean;
 }
 
-export const Provider: React.FC<ProviderProps> = ({ email, uid, Alias, Password, token, children }) => {
+export const Provider: React.FC<ProviderProps> = ({ email, uid, Alias, Password, token, isAdmin, children }) => {
   if (token) {
     token = new Buffer(token.data).toString('hex');
   }
   return (
     <Context.Provider
-      value={{ email,uid,Alias,Password, token }}
+      value={{ email, uid, Alias, Password, token, isAdmin }}
       children={children}
     />
   );

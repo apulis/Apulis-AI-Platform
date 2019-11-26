@@ -14,6 +14,7 @@ import {
 } from "@material-ui/core/styles";
 import { makeStyles, createStyles } from "@material-ui/core/styles";
 import Context from "./Context";
+import UserContext from '../../contexts/User';
 
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -53,6 +54,8 @@ const LinkListItem = withRouter<LinkProps & RouteComponentProps>(({ location, to
 
 const NavigationList: React.FC = () => {
   const styles = useStyles();
+  const { isAdmin } = React.useContext(UserContext);
+  console.log('isAdmin:', isAdmin)
   return (
     <List component="nav" className={styles.drawerHeader}>
       <LinkListItem to="/submission/training">
@@ -67,15 +70,21 @@ const NavigationList: React.FC = () => {
       <LinkListItem to="/cluster-status">
         <ListItemText>Cluster Status</ListItemText>
       </LinkListItem>
-      <LinkListItem to="/vc">
-        <ListItemText>Vc</ListItemText>
-      </LinkListItem>
-      <LinkListItem to="/user">
-        <ListItemText>User</ListItemText>
-      </LinkListItem>
-      <LinkListItem to="/access">
-        <ListItemText>Access</ListItemText>
-      </LinkListItem>
+      {
+        isAdmin ?
+          <div style={{ width: '100%' }}>
+            <LinkListItem to="/vc">
+              <ListItemText>Vc</ListItemText>
+            </LinkListItem>
+            <LinkListItem to="/user">
+              <ListItemText>User</ListItemText>
+            </LinkListItem>
+            <LinkListItem to="/access">
+              <ListItemText>Access</ListItemText>
+            </LinkListItem>
+          </div>
+          : null
+      }
     </List>
   );
 };

@@ -10,6 +10,7 @@ export default class Access extends React.Component {
   constructor() {
     super()
     this.state = {
+      vcList: [],
       accessList: [],
       modifyFlag: false,
       isEdit: 0,
@@ -22,6 +23,7 @@ export default class Access extends React.Component {
 
   componentWillMount() {
     this.getAccessList();
+    this.getVcList();
   }
 
   getAccessList = () => {
@@ -32,6 +34,15 @@ export default class Access extends React.Component {
         })
       }, () => { })
   }
+  getVcList = () => {
+    axios.get('/api/qjydev/listVc')
+      .then((res) => {
+        this.setState({
+          vcList: res.data.result,
+        })
+      }, () => { })
+  }
+
 
   addAccess = () => {
     const { modifyFlag } = this.state;
@@ -68,11 +79,12 @@ export default class Access extends React.Component {
     const { resourceType, resourceName, permissions, identityName } = this.state;
     let url = `/api/qjydev/updateAce?resourceType=${resourceType}&resourceName=${resourceName}&permissions=${permissions}&identityName=${identityName}`;
     axios.get(url).then((res) => {
-      alert(`修改成功`)
+      alert(`操作成功`)
       this.getAccessList();
+      this.setState({ modifyFlag: false })
     }, (e) => {
       console.log(e);
-      alert(`修改失败`)
+      alert(`操作失败`)
     })
   }
 
@@ -120,7 +132,13 @@ export default class Access extends React.Component {
   }
 
   render() {
-    const { accessList, modifyFlag, isEdit, identityName, resourceType, resourceName, permissions } = this.state;
+    const { accessList, modifyFlag, isEdit, identityName, resourceType, resourceName, permissions, vcList } = this.state;
+    const PermMap = {
+      0: 'Unauthorized',
+      1: 'User',
+      3: 'Collaborator',
+      7: 'Admin'
+    }
     return (
       <div>
         <Button variant="outlined" size="medium" color="primary" onClick={this.addAccess}>{modifyFlag && !isEdit ? '收起新增' : '新增ACCESS'}</Button>
@@ -155,7 +173,7 @@ export default class Access extends React.Component {
                       </Grid>
                       <Grid item xs={8}>
                         <FormControl>
-                          <InputLabel id="demo-simple-select-label">resourceType</InputLabel>
+                          <InputLabel>resourceType</InputLabel>
                           <Select
                             value={resourceType}
                             onChange={this.resourceTypeChange.bind(this)}
@@ -168,29 +186,32 @@ export default class Access extends React.Component {
                       {
                         resourceType === 2 ?
                           <Grid item xs={8}>
-                            <TextField
-                              required
-                              label="resourceName"
-                              value={resourceName}
-                              onChange={this.resourceNameChange.bind(this)}
-                              margin="normal"
-                              fullWidth={true}
-                            />
+                            <FormControl>
+                              <InputLabel>resourceName</InputLabel>
+                              <Select
+                                value={resourceName}
+                                onChange={this.resourceNameChange.bind(this)}
+                              >
+                                {vcList.map(item => (
+                                  <MenuItem key={item.vcName} value={item.vcName}>{item.vcName}</MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
                           </Grid> : null
                       }
                     </div>
                 }
                 <Grid item xs={8}>
                   <FormControl>
-                    <InputLabel id="demo-simple-select-label">permissions</InputLabel>
+                    <InputLabel>permissions</InputLabel>
                     <Select
                       value={permissions}
                       onChange={this.permissionsChange.bind(this)}
                     >
-                      <MenuItem value={0}>0</MenuItem>
-                      <MenuItem value={1}>1</MenuItem>
-                      <MenuItem value={3}>3</MenuItem>
-                      <MenuItem value={7}>7</MenuItem>
+                      <MenuItem value={0}>Unauthorized</MenuItem>
+                      <MenuItem value={1}>User</MenuItem>
+                      <MenuItem value={3}>Collaborator</MenuItem>
+                      <MenuItem value={7}>Admin</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -218,7 +239,7 @@ export default class Access extends React.Component {
                 <TableCell>{item.identityId} </TableCell>
                 <TableCell>{item.identityName} </TableCell>
                 <TableCell>{item.isDeny} </TableCell>
-                <TableCell>{item.permissions} </TableCell>
+                <TableCell>{PermMap[item.permissions]} </TableCell>
                 <TableCell>{item.resource}</TableCell>
                 <TableCell>
                   <Button color="primary" onClick={() => this.updateAccess(item)}>Modify</Button>

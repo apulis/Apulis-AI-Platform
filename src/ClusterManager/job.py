@@ -157,7 +157,7 @@ class JobSchema(Schema):
                            # but certain resources have more specific restrictions.
                            validate=validate.Regexp(r'^[a-z0-9]([-a-z0-9]*[a-z0-9])?$',
                                                     error="'{input}' does not match expected pattern {regex}."))
-    email = fields.Email(required=True, dump_to="userName", load_from="userName")
+    email = fields.String(required=True, dump_to="userName", load_from="userName")
     mountpoints = fields.Dict(required=False)
     job_path = fields.String(required=False, dump_to="jobPath", load_from="jobPath")
     work_path = fields.String(required=False, dump_to="workPath", load_from="workPath")

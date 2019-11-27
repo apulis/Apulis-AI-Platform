@@ -55,14 +55,25 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                   disabled={signIn}
                   onClick={onButtonClick}
                 >
-                  { signIn ? <CircularProgress size={24}/> : 'Sign in with corp account' }
+                  { signIn ? <CircularProgress size={24}/> : 'Sign in with Microsoft' }
+                </Button>
+              </Grid>
+              <Grid item>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  href="/api/authenticate/dingtalk"
+                  disabled={signIn}
+                  onClick={onButtonClick}
+                >
+                  { signIn ? <CircularProgress size={24}/> : 'Sign in with Dingtalk' }
                 </Button>
               </Grid>
               <Grid item>
                 <Typography variant="body2">
                   {"Built with "}
                   <span role="img" aria-label="heart">❤️</span>
-                  {" by ..."}
+                  {" by Qjianjingyaun"}
                 </Typography>
               </Grid>
             </Grid>

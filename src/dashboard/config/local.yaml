@@ -13,3 +13,7 @@ clusters:
     dataStorage: data
     grafana: https://qjy-proxy03.zhejianglab.com/grafana/
     prometheus: http://qjy-test02.zhejianglab.com:9091
+
+dingtalk:
+  appId: dingoap3bz8cizte9xu62e
+  appSecret: sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj	

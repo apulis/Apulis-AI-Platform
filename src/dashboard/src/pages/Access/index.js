@@ -141,10 +141,39 @@ export default class Access extends React.Component {
     }
     return (
       <div>
-        <Button variant="outlined" size="medium" color="primary" onClick={this.addAccess}>{modifyFlag && !isEdit ? '收起新增' : '新增ACCESS'}</Button>
+        <div>
+          <Button variant="outlined" size="medium" color="primary" onClick={this.addAccess}>{modifyFlag && !isEdit ? '收起新增' : '新增ACCESS'}</Button>
+        </div>
+        <Table style={{ width: '70%', float: 'left', marginTop: 20 }}>
+          <TableHead>
+            <TableRow style={{ backgroundColor: '#7583d1' }}>
+              <TableCell style={{ color: '#fff' }}>identityId</TableCell>
+              <TableCell style={{ color: '#fff' }}>identityName</TableCell>
+              <TableCell style={{ color: '#fff' }}>isDeny</TableCell>
+              <TableCell style={{ color: '#fff' }}>permissions</TableCell>
+              <TableCell style={{ color: '#fff' }}>resource</TableCell>
+              <TableCell style={{ color: '#fff' }}>actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {accessList.map(item => (
+              <TableRow key={item.id}>
+                <TableCell>{item.identityId} </TableCell>
+                <TableCell>{item.identityName} </TableCell>
+                <TableCell>{item.isDeny} </TableCell>
+                <TableCell>{PermMap[item.permissions]} </TableCell>
+                <TableCell>{item.resource}</TableCell>
+                <TableCell>
+                  <Button color="primary" onClick={() => this.updateAccess(item)}>Modify</Button>
+                  <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         {
           modifyFlag ?
-            <div style={{ width: '50%', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
+            <div style={{ width: '25%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
               <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
               {!isEdit ? <p>理论上不用新增，用户第三方登录后就会有ACL记录</p> : null}
               <form>
@@ -152,16 +181,16 @@ export default class Access extends React.Component {
                 {
                   isEdit === 1 ?
                     <div>
-                      <Grid item xs={8}>
+                      <Grid item xs={8} style={{ marginTop: 20 }}>
                         {identityName}
                       </Grid>
-                      <Grid item xs={8}>
+                      <Grid item xs={8} style={{ marginTop: 20 }}>
                         {resourceType === 1 ? 'Cluster' : 'Cluster/VC:' + resourceName}
                       </Grid>
                     </div>
                     :
                     <div>
-                      <Grid item xs={8}>
+                      <Grid item xs={8} style={{ marginTop: 20 }}>
                         <TextField
                           required
                           label="identityName"
@@ -171,7 +200,7 @@ export default class Access extends React.Component {
                           fullWidth={true}
                         />
                       </Grid>
-                      <Grid item xs={8}>
+                      <Grid item xs={8} style={{ marginTop: 20 }}>
                         <FormControl>
                           <InputLabel>resourceType</InputLabel>
                           <Select
@@ -185,7 +214,7 @@ export default class Access extends React.Component {
                       </Grid>
                       {
                         resourceType === 2 ?
-                          <Grid item xs={8}>
+                          <Grid item xs={8} style={{ marginTop: 20 }}>
                             <FormControl>
                               <InputLabel>resourceName</InputLabel>
                               <Select
@@ -201,7 +230,7 @@ export default class Access extends React.Component {
                       }
                     </div>
                 }
-                <Grid item xs={8}>
+                <Grid item xs={8} style={{ marginTop: 20 }}>
                   <FormControl>
                     <InputLabel>permissions</InputLabel>
                     <Select
@@ -222,33 +251,6 @@ export default class Access extends React.Component {
             </div>
             : null
         }
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>identityId</TableCell>
-              <TableCell>identityName</TableCell>
-              <TableCell>isDeny</TableCell>
-              <TableCell>permissions</TableCell>
-              <TableCell>resource</TableCell>
-              <TableCell>actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {accessList.map(item => (
-              <TableRow key={item.id}>
-                <TableCell>{item.identityId} </TableCell>
-                <TableCell>{item.identityName} </TableCell>
-                <TableCell>{item.isDeny} </TableCell>
-                <TableCell>{PermMap[item.permissions]} </TableCell>
-                <TableCell>{item.resource}</TableCell>
-                <TableCell>
-                  <Button color="primary" onClick={() => this.updateAccess(item)}>Modify</Button>
-                  <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </div>
     )
   }

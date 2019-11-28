@@ -45,7 +45,7 @@ export default class User extends React.Component {
   save = () => {
     const { isAdmin, isAuthorized, identityName } = this.state;
     let url = `/api/qjydev/updateUserPerm/${isAdmin}/${isAuthorized}/${identityName}`;
-    axios.get(url).then((res) => {
+    axios.get(url).then(() => {
       alert(`修改成功`)
       this.getUserList();
     }, (e) => {
@@ -71,54 +71,17 @@ export default class User extends React.Component {
     const { userList, modifyFlag, identityName, isAdmin, isAuthorized } = this.state;
     return (
       <div>
-        {
-          modifyFlag ?
-            <div style={{ width: '50%', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
-              <h2 id="simple-modal-title">修改</h2>
-              <form>
-                <Grid item xs={8}>
-                  {identityName}
-                </Grid>
-                <Grid item xs={8}>
-                  <FormControl>
-                    <InputLabel id="demo-simple-select-label">isAdmin</InputLabel>
-                    <Select
-                      value={isAdmin}
-                      onChange={this.isAdminChange.bind(this)}
-                    >
-                      <MenuItem value={1}>True</MenuItem>
-                      <MenuItem value={0}>false</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <FormControl>
-                    <InputLabel id="demo-simple-select-label">isAuthorized</InputLabel>
-                    <Select
-                      value={isAuthorized}
-                      onChange={this.isAuthorizedChange.bind(this)}
-                    >
-                      <MenuItem value={1}>True</MenuItem>
-                      <MenuItem value={0}>false</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={8} style={{ marginTop: 10 }}>
-                  <Button variant="outlined" size="medium" color="primary" type="button" onClick={this.save}>Save</Button>
-                </Grid>
-              </form>
-            </div>
-            : null
-        }
-        <Table>
+        <Table style={{ float: 'left', width: '70%' }}>
           <TableHead>
-            <TableRow>
-              <TableCell>uid</TableCell>
-              <TableCell>identityName</TableCell>
-              <TableCell>Alias</TableCell>
-              <TableCell>Password</TableCell>
-              <TableCell>groups</TableCell>
-              <TableCell>isAdmin</TableCell>
-              <TableCell>isAuthorized</TableCell>
-              <TableCell>actions</TableCell>
+            <TableRow style={{ backgroundColor: '#7583d1' }}>
+              <TableCell style={{ color: '#fff' }}>uid</TableCell>
+              <TableCell style={{ color: '#fff' }}>identityName</TableCell>
+              <TableCell style={{ color: '#fff' }}>Alias</TableCell>
+              <TableCell style={{ color: '#fff' }}>Password</TableCell>
+              <TableCell style={{ color: '#fff' }}>groups</TableCell>
+              <TableCell style={{ color: '#fff' }}>isAdmin</TableCell>
+              <TableCell style={{ color: '#fff' }}>isAuthorized</TableCell>
+              <TableCell style={{ color: '#fff' }}>actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -138,6 +101,43 @@ export default class User extends React.Component {
             ))}
           </TableBody>
         </Table>
+        {
+          modifyFlag ?
+            <div style={{ float: 'left', width: '25%', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
+              <h2 id="simple-modal-title">修改</h2>
+              <form>
+                <Grid item xs={8}>
+                  {identityName}
+                </Grid>
+                <Grid item xs={8} style={{ marginTop: 20 }}>
+                  <FormControl>
+                    <InputLabel>isAdmin</InputLabel>
+                    <Select
+                      value={isAdmin}
+                      onChange={this.isAdminChange.bind(this)}
+                    >
+                      <MenuItem value={1}>True</MenuItem>
+                      <MenuItem value={0}>false</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <FormControl style={{ marginLeft: 20 }}>
+                    <InputLabel>isAuthorized</InputLabel>
+                    <Select
+                      value={isAuthorized}
+                      onChange={this.isAuthorizedChange.bind(this)}
+                    >
+                      <MenuItem value={1}>True</MenuItem>
+                      <MenuItem value={0}>false</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={8} style={{ marginTop: 20 }}>
+                  <Button variant="outlined" size="medium" color="primary" type="button" onClick={this.save}>Save</Button>
+                </Grid>
+              </form>
+            </div>
+            : null
+        }
       </div>
     )
   }

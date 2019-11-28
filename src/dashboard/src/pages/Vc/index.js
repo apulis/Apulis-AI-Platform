@@ -57,6 +57,14 @@ export default class Vc extends React.Component {
 
   save = () => {
     const { isEdit, vcName, quota, metadata } = this.state;
+    if (!this.isJSON(quota)) {
+      alert('quota必须是json格式');
+      return;
+    }
+    if (!this.isJSON(metadata)) {
+      alert('metadata必须是json格式');
+      return;
+    }
     let url;
     if (isEdit) {
       url = `/api/qjydev/updateVc/${vcName}/${quota}/${metadata}`;
@@ -106,14 +114,56 @@ export default class Vc extends React.Component {
     })
   }
 
+  isJSON(str) {
+    if (typeof str == 'string') {
+      try {
+        var obj = JSON.parse(str);
+        if (typeof obj == 'object' && obj) {
+          return true;
+        } else {
+          return false;
+        }
+      } catch (e) {
+        return false;
+      }
+    }
+  }
+
   render() {
     const { vcList, modifyFlag, isEdit, vcName, quota, metadata } = this.state;
     return (
       <div>
-        <Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>{modifyFlag && !isEdit ? '收起新增' : '新增VC'}</Button>
+        <div>
+          <Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>{modifyFlag && !isEdit ? '收起新增' : '新增VC'}</Button>
+        </div>
+        <Table style={{ width: '70%', float: 'left', marginTop: 20 }}>
+          <TableHead>
+            <TableRow style={{ backgroundColor: '#7583d1' }}>
+              <TableCell style={{ color: '#fff' }}>vcName</TableCell>
+              <TableCell style={{ color: '#fff' }}>quota</TableCell>
+              <TableCell style={{ color: '#fff' }}>metadata</TableCell>
+              <TableCell style={{ color: '#fff' }}>admin</TableCell>
+              <TableCell style={{ color: '#fff' }}>actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {vcList.map(item => (
+              <TableRow key={item.vcName}>
+                <TableCell>{item.vcName} </TableCell>
+                <TableCell>{item.quota} </TableCell>
+                <TableCell>{item.metadata} </TableCell>
+                <TableCell>{item.admin ? '管理员' : '用户'} </TableCell>
+                <TableCell>
+                  <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
+                  <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         {
           modifyFlag ?
-            <div style={{ width: '50%', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
+            <div style={{ width: '25%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
               <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
               <form>
                 <Grid item xs={8}>
@@ -153,31 +203,6 @@ export default class Vc extends React.Component {
             </div>
             : null
         }
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>vcName</TableCell>
-              <TableCell>quota</TableCell>
-              <TableCell>metadata</TableCell>
-              <TableCell>admin</TableCell>
-              <TableCell>actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {vcList.map(item => (
-              <TableRow key={item.vcName}>
-                <TableCell>{item.vcName} </TableCell>
-                <TableCell>{item.quota} </TableCell>
-                <TableCell>{item.metadata} </TableCell>
-                <TableCell>{item.admin ? '管理员' : '用户'} </TableCell>
-                <TableCell>
-                  <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
-                  <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </div>
     )
   }

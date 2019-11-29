@@ -20,16 +20,16 @@ const useStyles = makeStyles(() => createStyles({
 }));
 
 const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
-  const { email } = React.useContext(UserContext);
+  const { userName } = React.useContext(UserContext);
   const [ signIn, setSignIn ] = React.useState(false);
   const onButtonClick = React.useCallback(() => {
     setSignIn(true);
   }, []);
   React.useEffect(() => {
-    if (email !== undefined) {
+    if (userName !== undefined) {
       history.replace('/');
     }
-  }, [email, history])
+  }, [userName, history])
 
   const styles = useStyles();
 

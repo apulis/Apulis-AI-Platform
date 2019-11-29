@@ -136,9 +136,9 @@ TeamMenu = () => {
 const UserButton: React.FC = () => {
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
-  const { email, Alias, Password, token} = React.useContext(UserContext);
+  const { userName, Alias, Password, token} = React.useContext(UserContext);
   const styles = useStyles();
-  const Username = typeof email === 'string' ?  email.split('@', 1)[0] : email;
+  const Username = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
   const handleClose = () => {
     setOpenUserProfile(false);
   }
@@ -174,7 +174,7 @@ const UserButton: React.FC = () => {
         <Box m={10}>
           <List>
             <ListItem button>
-              <ListItemText primary="Email" secondary={email}  onClick={()=>handleCopy(email)}/>
+              <ListItemText primary="Email" secondary={userName}  onClick={()=>handleCopy(userName)}/>
             </ListItem>
             <Divider />
             <ListItem button>

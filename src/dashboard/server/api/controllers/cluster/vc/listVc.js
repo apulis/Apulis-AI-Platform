@@ -7,7 +7,7 @@
 module.exports = async context => {
   const { cluster, user } = context.state
   const params = context.params
-  params.userName = user.email
+  params.userName = user.userName
   const ret = await cluster.listVc(params)
   context.body = ret
 }

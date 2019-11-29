@@ -30,7 +30,7 @@ const Access = React.lazy(() => import('./pages/Access/index.js'));
 const theme = createMuiTheme();
 
 interface BootstrapProps {
-  email?: string;
+  userName?: string;
   uid?: string;
   Alias?: string;
   Password?: string;
@@ -44,9 +44,9 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ email, uid, Alias, Password, isAdmin, _token, children }) => (
+const Contexts: React.FC<BootstrapProps> = ({ userName, uid, Alias, Password, isAdmin, _token, children }) => (
   <BrowserRouter>
-    <UserProvider email={email} uid={uid} Alias={Alias} Password={Password} isAdmin={isAdmin} token={_token} >
+    <UserProvider userName={userName} uid={uid} Alias={Alias} Password={Password} isAdmin={isAdmin} token={_token} >
       <TeamProvider>
         <ClustersProvider>
           <ThemeProvider theme={theme}>
@@ -59,15 +59,15 @@ const Contexts: React.FC<BootstrapProps> = ({ email, uid, Alias, Password, isAdm
 );
 
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
-  const { email } = React.useContext(UserContext);
+  const { userName } = React.useContext(UserContext);
 
   React.useEffect(() => {
-    if (email === undefined) {
+    if (userName === undefined) {
       history.replace('/sign-in');
     }
-  }, [email, history]);
+  }, [userName, history]);
 
-  if (email === undefined) {
+  if (userName === undefined) {
     return null;
   }
 

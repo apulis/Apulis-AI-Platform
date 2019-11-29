@@ -27,7 +27,7 @@ interface Props {
 }
 
 const JobDetails: React.FC<Props> = ({ clusterId, jobId, job, team }) => {
-  const { email } = React.useContext(UserContext);
+  const { userName } = React.useContext(UserContext);
   const [cluster] = useGet(`/api/clusters/${clusterId}`, { onMount: true });
   const [value, setValue] = React.useState(0);
   const theme = useTheme();
@@ -36,7 +36,7 @@ const JobDetails: React.FC<Props> = ({ clusterId, jobId, job, team }) => {
     setValue(index);
   }
   const { teams } = React.useContext(TeamContext);
-  const isReadOnly = teams.filter((item: any)=>item["id"] === team)[0]["clusters"].filter((cluster: any) => cluster.id === clusterId)[0].admin || email === job['userName'];
+  const isReadOnly = teams.filter((item: any)=>item["id"] === team)[0]["clusters"].filter((cluster: any) => cluster.id === clusterId)[0].admin || userName === job['userName'];
   useEffect(()=>{
     let mount = true;
     let timeout: any;

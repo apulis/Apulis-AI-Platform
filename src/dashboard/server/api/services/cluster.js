@@ -33,9 +33,9 @@ class Cluster extends Service {
   async getJobs (teamId, all, limit) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email,
+      userName: user.userName,
       vcName: teamId,
-      jobOwner: all ? 'all' : user.email,
+      jobOwner: all ? 'all' : user.userName,
       num: limit
     })
     const response = await this.fetch('/ListJobs?' + params)
@@ -59,7 +59,7 @@ class Cluster extends Service {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.email
+      userName: user.userName
     })
     const response = await this.fetch('/GetJobDetail?' + params)
     this.context.assert(response.ok, 502)
@@ -109,7 +109,7 @@ class Cluster extends Service {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.email
+      userName: user.userName
     })
     if (status === 'approved') {
       const response = await this.fetch('/ApproveJob?' + params)
@@ -175,7 +175,7 @@ class Cluster extends Service {
   async getTeams () {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email
+      userName: user.userName
     })
 
     const response = await this.fetch('/ListVCs?' + params)
@@ -192,7 +192,7 @@ class Cluster extends Service {
   async getTeam (teamId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email,
+      userName: user.userName,
       vcName: teamId
     })
     const response = await this.fetch('/GetVC?' + params)
@@ -211,7 +211,7 @@ class Cluster extends Service {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.email
+      userName: user.userName
     })
     const response = await this.fetch('/GetCommands?' + params)
     this.context.assert(response.ok, 502)
@@ -229,7 +229,7 @@ class Cluster extends Service {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.email,
+      userName: user.userName,
       command
     })
 
@@ -248,7 +248,7 @@ class Cluster extends Service {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.email
+      userName: user.userName
     })
 
     const response = await this.fetch('/endpoints?' + params)
@@ -284,7 +284,7 @@ class Cluster extends Service {
   async getTemplates (teamId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email,
+      userName: user.userName,
       vcName: teamId
     })
     const response = await this.fetch('/templates?' + params)
@@ -302,7 +302,7 @@ class Cluster extends Service {
   async updateTemplate (database, teamId, templateName, template) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email,
+      userName: user.userName,
       vcName: teamId,
       database: {
         user: 'user',
@@ -328,7 +328,7 @@ class Cluster extends Service {
   async deleteTemplate (database, teamId, templateName) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email,
+      userName: user.userName,
       vcName: teamId,
       database: 'user',
       templateName

@@ -15,11 +15,11 @@ const clusterIds = Object.keys(config.get('clusters'))
 class User extends Service {
   /**
    * @param {import('koa').Context} context
-   * @param {string} email
+   * @param {string} userName
    */
-  constructor(context, email) {
+  constructor(context, userName) {
     super(context)
-    this.email = email
+    this.userName = userName
   }
 
   /**
@@ -49,8 +49,8 @@ class User extends Service {
    * @param {object} idToken
    * @return {User}
    */
-  static fromToken(context, email, token) {
-    const user = new User(context, email)
+  static fromToken(context, userName, token) {
+    const user = new User(context, userName)
     const expectedToken = user.token
     const actualToken = Buffer.from(token, 'hex')
     context.assert(expectedToken.equals(actualToken), 403, 'Invalid token')
@@ -65,7 +65,7 @@ class User extends Service {
    */
   static fromCookie(context, token) {
     const payload = jwt.verify(token, sign)
-    const user = new User(context, payload['email'])
+    const user = new User(context, payload['userName'])
 
     user.uid = payload['uid']
     user.gid = payload['gid']
@@ -80,14 +80,14 @@ class User extends Service {
   get token() {
     if (this._token == null) {
       const hash = createHash('md5')
-      hash.update(`${this.email}:${masterToken}`)
+      hash.update(`${this.userName}:${masterToken}`)
       this._token = hash.digest()
     }
     return this._token
   }
 
   async fillIdFromWinbind() {
-    const params = new URLSearchParams({ userName: this.email })
+    const params = new URLSearchParams({ userName: this.userName })
     const url = `${winbind}/domaininfo/GetUserId?${params}`
     this.context.log.info({ url }, 'Winbind request')
     const response = await fetch(url)
@@ -104,7 +104,7 @@ class User extends Service {
     if (Array.isArray(data['groups'])) {
       data['groups'] = JSON.stringify(data['groups'].map(e => String(e)))
     }
-    const params = new URLSearchParams(Object.assign({ userName: this.email }, data))
+    const params = new URLSearchParams(Object.assign({ userName: this.userName }, data))
     for (const clusterId of clusterIds) {
       new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
     }
@@ -112,7 +112,7 @@ class User extends Service {
 
   async loginWithMicrosoft() {
     const params = new URLSearchParams(Object.assign({
-      identityName: this.email,
+      identityName: this.userName,
       Alias: this.Alias,
       Group: "Microsoft",
       isAdmin: true,
@@ -125,7 +125,7 @@ class User extends Service {
   
   async loginWithDingtalk() {
     const params = new URLSearchParams(Object.assign({
-      identityName: this.email,
+      identityName: this.userName,
       Alias: this.Alias,
       Group: "DingTalk",
       isAdmin: false,
@@ -138,7 +138,7 @@ class User extends Service {
   
 
   async getAccountInfo() {
-    const params = new URLSearchParams(Object.assign({ identityName: this.email }))
+    const params = new URLSearchParams(Object.assign({ identityName: this.userName }))
     const clusterId = clusterIds[0]
     const response = await new Cluster(this.context, clusterId).fetch('/getAccountInfo?' + params)
     const data = await response.json()
@@ -160,7 +160,7 @@ class User extends Service {
   toCookie() {
     // console.log('token is ', this.token)
     return jwt.sign({
-      email: this.email,
+      userName: this.userName,
       uid: this.uid,
       gid: this.gid,
       Alias: this.Alias,

@@ -13,7 +13,7 @@ module.exports = async context => {
     let [key, value] = item.split('=')
     params[key] = value
   }
-  params.userName = user.email
+  params.userName = user.userName
   const ret = await cluster.deleteAce(params)
   context.body = ret
 }

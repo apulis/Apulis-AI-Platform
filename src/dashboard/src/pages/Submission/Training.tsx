@@ -58,7 +58,7 @@ const sanitizePath = (path: string) => {
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
   const { selectedCluster,saveSelectedCluster } = React.useContext(ClustersContext);
-  const { email, uid } = React.useContext(UserContext);
+  const { userName, uid } = React.useContext(UserContext);
   const { teams, selectedTeam }= React.useContext(TeamsContext);
   //const team = 'platform';
   const [showGPUFragmentation, setShowGPUFragmentation] = React.useState(false)
@@ -438,7 +438,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (!submittable) return;
 
     const job: any = {
-      userName: email,
+      userName: userName,
       userId: uid,
       jobType: 'training',
       gpuType: gpuModel,

@@ -181,7 +181,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   const [workStorage, setWorkStorage ] = useState('');
   const [dataStorage, setDataStorage] = useState('');
   const [activate,setActivate] = useState(false);
-  const { email } = React.useContext(UserContext);
+  const { userName } = React.useContext(UserContext);
   const {selectedTeam} = React.useContext(TeamsContext);
   const options = {
     onMount: true
@@ -190,7 +190,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   const request = useFetch(fetchDiretoryUrl,options);
   const fetchDirectories = async () => {
     const data = await request.get('');
-    const name = typeof email === 'string' ?  email.split('@', 1)[0] : email;
+    const name = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
     setDataStorage(data.dataStorage);
     setWorkStorage(`${data.workStorage}/${name}`);
   }

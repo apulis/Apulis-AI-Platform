@@ -136,9 +136,10 @@ TeamMenu = () => {
 const UserButton: React.FC = () => {
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
-  const { userName, Alias, Password, token} = React.useContext(UserContext);
+  const { nickName, userName,  password, isAdmin, isAuthorized, token } = React.useContext(UserContext);
   const styles = useStyles();
-  const Username = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
+  // const Username = typeof openId === 'string' ?  openId.split('@', 1)[0] : openId;
+  const accountType = isAdmin ? 'Admin' : (isAuthorized ? 'User' : 'Unauthorized')
   const handleClose = () => {
     setOpenUserProfile(false);
   }
@@ -158,7 +159,7 @@ const UserButton: React.FC = () => {
     <main>
       <Button variant="outlined" color="inherit" onClick={showUserProfile} className={classes.userLabel}>
         <AccountBox className={styles.leftIcon}/>
-        {Alias}
+        {nickName}
       </Button>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>
         <AppBar>
@@ -174,19 +175,19 @@ const UserButton: React.FC = () => {
         <Box m={10}>
           <List>
             <ListItem button>
-              <ListItemText primary="Email" secondary={userName}  onClick={()=>handleCopy(userName)}/>
+              <ListItemText primary="NickName" secondary={nickName}  onClick={()=>handleCopy(nickName)}/>
             </ListItem>
             <Divider />
             <ListItem button>
-              <ListItemText primary="Username" secondary={Username}  onClick={()=>handleCopy(Username)}/>
-            </ListItem>
-            <Divider />
-            <ListItem button>
-              <ListItemText primary="Alias" secondary={Alias}  onClick={()=>handleCopy(Alias)}/>
+              <ListItemText primary="Username" secondary={userName}  onClick={()=>handleCopy(userName)}/>
             </ListItem>
             <Divider />
             <ListItem button >
-              <ListItemText primary="Password" secondary={Password} onClick={()=>handleCopy(Password)}/>
+              <ListItemText primary="Password" secondary={password} onClick={()=>handleCopy(password)}/>
+            </ListItem>
+            <Divider />
+            <ListItem button >
+              <ListItemText primary="AccountType" secondary={accountType}/>
             </ListItem>
             <Divider />
             <ListItem button >

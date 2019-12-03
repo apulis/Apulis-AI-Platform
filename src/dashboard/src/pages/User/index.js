@@ -12,7 +12,7 @@ export default class User extends React.Component {
     this.state = {
       userList: [],
       modifyFlag: false,
-      identityName: '',
+      userName: '',
       isAdmin: null,
       isAuthorized: null,
     }
@@ -36,15 +36,15 @@ export default class User extends React.Component {
     const { modifyFlag } = this.state;
     this.setState({
       modifyFlag: !modifyFlag,
-      identityName: item.identityName,
+      userName: item.userName,
       isAdmin: item.isAdmin,
       isAuthorized: item.isAuthorized,
     })
   }
 
   save = () => {
-    const { isAdmin, isAuthorized, identityName } = this.state;
-    let url = `/api/qjydev/updateUserPerm/${isAdmin}/${isAuthorized}/${identityName}`;
+    const { isAdmin, isAuthorized, userName } = this.state;
+    let url = `/api/qjydev/updateUserPerm/${isAdmin}/${isAuthorized}/${userName}`;
     axios.get(url).then(() => {
       alert(`修改成功`)
       this.getUserList();
@@ -68,17 +68,17 @@ export default class User extends React.Component {
   }
 
   render() {
-    const { userList, modifyFlag, identityName, isAdmin, isAuthorized } = this.state;
+    const { userList, modifyFlag, userName, isAdmin, isAuthorized } = this.state;
     return (
       <div>
         <Table style={{ float: 'left', width: '70%' }}>
           <TableHead>
             <TableRow style={{ backgroundColor: '#7583d1' }}>
               <TableCell style={{ color: '#fff' }}>uid</TableCell>
-              <TableCell style={{ color: '#fff' }}>identityName</TableCell>
-              <TableCell style={{ color: '#fff' }}>Alias</TableCell>
-              <TableCell style={{ color: '#fff' }}>Password</TableCell>
-              <TableCell style={{ color: '#fff' }}>groups</TableCell>
+              <TableCell style={{ color: '#fff' }}>openId</TableCell>
+              <TableCell style={{ color: '#fff' }}>group</TableCell>
+              <TableCell style={{ color: '#fff' }}>nickName</TableCell>
+              <TableCell style={{ color: '#fff' }}>userName</TableCell>
               <TableCell style={{ color: '#fff' }}>isAdmin</TableCell>
               <TableCell style={{ color: '#fff' }}>isAuthorized</TableCell>
               <TableCell style={{ color: '#fff' }}>actions</TableCell>
@@ -88,10 +88,10 @@ export default class User extends React.Component {
             {userList.map(item => (
               <TableRow key={item.uid}>
                 <TableCell>{item.uid} </TableCell>
-                <TableCell>{item.identityName} </TableCell>
-                <TableCell>{item.Alias} </TableCell>
-                <TableCell>{item.Password} </TableCell>
-                <TableCell>{item.groups}/{item.gid}</TableCell>
+                <TableCell>{item.openId} </TableCell>
+                <TableCell>{item.group} </TableCell>
+                <TableCell>{item.nickName} </TableCell>
+                <TableCell>{item.userName}</TableCell>
                 <TableCell>{item.isAdmin ? '管理员' : '用户'} </TableCell>
                 <TableCell>{item.isAuthorized ? '有权限' : '没权限'} </TableCell>
                 <TableCell>
@@ -107,7 +107,7 @@ export default class User extends React.Component {
               <h2 id="simple-modal-title">修改</h2>
               <form>
                 <Grid item xs={8}>
-                  {identityName}
+                  {userName}
                 </Grid>
                 <Grid item xs={8} style={{ marginTop: 20 }}>
                   <FormControl>

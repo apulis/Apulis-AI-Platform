@@ -1,7 +1,6 @@
 const config = require('config')
 const fetch = require('node-fetch')
-const jwt = require('jsonwebtoken')
-const CryptoJS = require("crypto-js")
+const CryptoJS = require('crypto-js')
 
 const User = require('../../services/user')
 
@@ -58,7 +57,7 @@ const getUserinfo = async context => {
     })
   })
   const data = await response.json()
-  if(data.errcode === 0) {
+  if (data.errcode === 0) {
     return data.user_info
   }
   return null
@@ -69,18 +68,13 @@ module.exports = async context => {
   if (context.query.code != null) {
     context.log.info({ query: context.query }, 'Authentication succeessful callback')
     const userinfo = await getUserinfo(context)
-    context.log.info(userinfo, 'Id token')
+    context.log.info(userinfo, 'Dingtalk Userinfo')
     if (!userinfo) {
-      context.log.error({ userinfo: userinfo }, 'getUserinfo failed')
-      return context.redirect('/')
-    }
-    const user = User.fromDingtalk(context, userinfo)
-    const succ = await user.loginWithDingtalk()
-    if (!succ) {
-      context.log.error({ query: context.query }, 'Login With Dingtalk failed')
+      context.log.error({ userinfo }, 'getUserinfo failed')
       return context.redirect('/')
     }
 
+    const user = User.fromDingtalk(context, userinfo)
     await user.getAccountInfo()
     context.cookies.set('token', user.toCookie())
 

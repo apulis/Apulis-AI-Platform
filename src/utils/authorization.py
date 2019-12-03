@@ -83,14 +83,14 @@ class AuthorizationManager:
         dataHandler = DataHandler() 
         try:
             identityId = 0
-            if identityName.isdigit():
-                identityId = int(identityName)
-            else:               
-                identityId = IdentityManager.GetIdentityInfoFromDB(identityName)["uid"]
-                if identityId == INVALID_ID:
-                    info = IdentityManager.GetIdentityInfoFromAD(identityName)
-                    dataHandler.UpdateIdentityInfo(identityName, info["uid"], info["gid"], info["groups"])
-                    identityId = info["uid"]
+            # if identityName.isdigit():
+            #     identityId = int(identityName)
+            # else:               
+            identityId = IdentityManager.GetIdentityInfoFromDB(identityName)["uid"]
+            if identityId == INVALID_ID:
+                info = IdentityManager.GetIdentityInfoFromAD(identityName)
+                dataHandler.UpdateIdentityInfo(identityName, info["uid"], info["gid"], info["groups"])
+                identityId = info["uid"]
             return dataHandler.UpdateAce(identityName, identityId, resourceAclPath, permissions, isDeny)
 
         except Exception as e:

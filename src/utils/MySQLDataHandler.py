@@ -97,16 +97,17 @@ class DataHandler(object):
                 CREATE TABLE IF NOT EXISTS `%s`
                 (
                     `uid` int(11) NOT NULL AUTO_INCREMENT,
-                    `gid` int(11) NOT NULL COMMENT '3001: Microsoft; 3002: Zhejianglab; 3003: Wechat;',
-                    `identityName` varchar(128) NOT NULL,
-                    `Alias` varchar(128) NOT NULL,
-                    `groups` varchar(255) NOT NULL,
-                    `Password` varchar(64) NOT NULL,
+                    `openId` varchar(64) NOT NULL,
+                    `group` varchar(64) NOT NULL,
+                    `nickName` varchar(64) NOT NULL,
+                    `userName` varchar(64) NOT NULL,
+                    `password` varchar(64) NOT NULL,
                     `isAdmin` int(11) NOT NULL,
                     `isAuthorized` int(11) NOT NULL,
                     `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (`uid`),
-                    UNIQUE KEY `identityName` (`identityName`)
+                    PRIMARY KEY (`uid`) USING BTREE,
+                    UNIQUE KEY `userName` (`userName`) USING BTREE,
+                    UNIQUE KEY `openId-group` (`openId`,`group`) USING BTREE
                 ) AUTO_INCREMENT=30001;
                 """ % (self.accounttablename)
 
@@ -439,64 +440,86 @@ class DataHandler(object):
     @record
     def ListUser(self):
         cursor = self.conn.cursor()
-        query = "SELECT `uid`,`identityName`,`Alias`,`gid`,`groups`, `Password`,`isAdmin`,`isAuthorized` FROM `%s`" % (self.accounttablename)
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s`" % (self.accounttablename)
         ret = []
         try:
             cursor.execute(query)
-            for (uid,identityName,Alias,gid,groups,Password,isAdmin,isAuthorized) in cursor:
+            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in cursor:
                 record = {}
                 record["uid"] = uid
-                record["identityName"] = identityName
-                record["Alias"] = Alias
-                record["gid"] = gid
-                record["groups"] = groups
-                record["Password"] = Password
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
                 record["isAdmin"] = isAdmin
                 record["isAuthorized"] = isAuthorized
                 ret.append(record)
         except Exception as e:
-            logger.error('GetAccountInfo Exception: %s', str(e))
+            logger.error('ListUser Exception: %s', str(e))
         self.conn.commit()
         cursor.close()
         return ret
 
     @record
-    def GetAccountInfo(self, identityName):
+    def GetAccountByOpenId(self, openId, group):
         cursor = self.conn.cursor()
-        query = "SELECT `uid`,`identityName`,`Alias`,`gid`,`groups`, `Password`,`isAdmin`,`isAuthorized` FROM `%s` where `identityName` = '%s'" % (self.accounttablename, identityName)
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []
         try:
             cursor.execute(query)
-            for (uid,identityName,Alias,gid,groups,Password,isAdmin,isAuthorized) in cursor:
+            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in cursor:
                 record = {}
                 record["uid"] = uid
-                record["identityName"] = identityName
-                record["Alias"] = Alias
-                record["gid"] = gid
-                record["groups"] = groups
-                record["Password"] = Password
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
                 record["isAdmin"] = isAdmin
                 record["isAuthorized"] = isAuthorized
                 ret.append(record)
         except Exception as e:
-            logger.error('GetAccountInfo Exception: %s', str(e))
+            logger.error('GetAccountByOpenId Exception: %s', str(e))
         self.conn.commit()
         cursor.close()
         return ret
 
     @record
-    def UpdateAccountInfo(self, identityName, Alias, gid, groups, Password, isAdmin, isAuthorized):
+    def GetAccountByUserName(self, userName):
+        cursor = self.conn.cursor()
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `userName` = '%s'" % (self.accounttablename, userName)
+        ret = []
+        try:
+            cursor.execute(query)
+            for (uid, openId, group, nickName, userName,  password, isAdmin, isAuthorized) in cursor:
+                record = {}
+                record["uid"] = uid
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+        except Exception as e:
+            logger.error('GetAccountByUserName Exception: %s', str(e))
+        self.conn.commit()
+        cursor.close()
+        return ret
+
+    @record
+    def UpdateAccountInfo(self, openId, group, nickName, userName, password, isAdmin, isAuthorized):
         try:
             cursor = self.conn.cursor()
-            if (isinstance(groups, list)):
-                groups = json.dumps(groups)
 
-            if len(self.GetAccountInfo(identityName)) == 0:
-                sql = "INSERT INTO `"+self.accounttablename+"` (identityName, Alias, gid, groups, Password, isAdmin, isAuthorized) VALUES (%s,%s,%s,%s,%s,%s,%s)"
-                cursor.execute(sql, (identityName, Alias, gid, groups, Password, isAdmin, isAuthorized))
+            if len(self.GetAccountByOpenId(openId, group)) == 0:
+                sql = "INSERT INTO `"+self.accounttablename+"` (`openId`, `group`, `nickName`, `userName`, `password`, `isAdmin`, `isAuthorized`) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+                cursor.execute(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
             else:
-                sql = "update `%s` set Alias = '%s', gid = '%s', groups = '%s', Password = '%s', isAdmin = '%s', isAuthorized = '%s' where `identityName` = '%s' "
-                cursor.execute(sql, (self.accounttablename, Alias, gid, groups, Password, isAdmin, isAuthorized, identityName))
+                sql = "update `%s` set `nickName` = '%s', `userName` = '%s', `password` = '%s', `isAdmin` = '%s', isAuthorized = '%s' where `openId` = '%s' and `group` = '%s'"
+                cursor.execute(sql, (self.accounttablename, nickName, userName, password, isAdmin, isAuthorized, openId, group))
 
             self.conn.commit()
             cursor.close()

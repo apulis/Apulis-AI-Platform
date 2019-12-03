@@ -10,7 +10,7 @@ import { ThemeProvider } from "@material-ui/styles";
 
 import UserContext, { Provider as UserProvider } from "./contexts/User";
 import { Provider as ClustersProvider } from "./contexts/Clusters";
-import { Provider as TeamProvider } from './contexts/Teams';
+import TeamsContext, { Provider as TeamProvider } from './contexts/Teams';
 
 import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
@@ -19,6 +19,8 @@ import { Provider as DrawerProvider } from "./layout/Drawer/Context";
 
 const Home = React.lazy(() => import('./pages/Home'));
 const SignIn = React.lazy(() => import('./pages/SignIn'));
+const SignUp = React.lazy(() => import('./pages/SignUp'));
+const EmptyTeam = React.lazy(() => import('./pages/EmptyTeam'));
 const Submission = React.lazy(() => import('./pages/Submission'));
 const Jobs = React.lazy(() => import('./pages/Jobs'));
 const Job = React.lazy(() => import('./pages/Job'));
@@ -30,11 +32,14 @@ const Access = React.lazy(() => import('./pages/Access/index.js'));
 const theme = createMuiTheme();
 
 interface BootstrapProps {
-  userName?: string;
   uid?: string;
-  Alias?: string;
-  Password?: string;
+  openId?: string;
+  group?: string;
+  nickName?: string;
+  userName?: string;
+  password?: string;
   isAdmin?: boolean;
+  isAuthorized?: boolean;
   _token?: any;
 }
 
@@ -44,9 +49,9 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ userName, uid, Alias, Password, isAdmin, _token, children }) => (
+const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children }) => (
   <BrowserRouter>
-    <UserProvider userName={userName} uid={uid} Alias={Alias} Password={Password} isAdmin={isAdmin} token={_token} >
+    <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
       <TeamProvider>
         <ClustersProvider>
           <ThemeProvider theme={theme}>
@@ -59,15 +64,20 @@ const Contexts: React.FC<BootstrapProps> = ({ userName, uid, Alias, Password, is
 );
 
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
-  const { userName } = React.useContext(UserContext);
+  const { openId, group, userName } = React.useContext(UserContext);
+  const { teams } = React.useContext(TeamsContext);
 
   React.useEffect(() => {
-    if (userName === undefined) {
+    if (openId === undefined || group === undefined) {
       history.replace('/sign-in');
+    } else if(userName === undefined){
+      history.replace('/sign-up');
+    } else if(teams !== undefined && teams.length === 0) {
+      history.replace('/empty-team');
     }
-  }, [userName, history]);
+  }, [openId, group, userName, teams, history]);
 
-  if (userName === undefined) {
+  if (openId === undefined || group === undefined || userName === undefined || (teams !== undefined && teams.length === 0)) {
     return null;
   }
 
@@ -104,6 +114,8 @@ const App: React.FC<BootstrapProps> = (props) => (
       <React.Suspense fallback={Loading}>
         <Switch>
           <Route exact path="/sign-in" component={SignIn} />
+          <Route exact path="/sign-up" component={SignUp} />
+          <Route exact path="/empty-team" component={EmptyTeam} />
           <Route component={Layout} />
         </Switch>
       </React.Suspense>

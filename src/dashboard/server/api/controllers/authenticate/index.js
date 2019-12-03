@@ -71,14 +71,12 @@ module.exports = async context => {
     context.log.info({ query: context.query }, 'Authentication succeessful callback')
     const idToken = await getDecodedIdToken(context)
     context.log.info(idToken, 'Id token')
-
-    const user = User.fromIdToken(context, idToken)
-    const succ = await user.loginWithMicrosoft()
-    if(!succ) {
-      context.log.error({ query: context.query }, 'Login With Microsoft failed')
+    if (!idToken) {
+      context.log.error({ idToken }, 'getDecodedIdToken failed')
       return context.redirect('/')
     }
-
+    
+    const user = User.fromIdToken(context, idToken)
     await user.getAccountInfo()
     context.cookies.set('token', user.toCookie())
 

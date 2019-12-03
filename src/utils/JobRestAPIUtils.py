@@ -429,50 +429,79 @@ def AddUser(username,uid,gid,groups):
         dataHandler.Close()
     return ret
 
-
-def Login(identityName, Alias = "", Group = "Other", isAdmin = False, isAuthorized = False):
+def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAuthorized = False):
+    ret = {}
     try:
         dataHandler = DataHandler()
-        lst = dataHandler.GetAccountInfo(identityName)
-        if len(lst) == 0: # Register
-            groupDict = {
-                "Microsoft": 3001,
-                "Zhejianglab": 3002,
-                "Wechat": 3003,
-                "DingTalk": 3004
-            }
-            if Group in groupDict:
-                groups = [Group]
-                gid = groupDict[Group]
-            else:
-                gid = 3999
-                groups = ['Other']
-            Password = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-            dataHandler.UpdateAccountInfo(identityName, Alias, gid, groups, Password, isAdmin, isAuthorized)
-            lst = dataHandler.GetAccountInfo(identityName)
+        lst = dataHandler.GetAccountByOpenId(openId, group)
         
+        # Register
+        if len(lst) == 0:
+            if nickName is None or len(nickName) < 1:
+                ret["error"] = "NickName is too short"
+                return  ret
+            if userName is None or len(userName) < 3:
+                ret["error"] = "UserName is too short (minimum is 3 characters)"
+                return  ret
+            if password is None or len(password) < 6:
+                ret["error"] = "Password is too short (minimum is 6 characters)"
+                return  ret
+            # Check UserName available
+            if len(dataHandler.GetAccountByUserName(userName)) > 0:
+                ret["error"] = ('UserName %s is not available!') % userName
+                return  ret
+            if password is None or len(password) < 6:
+                password = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+            dataHandler.UpdateAccountInfo(openId, group, nickName, userName, password, isAdmin, isAuthorized)
+            lst = dataHandler.GetAccountByOpenId(openId, group)
+
         if len(lst) > 0:
             accountInfo = lst[0]
-            identityInfo = IdentityManager.GetIdentityInfoFromDB(identityName)
+            identityInfo = IdentityManager.GetIdentityInfoFromDB(userName)
             if identityInfo["uid"] == authorization.INVALID_ID:
-                dataHandler.UpdateIdentityInfo(identityName, accountInfo["uid"], gid, groups)
+                GROUP_DICT = {
+                    "Microsoft": 3001,
+                    "Zhejianglab": 3002,
+                    "Wechat": 3003,
+                    "DingTalk": 3004
+                }
+                if group in GROUP_DICT:
+                    groups = [group]
+                    gid = GROUP_DICT[group]
+                else:
+                    gid = 3999
+                    groups = ['Other']
+                dataHandler.UpdateIdentityInfo(userName, accountInfo["uid"], gid, groups)
                 
+                # Update Ace
                 permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
                 resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-                AuthorizationManager.UpdateAce(identityName, resourceAclPath, Permission.Admin, False)
+                AuthorizationManager.UpdateAce(userName, resourceAclPath, permission, False)
 
         dataHandler.Close()
-        return True
     except Exception as e:
         logger.error('Exception: %s', str(e))
-    return False
+        ret["error"] = 'Exception: %s', str(e)
+    return ret
 
 
-def GetAccountInfo(identityName):
+def GetAccountByOpenId(openId, group):
     ret = None
     try:
         dataHandler = DataHandler()
-        lst = dataHandler.GetAccountInfo(identityName)
+        lst = dataHandler.GetAccountByOpenId(openId, group)
+        dataHandler.Close()
+        if len(lst) > 0:
+            ret = lst[0]
+    except Exception as e:
+        logger.error('Exception: %s', str(e))
+    return ret
+
+def GetAccountByUserName(userName):
+    ret = None
+    try:
+        dataHandler = DataHandler()
+        lst = dataHandler.GetAccountByOpenId(userName)
         dataHandler.Close()
         if len(lst) > 0:
             ret = lst[0]

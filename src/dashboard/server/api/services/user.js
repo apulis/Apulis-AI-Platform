@@ -15,11 +15,13 @@ const clusterIds = Object.keys(config.get('clusters'))
 class User extends Service {
   /**
    * @param {import('koa').Context} context
-   * @param {string} userName
+   * @param {string} openId
+   * @param {string} group
    */
-  constructor(context, userName) {
+  constructor(context, openId, group) {
     super(context)
-    this.userName = userName
+    this.openId = openId
+    this.group = group
   }
 
   /**
@@ -28,8 +30,8 @@ class User extends Service {
    * @return {User}
    */
   static fromIdToken(context, idToken) {
-    const user = new User(context, idToken['email'])
-    user.Alias = idToken['name']
+    const user = new User(context, idToken['email'], 'Microsoft')
+    user.nickName = idToken['name']
     return user
   }
 
@@ -39,8 +41,8 @@ class User extends Service {
    * @return {User}
    */
   static fromDingtalk(context, userinfo) {
-    const user = new User(context, userinfo['openid'])
-    user.Alias = userinfo['nick']
+    const user = new User(context, userinfo['openid'], 'DingTalk')
+    user.nickName = userinfo['nick']
     return user
   }
 
@@ -49,8 +51,8 @@ class User extends Service {
    * @param {object} idToken
    * @return {User}
    */
-  static fromToken(context, userName, token) {
-    const user = new User(context, userName)
+  static fromToken(context, openId, group, token) {
+    const user = new User(context, openId, group)
     const expectedToken = user.token
     const actualToken = Buffer.from(token, 'hex')
     context.assert(expectedToken.equals(actualToken), 403, 'Invalid token')
@@ -65,13 +67,12 @@ class User extends Service {
    */
   static fromCookie(context, token) {
     const payload = jwt.verify(token, sign)
-    const user = new User(context, payload['userName'])
+    const user = new User(context, payload['openId'], payload['group'])
 
     user.uid = payload['uid']
-    user.gid = payload['gid']
-    user.Alias = payload['Alias']
-    user.groups = payload['groups']
-    user.Password = payload['Password']
+    user.nickName = payload['nickName']
+    user.userName = payload['userName']
+    user.password = payload['password']
     user.isAdmin = payload['isAdmin']
     user.isAuthorized = payload['isAuthorized']
     return user
@@ -93,7 +94,7 @@ class User extends Service {
     const response = await fetch(url)
     const data = await response.json()
     this.context.log.info({ data }, 'Winbind response')
-    
+
     this.uid = data['uid']
     this.gid = data['gid']
     return data
@@ -135,23 +136,44 @@ class User extends Service {
     const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
     return await response.json()
   }
-  
+
 
   async getAccountInfo() {
-    const params = new URLSearchParams(Object.assign({ identityName: this.userName }))
+    const params = new URLSearchParams(Object.assign({
+      openId: this.openId,
+      group: this.group,
+    }))
+
     const clusterId = clusterIds[0]
     const response = await new Cluster(this.context, clusterId).fetch('/getAccountInfo?' + params)
     const data = await response.json()
     this.context.log.warn(data, 'getAccountInfo')
 
-    this.uid = data['uid']
-    this.gid = data['gid']
-    this.Alias = data['Alias']
-    this.groups = data['groups']
-    this.Password = data['Password']
-    this.isAdmin = data['isAdmin']
-    this.isAuthorized = data['isAuthorized']
+    if (data) {
+      this.uid = data['uid']
+      this.nickName = data['nickName']
+      this.userName = data['userName']
+      this.password = data['password']
+      this.isAdmin = data['isAdmin']
+      this.isAuthorized = data['isAuthorized']
+
+    }
     return data
+  }
+
+  async signup(nickName, userName, password ) {
+    const params = new URLSearchParams(Object.assign({
+      openId: this.openId,
+      group: this.group,
+      nickName: nickName,
+      userName: userName,
+      password: password,
+      isAdmin: true,
+      isAuthorized: true
+    }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/SignUp?' + params)
+    return await response.json()
   }
 
   /**
@@ -160,12 +182,12 @@ class User extends Service {
   toCookie() {
     // console.log('token is ', this.token)
     return jwt.sign({
-      userName: this.userName,
+      openId: this.openId,
+      group: this.group,
       uid: this.uid,
-      gid: this.gid,
-      Alias: this.Alias,
-      groups: this.groups,
-      Password: this.Password,
+      nickName: this.nickName,
+      userName: this.userName,
+      password: this.password,
       isAdmin: this.isAdmin,
       isAuthorized: this.isAuthorized
     }, sign)

@@ -704,19 +704,25 @@ class UpdateUserPerm(Resource):
         return resp
 api.add_resource(UpdateUserPerm, '/UpdateUserPerm')
 
-class Login(Resource):
+class SignUp(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('identityName')
-        parser.add_argument('Alias')
-        parser.add_argument('Group')
+        parser.add_argument('openId')
+        parser.add_argument('group')
+        parser.add_argument('nickName')
+        parser.add_argument('userName')
+        parser.add_argument('password')
         parser.add_argument('isAdmin')
         parser.add_argument('isAuthorized')
         
         args = parser.parse_args()
-        identityName = args["identityName"]
-        Alias = args["Alias"]
-        Group = args["Group"]
+        openId = args["openId"]
+        group = args["group"]
+        nickName = args["nickName"]
+        userName = args["userName"]
+        password = args["password"]
+
+        ret = {}
 
         if args["isAdmin"] is None or args["isAdmin"].strip() != 'true':
             isAdmin = False
@@ -728,7 +734,13 @@ class Login(Resource):
         else:
             isAuthorized = True
 
-        ret = JobRestAPIUtils.Login(identityName, Alias, Group, isAdmin, isAuthorized)
+        output = JobRestAPIUtils.SignUp(openId, group, nickName, userName, password, isAdmin, isAuthorized)
+        if "error" in output:
+            ret["result"] = False
+            ret["error"] = output["error"]
+        else:
+            ret["result"] = True
+
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -737,16 +749,18 @@ class Login(Resource):
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(Login, '/login')
+api.add_resource(SignUp, '/SignUp')
 
 
-class GetAccountInfo(Resource):
+class GetAccountByOpenId(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('identityName')
+        parser.add_argument('openId')
+        parser.add_argument('group')
         args = parser.parse_args()
-        identityName = args["identityName"]
-        ret = JobRestAPIUtils.GetAccountInfo(identityName)
+        openId = args["openId"]
+        group = args["group"]
+        ret = JobRestAPIUtils.GetAccountByOpenId(openId, group)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -755,7 +769,7 @@ class GetAccountInfo(Resource):
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(GetAccountInfo, '/getAccountInfo')
+api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
 
 class UpdateAce(Resource):

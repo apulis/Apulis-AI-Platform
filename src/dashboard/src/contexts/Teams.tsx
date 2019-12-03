@@ -43,6 +43,7 @@ export const Provider: React.FC = ({ children }) => {
     //   localStorage.setItem('team',_.map(teams, 'id')[0])
     // }
   },[teams])
+  /*
   const EmptyTeam: React.FC = () => {
     const onClick = () => {
       return (
@@ -77,6 +78,7 @@ export const Provider: React.FC = ({ children }) => {
       />
     )
   }
+  */
   return (
     <Context.Provider
       value={{ teams, selectedTeam, saveSelectedTeam }}

@@ -5,7 +5,7 @@ const CryptoJS = require('crypto-js')
 const User = require('../../services/user')
 
 const dingtalkConfig = config.get('dingtalk')
-
+const domain = config.get('domain')
 const OAUTH2_URL = `https://oapi.dingtalk.com`
 
 /**
@@ -17,7 +17,7 @@ const getUriWithoutQuery = context => {
   if (/localhost/.test(context.origin)) {
     return (context.origin + originalUrl).split('?')[0]
   } else if (/127.0.0.1/.test(context.origin)) {
-    return 'https://dev.qjycloud.com/api/authenticate/dingtalk'
+    return domain + '/api/authenticate/dingtalk'
   } else {
     return (context.origin.replace('http', 'https') + originalUrl).split('?')[0]
   }

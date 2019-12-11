@@ -21,11 +21,11 @@ const useStyles = makeStyles(() => createStyles({
 
 const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
   const { openId, group } = React.useContext(UserContext);
-  const [ signIn, setSignIn ] = React.useState(false);
+  const [signIn, setSignIn] = React.useState(false);
   const onButtonClick = React.useCallback(() => {
     setSignIn(true);
   }, []);
-  
+
   React.useEffect(() => {
     if (openId !== undefined && group !== undefined) {
       history.replace('/');
@@ -42,34 +42,50 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
       >
         <Paper square elevation={6}>
           <Box paddingTop={10} paddingRight={5} paddingBottom={10} paddingLeft={5} minHeight="100%" display="flex">
-            <Grid container direction="column" spacing={10} alignItems="center" justify="center">
+            <Grid container direction="column" spacing={10} alignItems="center" justify="space-between">
               <Grid item>
                 <Typography variant="h2" component="h1" align="center">
                   钱江源开源开放平台
                 </Typography>
               </Grid>
-              <Grid item>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  href="/api/authenticate"
-                  disabled={signIn}
-                  onClick={onButtonClick}
-                >
-                  { signIn ? <CircularProgress size={24}/> : 'Sign in with Microsoft' }
-                </Button>
+
+              <Grid container direction="column" spacing={2} alignItems="center" justify="center">
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    href="/api/authenticate"
+                    disabled={signIn}
+                    onClick={onButtonClick}
+                  >
+                    {signIn ? <CircularProgress size={24} /> : 'Sign in with Microsoft'}
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    href="/api/authenticate/dingtalk"
+                    disabled={signIn}
+                    onClick={onButtonClick}
+                  >
+                    {signIn ? <CircularProgress size={24} /> : 'Sign in with Dingtalk'}
+                  </Button>
+                </Grid>
+
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    href="/api/authenticate/zjlab"
+                    disabled={signIn}
+                    onClick={onButtonClick}
+                  >
+                    {signIn ? <CircularProgress size={24} /> : 'Sign in with Zhejianglab'}
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid item>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  href="/api/authenticate/dingtalk"
-                  disabled={signIn}
-                  onClick={onButtonClick}
-                >
-                  { signIn ? <CircularProgress size={24}/> : 'Sign in with Dingtalk' }
-                </Button>
-              </Grid>
+
               <Grid item>
                 <Typography variant="body2">
                   {"Built with "}

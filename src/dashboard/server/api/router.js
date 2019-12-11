@@ -11,6 +11,9 @@ router.get('/authenticate/logout',
   require('./controllers/authenticate/logout'))
 router.get('/authenticate/dingtalk',
   require('./controllers/authenticate/dingtalk'))
+router.get('/authenticate/zjlab',
+  require('./controllers/authenticate/zjlab'))
+
 router.get('/authenticate/signup',
   require('./middlewares/user')(),
   require('./controllers/authenticate/signup'))

@@ -180,6 +180,7 @@ module.exports = class Cas {
         this.session_name = options.session_name !== undefined ? options.session_name : 'cas_user'
         this.session_info = ['2.0', '3.0', 'saml1.1'].indexOf(this.cas_version) >= 0 && options.session_info !== undefined ? options.session_info : false
         this.destroy_session = options.destroy_session !== undefined ? !!options.destroy_session : false
+        this.logout_redirect_url = options.logout_redirect_url
 
         // Bind the prototype routing methods to this instance of CASAuthentication.
         this.bounce = this.bounce.bind(this)
@@ -237,8 +238,11 @@ module.exports = class Cas {
             }
         }
 
+        var query = ''
+        if (this.logout_redirect_url) query = `service=${this.logout_redirect_url}`
+
         // Redirect the client to the CAS logout.
-        ctx.redirect(this.cas_url + '/logout')
+        ctx.redirect(this.cas_url + `/logout?${query}`)
     }
 }
 
@@ -283,13 +287,15 @@ async function _handle(ctx, next, authType) {
 function _login(ctx, next) {
     // Save the return URL in the session. If an explicit return URL is set as a
     // query parameter, use that. Otherwise, just use the URL from the request.
-    ctx.session.cas_return_to = ctx.query.returnTo || url.parse(ctx.url).path
+    ctx.session.cas_return_to = ctx.query.returnTo || this.service_url + url.parse(ctx.url).path
 
     // Set up the query parameters.
     var query = {
-        service: this.service_url + url.parse(ctx.url).pathname,
-        renew: this.renew
+        service: this.service_url + url.parse(ctx.url).pathname
     }
+
+    // only add renew as query param when truthy
+    if (this.renew) query.renew = true
 
     // Redirect to the CAS login.
     ctx.redirect(

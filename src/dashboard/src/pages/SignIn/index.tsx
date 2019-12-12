@@ -20,10 +20,16 @@ const useStyles = makeStyles(() => createStyles({
 }));
 
 const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
+  enum SIGNIN_STATUS {
+    Initial = 0,
+    Microsoft,
+    Dingtalk,
+    Zhejianglab
+  }
   const { openId, group } = React.useContext(UserContext);
-  const [signIn, setSignIn] = React.useState(false);
-  const onButtonClick = React.useCallback(() => {
-    setSignIn(true);
+  const [signInStatus, setSignInStatus] = React.useState(SIGNIN_STATUS.Initial);
+  const onButtonClick = React.useCallback((status) => {
+    setSignInStatus(status);
   }, []);
 
   React.useEffect(() => {
@@ -49,16 +55,16 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                 </Typography>
               </Grid>
 
-              <Grid container direction="column" spacing={2} alignItems="center" justify="center">
+              <Grid container direction="column" alignItems="center" justify="space-between" style={{ height: 150 }}>
                 <Grid item>
                   <Button
                     variant="outlined"
                     color="primary"
                     href="/api/authenticate"
-                    disabled={signIn}
-                    onClick={onButtonClick}
+                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                    onClick={() => onButtonClick(SIGNIN_STATUS.Microsoft)}
                   >
-                    {signIn ? <CircularProgress size={24} /> : 'Sign in with Microsoft'}
+                    {signInStatus === SIGNIN_STATUS.Microsoft ? <CircularProgress size={24} /> : 'Sign in with Microsoft'}
                   </Button>
                 </Grid>
                 <Grid item>
@@ -66,22 +72,21 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                     variant="outlined"
                     color="primary"
                     href="/api/authenticate/dingtalk"
-                    disabled={signIn}
-                    onClick={onButtonClick}
+                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                    onClick={() => onButtonClick(SIGNIN_STATUS.Dingtalk)}
                   >
-                    {signIn ? <CircularProgress size={24} /> : 'Sign in with Dingtalk'}
+                    {signInStatus === SIGNIN_STATUS.Dingtalk ? <CircularProgress size={24} /> : 'Sign in with Dingtalk'}
                   </Button>
                 </Grid>
-
                 <Grid item>
                   <Button
                     variant="outlined"
                     color="primary"
                     href="/api/authenticate/zjlab"
-                    disabled={signIn}
-                    onClick={onButtonClick}
+                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                    onClick={() => onButtonClick(SIGNIN_STATUS.Zhejianglab)}
                   >
-                    {signIn ? <CircularProgress size={24} /> : 'Sign in with Zhejianglab'}
+                    {signInStatus === SIGNIN_STATUS.Zhejianglab ? <CircularProgress size={24} /> : 'Sign in with Zhejianglab'}
                   </Button>
                 </Grid>
               </Grid>

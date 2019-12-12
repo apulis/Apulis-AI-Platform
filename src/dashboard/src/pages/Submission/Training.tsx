@@ -62,7 +62,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const { teams, selectedTeam }= React.useContext(TeamsContext);
   //const team = 'platform';
   const [showGPUFragmentation, setShowGPUFragmentation] = React.useState(false)
-  const [prometheusUrl, setPrometheusUrl] = React.useState('');
+  const [grafanaUrl, setGrafanaUrl] = React.useState('');
   const [name, setName] = React.useState("");
   const [gpuFragmentation, setGpuFragmentation] = React.useState<any[]>([]);
   const onNameChange = React.useCallback(
@@ -523,18 +523,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
     }
   }, [postJobData, postEndpoints, ssh, ipython, tensorboard, interactivePorts, history, selectedCluster]);
-  const fetchPrometheusUrl = `/api/clusters`;
-  const request = useFetch(fetchPrometheusUrl);
-  const fetchPrometheus = async () => {
-    const {prometheus} = await request.get(`/${selectedCluster}`);
-    setPrometheusUrl(prometheus);
+  const fetchGrafanaUrl = `/api/clusters`;
+  const request = useFetch(fetchGrafanaUrl);
+  const fetchGrafana = async () => {
+    const {grafana} = await request.get(`/${selectedCluster}`);
+    setGrafanaUrl(grafana);
   }
   const handleCloseGPUGramentation = () => {
     setShowGPUFragmentation(false);
   }
 
   React.useEffect(() => {
-    fetchPrometheus()
+    fetchGrafana()
     if (postEndpointsData) {
       setOpen(true);
       setTimeout(()=>{
@@ -566,8 +566,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     setShowDeleteTemplate(false)
   }
   React.useEffect(() => {
-    if (!prometheusUrl) return;
-    let getNodeGpuAva = `${prometheusUrl}/prometheus/api/v1/query?`;
+    if (!grafanaUrl) return;
+    let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params = new URLSearchParams({
       query:'count_values("gpu_available", k8s_node_gpu_available)'
     });
@@ -577,7 +577,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       const sortededResult = result.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
       setGpuFragmentation(sortededResult)
     })
-  }, [prometheusUrl])
+  }, [grafanaUrl])
 
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
 

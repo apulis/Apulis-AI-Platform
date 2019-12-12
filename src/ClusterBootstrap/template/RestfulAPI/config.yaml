@@ -48,3 +48,5 @@ job-manager:
     {% endif %}
   {% endif %}
 {% endif %}
+
+gpu_reporter: 'http://{{cnf["prometheus"]["host"]}}:{{cnf["prometheus"]["reporter"]["port"]}}'

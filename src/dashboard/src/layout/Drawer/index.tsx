@@ -55,7 +55,6 @@ const LinkListItem = withRouter<LinkProps & RouteComponentProps>(({ location, to
 const NavigationList: React.FC = () => {
   const styles = useStyles();
   const { isAdmin } = React.useContext(UserContext);
-  console.log('isAdmin:', isAdmin)
   return (
     <List component="nav" className={styles.drawerHeader}>
       <LinkListItem to="/submission/training">

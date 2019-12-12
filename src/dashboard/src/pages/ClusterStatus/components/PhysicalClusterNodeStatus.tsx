@@ -53,24 +53,24 @@ export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
               </>, customSort:(a: any, b: any) => a['unschedulable'] - b['unschedulable']},
             {title: 'Pods', field: '', render: (rowData: any) => <>
                 {
-                  rowData['pods'].map((pod: string)=>{
+                  rowData['pods'].map((pod: string, index: number)=>{
                     if (!pod.includes("!!!!!!")) {
                       return (
-                        <>
+                        <div key={index}>
                           <Typography variant="subtitle2" component="span" gutterBottom>
                             {`[${pod}]`}
                           </Typography>
                           <br/>
-                        </>
+                        </div>
                       )
                     } else {
                       return (
-                        <>
+                        <div key={index}>
                           <Typography variant="subtitle2" component="span" style={{ color:red[400] }} gutterBottom>
                             {`[${pod.replace("!!!!!!", "")}]`}
                           </Typography>
                           <br/>
-                        </>
+                        </div>
                       )
                     }
                   })

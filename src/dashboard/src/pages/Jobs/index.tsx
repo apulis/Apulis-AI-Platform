@@ -143,7 +143,6 @@ const Jobs: React.FC = (props: any) => {
   const [allJobs] = useJobsAll();
   const[isAdmin, setIsAdmin] = useState(clusters.filter((cluster) => cluster.id === currentCluster)[0].admin);
   const filterJobsByCluster = (jobs: any, clusterName: string) => {
-    console.log(isAdmin);
     if (clusterName === '-1' || clusterName === '') {
       return Jobs;
     } else {
@@ -296,7 +295,7 @@ const Jobs: React.FC = (props: any) => {
         disabled={!isAdmin}
         key={rowData['jobId']}
         type="number"
-        id={rowData.tableData.id}
+        id={rowData.tableData.id.toString()}
         defaultValue={rowData.priority}
         onKeyPress={(event) => handlePriorityKeyPress(rowData, event)}
         onChange={(event)=>handleChangePriority(rowData, event)}
@@ -393,7 +392,6 @@ const Jobs: React.FC = (props: any) => {
   }
   const { selectedTeam } = React.useContext(TeamContext);
   if (jobs && allJobs) {
-    console.log(jobs)
     return (
       <Fragment>
         <JobsOperationDialog handleClose={handleClose}

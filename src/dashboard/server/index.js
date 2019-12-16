@@ -1,7 +1,11 @@
 const Koa = require('koa')
+const Session = require('koa-session')
 const mount = require('koa-mount')
 
 const app = module.exports = new Koa()
+
+app.keys = ['some secret hurr...']
+app.use(Session(app))
 
 app.use(mount('/api', require('./api')))
 app.use(require('./frontend'))

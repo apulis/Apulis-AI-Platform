@@ -27,9 +27,14 @@ const useStyles = makeStyles(theme => createStyles({
 
 const SignUp: React.FC<RouteComponentProps> = ({ history }) => {
   const user = React.useContext(UserContext);
+  const defaultNickName = (user && user.nickName) || ''
+  let defaultUserName = ''
+  if (user && user.group === 'Microsoft' && user.openId) {
+    defaultUserName = user.openId.split('@', 1)[0]
+  }
   const [signUp, setSignUp] = React.useState(false);
-  const [nickName, setNickName] = React.useState(user.nickName || '');
-  const [userName, setUserName] = React.useState(user.userName || '');
+  const [nickName, setNickName] = React.useState(defaultNickName);
+  const [userName, setUserName] = React.useState(defaultUserName);
   const [password, setPassword] = React.useState('');
 
   React.useEffect(() => {
@@ -56,6 +61,19 @@ const SignUp: React.FC<RouteComponentProps> = ({ history }) => {
     [setNickName, setUserName, setPassword]
   )
   const onButtonClick = () => {
+    if(nickName.length < 1){
+      alert('Invalid nickName!')
+      return
+    }
+    if (!/^[a-zA-Z]{1}([a-zA-Z0-9]|[._]){2,9}$/.test(userName)) {
+      alert('Invalid userName!')
+      return
+    }
+    if(password.length < 6){
+      alert('Invalid password!')
+      return
+    }
+
     setSignUp(true);
     const params = new URLSearchParams({
       nickName: nickName,
@@ -77,14 +95,14 @@ const SignUp: React.FC<RouteComponentProps> = ({ history }) => {
   }
 
   return (
-  <Grid container justify="flex-end" className={styles.container}>
+    <Grid container justify="flex-end" className={styles.container}>
       <Grid
         item xl={4} lg={5} md={6} sm={8} xs={12} zeroMinWidth
         container alignItems="stretch" justify="flex-end"
       >
         <Paper square elevation={6}>
           <Box paddingTop={10} paddingRight={5} paddingBottom={10} paddingLeft={5} minHeight="100%" display="flex">
-            <Grid container direction="column" spacing={10} alignItems="center" justify="center">
+            <Grid container direction="column" spacing={10} alignItems="center" justify="space-between">
               <Grid item>
                 <Typography variant="h2" component="h1" align="center">
                   钱江源开源开放平台

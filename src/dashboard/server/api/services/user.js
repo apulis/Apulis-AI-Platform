@@ -37,12 +37,23 @@ class User extends Service {
 
   /**
    * @param {import('koa').Context} context
-   * @param {object} idToken
+   * @param {object} userinfo
    * @return {User}
    */
   static fromDingtalk(context, userinfo) {
     const user = new User(context, userinfo['openid'], 'DingTalk')
     user.nickName = userinfo['nick']
+    return user
+  }
+
+  /**
+   * @param {import('koa').Context} context
+   * @param {String} openId
+   * @return {User}
+   */
+  static fromZjlab(context, openId) {
+    const user = new User(context, openId, 'Zjlab')
+    user.nickName = openId
     return user
   }
 
@@ -137,7 +148,6 @@ class User extends Service {
     return await response.json()
   }
 
-
   async getAccountInfo() {
     const params = new URLSearchParams(Object.assign({
       openId: this.openId,
@@ -156,7 +166,6 @@ class User extends Service {
       this.password = data['password']
       this.isAdmin = data['isAdmin']
       this.isAuthorized = data['isAuthorized']
-
     }
     return data
   }

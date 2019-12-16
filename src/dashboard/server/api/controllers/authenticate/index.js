@@ -18,7 +18,7 @@ const getUriWithoutQuery = context => {
   if (/localhost/.test(context.origin)) {
     return (context.origin + originalUrl).split('?')[0]
   } else if (/127.0.0.1/.test(context.origin)) {
-    return domain + '/api/authenticate/dingtalk'
+    return domain + '/api/authenticate'
   } else {
     return (context.origin.replace('http', 'https') + originalUrl).split('?')[0]
   }

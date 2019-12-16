@@ -51,9 +51,9 @@ class User extends Service {
    * @param {String} openId
    * @return {User}
    */
-  static fromZjlab(context, openId) {
-    const user = new User(context, openId, 'Zjlab')
-    user.nickName = openId
+  static fromZjlab(context, zjlabId) {
+    const user = new User(context, `ZJ${zjlabId}`, 'Zjlab')
+    user.nickName = `User ${zjlabId}`
     return user
   }
 

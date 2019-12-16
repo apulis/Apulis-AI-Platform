@@ -148,7 +148,6 @@ const SignUp: React.FC<RouteComponentProps> = ({ history }) => {
                     onChange={handleChange}
                   />
                   <Button
-                    type="submit"
                     fullWidth
                     variant="contained"
                     color="primary"

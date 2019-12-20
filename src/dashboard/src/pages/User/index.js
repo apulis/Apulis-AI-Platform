@@ -5,8 +5,10 @@ import {
   TableRow, TableCell, TableBody, Button, Grid, FormControl, InputLabel, Select, MenuItem,
 } from "@material-ui/core";
 import axios from 'axios';
+import ClustersContext from "../../contexts/Clusters";
 
 export default class User extends React.Component {
+  static contextType = ClustersContext
   constructor() {
     super()
     this.state = {
@@ -23,7 +25,7 @@ export default class User extends React.Component {
   }
 
   getUserList = () => {
-    axios.get('/api/qjydev/listUser')
+    axios.get(`/api/${this.context.selectedCluster}/listUser`)
       .then((res) => {
         this.setState({
           userList: res.data,
@@ -44,7 +46,7 @@ export default class User extends React.Component {
 
   save = () => {
     const { isAdmin, isAuthorized, userName } = this.state;
-    let url = `/api/qjydev/updateUserPerm/${isAdmin}/${isAuthorized}/${userName}`;
+    let url = `/api/${this.context.selectedCluster}/updateUserPerm/${isAdmin}/${isAuthorized}/${userName}`;
     axios.get(url).then(() => {
       alert(`修改成功`)
       this.getUserList();

@@ -5,8 +5,10 @@ import {
   TableRow, TableCell, TableBody, Button, TextField, Grid,
 } from "@material-ui/core";
 import axios from 'axios';
+import ClustersContext from "../../contexts/Clusters";
 
 export default class Vc extends React.Component {
+  static contextType = ClustersContext
   constructor() {
     super()
     this.state = {
@@ -24,7 +26,7 @@ export default class Vc extends React.Component {
   }
 
   getVcList = () => {
-    axios.get('/api/qjydev/listVc')
+    axios.get(`/api/${this.context.selectedCluster}/listVc`)
       .then((res) => {
         this.setState({
           vcList: res.data.result,
@@ -67,9 +69,9 @@ export default class Vc extends React.Component {
     }
     let url;
     if (isEdit) {
-      url = `/api/qjydev/updateVc/${vcName}/${quota}/${metadata}`;
+      url = `/api/${this.context.selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
     } else {
-      url = `/api/qjydev/addVc/${vcName}/${quota}/${metadata}`;
+      url = `/api/${this.context.selectedCluster}/addVc/${vcName}/${quota}/${metadata}`;
     }
     axios.get(url)
       .then((res) => {
@@ -87,7 +89,7 @@ export default class Vc extends React.Component {
       return;
     }
     if (window.confirm('确认删除')) {
-      axios.get(`/api/qjydev/deleteVc/${item.vcName}`)
+      axios.get(`/api/${this.context.selectedCluster}/deleteVc/${item.vcName}`)
         .then((res) => {
           this.getVcList();
         }, () => { })

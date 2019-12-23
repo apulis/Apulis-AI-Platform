@@ -1,5 +1,6 @@
 # These are the default configuration parameter
 default_config_parameters = {
+    "allroles": {"infra", "infrastructure", "worker", "nfs", "sql", "dev"},
     # Kubernetes setting
     "service_cluster_ip_range": "10.3.0.0/16",
     "pod_ip_range": "10.2.0.0/16",
@@ -19,12 +20,31 @@ default_config_parameters = {
     "influxdb_rpc_port": "8088",
     "influxdb_data_path": "/var/lib/influxdb",
 
+    "prometheus": { "port": 9091, "reporter": {"port": 9092} },
+    "job-exporter": { "port": 9102 },
+    "node-exporter": { "port": 9100 },
+    "watchdog": { "port": 9101 },
+    "grafana": { "port": 3000, "prometheus-ip": "localhost" },
+    "alert-manager": {
+        "port": 9093,
+        "configured": False,
+        "alert_users": False,
+        # If want to deploy with alert-manager, should config
+        # configured with True, and fill appropriate value to:
+        # smtp_url, smtp_from, smtp_auth_username, smtp_auth_password and receiver
+        "reaper": {
+            "dry-run": True,
+            "port": "9500",
+            "restful-url": "http://localhost:5000",
+        }
+    },
+
     "mysql_port": "3306",
     "mysql_username": "root",
     "mysql_data_path": "/var/lib/mysql",
 
-    "datasource": "AzureSQL",
-
+    "datasource": "MySQL",
+    "defalt_virtual_cluster_name": "platform",
     # Discover server is used to find IP address of the host, it need to be a well-known IP address
     # that is pingable.
     "discoverserver": "4.2.2.1",
@@ -74,7 +94,8 @@ default_config_parameters = {
         ".js": True,
         ".swf": True,
         ".gzip": True,
-        ".tpl": True,
+        ".rules": True,
+        ".tmpl": True,
     },
     "render-by-copy": {
         # The following file will be copied (not rendered for configuration)
@@ -88,9 +109,11 @@ default_config_parameters = {
         "collectd.graphite.conf.tpl": True,
         "collectd.influxdb.conf.tpl": True,
         "collectd.riemann.conf.tpl": True,
+        "prometheus-alerting.yaml": True,
+        "alert-templates.yaml": True,
         # "nginx": True,
         "RecogServer": True,
-        
+
         # This template will be rendered inside container, but not at build stage
         # "hdfs-site.xml.template": True,
     },
@@ -199,7 +222,9 @@ default_config_parameters = {
         "jobmanager": "etcd_node_1",
         "FragmentGPUJob": "all",
         "grafana": "etcd_node_1",
-        "influxdb": "etcd_node_1",
+        "prometheus": "etcd_node_1",
+        "alert-manager": "etcd_node_1",
+        "watchdog": "etcd_node_1",
         "elasticsearch": "etcd_node_1",
         "kibana": "etcd_node_1",
         "mysql": "etcd_node_1",
@@ -338,7 +363,7 @@ default_config_parameters = {
         "CCSAdmins": {
             # The match is in C# Regex Language, please refer to :
             # https://msdn.microsoft.com/en-us/library/az24scfc(v=vs.110).aspx
-            "Allowed": ["jinl@microsoft.com", "hongzl@microsoft.com", "sanjeevm@microsoft.com"],
+            "Allowed": ["hongzl@microsoft.com", "anbhu@microsoft.com", "jachzh@microsoft.com","zhexu@microsoft.com","dixu@microsoft.com","qixcheng@microsoft.com","jingzhao@microsoft.com","hayua@microsoft.com"],
             "uid": "900000000-999999999",
             "gid": "508953967"
         },
@@ -376,7 +401,6 @@ default_config_parameters = {
     "DeployAuthentications": ["Corp", "Live", "Gmail"],
     # You should remove WinBindServers if you will use
     # UserGroups for authentication.
-    "WinbindServers": ["http://onenet40.redmond.corp.microsoft.com/domaininfo/GetUserId?userName={0}"],
     "workFolderAccessPoint": "",
     "dataFolderAccessPoint": "",
 
@@ -569,33 +593,33 @@ default_config_parameters = {
             "tutorial-imagenet18": {},
             "algorithm-bert": {},
             "algorithm-segmentation": {}, 
-            "gobld": {}, 
-            "kubernetes": {}, 
-            "kaggle": {},
-            "binary": {}
+            "gobld": {},
+            "kubernetes": {},
         },
         "customize": {
             "webui": {},
             "webui2": {}, 
-            "restfulapi": {}
+            "webui3": {}, 
+            "restfulapi": {},
+            "gpu-reporter": {}
         },
         "external": {
             # These dockers are to be built by additional add ons.
-            "hyperkube": {"fullname":"dlws/hyperkube:v1.9.0"},
-            "freeflow": {"fullname":"dlws/freeflow:0.16"},
+            "hyperkube": {"fullname":"gcr.azk8s.cn/google-containers/hyperkube:v1.15.2"},
+            "freeflow": {"fullname":"dlws/freeflow:0.18"},
             "podinfra": {"fullname":"dlws/pause-amd64:3.0"},
             "nvidiadriver": {"fullname":"dlws/nvidia_driver:375.20"},
-            "weave":{"fullname":"dlws/weave:2.2.0"},
-            "weave-npc":{"fullname":"dlws/weave-npc:2.2.0"},
+            "weave":{"fullname":"docker.io/weaveworks/weave-kube:2.5.2"},
+            "weave-npc":{"fullname":"docker.io/weaveworks/weave-npc:2.5.2"},
             "k8s-dashboard":{"fullname":"dlws/kubernetes-dashboard-amd64:v1.5.1"},
             "kube-dns":{"fullname":"dlws/k8s-dns-kube-dns-amd64:1.14.8"},
             "kube-dnsmasq":{"fullname":"dlws/k8s-dns-dnsmasq-nanny-amd64:1.14.8"},
             "kube-dns-sidecar":{"fullname":"dlws/k8s-dns-sidecar-amd64:1.14.8"},
-            "heapster":{"fullname":"dlws/heapster-amd64:v1.4.0"},            
-            "etcd":{"fullname":"dlws/etcd:3.1.10"},            
-            "mysql":{"fullname":"dlws/mysql:5.6"},            
+            "heapster":{"fullname":"dlws/heapster-amd64:v1.4.0"},
+            "etcd":{"fullname":"dlws/etcd:3.1.10"},
+            "mysql":{"fullname":"dlws/mysql:5.6"},
             "phpmyadmin":{"fullname":"dlws/phpmyadmin:4.7.6"},
-            "fluentd-elasticsearch":{"fullname":"dlws/fluentd-elasticsearch:v2.0.2"},            
+            "fluentd-elasticsearch":{"fullname":"dlws/fluentd-elasticsearch:v2.0.2"},
 
         },
         "infrastructure": {
@@ -610,15 +634,53 @@ default_config_parameters = {
     "cloud_config": {
         "vnet_range": "192.168.0.0/16",
         "default_admin_username": "dlwsadmin",
-        "tcp_port_for_pods": "30000-32767",
-        "tcp_port_ranges": "80 443 30000-32767 25826",
+        "tcp_port_for_pods": "30000-49999",
+        "tcp_port_ranges": "80 443 30000-49999 25826 3000 22222 9091 9092",
         "udp_port_ranges": "25826",
-        "dev_network": {
-            "tcp_port_ranges": "22 1443 2379 3306 5000 8086",
+        "inter_connect": {
+            "tcp_port_ranges": "22 1443 2379 3306 5000 8086 10250",
             # Need to white list dev machines to connect
             # "source_addresses_prefixes": [ "52.151.0.0/16"]
-        }
+        },
+        "dev_network": {
+            "tcp_port_ranges": "22 1443 2379 3306 5000 8086 10250 10255 22222",
+            # Need to white list dev machines to connect
+            # "source_addresses_prefixes": [ "52.151.0.0/16"]
+        },
     },
+
+    "nfs_mnt_setup": [
+          {
+            "mnt_point": {"rootshare":{"curphysicalmountpoint":"/mntdlws/infranfs","filesharename":"/infradata/share","mountpoints":""}}}
+    ],
+    "vc_config":{
+        "VC-Default":["*"],
+    },
+    "registry_credential": {},
+    "domain_name": "redmond.corp.microsoft.com",
+    "priority": "regular",
+    "sku_mapping": {
+        "Standard_ND6s":{"gpu-type": "P40","gpu-count": 1},
+        "Standard_NV24": {"gpu-type": "M60", "gpu-count": 4},
+        "Standard_ND12s": {"gpu-type": "P40", "gpu-count": 2},
+        "Standard_ND24rs": {"gpu-type": "P40", "gpu-count": 4},
+        "Standard_NV12": {"gpu-type": "M60", "gpu-count": 2},
+        "Standard_NV48s_v3": {"gpu-type": "M60", "gpu-count": 4},
+        "Standard_ND40s_v2": {"gpu-type": "V100", "gpu-count": 8},
+        "Standard_NC6s_v3": {"gpu-type": "V100", "gpu-count": 1},
+        "Standard_NC6s_v2": {"gpu-type": "P100", "gpu-count": 1},
+        "Standard_ND24s": {"gpu-type": "P40", "gpu-count": 4},
+        "Standard_NV24s_v3": {"gpu-type": "M60", "gpu-count": 2},
+        "Standard_NV6": {"gpu-type": "M60", "gpu-count": 1},
+        "Standard_NV12s_v3": {"gpu-type": "M60", "gpu-count": 1},
+        "Standard_NC24s_v2": {"gpu-type": "P100", "gpu-count": 4},
+        "Standard_NC24s_v3": {"gpu-type": "V100", "gpu-count": 4},
+        "Standard_NC12s_v3": {"gpu-type": "V100", "gpu-count": 2},
+        "Standard_NC12s_v2": {"gpu-type": "P100", "gpu-count": 2},
+        "Standard_NC24rs_v3": {"gpu-type": "V100", "gpu-count": 4},
+        "Standard_NC24rs_v2": {"gpu-type": "P100", "gpu-count": 4},
+        "default": {"gpu-type": "None", "gpu-count": 0},
+    }
 }
 
 # These are super scripts
@@ -630,29 +692,32 @@ scriptblocks = {
         "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics", 
     ],
     "azure": [
-        "runscriptonall ./scripts/prepare_vm_disk.sh",
+        "runscriptonroles infra worker ./scripts/prepare_vm_disk.sh",
         "nfs-server create",
-        "runscriptonall ./scripts/prepare_ubuntu.sh",
+        "runscriptonroles infra worker ./scripts/prepare_ubuntu.sh",
+        "genscripts",
+        "runscriptonroles infra worker ./scripts/dns.sh",
         "-y deploy",
         "-y updateworker",
         "-y kubernetes labels",
+        "-y gpulabel",
         "kubernetes start nvidia-device-plugin",
+        "kubernetes start flexvolume",
         "webui",
         "docker push restfulapi",
         "docker push webui",
-        "nginx fqdn",
-        "nginx config",
         "mount",
         "kubernetes start mysql",
         "kubernetes start jobmanager",
         "kubernetes start restfulapi",
         "kubernetes start webportal",
         "kubernetes start cloudmonitor",
-        "kubernetes start nginx",
-        "kubernetes start custommetrics",
         # TODO(harry): we cannot distinguish gce aws from azure, so add the same providerID
         # This will not break current deployment.
-        "-y kubernetes patchprovider aztools"
+        "-y kubernetes patchprovider aztools",
+        "setconfigmap",
+        "--sudo runscriptonrandmaster ./scripts/pass_secret.sh",
+        "runscriptonroles worker scripts/pre_download_images.sh",
     ],
     "azure_uncordon": [
         "runscriptonall ./scripts/prepare_vm_disk.sh",

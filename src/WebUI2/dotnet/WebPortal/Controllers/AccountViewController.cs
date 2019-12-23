@@ -103,13 +103,16 @@ namespace WindowsAuth.Controllers
                 HttpContext.Session.Remove("uid");
                 HttpContext.Session.Remove("gid");
                 HttpContext.Session.Remove("Password");
-                HttpContext.Session.Remove("Restapi");
+                // HttpContext.Session.Remove("Restapi");
                 HttpContext.Session.Remove("WorkFolderAccessPoint");
                 HttpContext.Session.Remove("DataFolderAccessPoint");
                 HttpContext.Session.Remove("AuthorizedClusters");
                 HttpContext.Session.Remove("CurrentClusters");
                 HttpContext.Session.Remove("Username");
                 HttpContext.Session.Remove("ClustersList");
+                HttpContext.Session.Remove("Teams");
+                HttpContext.Session.Remove("Team");
+                HttpContext.Session.Remove("TeamClusters");
                 await _signInManager.SignOutAsync();
                 // await HttpContext.Authentication.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             }

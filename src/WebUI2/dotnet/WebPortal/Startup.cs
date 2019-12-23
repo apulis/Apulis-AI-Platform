@@ -406,6 +406,7 @@ namespace WindowsAuth
 
                 }
                 clusterInfo.Restapi = clusterConfig["Restapi"] as string;
+                // clusterInfo.Grafana = clusterConfig["Grafana"] as string;
                 clusterInfo.SQLDatabaseForUser = (clusterConfig["SQLDatabaseForUser"] as string) + clusterInfo.ClusterId;
                 clusterInfo.SQLHostname = clusterConfig["SQLHostname"] as string;
                 clusterInfo.SQLPassword = clusterConfig["SQLPassword"] as string;
@@ -633,6 +634,23 @@ namespace WindowsAuth
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
+            });
+            
+            app.Use(async (context, next) =>
+            {
+                if ( context.Request.Query.ContainsKey("current-team") && context.Session.GetString("Teams") != null)
+                {
+                    var team = context.Request.Query["current-team"];
+                    var teams = JsonConvert.DeserializeObject<string[]>(context.Session.GetString("Teams"));
+                    if (Array.Exists(teams, t => t.Equals(team)))
+                    {
+                        context.Session.SetString("Team", team);
+                        var teamClusters = await Controllers.HomeController.GetTeamClusters(context, team);
+                        context.Session.SetString("TeamClusters", JsonConvert.SerializeObject(teamClusters));
+                        _logger.LogInformation("{0} switch team to {1}", context.Session.GetString("Username"), team);
+                    }
+                }
+                await next.Invoke();
             });
         }
 

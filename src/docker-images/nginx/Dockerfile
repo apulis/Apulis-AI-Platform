@@ -49,3 +49,7 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 COPY nginx*.conf /etc/nginx/
 RUN chmod +x /home/auto-reload-nginx.sh
 RUN chmod +x /etc/nginx/conf.d/default.conf
+
+RUN sudo apt-get install letsencrypt
+RUN sudo letsencrypt certonly --webroot -w /usr/share/nginx -d dev.qjycloud.com
+RUN sudo service nginx reload

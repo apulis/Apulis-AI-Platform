@@ -23,8 +23,6 @@ import logging.config
 
 from multiprocessing import Process, Manager
 
-
-
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../storage"))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 
@@ -34,10 +32,13 @@ from osUtils import mkdirsAsUser
 from config import config, GetStoragePath
 from DataHandler import DataHandler
 
+from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time
 
-def create_log( logdir = '/var/log/dlworkspace' ):
+logger = logging.getLogger(__name__)
+
+def create_log(logdir = '/var/log/dlworkspace'):
     if not os.path.exists( logdir ):
-        os.system("mkdir -p " + logdir )
+        os.system("mkdir -p " + logdir)
     with open('logging.yaml') as f:
         logging_config = yaml.load(f)
         f.close()
@@ -51,6 +52,8 @@ def extract_job_log(jobId,logPath,userId):
         dataHandler = DataHandler()
 
         logs = k8sUtils.GetLog(jobId)
+        # logs = k8sUtils.getJobConsoleDetail(jobId)
+        jupyterLog = k8sUtils.getJupyterInfo(jobId)
     
         jobLogDir = os.path.dirname(logPath)
         if not os.path.exists(jobLogDir):
@@ -69,6 +72,7 @@ def extract_job_log(jobId,logPath,userId):
                 logStr += "=========================================================\n"
                 logStr += "=========================================================\n"
                 logStr += log["containerLog"]
+                logStr += jupyterLog
                 logStr += "\n\n\n"
                 logStr += "=========================================================\n"
                 logStr += "        end of logs from pod: %s\n" % log["podName"] 
@@ -86,6 +90,7 @@ def extract_job_log(jobId,logPath,userId):
                 logLines = log["containerLog"].split('\n')
                 if (len(logLines) < 3000):
                     trimlogstr += log["containerLog"]
+                    trimlogstr += jupyterLog
                     trimlogstr += "\n\n\n"
                     trimlogstr += "=========================================================\n"
                     trimlogstr += "        end of logs from pod: %s\n" % log["podName"] 
@@ -93,6 +98,7 @@ def extract_job_log(jobId,logPath,userId):
                     trimlogstr += "\n\n\n"
                 else:
                     trimlogstr += "\n".join(logLines[-2000:])
+                    trimlogstr += jupyterLog
                     trimlogstr += "\n\n\n"
                     trimlogstr += "=========================================================\n"
                     trimlogstr += "        end of logs from pod: %s\n" % log["podName"] 
@@ -109,7 +115,7 @@ def extract_job_log(jobId,logPath,userId):
                     f.close()
                     os.system("chown -R %s %s" % (userId, containerLogPath))
                 except Exception as e:
-                    print e
+                    logger.exception("write container log failed")
 
 
         if len(trimlogstr.strip()) > 0:
@@ -149,15 +155,24 @@ def update_job_logs():
 
 
 def Run():
+    register_stack_trace_dump()
     create_log()
     logging.info("start to update job logs ...")
 
     while True:
-        try:
-            update_job_logs()
-        except Exception as e:
-            print e
+        update_file_modification_time("joblog_manager")
+
+        with manager_iteration_histogram.labels("joblog_manager").time():
+            try:
+                update_job_logs()
+            except Exception as e:
+                logger.exception("update job logs failed")
         time.sleep(1)
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", "-p", help="port of exporter", type=int, default=9203)
+    args = parser.parse_args()
+    setup_exporter_thread(args.port)
+
     Run()

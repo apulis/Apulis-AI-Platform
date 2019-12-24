@@ -23,5 +23,8 @@ default_az_parameters = {
             "port": 22,
             "source_ips": []
         },
+        "nfs_share" : {
+            "source_ips": []
+        }
     },
 }

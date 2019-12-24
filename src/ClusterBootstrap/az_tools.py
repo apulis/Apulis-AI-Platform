@@ -383,6 +383,8 @@ def create_nfs_nsg():
             print(output)
 
     if "nfs_ssh" in config["cloud_config"]:
+        if verbose:
+            print("Cloud_config: %s" % config["cloud_config"])
         print type(config["cloud_config"]["nfs_ssh"]["source_ips"]), config["cloud_config"]["nfs_ssh"]["source_ips"],type(source_addresses_prefixes), source_addresses_prefixes
         cmd = """
             az network nsg rule create \

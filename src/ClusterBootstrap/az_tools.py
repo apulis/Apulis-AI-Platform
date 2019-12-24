@@ -32,6 +32,7 @@ import socket
 import utils
 from az_params import *
 from params import *
+sys.path.append("../utils")
 from ConfigUtils import *
 
 verbose = False

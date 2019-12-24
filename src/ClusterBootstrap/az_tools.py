@@ -32,13 +32,14 @@ import socket
 import utils
 from az_params import *
 from params import *
+from ConfigUtils import *
 
 verbose = False
 no_execution = False
 
 # These are the default configuration parameter
 
-
+""" 
 def init_config():
     config = {}
     for k, v in default_config_parameters.iteritems():
@@ -65,9 +66,13 @@ def merge_config(config1, config2, verbose):
             if verbose:
                 print("Entry %s == %s " % (entry, config2[entry]))
             config1[entry] = config2[entry]
-
+ """
 
 def update_config(config, genSSH=True):
+    # Generate random mysql_password if necessary
+    if "mysql_password" not in config:
+        config["mysql_password"] = uuid.uuid4().hex[:16]
+
     if "resource_group_name" not in config["azure_cluster"]:
         config["azure_cluster"]["resource_group_name"] = config[
             "azure_cluster"]["cluster_name"] + "ResGrp"
@@ -440,7 +445,7 @@ def get_vm_ip(i, role):
 def create_cluster(arm_vm_password=None, parallelism=1):
     bSQLOnly = (config["azure_cluster"]["infra_node_num"] <= 0)
     assert int(config["azure_cluster"]["nfs_node_num"]) >= len(config["azure_cluster"]["nfs_vm"])
-    assert "mysql_password" in config
+    # assert "mysql_password" in config
     print "creating resource group..."
     create_group()
     if not bSQLOnly:
@@ -949,7 +954,8 @@ if __name__ == '__main__':
     dirpath = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
     # print "Directory: " + dirpath
     os.chdir(dirpath)
-    config = init_config()
+    config = init_config(default_config_parameters)
+    merge_config( config, default_az_parameters )
     parser = argparse.ArgumentParser(prog='az_utils.py',
                                      formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=textwrap.dedent('''\

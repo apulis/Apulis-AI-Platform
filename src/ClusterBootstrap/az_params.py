@@ -18,4 +18,10 @@ default_az_parameters = {
         "nfs_data_disk_path": '/data',
         "nfs_vm": [],
     },
+    "cloud_config" : {
+        "nfs_ssh" : {
+            "port": 22,
+            "source_ips": []
+        },
+    },
 }

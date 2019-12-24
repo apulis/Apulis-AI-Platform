@@ -1072,7 +1072,9 @@ Command:
     if os.path.exists(config_file):
         with open(config_file) as cf:
             tmpconfig = yaml.load(cf)
-            assert tmpconfig["cluster_name"] in tmpconfig["azure_cluster"]
+            if tmpconfig["cluster_name"] not in tmpconfig["azure_cluster"]:
+                print( "In config.yaml, azure_cluster need to have a entry of %s" % tmpconfig["cluster_name"])
+                exit()
         merge_config(config, tmpconfig, verbose)
         if tmpconfig is not None and "cluster_name" in tmpconfig:
             config["azure_cluster"]["cluster_name"] = tmpconfig["cluster_name"]

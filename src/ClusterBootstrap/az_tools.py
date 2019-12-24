@@ -461,6 +461,7 @@ def create_cluster(arm_vm_password=None, parallelism=1):
         create_vnet()
         print "creating network security group..."
         create_nsg()
+        print "creating network security group for nfs ..."
         create_nfs_nsg()
     if useSqlAzure():
         print "creating sql server and database..."

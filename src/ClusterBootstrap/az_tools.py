@@ -382,41 +382,43 @@ def create_nfs_nsg():
             output = utils.exec_cmd_local(cmd)
             print(output)
 
-    print type(config["cloud_config"]["nfs_ssh"]["source_ips"]), config["cloud_config"]["nfs_ssh"]["source_ips"],type(source_addresses_prefixes), source_addresses_prefixes
-    cmd = """
-        az network nsg rule create \
-            --resource-group %s \
-            --nsg-name %s \
-            --name allow_ssh\
-            --priority 1200 \
-            --destination-port-ranges %s \
-            --source-address-prefixes %s \
-            --access allow
-        """ % ( config["azure_cluster"]["resource_group_name"],
-                config["azure_cluster"]["nfs_nsg_name"],
-                config["cloud_config"]["nfs_ssh"]["port"],
-                " ".join(list(set(config["cloud_config"]["nfs_ssh"]["source_ips"] + source_addresses_prefixes))),
-                )
-    if not no_execution:
-        output = utils.exec_cmd_local(cmd)
-        print(output)
+    if "nfs_ssh" in config["cloud_config"]:
+        print type(config["cloud_config"]["nfs_ssh"]["source_ips"]), config["cloud_config"]["nfs_ssh"]["source_ips"],type(source_addresses_prefixes), source_addresses_prefixes
+        cmd = """
+            az network nsg rule create \
+                --resource-group %s \
+                --nsg-name %s \
+                --name allow_ssh\
+                --priority 1200 \
+                --destination-port-ranges %s \
+                --source-address-prefixes %s \
+                --access allow
+            """ % ( config["azure_cluster"]["resource_group_name"],
+                    config["azure_cluster"]["nfs_nsg_name"],
+                    config["cloud_config"]["nfs_ssh"]["port"],
+                    " ".join(list(set(config["cloud_config"]["nfs_ssh"]["source_ips"] + source_addresses_prefixes))),
+                    )
+        if not no_execution:
+            output = utils.exec_cmd_local(cmd)
+            print(output)
 
-    cmd = """
-        az network nsg rule create \
-            --resource-group %s \
-            --nsg-name %s \
-            --name allow_share \
-            --priority 1300 \
-            --source-address-prefixes %s \
-            --destination-port-ranges \'*\' \
-            --access allow
-        """ % ( config["azure_cluster"]["resource_group_name"],
-                config["azure_cluster"]["nfs_nsg_name"],
-                " ".join(config["cloud_config"]["nfs_share"]["source_ips"]),
-                )
-    if not no_execution:
-        output = utils.exec_cmd_local(cmd)
-        print(output)
+    if "nfs_share" in config["cloud_config"]:
+        cmd = """
+            az network nsg rule create \
+                --resource-group %s \
+                --nsg-name %s \
+                --name allow_share \
+                --priority 1300 \
+                --source-address-prefixes %s \
+                --destination-port-ranges \'*\' \
+                --access allow
+            """ % ( config["azure_cluster"]["resource_group_name"],
+                    config["azure_cluster"]["nfs_nsg_name"],
+                    " ".join(config["cloud_config"]["nfs_share"]["source_ips"]),
+                    )
+        if not no_execution:
+            output = utils.exec_cmd_local(cmd)
+            print(output)
 
 
 def delete_group():

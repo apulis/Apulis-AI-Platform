@@ -1073,7 +1073,7 @@ Command:
     if os.path.exists(config_cluster):
         tmpconfig = yaml.load(open(config_cluster))
         if tmpconfig is not None:
-            merge_config(config, tmpconfig, verbose)
+            merge_config(config, tmpconfig)
 
     config_file = os.path.join(dirpath, "config.yaml")
     if os.path.exists(config_file):
@@ -1082,14 +1082,14 @@ Command:
             if tmpconfig["cluster_name"] not in tmpconfig["azure_cluster"]:
                 print( "In config.yaml, azure_cluster need to have a entry of %s" % tmpconfig["cluster_name"])
                 exit()
-        merge_config(config, tmpconfig, verbose)
+        merge_config(config, tmpconfig)
         if tmpconfig is not None and "cluster_name" in tmpconfig:
             config["azure_cluster"]["cluster_name"] = tmpconfig["cluster_name"]
         if tmpconfig is not None and "datasource" in tmpconfig:
             config["azure_cluster"]["datasource"] = tmpconfig["datasource"]
     if tmpconfig is not None and "azure_cluster" in tmpconfig and config["azure_cluster"]["cluster_name"] in tmpconfig["azure_cluster"]:
         merge_config(config["azure_cluster"], tmpconfig["azure_cluster"][
-                     config["azure_cluster"]["cluster_name"]], verbose)
+                     config["azure_cluster"]["cluster_name"]])
     if (args.cluster_name is not None):
         config["azure_cluster"]["cluster_name"] = args.cluster_name
 

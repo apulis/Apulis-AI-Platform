@@ -369,7 +369,7 @@ def create_nsg():
 def get_nfs_network_source_addresses_prefixes():
     source_addresses_prefixes = get_dev_network_source_addresses_prefixes()
     if "source_ips" in config["cloud_config"]["nfs_ssh"]:
-        return " ".join(list(set(config["cloud_config"]["nfs_ssh"]["source_ips"] + source_addresses_prefixes
+        return " ".join(list(set(config["cloud_config"]["nfs_ssh"]["source_ips"])) + source_addresses_prefixes)
     else:
         return source_addresses_prefixes
 

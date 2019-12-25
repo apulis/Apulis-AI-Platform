@@ -285,8 +285,7 @@ def create_vnet():
         output = utils.exec_cmd_local(cmd)
         print(output)
 
-
-def create_nsg():
+def get_dev_network_source_addresses_prefixes():
     if "source_addresses_prefixes" in config["cloud_config"]["dev_network"]:
         source_addresses_prefixes = config["cloud_config"][
             "dev_network"]["source_addresses_prefixes"]
@@ -295,6 +294,11 @@ def create_nsg():
     else:
         print "Please setup source_addresses_prefixes in config.yaml, otherwise, your cluster cannot be accessed"
         exit()
+    return source_addresses_prefixes
+
+
+def create_nsg():
+    source_addresses_prefixes = get_dev_network_source_addresses_prefixes()
     cmd = """
         az network nsg create \
             --resource-group %s \
@@ -362,13 +366,15 @@ def create_nsg():
         output = utils.exec_cmd_local(cmd)
         print(output)
 
-def create_nfs_nsg():
-    if "source_addresses_prefixes" in config["cloud_config"]["dev_network"]:
-        source_addresses_prefixes = config["cloud_config"][
-            "dev_network"]["source_addresses_prefixes"]
+def get_nfs_network_source_addresses_prefixes():
+    source_addresses_prefixes = get_dev_network_source_addresses_prefixes()
+    if "source_ips" in config["cloud_config"]["nfs_ssh"]:
+        return " ".join(list(set(config["cloud_config"]["nfs_ssh"]["source_ips"] + source_addresses_prefixes
     else:
-        print "Please setup source_addresses_prefixes in config.yaml, otherwise, your cluster cannot be accessed"
-        exit()
+        return source_addresses_prefixes
+
+def create_nfs_nsg():
+    source_addresses_prefixes = get_nfs_network_source_addresses_prefixes()
     if int(config["azure_cluster"]["nfs_node_num"]) > 0:
         cmd = """
             az network nsg create \
@@ -384,7 +390,6 @@ def create_nfs_nsg():
     else:
         return
 
-    print("Cloud_config: %s" % config["cloud_config"])
     print type(config["cloud_config"]["nfs_ssh"]["source_ips"]), config["cloud_config"]["nfs_ssh"]["source_ips"],type(source_addresses_prefixes), source_addresses_prefixes
     cmd = """
         az network nsg rule create \
@@ -398,7 +403,7 @@ def create_nfs_nsg():
         """ % ( config["azure_cluster"]["resource_group_name"],
                 config["azure_cluster"]["nfs_nsg_name"],
                 config["cloud_config"]["nfs_ssh"]["port"],
-                " ".join(list(set(config["cloud_config"]["nfs_ssh"]["source_ips"] + source_addresses_prefixes))),
+                source_addresses_prefixes,
                 )
     if not no_execution:
         output = utils.exec_cmd_local(cmd)

@@ -803,7 +803,8 @@ def gen_cluster_config(output_file_name, output_file=True, no_az=False):
             cc["mountpoints"]["rootshare"]["mountpoints"] = ""
             if file_share_key is not None:
                 cc["mountpoints"]["rootshare"]["accesskey"] = file_share_key
-        else:
+        elif len(config["azure_cluster"]["nfs_vm"])>0:
+            # Use NFS
             nfs_vm_suffixes2dpath = {vm["suffix"]:vm["data_disk_mnt_path"] for vm in config["azure_cluster"]["nfs_vm"] if "suffix" in vm}
             used_nfs_suffix = set([nfs_cnf["server_suffix"] for nfs_cnf in config["nfs_mnt_setup"] if "server_suffix" in nfs_cnf])
             assert (used_nfs_suffix - set(nfs_vm_suffixes2dpath.keys())) == set() and "suffix not in nfs_suffixes list!"

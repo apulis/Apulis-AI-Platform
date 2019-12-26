@@ -818,7 +818,7 @@ def gen_cluster_config(output_file_name, output_file=True, no_az=False):
             # unused, either node without name suffix or those with suffix but not specified in any nfs_svr_setup item
             unused_nfs = sorted([s for s in nfs_names2ip.keys() if s not in suffix2used_nfs.values()])
             unused_ID_cnt = 0
-            print("nfs_mnt_setup: %s" % (config["nfs_mnt_setup"])
+            print("nfs_mnt_setup: %s" % (config["nfs_mnt_setup"]))
             for nfs_cnf in config["nfs_mnt_setup"]:
                 if "server_suffix" in nfs_cnf:
                     server_name = suffix2used_nfs[nfs_cnf["server_suffix"]]

@@ -27,4 +27,13 @@ default_az_parameters = {
         }, 
         "samba_range" : "192.168.0.0/16"
     },
+    "nfs_mnt_setup": [
+        {
+        "mnt_point": {
+            "rootshare":{
+                "curphysicalmountpoint":"/mntdlws/nfsshare","filesharename":"/data/nfsshare",
+                "mountpoints":""}
+            }
+        }
+    ],
 }

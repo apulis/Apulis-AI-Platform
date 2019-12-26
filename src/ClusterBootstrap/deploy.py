@@ -1108,7 +1108,10 @@ def set_nfs_disk():
     nfs_servers = config["nfs_node"] if len(config["nfs_node"]) > 0 else config["etcd_node"]
     machine_name_2_full = {nm.split('.')[0]:nm for nm in nfs_servers}
     for srvr_nm, nfs_cnf in config["nfs_disk_mnt"].items():
-        nfs_cnf["cloud_config"] = {"vnet_range":config["cloud_config"]["vnet_range"], "samba_range": config["cloud_config"]["samba_range"]}
+        nfs_cnf["cloud_config"] = {}
+        for key in ["vnet_range", "samba_range"]:
+            if key in config["cloud_config"]:
+                nfs_cnf["cloud_config"][key] = config["cloud_config"][key]
         nfs_server = machine_name_2_full[srvr_nm]
         # print nfs_cnf, nfs_server
         utils.render_template("./template/nfs/nfs_config.sh.template","./deploy/scripts/setup_nfs_server.sh",nfs_cnf)

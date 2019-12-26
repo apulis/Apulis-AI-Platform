@@ -21,7 +21,9 @@ sudo mkdir -p {{ fileshare }}
 sudo chmod -R 777 {{ fileshare }}
 sudo chown nobody:nogroup {{fileshare}}
 echo "{{ fileshare }} {{cnf["cloud_config"]["vnet_range"]}}(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+{% if cnf["cloud_config"]["samba_range"] %}
 echo "{{ fileshare }} {{cnf["cloud_config"]["samba_range"]}}(rw,fsid=1,nohide,insecure,sync,no_subtree_check,no_root_squash)" | sudo tee -a /etc/exports
+{% endif %}
 {% endfor %}
 
 # Get number of CPU

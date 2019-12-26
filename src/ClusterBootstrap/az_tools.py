@@ -1078,7 +1078,10 @@ Command:
 
     if args.verbose:
         verbose = args.verbose
-        print "{0}".format(args)
+        print ("{0}".format(args))
+        print ("Merge system configuration: %s " % default_config_parameters)
+        print ("Merge az configuration: %s " % default_az_parameters)
+        print ("Use configuration: %s " % config)
 
     # Cluster Config
     config_cluster = os.path.join(dirpath, "azure_cluster_config.yaml")

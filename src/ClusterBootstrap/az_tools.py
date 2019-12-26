@@ -827,6 +827,7 @@ def gen_cluster_config(output_file_name, output_file=True, no_az=False):
                     unused_ID_cnt += 1
                     mnt_parent_path = config["azure_cluster"]["nfs_data_disk_path"]
                 server_ip = nfs_names2ip[server_name]
+                print("Mnt_point: %s" % nfs_cnf["mnt_point"])
                 for mntname, mntcnf in nfs_cnf["mnt_point"].items():
                     if not mntcnf["filesharename"].startswith(mnt_parent_path):
                         print "Error: Wrong filesharename {}! Mount path is {} !".format(mntcnf["filesharename"], mnt_parent_path)

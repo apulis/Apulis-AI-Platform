@@ -967,6 +967,7 @@ if __name__ == '__main__':
     dirpath = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
     # print "Directory: " + dirpath
     os.chdir(dirpath)
+    global config
     config = init_config(default_config_parameters)
     merge_config( config, default_az_parameters )
     parser = argparse.ArgumentParser(prog='az_utils.py',
@@ -1079,9 +1080,9 @@ Command:
     if args.verbose:
         verbose = args.verbose
         print ("{0}".format(args))
-        print ("Merge system configuration: %s " % default_config_parameters)
-        print ("Merge az configuration: %s " % default_az_parameters)
-        print ("Use configuration: %s " % config)
+        # print ("Merge system configuration: %s " % default_config_parameters)
+        # print ("Merge az configuration: %s " % default_az_parameters)
+        # print ("Use configuration: %s " % config)
 
     # Cluster Config
     config_cluster = os.path.join(dirpath, "azure_cluster_config.yaml")

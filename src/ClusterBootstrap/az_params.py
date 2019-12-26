@@ -25,5 +25,6 @@ default_az_parameters = {
         "nfs_share": {
             "source_ips": ["192.168.0.0/16"],
         }, 
+        "samba_range" : "192.168.0.0/16"
     },
 }

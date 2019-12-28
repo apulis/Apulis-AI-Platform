@@ -127,8 +127,8 @@ function setup-easyrsa {
   (set -x
     cd "${KUBE_TEMP}"
     # change away from using googleapis
-    # curl -L -O --connect-timeout 20 --retry 6 --retry-delay 2 https://github.com/OpenVPN/easy-rsa/archive/v3.0.5.tar.gz
-    curl -L -O --connect-timeout 20 --retry 6 --retry-delay 2 http://cdn.qjycloud.com/v3.0.5.tar.gz
+    curl -L -O --connect-timeout 20 --retry 6 --retry-delay 2 https://github.com/OpenVPN/easy-rsa/archive/v3.0.5.tar.gz
+    # curl -L -O --connect-timeout 20 --retry 6 --retry-delay 2 http://cdn.qjycloud.com/v3.0.5.tar.gz
     # tar to easy-rsa-v3.0.5
     tar xzf v3.0.5.tar.gz
     mv easy-rsa-3.0.5 easy-rsa-master

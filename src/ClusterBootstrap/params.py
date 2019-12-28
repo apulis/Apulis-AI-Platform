@@ -84,6 +84,7 @@ default_config_parameters = {
 
     "render-exclude": {
         "GlusterFSUtils.pyc": True,
+        "nbconvert-extensions.tpl": True,
         "launch_glusterfs.pyc": True,
         "bootstrap_hdfs.pyc": True,
     },

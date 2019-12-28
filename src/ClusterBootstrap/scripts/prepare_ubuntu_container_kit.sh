@@ -136,7 +136,7 @@ if  lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VG
         sudo pkill -SIGHUP dockerd
 
         # Test nvidia-smi
-        sudo docker run --rm dlws/cuda nvidia-smi
+        sudo docker run --gpus all --rm dlws/cuda nvidia-smi
 
 
         sudo mkdir -p /opt/nvidia-driver/

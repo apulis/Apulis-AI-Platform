@@ -707,6 +707,8 @@ scriptblocks = {
         "docker push restfulapi",
         "docker push webui",
         "mount",
+        "nginx config",
+        "nginx fqdn",
         "kubernetes start mysql",
         "kubernetes start jobmanager",
         "kubernetes start restfulapi",

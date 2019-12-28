@@ -121,7 +121,7 @@ if  lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VG
 
     sudo apt-get purge -y nvidia*
     sudo apt-get update
-    yes | sudo apt-get install -y nvidia-430
+    yes | sudo apt-get install -y nvidia-440
 
         yes | sudo apt install -y nvidia-modprobe
 

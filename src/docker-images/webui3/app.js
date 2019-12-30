@@ -57,6 +57,6 @@ app.use(async (ctx) => {
         return queryData;
     }
 });
-app.listen(3081, () => {
-    console.log('http://127.0.0.1:3081');
+app.listen({{cnf[webuiport]}}, () => {
+    console.log('http://127.0.0.1:{{cnf[webuiport]}}');
 });

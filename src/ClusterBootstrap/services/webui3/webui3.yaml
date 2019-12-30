@@ -42,7 +42,7 @@ spec:
         {% if false %}
         ports:
           - name: webui3
-            containerPort: 3081
+            containerPort: {{cnf["webuiport"]}}
         {% endif %}
         imagePullPolicy: Always
         volumeMounts:

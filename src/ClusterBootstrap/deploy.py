@@ -2956,7 +2956,9 @@ def start_one_kube_service(fname):
 
     if fname == "./deploy/services/jobmanager/jobmanager.yaml":
         # recreate the configmap dlws-scripts
-        run_kubectl( ["create configmap dlws-scripts --from-file=../Jobs_Templete/ -o yaml --dry-run | ./deploy/bin/kubectl apply -f -"] )
+        # run_kubectl( ["create configmap dlws-scripts --from-file=../Jobs_Templete/ -o yaml --dry-run | ./deploy/bin/kubectl apply -f -"] )
+        run_kubectl( ["create configmap dlws-scripts --from-file=../init-scripts/ -o yaml --dry-run | ./deploy/bin/kubectl apply -f -"] )
+        ()
 
     run_kubectl( ["create", "-f", fname ] )
 
@@ -3780,7 +3782,8 @@ def run_command( args, command, nargs, parser ):
         gen_warm_up_cluster_script()
 
     elif command == "setconfigmap":
-        os.system('./deploy/bin/kubectl create configmap dlws-scripts --from-file=../Jobs_Templete -o yaml --dry-run | ./deploy.py kubectl apply -f -')
+        # os.system('./deploy/bin/kubectl create configmap dlws-scripts --from-file=../Jobs_Templete -o yaml --dry-run | ./deploy.py kubectl apply -f -')
+        os.system('./deploy/bin/kubectl create configmap dlws-scripts --from-file=../init-scripts -o yaml --dry-run | ./deploy.py kubectl apply -f -')
 
     elif command == "download":
         if len(nargs)>=1:

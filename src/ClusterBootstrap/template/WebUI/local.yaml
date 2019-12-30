@@ -22,7 +22,7 @@ administrators:
 clusters:
   {{cnf["cluster_name"]}}:
       restfulapi: http://10.5.18.85:5000/
-      title: "Grafana endpoint of the cluster"
+      title: Grafana-endpoint-of-the-cluster
       workStorage: work
       dataStorage: data
       grafana: https://{{cnf["webportal_node"]}}/grafana/

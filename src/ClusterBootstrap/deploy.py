@@ -1378,6 +1378,7 @@ def deploy_webUI_on_node(ipAddress):
     # write into host, mounted into container
     utils.sudo_scp(config["ssh_cert"],"./deploy/WebUI/userconfig.json","/etc/WebUI/userconfig.json", sshUser, webUIIP )
     utils.sudo_scp(config["ssh_cert"],"./deploy/WebUI/configAuth.json","/etc/WebUI/configAuth.json", sshUser, webUIIP )
+    utils.sudo_scp(config["ssh_cert"],"./deploy/WebUI/local.yaml","/etc/WebUI/local.yaml", sshUser, webUIIP )
 
     # write report configuration
     masternodes = get_ETCD_master_nodes(config["clusterId"])
@@ -1994,6 +1995,7 @@ def deploy_webUI():
     # masterIP = config["kubernetes_master_node"][0]
     nodes = get_node_lists_for_service("webportal")
     for node in nodes:
+        config["webportal_node"] = node
         deploy_webUI_on_node(node)
 
 def ufw_default_firewall_rule(node):

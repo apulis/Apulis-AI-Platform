@@ -1,0 +1,28 @@
+sign: "Sign key for JWT"
+winbind: "Will call /domaininfo/GetUserId with userName query to get the user’s id info"
+masterToken: "Access token of all users"
+{% if cnf["Authentications"]["Microsoft"] %}
+activeDirectory:
+  tenant: "{{cnf["Authentications"]["Microsoft"]["TenantId"]}}"
+  clientId: "{{cnf["Authentications"]["Microsoft"]["ClientId"]}}"
+  clientSecret: "{{cnf["Authentications"]["Microsoft"]["ClientSecret"]}}"
+{% endif %}
+{% if cnf["Authentications"]["DingTalk"] %}
+dingtalk:
+  appId: "{{cnf["Authentications"]["DingTalk"]["AppId"]}}"
+  appSecret: "{{cnf["Authentications"]["DingTalk"]["AppSecret"]}}
+{% endif %}
+domain: https://{{cnf["webportal_node"]}}
+casUrl: http://{{cnf["webportal_node"]}}/cas
+
+administrators:
+{% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
+  - {{admin}}
+{% endfor %}
+clusters:
+  qjydev:
+    restfulapi: http://10.5.18.85:5000/
+    title: "Grafana endpoint of the cluster"
+    workStorage: work
+    dataStorage: data
+    grafana: https://{{cnf["webportal_node"]}}/grafana/

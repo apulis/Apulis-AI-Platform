@@ -14,5 +14,5 @@ RUN yarn --frozen-lockfile
 COPY . .
 RUN yarn build
 
-EXPOSE {{cnf["webuiport"]}}
+EXPOSE 3081
 CMD node server

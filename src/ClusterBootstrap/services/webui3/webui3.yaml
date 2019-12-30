@@ -48,6 +48,8 @@ spec:
         volumeMounts:
         - mountPath: /WebUI
           name: webuiconfig
+        - mountPath: /usr/src/app/config
+          name: nodejsconfig
         - mountPath: /var/log/webui3
           name: webuilog
       volumes:
@@ -57,6 +59,9 @@ spec:
       - name: webuilog
         hostPath:
           path: /var/log/webui3
+      - name: nodejsconfig
+        hostPath:
+          path: /etc/WebUI
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

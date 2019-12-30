@@ -7,4 +7,4 @@ services:
     environment:
       NODE_ENV: production
     ports:
-      - {{cnf[webuiport]}}:{{cnf[webuiport]}}
+      - {{cnf["webuiport"]}}:{{cnf["webuiport"]}}

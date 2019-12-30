@@ -7,4 +7,4 @@ services:
     environment:
       NODE_ENV: production
     ports:
-      - 3081:3081
+      - {{cnf[webuiport]}}:{{cnf[webuiport]}}

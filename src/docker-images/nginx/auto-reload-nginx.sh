@@ -19,7 +19,7 @@
 # If you only have http access, you can use certbot certonly --webroot -w /usr/share/nginx/ -d $fqdn to obtain certificate
 # 
 fqdn=`cat /etc/hostname-fqdn`
-command='s/hostname-fqdn/'$fqdn'/'
+command='s/hostname-fqdn/'$fqdn'/g'
 sed $command -i /etc/nginx/conf.d/default.conf
 echo sed $command -i /etc/nginx/conf.d/default.conf
 # cp /etc/nginx/nginx.before_cert.conf /etc/nginx/nginx.conf

@@ -20,7 +20,7 @@ administrators:
   - {{admin}}
 {% endfor %}
 clusters:
-  qjydev:
+  {{cnf["cluster_name"]}}:
     restfulapi: http://10.5.18.85:5000/
     title: "Grafana endpoint of the cluster"
     workStorage: work

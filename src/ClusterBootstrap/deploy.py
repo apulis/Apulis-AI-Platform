@@ -1994,7 +1994,7 @@ def deploy_webUI():
 
     # masterIP = config["kubernetes_master_node"][0]
     nodes = get_node_lists_for_service("webportal")
-    nodes_restfulapi = get_node_list_for_service("restfulapi")
+    nodes_restfulapi = get_node_lists_for_service("restfulapi")
     for i, node in enumerate(nodes):
         node_restfulapi = nodes_restfulapi[i] if i < len(nodes_restfulapi) else nodes_restfulapi[0]
         config["webportal_node"] = node

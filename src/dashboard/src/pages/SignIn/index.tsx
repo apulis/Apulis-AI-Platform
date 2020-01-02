@@ -95,7 +95,7 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                 <Typography variant="body2">
                   {"Built with "}
                   <span role="img" aria-label="heart">❤️</span>
-                  {" by Qjianjingyaun"}
+                  {" by Bing DLTS"}
                 </Typography>
               </Grid>
             </Grid>

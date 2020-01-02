@@ -14,6 +14,7 @@ app.use(Session(app))
 app.use(router.routes())
 app.use(router.allowedMethods())
 
+/* istanbul ignore if */
 if (require.main === module) {
   app.listen(process.env.PORT || 3081, process.env.HOST)
 }

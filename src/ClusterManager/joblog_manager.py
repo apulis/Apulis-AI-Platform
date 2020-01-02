@@ -32,7 +32,7 @@ from osUtils import mkdirsAsUser
 from config import config, GetStoragePath
 from DataHandler import DataHandler
 
-from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time
+from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time, record
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ def create_log(logdir = '/var/log/dlworkspace'):
 
 
 
+@record
 def extract_job_log(jobId,logPath,userId):
     try:
         dataHandler = DataHandler()
@@ -55,6 +56,16 @@ def extract_job_log(jobId,logPath,userId):
         # logs = k8sUtils.getJobConsoleDetail(jobId)
         jupyterLog = k8sUtils.getJupyterInfo(jobId)
     
+        # TODO: Replace joblog manager with elastic search
+        logs = k8sUtils.GetLog(jobId, tail=None)
+
+        # Do not overwrite existing logs with empty log
+        # DLTS bootstrap will generate logs for all containers.
+        # If one container has empty log, skip writing.
+        for log in logs:
+            if "containerLog" in log and log["containerLog"] == "":
+                return
+
         jobLogDir = os.path.dirname(logPath)
         if not os.path.exists(jobLogDir):
             mkdirsAsUser(jobLogDir,userId)

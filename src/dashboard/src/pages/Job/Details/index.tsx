@@ -5,7 +5,7 @@ import {
   CircularProgress,
   useMediaQuery, 
 } from '@material-ui/core';
-import { useGet } from 'use-http';
+import useFetch from 'use-http';
 
 import UserContext from '../../../contexts/User';
 import Context from './Context';
@@ -19,6 +19,7 @@ import {DLTSTabs} from "../../CommonComponents/DLTSTabs";
 import {JobDetailTitles, readOnlyJobDetailTitles} from "../../../Constants/TabsContants";
 import {DLTSSnackbar} from "../../CommonComponents/DLTSSnackbar";
 import TeamContext from "../../../contexts/Teams";
+import {useTimeoutFn} from "react-use";
 interface Props {
   team: string;
   clusterId: string;
@@ -27,25 +28,34 @@ interface Props {
 }
 
 const JobDetails: React.FC<Props> = ({ clusterId, jobId, job, team }) => {
-  const { userName } = React.useContext(UserContext);
-  const [cluster] = useGet(`/api/clusters/${clusterId}`, { onMount: true });
+  const { email } = React.useContext(UserContext);
+  const { data: cluster } = useFetch(`/api/clusters/${clusterId}`, { onMount: true });
   const [value, setValue] = React.useState(0);
   const theme = useTheme();
   const[showIframe, setShowIframe] = useState(false);
+  const [refresh, setRefresh] = React.useState(window.navigator.userAgent.indexOf('Edge') == -1);
   const handleChangeIndex = (index: number) => {
+    setShowIframe(false)
+    if (window.navigator.userAgent.indexOf('Edge') != -1) {
+      setTimeout(()=>{
+        setShowIframe(true);
+        setRefresh(true);
+      },2000);
+    }
     setValue(index);
   }
   const { teams } = React.useContext(TeamContext);
-  const isReadOnly = teams.filter((item: any)=>item["id"] === team)[0]["clusters"].filter((cluster: any) => cluster.id === clusterId)[0].admin || userName === job['userName'];
+  const [isReady, reset, cancel] = useTimeoutFn(() => {
+    setRefresh(true);
+    setShowIframe(true)
+  }, 2000);
+  const isReadOnly = teams.filter((item: any)=>item["id"] === team)[0]["clusters"].filter((cluster: any) => cluster.id === clusterId)[0].admin || email === job['userName'];
   useEffect(()=>{
-    let mount = true;
-    let timeout: any;
-    timeout = setTimeout(()=>{
-      setShowIframe(true);
-    },2000);
+    if (isReady()) {
+      reset();
+    }
     return () => {
-      mount = false;
-      clearTimeout(timeout)
+      cancel()
     }
   },[])
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
@@ -53,10 +63,11 @@ const JobDetails: React.FC<Props> = ({ clusterId, jobId, job, team }) => {
   const handleWarnClose = () => {
     setshowOpen(false)
   }
+
   if (!isReadOnly) {
     return (
       <Context.Provider value={{ jobId, clusterId, job, cluster }}>
-        <DLTSTabs value={value} setValue={setValue} titles={readOnlyJobDetailTitles}  />
+        <DLTSTabs value={value} setValue={setValue} titles={readOnlyJobDetailTitles} setRefresh={setRefresh}  />
         <SwipeableViews
           axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
           index={value}
@@ -66,7 +77,7 @@ const JobDetails: React.FC<Props> = ({ clusterId, jobId, job, team }) => {
             <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Brief/></Container>
           </DLTSTabPanel>
           <DLTSTabPanel value={value} index={1} dir={theme.direction}>
-            { showIframe ? cluster && <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Monitor/></Container> :  <CircularProgress/>}
+            { refresh ? cluster && <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Monitor/></Container> : <CircularProgress/>}
           </DLTSTabPanel>
           <DLTSTabPanel value={value} index={2} dir={theme.direction}>
             { job['log'] && <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Log/></Container> }
@@ -78,7 +89,7 @@ const JobDetails: React.FC<Props> = ({ clusterId, jobId, job, team }) => {
   } else {
     return (
       <Context.Provider value={{ jobId, clusterId, job, cluster }}>
-        <DLTSTabs value={value} setValue={setValue} titles={JobDetailTitles} />
+        <DLTSTabs value={value} setValue={setValue} titles={JobDetailTitles} setRefresh={setRefresh} />
         <SwipeableViews
           axis={theme.direction === 'rtl' ? 'x-reverse' : 'x'}
           index={value}
@@ -88,7 +99,7 @@ const JobDetails: React.FC<Props> = ({ clusterId, jobId, job, team }) => {
             <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Brief/></Container>
           </DLTSTabPanel>
           <DLTSTabPanel value={value} index={1} dir={theme.direction}>
-            {(job['jobStatus'] !== 'pausing' && job['jobStatus'] !== 'paused') &&  <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Endpoints setOpen={setshowOpen}/></Container>}
+            { refresh ? (job['jobStatus'] !== 'pausing' && job['jobStatus'] !== 'paused') &&  <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Endpoints setOpen={setshowOpen} status={job['jobStatus']}/></Container> :  <CircularProgress/>}
           </DLTSTabPanel>
           <DLTSTabPanel value={value} index={2} dir={theme.direction}>
             { showIframe ? cluster && <Container maxWidth={isDesktop ? 'lg' : 'xs'} ><Monitor/></Container> :  <CircularProgress/>}

@@ -10,6 +10,7 @@ app.use(Session(app))
 app.use(mount('/api', require('./api')))
 app.use(require('./frontend'))
 
+/* istanbul ignore if */
 if (require.main === module) {
   app.listen(process.env.PORT || 3081, process.env.HOST)
 }

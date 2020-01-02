@@ -25,7 +25,7 @@ export const DLTSTabs = (props: TabsProps) => {
           {...other}
         >
           { titles && titles.map((title, index)=>(
-            <Tab label={title} key={index} />
+            <Tab label={title} key={index}/>
           )) }
           {children}
         </Tabs>

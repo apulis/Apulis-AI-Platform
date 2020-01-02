@@ -1,0 +1,22 @@
+const config = require('config')
+const logger = require('koa-pino-logger')
+
+/**
+ * @param {import('koa')} app
+ */
+module.exports = (app) => {
+  const enabled = app.env !== 'test'
+  const prettyPrint = app.env === 'development'
+<<<<<<< HEAD
+  const level = 'warn'
+  const middleware = logger({ prettyPrint, level })
+=======
+  const middleware = logger({ enabled, prettyPrint })
+  app.silent = !enabled
+>>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+
+  // Log the config
+  middleware.logger.info(config.util.toObject(), 'App config')
+
+  app.use(middleware)
+}

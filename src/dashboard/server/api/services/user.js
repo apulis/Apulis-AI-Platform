@@ -9,7 +9,10 @@ const Cluster = require('./cluster')
 
 const sign = config.get('sign')
 // const winbind = config.get('winbind')
+const winbind = config.has('winbind') ? config.get('winbind') : undefined
 const masterToken = config.get('masterToken')
+const addGroupLink = config.get('AddGroupLink')
+const WikiLink = config.get('WikiLink')
 const clusterIds = Object.keys(config.get('clusters'))
 
 class User extends Service {
@@ -59,7 +62,8 @@ class User extends Service {
 
   /**
    * @param {import('koa').Context} context
-   * @param {object} idToken
+   * @param {string} email
+   * @param {string} token
    * @return {User}
    */
   static fromToken(context, openId, group, token) {
@@ -98,8 +102,13 @@ class User extends Service {
     return this._token
   }
 
-  async fillIdFromWinbind() {
-    const params = new URLSearchParams({ userName: this.userName })
+  async fillIdFromWinbind () {
+    if (winbind == null) {
+      this.context.log.warn('No winbind server, user will have no uid / gid, and will not sync user info to any cluster.')
+      return null
+    }
+
+    const params = new URLSearchParams({ userName: this.email })
     const url = `${winbind}/domaininfo/GetUserId?${params}`
     this.context.log.info({ url }, 'Winbind request')
     const response = await fetch(url)
@@ -111,7 +120,9 @@ class User extends Service {
     return data
   }
 
-  async addUserToCluster(data) {
+  async addUserToCluster (data) {
+    if (data == null) return
+
     // Fix groups format
     if (Array.isArray(data['groups'])) {
       data['groups'] = JSON.stringify(data['groups'].map(e => String(e)))

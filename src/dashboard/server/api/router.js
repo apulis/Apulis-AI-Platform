@@ -5,6 +5,7 @@ const router = module.exports = new Router()
 router.get('/',
   require('./controllers'))
   
+
 router.get('/bootstrap.js',
   require('./middlewares/user')(false),
   require('./controllers/bootstrap'))
@@ -115,3 +116,5 @@ router.get('/:clusterId/updateAce',
 router.get('/:clusterId/deleteAce',
   require('./middlewares/user')(),
   require('./controllers/cluster/access/deleteAce'))
+router.get('/error.gif',
+  require('./controllers/error'))

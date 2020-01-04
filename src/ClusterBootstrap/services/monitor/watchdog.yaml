@@ -41,7 +41,7 @@ spec:
         env:
         - name: LOGGING_LEVEL
           value: INFO
-        image: {{cnf["dockers"]["container"]["job-exporter"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["watchdog"]["fullname"]}}
         imagePullPolicy: Always
         name: watchdog
         readinessProbe:

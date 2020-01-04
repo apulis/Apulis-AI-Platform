@@ -41,7 +41,7 @@ spec:
         env:
         - name: LOGGING_LEVEL
           value: INFO
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}watchdog:{{cnf["dockertag"]}}
+        image: {{cnf["dockers"]["container"]["job-exporter"]["fullname"]}}
         imagePullPolicy: Always
         name: watchdog
         readinessProbe:

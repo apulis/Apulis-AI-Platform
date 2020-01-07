@@ -619,14 +619,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const request = useFetch(fetchPrometheusUrl);
   const fetchPrometheus = async () => {
     const {prometheus} = await request.get(`/${selectedCluster}`);
-    setPrometheusUrl(prometheus);
+    // setPrometheusUrl(prometheus);
   }
   const handleCloseGPUGramentation = () => {
     setShowGPUFragmentation(false);
   }
 
   React.useEffect(() => {
-    fetchGrafana()
+    // fetchGrafana()
     if (postEndpointsData) {
       setOpen(true);
       setTimeout(()=>{

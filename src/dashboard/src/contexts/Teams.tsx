@@ -81,7 +81,6 @@ export const Provider: React.FC<ProviderProps> = ({addGroupLink,WikiLink ,childr
       />
     )
   }
-  */
   return (
     <Context.Provider
       value={{ teams, selectedTeam, saveSelectedTeam,WikiLink }}

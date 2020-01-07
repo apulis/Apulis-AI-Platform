@@ -6,7 +6,7 @@
   "WikiLink": "http://wiki/",
   "activeDirectory": {
     "tenant": "00000000-0000-0000-0000-000000000000",
-    "clientId": "11111111-1111-1111-1111-111111111111",
+    "clientId": "6d93837b-d8ce-48b9-868a-39a9d843dc57",
     "clientSecret": "DashboardActiveDirectoryClientSecret"
   },
   "clusters": {
@@ -17,5 +17,7 @@
       "restfulapi": "http://targaryen"
     }
   },
-  "domain": "http://localhost:3000"
+  "domain": "http://localhost:3001",
+  "casUrl": "http://localhost:3001",
+  "dingtalk": ""
 }

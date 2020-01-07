@@ -52,7 +52,7 @@ const Loading = (
 const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children }) => (
   <BrowserRouter>
     <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
-      <TeamProvider>
+      <TeamProvider addGroupLink="a" WikiLink="b">
         <ClustersProvider>
           <ThemeProvider theme={theme}>
             {children}

@@ -177,7 +177,7 @@ class Cluster extends Service {
      * @return {Promise<Array>}
      */
   async getTeams () {
-    const { user } = this.context.state
+    const { user } = this.context
     const params = new URLSearchParams({
       userName: user.userName
     })

@@ -358,6 +358,8 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
       setReserved(reversedGpu);
       setActiveJobs((Number)(sumValues(res['AvaliableJobNum'])));
       setActivate(true);
+    }).catch(err => {
+      console.log('err', err)
     })
   },[selectedTeam]);
   const tableTheme = createMuiTheme({

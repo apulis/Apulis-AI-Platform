@@ -58,7 +58,6 @@ const ClusterStatus: FC = () => {
       return;
     }
     const {grafana, prometheus} = responseUrls;
-    const idleGPUUrl = prometheus.replace("9091","9092");
     const getIdleGPUPerUser = `${prometheus}/prometheus/api/v1/query?`;
 
     response['getIdleGPUPerUserUrl'] = getIdleGPUPerUser;

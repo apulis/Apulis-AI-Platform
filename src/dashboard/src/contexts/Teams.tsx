@@ -71,8 +71,6 @@ export const Provider: React.FC<ProviderProps> = ({addGroupLink,WikiLink ,childr
     )
   };
   if (teams !== undefined && teams.length === 0) {
-    console.log(addGroupLink)
-    console.log(WikiLink)
     return (
 
       <Context.Provider

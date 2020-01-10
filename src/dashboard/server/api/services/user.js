@@ -169,7 +169,6 @@ class User extends Service {
     const response = await new Cluster(this.context, clusterId).fetch('/getAccountInfo?' + params)
     const data = await response.json()
     this.context.log.warn(data, 'getAccountInfo')
-
     if (data) {
       this.uid = data['uid']
       this.nickName = data['nickName']

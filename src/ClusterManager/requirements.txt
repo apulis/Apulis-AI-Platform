@@ -6,4 +6,3 @@ twisted==19.7.0
 cachetools==3.1.1
 redis==3.2.1
 requests
-cachetools

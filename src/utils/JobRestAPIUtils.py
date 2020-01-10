@@ -651,6 +651,8 @@ def GetVC(userName, vcName):
     data_handler = DataHandler()
 
     cluster_status, _ = data_handler.GetClusterStatus()
+    if not cluster_status:
+        return ret
     cluster_total = cluster_status["gpu_capacity"]
     cluster_available = cluster_status["gpu_avaliable"]
     cluster_reserved = cluster_status["gpu_reserved"]

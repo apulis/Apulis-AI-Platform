@@ -15,7 +15,6 @@ RUN ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled
 
 COPY dlws-restfulapi.wsgi /wsgi/dlws-restfulapi.wsgi
 
-
 COPY runScheduler.sh /
 RUN chmod +x /runScheduler.sh
 COPY pullsrc.sh /

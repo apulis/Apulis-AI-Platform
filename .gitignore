@@ -15,6 +15,7 @@
 *.iso
 *.srl
 *.swp
+.idea
 
 src/RepairManager/id_rsa
 src/ClusterBootstrap/ssl/ca/ca.srl

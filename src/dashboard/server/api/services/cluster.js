@@ -361,7 +361,7 @@ class Cluster extends Service {
     const begin = Date.now()
     this.context.log.info({ url, init }, 'Cluster fetch request')
     try {
-      const response = await fetch(url, init)
+      const response = await fetch(this.config.restfulapi + path, init)
       const duration = Date.now() - begin
       this.context.log.info({ url, init, status: response.status, duration }, 'Cluster fetch response')
       return response

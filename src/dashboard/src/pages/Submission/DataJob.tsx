@@ -46,7 +46,7 @@ const DataJob: React.FC = (props: any) => {
   const [nfsDataStorage, setNFSDataStorage] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const[dialogContentText, setDialogContentText] = useState('');
-  const [submittable, setSubmittable] = useState(true);
+  const [submittable, setSubmittable] = useState(!(formats.azureDataStorage && formats.nfsDataStorage));
   const {userName,uid } = React.useContext(UserContext);
   const {teams, selectedTeam} = React.useContext(TeamsContext);
   const { selectedCluster,saveSelectedCluster } = React.useContext(ClustersContext);
@@ -129,8 +129,16 @@ const DataJob: React.FC = (props: any) => {
   const covert = (dataJob: any) => {
     dataJob.vcName = selectedTeam;
     dataJob.jobName = "Data Job @ " + new Date().toISOString();
-    if (azureDataStorage) {dataJob.fromFolder = azureDataStorage;}
-    if (nfsDataStorage) {dataJob.toFolder = nfsDataStorage;}
+    if (azureDataStorage) {
+      dataJob.fromFolder = azureDataStorage;
+    } else {
+      dataJob.fromFolder = formats.azureDataStorage;
+    }
+    if (nfsDataStorage) {
+      dataJob.toFolder = nfsDataStorage;
+    } else {
+      dataJob.toFolder = formats.nfsDataStorage
+    }
     dataJob.userName = userName;
     dataJob.jobType = 'training';
     dataJob.jobtrainingtype = "RegularJob";
@@ -194,7 +202,7 @@ const DataJob: React.FC = (props: any) => {
               value={dataStorage}
             />
             <TextField
-              error={ !azureDataStorage}
+              error={!azureDataStorage && !formats.azureDataStorage}
               name={"azureDataStorage"}
               onChange={handleChange}
               id="outlined-error"
@@ -205,7 +213,7 @@ const DataJob: React.FC = (props: any) => {
               margin="dense"
             />
             <TextField
-              error={!nfsDataStorage}
+              error={!nfsDataStorage && !formats.nfsDataStorage}
               name={"nfsDataStorage"}
               onChange={handleChange}
               id="outlined-error"
@@ -218,7 +226,7 @@ const DataJob: React.FC = (props: any) => {
           </Grid>
         </CardContent>
         <CardActions>
-          <Button type="submit"  disabled ={submittable} color="primary" variant="contained" className={styles.submitButton}  onClick={postDataJob}>Submit</Button>
+          <Button type="submit" disabled={submittable} color="primary" variant="contained" className={styles.submitButton} onClick={postDataJob}>Submit</Button>
         </CardActions>
       </Card>
       <Dialog

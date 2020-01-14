@@ -221,7 +221,6 @@ interface EndpointsProps {
 const Endpoints: React.FC<EndpointsProps> = ({setOpen, status}) => {
   const { clusterId, jobId } = useContext(Context);
   const { data, get, post } = useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`, { onMount: true });
-
   const refreshTimeout = useRef<number | null>(null);
   const refreshFunction: TimerHandler = useCallback(async () => {
     refreshTimeout.current = null;

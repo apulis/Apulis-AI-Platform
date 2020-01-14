@@ -16,6 +16,7 @@ import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
 import Drawer from "./layout/Drawer";
 import { Provider as DrawerProvider } from "./layout/Drawer/Context";
+import { SnackbarProvider } from 'notistack';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const SignIn = React.lazy(() => import('./pages/SignIn'));
@@ -50,16 +51,19 @@ const Loading = (
 );
 
 const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children }) => (
+
   <BrowserRouter>
-    <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
-      <TeamProvider addGroupLink="a" WikiLink="b">
-        <ClustersProvider>
-          <ThemeProvider theme={theme}>
-            {children}
-          </ThemeProvider>
-        </ClustersProvider>
-      </TeamProvider>
-    </UserProvider>
+    <SnackbarProvider>
+      <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
+        <TeamProvider addGroupLink="a" WikiLink="b">
+          <ClustersProvider>
+            <ThemeProvider theme={theme}>
+              {children}
+            </ThemeProvider>
+          </ClustersProvider>
+        </TeamProvider>
+      </UserProvider>
+    </SnackbarProvider>
   </BrowserRouter>
 );
 

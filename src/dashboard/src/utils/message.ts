@@ -1,6 +1,5 @@
 import { VariantType, useSnackbar } from 'notistack'
 
-
 export type VariantTypeObj = {
   [variantType in VariantType]: string
 }

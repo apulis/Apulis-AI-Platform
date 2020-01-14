@@ -53,17 +53,15 @@ const Loading = (
 const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children }) => (
 
   <BrowserRouter>
-    <SnackbarProvider>
-      <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
-        <TeamProvider addGroupLink="a" WikiLink="b">
-          <ClustersProvider>
-            <ThemeProvider theme={theme}>
-              {children}
-            </ThemeProvider>
-          </ClustersProvider>
-        </TeamProvider>
-      </UserProvider>
-    </SnackbarProvider>
+    <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
+      <TeamProvider addGroupLink="a" WikiLink="b">
+        <ClustersProvider>
+          <ThemeProvider theme={theme}>
+            {children}
+          </ThemeProvider>
+        </ClustersProvider>
+      </TeamProvider>
+    </UserProvider>
   </BrowserRouter>
 );
 
@@ -112,19 +110,22 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 }
 
 const App: React.FC<BootstrapProps> = (props) => (
-  <Contexts {...props}>
-    <CssBaseline />
-    <Box display="flex" minHeight="100vh" maxWidth="100vw">
-      <React.Suspense fallback={Loading}>
-        <Switch>
-          <Route exact path="/sign-in" component={SignIn} />
-          <Route exact path="/sign-up" component={SignUp} />
-          <Route exact path="/empty-team" component={EmptyTeam} />
-          <Route component={Layout} />
-        </Switch>
-      </React.Suspense>
-    </Box>
-  </Contexts>
+  <SnackbarProvider>
+    <Contexts {...props}>
+      <CssBaseline />
+      <Box display="flex" minHeight="100vh" maxWidth="100vw">
+        <React.Suspense fallback={Loading}>
+          <Switch>
+            <Route exact path="/sign-in" component={SignIn} />
+            <Route exact path="/sign-up" component={SignUp} />
+            <Route exact path="/empty-team" component={EmptyTeam} />
+            <Route component={Layout} />
+          </Switch>
+        </React.Suspense>
+      </Box>
+    </Contexts>
+  </SnackbarProvider>
+  
 );
 
 export default App;

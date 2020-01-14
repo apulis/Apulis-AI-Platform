@@ -640,6 +640,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   React.useEffect(() => {
     if (postJobError) {
+
       // message('error', 'Job submission failed')
     }
   }, [postJobError])

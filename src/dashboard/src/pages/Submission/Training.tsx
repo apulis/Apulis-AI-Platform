@@ -492,6 +492,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     error: postJobError,
     post: postJob,
   } = useFetch('/api');
+  console.log('postJobData', postJobData)
   const {
     data: postEndpointsData,
     loading: postEndpointsLoading,
@@ -595,7 +596,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
     jobId.current = postJobData['jobId'];
     const endpoints = [];
-
+    console.log('interactivePorts', interactivePorts)
     for (const port of interactivePorts.split(',')) {
       const portNumber = Number(port)
       if (portNumber >= 40000 && portNumber <= 49999) {
@@ -611,8 +612,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (tensorboard) endpoints.push('tensorboard');
 
     if (endpoints.length > 0) {
+      console.log('endpoints', endpoints, [postJobData, ssh, ipython, tensorboard, interactivePorts, history, selectedCluster, postEndpoints, selectedTeam])
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
-      endpoints.pop()
+      if (ssh) setSsh(false)
+      if (ipython) setIpython(false)
+      if (tensorboard) setTensorboard(false)
     } else {
       history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
     }

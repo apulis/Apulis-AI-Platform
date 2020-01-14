@@ -30,6 +30,7 @@ import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import useFetch from "use-http";
 import { join } from 'path';
+import _ from "lodash";
 
 import ClusterSelectField from "./components/ClusterSelectField";
 import UserContext from "../../contexts/User";
@@ -48,7 +49,7 @@ import {
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-import _ from "lodash";
+import message from '../../utils/message'
 
 interface EnvironmentVariable {
   name: string;
@@ -638,13 +639,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   React.useEffect(() => {
     if (postJobError) {
-      alert('Job submission failed')
+      // message('error', 'Job submission failed')
     }
   }, [postJobError])
 
   React.useEffect(() => {
     if (postEndpointsError) {
-      alert('Enable endpoints failed')
+      // alert('Enable endpoints failed')
     }
   }, [postEndpointsError])
 

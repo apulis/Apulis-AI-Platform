@@ -1,3 +1,4 @@
+import React, { useState } from 'react'
 import { VariantType, useSnackbar } from 'notistack'
 
 export type VariantTypeObj = {
@@ -17,5 +18,10 @@ const { enqueueSnackbar } = useSnackbar()
 const message = (variant: VariantType, message?: string) => () => {
   enqueueSnackbar(message || MESSAGE_TYPES[variant], { variant })
 }
+
+const MessageContainer: React.FC = () => {
+  return <div>11</div>
+}
+
 
 export default message

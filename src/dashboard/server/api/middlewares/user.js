@@ -17,6 +17,7 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
       await user.addGroupLink
       await user.WikiLink
       context.log.info(user, 'Authenticated by cookie')
+      context.user = user
     } catch (error) {
       context.log.error(error, 'Error in cookie authentication')
     }

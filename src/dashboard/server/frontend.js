@@ -12,3 +12,4 @@ module.exports = compose([
   serve('build'),
   index
 ])
+

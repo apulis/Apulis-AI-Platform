@@ -15,7 +15,6 @@ const EmptyTeam: React.FC<RouteComponentProps> = ({ history }) => {
   const { teams } = React.useContext(TeamsContext);
 
   React.useEffect(() => {
-    console.log(teams)
     if(teams === undefined) {
       history.replace('/');
     } else if (teams.length > 0) {

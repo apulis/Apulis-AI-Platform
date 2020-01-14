@@ -28,6 +28,7 @@
     "luxon": "^1.17.2",
     "material-table": "^1.49.0",
     "node-fetch": "^2.6.0",
+    "notistack": "^0.9.7",
     "pino": "^4.0.0",
     "query-string": "^6.8.2",
     "react": "^16.8.6",
@@ -74,13 +75,13 @@
     "eslint-plugin-standard": "^4.0.0",
     "mocha": "^6.2.1",
     "nock": "^11.4.0",
-    "nodemon": "^1.19.1",
+    "nodemon": "^2.0.2",
     "nyc": "^14.1.1",
     "react-scripts": "^3.0.1",
     "should": "^13.2.3",
     "sinon": "^7.5.0",
     "tough-cookie": "^3.0.1",
-    "typescript": "^3.5.2"
+    "typescript": "^3.7.4"
   },
   "scripts": {
     "start": "node server",

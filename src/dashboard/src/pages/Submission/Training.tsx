@@ -612,6 +612,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
+      endpoints.pop()
     } else {
       history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
     }
@@ -646,6 +647,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   React.useEffect(() => {
     if (postEndpointsError) {
       // alert('Enable endpoints failed')
+      // message('error', 'Enable endpoints failed')
     }
   }, [postEndpointsError])
 

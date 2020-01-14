@@ -19,6 +19,4 @@ const message = (variant: VariantType, message?: string) => () => {
   enqueueSnackbar(message || MESSAGE_TYPES[variant], { variant })
 }
 
-
-
 export default message

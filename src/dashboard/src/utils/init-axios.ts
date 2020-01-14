@@ -2,6 +2,7 @@ import axios, { AxiosResponse, AxiosRequestConfig, AxiosError } from 'axios'
 
 import message from './message'
 
+console.log('message', message)
 axios.interceptors.request.use((config: AxiosRequestConfig) => {
   return config
 }, err => {

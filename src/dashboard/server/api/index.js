@@ -11,10 +11,16 @@ var util = require('util');
 var log_file = fs.createWriteStream(__dirname + '/debug.log', {flags : 'w'});
 var log_stdout = process.stdout;
 
+
+
 console.log = function(d) { //
   log_file.write(util.format(d) + '\n');
   log_stdout.write(util.format(d) + '\n');
 };
+
+process.on('uncaughtException', (e)=>{  
+  console.log('process error is:', e.message);
+})
 
 const router = require('./router')
 
@@ -28,3 +34,5 @@ app.use(router.allowedMethods())
 if (require.main === module) {
   app.listen(process.env.PORT || 3081, process.env.HOST)
 }
+
+console.log('1111111111111')

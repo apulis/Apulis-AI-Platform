@@ -70,15 +70,15 @@ export const Provider: React.FC<ProviderProps> = ({addGroupLink,WikiLink ,childr
       </Box>
     )
   };
-  if (teams !== undefined && teams.length === 0) {
-    return (
+  // if (teams !== undefined && teams.length === 0) {
+  //   return (
 
-      <Context.Provider
-        value={{ teams, selectedTeam ,saveSelectedTeam,WikiLink }}
-        children={<EmptyTeam addGroupLink={addGroupLink} WikiLink={WikiLink}/>}
-      />
-    )
-  }
+  //     <Context.Provider
+  //       value={{ teams, selectedTeam ,saveSelectedTeam,WikiLink }}
+  //       children={<EmptyTeam addGroupLink={addGroupLink} WikiLink={WikiLink}/>}
+  //     />
+  //   )
+  // }
   return (
     <Context.Provider
       value={{ teams, selectedTeam, saveSelectedTeam,WikiLink }}

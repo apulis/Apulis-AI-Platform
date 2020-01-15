@@ -65,7 +65,7 @@ const SignUp: React.FC<RouteComponentProps> = ({ history }) => {
       alert('Invalid nickName!')
       return
     }
-    if (/^[a-zA-Z]{1}([a-zA-Z0-9]|[._]){2,9}$/.test(userName)) {
+    if (!/^[a-zA-Z]{1}([a-zA-Z0-9]|[._]){2,9}$/.test(userName)) {
       alert('Invalid userName!')
       return
     }
@@ -105,7 +105,7 @@ const SignUp: React.FC<RouteComponentProps> = ({ history }) => {
             <Grid container direction="column" spacing={10} alignItems="center" justify="space-between">
               <Grid item>
                 <Typography variant="h2" component="h1" align="center">
-                  钱江源开源开放平台
+                  依瞳 AI 平台
                 </Typography>
               </Grid>
               <Grid item>

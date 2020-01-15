@@ -94,7 +94,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (cluster == null || gpuModel == null) return;
     return cluster.gpus[gpuModel].perNode;
   }, [cluster, gpuModel]);
-
   const {
     data: templates,
     get: getTemplates,
@@ -492,7 +491,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     error: postJobError,
     post: postJob,
   } = useFetch('/api');
-  console.log('postJobData', postJobData)
   const {
     data: postEndpointsData,
     loading: postEndpointsLoading,

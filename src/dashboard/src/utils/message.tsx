@@ -1,27 +1,33 @@
 import React, { useState } from 'react'
-import { VariantType, useSnackbar } from 'notistack'
+import { createPortal } from 'react-dom'
+import Snackbar from '@material-ui/core/Snackbar'
+import Alert from '@material-ui/lab/Alert'
 
-export type VariantTypeObj = {
-  [variantType in VariantType]: string
+
+type MessageProps = {
+  type: 'success' | 'error' | 'warning' | 'info',
+  message?: string,
 }
 
-const MESSAGE_TYPES: VariantTypeObj = {
-  success: '成功',
-  error: '错误',
-  warning: '警告',
-  default: '默认',
-  info: '信息',
+const Message = (props: MessageProps) => {
+  const [open, setOpen] = useState(true)
+  const handleClose = (e: React.SyntheticEvent | React.MouseEvent, reason: string) => {
+
+  }
+  return createPortal(
+    <Snackbar open={open} autoHideDuration={3000} onClose={handleClose}>
+      <Alert severity={props.type}>
+        {props.message}
+      </Alert>
+    </Snackbar>, document.body
+  )
 }
 
-const { enqueueSnackbar } = useSnackbar()
-
-const message = (variant: VariantType, message?: string) => () => {
-  enqueueSnackbar(message || MESSAGE_TYPES[variant], { variant })
+const message = function(type: MessageProps["type"], message: MessageProps['message']) {
+  Message({
+    type,
+    message,
+  })
 }
-
-const MessageContainer: React.FC = () => {
-  return <div>11</div>
-}
-
 
 export default message

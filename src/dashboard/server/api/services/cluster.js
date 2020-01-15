@@ -203,7 +203,7 @@ class Cluster extends Service {
     this.context.assert(response.ok, 502)
     const data = await response.json()
     this.context.log.info(data, 'Got VC')
-    this.context.assert(data != null, 404, 'Team is not found')
+    // this.context.assert(data != null, 404, 'Team is not found')
     return data
   }
 
@@ -361,7 +361,6 @@ class Cluster extends Service {
     const begin = Date.now()
     this.context.log.info({ url, init }, 'Cluster fetch request')
     try {
-      console.log('response', this.config.restfulapi + path, init)
       const response = await fetch(this.config.restfulapi + path, init)
       const duration = Date.now() - begin
       this.context.log.info({ url, init, status: response.status, duration }, 'Cluster fetch response')

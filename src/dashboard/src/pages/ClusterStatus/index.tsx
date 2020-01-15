@@ -54,6 +54,7 @@ const ClusterStatus: FC = () => {
   const fetchVC = async (cluster: string) => {
     const response = await request.get(`/teams/${selectedTeam}/clusters/${cluster}`);
     const responseUrls = await requestGrafana.get(`/${cluster}`);
+    console.log('responseUrls', responseUrls, cluster)
     if (!response || !responseUrls) {
       return;
     }
@@ -62,8 +63,8 @@ const ClusterStatus: FC = () => {
 
     response['getIdleGPUPerUserUrl'] = getIdleGPUPerUser;
     response['ClusterName'] = cluster;
-    response['GranaUrl'] = `${grafana}/dashboard/db/gpu-usage?refresh=30s&orgId=1&_=${Date.now()}`;
-    response['GPUStatisticPerVC'] = `${grafana}/dashboard/db/per-vc-gpu-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}`;
+    response['GranaUrl'] = `${grafana}dashboard/db/gpu-usage?refresh=30s&orgId=1&_=${Date.now()}`;
+    response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-gpu-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}`;
     return response;
   }
   const fetchClusterStatus = (mount: boolean) => {

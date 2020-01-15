@@ -15,7 +15,6 @@ RUN ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled
 
 COPY dlws-restfulapi.wsgi /wsgi/dlws-restfulapi.wsgi
 
-
 COPY runScheduler.sh /
 RUN chmod +x /runScheduler.sh
 COPY pullsrc.sh /
@@ -30,10 +29,9 @@ RUN rm -rf /usr/lib/python2.7/dist-packages/yaml
 RUN rm -rf /usr/lib/python2.7/dist-packages/PyYAML-*
 RUN pip install -r /requirements.txt
 
-ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete
-ADD utils /DLWorkspace/src/utils
-ADD RestAPI /DLWorkspace/src/RestAPI
-ADD ClusterManager /DLWorkspace/src/ClusterManager
-
+#ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete
+#ADD utils /DLWorkspace/src/utils
+#ADD RestAPI /DLWorkspace/src/RestAPI
+#ADD ClusterManager /DLWorkspace/src/ClusterManager
 
 CMD /run.sh

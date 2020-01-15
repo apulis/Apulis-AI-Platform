@@ -5,10 +5,9 @@ import threading
 
 try:
     f = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.yaml"))
-    config = yaml.full_load(f)
+    config = yaml.load(f)
 except Exception:
     config = {}
-    ()
 
 def GetWorkPath(workpath):
     workPath = "work/"+workpath

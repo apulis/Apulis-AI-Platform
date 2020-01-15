@@ -1,0 +1,31 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: react-fontend
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      react-fontend: active
+  template:
+    metadata:
+      name: react-fontend
+      labels:
+        app: react-fontend
+        react-fontend: active
+    spec:
+      nodeSelector:
+        react-fontend: active
+      hostNetwork: true
+      containers:
+      - name: webui3
+        image: apulistech/skypulis1_webui3:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PORT
+          value: "3000"
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

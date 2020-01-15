@@ -1,0 +1,32 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: nodejs
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      react-fontend: active
+  template:
+    metadata:
+      name: nodejs
+      labels:
+        app: nodejs
+        react-fontend: active
+    spec:
+      nodeSelector:
+        react-fontend: active
+      hostNetwork: true
+      containers:
+      - name: nodejs
+        image: apulistech/skypulis1_webui3:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PORT
+          value: "3081"
+        command: ["node","server"]
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

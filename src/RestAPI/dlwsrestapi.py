@@ -99,6 +99,13 @@ def getAlias(username):
         username = username.split("/")[1].strip()
     return username
 
+def get_query_params(*args,**kwargs):
+    parser = reqparse.RequestParser()
+    for paramName in args:
+        parser.add_argument(paramName)
+    args = parser.parse_args()
+    return [args[name] for name in args]
+
 class SubmitJob(Resource):
     def get(self):
         parser = reqparse.RequestParser()

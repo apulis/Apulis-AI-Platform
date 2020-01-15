@@ -402,7 +402,7 @@ class DataHandler(object):
                 record["metadata"] = metadata
                 ret.append(record)
         except Exception as e:
-            logger.error('Exception: %s', str(e))
+            logger.exception('Exception: %s', str(e))
             pass
         self.conn.commit()
         cursor.close()

@@ -577,10 +577,10 @@ default_config_parameters = {
     # We will gradually migrate mroe and more docker in DLWorkspace to system
     # dockers
     "heketi-docker": "heketi/heketi:dev",
-    "dockerregistry": "qianjiangyuan/",
+    "dockerregistry": "apulistech/",
     "dockers": {
         # Hub is docker.io/
-        "hub": "qianjiangyuan/",
+        "hub": "apulistech/",
         #"hub": "registry.docker-cn.com/dlws/",
         "tag": "1.8", # migrate docker to 1.8 for QianJiangYuan
         "system": {

@@ -18,5 +18,3 @@ app.use(router.allowedMethods())
 if (require.main === module) {
   app.listen(process.env.PORT || 3081, process.env.HOST)
 }
-
-console.log('1111111111111')

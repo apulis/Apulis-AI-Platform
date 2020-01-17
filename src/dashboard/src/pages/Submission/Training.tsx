@@ -38,6 +38,7 @@ import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
+import { message } from 'antd';
 import Paper, { PaperProps } from '@material-ui/core/Paper';
 import Draggable from 'react-draggable'
 import {TransitionProps} from "@material-ui/core/transitions";
@@ -49,7 +50,6 @@ import {
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-import message from '../../utils/message'
 
 interface EnvironmentVariable {
   name: string;
@@ -643,7 +643,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   React.useEffect(() => {
     if (postJobError) {
 
-      // message('error', 'Job submission failed')
+      message.error('Job submission failed');
     }
   }, [postJobError])
 

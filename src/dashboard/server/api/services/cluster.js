@@ -185,7 +185,6 @@ class Cluster extends Service {
     const response = await this.fetch('/ListVCs?' + params)
     const data = await response.json()
     this.context.log.info(data, 'Listed VC')
-
     return data['result']
   }
 
@@ -199,11 +198,13 @@ class Cluster extends Service {
       userName: user.userName,
       vcName: teamId
     })
+    console.log('params', params, typeof params)
     const response = await this.fetch('/GetVC?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()
     this.context.log.info(data, 'Got VC')
-    // this.context.assert(data != null, 404, 'Team is not found')
+    console.log('data2', data)
+    this.context.assert(data != null, 404, 'Team is not found')
     return data
   }
 

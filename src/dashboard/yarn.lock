@@ -12622,10 +12622,10 @@ react-fast-compare@^2.0.4:
   resolved "https://registry.yarnpkg.com/react-fast-compare/-/react-fast-compare-2.0.4.tgz#e84b4d455b0fec113e0402c329352715196f81f9"
   integrity sha512-suNP+J1VU1MWFKcyt7RtjiSWUjvidmQSlqu+eHslq+342xCbGTYmC0mEhPCOHxlW0CywylOC1u2DFAT+bv4dBw==
 
-react-hook-form@^4.5.2:
-  version "4.5.2"
-  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-4.5.2.tgz#98034ce9454e804c220bdea21b3a60db76e6d5d0"
-  integrity sha512-KnFoAhluyviP4TjbcM2JmHYsnpNXNO/DCDB+biAev/yGJsXEehU3dJuojO2P+GFnA4XyYr0yD6B0ifCSrGM7cQ==
+react-hook-form@^4.5.5:
+  version "4.5.5"
+  resolved "https://registry.yarnpkg.com/react-hook-form/-/react-hook-form-4.5.5.tgz#7bb61360a98e08ff07b14646ea80c94341b89ad3"
+  integrity sha512-NXz22dG1ej666gzExf3pLH0/gi5WJNzHD0h0Iy4Op5+25Ru/mN24mOfZmbfyr+kFTVUkr/cNMpIL1camon8lMA==
 
 react-iframe@^1.8.0:
   version "1.8.0"

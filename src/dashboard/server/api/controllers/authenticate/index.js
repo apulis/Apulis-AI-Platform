@@ -9,6 +9,7 @@ const domain = config.get('domain')
 
 const OAUTH2_URL = `https://login.microsoftonline.com/common/oauth2/v2.0`
 
+
 /**
  * @param {import('koa').Context} context
  * @return {string}
@@ -29,10 +30,11 @@ const getUriWithoutQuery = context => {
  * @return {string}
  */
 const getAuthenticationUrl = context => {
+  let redirect_uri = getUriWithoutQuery(context)
   const params = new URLSearchParams({
     client_id: activeDirectoryConfig.clientId,
     response_type: 'code',
-    redirect_uri: getUriWithoutQuery(context),
+    redirect_uri,
     response_mode: 'query',
     scope: 'openid profile email'
   })

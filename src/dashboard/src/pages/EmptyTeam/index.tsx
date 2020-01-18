@@ -36,7 +36,7 @@ const EmptyTeam: React.FC<RouteComponentProps> = ({ history }) => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {"您当前没有钱江源集群权限。请联系管理员或发邮件到qianjiangyuan@aliyun.com申请相关权限"}
+            {"您当前没有使用权限，请联系系统管理员将您添加到小组中"}
           </DialogContentText>
         </DialogContent>
         <DialogActions>

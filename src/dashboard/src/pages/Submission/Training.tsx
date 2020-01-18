@@ -28,6 +28,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import { Info, Delete, Add } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
+import { useForm, Controller } from 'react-hook-form';
 import useFetch from "use-http";
 import { join } from 'path';
 import _ from "lodash";
@@ -38,6 +39,7 @@ import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
+import message from 'antd/es/message';
 import Paper, { PaperProps } from '@material-ui/core/Paper';
 import Draggable from 'react-draggable'
 import {TransitionProps} from "@material-ui/core/transitions";
@@ -49,7 +51,6 @@ import {
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-import message from '../../utils/message'
 
 interface EnvironmentVariable {
   name: string;
@@ -66,6 +67,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const { userName, uid } = React.useContext(UserContext);
   const { teams, selectedTeam }= React.useContext(TeamsContext);
   //const team = 'platform';
+  const { control, handleSubmit } = useForm()
   const [showGPUFragmentation, setShowGPUFragmentation] = React.useState(false)
   const [grafanaUrl, setGrafanaUrl] = React.useState('');
   const [name, setName] = React.useState("");
@@ -571,7 +573,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (type === 'PSDistJob') {
       // Check GPU fragmentation
       let workersNeeded = workers;
-      console.log(gpuFragmentation)
       for (const { metric, value } of gpuFragmentation) {
         if (Number(metric['gpu_available']) >= gpusPerNode) {
           workersNeeded -= (Number(value[1]) || 0);
@@ -594,7 +595,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
     jobId.current = postJobData['jobId'];
     const endpoints = [];
-    console.log('interactivePorts', interactivePorts)
     for (const port of interactivePorts.split(',')) {
       const portNumber = Number(port)
       if (portNumber >= 40000 && portNumber <= 49999) {
@@ -610,7 +610,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (tensorboard) endpoints.push('tensorboard');
 
     if (endpoints.length > 0) {
-      console.log('endpoints', endpoints, [postJobData, ssh, ipython, tensorboard, interactivePorts, history, selectedCluster, postEndpoints, selectedTeam])
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
       if (ssh) setSsh(false)
       if (ipython) setIpython(false)
@@ -643,7 +642,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   React.useEffect(() => {
     if (postJobError) {
 
-      // message('error', 'Job submission failed')
+      message.error('Job submission failed');
     }
   }, [postJobError])
 

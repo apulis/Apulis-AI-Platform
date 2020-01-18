@@ -31,3 +31,4 @@ const message = function(type: MessageProps["type"], message: MessageProps['mess
 }
 
 export default message
+

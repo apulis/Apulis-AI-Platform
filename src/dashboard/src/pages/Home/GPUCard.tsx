@@ -316,7 +316,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
             }
           }
           //({ mountpointName: key, users: value })
-          storageRes = tmpStorage.filter((store: any) => !checkObjIsEmpty(store));
+          storageRes = tmpStorage.fialter((store: any) => !checkObjIsEmpty(store));
           let finalStorageRes: any = [];
           if (storageRes && storageRes.length > 0) {
             finalStorageRes = _.chain(storageRes).groupBy('mountpointName').map((value, key) => {

@@ -1,18 +1,14 @@
 const Koa = require('koa')
 const Session = require('koa-session')
+const mount = require('koa-mount')
 
 const app = module.exports = new Koa()
-
-require('./configurations/logger')(app)
-require('./configurations/config')(app)
-
-const router = require('./router')
 
 app.keys = ['some secret hurr...']
 app.use(Session(app))
 
-app.use(router.routes())
-app.use(router.allowedMethods())
+app.use(mount('/api', require('./api')))
+app.use(require('./frontend-dev'))
 
 /* istanbul ignore if */
 if (require.main === module) {

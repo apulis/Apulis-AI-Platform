@@ -33,6 +33,8 @@ bootstap({
 
 路径: /api/teams
 
+方法：GET
+
 表示用户当前有权限的 virtual cluster，是一个数组，数据格式如下：
 
 ```

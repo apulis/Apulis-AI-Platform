@@ -65,7 +65,7 @@ const SignUp: React.FC<RouteComponentProps> = ({ history }) => {
       alert('Invalid nickName!')
       return
     }
-    if (!/^[a-zA-Z]{1}([a-zA-Z0-9]|[._]){2,9}$/.test(userName)) {
+    if (!/^[a-zA-Z]{1}([a-zA-Z0-9]|[._]){2,20}$/.test(userName)) {
       alert('Invalid userName!')
       return
     }

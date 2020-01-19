@@ -45,6 +45,7 @@ import acs_tools
 
 from params import default_config_parameters, scriptblocks
 from ConfigUtils import *
+import pdb
 
 capacityMatch = re.compile("\d+\.?\d*\s*[K|M|G|T|P]B")
 digitsMatch = re.compile("\d+\.?\d*")
@@ -306,6 +307,7 @@ def add_acs_config(command):
         configAzure = acs_tools.acs_update_azconfig(False)
         if verbose:
             print "AzureConfig:\n{0}".format(configAzure)
+
         utils.mergeDict(config, configAzure, True) # ovewrites defaults with Azure defaults
         if verbose:
             print "Config:\n{0}".format(config)
@@ -768,26 +770,45 @@ def on_premise_params():
     print("Warning: remember to set parameters:\ngpu_count_per_node, gpu_type, worker_node_num\n when using on premise machine!")
 
 def load_platform_type():
-    platform_type = list(set(config.keys()) & set(config["supported_platform"]))
+
+    platform_type = []
+    if "supported_platform" in config.keys():
+        platform_type = config["supported_platform"]
+    else:
+        pass
+
     assert len(platform_type) == 1 and "platform type should be specified explicitly and unique!"
+
     platform_type = platform_type[0]
     config["platform_type"] = platform_type
 
 def gen_platform_wise_config():
+
     load_platform_type()
+
     azdefault = { 'network_domain':"config['network']['domain']", 
-        'worker_node_num':"config['azure_cluster']['worker_node_num']", 
-        'gpu_count_per_node':'config["sku_mapping"].get(config["azure_cluster"]["worker_vm_size"],config["sku_mapping"]["default"])["gpu-count"]',
-        'gpu_type':'config["sku_mapping"].get(config["azure_cluster"]["worker_vm_size"],config["sku_mapping"]["default"])["gpu-type"]' }
-    on_premise_default = {'network_domain':"config['network']['domain']"}
+                'worker_node_num':"config['azure_cluster']['worker_node_num']", 
+                'gpu_count_per_node':'config["sku_mapping"].get(config["azure_cluster"]["worker_vm_size"],config["sku_mapping"]["default"])["gpu-count"]',
+                'gpu_type':'config["sku_mapping"].get(config["azure_cluster"]["worker_vm_size"],config["sku_mapping"]["default"])["gpu-type"]' }
+
+    on_premise_default = {'network_domain':"config['network']['domain']",
+                'worker_node_num':"config['onpremise_cluster']['worker_node_num']",
+                'gpu_count_per_node':"config['onpremise_cluster']['gpu_count_per_node']",
+                'gpu_type':"config['onpremise_cluster']['gpu_type']"
+                }
+
     platform_dict = { 'azure_cluster': azdefault, 'onpremise': on_premise_default }
     platform_func = { 'azure_cluster': load_az_params_as_default, 'onpremise': on_premise_params } 
+
     default_dict, default_func = platform_dict[config["platform_type"]], platform_func[config["platform_type"]]
     default_func()
+
     need_val = ['network_domain', 'worker_node_num', 'gpu_count_per_node', 'gpu_type']
     for ky in need_val:
         if ky not in config:
             config[ky] = eval(default_dict[ky])
+
+    return
 
 def gen_configs():
     print "==============================================="
@@ -953,17 +974,24 @@ def get_kubectl_binary(force = False):
 def get_hyperkube_docker(force = False) :
     os.system("mkdir -p ./deploy/bin")
     print( "Use docker container %s" % config["dockers"]["container"]["hyperkube"]["fullname"])
+
     if force or not os.path.exists("./deploy/bin/hyperkube"):
         copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/hyperkube", "./deploy/bin/hyperkube")
+
     if force or not os.path.exists("./deploy/bin/kubelet"):
         copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubelet", "./deploy/bin/kubelet")
+
     if force or not os.path.exists("./deploy/bin/kubectl"):
         copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubectl", "./deploy/bin/kubectl")
+
     if config['kube_custom_cri']:
         if force or not os.path.exists("./deploy/bin/crishim"):
             copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/crishim", "./deploy/bin/crishim")
+        
         if force or not os.path.exists("./deploy/bin/nvidiagpuplugin.so"):
             copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/nvidiagpuplugin.so", "./deploy/bin/nvidiagpuplugin.so")
+
+    return
 
 def deploy_masters(force = False):
     print "==============================================="
@@ -2667,12 +2695,14 @@ def deploy_ETCD_master(force = False):
 
         if "etcd_node" in config and len(config["etcd_node"]) >= int(config["etcd_node_num"]) and "kubernetes_master_node" in config and len(config["kubernetes_master_node"]) >= 1:
             print "Ready to deploy kubernetes master on %s, etcd cluster on %s.  " % (",".join(config["kubernetes_master_node"]), ",".join(config["etcd_node"]))
+            
             gen_configs()
             response = raw_input_with_default("Clean Up master, and deploy ETCD Nodes (y/n)?")
             if first_char(response) == "y":
                 clean_master()
                 gen_ETCD_certificates()
                 deploy_ETCD()
+
             response = raw_input_with_default("Deploy Master Nodes (y/n)?")
             if first_char(response) == "y":
                 gen_master_certificates()
@@ -2755,6 +2785,7 @@ def get_all_services():
     render_service_templates()
     rootdir = "./deploy/services"
     servicedic = {}
+    
     for service in os.listdir(rootdir):
         dirname = os.path.join(rootdir, service)
         if os.path.isdir(dirname):
@@ -2802,11 +2833,14 @@ def get_service_name(service_config_file):
 def get_service_yaml( use_service ):
     servicedic = get_all_services()
     newentries = {}
+
     for service in servicedic:
         servicename = get_service_name(servicedic[service])
         newentries[servicename] = servicedic[service]
+
     servicedic.update(newentries)
     fname = servicedic[use_service]
+
     return fname
 
 def kubernetes_label_node(cmdoptions, nodename, label):
@@ -2936,6 +2970,7 @@ def kubernetes_mark_nodes( marklist, bMark ):
                     kubernetes_label_node( "", nodename, mark+"-" )
 
 def start_one_kube_service(fname):
+
     if verbose:
         # use try/except because yaml.load cannot load yaml file with multiple documents.
         try:
@@ -2954,15 +2989,20 @@ def start_one_kube_service(fname):
         ()
 
     run_kubectl( ["create", "-f", fname ] )
+    return
 
 def stop_one_kube_service(fname):
     run_kubectl( ["delete", "-f", fname ] )
 
 def start_kube_service( servicename ):
+
     fname = get_service_yaml( servicename )
     dirname = os.path.dirname(fname)
+
     if os.path.exists(os.path.join(dirname,"launch_order")) and "/" not in servicename:
+
         with open(os.path.join(dirname,"launch_order"),'r') as f:
+
             allservices = f.readlines()
             for filename in allservices:
                 # If this line is a sleep tag (e.g. SLEEP 10), sleep for given seconds to wait for the previous service to start.
@@ -2971,8 +3011,11 @@ def start_kube_service( servicename ):
                 else:
                     filename = filename.strip('\n')
                     start_one_kube_service(os.path.join(dirname,filename))
+
     else:
         start_one_kube_service(fname)
+
+    return
 
 def stop_kube_service( servicename ):
     fname = get_service_yaml( servicename )
@@ -3163,7 +3206,6 @@ def run_command( args, command, nargs, parser ):
         bForce = args.force if args.force is not None else False
         get_kubectl_binary(force=args.force)
         exit()
-
 
     if command =="clean":
         clean_deployment()
@@ -3707,16 +3749,21 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "kubernetes":
         configuration( config, verbose )
+
         if len(nargs) >= 1:
+
             if len(nargs)>=2:
                 servicenames = nargs[1:]
+
             else:
                 allservices = get_all_services()
                 servicenames = []
                 for service in allservices:
                     servicenames.append(service)
+
             generate_hdfs_containermounts()
             configuration( config, verbose )
+
             if nargs[0] == "start":
                 if args.force and "hdfsformat" in servicenames:
                     print ("This operation will WIPEOUT HDFS namenode, and erase all data on the HDFS cluster,  "  )
@@ -3726,14 +3773,17 @@ def run_command( args, command, nargs, parser ):
                 # Start a kubelet service.
                 for servicename in servicenames:
                     start_kube_service(servicename)
+
             elif nargs[0] == "stop":
                 # stop a kubelet service.
                 for servicename in servicenames:
                     stop_kube_service(servicename)
+
             elif nargs[0] == "restart":
                 # restart a kubelet service.
                 for servicename in servicenames:
                     replace_kube_service(servicename)
+
             elif nargs[0] == "labels":
                 if len(nargs)>=2 and ( nargs[1] == "active" or nargs[1] == "inactive" or nargs[1] == "remove" ):
                     kubernetes_label_nodes(nargs[1], nargs[2:], args.yes)
@@ -3742,6 +3792,7 @@ def run_command( args, command, nargs, parser ):
                 else:
                     parser.print_help()
                     print "Error: kubernetes labels expect a verb which is either active, inactive or remove, but get: %s" % nargs[1]
+            
             elif nargs[0] == "patchprovider":
                 # TODO(harry): read a tag to decide which tools we are using, so we don't need nargs[1]
                 if len(nargs)>=2 and ( nargs[1] == "aztools" or nargs[1] == "gstools" or nargs[1] == "awstools" ):
@@ -3751,12 +3802,16 @@ def run_command( args, command, nargs, parser ):
                         kubernetes_patch_nodes_provider(nargs[1], False)
                 else:
                     print "Error: kubernetes patchprovider expect a verb which is either aztools, gstools or awstools."
+            
             elif nargs[0] == "mark":
                 kubernetes_mark_nodes( nargs[1:], True)
+            
             elif nargs[0] == "unmark":
                 kubernetes_mark_nodes( nargs[1:], False)
+            
             elif nargs[0] == "cordon" or nargs[0] == "uncordon":
                 run_kube_command_on_nodes(nargs)
+            
             elif nargs[0] == "labelvc":
                 kubernetes_label_vc(True)
             else:

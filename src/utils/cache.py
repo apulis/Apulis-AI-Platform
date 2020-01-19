@@ -76,6 +76,8 @@ class CacheManager(object):
 
     @staticmethod
     def _WorkerThreadFunc():
+        logger = logging.getLogger(__name__)
+
         while (True):
             try:
                 while not CacheManager.taskQueue.empty():

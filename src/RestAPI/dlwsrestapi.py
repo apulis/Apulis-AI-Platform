@@ -765,13 +765,16 @@ api.add_resource(SignUp, '/SignUp')
 
 
 class GetAccountByOpenId(Resource):
+    
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
         parser.add_argument('group')
         args = parser.parse_args()
+
         openId = args["openId"]
         group = args["group"]
+
         ret = JobRestAPIUtils.GetAccountByOpenId(openId, group)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"

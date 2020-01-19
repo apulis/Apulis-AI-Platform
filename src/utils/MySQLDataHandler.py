@@ -42,6 +42,7 @@ def record(fn):
 
 class DataHandler(object):
     def __init__(self):
+
         start_time = timeit.default_timer()
         self.database = "DLWSCluster-%s" % config["clusterId"]
         self.accounttablename = "account"
@@ -54,6 +55,7 @@ class DataHandler(object):
         self.commandtablename = "commands"
         self.templatetablename = "templates"
         self.jobprioritytablename = "job_priorities"
+
         server = config["mysql"]["hostname"]
         username = config["mysql"]["username"]
         password = config["mysql"]["password"]
@@ -465,6 +467,7 @@ class DataHandler(object):
         cursor = self.conn.cursor()
         query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []
+        
         try:
             cursor.execute(query)
             for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in cursor:
@@ -478,6 +481,7 @@ class DataHandler(object):
                 record["isAdmin"] = isAdmin
                 record["isAuthorized"] = isAuthorized
                 ret.append(record)
+
         except Exception as e:
             logger.error('GetAccountByOpenId Exception: %s', str(e))
         self.conn.commit()

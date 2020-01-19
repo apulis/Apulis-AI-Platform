@@ -71,15 +71,42 @@ module.exports = (app) => {
 
 
 
-## 业务逻辑流程
+## 业务流程
+
+###  一、注册/登录/鉴权等
+
+采用 OAuth 2 的登录方式，注意在开发环境下，由于 nodejs 程序监听的是另一个端口，在登录页面跳转后，需要再手动将浏览器地址换成 前端的地址（以后有机会我会优化的），但是在生产环境中，没有这种问题
+
+OAuth 2 登录完成之后，还需要填写用户名、密码等完成注册
+
+[相关 api](./index-api.md)
 
 
 
+## 二、Submit Training  Job
+
+这是一个表单，用于提交 training job，提交成功会跳转到 /job/{userName}/apulis-dev/{jobId} 页面
 
 
-###  一、注册/登录
 
-采用 OAuth 2 的登录方式，注意在开发环境下，由于 nodejs 程序监听的是另一个端口，在登录页面跳转后，需要再手动将浏览器地址换成 前端的地址（以后有机会我会优化的）
+这个页面会展示当前 job 的详情，包括 brief，mapped endpoints，job analytics and monitoring，console output。
 
-## 二、
+其中，job analytics and monitoring 是一个 iframe 页面，是用于监控当前 job 的各种资源使用情况。
 
+[相关 api](submit-training-job-api)
+
+## 三、Submit Data Job
+
+这是一个表单，用于提交 data job，提交成功后会跳转到 /job/{userName}/apulis-dev/{jobId} 页面，和上面的流程是一致的
+
+
+
+## 四、View And Manage Jobs
+
+这个页面可以查看当前用户的 job 和 所有的 job。注意，当选择所有的 job 时，只会返回 pending 的job。点击 jobId 后会进入 /job/{userName}/apulis-dev/{jobId} 页面
+
+
+
+## 五、Cluster Status
+
+这个页面会展示

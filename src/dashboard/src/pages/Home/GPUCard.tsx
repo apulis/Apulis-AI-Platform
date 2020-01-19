@@ -316,7 +316,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
             }
           }
           //({ mountpointName: key, users: value })
-          storageRes = tmpStorage.fialter((store: any) => !checkObjIsEmpty(store));
+          storageRes = tmpStorage.filter((store: any) => !checkObjIsEmpty(store));
           let finalStorageRes: any = [];
           if (storageRes && storageRes.length > 0) {
             finalStorageRes = _.chain(storageRes).groupBy('mountpointName').map((value, key) => {
@@ -339,7 +339,6 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               finalStorageRes.unshift(item);
             }
           });
-          console.log(finalStorageRes)
           finalStorageRes = finalStorageRes.filter((item: any) => {
             return !(item["mountpointName"].indexOf("dlts") === -1 && item["mountpointName"].indexOf("dlws/nfs") === -1);
           })

@@ -80,9 +80,9 @@ GPU类别：NVidia，driver版本 >= 430
 
    - 配置子域名快捷搜索（dev、master、worker三个机器）
 
-     修改文件：vim /etc/resolvconf/resolv.conf.d/base
-     增加数据：search sigsus.cn
-     执行指令：sudo resolvconf -u 
+     修改文件：vim /etc/resolvconf/resolv.conf.d/base  
+     增加数据：search sigsus.cn  
+     执行指令：sudo resolvconf -u   
 
      
 

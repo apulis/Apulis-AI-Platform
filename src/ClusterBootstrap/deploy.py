@@ -1896,17 +1896,22 @@ def add_service_config():
         os.system("cp deploy/etc/nginx/* deploy/services/nginx/")
 
 def config_nginx():
+    
     all_nodes = get_nodes(config["clusterId"])
     template_dir = "services/nginx/"
     target_dir = "deploy/services/nginx/"
     utils.render_template_directory(template_dir, target_dir,config)
+
     for node in all_nodes:
+        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, "sudo mkdir -p /www/static/dashboard")
         utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/","/etc/nginx/conf.other", config["admin_username"], node )
+
     # See https://github.com/kubernetes/examples/blob/master/staging/https-nginx/README.md
     # Please use
     # kubectl create configmap nginxconfigmap --from-file=services/nginx/default.conf
     # run_kubectl( ["delete", "configmap", "nginxconfigmap"] )
     # run_kubectl( ["create", "configmap", "nginxconfigmap", "--from-file=%s/default.conf" % target_dir ] )
+    return
 
 def mount_fileshares_by_service(perform_mount=True):
     all_nodes = get_nodes(config["clusterId"])

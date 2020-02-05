@@ -44,6 +44,8 @@ spec:
           name: etc-letsencrpyt  
         - mountPath: /var/log/letsencrypt
           name: letsencrypt-log         
+        - mountPath: /www/static
+          name: www-static        
       volumes:
       - name: secret-volume
         hostPath:
@@ -63,6 +65,9 @@ spec:
       - name: letsencrypt-log
         hostPath:
           path: /var/log/letsencrypt    
+      - name: www-static
+        hostPath:
+          path: /www/static   
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

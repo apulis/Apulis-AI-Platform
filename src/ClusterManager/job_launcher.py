@@ -537,6 +537,7 @@ class PythonLauncher(Launcher):
 
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()
             secret_template = job_object.get_blobfuse_secret_template()
+
             if job_object.params["jobtrainingtype"] == "RegularJob":
                 pod_template = PodTemplate(job_object.get_template(),
                                            enable_custom_scheduler=enable_custom_scheduler,
@@ -563,14 +564,16 @@ class PythonLauncher(Launcher):
             job_description = "\n---\n".join([yaml.dump(pod) for pod in pods])
             job_description_path = "jobfiles/" + time.strftime("%y%m%d") + "/" + job_object.job_id + "/" + job_object.job_id + ".yaml"
             local_jobDescriptionPath = os.path.realpath(os.path.join(config["storage-mount-path"], job_description_path))
+            
             if not os.path.exists(os.path.dirname(local_jobDescriptionPath)):
                 os.makedirs(os.path.dirname(local_jobDescriptionPath))
+                
             with open(local_jobDescriptionPath, 'w') as f:
                 f.write(job_description)
 
             secrets = pod_template.generate_secrets(job_object)
-
             job_deployer = JobDeployer()
+
             try:
                 secrets = job_deployer.create_secrets(secrets)
                 ret["output"] = "Created secrets: {}. ".format([secret.metadata.name for secret in secrets])
@@ -596,10 +599,12 @@ class PythonLauncher(Launcher):
 
             jobMetaStr = base64.b64encode(json.dumps(jobMeta))
             dataHandler.UpdateJobTextField(job_object.job_id, "jobMeta", jobMetaStr)
+
         except Exception as e:
             logging.error("Submit job failed: %s" % job, exc_info=True)
             ret["error"] = str(e)
             retries = dataHandler.AddandGetJobRetries(job["jobId"])
+
             if retries >= 5:
                 dataHandler.UpdateJobTextField(job["jobId"], "jobStatus", "error")
                 dataHandler.UpdateJobTextField(job["jobId"], "errorMsg", "Cannot submit job!" + str(e))

@@ -601,13 +601,16 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 launcher.submit_job(sji["job"])
                 update_job_state_latency(redis_conn, sji["jobId"], "scheduling")
                 logging.info("TakeJobActions : submitting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
             elif sji["preemptionAllowed"] and (sji["job"]["jobStatus"] == "scheduling" or sji["job"]["jobStatus"] == "running") and (sji["allowed"] is False):
                 launcher.kill_job(sji["job"]["jobId"], "queued")
                 logging.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
         except Exception as e:
             logging.error("Process job failed {}".format(sji["job"]), exc_info=True)
 
     logging.info("TakeJobActions : job desired actions taken")
+    return
 
 def Run(redis_port, target_status):
     register_stack_trace_dump()

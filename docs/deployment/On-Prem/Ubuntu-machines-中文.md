@@ -82,7 +82,7 @@ GPU类别：NVidia，driver版本 >= 430
 
      修改文件：vim /etc/resolvconf/resolv.conf.d/base  
      增加数据：search sigsus.cn  
-     执行指令：sudo resolvconf -u   
+     执行指令：sudo resolvconf -u   	
 
      
 
@@ -471,4 +471,11 @@ GPU类别：NVidia，driver版本 >= 430
     deploy.py --verbose kubernetes start cloudmonitor
     ```
 
+    启动dashboard
+    
+    ```
+    deploy.py --verbose nginx webui3
+    deploy.py --verbose kubernetes start webui3
+    ```
+    
     

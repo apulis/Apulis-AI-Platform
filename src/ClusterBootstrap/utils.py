@@ -137,11 +137,17 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
 
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 def SSH_exec_cmd(identity_file, user,host,cmd,showCmd=True):
+
     if len(cmd)==0:
         return;
+    
     if showCmd or verbose:
         print ("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) ) 
-    os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
+
+    os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
+
+    return 
+
 
 # SSH Connect to a remote host with identity file (private SSH key), user, host
 # Program usually exit here. 

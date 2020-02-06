@@ -34,7 +34,7 @@ from GlusterFSUtils import GlusterFSJson
 sys.path.append("../utils")
 
 import utils
-from DockerUtils import push_one_docker, build_dockers, push_dockers, run_docker, find_dockers, build_docker_fullname, copy_from_docker_image, configuration
+from DockerUtils import push_one_docker, build_dockers, push_dockers, run_docker, find_dockers, build_docker_fullname, copy_from_docker_image, configuration, get_reponame
 import k8sUtils
 from config import config as k8sconfig
 
@@ -1891,6 +1891,28 @@ def config_fqdn():
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
+def config_webui(nargs):
+    
+    all_nodes = get_nodes(config["clusterId"])
+    reponame = get_reponame("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose)
+
+    for node in all_nodes:
+        # pull new image
+        remotecmd = "sudo docker pull %s" %s reponame 
+        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+
+        # todo: 
+        # should judge if dashboard folder exists
+        remotecmd = "sudo rm -rf /www/static/dashboard; sudo mkdir -p /www/static/"
+        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+       
+        # copy the static assets from webui image to the host
+        remotecmd = "sudo docker cp $(docker create %s):/usr/src/app/build/ /www/static/dashboard" % reponame
+        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+
+    return
+
+
 def add_service_config():
     if os.path.exists("deploy/etc/nginx/"):
         os.system("cp deploy/etc/nginx/* deploy/services/nginx/")
@@ -3072,10 +3094,13 @@ def build_docker_images(nargs):
 
 def push_docker_images(nargs):
     render_docker_images()
+
     if verbose:
         print "Build & push docker images to docker register  ..."
         print "Nocache: {0}".format(nocache)
+
     push_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache = nocache )
+    return
 
 def check_buildable_images(nargs):
     for imagename in nargs:
@@ -3878,20 +3903,32 @@ def run_command( args, command, nargs, parser ):
     elif command == "nginx":
         if len(nargs)>=1:
             configuration( config, verbose )
+
             if nargs[0] == "config":
                 config_nginx()
+                
             if nargs[0] == "fqdn":
                 config_fqdn()
+
+            
+            if nargs[0].startswith("webui"):
+                config_webui(nargs)
+
+        else:
+            pass
 
     elif command == "docker":
         if len(nargs)>=1:
             configuration( config, verbose )
+
             if nargs[0] == "build":
                 check_buildable_images(nargs[1:])
                 build_docker_images(nargs[1:])
+
             elif nargs[0] == "push":
                 check_buildable_images(nargs[1:])
                 push_docker_images(nargs[1:])
+
             elif nargs[0] == "run":
                 if len(nargs)>=2:
                     run_docker_image( nargs[1], args.native, sudo = args.sudo )

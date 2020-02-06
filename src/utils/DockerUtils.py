@@ -292,11 +292,23 @@ def push_one_docker(dirname, dockerprefix, tag, basename, config, verbose = Fals
 def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose = False, nocache = False ):
     configuration(config, verbose)
     docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose ); 
+
     for _, tuple in docker_list.iteritems():
         dockername, _ = tuple
         build_docker_with_config( dockername, config, verbose, nocache = nocache )
         push_docker_with_config( dockername, config, verbose, nocache = nocache )
 
+    return
+
+def get_reponame(rootdir, dockerprefix, dockertag, nargs, config, verbose = False):
+    configuration(config, verbose)
+    docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose ); 
+
+    for _, tuple in docker_list.iteritems():
+        docker_name, _ = tuple
+        return config["dockers"]["container"][docker_name]["fullname"]
+
+    return None
 
 def copy_from_docker_image(image, srcFile, dstFile):
     id = subprocess.check_output(['docker', 'create', image])

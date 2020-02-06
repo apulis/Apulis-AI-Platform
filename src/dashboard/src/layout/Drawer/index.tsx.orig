@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, LinkProps, matchPath, RouteComponentProps, withRouter } from "react-router-dom";
+import { Link, LinkProps, matchPath, useLocation } from "react-router-dom";
 
 import {
   Drawer,
@@ -19,8 +19,8 @@ import Context from "./Context";
 import UserContext from '../../contexts/User';
 
 =======
-import TeamContext from "../../contexts/Teams";
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+import ConfigContext from "../../contexts/Config";
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
@@ -44,9 +44,13 @@ export const ListLink = React.forwardRef<Link, LinkProps>(
   ({ to, ...props }, ref) => <Link ref={ref} to={to} {...props} />
 );
 
-const LinkListItem = withRouter<LinkProps & RouteComponentProps>(({ location, to, children }) => {
+const LinkListItem: React.FC<LinkProps> = ({ to, children }) => {
+  const location = useLocation();
+
   const locationPathname = location.pathname;
-  const toPathname = typeof to === "string" ? to : to.pathname;
+  const toPathname = typeof to === "string" ? to
+    : typeof to === "object" ? to.pathname
+      : undefined;
   const selected = typeof toPathname === "string"
     ? matchPath(locationPathname, toPathname) !== null
     : true;
@@ -55,15 +59,15 @@ const LinkListItem = withRouter<LinkProps & RouteComponentProps>(({ location, to
       {children}
     </ListItem>
   );
-});
+};
 
 const NavigationList: React.FC = () => {
   const styles = useStyles();
 <<<<<<< HEAD
   const { isAdmin } = React.useContext(UserContext);
 =======
-  const { WikiLink } = React.useContext(TeamContext);
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+  const { wiki } = React.useContext(ConfigContext);
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
   return (
     <List component="nav" className={styles.drawerHeader}>
       <LinkListItem to="/submission/training">
@@ -74,6 +78,9 @@ const NavigationList: React.FC = () => {
       </LinkListItem>
       <LinkListItem to="/jobs">
         <ListItemText>View and Manage Jobs</ListItemText>
+      </LinkListItem>
+      <LinkListItem to="/jobs-v2">
+        <ListItemText>View and Manage Jobs V2</ListItemText>
       </LinkListItem>
       <LinkListItem to="/cluster-status">
         <ListItemText>Cluster Status</ListItemText>
@@ -97,10 +104,10 @@ const NavigationList: React.FC = () => {
 =======
       <ListItem button>
         <ListItemText>
-          <a href={WikiLink} target="_blank" style={{ textDecoration:'none' }}>DLTS Wiki</a>
+          <a href={wiki} target="_blank" style={{ textDecoration:'none' }}>DLTS Wiki</a>
         </ListItemText>
       </ListItem>
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
     </List>
   );
 };

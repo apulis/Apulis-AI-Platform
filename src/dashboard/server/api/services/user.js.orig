@@ -2,21 +2,18 @@ const { createHash } = require('crypto')
 
 const config = require('config')
 const jwt = require('jsonwebtoken')
-const fetch = require('node-fetch')
 
 const Service = require('./service')
-const Cluster = require('./cluster')
 
 const sign = config.get('sign')
 <<<<<<< HEAD
 // const winbind = config.get('winbind')
-=======
 const winbind = config.has('winbind') ? config.get('winbind') : undefined
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+=======
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 const masterToken = config.get('masterToken')
-const addGroupLink = config.get('AddGroupLink')
-const WikiLink = config.get('WikiLink')
-const clusterIds = Object.keys(config.get('clusters'))
+
+const TOKEN = Symbol('token')
 
 class User extends Service {
   /**
@@ -65,23 +62,26 @@ class User extends Service {
   static fromIdToken (context, idToken) {
     const user = new User(context, idToken['upn'])
     user.givenName = idToken['given_name']
-    user.addGroupLink = addGroupLink
     user.familyName = idToken['family_name']
-    user.WikiLink = WikiLink
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
     return user
   }
 
   /**
    * @param {import('koa').Context} context
    * @param {string} email
-   * @param {string} token
+   * @param {string} password
    * @return {User}
    */
+<<<<<<< HEAD
   static fromToken(context, openId, group, token) {
     const user = new User(context, openId, group)
+=======
+  static fromPassword (context, email, password) {
+    const user = new User(context, email)
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
     const expectedToken = user.token
-    const actualToken = Buffer.from(token, 'hex')
+    const actualToken = Buffer.from(password, 'hex')
     context.assert(expectedToken.equals(actualToken), 403, 'Invalid token')
 
     return user
@@ -89,22 +89,21 @@ class User extends Service {
 
   /**
    * @param {import('koa').Context} context
-   * @param {string} token
+   * @param {string} cookieToken
    * @return {User}
    */
+<<<<<<< HEAD
   static fromCookie(context, token) {
     const payload = jwt.verify(token, sign)
-<<<<<<< HEAD
     const user = new User(context, payload['openId'], payload['group'])
 
 =======
+  static fromCookieToken (context, cookieToken) {
+    const payload = jwt.verify(cookieToken, sign)
     const user = new User(context, payload['email'])
-    user.password = this.generateToken(user.email)
     user.givenName = payload['givenName']
-    user.addGroupLink = addGroupLink
-    user.WikiLink = WikiLink
     user.familyName = payload['familyName']
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
     user.uid = payload['uid']
     user.nickName = payload['nickName']
     user.userName = payload['userName']
@@ -120,6 +119,38 @@ class User extends Service {
       const hash = createHash('md5')
       hash.update(`${this.userName}:${masterToken}`)
       this._token = hash.digest()
+    }
+    return this._token
+  }
+
+  async fillIdFromWinbind () {
+    if (winbind == null) {
+      this.context.log.warn('No winbind server, user will have no uid / gid, and will not sync user info to any cluster.')
+      return null
+    }
+
+    const params = new URLSearchParams({ userName: this.email })
+    const url = `${winbind}/domaininfo/GetUserId?${params}`
+    this.context.log.info({ url }, 'Winbind request')
+    const response = await fetch(url)
+    const data = await response.json()
+    this.context.log.info({ data }, 'Winbind response')
+
+    this.uid = data['uid']
+    this.gid = data['gid']
+    return data
+  }
+
+  async addUserToCluster (data) {
+    if (data == null) return
+
+    // Fix groups format
+    if (Array.isArray(data['groups'])) {
+      data['groups'] = JSON.stringify(data['groups'].map(e => String(e)))
+    }
+    const params = new URLSearchParams(Object.assign({ userName: this.userName }, data))
+    for (const clusterId of clusterIds) {
+      new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
 =======
   /**
    * @param {string} email
@@ -132,53 +163,11 @@ class User extends Service {
   }
 
   get token () {
-    if (this._token == null) {
-      Object.defineProperty(this, '_token', {
-        value: User.generateToken(this.email)
-      })
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+    if (this[TOKEN] == null) {
+      this[TOKEN] = User.generateToken(this.email)
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
     }
-    return this._token
-  }
-
-<<<<<<< HEAD
-  async fillIdFromWinbind() {
-    const params = new URLSearchParams({ userName: this.userName })
-=======
-  async fillIdFromWinbind () {
-    if (winbind == null) {
-      this.context.log.warn('No winbind server, user will have no uid / gid, and will not sync user info to any cluster.')
-      return null
-    }
-
-    const params = new URLSearchParams({ userName: this.email })
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
-    const url = `${winbind}/domaininfo/GetUserId?${params}`
-    this.context.log.info({ url }, 'Winbind request')
-    const response = await fetch(url)
-    const data = await response.json()
-    this.context.log.info({ data }, 'Winbind response')
-
-    this.uid = data['uid']
-    this.gid = data['gid']
-    return data
-  }
-
-<<<<<<< HEAD
-  async addUserToCluster(data) {
-=======
-  async addUserToCluster (data) {
-    if (data == null) return
-
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
-    // Fix groups format
-    if (Array.isArray(data['groups'])) {
-      data['groups'] = JSON.stringify(data['groups'].map(e => String(e)))
-    }
-    const params = new URLSearchParams(Object.assign({ userName: this.userName }, data))
-    for (const clusterId of clusterIds) {
-      new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
-    }
+    return this[TOKEN]
   }
 
   async loginWithMicrosoft() {
@@ -251,8 +240,8 @@ class User extends Service {
   toCookie() {
     // console.log('token is ', this.token)
 =======
-  toCookie () {
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+  toCookieToken () {
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
     return jwt.sign({
       openId: this.openId,
       group: this.group,
@@ -263,17 +252,27 @@ class User extends Service {
       password: this.password,
       isAdmin: this.isAdmin,
       isAuthorized: this.isAuthorized
-=======
-      gid: this.gid,
-      _token: this.token,
-      familyName: this.familyName,
-      givenName: this.givenName,
-      addGroupLink: addGroupLink,
-      WikiLink: WikiLink
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
     }, sign)
   }
 
+=======
+      gid: this.gid,
+      familyName: this.familyName,
+      givenName: this.givenName
+    }, sign)
+  }
+
+  toJSON () {
+    return {
+      email: this.email,
+      password: this.token.toString('hex'),
+      uid: this.uid,
+      gid: this.gid,
+      familyName: this.familyName,
+      givenName: this.givenName
+    }
+  }
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 }
 
 module.exports = User

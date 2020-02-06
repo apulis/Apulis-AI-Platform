@@ -10,6 +10,9 @@ interface Context {
   isAdmin?: boolean;
   isAuthorized?: boolean;
   token?: any;
+  email?: string;
+  familyName?: string;
+  givenName?: string;
 }
 
 const Context = React.createContext<Context>({});

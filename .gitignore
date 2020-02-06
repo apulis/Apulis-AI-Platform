@@ -58,6 +58,7 @@ src/**/dotnet/WebPortal/hosting.json
 **/storage.ide
 
 src/RepairManager/.vs/*
+src/RepairManager/mock-data/*
 /.vs/slnx.sqlite
 /.vs/ProjectSettings.json
 /.vs/VSWorkspaceState.json
@@ -73,3 +74,8 @@ src/ClusterBootstrap/services/monitor/alerting/kill-idle.rules
 
 /src/dashboard/build/*
 *.log
+src/ClusterBootstrap/template/*config.yaml.template
+
+**/.vscode/*
+.idea
+venv

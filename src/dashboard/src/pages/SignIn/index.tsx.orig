@@ -19,6 +19,7 @@ const useStyles = makeStyles(() => createStyles({
   }
 }));
 
+<<<<<<< HEAD
 const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
   enum SIGNIN_STATUS {
     Initial = 0,
@@ -32,6 +33,21 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
     setSignInStatus(status);
   }, []);
 
+=======
+const SignIn: React.FC<RouteComponentProps> = ({ history, location }) => {
+  const { email } = React.useContext(UserContext);
+  const [ signIn, setSignIn ] = React.useState(false);
+  const onButtonClick = React.useCallback(() => {
+    setSignIn(true);
+  }, []);
+  const href = React.useMemo(() => {
+    let href = '/api/authenticate';
+    if (typeof location.state === 'object' && typeof location.state.to === 'string') {
+      href += `?to=${encodeURIComponent(location.state.to)}`;
+    }
+    return href;
+  }, [location.state]);
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
   React.useEffect(() => {
     if (openId !== undefined && group !== undefined) {
       history.replace('/');
@@ -54,6 +70,7 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                   钱江源开源开放平台
                 </Typography>
               </Grid>
+<<<<<<< HEAD
 
               <Grid container direction="column" alignItems="center" justify="space-between" style={{ height: 150 }}>
                 <Grid item>
@@ -89,17 +106,25 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                     {signInStatus === SIGNIN_STATUS.Zhejianglab ? <CircularProgress size={24} /> : 'Sign in with Zhejianglab'}
                   </Button>
                 </Grid>
+=======
+              <Grid item>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  href={href}
+                  disabled={signIn}
+                  onClick={onButtonClick}
+                >
+                  { signIn ? <CircularProgress size={24}/> : 'Sign in with corp account' }
+                </Button>
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
               </Grid>
 
               <Grid item>
                 <Typography variant="body2">
                   {"Built with "}
                   <span role="img" aria-label="heart">❤️</span>
-<<<<<<< HEAD
-                  {" by Qjianjingyaun"}
-=======
                   {" by Bing DLTS"}
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
                 </Typography>
               </Grid>
             </Grid>

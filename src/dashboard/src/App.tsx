@@ -5,12 +5,16 @@ import { BrowserRouter, Redirect, Route, RouteComponentProps, Switch } from "rea
 import 'typeface-roboto';
 import 'typeface-roboto-mono';
 
+import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
 import { ThemeProvider } from "@material-ui/styles";
 
+import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
 import { Provider as ClustersProvider } from "./contexts/Clusters";
 import TeamsContext, { Provider as TeamProvider } from './contexts/Teams';
+
+import { ConfirmProvider } from './hooks/useConfirm';
 
 import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
@@ -24,6 +28,7 @@ const SignUp = React.lazy(() => import('./pages/SignUp'));
 const EmptyTeam = React.lazy(() => import('./pages/EmptyTeam'));
 const Submission = React.lazy(() => import('./pages/Submission'));
 const Jobs = React.lazy(() => import('./pages/Jobs'));
+const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
 const Job = React.lazy(() => import('./pages/Job'));
 const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
@@ -42,6 +47,8 @@ interface BootstrapProps {
   isAdmin?: boolean;
   isAuthorized?: boolean;
   _token?: any;
+  config: ConfigContext;
+  user: UserContext;
 }
 
 const Loading = (
@@ -54,7 +61,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, user
 
   <BrowserRouter>
     <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
-      <TeamProvider addGroupLink="a" WikiLink="b">
+      <TeamProvider>
         <ClustersProvider>
           <ThemeProvider theme={theme}>
             {children}
@@ -91,16 +98,18 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
           <Drawer />
           <React.Suspense fallback={Loading}>
             <Switch location={location}>
-              <Route exact path="/" component={Home} />
-              <Route path="/submission" component={Submission} />
-              <Route path="/jobs/:cluster" component={Jobs} />
-              <Route path="/jobs" component={Jobs} />
-              <Route path="/job/:team/:clusterId/:jobId" component={Job} />
-              <Route path="/cluster-status" component={ClusterStatus} />
-              <Route path="/vc" component={Vc} />
-              <Route path="/user" component={User} />
-              <Route path="/access" component={Access} />
-              <Redirect to="/" />
+              <Route exact path="/" component={Home}/>
+              <Route path="/submission" component={Submission}/>
+              <Route path="/jobs/:cluster" component={Jobs}/>
+              <Route path="/jobs" component={Jobs}/>
+              <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobsV2}/>
+              <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
+              <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/>
+              <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
+              <Route strict exact path="/jobs-v2/" component={JobsV2}/>
+              <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
+              <Route path="/cluster-status" component={ClusterStatus}/>
+              <Redirect to="/"/>
             </Switch>
           </React.Suspense>
         </Content>
@@ -110,22 +119,21 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 }
 
 const App: React.FC<BootstrapProps> = (props) => (
-  <SnackbarProvider>
     <Contexts {...props}>
-      <CssBaseline />
+      <Helmet
+        titleTemplate="%s - Deep Learning Training Service"
+        defaultTitle="Deep Learning Training Service"
+      />
+      <CssBaseline/>
       <Box display="flex" minHeight="100vh" maxWidth="100vw">
         <React.Suspense fallback={Loading}>
           <Switch>
-            <Route exact path="/sign-in" component={SignIn} />
-            <Route exact path="/sign-up" component={SignUp} />
-            <Route exact path="/empty-team" component={EmptyTeam} />
-            <Route component={Layout} />
+            <Route exact path="/sign-in" component={SignIn}/>
+            <Route component={Layout}/>
           </Switch>
         </React.Suspense>
       </Box>
     </Contexts>
-  </SnackbarProvider>
-  
 );
 
 export default App;

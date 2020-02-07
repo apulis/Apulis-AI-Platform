@@ -11,7 +11,6 @@ module.exports = (app) => {
     production: 'info'
   }[app.env]
   const prettyPrint = app.env === 'development'
-  const level = 'warn'
   const middleware = logger({ prettyPrint, level })
 
   // Log the config

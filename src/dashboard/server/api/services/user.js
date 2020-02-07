@@ -4,6 +4,9 @@ const config = require('config')
 const jwt = require('jsonwebtoken')
 
 const Service = require('./service')
+const Cluster = require('./cluster')
+
+const clusterIds = Object.keys(config.get('clusters'))
 
 const sign = config.get('sign')
 // const winbind = config.get('winbind')

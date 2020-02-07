@@ -2,18 +2,15 @@ const { createHash } = require('crypto')
 
 const config = require('config')
 const jwt = require('jsonwebtoken')
-const fetch = require('node-fetch')
 
 const Service = require('./service')
-const Cluster = require('./cluster')
 
 const sign = config.get('sign')
 // const winbind = config.get('winbind')
 const winbind = config.has('winbind') ? config.get('winbind') : undefined
 const masterToken = config.get('masterToken')
-const addGroupLink = config.get('AddGroupLink')
-const WikiLink = config.get('WikiLink')
-const clusterIds = Object.keys(config.get('clusters'))
+
+const TOKEN = Symbol('token')
 
 class User extends Service {
   /**
@@ -63,13 +60,13 @@ class User extends Service {
   /**
    * @param {import('koa').Context} context
    * @param {string} email
-   * @param {string} token
+   * @param {string} password
    * @return {User}
    */
   static fromToken(context, openId, group, token) {
     const user = new User(context, openId, group)
     const expectedToken = user.token
-    const actualToken = Buffer.from(token, 'hex')
+    const actualToken = Buffer.from(password, 'hex')
     context.assert(expectedToken.equals(actualToken), 403, 'Invalid token')
 
     return user
@@ -77,13 +74,25 @@ class User extends Service {
 
   /**
    * @param {import('koa').Context} context
-   * @param {string} token
+   * @param {string} cookieToken
    * @return {User}
    */
   static fromCookie(context, token) {
     const payload = jwt.verify(token, sign)
     const user = new User(context, payload['openId'], payload['group'])
+    return user
+  }
 
+  /**
+   * @param {import('koa').Context} context
+   * @param {string} cookieToken
+   * @return {User}
+   */
+  static fromCookieToken (context, cookieToken) {
+    const payload = jwt.verify(cookieToken, sign)
+    const user = new User(context, payload['email'])
+    user.givenName = payload['givenName']
+    user.familyName = payload['familyName']
     user.uid = payload['uid']
     user.nickName = payload['nickName']
     user.userName = payload['userName']
@@ -132,6 +141,23 @@ class User extends Service {
       new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
     }
   }
+  /**
+   * @param {string} email
+   * @return {Buffer}
+   */
+  static generateToken (email) {
+    const hash = createHash('md5')
+    hash.update(`${email}:${masterToken}`)
+    return hash.digest()
+  }
+
+  /*
+  get token () {
+    if (this[TOKEN] == null) {
+      this[TOKEN] = User.generateToken(this.email)
+    }
+    return this[TOKEN]
+  }*/
 
   async loginWithMicrosoft() {
     const params = new URLSearchParams(Object.assign({
@@ -208,10 +234,39 @@ class User extends Service {
       userName: this.userName,
       password: this.password,
       isAdmin: this.isAdmin,
-      isAuthorized: this.isAuthorized
+      isAuthorized: this.isAuthorized,
+      gid: this.gid,
+      familyName: this.familyName,
+      givenName: this.givenName
+    }, sign)
+
+  }
+  toCookieToken () {
+    return jwt.sign({
+      openId: this.openId,
+      group: this.group,
+      uid: this.uid,
+      nickName: this.nickName,
+      userName: this.userName,
+      password: this.password,
+      isAdmin: this.isAdmin,
+      isAuthorized: this.isAuthorized,
+      gid: this.gid,
+      familyName: this.familyName,
+      givenName: this.givenName
     }, sign)
   }
 
+  toJSON () {
+    return {
+      email: this.email,
+      password: this.token.toString('hex'),
+      uid: this.uid,
+      gid: this.gid,
+      familyName: this.familyName,
+      givenName: this.givenName
+    }
+  }
 }
 
 module.exports = User

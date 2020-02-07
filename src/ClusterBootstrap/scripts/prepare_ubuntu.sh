@@ -250,6 +250,17 @@ set_kubernetes() {
     set_install_flag "set_kubernetes"
 }
 
+set_azure() {
+
+    # Install azure blobfuse
+    sudo rm -f packages-microsoft-prod.deb
+    wget https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+    sudo dpkg -i packages-microsoft-prod.deb
+    sudo apt-get update
+    sudo apt-get install -y blobfuse fuse jq
+    sudo rm -f packages-microsoft-prod.deb
+}
+
 resume_mode() {
     if [ "$exec_mode" = "continue" ]
     then
@@ -319,6 +330,7 @@ main () {
     set_network
     install_gpu_utils
     set_kubernetes
+    set_azure
 }
 
 main $*

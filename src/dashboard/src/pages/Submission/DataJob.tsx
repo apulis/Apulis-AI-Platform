@@ -48,6 +48,7 @@ const DataJob: React.FC = (props: any) => {
   const[dialogContentText, setDialogContentText] = useState('');
   const [submittable, setSubmittable] = useState(!(formats.azureDataStorage && formats.nfsDataStorage));
   const {userName,uid } = React.useContext(UserContext);
+  const {email} = React.useContext(UserContext);
   const {teams, selectedTeam} = React.useContext(TeamsContext);
   const { selectedCluster,saveSelectedCluster } = React.useContext(ClustersContext);
   const [workStorage, setWorkStorage ] = useState('');
@@ -146,7 +147,6 @@ const DataJob: React.FC = (props: any) => {
     dataJob.runningasroot = "1";
     dataJob.resourcegpu = 0;
     dataJob.containerUserId = 0;
-    dataJob.userId = uid;
     dataJob.image = "indexserveregistry.azurecr.io/dlts-data-transfer-image";
     dataJob.cmd = [
       "cd /DataUtils && ./copy_data.sh",

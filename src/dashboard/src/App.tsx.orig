@@ -5,12 +5,17 @@ import { BrowserRouter, Redirect, Route, RouteComponentProps, Switch } from "rea
 import 'typeface-roboto';
 import 'typeface-roboto-mono';
 
+import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
 import { ThemeProvider } from "@material-ui/styles";
+import { SnackbarProvider } from "notistack";
 
+import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
 import { Provider as ClustersProvider } from "./contexts/Clusters";
 import TeamsContext, { Provider as TeamProvider } from './contexts/Teams';
+
+import { ConfirmProvider } from './hooks/useConfirm';
 
 import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
@@ -23,17 +28,23 @@ const SignUp = React.lazy(() => import('./pages/SignUp'));
 const EmptyTeam = React.lazy(() => import('./pages/EmptyTeam'));
 const Submission = React.lazy(() => import('./pages/Submission'));
 const Jobs = React.lazy(() => import('./pages/Jobs'));
+const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
 const Job = React.lazy(() => import('./pages/Job'));
+<<<<<<< HEAD
 const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
 const User = React.lazy(() => import('./pages/User/index.js'));
 const Access = React.lazy(() => import('./pages/Access/index.js'));
+=======
+const JobV2 = React.lazy(() => import('./pages/JobV2'));
+const ClusterStatus = React.lazy( () => import('./pages/ClusterStatus'));
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 
 const theme = createMuiTheme();
 
 interface BootstrapProps {
-  uid?: string;
 <<<<<<< HEAD
+  uid?: string;
   openId?: string;
   group?: string;
   nickName?: string;
@@ -43,12 +54,9 @@ interface BootstrapProps {
   isAuthorized?: boolean;
   _token?: any;
 =======
-  familyName?: string;
-  givenName?: string;
-  password?: any;
-  addGroupLink: string;
-  WikiLink: string;
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+  config: ConfigContext;
+  user: UserContext;
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 }
 
 const Loading = (
@@ -72,28 +80,35 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, user
   </BrowserRouter>
 );
 =======
-const Contexts: React.FC<BootstrapProps> = ({ email, uid, familyName, givenName,password ,WikiLink,addGroupLink,children }) => {
+const Contexts: React.FC<BootstrapProps> = ({ config, user, children }) => {
   return (
     <BrowserRouter>
-      <UserProvider email={email} uid={uid} familyName={familyName} givenName={givenName} token={password} >
-        <TeamProvider addGroupLink={addGroupLink} WikiLink={WikiLink}>
-          <ClustersProvider>
-            <ThemeProvider theme={theme}>
-              {children}
-            </ThemeProvider>
-          </ClustersProvider>
-        </TeamProvider>
-      </UserProvider>
+      <ConfigProvider {...config}>
+        <UserProvider {...user}>
+          <SnackbarProvider>
+            <ConfirmProvider>
+              <TeamProvider>
+                <ClustersProvider>
+                  <ThemeProvider theme={theme}>
+                    {children}
+                  </ThemeProvider>
+                </ClustersProvider>
+              </TeamProvider>
+            </ConfirmProvider>
+          </SnackbarProvider>
+        </UserProvider>
+      </ConfigProvider>
     </BrowserRouter>
   );
 }
->>>>>>> 617d14f1b8634ff6cbe576f3bf8f3cac52047c89
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   const { openId, group, userName } = React.useContext(UserContext);
   const { teams } = React.useContext(TeamsContext);
 
   React.useEffect(() => {
+<<<<<<< HEAD
     if (openId === undefined || group === undefined) {
       history.replace('/sign-in');
     } else if(userName === undefined){
@@ -102,6 +117,15 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
       history.replace('/empty-team');
     }
   }, [openId, group, userName, teams, history]);
+=======
+    if (email === undefined) {
+      history.replace({
+        pathname: '/sign-in',
+        state: { to: location.pathname }
+      });
+    }
+  }, [email, history, location]);
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 
   if (openId === undefined || group === undefined || userName === undefined || (teams !== undefined && teams.length === 0)) {
     return null;
@@ -115,6 +139,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
           <Drawer />
           <React.Suspense fallback={Loading}>
             <Switch location={location}>
+<<<<<<< HEAD
               <Route exact path="/" component={Home} />
               <Route path="/submission" component={Submission} />
               <Route path="/jobs/:cluster" component={Jobs} />
@@ -125,6 +150,20 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
               <Route path="/user" component={User} />
               <Route path="/access" component={Access} />
               <Redirect to="/" />
+=======
+              <Route exact path="/" component={Home}/>
+              <Route path="/submission" component={Submission}/>
+              <Route path="/jobs/:cluster" component={Jobs}/>
+              <Route path="/jobs" component={Jobs}/>
+              <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/>
+              <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
+              <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/>
+              <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
+              <Route strict exact path="/jobs-v2/" component={JobsV2}/>
+              <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
+              <Route path="/cluster-status" component={ClusterStatus}/>
+              <Redirect to="/"/>
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
             </Switch>
           </React.Suspense>
         </Content>
@@ -134,6 +173,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 }
 
 const App: React.FC<BootstrapProps> = (props) => (
+<<<<<<< HEAD
   <Contexts {...props}>
     <CssBaseline />
     <Box display="flex" minHeight="100vh" maxWidth="100vw">
@@ -147,6 +187,23 @@ const App: React.FC<BootstrapProps> = (props) => (
       </React.Suspense>
     </Box>
   </Contexts>
+=======
+    <Contexts {...props}>
+      <Helmet
+        titleTemplate="%s - Deep Learning Training Service"
+        defaultTitle="Deep Learning Training Service"
+      />
+      <CssBaseline/>
+      <Box display="flex" minHeight="100vh" maxWidth="100vw">
+        <React.Suspense fallback={Loading}>
+          <Switch>
+            <Route exact path="/sign-in" component={SignIn}/>
+            <Route component={Layout}/>
+          </Switch>
+        </React.Suspense>
+      </Box>
+    </Contexts>
+>>>>>>> c52a2da5411eb8408c7ce099ef8b64f0558cb564
 );
 
 export default App;

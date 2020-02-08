@@ -5,8 +5,6 @@ import argparse
 import uuid
 import subprocess
 import sys
-import random
-import string
 import collections
 import copy
 
@@ -110,7 +108,7 @@ def SubmitJob(jobParamsJsonStr):
         jobParams["preemptionAllowed"] = False
     else:
         jobParams["preemptionAllowed"] = ToBool(jobParams["preemptionAllowed"])
-    
+
     uniqId = str(uuid.uuid4())
     if "jobId" not in jobParams or jobParams["jobId"] == "":
         #jobParams["jobId"] = jobParams["jobName"] + "-" + str(uuid.uuid4())
@@ -371,7 +369,6 @@ def ResumeJob(userName, jobId):
         if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Collaborator):
             ret = dataHandler.UpdateJobTextField(jobId, "jobStatus", "unapproved")
     dataHandler.Close()
-    InvalidateJobListCache(jobs[0]["vcName"])
     return ret
 
 
@@ -480,17 +477,6 @@ def GetClusterStatus():
     cluster_status,last_update_time =  DataManager.GetClusterStatus()
     return cluster_status,last_update_time
 
-def ListUser():
-    dataHandler = DataHandler()
-    ret = dataHandler.ListUser()
-    dataHandler.Close()
-    return ret
-
-def updateUserPerm(identityName,isAdmin,isAuthorized):
-    dataHandler = DataHandler()
-    ret = dataHandler.UpdateIdentityInfoPerm(identityName,isAdmin,isAuthorized)
-    dataHandler.Close()
-    return ret
 
 def AddUser(username,uid,gid,groups):
     ret = None
@@ -510,86 +496,6 @@ def AddUser(username,uid,gid,groups):
     if needToUpdateDB:
         ret = IdentityManager.UpdateIdentityInfo(username, uid, gid, groups)
         ret = ret & ACLManager.UpdateAclIdentityId(username,uid)
-    return ret
-
-def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAuthorized = False):
-    ret = {}
-    try:
-        dataHandler = DataHandler()
-        lst = dataHandler.GetAccountByOpenId(openId, group)
-        
-        # Register
-        if len(lst) == 0:
-            if nickName is None or len(nickName) < 1:
-                ret["error"] = "NickName is too short"
-                return  ret
-            if userName is None or len(userName) < 3:
-                ret["error"] = "UserName is too short (minimum is 3 characters)"
-                return  ret
-            if password is None or len(password) < 6:
-                ret["error"] = "Password is too short (minimum is 6 characters)"
-                return  ret
-            # Check UserName available
-            if len(dataHandler.GetAccountByUserName(userName)) > 0:
-                ret["error"] = ('UserName %s is not available!') % userName
-                return  ret
-            if password is None or len(password) < 6:
-                password = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-            dataHandler.UpdateAccountInfo(openId, group, nickName, userName, password, isAdmin, isAuthorized)
-            lst = dataHandler.GetAccountByOpenId(openId, group)
-
-        if len(lst) > 0:
-            accountInfo = lst[0]
-            identityInfo = IdentityManager.GetIdentityInfoFromDB(userName)
-            if identityInfo["uid"] == authorization.INVALID_ID:
-                GROUP_DICT = {
-                    "Microsoft": 3001,
-                    "Zhejianglab": 3002,
-                    "Wechat": 3003,
-                    "DingTalk": 3004
-                }
-                if group in GROUP_DICT:
-                    groups = [group]
-                    gid = GROUP_DICT[group]
-                else:
-                    gid = 3999
-                    groups = ['Other']
-                dataHandler.UpdateIdentityInfo(userName, accountInfo["uid"], gid, groups)
-                
-                # Update Ace
-                permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
-                resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-                AuthorizationManager.UpdateAce(userName, resourceAclPath, permission, False)
-
-        dataHandler.Close()
-    except Exception as e:
-        logger.error('Exception: %s', str(e))
-        ret["error"] = 'Exception: %s', str(e)
-    return ret
-
-
-def GetAccountByOpenId(openId, group):
-    ret = None
-    try:
-        dataHandler = DataHandler()
-        lst = dataHandler.GetAccountByOpenId(openId, group)
-        dataHandler.Close()
-        if len(lst) > 0:
-            ret = lst[0]
-    except Exception as e:
-        logger.error('Exception: %s', str(e))
-    return ret
-
-def GetAccountByUserName(userName):
-    ret = None
-    try:
-        dataHandler = DataHandler()
-        lst = dataHandler.GetAccountByOpenId(userName)
-        dataHandler.Close()
-        if len(lst) > 0:
-            ret = lst[0]
-    except Exception as e:
-        logger.error('Exception: %s', str(e))
     return ret
 
 
@@ -710,8 +616,6 @@ def GetVC(userName, vcName):
     data_handler = DataHandler()
 
     cluster_status, _ = data_handler.GetClusterStatus()
-    if not cluster_status:
-        return ret
     cluster_total = cluster_status["gpu_capacity"]
     cluster_available = cluster_status["gpu_avaliable"]
     cluster_reserved = cluster_status["gpu_reserved"]
@@ -775,14 +679,6 @@ def GetVC(userName, vcName):
                 user_name = user_name.split("@")[0].strip()
                 vc["user_status"].append({"userName":user_name, "userGPU":user_gpu.ToSerializable()})
 
-            try:
-                gpu_idle_url = config["gpu_reporter"] + '/gpu_idle'
-                gpu_idle_params = {"vc": vcName}
-                gpu_idle_response = requests.get(gpu_idle_url, params=gpu_idle_params)
-                gpu_idle_json = gpu_idle_response.json()
-                vc["gpu_idle"] = gpu_idle_json
-            except Exception:
-                logger.exception("Failed to fetch gpu_idle from gpu-exporter")
             vc["user_status_preemptable"] = []
             for user_name, user_gpu in user_status_preemptable.iteritems():
                 user_name = user_name.split("@")[0].strip()
@@ -1099,7 +995,6 @@ def getAlias(username):
     if "/" in username:
         username = username.split("/")[1].strip()
     return username
-
 
 
 if __name__ == '__main__':

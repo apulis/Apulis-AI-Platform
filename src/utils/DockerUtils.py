@@ -217,16 +217,14 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
         system_docker_registry = config["dockers"]["hub"]
         system_docker_tag = config["dockers"]["tag"]
         system_docker_dic = config["dockers"]["system"]
-        customize_docker_dic = config["dockers"]["customize"]
         docker_list = get_docker_list(rootdir, dockerprefix, dockertag, None, verbose )
-        # print("Customized_dic: %s" % customize_docker_dic)
         # Populate system dockers 
         for assemblename, tupl in docker_list.items():
             # print assemblename
             dockername, deploydir = tupl
             if dockername in system_docker_dic:
                 # system docker 
-                tag = system_docker_dic[dockername]["tag"] if dockername in system_docker_dic and "tag" in system_docker_dic[dockername] else system_docker_tag
+                tag = system_docker_dic[dockername]["tag"] if "tag" in system_docker_dic[dockername] else system_docker_tag
                 prefix = ""
                 # dirname = os.path.join(rootdir, dockername)
                 # our target is to use rootdir/dockername in the future

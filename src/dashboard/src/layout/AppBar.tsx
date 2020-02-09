@@ -269,7 +269,7 @@ const DashboardAppBar: React.FC = () => {
           <Grid item >
             <TeamMenu />
           </Grid>
-          <Grid item style={{ marginLeft:'10px' }}>
+          <Grid item style={{ marginLeft:'5' }}>
             <UserButton />
           </Grid>
           <Grid item>

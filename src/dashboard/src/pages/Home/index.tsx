@@ -5,9 +5,7 @@ import ClustersContext from "../../contexts/Clusters";
 import GPUCard from "./GPUCard";
 import _ from 'lodash';
 const Home: React.FC = () => {
-
   const { clusters } = React.useContext(ClustersContext);
-  console.log(clusters)
   return (
     <>
       <Box display="flex" flexWrap="wrap" paddingTop={5}>

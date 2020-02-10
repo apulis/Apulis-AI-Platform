@@ -60,15 +60,21 @@ const Loading = (
 const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children }) => (
 
   <BrowserRouter>
-    <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
-      <TeamProvider>
-        <ClustersProvider>
-          <ThemeProvider theme={theme}>
-            {children}
-          </ThemeProvider>
-        </ClustersProvider>
-      </TeamProvider>
-    </UserProvider>
+    <ConfigProvider>
+      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
+        <SnackbarProvider>
+          <ConfirmProvider>
+            <TeamProvider>
+              <ClustersProvider>
+                <ThemeProvider theme={theme}>
+                  {children}
+                </ThemeProvider>
+              </ClustersProvider>
+            </TeamProvider>
+          </ConfirmProvider>
+        </SnackbarProvider>
+      </UserProvider>
+    </ConfigProvider>
   </BrowserRouter>
 );
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {

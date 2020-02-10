@@ -107,6 +107,9 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
               <Route strict exact path="/jobs-v2/" component={JobsV2}/>
               <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
               <Route path="/cluster-status" component={ClusterStatus}/>
+              <Route path="/vc" component={Vc} />
+              <Route path="/user" component={User} />
+              <Route path="/access" component={Access} />
               <Redirect to="/"/>
             </Switch>
           </React.Suspense>

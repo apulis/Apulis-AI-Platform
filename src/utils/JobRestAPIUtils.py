@@ -564,7 +564,7 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                 # Update Ace
                 permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
                 resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-                AuthorizationManager.UpdateAce(userName, resourceAclPath, permission, False)
+                ACLManager.UpdateAce(userName, resourceAclPath, permission, False)
 
         dataHandler.Close()
     except Exception as e:

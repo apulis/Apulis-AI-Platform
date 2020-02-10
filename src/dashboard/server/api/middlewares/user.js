@@ -23,7 +23,7 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
   } else if (context.cookies.get('token')) {
     try {
       const token = context.cookies.get('token')
-      const user = context.state.user = User.fromCookie(context, token)
+      const user = context.state.user = User.fromCookieToken(context, token)
       await user.password
       await user.addGroupLink
       await user.WikiLink

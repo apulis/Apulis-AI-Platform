@@ -376,11 +376,12 @@ class Cluster extends Service {
      * @returns {Promise<import('node-fetch').Response>}
      */
   async fetch (path, init) {
-    const url = new URL(path, this.config.restfulapi)
+    const url = this.config.restfulapi + path
+    console.log('url', url)
     const begin = Date.now()
     this.context.log.info({ url, init }, 'Cluster fetch request')
     try {
-      const response = await fetch(this.config.restfulapi + path, init)
+      const response = await fetch(url, init)
       const duration = Date.now() - begin
       this.context.log.info({ url, init, status: response.status, duration }, 'Cluster fetch response')
       return response

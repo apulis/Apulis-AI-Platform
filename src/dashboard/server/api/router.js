@@ -13,10 +13,10 @@ router.get('/bootstrap.js',
   router.get('/authenticate',
     require('./controllers/authenticate'))
 // }
-if (authEnabled.Wechat) {
+// if (authEnabled.Wechat) {
   router.get('/authenticate/wechat',
     require('./controllers/authenticate/wechat'))
-}
+// }
 
 router.get('/authenticate/logout',
   require('./controllers/authenticate/logout'))

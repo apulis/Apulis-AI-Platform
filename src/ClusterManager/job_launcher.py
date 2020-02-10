@@ -631,14 +631,16 @@ class PythonLauncher(Launcher):
             job_description = "\n---\n".join([yaml.dump(pod) for pod in pods])
             job_description_path = "jobfiles/" + time.strftime("%y%m%d") + "/" + job_object.job_id + "/" + job_object.job_id + ".yaml"
             local_jobDescriptionPath = os.path.realpath(os.path.join(config["storage-mount-path"], job_description_path))
+
             if not os.path.exists(os.path.dirname(local_jobDescriptionPath)):
                 os.makedirs(os.path.dirname(local_jobDescriptionPath))
+
             with open(local_jobDescriptionPath, 'w') as f:
                 f.write(job_description)
 
             secrets = pod_template.generate_secrets(job_object)
-
             job_deployer = JobDeployer()
+
             try:
                 secrets = job_deployer.create_secrets(secrets)
                 ret["output"] = "Created secrets: {}. ".format([secret.metadata.name for secret in secrets])
@@ -672,6 +674,7 @@ class PythonLauncher(Launcher):
             logger.error("Submit job failed: %s" % job, exc_info=True)
             ret["error"] = str(e)
             retries = dataHandler.AddandGetJobRetries(job["jobId"])
+
             if retries >= 5:
                 detail = get_job_status_detail(job)
                 detail = job_status_detail_with_finished_time(detail, "error", "Server error in job submission")

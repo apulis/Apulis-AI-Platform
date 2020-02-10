@@ -282,6 +282,8 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
         if "job-exporter" in config["dockers"]["container"]:
  
             dockername = "job-exporter"
+            dockertag = "1.8"
+
             config["dockers"]["container"][dockername] = {
                 "dirname": os.path.join("./deploy/docker-images", dockername ),  
                 "fullname": config["worker-dockerregistry"] + dockername + ":" + dockertag, 
@@ -295,6 +297,8 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
         if "watchdog" in config["dockers"]["container"]:
 
             dockername = "watchdog"
+            dockertag = "1.8"
+
             config["dockers"]["container"][dockername] = {
                 "dirname": os.path.join("./deploy/docker-images", dockername ),  
                 "fullname": config["worker-dockerregistry"] + dockername + ":" + dockertag, 

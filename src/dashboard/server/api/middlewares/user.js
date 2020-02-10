@@ -8,7 +8,7 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
     const { userName, token } = context.query
     const user = context.state.user = User.fromToken(context, userName, token)
     await user.getAccountInfo()
-    context.log.warn(user, 'Authenticated by token') 
+    context.log.warn(user, 'Authenticated by token')
   }
   if ('email' in context.query) {
     let { email, password } = context.query
@@ -28,7 +28,6 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
       await user.addGroupLink
       await user.WikiLink
       context.log.info(user, 'Authenticated by cookie')
-      context.user = user
     } catch (error) {
       context.log.error(error, 'Error in cookie authentication')
     }

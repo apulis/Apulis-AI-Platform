@@ -11,13 +11,12 @@ const frontendConfig = config.has('frontend')
 
 /** @type {import('koa').Middleware<State>} */
 module.exports = (context) => {
-  console.log('1111111', context)
-  const { user } = context
+  const { user } = context.state
   const parameter = { config: frontendConfig, user }
   context.type = 'js'
   if (user) {
     context.body = `bootstrap(${JSON.stringify({ ...user, password: '******' })})`
   } else {
-    context.body = `bootstrap(${JSON.stringify({ ...user })})`
+    context.body = `bootstrap(${JSON.stringify(undefined)})`
   }
 }

@@ -9,10 +9,10 @@ router.get('/',
 router.get('/bootstrap.js',
   require('./middlewares/user')(false),
   require('./controllers/bootstrap'))
-if (authEnabled.Microsoft) {
+// if (authEnabled.Microsoft) {
   router.get('/authenticate',
     require('./controllers/authenticate'))
-}
+// }
 if (authEnabled.Wechat) {
   router.get('/authenticate/wechat',
     require('./controllers/authenticate/wechat'))

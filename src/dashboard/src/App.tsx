@@ -75,7 +75,6 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, user
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   const { openId, group, userName } = React.useContext(UserContext);
   const { teams } = React.useContext(TeamsContext);
-
   React.useEffect(() => {
     if (openId === undefined || group === undefined) {
       history.replace('/sign-in');

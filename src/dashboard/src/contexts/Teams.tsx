@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import useFetch from "use-http";
 import {
   Box, Button,
@@ -10,27 +10,24 @@ import {
 
 import _ from "lodash";
 
+import ConfigContext from './Config';
+
 interface Context {
   teams: any;
   selectedTeam: any;
   saveSelectedTeam(team: React.SetStateAction<string>): void;
-  WikiLink: string;
 }
 
 const Context = React.createContext<Context>({
   teams: [],
   selectedTeam: '',
   saveSelectedTeam: function(team: React.SetStateAction<string>) {},
-  WikiLink: '',
 });
 
 export default Context;
-interface ProviderProps {
-  addGroupLink: string;
-  WikiLink: string;
-}
-export const Provider: React.FC<ProviderProps> = ({addGroupLink,WikiLink ,children }) => {
+export const Provider: React.FC = ({ children }) => {
   const fetchTeamsUrl = '/api/teams';
+  const { addGroup } = useContext(ConfigContext);
   const { data: teams } = useFetch(fetchTeamsUrl, { onMount: true });
   const [selectedTeam, setSelectedTeam] = React.useState<string>('');
   const saveSelectedTeam = (team: React.SetStateAction<string>) => {
@@ -39,16 +36,15 @@ export const Provider: React.FC<ProviderProps> = ({addGroupLink,WikiLink ,childr
     window.location.reload()
   };
   useEffect(()=> {
-    console.log("--------------->", WikiLink)
     if (localStorage.getItem('team')) {
       setSelectedTeam((String)(localStorage.getItem('team')))
     } else {
       setSelectedTeam(_.map(teams, 'id')[0]);
     }
   },[teams])
-  const EmptyTeam: React.FC<ProviderProps> = () => {
+  const EmptyTeam: React.FC = () => {
     const onClick = () => {
-      window.open(addGroupLink,"_blank");
+      window.open(addGroup, "_blank");
     }
     return (
       <Box display="flex">

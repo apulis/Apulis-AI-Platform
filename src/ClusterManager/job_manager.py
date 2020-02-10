@@ -11,8 +11,6 @@ import collections
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../storage"))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 
-from JobRestAPIUtils import GetJobTotalGpu
-from jobs_tensorboard import GenTensorboardMeta
 import k8sUtils
 import joblog_manager
 import notify
@@ -25,55 +23,12 @@ import base64
 from ResourceInfo import ResourceInfo
 import quota
 
-import re
-import thread
-import threading
-import random
 from prometheus_client import Histogram
 import redis
 
 import logging
 import logging.config
 from job import Job, JobSchema
-from pod_template import PodTemplate
-from dist_pod_template import DistPodTemplate
-from job_deployer import JobDeployer
-from job_role import JobRole
-
-from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time
-
-
-def all_pods_not_existing(job_id):
-    job_deployer = JobDeployer()
-    job_roles = JobRole.get_job_roles(job_id)
-    statuses = [job_role.status() for job_role in job_roles]
-    logging.info("Job: {}, status: {}".format(job_id, statuses))
-    return all([status == "NotFound" for status in statuses])
-
-def create_log( logdir = '/var/log/dlworkspace' ):
-    if not os.path.exists( logdir ):
-        os.system("mkdir -p " + logdir )
-    with open('logging.yaml') as f:
-        logging_config = yaml.load(f)
-        f.close()
-        logging_config["handlers"]["file"]["filename"] = logdir+"/jobmanager.log"
-        logging.config.dictConfig(logging_config)
-
-def SubmitJob(job):
-    # check if existing any pod with label: run=job_id
-    assert("jobId" in job)
-    job_id = job["jobId"]
-    if not all_pods_not_existing(job_id):
-        logging.warning("Waiting until previously pods are cleaned up! Job {}".format(job_id))
-        job_deployer = JobDeployer()
-        errors = job_deployer.delete_job(job_id, force=True)
-        if errors:
-            logging.warning("Force delete job {}: {}".format(job_id, errors))
-        return
-
-    ret = {}
-    dataHandler = DataHandler()
-
 from job_launcher import JobDeployer, JobRole, PythonLauncher
 
 from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time, record
@@ -517,10 +472,6 @@ def get_job_priority(priority_dict, job_id):
         return priority_dict[job_id]
     return 100
 
-    for sji in jobsInfo:
-        logging.info("TakeJobActions : job : %s : %s : %s" % (sji["jobParams"]["jobName"], sji["localResInfo"].CategoryToCountMap, sji["sortKey"]))
-        if sji["jobParams"]["preemptionAllowed"]:
-            localResInfo.UnblockResourceCategory(sji["localResInfo"])
 
 @record
 def TakeJobActions(data_handler, redis_conn, launcher, jobs):
@@ -636,34 +587,22 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     for sji in jobsInfo:
         try:
             if sji["job"]["jobStatus"] == "queued" and (sji["allowed"] is True):
-                
                 launcher.submit_job(sji["job"])
                 update_job_state_latency(redis_conn, sji["jobId"], "scheduling")
-
                 logger.info("TakeJobActions : submitting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
-
             elif sji["preemptionAllowed"] and (sji["job"]["jobStatus"] == "scheduling" or sji["job"]["jobStatus"] == "running") and (sji["allowed"] is False):
-
                 launcher.kill_job(sji["job"]["jobId"], "queued")
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
-
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
-
                 vc_name = sji["job"]["vcName"]
                 available_resource = vc_resources[vc_name]
                 requested_resource = sji["globalResInfo"]
                 detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource, available_resource)}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
-
-            else:
-                pass
-
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)
 
-    logging.info("TakeJobActions : job desired actions taken")
-    return
-
+    logger.info("TakeJobActions : job desired actions taken")
 
 def Run(redis_port, target_status):
     register_stack_trace_dump()

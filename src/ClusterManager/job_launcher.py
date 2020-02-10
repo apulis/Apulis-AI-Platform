@@ -601,12 +601,10 @@ class PythonLauncher(Launcher):
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()
             blobfuse_secret_template = job_object.get_blobfuse_secret_template()
             image_pull_secret_template = job_object.get_image_pull_secret_template()
-
             secret_templates = {
                 "blobfuse": blobfuse_secret_template,
                 "imagePull": image_pull_secret_template
             }
-
             if job_object.params["jobtrainingtype"] == "RegularJob":
                 pod_template = PodTemplate(job_object.get_template(),
                                            enable_custom_scheduler=enable_custom_scheduler,
@@ -633,10 +631,10 @@ class PythonLauncher(Launcher):
             job_description = "\n---\n".join([yaml.dump(pod) for pod in pods])
             job_description_path = "jobfiles/" + time.strftime("%y%m%d") + "/" + job_object.job_id + "/" + job_object.job_id + ".yaml"
             local_jobDescriptionPath = os.path.realpath(os.path.join(config["storage-mount-path"], job_description_path))
-            
+
             if not os.path.exists(os.path.dirname(local_jobDescriptionPath)):
                 os.makedirs(os.path.dirname(local_jobDescriptionPath))
-                
+
             with open(local_jobDescriptionPath, 'w') as f:
                 f.write(job_description)
 
@@ -670,10 +668,8 @@ class PythonLauncher(Launcher):
                 "lastUpdated": datetime.datetime.now().isoformat(),
                 "jobMeta": jobMetaStr
             }
-
             conditionFields = {"jobId": job_object.job_id}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
-
         except Exception as e:
             logger.error("Submit job failed: %s" % job, exc_info=True)
             ret["error"] = str(e)

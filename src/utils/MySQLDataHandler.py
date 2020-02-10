@@ -91,7 +91,7 @@ class DataHandler(object):
         if "initSQLTable" not in global_vars or not global_vars["initSQLTable"]:
             logger.info("===========init SQL Tables ===============")
             global_vars["initSQLTable"] = True
-            
+
             sql = """
                 CREATE TABLE IF NOT EXISTS `%s`
                 (
@@ -463,7 +463,7 @@ class DataHandler(object):
         cursor = self.conn.cursor()
         query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []
-        
+
         try:
             cursor.execute(query)
             for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in cursor:
@@ -563,6 +563,33 @@ class DataHandler(object):
         except Exception as e:
             logger.error('UpdateIdentityInfo Exception: %s', str(e))
             return False
+
+    @record
+    def UpdateIdentityInfoPerm(self, identityName, isAdmin, isAuthorized):
+        try:
+            cursor = self.conn.cursor()
+            sql = """update `%s` set isAdmin = '%s', isAuthorized = '%s' where `identityName` = '%s' """ % (self.accounttablename, isAdmin, isAuthorized, identityName)
+            cursor.execute(sql)
+            self.conn.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+
+    @record
+    def GetAceCount(self, identityName, resource):
+        cursor = self.conn.cursor()
+        query = "SELECT count(ALL id) as c FROM `%s` where `identityName` = '%s' and `resource` = '%s'" % (self.acltablename,identityName, resource)
+        cursor.execute(query)
+        ret = 0
+        for c in cursor:
+            ret = c[0]
+        self.conn.commit()
+        cursor.close()
+        return ret
+
 
     @record
     def UpdateAce(self, identityName, identityId, resource, permissions, isDeny):

@@ -4,8 +4,6 @@ import json
 import requests
 import random
 from config import config
-import timeit
-from cache import fcache
 import time
 import threading
 from cachetools import cached, TTLCache
@@ -48,25 +46,31 @@ class AuthorizationManager:
 
     # Check if user has requested access (based on effective ACL) on the specified resource.
     @staticmethod
-    @fcache(TTLInSec=300)
-    def _HasAccess(identityName, resourceAclPath, permissions):
-        start_time = timeit.default_timer()
-        requestedAccess = '%s;%s;%s' % (str(identityName), resourceAclPath, str(permissions))
-        try:           
-            identities = []
-            identities.extend(IdentityManager.GetIdentityInfoFromDB(identityName)["groups"])
+    def _HasAccess(identity_name, resource_acl_path, permissions):
+        start_time = time.time()
+        requested_access = "%s;%s;%s" % (str(identity_name), resource_acl_path, str(permissions))
+        try:
+            identities = set([])
+            try:
+                identities = IdentityManager.GetIdentityInfoFromDB(identity_name)["groups"]
+                identities = set(map(lambda x: int(x), identities))
+            except Exception as e:
+                logger.warn("Failed to get identities list: %s" % e)
 
             #TODO: handle isDeny
-            while resourceAclPath:
-                #logger.debug('resourceAclPath ' + resourceAclPath)
-                acl = DataManager.GetResourceAcl(resourceAclPath)
+            while resource_acl_path:
+                acl = ACLManager.GetResourceAcl(resource_acl_path)
+
                 for ace in acl:
-                    if ace["identityName"] == identityName:
-                        permissions = permissions & (~ace["permissions"])
-                        if not permissions:
-                            logger.info('Yes for %s in time %s' % (requestedAccess, str(timeit.default_timer() - start_time)))
+                    ace_id = int(ace["identityId"])
+                    id_in_identities = ace_id in identities
+                    id_in_range = ace_id < INVALID_RANGE_START or ace_id > INVALID_RANGE_END
+                    if ace["identityName"] == identity_name or (id_in_identities and id_in_range):
+                        permission = permissions & (~ace["permissions"])
+                        if not permission:
+                            logger.info('Yes for %s in time %f' % (requested_access, time.time() - start_time))
                             return True
-                    
+
                     identities = []
                     identities.extend(IdentityManager.GetIdentityInfoFromDB(identityName)["groups"])
                     for identity in identities:
@@ -77,13 +81,11 @@ class AuthorizationManager:
                                 logger.info('Yes for %s in time %s' % (requestedAccess, str(timeit.default_timer() - start_time)))
                                 return True
 
-                resourceAclPath = AuthorizationManager.__GetParentPath(resourceAclPath)
-            logger.info('No for %s in time %s' % (requestedAccess, str(timeit.default_timer() - start_time)))
+            logger.info("No for %s in time %s" % (requested_access, time.time() - start_time))
             return False
 
         except Exception as e:
-            logger.error('Exception: '+ str(e))
-            logger.warn('No (exception) for %s in time %s' % (requestedAccess, str(timeit.default_timer() - start_time)))
+            logger.error("No (exception) for %s in time %f, ex: %s", requested_access, time.time() - start_time, str(e))
             return False
 
 
@@ -134,7 +136,7 @@ class AuthorizationManager:
 
 
 class ACLManager:
-    # Add/Update a specific access control entry. 
+    # Add/Update a specific access control entry.
     @staticmethod
     def UpdateAce(identityName, resource, permissions, isDeny):
         dataHandler = DataHandler()
@@ -143,7 +145,7 @@ class ACLManager:
             identityId = 0
             # if identityName.isdigit():
             #     identityId = int(identityName)
-            # else:               
+            # else:
             identityId = IdentityManager.GetIdentityInfoFromDB(identityName)["uid"]
             if identityId == INVALID_ID:
                 info = IdentityManager.GetIdentityInfoFromAD(identityName)
@@ -151,9 +153,6 @@ class ACLManager:
                 identityId = info["uid"]
             return dataHandler.UpdateAce(identityName, identityId, resourceAclPath, permissions, isDeny)
 
-            with acl_cache_lock:
-                acl_cache.pop(resourceKeyPrefix + resource, None)
-                acl_cache.pop(identityKeyPrefix + identityName, None)
         except Exception as e:
             logger.warn("Fail to Update Ace for user %s, ex: %s" , identityName, str(e))
         finally:
@@ -181,7 +180,7 @@ class ACLManager:
     def DeleteResourceAcl(resource):
         dataHandler = DataHandler()
         ret = False
-        try:           
+        try:
             ret = dataHandler.DeleteResourceAcl(resource)
 
             with acl_cache_lock:

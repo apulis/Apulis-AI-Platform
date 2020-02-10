@@ -6,6 +6,7 @@ const app = module.exports = new Koa()
 
 require('./configurations/logger')(app)
 require('./configurations/config')(app)
+const router = require('./router')
 
 app.use(mount('/v2', require('./v2/router').routes()))
 app.use(mount('/v2', require('./v2/router').allowedMethods()))

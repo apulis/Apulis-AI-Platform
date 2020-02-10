@@ -58,8 +58,8 @@ const ClusterStatus: FC = () => {
     if (!response || !responseUrls) {
       return;
     }
-    const {grafana, prometheus} = responseUrls;
-    const getIdleGPUPerUser = `${prometheus}/prometheus/api/v1/query?`;
+    const {grafana} = responseUrls;
+    const getIdleGPUPerUser = `${grafana}/api/datasources/proxy/1/api/v1/query?`;
 
     response['getIdleGPUPerUserUrl'] = getIdleGPUPerUser;
     response['ClusterName'] = cluster;
@@ -98,7 +98,6 @@ const ClusterStatus: FC = () => {
         } else {
           userfetchs = res.filter((vc: any) => vc['ClusterName'] === localStorage.getItem('selectedCluster'))[0];
         }
-        console.log('----> user',userfetchs)
         const newuserStatusPreemptable: any = [];
         if (userfetchs['user_status_preemptable']) {
           userfetchs['user_status_preemptable'].map( (item: any) => {
@@ -164,39 +163,8 @@ const ClusterStatus: FC = () => {
             if (!mu.hasOwnProperty('booked')) {
               mu['booked'] = "0";
             }
-            let tmpMerged = _.values(mergeTwoObjsByKey(fetchIdes,fetchUsrs,'userName'));
-            _.values(tmpMerged).forEach((mu: any)=>{
-              if (!mu.hasOwnProperty('usedGPU')) {
-                mu['usedGPU'] = "0";
-              }
-              if (!mu.hasOwnProperty('idleGPU')) {
-                mu['idleGPU'] = "0";
-              }
-              if (!mu.hasOwnProperty('booked')) {
-                mu['booked'] = "0";
-              }
-              if (!mu.hasOwnProperty('idle')) {
-                mu['idle'] = "0";
-              }
-              if (!mu.hasOwnProperty('preemptableGPU')) {
-                mu['preemptableGPU'] = "0";
-              }
-            });
-            let finalUserStatus = _.values(mergeTwoObjsByKey(tmpMerged,prometheusResp,'userName'));
-            let totalRow: any = {};
-            totalRow['userName'] = 'Total';
-            totalRow['booked'] = 0;
-            totalRow['idle'] = 0;
-            totalRow['usedGPU'] = 0;
-            totalRow['idleGPU'] = 0;
-            totalRow['preemptableGPU'] = 0;
-            for (let us of finalUserStatus) {
-              console.log(us['preemptableGPU']);
-              totalRow['booked'] += parseInt(us['booked']);
-              totalRow['idle'] += parseInt(us['idle']);
-              totalRow['usedGPU'] += parseInt(us['usedGPU']);
-              totalRow['idleGPU'] += parseInt(us['idleGPU']);
-              totalRow['preemptableGPU'] += parseInt(us['preemptableGPU']);
+            if (!mu.hasOwnProperty('booked')) {
+              mu['booked'] = "0";
             }
             if (!mu.hasOwnProperty('preemptableGPU')) {
               mu['preemptableGPU'] = "0";

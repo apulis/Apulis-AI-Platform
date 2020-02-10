@@ -79,7 +79,6 @@ module.exports = async context => {
       context.log.error({ idToken }, 'getDecodedIdToken failed')
       return context.redirect('/')
     }
-    
     const user = User.fromIdToken(context, idToken)
     await user.getAccountInfo()
     /* context.cookies.set('token', user.toCookie()) */

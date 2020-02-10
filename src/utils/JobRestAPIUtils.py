@@ -110,7 +110,12 @@ def SubmitJob(jobParamsJsonStr):
         jobParams["preemptionAllowed"] = False
     else:
         jobParams["preemptionAllowed"] = ToBool(jobParams["preemptionAllowed"])
-    
+
+    if "preemptionAllowed" not in jobParams:
+        jobParams["preemptionAllowed"] = False
+    else:
+        jobParams["preemptionAllowed"] = ToBool(jobParams["preemptionAllowed"])
+
     uniqId = str(uuid.uuid4())
     if "jobId" not in jobParams or jobParams["jobId"] == "":
         #jobParams["jobId"] = jobParams["jobName"] + "-" + str(uuid.uuid4())
@@ -517,7 +522,7 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
     try:
         dataHandler = DataHandler()
         lst = dataHandler.GetAccountByOpenId(openId, group)
-        
+
         # Register
         if len(lst) == 0:
             if nickName is None or len(nickName) < 1:
@@ -555,7 +560,7 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                     gid = 3999
                     groups = ['Other']
                 dataHandler.UpdateIdentityInfo(userName, accountInfo["uid"], gid, groups)
-                
+
                 # Update Ace
                 permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
                 resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)

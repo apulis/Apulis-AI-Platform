@@ -105,6 +105,7 @@ spec:
   {% if job["hostIPC"] %}
   hostIPC: true
   {% endif %}
+  {% if job["initialize"] %}
   initContainers:
   - name: init
     imagePullPolicy: Always
@@ -136,6 +137,7 @@ spec:
     - name: DLWS_HOST_NETWORK
       value: "enable"
     {% endif %}
+  {% endif %}
   containers:
   - name: {{ job["podName"] }}
     image: {{ job["image"] }}

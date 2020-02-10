@@ -176,6 +176,7 @@ class PodTemplate():
             pod_path = job.get_hostpath(job.job_path, "master")
             pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
             if os.environ.get("INIT_CONTAINER_IMAGE"):
+                pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")
 
             k8s_pod = self.generate_pod(pod, params["cmd"])

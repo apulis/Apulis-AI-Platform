@@ -149,10 +149,13 @@ class ACLManager:
             identityId = IdentityManager.GetIdentityInfoFromDB(identityName)["uid"]
             if identityId == INVALID_ID:
                 info = IdentityManager.GetIdentityInfoFromAD(identityName)
-                dataHandler.UpdateIdentityInfo(identityName, info["uid"], info["gid"], info["groups"])
+                IdentityManager.UpdateIdentityInfo(identityName, info["uid"], info["gid"], info["groups"])
                 identityId = info["uid"]
-            return dataHandler.UpdateAce(identityName, identityId, resourceAclPath, permissions, isDeny)
+            ret = dataHandler.UpdateAce(identityName, identityId, resource, permissions, isDeny)
 
+            with acl_cache_lock:
+                acl_cache.pop(resourceKeyPrefix + resource, None)
+                acl_cache.pop(identityKeyPrefix + identityName, None)
         except Exception as e:
             logger.warn("Fail to Update Ace for user %s, ex: %s" , identityName, str(e))
         finally:

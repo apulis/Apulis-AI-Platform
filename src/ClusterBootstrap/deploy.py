@@ -2046,7 +2046,7 @@ def config_webui(nargs):
 
     for node in all_nodes:
         # pull new image
-        remotecmd = "sudo docker pull %s" %s reponame 
+        remotecmd = "sudo docker pull %s" % reponame 
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
         # todo: 
@@ -3413,6 +3413,8 @@ def run_command( args, command, nargs, parser ):
 
     with open(config_file) as f:
         merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+        f.close()
+
     if os.path.exists("./deploy/clusterID.yml"):
         with open("./deploy/clusterID.yml") as f:
             tmp = yaml.load(f, Loader=yaml.FullLoader)

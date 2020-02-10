@@ -71,15 +71,7 @@ class AuthorizationManager:
                             logger.info('Yes for %s in time %f' % (requested_access, time.time() - start_time))
                             return True
 
-                    identities = []
-                    identities.extend(IdentityManager.GetIdentityInfoFromDB(identityName)["groups"])
-                    for identity in identities:
-                        #logger.debug('identity %s' % identity)
-                        if str(ace["identityId"]) == str(identity)  and (int(identity) < INVALID_RANGE_START or int(identity) > INVALID_RANGE_END):
-                            permissions = permissions & (~ace["permissions"])
-                            if not permissions:
-                                logger.info('Yes for %s in time %s' % (requestedAccess, str(timeit.default_timer() - start_time)))
-                                return True
+                resource_acl_path = AuthorizationManager.__GetParentPath(resource_acl_path)
 
             logger.info("No for %s in time %s" % (requested_access, time.time() - start_time))
             return False

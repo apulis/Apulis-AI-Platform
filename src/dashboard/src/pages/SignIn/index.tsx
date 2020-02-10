@@ -5,6 +5,8 @@ import { RouteComponentProps } from "react-router-dom"
 import { Box, Grid, Paper, Typography, Button, CircularProgress } from "@material-ui/core";
 import { createStyles, makeStyles } from "@material-ui/core/styles";
 
+// import config from 'config'
+
 import image1 from "./image1.jpeg";
 import image2 from "./image2.jpeg";
 import image3 from "./image3.jpeg";
@@ -20,17 +22,17 @@ const useStyles = makeStyles(() => createStyles({
 }));
 
 const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
+  
   enum SIGNIN_STATUS {
     Initial = 0,
     Microsoft,
-    Dingtalk,
-    Zhejianglab
+    Wechat,
   }
   const { openId, group } = React.useContext(UserContext);
   const [signInStatus, setSignInStatus] = React.useState(SIGNIN_STATUS.Initial);
   const onButtonClick = React.useCallback((status) => {
     setSignInStatus(status);
-  }, []);
+  }, [])
 
   React.useEffect(() => {
     if (openId !== undefined && group !== undefined) {
@@ -71,24 +73,14 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                   <Button
                     variant="outlined"
                     color="primary"
-                    href="/api/authenticate/dingtalk"
-                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
-                    onClick={() => onButtonClick(SIGNIN_STATUS.Dingtalk)}
+                    href="/api/authenticate/wechat"
+                    disabled={true}
+                    onClick={() => onButtonClick(SIGNIN_STATUS.Wechat)}
                   >
-                    {signInStatus === SIGNIN_STATUS.Dingtalk ? <CircularProgress size={24} /> : 'Sign in with Dingtalk'}
+                    {signInStatus === SIGNIN_STATUS.Wechat ? <CircularProgress size={24} /> : 'Sign in with Wechat'}
                   </Button>
                 </Grid>
-                <Grid item>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    href="/api/authenticate/zjlab"
-                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
-                    onClick={() => onButtonClick(SIGNIN_STATUS.Zhejianglab)}
-                  >
-                    {signInStatus === SIGNIN_STATUS.Zhejianglab ? <CircularProgress size={24} /> : 'Sign in with Zhejianglab'}
-                  </Button>
-                </Grid>
+
               </Grid>
 
               <Grid item>

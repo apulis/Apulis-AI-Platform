@@ -3446,7 +3446,10 @@ def run_command( args, command, nargs, parser ):
     # additional glusterfs launch parameter.
     config["launch-glusterfs-opt"] = args.glusterfs;
     get_ssh_config()
+
+    #pdb.set_trace()
     configuration( config, verbose )
+
     if args.yes:
         global defanswer
         print "Use yes for default answer"
@@ -3460,6 +3463,7 @@ def run_command( args, command, nargs, parser ):
         print "deploy " + command + " " + (" ".join(nargs))
         print "PlatformScripts = {0}".format(config["platform-scripts"])
 
+    #pdb.set_trace()
     if command == "restore":
         # Second part of restore, after config has been read.
         if os.path.exists("./deploy/acs_kubeclusterconfig"):

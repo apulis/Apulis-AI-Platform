@@ -71,7 +71,6 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, user
     </UserProvider>
   </BrowserRouter>
 );
-
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   const { openId, group, userName } = React.useContext(UserContext);
   const { teams } = React.useContext(TeamsContext);
@@ -128,6 +127,8 @@ const App: React.FC<BootstrapProps> = (props) => (
         <React.Suspense fallback={Loading}>
           <Switch>
             <Route exact path="/sign-in" component={SignIn}/>
+            <Route exact path="/sign-up" component={SignUp} />
+            <Route exact path="/empty-team" component={EmptyTeam} />
             <Route component={Layout}/>
           </Switch>
         </React.Suspense>

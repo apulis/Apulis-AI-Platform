@@ -62,7 +62,7 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                   <Button
                     variant="outlined"
                     color="primary"
-                    href="/api/authenticate/wechat"
+                    href="/api/authenticate"
                     disabled={signInStatus !== SIGNIN_STATUS.Initial}
                     onClick={() => onButtonClick(SIGNIN_STATUS.Microsoft)}
                   >
@@ -73,8 +73,8 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
                   <Button
                     variant="outlined"
                     color="primary"
-                    href="/api/authenticate"
-                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                    href="/api/authenticate/wechat"
+                    disabled={true}
                     onClick={() => onButtonClick(SIGNIN_STATUS.Wechat)}
                   >
                     {signInStatus === SIGNIN_STATUS.Wechat ? <CircularProgress size={24} /> : 'Sign in with Wechat'}

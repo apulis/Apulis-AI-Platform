@@ -197,11 +197,10 @@ class Cluster extends Service {
    * @return {Promise<Array>}
    */
   async getTeams () {
-    const { user } = this.context
+    const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.userName
     })
-
     const response = await this.fetch('/ListVCs?' + params)
     const data = await response.json()
     this.context.log.debug(data, 'Listed VC')
@@ -377,7 +376,6 @@ class Cluster extends Service {
      */
   async fetch (path, init) {
     const url = this.config.restfulapi + path
-    console.log('url', url)
     const begin = Date.now()
     this.context.log.info({ url, init }, 'Cluster fetch request')
     try {
@@ -388,7 +386,7 @@ class Cluster extends Service {
     } catch (error) {
       const duration = Date.now() - begin
       console.log('err', error)
-      // this.context.log.error({ url, init, error, duration }, 'Cluster fetch error')
+      this.context.log.error({ url, init, error, duration }, 'Cluster fetch error')
       throw error
     }
   }

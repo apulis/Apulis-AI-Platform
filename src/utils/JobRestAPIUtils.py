@@ -103,7 +103,7 @@ def SubmitJob(jobParamsJsonStr):
     if "vcName" not in jobParams or len(jobParams["vcName"].strip()) == 0:
         ret["error"] = "ERROR: VC name cannot be empty"
         return ret
-    if "userId" not in jobParams or len(jobParams["userId"].strip()) == 0:
+    if "userId" not in jobParams or len(str(jobParams["userId"]).strip()) == 0:
         jobParams["userId"] = GetUser(jobParams["userName"])["uid"]
 
     if "preemptionAllowed" not in jobParams:

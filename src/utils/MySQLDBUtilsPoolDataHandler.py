@@ -1058,7 +1058,7 @@ class DataHandler(object):
             query = "SELECT `endpoints` from `%s` where `jobStatus` = '%s' and `endpoints` is not null" % (self.jobtablename, "running")
             cursor.execute(query)
             jobs = cursor.fetchall()
-            self.conn.commit()
+            conn.commit()
 
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
             endpoints = map(lambda job: self.load_json(job[0]), jobs)
@@ -1085,7 +1085,7 @@ class DataHandler(object):
             query = "SELECT `endpoints` from `%s` where `jobId` = '%s'" % (self.jobtablename, job_id)
             cursor.execute(query)
             jobs = cursor.fetchall()
-            self.conn.commit()
+            conn.commit()
 
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
             endpoints = map(lambda job: self.load_json(job[0]), jobs)
@@ -1251,10 +1251,10 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
             cursor.execute(sql)
-            self.conn.commit()
+            conn.commit()
             ret = True
         except Exception as e:
-            logger.error('updateJobTextFields Exception: %s, ex: %s', fields, str(e))
+            logger.error('updateJobTextFields Exception: %s, ex: %s', dataFields, str(e))
         finally:
             if cursor is not None:
                 cursor.close()
@@ -1303,7 +1303,7 @@ class DataHandler(object):
             columns = [column[0] for column in cursor.description]
             for item in cursor.fetchall():
                 ret = dict(zip(columns, item))
-            self.conn.commit()
+            conn.commit()
         except Exception as e:
             logger.error('GetJobTextFields Exception: %s', str(e))
         finally:

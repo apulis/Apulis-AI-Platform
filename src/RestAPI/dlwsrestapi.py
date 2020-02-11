@@ -21,6 +21,7 @@ from authorization import ResourceType, Permission, AuthorizationManager, ACLMan
 from config import config
 from config import global_vars
 import authorization
+config["datasource"] = "MySQL"
 from DataHandler import DataHandler
 
 import time
@@ -43,7 +44,7 @@ api = Api(app)
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
 logger.info("%s", config)
-config["datasource"] == "MySQL"
+
 
 if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     logger.info("===========Init Admin Access===============")

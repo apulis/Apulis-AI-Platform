@@ -2046,7 +2046,7 @@ def config_webui(nargs):
 
     for node in all_nodes:
         # pull new image
-        remotecmd = "sudo docker pull %s" %s reponame 
+        remotecmd = "sudo docker pull %s" % reponame
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
         # todo: 

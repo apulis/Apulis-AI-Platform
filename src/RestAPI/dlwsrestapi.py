@@ -43,6 +43,7 @@ api = Api(app)
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
 logger.info("%s", config)
+config["datasource"] == "MySQLDBUtilsPool"
 
 if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     logger.info("===========Init Admin Access===============")

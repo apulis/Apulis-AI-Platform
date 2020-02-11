@@ -69,7 +69,6 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
   }), [pageSize]);
   const { support, pause, resume, kill } = useActions(cluster.id);
   const actions = [support, pause, resume, kill];
-
   return (
     <MaterialTable
       title="My Jobs"

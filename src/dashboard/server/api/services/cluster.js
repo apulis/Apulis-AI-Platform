@@ -38,6 +38,8 @@ class Cluster extends Service {
       jobOwner: all ? 'all' : user.userName,
       num: limit
     })
+    console.log('12312312311111111111111112312312313123131231')
+    console.log('params', params)
     const response = await this.fetch('/ListJobs?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()

@@ -103,7 +103,7 @@ def SubmitJob(jobParamsJsonStr):
     if "vcName" not in jobParams or len(jobParams["vcName"].strip()) == 0:
         ret["error"] = "ERROR: VC name cannot be empty"
         return ret
-    if "userId" not in jobParams or len(jobParams["userId"].strip()) == 0:
+    if "userId" not in jobParams or len(str(jobParams["userId"]).strip()) == 0:
         jobParams["userId"] = GetUser(jobParams["userName"])["uid"]
 
     if "preemptionAllowed" not in jobParams:
@@ -564,7 +564,7 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                 # Update Ace
                 permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
                 resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-                AuthorizationManager.UpdateAce(userName, resourceAclPath, permission, False)
+                ACLManager.UpdateAce(userName, resourceAclPath, permission, False)
 
         dataHandler.Close()
     except Exception as e:

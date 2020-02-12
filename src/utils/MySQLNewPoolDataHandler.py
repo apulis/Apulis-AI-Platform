@@ -479,6 +479,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for one in rets:
+                one["groups"] = json.loads(one["groups"])
                 ret.append(one)
         except Exception as e:
             logger.error('GetIdentityInfo Exception: %s', str(e))

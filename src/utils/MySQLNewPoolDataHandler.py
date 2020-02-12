@@ -118,10 +118,9 @@ class DataHandler(object):
                 ) AUTO_INCREMENT=30001;
                 """ % (self.accounttablename)
 
-            cursor = self.conn.cursor()
-            cursor.execute(sql)
-            self.conn.commit()
-            cursor.close()
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
 
             sql = """
                 CREATE TABLE IF NOT EXISTS `%s`
@@ -340,14 +339,8 @@ class DataHandler(object):
             self.storagetablename, vcName)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (storageType, url, metadata, vcName, defaultMountPath) in rets:
-                record = {}
-                record["vcName"] = vcName
-                record["url"] = url
-                record["storageType"] = storageType
-                record["metadata"] = metadata
-                record["defaultMountPath"] = defaultMountPath
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('ListStorages Exception: %s', str(e))
         return ret
@@ -386,12 +379,8 @@ class DataHandler(object):
             query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (vcName, quota, metadata) in rets:
-                record = {}
-                record["vcName"] = vcName
-                record["quota"] = quota
-                record["metadata"] = metadata
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('ListVCs Exception: %s', str(e))
         return ret
@@ -430,17 +419,8 @@ class DataHandler(object):
         try:
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in rets:
-                record = {}
-                record["uid"] = uid
-                record["openId"] = openId
-                record["group"] = group
-                record["nickName"] = nickName
-                record["userName"] = userName
-                record["password"] = password
-                record["isAdmin"] = isAdmin
-                record["isAuthorized"] = isAuthorized
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('ListUser Exception: %s', str(e))
         return ret
@@ -452,16 +432,8 @@ class DataHandler(object):
         try:
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in rets:
-                record = {}
-                record["uid"] = uid
-                record["openId"] = openId
-                record["group"] = group
-                record["nickName"] = nickName
-                record["userName"] = userName
-                record["password"] = password
-                record["isAdmin"] = isAdmin
-                record["isAuthorized"] = isAuthorized
+            for one in rets:
+                ret.append(one)
                 ret.append(record)
 
         except Exception as e:
@@ -475,17 +447,8 @@ class DataHandler(object):
         try:
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (uid, openId, group, nickName, userName,  password, isAdmin, isAuthorized) in rets:
-                record = {}
-                record["uid"] = uid
-                record["openId"] = openId
-                record["group"] = group
-                record["nickName"] = nickName
-                record["userName"] = userName
-                record["password"] = password
-                record["isAdmin"] = isAdmin
-                record["isAuthorized"] = isAuthorized
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('GetAccountByUserName Exception: %s', str(e))
         return ret
@@ -516,13 +479,8 @@ class DataHandler(object):
             self.identitytablename, identityName)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (identityName, uid, gid, groups) in rets:
-                record = {}
-                record["identityName"] = identityName
-                record["uid"] = uid
-                record["gid"] = gid
-                record["groups"] = json.loads(groups)
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('GetIdentityInfo Exception: %s', str(e))
         return ret
@@ -564,7 +522,7 @@ class DataHandler(object):
             rets = conn.update(query)
         ret = 0
         for c in rets:
-            ret = c[0]
+            ret = c["c"]
         return ret
 
     @record
@@ -630,14 +588,8 @@ class DataHandler(object):
                 self.acltablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (identityName, identityId, resource, permissions, isDeny) in rets:
-                record = {}
-                record["identityName"] = identityName
-                record["identityId"] = identityId
-                record["resource"] = resource
-                record["permissions"] = permissions
-                record["isDeny"] = isDeny
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('GetAcl Exception: %s', str(e))
         return ret
@@ -650,14 +602,8 @@ class DataHandler(object):
             self.acltablename, resource)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (identityName, identityId, resource, permissions, isDeny) in rets:
-                record = {}
-                record["identityName"] = identityName
-                record["identityId"] = identityId
-                record["resource"] = resource
-                record["permissions"] = permissions
-                record["isDeny"] = isDeny
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('GetResourceAcl Exception: %s', str(e))
         return ret
@@ -707,25 +653,8 @@ class DataHandler(object):
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
             logger.info("(fetchall time: %f)", fetch_elapsed)
-            for (
-            jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobDescriptionPath, jobDescription,
-            jobTime, endpoints, jobParams, errorMsg, jobMeta) in rets:
-                record = {}
-                record["jobId"] = jobId
-                record["jobName"] = jobName
-                record["userName"] = userName
-                record["vcName"] = vcName
-                record["jobStatus"] = jobStatus
-                record["jobStatusDetail"] = jobStatusDetail
-                record["jobType"] = jobType
-                record["jobDescriptionPath"] = jobDescriptionPath
-                record["jobDescription"] = jobDescription
-                record["jobTime"] = jobTime
-                record["endpoints"] = endpoints
-                record["jobParams"] = jobParams
-                record["errorMsg"] = errorMsg
-                record["jobMeta"] = jobMeta
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('GetJobList Exception: %s', str(e))
         return ret
@@ -807,14 +736,8 @@ class DataHandler(object):
                 self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (jobId, userName, vcName, jobParams, jobStatus) in rets:
-                record = {}
-                record["jobId"] = jobId
-                record["userName"] = userName
-                record["vcName"] = vcName
-                record["jobParams"] = jobParams
-                record["jobStatus"] = jobStatus
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
 
         except Exception as e:
             logger.error('GetActiveJobList Exception: %s', str(e))
@@ -905,12 +828,8 @@ class DataHandler(object):
                 self.commandtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (id, jobId, command) in rets:
-                record = {}
-                record["id"] = id
-                record["jobId"] = jobId
-                record["command"] = command
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('GetPendingCommands Exception: %s', str(e))
         return ret
@@ -936,13 +855,8 @@ class DataHandler(object):
             self.commandtablename, jobId)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (time, command, status, output) in rets:
-                record = {}
-                record["time"] = time
-                record["command"] = command
-                record["status"] = status
-                record["output"] = output
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('FinishCommand Exception: %s', str(e))
         return ret
@@ -966,7 +880,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
-            endpoints = map(lambda job: self.load_json(job[0]), rets)
+            endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
             # {endpoint1: {}, endpoint2: {}, ... }
             # endpoint["status"] == "pending"
             ret = {k: v for d in endpoints for k, v in d.items() if v["status"] == "pending"}
@@ -982,7 +896,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
-            endpoints = map(lambda job: self.load_json(job[0]), rets)
+            endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
             # {endpoint1: {}, endpoint2: {}, ... }
             # endpoint["status"] == "pending"
             ret = {k: v for d in endpoints for k, v in d.items()}
@@ -998,8 +912,8 @@ class DataHandler(object):
             query = "SELECT `endpoints` FROM jobs WHERE `jobStatus` <> 'running' and `jobStatus` <> 'pending' and `jobStatus` <> 'queued' and `jobStatus` <> 'scheduling' order by `jobTime` DESC"
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for [endpoints] in rets:
-                endpoint_list = {k: v for k, v in self.load_json(endpoints).items() if v["status"] == "running"}
+            for one in rets:
+                endpoint_list = {k: v for k, v in self.load_json(one["endpoints"]).items() if v["status"] == "running"}
                 ret.update(endpoint_list)
             conn.commit()
         except Exception as e:
@@ -1032,26 +946,8 @@ class DataHandler(object):
                 self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (
-            jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobDescriptionPath, jobDescription,
-            jobTime, endpoints, jobParams, errorMsg, jobMeta) in rets:
-                record = {}
-                record["jobId"] = jobId
-                record["jobName"] = jobName
-                record["userName"] = userName
-                record["vcName"] = vcName
-                record["jobStatus"] = jobStatus
-                record["jobStatusDetail"] = jobStatusDetail
-                record["jobType"] = jobType
-                record["jobDescriptionPath"] = jobDescriptionPath
-                record["jobDescription"] = jobDescription
-                record["jobTime"] = jobTime
-                record["endpoints"] = endpoints
-                record["jobParams"] = jobParams
-                record["errorMsg"] = errorMsg
-                record["jobMeta"] = jobMeta
-                ret.append(record)
-            conn.commit()
+            for one in rets:
+                ret.append(one)
         except Exception as e:
             logger.error('GetPendingJobs Exception: %s', str(e))
         return ret
@@ -1091,8 +987,8 @@ class DataHandler(object):
         try:
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (jobId, value) in rets:
-                ret = value
+            for one in rets:
+                ret = one[field]
         except Exception as e:
             logger.error('Exception: %s', str(e))
             pass
@@ -1110,8 +1006,8 @@ class DataHandler(object):
             rets = conn.select_many(query)
         ret = None
 
-        for (jobId, value) in rets:
-            ret = value
+        for one in rets:
+            ret = one["retries"]
         return ret
 
     @record
@@ -1140,8 +1036,8 @@ class DataHandler(object):
             query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = '%s' " % (field, self.jobtablename, jobId)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (jobId, value) in rets:
-                ret = value
+            for one in rets:
+                ret = one[field]
             conn.commit()
         except Exception as e:
             logger.error('GetJobTextField Exception: %s', str(e))
@@ -1182,12 +1078,12 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 conn.update(sql)
                 conn.commit()
-            cursor = conn.cursor()
-            query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = '%s' " % (self.jobtablename, jobId)
-            cursor.execute(query)
 
-            for (jobId, value) in cursor:
-                ret = value
+            query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = '%s' " % (self.jobtablename, jobId)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                ret = one["retries"]
             conn.commit()
         except Exception as e:
             logger.error('AddandGetJobRetries Exception: %s', str(e))
@@ -1215,9 +1111,9 @@ class DataHandler(object):
             query = "SELECT `time`, `status` FROM `%s` order by `time` DESC limit 1" % (self.clusterstatustablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (t, value) in rets:
-                ret = json.loads(base64.b64decode(value))
-                time = t
+            for one in rets:
+                ret = json.loads(base64.b64decode(one["status"]))
+                time = one["time"]
         except Exception as e:
             logger.error('GetClusterStatus Exception: %s', str(e))
         return ret, time
@@ -1229,8 +1125,8 @@ class DataHandler(object):
             query = "SELECT `identityName`,`uid` FROM `%s`" % (self.identitytablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for (identityName, uid) in rets:
-                ret.append((identityName, uid))
+            for one in rets:
+                ret.append((one["identityName"],one["uid"]))
         except Exception as e:
             logger.error('GetUsers Exception: %s', str(e))
         return ret
@@ -1243,7 +1139,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for c in rets:
-                ret = c[0]
+                ret = c["c"]
             conn.commit()
         except Exception as e:
             logger.error('GetActiveJobsCount Exception: %s', str(e))
@@ -1257,7 +1153,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for c in rets:
-                ret = c[0]
+                ret = c["c"]
             conn.commit()
         except Exception as e:
             logger.error('GetALLJobsCount Exception: %s', str(e))
@@ -1270,11 +1166,8 @@ class DataHandler(object):
             query = "SELECT `name`, `json` FROM `%s` WHERE `scope` = '%s'" % (self.templatetablename, scope)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for name, json in rets:
-                record = {}
-                record["name"] = name
-                record["json"] = json
-                ret.append(record)
+            for one in rets:
+                ret.append(one)
             conn.commit()
         except Exception as e:
             logger.error('GetTemplates Exception: %s', str(e))
@@ -1314,8 +1207,8 @@ class DataHandler(object):
                 self.jobprioritytablename, self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
-            for job_id, priority in rets:
-                ret[job_id] = priority
+            for one in rets:
+                ret[one["jobId"]] = one["priority"]
             conn.commit()
         except Exception as e:
             logger.error('get_job_priority Exception: %s', str(e))

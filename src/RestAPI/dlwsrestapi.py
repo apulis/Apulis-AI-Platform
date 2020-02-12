@@ -16,11 +16,14 @@ import thread
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
+from config import config
+config["datasource"] = "MySQL"
 import JobRestAPIUtils
 from authorization import ResourceType, Permission, AuthorizationManager, ACLManager
-from config import config
+
 from config import global_vars
 import authorization
+
 from DataHandler import DataHandler
 
 import time
@@ -43,6 +46,7 @@ api = Api(app)
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
 logger.info("%s", config)
+
 
 if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     logger.info("===========Init Admin Access===============")

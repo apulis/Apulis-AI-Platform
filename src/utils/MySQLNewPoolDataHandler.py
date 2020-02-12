@@ -74,6 +74,7 @@ class DataHandler(object):
     def __init__(self):
         start_time = timeit.default_timer()
         self.database = "DLWSCluster-%s" % config["clusterId"]
+        self.accounttablename = "account"
         self.jobtablename = "jobs"
         self.identitytablename = "identity"
         self.acltablename = "acl"
@@ -98,6 +99,30 @@ class DataHandler(object):
         if "initSQLTable" not in global_vars or not global_vars["initSQLTable"]:
             logger.info("===========init SQL Tables ===============")
             global_vars["initSQLTable"] = True
+
+            sql = """
+                CREATE TABLE IF NOT EXISTS `%s`
+                (
+                    `uid` int(11) NOT NULL AUTO_INCREMENT,
+                    `openId` varchar(64) NOT NULL,
+                    `group` varchar(64) NOT NULL,
+                    `nickName` varchar(64) NOT NULL,
+                    `userName` varchar(64) NOT NULL,
+                    `password` varchar(64) NOT NULL,
+                    `isAdmin` int(11) NOT NULL,
+                    `isAuthorized` int(11) NOT NULL,
+                    `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`uid`) USING BTREE,
+                    UNIQUE KEY `userName` (`userName`) USING BTREE,
+                    UNIQUE KEY `openId-group` (`openId`,`group`) USING BTREE
+                ) AUTO_INCREMENT=30001;
+                """ % (self.accounttablename)
+
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            self.conn.commit()
+            cursor.close()
+
             sql = """
                 CREATE TABLE IF NOT EXISTS `%s`
                 (
@@ -399,6 +424,91 @@ class DataHandler(object):
         return ret
 
     @record
+    def ListUser(self):
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s`" % (self.accounttablename)
+        ret = []
+        try:
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in rets:
+                record = {}
+                record["uid"] = uid
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+        except Exception as e:
+            logger.error('ListUser Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetAccountByOpenId(self, openId, group):
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
+        ret = []
+        try:
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in rets:
+                record = {}
+                record["uid"] = uid
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+
+        except Exception as e:
+            logger.error('GetAccountByOpenId Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetAccountByUserName(self, userName):
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `userName` = '%s'" % (self.accounttablename, userName)
+        ret = []
+        try:
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for (uid, openId, group, nickName, userName,  password, isAdmin, isAuthorized) in rets:
+                record = {}
+                record["uid"] = uid
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+        except Exception as e:
+            logger.error('GetAccountByUserName Exception: %s', str(e))
+        return ret
+
+    @record
+    def UpdateAccountInfo(self, openId, group, nickName, userName, password, isAdmin, isAuthorized):
+        try:
+            if len(self.GetAccountByOpenId(openId, group)) == 0:
+                sql = "INSERT INTO `"+self.accounttablename+"` (`openId`, `group`, `nickName`, `userName`, `password`, `isAdmin`, `isAuthorized`) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+                with MysqlConn() as conn:
+                    conn.insert_one(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
+                    conn.commit()
+            else:
+                sql = "update `%s` set `nickName` = '%s', `userName` = '%s', `password` = '%s', `isAdmin` = '%s', isAuthorized = '%s' where `openId` = '%s' and `group` = '%s'"
+                with MysqlConn() as conn:
+                    conn.insert_one(sql, (self.accounttablename, nickName, userName, password, isAdmin, isAuthorized, openId, group))
+                    conn.commit()
+            return True
+        except Exception as e:
+            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+    @record
     def GetIdentityInfo(self, identityName):
         ret = []
         try:
@@ -432,6 +542,29 @@ class DataHandler(object):
             ret = True
         except Exception as e:
             logger.error('UpdateIdentityInfo Exception: %s', str(e))
+        return ret
+
+    @record
+    def UpdateIdentityInfoPerm(self, identityName, isAdmin, isAuthorized):
+        try:
+            sql = """update `%s` set isAdmin = '%s', isAuthorized = '%s' where `identityName` = '%s' """ % (self.accounttablename, isAdmin, isAuthorized, identityName)
+            with MysqlConn() as conn:
+                conn.update(sql)
+                conn.commit()
+            return True
+        except Exception as e:
+            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+
+    @record
+    def GetAceCount(self, identityName, resource):
+        query = "SELECT count(ALL id) as c FROM `%s` where `identityName` = '%s' and `resource` = '%s'" % (self.acltablename,identityName, resource)
+        with MysqlConn() as conn:
+            rets = conn.update(query)
+        ret = 0
+        for c in rets:
+            ret = c[0]
         return ret
 
     @record
@@ -952,6 +1085,36 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetJobTextField(self, jobId, field):
+        query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = '%s' " % (field, self.jobtablename, jobId)
+        ret = None
+        try:
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for (jobId, value) in rets:
+                ret = value
+        except Exception as e:
+            logger.error('Exception: %s', str(e))
+            pass
+        return ret
+
+    @record
+    def AddandGetJobRetries(self, jobId):
+        sql = """update `%s` set `retries` = `retries` + 1 where `jobId` = '%s' """ % (self.jobtablename, jobId)
+        with MysqlConn() as conn:
+            conn.update(sql)
+            conn.commit()
+
+        query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = '%s' " % (self.jobtablename, jobId)
+        with MysqlConn() as conn:
+            rets = conn.select_many(query)
+        ret = None
+
+        for (jobId, value) in rets:
+            ret = value
+        return ret
+
+    @record
     def UpdateJobTextFields(self, conditionFields, dataFields):
         ret = False
         if not isinstance(conditionFields, dict) or not conditionFields or not isinstance(dataFields,
@@ -994,7 +1157,6 @@ class DataHandler(object):
 
         try:
             sql = "select " + ",".join(fields) + " from " + self.jobtablename + " where jobId='%s'" % (jobId)
-
             conn = self.pool.get_connection()
             cursor = conn.cursor()
             cursor.execute(sql)

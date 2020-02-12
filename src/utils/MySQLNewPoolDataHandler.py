@@ -16,6 +16,7 @@ from prometheus_client import Histogram
 import threading
 
 from mysql_conn_pool import MysqlConn
+MysqlConn.config_pool(risk_config={"max_connections":5})
 
 logger = logging.getLogger(__name__)
 

@@ -61,7 +61,7 @@ def record(fn):
         try:
             return fn(*args, **kwargs)
         except Exception as e:
-            logger.error('mysql Exception: %s', str(e))
+             logger.exception('mysql Exception: %s', str(e))
         finally:
             elapsed = timeit.default_timer() - start
             logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
@@ -315,7 +315,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('AddStorage Exception: %s', str(e))
+             logger.exception('AddStorage Exception: %s', str(e))
         return ret
 
     @record
@@ -328,7 +328,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('DeleteStorage Exception: %s', str(e))
+             logger.exception('DeleteStorage Exception: %s', str(e))
         return ret
 
     @record
@@ -342,7 +342,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('ListStorages Exception: %s', str(e))
+             logger.exception('ListStorages Exception: %s', str(e))
         return ret
 
     @record
@@ -356,7 +356,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateStorage Exception: %s', str(e))
+             logger.exception('UpdateStorage Exception: %s', str(e))
         return ret
 
     @record
@@ -369,7 +369,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('AddVC Exception: %s', str(e))
+             logger.exception('AddVC Exception: %s', str(e))
         return ret
 
     @record
@@ -382,7 +382,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('ListVCs Exception: %s', str(e))
+             logger.exception('ListVCs Exception: %s', str(e))
         return ret
 
     @record
@@ -395,7 +395,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('DeleteVC Exception: %s', str(e))
+             logger.exception('DeleteVC Exception: %s', str(e))
         return ret
 
     @record
@@ -409,7 +409,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateVC Exception: %s', str(e))
+             logger.exception('UpdateVC Exception: %s', str(e))
         return ret
 
     @record
@@ -422,7 +422,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('ListUser Exception: %s', str(e))
+             logger.exception('ListUser Exception: %s', str(e))
         return ret
 
     @record
@@ -436,7 +436,7 @@ class DataHandler(object):
                 ret.append(one)
 
         except Exception as e:
-            logger.error('GetAccountByOpenId Exception: %s', str(e))
+             logger.exception('GetAccountByOpenId Exception: %s', str(e))
         return ret
 
     @record
@@ -449,7 +449,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('GetAccountByUserName Exception: %s', str(e))
+             logger.exception('GetAccountByUserName Exception: %s', str(e))
         return ret
 
     @record
@@ -467,7 +467,7 @@ class DataHandler(object):
                     conn.commit()
             return True
         except Exception as e:
-            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+             logger.exception('UpdateIdentityInfo Exception: %s', str(e))
             return False
 
     @record
@@ -482,7 +482,7 @@ class DataHandler(object):
                 one["groups"] = json.loads(one["groups"])
                 ret.append(one)
         except Exception as e:
-            logger.error('GetIdentityInfo Exception: %s', str(e))
+             logger.exception('GetIdentityInfo Exception: %s', str(e))
         return ret
 
     @record
@@ -499,7 +499,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+             logger.exception('UpdateIdentityInfo Exception: %s', str(e))
         return ret
 
     @record
@@ -511,7 +511,7 @@ class DataHandler(object):
                 conn.commit()
             return True
         except Exception as e:
-            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+             logger.exception('UpdateIdentityInfo Exception: %s', str(e))
             return False
 
 
@@ -536,7 +536,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateAce Exception: %s', str(e))
+             logger.exception('UpdateAce Exception: %s', str(e))
         return ret
 
     @record
@@ -550,7 +550,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateAclIdentityId Exception: %s', str(e))
+             logger.exception('UpdateAclIdentityId Exception: %s', str(e))
         return ret
 
     @record
@@ -563,7 +563,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('DeleteResourceAcl Exception: %s', str(e))
+             logger.exception('DeleteResourceAcl Exception: %s', str(e))
         return ret
 
     @record
@@ -577,7 +577,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('DeleteAce Exception: %s', str(e))
+             logger.exception('DeleteAce Exception: %s', str(e))
         return ret
 
     @record
@@ -591,7 +591,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('GetAcl Exception: %s', str(e))
+             logger.exception('GetAcl Exception: %s', str(e))
         return ret
 
     @record
@@ -605,7 +605,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('GetResourceAcl Exception: %s', str(e))
+             logger.exception('GetResourceAcl Exception: %s', str(e))
         return ret
 
     @record
@@ -621,7 +621,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('AddJob Exception: %s', str(e))
+             logger.exception('AddJob Exception: %s', str(e))
         return ret
 
     @record
@@ -656,7 +656,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('GetJobList Exception: %s', str(e))
+             logger.exception('GetJobList Exception: %s', str(e))
         return ret
 
     @record
@@ -717,7 +717,7 @@ class DataHandler(object):
                     ret["finishedJobs"].append(record)
             conn.commit()
         except Exception as e:
-            logger.error('GetJobListV2 Exception: %s', str(e))
+             logger.exception('GetJobListV2 Exception: %s', str(e))
         finally:
             if cursor is not None:
                 cursor.close()
@@ -740,7 +740,7 @@ class DataHandler(object):
                 ret.append(one)
 
         except Exception as e:
-            logger.error('GetActiveJobList Exception: %s', str(e))
+             logger.exception('GetActiveJobList Exception: %s', str(e))
         return ret
 
     @record
@@ -750,7 +750,7 @@ class DataHandler(object):
         if len(kwargs) != 1: return []
         key, expected = kwargs.popitem()
         if key not in valid_keys:
-            logger.error("DataHandler_GetJob: key is not in valid keys list...")
+             logger.exception("DataHandler_GetJob: key is not in valid keys list...")
             return []
 
         ret = []
@@ -767,7 +767,7 @@ class DataHandler(object):
             ret = [dict(zip(columns, row)) for row in cursor.fetchall()]
             conn.commit()
         except Exception as e:
-            logger.error('GetJob Exception: %s', str(e))
+             logger.exception('GetJob Exception: %s', str(e))
         finally:
             if cursor is not None:
                 cursor.close()
@@ -798,7 +798,7 @@ class DataHandler(object):
                 ret.append(record)
             conn.commit()
         except Exception as e:
-            logger.error('GetJobV2 Exception: %s', str(e))
+             logger.exception('GetJobV2 Exception: %s', str(e))
         finally:
             if cursor is not None:
                 cursor.close()
@@ -816,7 +816,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('AddCommand Exception: %s', str(e))
+             logger.exception('AddCommand Exception: %s', str(e))
             ret = False
         return ret
 
@@ -831,7 +831,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('GetPendingCommands Exception: %s', str(e))
+             logger.exception('GetPendingCommands Exception: %s', str(e))
         return ret
 
     @record
@@ -844,7 +844,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('FinishCommand Exception: %s', str(e))
+             logger.exception('FinishCommand Exception: %s', str(e))
         return ret
 
     @record
@@ -858,7 +858,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('FinishCommand Exception: %s', str(e))
+             logger.exception('FinishCommand Exception: %s', str(e))
         return ret
 
     def load_json(self, raw_str):
@@ -917,7 +917,7 @@ class DataHandler(object):
                 ret.update(endpoint_list)
             conn.commit()
         except Exception as e:
-            logger.error('Query dead endpoints Exception: %s', str(e))
+             logger.exception('Query dead endpoints Exception: %s', str(e))
         return ret
 
     @record
@@ -949,7 +949,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('GetPendingJobs Exception: %s', str(e))
+             logger.exception('GetPendingJobs Exception: %s', str(e))
         return ret
 
     @record
@@ -963,7 +963,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('SetJobError Exception: %s', str(e))
+             logger.exception('SetJobError Exception: %s', str(e))
         return ret
 
     @record
@@ -976,7 +976,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateJobTextField Exception: %s', str(e))
+             logger.exception('UpdateJobTextField Exception: %s', str(e))
             ret = False
         return ret
 
@@ -990,7 +990,7 @@ class DataHandler(object):
             for one in rets:
                 ret = one[field]
         except Exception as e:
-            logger.error('Exception: %s', str(e))
+             logger.exception('Exception: %s', str(e))
             pass
         return ret
 
@@ -1026,7 +1026,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('updateJobTextFields Exception: %s, ex: %s', dataFields, str(e))
+             logger.exception('updateJobTextFields Exception: %s, ex: %s', dataFields, str(e))
         return ret
 
     @record
@@ -1040,7 +1040,7 @@ class DataHandler(object):
                 ret = one[field]
             conn.commit()
         except Exception as e:
-            logger.error('GetJobTextField Exception: %s', str(e))
+             logger.exception('GetJobTextField Exception: %s', str(e))
         return ret
 
     @record
@@ -1062,7 +1062,7 @@ class DataHandler(object):
                 ret = dict(zip(columns, item))
             conn.commit()
         except Exception as e:
-            logger.error('GetJobTextFields Exception: %s', str(e))
+             logger.exception('GetJobTextFields Exception: %s', str(e))
         finally:
             if cursor is not None:
                 cursor.close()
@@ -1086,7 +1086,7 @@ class DataHandler(object):
                 ret = one["retries"]
             conn.commit()
         except Exception as e:
-            logger.error('AddandGetJobRetries Exception: %s', str(e))
+             logger.exception('AddandGetJobRetries Exception: %s', str(e))
         return ret
 
     @record
@@ -1099,7 +1099,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateClusterStatus Exception: %s', str(e))
+             logger.exception('UpdateClusterStatus Exception: %s', str(e))
             ret = False
         return ret
 
@@ -1115,7 +1115,7 @@ class DataHandler(object):
                 ret = json.loads(base64.b64decode(one["status"]))
                 time = one["time"]
         except Exception as e:
-            logger.error('GetClusterStatus Exception: %s', str(e))
+             logger.exception('GetClusterStatus Exception: %s', str(e))
         return ret, time
 
     @record
@@ -1128,7 +1128,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append((one["identityName"],one["uid"]))
         except Exception as e:
-            logger.error('GetUsers Exception: %s', str(e))
+             logger.exception('GetUsers Exception: %s', str(e))
         return ret
 
     @record
@@ -1142,7 +1142,7 @@ class DataHandler(object):
                 ret = c["c"]
             conn.commit()
         except Exception as e:
-            logger.error('GetActiveJobsCount Exception: %s', str(e))
+             logger.exception('GetActiveJobsCount Exception: %s', str(e))
         return ret
 
     @record
@@ -1156,7 +1156,7 @@ class DataHandler(object):
                 ret = c["c"]
             conn.commit()
         except Exception as e:
-            logger.error('GetALLJobsCount Exception: %s', str(e))
+             logger.exception('GetALLJobsCount Exception: %s', str(e))
         return ret
 
     @record
@@ -1169,7 +1169,7 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
         except Exception as e:
-            logger.error('GetTemplates Exception: %s', str(e))
+             logger.exception('GetTemplates Exception: %s', str(e))
         return ret
 
     @record
@@ -1182,7 +1182,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('UpdateTemplate Exception: %s', str(e))
+             logger.exception('UpdateTemplate Exception: %s', str(e))
         return ret
 
     @record
@@ -1195,7 +1195,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('DeleteTemplate Exception: %s', str(e))
+             logger.exception('DeleteTemplate Exception: %s', str(e))
         return ret
 
     @record
@@ -1209,7 +1209,7 @@ class DataHandler(object):
             for one in rets:
                 ret[one["jobId"]] = one["priority"]
         except Exception as e:
-            logger.error('get_job_priority Exception: %s', str(e))
+             logger.exception('get_job_priority Exception: %s', str(e))
         return ret
 
     @record
@@ -1224,7 +1224,7 @@ class DataHandler(object):
                 conn.commit()
             ret = True
         except Exception as e:
-            logger.error('update_job_priority Exception: %s', str(e))
+             logger.exception('update_job_priority Exception: %s', str(e))
         return ret
 
     def __del__(self):

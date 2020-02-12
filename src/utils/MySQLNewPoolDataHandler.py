@@ -434,7 +434,6 @@ class DataHandler(object):
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
-                ret.append(record)
 
         except Exception as e:
             logger.error('GetAccountByOpenId Exception: %s', str(e))

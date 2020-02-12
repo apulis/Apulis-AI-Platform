@@ -1168,7 +1168,6 @@ class DataHandler(object):
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
-            conn.commit()
         except Exception as e:
             logger.error('GetTemplates Exception: %s', str(e))
         return ret
@@ -1209,7 +1208,6 @@ class DataHandler(object):
                 rets = conn.select_many(query)
             for one in rets:
                 ret[one["jobId"]] = one["priority"]
-            conn.commit()
         except Exception as e:
             logger.error('get_job_priority Exception: %s', str(e))
         return ret

@@ -85,6 +85,7 @@ class DataHandler(object):
         self.commandtablename = "commands"
         self.templatetablename = "templates"
         self.jobprioritytablename = "job_priorities"
+        self.pool = SingletonDBPool.instance()
         elapsed = timeit.default_timer() - start_time
         logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
 

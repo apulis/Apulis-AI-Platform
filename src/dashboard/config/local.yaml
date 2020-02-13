@@ -5,6 +5,15 @@ masterToken: "Access token of all users"
 AddGroupLink: http://add-group/
 WikiLink: http://wiki/
 
+authEnabled:
+  wechat: 1
+  microsoft: 1
+
+wechat:
+  appId: "wx403e175ad2bf1d2d"
+  appSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
+
+
 activeDirectory:
   tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
   clientId: "6d93837b-d8ce-48b9-868a-39a9d843dc57"

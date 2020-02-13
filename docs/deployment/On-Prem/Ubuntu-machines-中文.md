@@ -378,11 +378,65 @@ GPU类别：NVidia，driver版本 >= 430
 
 10. 部署NVidia插件
 
-    ```
-    ./deploy.py --verbose kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml
-    ```
+    - kubernetes v1.15
 
-    
+      指令：
+
+      ```
+      ./deploy.py --verbose kubectl create -f nvidia-device-plugin.yml
+      ```
+
+      配置文件名：nvidia-device-plugin.yml
+
+      配置文件样例：
+
+      ```
+      apiVersion: extensions/v1beta1
+      kind: DaemonSet
+      metadata:
+        name: nvidia-device-plugin-daemonset
+        namespace: kube-system
+      spec:
+        template:
+          metadata:
+            # Mark this pod as a critical add-on; when enabled, the critical add-on scheduler
+            # reserves resources for critical add-on pods so that they can be rescheduled after
+            # a failure.  This annotation works in tandem with the toleration below.
+            annotations:
+              scheduler.alpha.kubernetes.io/critical-pod: ""
+            labels:
+              name: nvidia-device-plugin-ds
+          spec:
+            tolerations:
+            # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
+            # This, along with the annotation above marks this pod as a critical add-on.
+            - key: CriticalAddonsOnly
+              operator: Exists
+            containers:
+            - image: nvidia/k8s-device-plugin:1.11
+              name: nvidia-device-plugin-ctr
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: device-plugin
+                  mountPath: /var/lib/kubelet/device-plugins
+            volumes:
+              - name: device-plugin
+                hostPath:
+                  path: /var/lib/kubelet/device-plugins
+      ```
+
+      
+
+    - kubernetes v1.11及以下
+
+      ```
+      ./deploy.py --verbose kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml
+      ```
+
+      
 
 11. 设置Dashboard服务配置文件
 

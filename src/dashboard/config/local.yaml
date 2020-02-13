@@ -15,12 +15,13 @@ dingtalk:
   appSecret: "sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj"
 
 domain: "https://apulis-sz-dev-infra01.sigsus.cn"
-casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
+casUrl: "https://apulis-sz-dev-infra01.sigsus.cn"
 
 administrators:
   - jinlmsft@hotmail.com
   - jinli.ccs@gmail.com
   - jin.li@apulis.com
+  - bifeng.peng@apulis.com
 
 clusters:
   apulis-dev:
@@ -29,5 +30,3 @@ clusters:
     workStorage: work
     dataStorage: data
     grafana: "https://apulis-sz-dev-infra01.sigsus.cn/grafana/"
-    prometheus: http://apulis-sz-dev-infra01.sigsus.cn:9091
-    

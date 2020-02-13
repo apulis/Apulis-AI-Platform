@@ -385,7 +385,6 @@ class Cluster extends Service {
       return response
     } catch (error) {
       const duration = Date.now() - begin
-      console.log('err', error)
       this.context.log.error({ url, init, error, duration }, 'Cluster fetch error')
       throw error
     }

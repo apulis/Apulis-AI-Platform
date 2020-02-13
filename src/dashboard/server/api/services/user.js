@@ -48,6 +48,23 @@ class User extends Service {
     user.nickName = userinfo['nick']
     return user
   }
+  /**
+   * @param {import('koa').Context} context
+   * @param {object} userinfo
+   * @return {User}
+   */
+  static fromWechat(context, userInfo) {
+    // 对于微信，首先选择 unionId 作为 openId
+    let userId = ''
+    if (userInfo.unionId) {
+      userId = 'unionId--' + userInfo.unionId
+    } else {
+      userId = 'openId--' + userInfo.openId
+    }
+    const user = new User(context, userId, 'Wechat')
+    user.nickName = userInfo.nickname
+    return user
+  }
 
   /**
    * @param {import('koa').Context} context

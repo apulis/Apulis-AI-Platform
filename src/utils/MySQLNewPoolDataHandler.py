@@ -925,7 +925,6 @@ class DataHandler(object):
             for one in rets:
                 endpoint_list = {k: v for k, v in self.load_json(one["endpoints"]).items() if v["status"] == "running"}
                 ret.update(endpoint_list)
-            conn.commit()
         except Exception as e:
             logger.exception('Query dead endpoints Exception: %s', str(e))
         return ret
@@ -1048,7 +1047,6 @@ class DataHandler(object):
                 rets = conn.select_many(query)
             for one in rets:
                 ret = one[field]
-            conn.commit()
         except Exception as e:
             logger.exception('GetJobTextField Exception: %s', str(e))
         return ret
@@ -1094,7 +1092,6 @@ class DataHandler(object):
                 rets = conn.select_many(query)
             for one in rets:
                 ret = one["retries"]
-            conn.commit()
         except Exception as e:
             logger.exception('AddandGetJobRetries Exception: %s', str(e))
         return ret
@@ -1150,7 +1147,6 @@ class DataHandler(object):
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
-            conn.commit()
         except Exception as e:
             logger.exception('GetActiveJobsCount Exception: %s', str(e))
         return ret
@@ -1164,7 +1160,6 @@ class DataHandler(object):
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
-            conn.commit()
         except Exception as e:
             logger.exception('GetALLJobsCount Exception: %s', str(e))
         return ret

@@ -67,9 +67,9 @@ const NavigationList: React.FC = () => {
       <LinkListItem to="/submission/training">
         <ListItemText>Submit Training Job</ListItemText>
       </LinkListItem>
-      <LinkListItem to="/submission/data">
+      {/* <LinkListItem to="/submission/data">
         <ListItemText>Submit Data Job</ListItemText>
-      </LinkListItem>
+      </LinkListItem> */}
       <LinkListItem to="/jobs">
         <ListItemText>View and Manage Jobs</ListItemText>
       </LinkListItem>

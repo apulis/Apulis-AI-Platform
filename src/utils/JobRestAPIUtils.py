@@ -346,6 +346,11 @@ def KillJob(userName, jobId):
     return ret
 
 
+def InvalidateJobListCache(vcName):
+    CacheManager.Invalidate("GetAllPendingJobs", vcName)
+    DataManager.GetAllPendingJobs(vcName)
+
+
 def AddCommand(userName, jobId,command):
     dataHandler = DataHandler()
     ret = False

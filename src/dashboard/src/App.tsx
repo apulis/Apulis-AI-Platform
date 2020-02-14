@@ -49,6 +49,9 @@ interface BootstrapProps {
   _token?: any;
   config: ConfigContext;
   user: UserContext;
+  authEnabled?: {
+    [props: string]: 1 | 0;
+  };
 }
 
 const Loading = (
@@ -57,11 +60,11 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children }) => (
+const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children, authEnabled }) => (
 
   <BrowserRouter>
     <ConfigProvider>
-      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
+      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} authEnabled={authEnabled} >
         <SnackbarProvider>
           <ConfirmProvider>
             <TeamProvider>

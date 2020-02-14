@@ -2,21 +2,21 @@ const Router = require('koa-router')
 const config = require('config')
 
 const router = module.exports = new Router()
-const { authEnabled } = config
+const authEnabled = config.get('authEnabled')
 router.get('/',
   require('./controllers'))
 
 router.get('/bootstrap.js',
   require('./middlewares/user')(false),
   require('./controllers/bootstrap'))
-// if (authEnabled.Microsoft) {
+if (authEnabled.microsoft) {
   router.get('/authenticate',
     require('./controllers/authenticate'))
-// }
-// if (authEnabled.Wechat) {
+}
+if (authEnabled.wechat) {
   router.get('/authenticate/wechat',
     require('./controllers/authenticate/wechat'))
-// }
+}
 
 router.get('/authenticate/logout',
   require('./controllers/authenticate/logout'))

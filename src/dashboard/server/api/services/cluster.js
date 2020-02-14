@@ -159,7 +159,7 @@ class Cluster extends Service {
   async setJobPriorty (jobId, priority) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email
+      userName: user.userName
     })
     const body = { [jobId]: priority }
     const response = await this.fetch('/jobs/priorities?' + params, {
@@ -182,7 +182,7 @@ class Cluster extends Service {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.email
+      userName: user.userName
     })
     if (cursor !== undefined) {
       params.set('cursor', cursor)
@@ -289,7 +289,7 @@ class Cluster extends Service {
   async addEndpoint (jobId, endpoints) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email
+      userName: user.userName
     })
     const body = { jobId, endpoints }
     const response = await this.fetch('/endpoints?' + params, {
@@ -385,7 +385,6 @@ class Cluster extends Service {
       return response
     } catch (error) {
       const duration = Date.now() - begin
-      console.log('err', error)
       this.context.log.error({ url, init, error, duration }, 'Cluster fetch error')
       throw error
     }

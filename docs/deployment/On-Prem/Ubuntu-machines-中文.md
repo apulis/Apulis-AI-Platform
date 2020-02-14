@@ -130,29 +130,7 @@ GPU类别：NVidia，driver版本 >= 430
 
 ### 执行安装
 
-1. 配置目标机器环境
-
-   ```
-   ./deploy.py  runscriptonall ./scripts/prepare_ubuntu.sh
-   ./deploy.py  runscriptonall ./scripts/prepare_ubuntu.sh continue
-   ```
-
-   
-
-2. Worker机器状态确认
-
-   ```
-   nvidia-docker run --rm dlws/cuda nvidia-smi
-   docker run --rm -ti dlws/cuda nvidia-smi
-   
-   保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
-   如nvidia-docker指令执行正常，但docker指令执行错误，则修改/etc/docker/daemon.json，
-   将nvidia-docker设置为default runtime
-   ```
-
-   
-
-3. 设置集群配置文件
+1. 设置集群配置文件
 
    样例
 
@@ -307,15 +285,15 @@ GPU类别：NVidia，driver版本 >= 430
 
    
 
-4. 编译
+2. 初始化部署环境
 
    ```
-   deploy.py -y build
+   ./deploy.py --verbose -y build 
    ```
 
    
 
-5. 配置集群节点ROOT用户密码
+3. 配置集群节点ROOT用户密码
 
    将集群节点ROOT密码设置一致，然后执行指令：
 
@@ -327,27 +305,28 @@ GPU类别：NVidia，driver版本 >= 430
 
    
 
-6. 安装SSH Key到所有集群节点
+4. 安装SSH Key到所有集群节点
 
    ```
-   deploy.py sshkey install
-   ```
-
-   
-
-7. 检查集群节点是否可正常访问
-
-   ```
-   deploy.py execonall sudo ls -al
+   ./deploy.py sshkey install
    ```
 
    
 
-8. 设置集群节点的安装环境
+5. 检查集群节点是否可正常访问
 
    ```
-   deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
-   deploy.py --verbose execonall sudo usermod -aG docker dlwsadmin
+   ./deploy.py execonall sudo ls -al
+   ```
+
+   
+
+6. 设置集群节点的安装环境
+
+   ```
+   ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
+   ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh continue
+   ./deploy.py --verbose execonall sudo usermod -aG docker dlwsadmin
    ```
 
    其中：
@@ -356,42 +335,110 @@ GPU类别：NVidia，driver版本 >= 430
 
    
 
-9. 安装K8S集群平台
+7. Worker机器状态确认
+
+   ```
+   nvidia-docker run --rm dlws/cuda nvidia-smi
+   docker run --rm -ti dlws/cuda nvidia-smi
+   保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
+   
+   如nvidia-docker指令执行正常，但docker指令执行错误，则修改/etc/docker/daemon.json，
+   将nvidia-docker设置为default runtime
+   ```
+
+   
+
+8. 安装K8S集群平台
 
    安装集群基础软件
 
    ```
-   deploy.py execonall docker pull dlws/pause-amd64:3.0
-   deploy.py execonall docker tag  dlws/pause-amd64:3.0 
-   deploy.py -y deploy
+   ./deploy.py execonall docker pull dlws/pause-amd64:3.0
+   ./deploy.py execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
+    
+   ./deploy.py --verbose -y deploy
    ```
 
    设置集群节点标签
 
    ```
-   deploy.py -y updateworker
-   deploy.py -y kubernetes labels
+   ./deploy.py --verbose -y updateworker
+   ./deploy.py --verbose -y kubernetes labels
    ```
 
    
 
-10. 挂载数据共享文件夹
+9. 挂载数据共享文件夹
 
-    ```
-    deploy.py --verbose mount
-    ```
+   ```
+   ./deploy.py --verbose mount
+   ```
 
-    
+   
 
-11. 部署NVidia插件
+10. 部署NVidia插件
 
-    ```
-    deploy.py --verbose kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml
-    ```
+    - kubernetes v1.15
 
-    
+      指令：
 
-12. 设置Dashboard服务配置文件
+      ```
+      ./deploy.py --verbose kubectl create -f nvidia-device-plugin.yml
+      ```
+
+      配置文件名：nvidia-device-plugin.yml
+
+      配置文件样例：
+
+      ```
+      apiVersion: extensions/v1beta1
+      kind: DaemonSet
+      metadata:
+        name: nvidia-device-plugin-daemonset
+        namespace: kube-system
+      spec:
+        template:
+          metadata:
+            # Mark this pod as a critical add-on; when enabled, the critical add-on scheduler
+            # reserves resources for critical add-on pods so that they can be rescheduled after
+            # a failure.  This annotation works in tandem with the toleration below.
+            annotations:
+              scheduler.alpha.kubernetes.io/critical-pod: ""
+            labels:
+              name: nvidia-device-plugin-ds
+          spec:
+            tolerations:
+            # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
+            # This, along with the annotation above marks this pod as a critical add-on.
+            - key: CriticalAddonsOnly
+              operator: Exists
+            containers:
+            - image: nvidia/k8s-device-plugin:1.11
+              name: nvidia-device-plugin-ctr
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: device-plugin
+                  mountPath: /var/lib/kubelet/device-plugins
+            volumes:
+              - name: device-plugin
+                hostPath:
+                  path: /var/lib/kubelet/device-plugins
+      ```
+
+      
+
+    - kubernetes v1.11及以下
+
+      ```
+      ./deploy.py --verbose kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml
+      ```
+
+      
+
+11. 设置Dashboard服务配置文件
 
     文件：src/dashboard/config/local.yaml
 
@@ -434,19 +481,19 @@ GPU类别：NVidia，driver版本 >= 430
 
     
 
-13. 部署集群应用
+12. 部署集群应用
 
     生成dashboard, jobmanager等服务的配置文件
 
     ```
-    deploy.py --verbose webui         
+    ./deploy.py --verbose webui         
     ```
 
     编译restfulapi和webui3服务
 
     ```
-    deploy.py --verbose docker push restfulapi
-    deploy.py --verbose docker push webui3
+    ./deploy.py --verbose docker push restfulapi
+    ./deploy.py --verbose docker push webui3
     ```
 
     编译GPU Reporter
@@ -460,22 +507,22 @@ GPU类别：NVidia，driver版本 >= 430
     配置Nginx
 
     ```
-    deploy.py --verbose nginx fqdn
-    deploy.py --verbose nginx config
+    ./deploy.py --verbose nginx fqdn
+    ./deploy.py --verbose nginx config
     ```
 
     启动集群应用
 
     ```
-    deploy.py --verbose kubernetes start mysql jobmanager restfulapi webui3 monitor nginx custommetrics
-    deploy.py --verbose kubernetes start cloudmonitor
+    ./deploy.py --verbose kubernetes start mysql jobmanager restfulapi monitor nginx custommetrics
+    ./deploy.py --verbose kubernetes start cloudmonitor
     ```
 
     启动dashboard
-    
+
     ```
-    deploy.py --verbose nginx webui3
-    deploy.py --verbose kubernetes start webui3
+    ./deploy.py --verbose nginx webui3
+    ./deploy.py --verbose kubernetes start webui3
     ```
-    
+
     

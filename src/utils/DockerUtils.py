@@ -205,26 +205,33 @@ def configuration( config, verbose):
     config_dockers("../docker-images", config["dockerprefix"], config["dockertag"], verbose, config )  
 
 def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
+
     global system_docker_registry
     global system_docker_tag
     global system_docker_dic
     global infra_docker_registry
     global worker_docker_registry
+
     if system_docker_registry is None:
+
         infra_dockers = config["infrastructure-dockers"] if "infrastructure-dockers" in config else {}
         infra_docker_registry = config["infrastructure-dockerregistry"] if "infrastructure-dockerregistry" in config else config["dockerregistry"]
         worker_docker_registry = config["worker-dockerregistry"] if "worker-dockerregistry" in config else config["dockerregistry"]
         system_docker_registry = config["dockers"]["hub"]
         system_docker_tag = config["dockers"]["tag"]
         system_docker_dic = config["dockers"]["system"]
+        customize_docker_dic = config["dockers"]["customize"]
         docker_list = get_docker_list(rootdir, dockerprefix, dockertag, None, verbose )
+        
+        # print("Customized_dic: %s" % customize_docker_dic)
         # Populate system dockers 
         for assemblename, tupl in docker_list.items():
+        
             # print assemblename
             dockername, deploydir = tupl
             if dockername in system_docker_dic:
                 # system docker 
-                tag = system_docker_dic[dockername]["tag"] if "tag" in system_docker_dic[dockername] else system_docker_tag
+                tag = system_docker_dic[dockername]["tag"] if dockername in system_docker_dic and "tag" in system_docker_dic[dockername] else system_docker_tag
                 prefix = ""
                 # dirname = os.path.join(rootdir, dockername)
                 # our target is to use rootdir/dockername in the future
@@ -238,6 +245,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
                     dockerregistry = infra_docker_registry 
                 else:
                     dockerregistry = worker_docker_registry
+            
             usedockername = dockername.lower()
             if "container" not in config["dockers"]:
                 config["dockers"]["container"] = {}
@@ -246,6 +254,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
                 "fullname": dockerregistry + prefix + usedockername + ":" + tag, 
                 "name": prefix + usedockername + ":" + tag,
                 }
+
         # pxe-ubuntu and pxe-coreos is in template
         for dockername in config["dockers"]["infrastructure"]:
             config["dockers"]["container"][dockername] = {
@@ -253,6 +262,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
                 "fullname": infra_docker_registry + dockerprefix + dockername + ":" + dockertag, 
                 "name": dockerprefix + dockername + ":" + dockertag,
                 }
+
         # pxe-ubuntu and pxe-coreos is in template
         for dockername in config["dockers"]["external"]:
             usedockername = dockername.lower()
@@ -267,7 +277,41 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
             else:
                 config["dockers"]["container"][dockername]["name"] = usedockername + ":" + system_docker_tag
 
+
+        # watch dog and job-exporter is in template
+        if "job-exporter" in config["dockers"]["container"]:
+ 
+            dockername = "job-exporter"
+            dockertag = "1.8"
+
+            config["dockers"]["container"][dockername] = {
+                "dirname": os.path.join("./deploy/docker-images", dockername ),  
+                "fullname": config["worker-dockerregistry"] + dockername + ":" + dockertag, 
+                "name":  dockername + ":" + dockertag,
+                }
+
+        else:
+            pass
+
+
+        if "watchdog" in config["dockers"]["container"]:
+
+            dockername = "watchdog"
+            dockertag = "1.8"
+
+            config["dockers"]["container"][dockername] = {
+                "dirname": os.path.join("./deploy/docker-images", dockername ),  
+                "fullname": config["worker-dockerregistry"] + dockername + ":" + dockertag, 
+                "name":  dockername + ":" + dockertag,
+                }
+
+        else:
+            pass
+
         # print config["dockers"]
+
+    return  
+
 
 def build_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose = False, nocache = False ):
     configuration(config, verbose)

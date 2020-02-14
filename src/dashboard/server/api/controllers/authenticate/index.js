@@ -81,10 +81,7 @@ module.exports = async context => {
     }
     const user = User.fromIdToken(context, idToken)
     await user.getAccountInfo()
-    /* context.cookies.set('token', user.toCookie()) */
-
     context.cookies.set('token', user.toCookieToken())
-
     try {
       const stateParams = new URLSearchParams(context.query.state)
       if (stateParams.has('to')) {

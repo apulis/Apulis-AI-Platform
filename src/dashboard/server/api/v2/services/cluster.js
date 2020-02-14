@@ -18,20 +18,21 @@ class Cluster extends ClusterV1 {
   async getJobs (teamId, all, limit) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email,
+      userName: user.userName,
       vcName: teamId,
-      jobOwner: all ? 'all' : user.email,
+      jobOwner: all ? 'all' : user.userName,
       num: limit
     })
     const response = await this.fetch('/ListJobsV2?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    const jobs = [].concat(
+    let jobs = [].concat(
       data['finishedJobs'],
       data['queuedJobs'],
       data['runningJobs'],
       data['visualizationJobs']
     )
+    jobs = jobs.filter(val => val)
     jobs.sort((jobA, jobB) => {
       return Date.parse(jobB['jobTime']) - Date.parse(jobA['jobTime'])
     })
@@ -46,7 +47,7 @@ class Cluster extends ClusterV1 {
   async getJob (jobId) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email,
+      userName: user.userName,
       jobId
     })
     const response = await this.fetch('/GetJobDetailV2?' + params)

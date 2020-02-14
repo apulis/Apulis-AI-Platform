@@ -1,103 +1,56 @@
 # DLWS集群安装步骤
 
-### 目标配置  
-
-操作系统：ubuntu 16.04 LTS、Ubuntu 18.04 LTS  
-
-机器构成：Dev机器1台，Master节点机器1台，携带GPU的Worker节点机器1台   
-
-GPU类别：NVidia，driver版本 >= 430  
-
+### 配置说明 & 示例
+| 名称 | 配置 | GPU | 操作系统 | 公网IP | 子网IP | 描述 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| dev | 4C16G | N/A | ubuntu 16.04 LTS/18.04 LTS | 52.130.78.51 | N/A | 执行部署操作 |
+| master | 1C8G | N/A | ubuntu 16.04 LTS/18.04 LTS | 115.220.9.243 | 192.168.0.195 | k8s master节点 |
+| worker | 8C64G | >=1 |  ubuntu 16.04 LTS/18.04 LTS | 115.220.9.252 | 192.168.0.63 | k8s worker节点 |
 
 
-### 安装环境预备
+其中：
+1. master和worker需在同一个子网或VPC，dev与master、worker可以不在同一个子网或VPC
+2. worker节点需携带GPU，GPU类别为NVidia，安装驱动（driver）版本>= 430  
 
-1. 免密码配置（针对非root用户）
+
+### 安装准备
+1. 免密码配置（针对非root用户，需在dev、master、worker三个机器中配置）
 
    - 执行sudo visudo
 
    - 检查文件内容，确认是否存在以下配置，没有则新增
 
-     ```
-     %sudo ALL=(ALL:ALL) ALL
-     %sudo ALL=(ALL) NOPASSWD:ALL
-     ```
+    ```
+    %sudo ALL=(ALL:ALL) ALL
+    %sudo ALL=(ALL) NOPASSWD:ALL
+    ```
 
-2. GIT配置
+2. 配置DNS，需要在DNS提供商控制台进行配置
 
-   - 检查GIT是否安装
+    DNS提供商：https://dns.console.aliyun.com
 
-     ```
-     执行指令：git --version
-     输出如下：git version 2.7.4
-     ```
+   主域名：sigsus.cn
 
-     
+    示例：
 
-   - 如未安装GIT，请执行
+    | 主机记录 | 记录类型 | 记录值 | 对应节点(参考) |
+    | ---- | ---- | ---- | ---- |
+    | apulis-chinaeast-infra01 | A | 52.130.78.51 | dev |
+    | apulis-sz-dev-infra01 | A | 115.220.9.243 | master |
+    | apulis-sz-dev-worker01 | A | 115.220.9.252 | worker |
 
-     ```
-     sudo apt update
-     sudo apt install git
-     ```
-
-     
-
-   - 配置账号
-
-     ```
-     git config user.name "your_github_account_name"
-     git config user.email "your_github_account_email"
-     ```
-
-   - 配置GitHub访问授权
-
-3. DNS配置
-
-   - 假设环境配置如下
-
-     > master节点主机名：apulis-sz-dev-infra01
-     >
-     > worker节点主机名：apulis-sz-dev-worker01
-     >
-     > dev节点主机名：apulis-chinaeast-infra01
-     >
-     > 域名解析供应商：https://dns.console.aliyun.com
-     >
-     > 主域名：sigsus.cn
-
-     
-
-   - 配置节点IP到对应域名的映射关系
-
-     apulis-sz-dev-infra01.sigsus.cn
-
-     apulis-sz-dev-worker01.sigsus.cn
-
-     apulis-chinaeast-infra01.sigsus.cn
-
-     
-
-   - 配置子域名快捷搜索（dev、master、worker三个机器）
-
+3. 配置子域名快捷搜索（dev、master、worker三个机器）  
      修改文件：vim /etc/resolvconf/resolv.conf.d/base  
      增加数据：search sigsus.cn  
-     执行指令：sudo resolvconf -u   	
+     执行指令：sudo resolvconf -u  
 
-     
-
-   - 检查DNS配置
-
-     指令执行是否成功
-
-     ```
+     检查DNS配置，在master、worker上指令执行看是否成功 
+     ``` 
      ping apulis-sz-dev-infra01
      ping apulis-sz-dev-worker01
      ```
 
-     
-
-4. 配置镜像文件
+4. 配置镜像源（dev、master、worker三个机器）  
 
      获取系统codebase
 
@@ -105,7 +58,7 @@ GPU类别：NVidia，driver版本 >= 430
      lsb_release -a
      ```
 
-     设置apt-get镜像源（假设codebase=bionic，采用aliyun镜像），编辑/etc/apt/sources.list
+     设置apt-get镜像源（假设codebase=bionic，采用aliyun镜像），编辑/etc/apt/sources.list，填入以下内容：
 
      ```
      deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
@@ -126,13 +79,15 @@ GPU类别：NVidia，driver版本 >= 430
      deb https://mirrors.aliyun.com/docker-ce/linux/ubuntu bionic stable
      ```
 
-     
-
 ### 执行安装
+1. 文件/路径说明  
+   安装程序所在目录 ：src/ClusterBootstrap/  
+   集群配置文件：src/ClusterBootstrap/config.yaml   
+   安装文件：src/ClusterBootstrap/deploy.py
 
-1. 设置集群配置文件
+2. 设置集群配置文件
 
-   样例
+   config.yaml样例
 
    ```
    cluster_name: apulis-sz-dev
@@ -182,15 +137,12 @@ GPU类别：NVidia，driver版本 >= 430
    - DLWSRegister
    
    WinbindServers: []
-    
-   
    
    datasource: MySQL
    mysql_password: apulis#2019#wednesday
    webuiport: 3081
    useclusterfile : true
    platform-scripts : ubuntu
-   
    
    machines:
      apulis-sz-dev-infra01:
@@ -210,7 +162,6 @@ GPU类别：NVidia，driver版本 >= 430
    cloud_config:
      dev_network:
        source_addresses_prefixes: [ "66.114.136.16/29", "73.140.21.119/32"]
-   
    
    cloud_config:
      default_admin_username: dlwsadmin
@@ -272,7 +223,6 @@ GPU类别：NVidia，driver版本 >= 430
      worker_node_num:    1
      gpu_count_per_node: 1
      gpu_type:           nvidia
-    
    
    mountpoints:
      nfsshare1:
@@ -283,17 +233,13 @@ GPU类别：NVidia，driver版本 >= 430
        mountpoints: ""
    ```
 
-   
-
-2. 初始化部署环境
+3. 初始化部署环境
 
    ```
    ./deploy.py --verbose -y build 
    ```
 
-   
-
-3. 配置集群节点ROOT用户密码
+4. 配置集群节点ROOT用户密码
 
    将集群节点ROOT密码设置一致，然后执行指令：
 
@@ -303,25 +249,19 @@ GPU类别：NVidia，driver版本 >= 430
    echo "your_root_password" > "rootpasswd"
    ```
 
-   
-
-4. 安装SSH Key到所有集群节点
+5. 安装SSH Key到所有集群节点
 
    ```
    ./deploy.py sshkey install
    ```
 
-   
-
-5. 检查集群节点是否可正常访问
+6. 检查集群节点是否可正常访问
 
    ```
    ./deploy.py execonall sudo ls -al
    ```
 
-   
-
-6. 设置集群节点的安装环境
+7. 设置集群节点的安装环境
 
    ```
    ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
@@ -333,9 +273,7 @@ GPU类别：NVidia，driver版本 >= 430
 
    dlwsadmin为操作集群机器所采用的用户名，配置于config.yaml
 
-   
-
-7. Worker机器状态确认
+8. Worker机器状态确认
 
    ```
    nvidia-docker run --rm dlws/cuda nvidia-smi
@@ -346,9 +284,7 @@ GPU类别：NVidia，driver版本 >= 430
    将nvidia-docker设置为default runtime
    ```
 
-   
-
-8. 安装K8S集群平台
+9. 安装K8S集群平台
 
    安装集群基础软件
 
@@ -366,17 +302,13 @@ GPU类别：NVidia，driver版本 >= 430
    ./deploy.py --verbose -y kubernetes labels
    ```
 
-   
-
-9. 挂载数据共享文件夹
+10. 挂载数据共享文件夹
 
    ```
    ./deploy.py --verbose mount
    ```
 
-   
-
-10. 部署NVidia插件
+11. 部署NVidia插件
 
     - kubernetes v1.15
 
@@ -427,18 +359,13 @@ GPU类别：NVidia，driver版本 >= 430
                 hostPath:
                   path: /var/lib/kubelet/device-plugins
       ```
-
       
-
     - kubernetes v1.11及以下
 
       ```
       ./deploy.py --verbose kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml
       ```
-
-      
-
-11. 设置Dashboard服务配置文件
+12. 设置Dashboard服务配置文件
 
     文件：src/dashboard/config/local.yaml
 
@@ -481,7 +408,7 @@ GPU类别：NVidia，driver版本 >= 430
 
     
 
-12. 部署集群应用
+13. 部署集群应用
 
     生成dashboard, jobmanager等服务的配置文件
 
@@ -524,5 +451,3 @@ GPU类别：NVidia，driver版本 >= 430
     ./deploy.py --verbose nginx webui3
     ./deploy.py --verbose kubernetes start webui3
     ```
-
-    

@@ -524,7 +524,7 @@ class DataHandler(object):
     def GetAceCount(self, identityName, resource):
         query = "SELECT count(ALL id) as c FROM `%s` where `identityName` = '%s' and `resource` = '%s'" % (self.acltablename,identityName, resource)
         with MysqlConn() as conn:
-            rets = conn.update(query)
+            rets = conn.select_many(query)
         ret = 0
         for c in rets:
             ret = c["c"]

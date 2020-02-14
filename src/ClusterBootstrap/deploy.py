@@ -1175,6 +1175,7 @@ def set_nfs_disk():
     we assume there's only 1 cluster.
     """
     load_platform_type()
+    get_nodes_by_roles(["nfs"])
     etcd_server_user = config["nfs_user"]
     nfs_servers = config["nfs_node"] if len(config["nfs_node"]) > 0 else config["etcd_node"]
     machine_name_2_full = {nm.split('.')[0]:nm for nm in nfs_servers}

@@ -67,6 +67,7 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
                 if ratio_sum == 0:
                     available = 0
                 else:
+                    # calculate per vc available num according to the cluster total num on percent
                     available = int(math.floor(float(cluster_available.get(gpu_type, 0)) * cur_ratio / ratio_sum))
                 quota = vc_info[vc_name][gpu_type]
 
@@ -97,3 +98,11 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
     logger.debug("vc_total %s, vc_used %s, vc_available %s, vc_unschedulable %s",
             vc_total, vc_used, vc_available, vc_unschedulable)
     return vc_total, vc_used, vc_available, vc_unschedulable
+
+if __name__ == '__main__':
+    vc_usage = collections.defaultdict(lambda :
+            collections.defaultdict(lambda : 0))
+    vc_usage["platform"] = {u'nvidia': 0}
+    re = calculate_vc_gpu_counts({u'nvidia': 1},{u'nvidia': 1},{u'nvidia': 0},{'platform': {u'nvidia': 1}, 'hanxianjie': {u'nvidia': 1}},vc_usage)
+    for i in re:
+        print(i)

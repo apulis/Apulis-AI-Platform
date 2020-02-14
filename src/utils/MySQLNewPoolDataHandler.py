@@ -493,9 +493,12 @@ class DataHandler(object):
         try:
             if (isinstance(groups, list)):
                 groups = json.dumps(groups)
-
-            sql = "insert into {0} (identityName, uid, gid, groups) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update uid='{2}', gid='{3}', groups='{4}'".format(
-                self.identitytablename, identityName, uid, gid, groups)
+            if len(self.GetIdentityInfo(identityName)) == 0:
+                sql = "insert into {0} (identityName, uid, gid, groups) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update uid='{2}', gid='{3}', groups='{4}'".format(
+                    self.identitytablename, identityName, uid, gid, groups)
+            else:
+                sql = """update `%s` set uid = '%s', gid = '%s', groups = '%s' where `identityName` = '%s' """ % (
+                self.identitytablename, uid, gid, groups, identityName)
             with MysqlConn() as conn:
                 conn.insert_one(sql)
                 conn.commit()
@@ -531,8 +534,13 @@ class DataHandler(object):
     def UpdateAce(self, identityName, identityId, resource, permissions, isDeny):
         ret = False
         try:
-            sql = "insert into {0} (identityName, identityId, resource, permissions, isDeny) values ('{1}', '{2}', '{3}', '{4}', '{5}') on duplicate key update permissions='{4}'".format(
-                self.acltablename, identityName, identityId, resource, permissions, isDeny)
+            existingAceCount = self.GetAceCount(identityName, resource)
+            if existingAceCount == 0:
+                sql = "insert into {0} (identityName, identityId, resource, permissions, isDeny) values ('{1}', '{2}', '{3}', '{4}', '{5}') on duplicate key update permissions='{4}'".format(
+                    self.acltablename, identityName, identityId, resource, permissions, isDeny)
+            else:
+                sql = """update `%s` set permissions = '%s' where `identityName` = '%s' and `resource` = '%s' """ % (
+                self.acltablename, permissions, identityName, resource)
             with MysqlConn() as conn:
                 conn.insert_one(sql)
                 conn.commit()

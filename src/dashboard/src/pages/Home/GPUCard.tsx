@@ -466,12 +466,12 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
         >
           Submit Training Job
         </Button>
-        <Button component={Link}
+        {/* <Button component={Link}
           to={{pathname: "/submission/data", state: { cluster } }}
           size="small" color="secondary"
         >
           Submit Data Job
-        </Button>
+        </Button> */}
       </CardActions>
       <Divider/>
       <CardContent>

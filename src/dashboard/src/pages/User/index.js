@@ -47,9 +47,15 @@ export default class User extends React.Component {
   save = () => {
     const { isAdmin, isAuthorized, userName } = this.state;
     let url = `/api/${this.context.selectedCluster}/updateUserPerm/${isAdmin}/${isAuthorized}/${userName}`;
-    axios.get(url).then(() => {
-      alert(`修改成功`)
-      this.getUserList();
+    axios.get(url).then((res) => {
+      if (res.data.result === true) {
+        alert(`修改成功`)
+        setTimeout(() => {
+          this.getUserList();
+        }, 500)
+      } else {
+        alert(res.data.result)
+      }
     }, (e) => {
       console.log(e);
       alert(`修改失败`)

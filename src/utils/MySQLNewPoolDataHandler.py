@@ -510,7 +510,7 @@ class DataHandler(object):
     @record
     def UpdateIdentityInfoPerm(self, identityName, isAdmin, isAuthorized):
         try:
-            sql = """update `%s` set isAdmin = '%s', isAuthorized = '%s' where `identityName` = '%s' """ % (self.accounttablename, isAdmin, isAuthorized, identityName)
+            sql = """update `%s` set isAdmin = '%s', isAuthorized = '%s' where `userName` = '%s' """ % (self.accounttablename, isAdmin, isAuthorized, identityName)
             with MysqlConn() as conn:
                 conn.update(sql)
                 conn.commit()

@@ -181,6 +181,23 @@ def sudo_scp (identity_file, source, target, user, host,changePermission=False, 
         print(cmd)
     SSH_exec_cmd(identity_file, user, host, cmd, verbose)
 
+# Copy a remote file (which require root access) to local (target) with identity file (private SSH key), user, host, and  
+def sudo_scp_to_local (identity_file, source, target, user, host,changePermission=False, verbose = False ):
+    tmp = str(uuid.uuid4())
+    cmd = "sudo cp %s ~/%s; sudo chmod og+rx ~/%s" % (source, tmp, tmp)
+    if verbose:
+        print(cmd)
+    SSH_exec_cmd(identity_file, user, host, cmd, verbose) 
+    cmd = 'scp -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -r "%s@%s:%s" "%s"' % (identity_file, user, host, tmp, target)
+    if verbose:
+        print(cmd)
+    os.system(cmd)    
+    cmd = "sudo rm ~/%s" % (tmp)
+    if verbose:
+        print(cmd)
+    SSH_exec_cmd(identity_file, user, host, cmd, verbose)    
+    
+
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 # Return the output of the remote command to local
 def SSH_exec_cmd_with_output1(identity_file, user,host,cmd, supressWarning = False):

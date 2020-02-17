@@ -28,6 +28,7 @@ const SignUp = React.lazy(() => import('./pages/SignUp'));
 const EmptyTeam = React.lazy(() => import('./pages/EmptyTeam'));
 const Submission = React.lazy(() => import('./pages/Submission'));
 const Jobs = React.lazy(() => import('./pages/Jobs'));
+const JobV2 = React.lazy(() => import('./pages/JobV2'));
 const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
 const Job = React.lazy(() => import('./pages/Job'));
 const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
@@ -49,6 +50,9 @@ interface BootstrapProps {
   _token?: any;
   config: ConfigContext;
   user: UserContext;
+  authEnabled?: {
+    [props: string]: 1 | 0;
+  };
 }
 
 const Loading = (
@@ -57,25 +61,29 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children }) => (
+const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children, authEnabled }) => (
 
   <BrowserRouter>
-    <UserProvider  uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} >
-      <TeamProvider>
-        <ClustersProvider>
-          <ThemeProvider theme={theme}>
-            {children}
-          </ThemeProvider>
-        </ClustersProvider>
-      </TeamProvider>
-    </UserProvider>
+    <ConfigProvider>
+      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} authEnabled={authEnabled} >
+        <SnackbarProvider>
+          <ConfirmProvider>
+            <TeamProvider>
+              <ClustersProvider>
+                <ThemeProvider theme={theme}>
+                  {children}
+                </ThemeProvider>
+              </ClustersProvider>
+            </TeamProvider>
+          </ConfirmProvider>
+        </SnackbarProvider>
+      </UserProvider>
+    </ConfigProvider>
   </BrowserRouter>
 );
-
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   const { openId, group, userName } = React.useContext(UserContext);
   const { teams } = React.useContext(TeamsContext);
-
   React.useEffect(() => {
     if (openId === undefined || group === undefined) {
       history.replace('/sign-in');
@@ -102,13 +110,16 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
               <Route path="/submission" component={Submission}/>
               <Route path="/jobs/:cluster" component={Jobs}/>
               <Route path="/jobs" component={Jobs}/>
-              <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobsV2}/>
+              <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/>
               <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
               <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/>
               <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
               <Route strict exact path="/jobs-v2/" component={JobsV2}/>
               <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
               <Route path="/cluster-status" component={ClusterStatus}/>
+              <Route path="/vc" component={Vc} />
+              <Route path="/user" component={User} />
+              <Route path="/access" component={Access} />
               <Redirect to="/"/>
             </Switch>
           </React.Suspense>
@@ -129,6 +140,8 @@ const App: React.FC<BootstrapProps> = (props) => (
         <React.Suspense fallback={Loading}>
           <Switch>
             <Route exact path="/sign-in" component={SignIn}/>
+            <Route exact path="/sign-up" component={SignUp} />
+            <Route exact path="/empty-team" component={EmptyTeam} />
             <Route component={Layout}/>
           </Switch>
         </React.Suspense>

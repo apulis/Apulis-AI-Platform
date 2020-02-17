@@ -677,7 +677,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     } else {
       history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
     }
-  }, [postJobData, ssh, ipython, tensorboard, interactivePorts, history, selectedCluster, postEndpoints, selectedTeam]);
+  }, [postJobData]);
   const fetchGrafanaUrl = `/api/clusters`;
   const request = useFetch(fetchGrafanaUrl);
   const fetchGrafana = async () => {
@@ -968,61 +968,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           </CardContent>
           <Collapse in={advanced}>
             <Divider/>
-            <CardContent>
-              <Typography component="div" variant="h6" >Azure Blob</Typography>
-              <Grid
-                container
-                wrap="wrap"
-                spacing={1}
-                align-items-xs-baseline
-              >
-                <Grid item xs={12}>
-                  <TextField
-                    value={accountName}
-                    onChange={onAccountNameChange}
-                    label="Account Name"
-                    fullWidth
-                    variant="filled"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    value={accountKey}
-                    onChange={onAccountKeyChange}
-                    label="Account Key"
-                    fullWidth
-                    variant="filled"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    value={containerName}
-                    onChange={onContainerNameChange}
-                    label="Container Name"
-                    fullWidth
-                    variant="filled"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    value={mountPath}
-                    onChange={onMountPathChange}
-                    label="Mount Path"
-                    fullWidth
-                    variant="filled"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    value={mountOptions}
-                    onChange={onMountOptionsChange}
-                    label="Mount Options"
-                    fullWidth
-                    variant="filled"
-                  />
-                </Grid>
-              </Grid>
-            </CardContent>
             <CardContent>
               <Typography component="div" variant="h6" >Custom Docker Registry</Typography>
               <Grid

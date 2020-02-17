@@ -56,16 +56,12 @@ const getDecodedIdToken = async context => {
     grant_type: 'authorization_code',
     client_secret: activeDirectoryConfig.clientSecret
   })
-  console.log('111111111111111')
   context.log.info({ body: params.toString() }, 'Id Token request')
   const response = await fetch(OAUTH2_URL + '/token', {
     method: 'POST',
     body: params
   })
-  console.log('22222222222')
   const data = await response.json()
-  console.log('res', response)
-  return
   context.log.info({ data }, 'Id Token response')
 
   context.assert(data['error'] == null, 502, data['error'])
@@ -83,13 +79,9 @@ module.exports = async context => {
       context.log.error({ idToken }, 'getDecodedIdToken failed')
       return context.redirect('/')
     }
-    
     const user = User.fromIdToken(context, idToken)
     await user.getAccountInfo()
-    /* context.cookies.set('token', user.toCookie()) */
-
     context.cookies.set('token', user.toCookieToken())
-
     try {
       const stateParams = new URLSearchParams(context.query.state)
       if (stateParams.has('to')) {

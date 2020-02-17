@@ -1,103 +1,56 @@
 # DLWS集群安装步骤
 
-### 目标配置  
-
-操作系统：ubuntu 16.04 LTS、Ubuntu 18.04 LTS  
-
-机器构成：Dev机器1台，Master节点机器1台，携带GPU的Worker节点机器1台   
-
-GPU类别：NVidia，driver版本 >= 430  
-
+### 配置说明 & 示例
+| 名称 | 配置 | GPU | 操作系统 | 公网IP | 子网IP | 描述 |
+| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
+| dev | 4C16G | N/A | ubuntu 16.04 LTS/18.04 LTS | 52.130.78.51 | N/A | 执行部署操作 |
+| master | 1C8G | N/A | ubuntu 16.04 LTS/18.04 LTS | 115.220.9.243 | 192.168.0.195 | k8s master节点 |
+| worker | 8C64G | >=1 |  ubuntu 16.04 LTS/18.04 LTS | 115.220.9.252 | 192.168.0.63 | k8s worker节点 |
 
 
-### 安装环境预备
+其中：
+1. master和worker需在同一个子网或VPC，dev与master、worker可以不在同一个子网或VPC
+2. worker节点需携带GPU，GPU类别为NVidia，安装驱动（driver）版本>= 430  
 
-1. 免密码配置（针对非root用户）
+
+### 安装准备
+1. 免密码配置（针对非root用户，需在dev、master、worker三个机器中配置）
 
    - 执行sudo visudo
 
    - 检查文件内容，确认是否存在以下配置，没有则新增
 
-     ```
-     %sudo ALL=(ALL:ALL) ALL
-     %sudo ALL=(ALL) NOPASSWD:ALL
-     ```
+    ```
+    %sudo ALL=(ALL:ALL) ALL
+    %sudo ALL=(ALL) NOPASSWD:ALL
+    ```
 
-2. GIT配置
+2. 配置DNS，需要在DNS提供商控制台进行配置
 
-   - 检查GIT是否安装
+    DNS提供商：https://dns.console.aliyun.com
 
-     ```
-     执行指令：git --version
-     输出如下：git version 2.7.4
-     ```
+   主域名：sigsus.cn
 
-     
+    示例：
 
-   - 如未安装GIT，请执行
+    | 主机记录 | 记录类型 | 记录值 | 对应节点(参考) |
+    | ---- | ---- | ---- | ---- |
+    | apulis-chinaeast-infra01 | A | 52.130.78.51 | dev |
+    | apulis-sz-dev-infra01 | A | 115.220.9.243 | master |
+    | apulis-sz-dev-worker01 | A | 115.220.9.252 | worker |
 
-     ```
-     sudo apt update
-     sudo apt install git
-     ```
-
-     
-
-   - 配置账号
-
-     ```
-     git config user.name "your_github_account_name"
-     git config user.email "your_github_account_email"
-     ```
-
-   - 配置GitHub访问授权
-
-3. DNS配置
-
-   - 假设环境配置如下
-
-     > master节点主机名：apulis-sz-dev-infra01
-     >
-     > worker节点主机名：apulis-sz-dev-worker01
-     >
-     > dev节点主机名：apulis-chinaeast-infra01
-     >
-     > 域名解析供应商：https://dns.console.aliyun.com
-     >
-     > 主域名：sigsus.cn
-
-     
-
-   - 配置节点IP到对应域名的映射关系
-
-     apulis-sz-dev-infra01.sigsus.cn
-
-     apulis-sz-dev-worker01.sigsus.cn
-
-     apulis-chinaeast-infra01.sigsus.cn
-
-     
-
-   - 配置子域名快捷搜索（dev、master、worker三个机器）
-
+3. 配置子域名快捷搜索（dev、master、worker三个机器）  
      修改文件：vim /etc/resolvconf/resolv.conf.d/base  
      增加数据：search sigsus.cn  
-     执行指令：sudo resolvconf -u   	
+     执行指令：sudo resolvconf -u  
 
-     
-
-   - 检查DNS配置
-
-     指令执行是否成功
-
-     ```
+     检查DNS配置，在master、worker上指令执行看是否成功 
+     ``` 
      ping apulis-sz-dev-infra01
      ping apulis-sz-dev-worker01
      ```
 
-     
-
-4. 配置镜像文件
+4. 配置镜像源（dev、master、worker三个机器）  
 
      获取系统codebase
 
@@ -105,7 +58,7 @@ GPU类别：NVidia，driver版本 >= 430
      lsb_release -a
      ```
 
-     设置apt-get镜像源（假设codebase=bionic，采用aliyun镜像），编辑/etc/apt/sources.list
+     设置apt-get镜像源（假设codebase=bionic，采用aliyun镜像），编辑/etc/apt/sources.list，填入以下内容：
 
      ```
      deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
@@ -126,35 +79,15 @@ GPU类别：NVidia，driver版本 >= 430
      deb https://mirrors.aliyun.com/docker-ce/linux/ubuntu bionic stable
      ```
 
-     
-
 ### 执行安装
+1. 文件/路径说明  
+   安装程序所在目录 ：src/ClusterBootstrap/  
+   集群配置文件：src/ClusterBootstrap/config.yaml   
+   安装文件：src/ClusterBootstrap/deploy.py
 
-1. 配置目标机器环境
+2. 设置集群配置文件
 
-   ```
-   ./deploy.py  runscriptonall ./scripts/prepare_ubuntu.sh
-   ./deploy.py  runscriptonall ./scripts/prepare_ubuntu.sh continue
-   ```
-
-   
-
-2. Worker机器状态确认
-
-   ```
-   nvidia-docker run --rm dlws/cuda nvidia-smi
-   docker run --rm -ti dlws/cuda nvidia-smi
-   
-   保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
-   如nvidia-docker指令执行正常，但docker指令执行错误，则修改/etc/docker/daemon.json，
-   将nvidia-docker设置为default runtime
-   ```
-
-   
-
-3. 设置集群配置文件
-
-   样例
+   config.yaml样例
 
    ```
    cluster_name: apulis-sz-dev
@@ -204,15 +137,12 @@ GPU类别：NVidia，driver版本 >= 430
    - DLWSRegister
    
    WinbindServers: []
-    
-   
    
    datasource: MySQL
    mysql_password: apulis#2019#wednesday
    webuiport: 3081
    useclusterfile : true
    platform-scripts : ubuntu
-   
    
    machines:
      apulis-sz-dev-infra01:
@@ -232,7 +162,6 @@ GPU类别：NVidia，driver版本 >= 430
    cloud_config:
      dev_network:
        source_addresses_prefixes: [ "66.114.136.16/29", "73.140.21.119/32"]
-   
    
    cloud_config:
      default_admin_username: dlwsadmin
@@ -294,7 +223,6 @@ GPU类别：NVidia，driver版本 >= 430
      worker_node_num:    1
      gpu_count_per_node: 1
      gpu_type:           nvidia
-    
    
    mountpoints:
      nfsshare1:
@@ -305,17 +233,13 @@ GPU类别：NVidia，driver版本 >= 430
        mountpoints: ""
    ```
 
-   
-
-4. 编译
+3. 初始化部署环境
 
    ```
-   deploy.py -y build
+   ./deploy.py --verbose -y build 
    ```
 
-   
-
-5. 配置集群节点ROOT用户密码
+4. 配置集群节点ROOT用户密码
 
    将集群节点ROOT密码设置一致，然后执行指令：
 
@@ -325,72 +249,122 @@ GPU类别：NVidia，driver版本 >= 430
    echo "your_root_password" > "rootpasswd"
    ```
 
-   
-
-6. 安装SSH Key到所有集群节点
+5. 安装SSH Key到所有集群节点
 
    ```
-   deploy.py sshkey install
+   ./deploy.py sshkey install
    ```
 
-   
-
-7. 检查集群节点是否可正常访问
+6. 检查集群节点是否可正常访问
 
    ```
-   deploy.py execonall sudo ls -al
+   ./deploy.py execonall sudo ls -al
    ```
 
-   
-
-8. 设置集群节点的安装环境
+7. 设置集群节点的安装环境
 
    ```
-   deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
-   deploy.py --verbose execonall sudo usermod -aG docker dlwsadmin
+   ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
+   ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh continue
+   ./deploy.py --verbose execonall sudo usermod -aG docker dlwsadmin
    ```
 
    其中：
 
    dlwsadmin为操作集群机器所采用的用户名，配置于config.yaml
 
+8. Worker机器状态确认
+
+   ```
+   nvidia-docker run --rm dlws/cuda nvidia-smi
+   docker run --rm -ti dlws/cuda nvidia-smi
+   保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
    
+   如nvidia-docker指令执行正常，但docker指令执行错误，则修改/etc/docker/daemon.json，
+   将nvidia-docker设置为default runtime
+   ```
 
 9. 安装K8S集群平台
 
    安装集群基础软件
 
    ```
-   deploy.py execonall docker pull dlws/pause-amd64:3.0
-   deploy.py execonall docker tag  dlws/pause-amd64:3.0 
-   deploy.py -y deploy
+   ./deploy.py execonall docker pull dlws/pause-amd64:3.0
+   ./deploy.py execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
+    
+   ./deploy.py --verbose -y deploy
    ```
 
    设置集群节点标签
 
    ```
-   deploy.py -y updateworker
-   deploy.py -y kubernetes labels
+   ./deploy.py --verbose -y updateworker
+   ./deploy.py --verbose -y kubernetes labels
    ```
-
-   
 
 10. 挂载数据共享文件夹
 
-    ```
-    deploy.py --verbose mount
-    ```
-
-    
+   ```
+   ./deploy.py --verbose mount
+   ```
 
 11. 部署NVidia插件
 
-    ```
-    deploy.py --verbose kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml
-    ```
+    - kubernetes v1.15
 
-    
+      指令：
 
+      ```
+      ./deploy.py --verbose kubectl create -f nvidia-device-plugin.yml
+      ```
+
+      配置文件名：nvidia-device-plugin.yml
+
+      配置文件样例：
+
+      ```
+      apiVersion: extensions/v1beta1
+      kind: DaemonSet
+      metadata:
+        name: nvidia-device-plugin-daemonset
+        namespace: kube-system
+      spec:
+        template:
+          metadata:
+            # Mark this pod as a critical add-on; when enabled, the critical add-on scheduler
+            # reserves resources for critical add-on pods so that they can be rescheduled after
+            # a failure.  This annotation works in tandem with the toleration below.
+            annotations:
+              scheduler.alpha.kubernetes.io/critical-pod: ""
+            labels:
+              name: nvidia-device-plugin-ds
+          spec:
+            tolerations:
+            # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
+            # This, along with the annotation above marks this pod as a critical add-on.
+            - key: CriticalAddonsOnly
+              operator: Exists
+            containers:
+            - image: nvidia/k8s-device-plugin:1.11
+              name: nvidia-device-plugin-ctr
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: device-plugin
+                  mountPath: /var/lib/kubelet/device-plugins
+            volumes:
+              - name: device-plugin
+                hostPath:
+                  path: /var/lib/kubelet/device-plugins
+      ```
+      
+    - kubernetes v1.11及以下
+
+      ```
+      ./deploy.py --verbose kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml
+      ```
 12. 设置Dashboard服务配置文件
 
     文件：src/dashboard/config/local.yaml
@@ -439,14 +413,14 @@ GPU类别：NVidia，driver版本 >= 430
     生成dashboard, jobmanager等服务的配置文件
 
     ```
-    deploy.py --verbose webui         
+    ./deploy.py --verbose webui         
     ```
 
     编译restfulapi和webui3服务
 
     ```
-    deploy.py --verbose docker push restfulapi
-    deploy.py --verbose docker push webui3
+    ./deploy.py --verbose docker push restfulapi
+    ./deploy.py --verbose docker push webui3
     ```
 
     编译GPU Reporter
@@ -460,22 +434,20 @@ GPU类别：NVidia，driver版本 >= 430
     配置Nginx
 
     ```
-    deploy.py --verbose nginx fqdn
-    deploy.py --verbose nginx config
+    ./deploy.py --verbose nginx fqdn
+    ./deploy.py --verbose nginx config
     ```
 
     启动集群应用
 
     ```
-    deploy.py --verbose kubernetes start mysql jobmanager restfulapi webui3 monitor nginx custommetrics
-    deploy.py --verbose kubernetes start cloudmonitor
+    ./deploy.py --verbose kubernetes start mysql jobmanager restfulapi monitor nginx custommetrics
+    ./deploy.py --verbose kubernetes start cloudmonitor
     ```
 
     启动dashboard
-    
+
     ```
-    deploy.py --verbose nginx webui3
-    deploy.py --verbose kubernetes start webui3
+    ./deploy.py --verbose nginx webui3
+    ./deploy.py --verbose kubernetes start webui3
     ```
-    
-    

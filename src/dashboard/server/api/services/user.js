@@ -48,6 +48,23 @@ class User extends Service {
     user.nickName = userinfo['nick']
     return user
   }
+  /**
+   * @param {import('koa').Context} context
+   * @param {object} userinfo
+   * @return {User}
+   */
+  static fromWechat(context, userInfo) {
+    // 对于微信，首先选择 unionId 作为 openId
+    let userId = ''
+    if (userInfo.unionId) {
+      userId = 'unionId--' + userInfo.unionId
+    } else {
+      userId = 'openId--' + userInfo.openId
+    }
+    const user = new User(context, userId, 'Wechat')
+    user.nickName = userInfo.nickname
+    return user
+  }
 
   /**
    * @param {import('koa').Context} context
@@ -102,6 +119,8 @@ class User extends Service {
     user.password = payload['password']
     user.isAdmin = payload['isAdmin']
     user.isAuthorized = payload['isAuthorized']
+    user.group = payload['group']
+    user.openId = payload['openId']
     return user
   }
 
@@ -205,11 +224,13 @@ class User extends Service {
       this.password = data['password']
       this.isAdmin = data['isAdmin']
       this.isAuthorized = data['isAuthorized']
+      this.openId = data['openId']
+      this.group = data['group']
     }
     return data
   }
 
-  async signup(nickName, userName, password ) {
+  async signup(nickName, userName, password) {
     const params = new URLSearchParams(Object.assign({
       openId: this.openId,
       group: this.group,
@@ -242,8 +263,8 @@ class User extends Service {
       familyName: this.familyName,
       givenName: this.givenName
     }, sign)
-
   }
+
   toCookieToken () {
     return jwt.sign({
       openId: this.openId,

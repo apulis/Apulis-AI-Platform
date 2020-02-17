@@ -159,7 +159,7 @@ class Cluster extends Service {
   async setJobPriorty (jobId, priority) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email
+      userName: user.userName
     })
     const body = { [jobId]: priority }
     const response = await this.fetch('/jobs/priorities?' + params, {
@@ -182,7 +182,7 @@ class Cluster extends Service {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.email
+      userName: user.userName
     })
     if (cursor !== undefined) {
       params.set('cursor', cursor)
@@ -197,11 +197,10 @@ class Cluster extends Service {
    * @return {Promise<Array>}
    */
   async getTeams () {
-    const { user } = this.context
+    const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.userName
     })
-
     const response = await this.fetch('/ListVCs?' + params)
     const data = await response.json()
     this.context.log.debug(data, 'Listed VC')
@@ -290,7 +289,7 @@ class Cluster extends Service {
   async addEndpoint (jobId, endpoints) {
     const { user } = this.context.state
     const params = new URLSearchParams({
-      userName: user.email
+      userName: user.userName
     })
     const body = { jobId, endpoints }
     const response = await this.fetch('/endpoints?' + params, {
@@ -376,18 +375,17 @@ class Cluster extends Service {
      * @returns {Promise<import('node-fetch').Response>}
      */
   async fetch (path, init) {
-    const url = new URL(path, this.config.restfulapi)
+    const url = this.config.restfulapi + path
     const begin = Date.now()
     this.context.log.info({ url, init }, 'Cluster fetch request')
     try {
-      const response = await fetch(this.config.restfulapi + path, init)
+      const response = await fetch(url, init)
       const duration = Date.now() - begin
       this.context.log.info({ url, init, status: response.status, duration }, 'Cluster fetch response')
       return response
     } catch (error) {
       const duration = Date.now() - begin
-      console.log('err', error)
-      // this.context.log.error({ url, init, error, duration }, 'Cluster fetch error')
+      this.context.log.error({ url, init, error, duration }, 'Cluster fetch error')
       throw error
     }
   }

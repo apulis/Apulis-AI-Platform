@@ -1053,6 +1053,34 @@ def deploy_masters(force = False):
     """
     utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_masters[0], deploycmd , False)
 
+def deploy_masters_by_kubeadm(force = False):
+    print "==============================================="
+    print "Prepare to deploy kubernetes master"
+    print "==============================================="
+
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+
+    utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
+    #temporary hard-coding, will be fixed after refactoring of config/render logic
+    config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
+    if verbose:
+        print( "Restapi information == %s " % config["restapi"])
+    utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
+    utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+    render_service_templates()
+    utils.exec_cmd_local("./scripts/install_kubeadm.sh")
+    for i,kubernetes_master in enumerate(kubernetes_masters):
+        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s
+            """ % kubernetes_master0
+        utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
+        if i==0:
+            utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
+    if not os.path.exists("./deploy/bin/kubectl") and os.path.exists("/usr/bin/kubectl"):
+        utils.exec_cmd_local("mkdir -p  ./deploy/bin; ln -s /usr/bin/kubectl ./deploy/bin/kubectl" )
+    kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
+    run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
 
 def clean_etcd():
     etcd_servers = config["etcd_node"]
@@ -1419,6 +1447,54 @@ def update_worker_nodes( nargs ):
     os.system("rm ./deploy/kubelet/options.env")
     os.system("rm ./deploy/kubelet/kubelet.service")
     os.system("rm ./deploy/kubelet/worker-kubeconfig.yaml")
+
+def update_worker_nodes_by_kubeadm( nargs ):
+    write_nodelist_yaml()
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+
+    workerNodes = get_worker_nodes(config["clusterId"], False)
+    workerNodes = limit_nodes(workerNodes)
+    worker_ssh_user = config["admin_username"]
+
+    tokencmd = "sudo kubeadm token create"
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    token = tokenresult.split("\n")[0]
+    hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+
+    print("Token === %s, hash == %s" % (token, hash) )
+    for node in workerNodes:
+        if in_list(node, nargs):
+            workercmd = "sudo kubeadm join --token %s %s:6443 --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, hash)
+            if verbose:
+                print(workercmd)
+            utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
+
+def reset_worker_nodes_by_kubeadm( nargs ):
+    write_nodelist_yaml()
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+
+    workerNodes = get_worker_nodes(config["clusterId"], False)
+    workerNodes = limit_nodes(workerNodes)
+    worker_ssh_user = config["admin_username"]
+
+    if nargs is not None and len(nargs)>=0:
+        print("Reset nodes %s " % nargs )
+    for node in workerNodes:
+        if verbose:
+            print ("Worker node %s" % node)
+        if in_list(node, nargs):
+            nodename = kubernetes_get_node_name(node)
+            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename, 'delete node %s' %nodename ] ) 
+            workercmd = "sudo kubeadm reset" 
+            if verbose:
+                print(workercmd)
+            utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user,node,workercmd)
+
 
 def update_worker_nodes_in_parallel(nargs):
     # TODO: Merge with update_worker_nodes
@@ -2900,6 +2976,24 @@ def deploy_ETCD_master(force = False):
             print "Cannot deploy cluster since there are insufficient number of etcd server or master server. \n To continue deploy the cluster we need at least %d etcd server(s)" % (int(config["etcd_node_num"]))
             return False
 
+def deploy_ETCD_master_by_kubeadm(force = False):
+        print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
+        print "The current deployment has:\n"
+
+        check_master_ETCD_status()
+
+        if "etcd_node" in config and len(config["etcd_node"]) >= int(config["etcd_node_num"]) and "kubernetes_master_node" in config and len(config["kubernetes_master_node"]) >= 1:
+            print ("Ready to deploy kubernetes master/etcd on %s.  " % (",".join(config["kubernetes_master_node"])))
+            
+            gen_configs()
+            deploy_masters_by_kubeadm(force)
+
+            return True
+        else:
+            print "Cannot deploy cluster since there are insufficient number of etcd server or master server. \n To continue deploy the cluster we need at least %d etcd server(s)" % (int(config["etcd_node_num"]))
+            return False
+
+
 def update_config_node( node ):
     role = SSH_exec_cmd_with_output( )
 
@@ -2923,7 +3017,14 @@ def run_kube( prog, commands ):
     os.system(kube_command)
 
 def run_kubectl( commands ):
-    run_kube( "./deploy/bin/kubectl", commands)
+    if os.path.exists("./deploy/sshkey/admin.conf"):
+        one_command = " ".join(commands)
+        kube_command = "kubectl --kubeconfig=./deploy/sshkey/admin.conf %s" % one_command
+        if verbose:
+            print kube_command
+        os.system(kube_command)
+    else:
+        run_kube( "./deploy/bin/kubectl", commands)
 
 def kubernetes_get_node_name(node):
     kube_node_name = ""
@@ -2992,6 +3093,8 @@ def get_service_name(service_config_file):
     except:
         return None
     f.close()
+    if service_config is None:
+        return None
     name = fetch_dictionary(service_config, ["metadata","name"])
     if not name is None:
         return name
@@ -3067,11 +3170,15 @@ def get_node_lists_for_service(service):
 
 def kubernetes_label_nodes( verb, servicelists, force ):
     servicedic = get_all_services()
-    print "servicedic\n", servicedic
+    if verbose: 
+        print ( "servicedic == %s" % servicedic )
     get_nodes(config["clusterId"])
     labels = fetch_config(config, ["kubelabels"])
-    print "labels\n", labels
+    if verbose: 
+        print ( "labels == %s " % labels )
     for service, serviceinfo in servicedic.iteritems():
+        if verbose:
+            print("Examine service %s" % service)
         servicename = get_service_name(servicedic[service])
         if (not service in labels) and (not servicename in labels) and "default" in labels and (not servicename is None):
             print "not in: {},{}\n".format(service, serviceinfo)
@@ -3519,6 +3626,23 @@ def run_command( args, command, nargs, parser ):
     elif command == "deploy" and "clusterId" in config:
         deploy_ETCD_master(force=args.force)
         utils.render_template("./template/kubeconfig/kubeconfig.yaml.template", "deploy/kubeconfig/kubeconfig.yaml", config)
+
+    elif command == "kubeadm":
+        if len(nargs) > 0:
+            if nargs[0] == "init":
+                # Setup cluster by kubeadm
+                deploy_ETCD_master_by_kubeadm(force=args.force)
+            elif nargs[0] == "join":
+                # Join worker nodes by kubeadm
+                update_worker_nodes_by_kubeadm( nargs[1:] )
+            elif nargs[0] == "reset":
+                reset_worker_nodes_by_kubeadm( nargs[1:] )
+            else:
+                print ("Error: subcommand %s is not recognized for kubeadm. " % nargs[0])
+                exit()
+        else:
+            print ("Error: kubeadm need a subcommand (init, join) ")
+            exit()
 
     elif command == "nfs-server":
         if len(nargs) > 0:

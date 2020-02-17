@@ -8,3 +8,4 @@ redis==3.2.1
 requests
 MySQL-python
 DButils
+subprocess32

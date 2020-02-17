@@ -36,3 +36,11 @@ matrix:
       - pip install pyyaml requests tabulate cachetools kubernetes
     script:
       - python -m unittest discover .
+  - language: python
+    python: 3.6
+    before_install:
+      - cd src/StorageManager
+    install:
+      - pip install requests
+    script:
+      - python -m unittest discover .

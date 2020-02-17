@@ -611,12 +611,14 @@ default_config_parameters = {
             "algorithm-segmentation": {}, 
             "gobld": {},
             "kubernetes": {},
+            "backendbase": {},
         },
         "customize": {
             "webui": {},
             "webui2": {}, 
             "webui3": {}, 
             "restfulapi": {},
+            "restfulapi2": {},
             "gpu-reporter": {}
         },
         "external": {

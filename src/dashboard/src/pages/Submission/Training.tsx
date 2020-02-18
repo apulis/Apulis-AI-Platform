@@ -25,9 +25,11 @@ import {
   SvgIcon, useMediaQuery
 } from "@material-ui/core";
 import Tooltip from '@material-ui/core/Tooltip';
-import { Info, Delete, Add } from "@material-ui/icons";
+import { Info, Delete, Add, PortraitSharp } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
+import { useSnackbar } from 'notistack';
+
 import { useForm, Controller } from 'react-hook-form';
 import useFetch from "use-http";
 import { join } from 'path';
@@ -66,8 +68,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const { selectedCluster,saveSelectedCluster } = React.useContext(ClustersContext);
   const { userName, uid } = React.useContext(UserContext);
   const { teams, selectedTeam }= React.useContext(TeamsContext);
+  const { enqueueSnackbar } = useSnackbar()
   //const team = 'platform';
-  const { control, handleSubmit } = useForm()
+  // const { control, handleSubmit } = useForm()
   const [showGPUFragmentation, setShowGPUFragmentation] = React.useState(false)
   const [grafanaUrl, setGrafanaUrl] = React.useState('');
   const [name, setName] = React.useState("");
@@ -403,7 +406,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setSaveTemplate(true)
       window.location.reload()
     } catch (error) {
-      alert('Failed to save the template, check console (F12) for technical details.')
+      enqueueSnackbar('Failed to save the template', {
+        variant: 'error',
+      })
+      // alert('Failed to save the template, check console (F12) for technical details.')
       console.error(error);
     }
   };
@@ -448,7 +454,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setShowDeleteTemplate(true)
       window.location.reload()
     } catch (error) {
-      alert('Failed to delete the template, check console (F12) for technical details.')
+      enqueueSnackbar('Failed to delete the template', {
+        variant: 'error',
+      })
+      // alert('Failed to delete the template, check console (F12) for technical details.')
       console.error(error);
     }
   }
@@ -493,7 +502,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           tensorboard,
           plugins
         } = JSON.parse(event.target.value as string);
-        console.log('jobpath', plugins)
         if (name !== undefined) setName(name);
         if (type !== undefined) setType(type);
         if (gpus !== undefined) setGpus(gpus);
@@ -652,6 +660,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   React.useEffect(() => {
     if (postJobData == null) return;
+    if (postJobData.error) {
+      enqueueSnackbar(postJobData.error, {
+        variant: 'error'
+      });
+      return
+    }
 
     jobId.current = postJobData['jobId'];
     const endpoints = [];
@@ -668,7 +682,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (ssh) endpoints.push('ssh');
     if (ipython) endpoints.push('ipython');
     if (tensorboard) endpoints.push('tensorboard');
-
+    
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
       if (ssh) setSsh(false)
@@ -689,7 +703,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
 
   React.useEffect(() => {
-    // fetchGrafana()
+    fetchGrafana()
     if (postEndpointsData) {
       setOpen(true);
       setTimeout(()=>{
@@ -701,15 +715,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   React.useEffect(() => {
     if (postJobError) {
-
-      message.error('Job submission failed');
+      enqueueSnackbar('Job submission failed', {
+        variant: 'error',
+      })
     }
   }, [postJobError])
 
   React.useEffect(() => {
     if (postEndpointsError) {
       // alert('Enable endpoints failed')
-      // message('error', 'Enable endpoints failed')
+      enqueueSnackbar('Enable endpoints failed', {
+        variant: 'error',
+      })
     }
   }, [postEndpointsError])
 
@@ -1064,6 +1081,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         fullWidth
                         margin="dense"
                         variant="filled"
+                        error={jobPath.indexOf('\\') === 0 || jobPath.indexOf('/') === 0}
                         value={jobPath}
                         onChange={onJobPathChange}
                       />

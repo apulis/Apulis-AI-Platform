@@ -685,9 +685,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
-      if (ssh) setSsh(false)
-      if (ipython) setIpython(false)
-      if (tensorboard) setTensorboard(false)
     } else {
       history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
     }

@@ -277,16 +277,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   const [jobPath, setJobPath] = React.useState("");
 
-  const jobPathError = jobPath.indexOf('\\') === 0 || jobPath.indexOf('/') === 0;
   const onJobPathChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const { value } = event.target
       setJobPath(value);
-      setEnableSubmit(false);
-      if (value.indexOf('\\') === 0 || value.indexOf('/') === 0) {
-        console.log(2234)
-        setEnableSubmit(true);
-      }
     },
     [setJobPath]
   )
@@ -623,7 +617,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       enableworkpath: enableWorkPath,
       dataPath: sanitizePath(dataPath || ''),
       enabledatapath: enableDataPath,
-      jobPath: jobPath || '',
+      jobPath: sanitizePath(jobPath || ''),
       enablejobpath: enableJobPath,
       env: environmentVariables,
       hostNetwork : type === 'PSDistJob',
@@ -1086,7 +1080,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         fullWidth
                         margin="dense"
                         variant="filled"
-                        error={jobPathError}
                         value={jobPath}
                         onChange={onJobPathChange}
                       />

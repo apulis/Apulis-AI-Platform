@@ -276,9 +276,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   );
 
   const [jobPath, setJobPath] = React.useState("");
+
+  const jobPathError = jobPath.indexOf('\\') === 0 || jobPath.indexOf('/') === 0;
   const onJobPathChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setJobPath(event.target.value);
+      const { value } = event.target
+      setJobPath(value);
+      setEnableSubmit(false);
+      if (value.indexOf('\\') === 0 || value.indexOf('/') === 0) {
+        console.log(2234)
+        setEnableSubmit(true);
+      }
     },
     [setJobPath]
   )
@@ -1078,7 +1086,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         fullWidth
                         margin="dense"
                         variant="filled"
-                        error={jobPath.indexOf('\\') === 0 || jobPath.indexOf('/') === 0}
+                        error={jobPathError}
                         value={jobPath}
                         onChange={onJobPathChange}
                       />

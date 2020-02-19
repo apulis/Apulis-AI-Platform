@@ -593,7 +593,8 @@ class PythonLauncher(Launcher):
                     job_object.params["job_token"] = hashlib.md5(job_object.params["userName"]+":"+config["master_token"]).hexdigest()
                 else:
                     job_object.params["job_token"] = "tryme2017"
-
+            if "env" in job_object.params:
+                job_object.params["envs"]=job_object.params["env"]
             if "envs" not in job_object.params:
                 job_object.params["envs"] =[]
             job_object.params["envs"].append({"name": "DLTS_JOB_TOKEN", "value": job_object.params["job_token"]})              

@@ -346,6 +346,11 @@ def KillJob(userName, jobId):
     return ret
 
 
+def InvalidateJobListCache(vcName):
+    CacheManager.Invalidate("GetAllPendingJobs", vcName)
+    DataManager.GetAllPendingJobs(vcName)
+
+
 def AddCommand(userName, jobId,command):
     dataHandler = DataHandler()
     ret = False
@@ -564,7 +569,8 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                 # Update Ace
                 permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
                 resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-                ACLManager.UpdateAce(userName, resourceAclPath, permission, False)
+                # delete of default admin permissions
+                # ACLManager.UpdateAce(userName, resourceAclPath, permission, False)
 
         dataHandler.Close()
     except Exception as e:

@@ -5,9 +5,11 @@ import { BrowserRouter, Redirect, Route, RouteComponentProps, Switch } from "rea
 import 'typeface-roboto';
 import 'typeface-roboto-mono';
 
+
 import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
 import { ThemeProvider } from "@material-ui/styles";
+import initAxios from './utils/init-axios'
 
 import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
@@ -20,7 +22,7 @@ import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
 import Drawer from "./layout/Drawer";
 import { Provider as DrawerProvider } from "./layout/Drawer/Context";
-import { SnackbarProvider } from 'notistack';
+import { SnackbarProvider, useSnackbar, VariantType } from 'notistack';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const SignIn = React.lazy(() => import('./pages/SignIn'));
@@ -61,12 +63,12 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children, authEnabled }) => (
 
+
+const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, password, isAdmin, isAuthorized, _token, children, authEnabled }) => (
   <BrowserRouter>
     <ConfigProvider>
       <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} password={password} isAdmin={isAdmin} isAuthorized={isAuthorized} token={_token} authEnabled={authEnabled} >
-        <SnackbarProvider>
           <ConfirmProvider>
             <TeamProvider>
               <ClustersProvider>
@@ -76,7 +78,6 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, user
               </ClustersProvider>
             </TeamProvider>
           </ConfirmProvider>
-        </SnackbarProvider>
       </UserProvider>
     </ConfigProvider>
   </BrowserRouter>
@@ -93,44 +94,49 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
       history.replace('/empty-team');
     }
   }, [openId, group, userName, teams, history]);
-
+  const { enqueueSnackbar } = useSnackbar();
+  initAxios((type: VariantType, msg: string) => {
+    enqueueSnackbar(msg, {
+      variant: type,
+    });
+  });
   if (openId === undefined || group === undefined || userName === undefined || (teams !== undefined && teams.length === 0)) {
     return null;
   }
 
   return (
-    <>
-      <DrawerProvider>
-        <Content>
-          <AppBar />
-          <Drawer />
-          <React.Suspense fallback={Loading}>
-            <Switch location={location}>
-              <Route exact path="/" component={Home}/>
-              <Route path="/submission" component={Submission}/>
-              <Route path="/jobs/:cluster" component={Jobs}/>
-              <Route path="/jobs" component={Jobs}/>
-              <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/>
-              <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
-              <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/>
-              <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
-              <Route strict exact path="/jobs-v2/" component={JobsV2}/>
-              <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
-              <Route path="/cluster-status" component={ClusterStatus}/>
-              <Route path="/vc" component={Vc} />
-              <Route path="/user" component={User} />
-              <Route path="/access" component={Access} />
-              <Redirect to="/"/>
-            </Switch>
-          </React.Suspense>
-        </Content>
-      </DrawerProvider>
-    </>
+    <DrawerProvider>
+      <Content>
+        <AppBar />
+        <Drawer />
+        <React.Suspense fallback={Loading}>
+          <Switch location={location}>
+            <Route exact path="/" component={Home}/>
+            <Route path="/submission" component={Submission}/>
+            <Route path="/jobs/:cluster" component={Jobs}/>
+            <Route path="/jobs" component={Jobs}/>
+            <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/>
+            <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
+            <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/>
+            <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
+            <Route strict exact path="/jobs-v2/" component={JobsV2}/>
+            <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
+            <Route path="/cluster-status" component={ClusterStatus}/>
+            <Route path="/vc" component={Vc} />
+            <Route path="/user" component={User} />
+            <Route path="/access" component={Access} />
+            <Redirect to="/"/>
+          </Switch>
+        </React.Suspense>
+      </Content>
+    </DrawerProvider>
   );
 }
 
-const App: React.FC<BootstrapProps> = (props) => (
-    <Contexts {...props}>
+const App: React.FC<BootstrapProps> = (props) => {
+  return (
+    <SnackbarProvider>
+      <Contexts {...props} >
       <Helmet
         titleTemplate="%s - Deep Learning Training Service"
         defaultTitle="Deep Learning Training Service"
@@ -147,6 +153,7 @@ const App: React.FC<BootstrapProps> = (props) => (
         </React.Suspense>
       </Box>
     </Contexts>
-);
+  </SnackbarProvider>
+)};
 
 export default App;

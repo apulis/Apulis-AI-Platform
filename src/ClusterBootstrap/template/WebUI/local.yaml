@@ -1,6 +1,11 @@
 sign: "Sign key for JWT"
 winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
 masterToken: "Access token of all users"
+
+authEnabled:
+  wechat: {% if cnf["Authentications"]["Wechat"] %}1{% else %}0{% endif %}
+  microsoft: {% if cnf["Authentications"]["Microsoft"] %}1{% else %}0{% endif %}
+
 {% if cnf["Authentications"]["Microsoft"] %}
 activeDirectory:
   tenant: "{{cnf["Authentications"]["Microsoft"]["TenantId"]}}"
@@ -12,6 +17,12 @@ dingtalk:
   appId: "{{cnf["Authentications"]["DingTalk"]["AppId"]}}"
   appSecret: "{{cnf["Authentications"]["DingTalk"]["AppSecret"]}}"
 {% endif %}
+{% if cnf["Authentications"]["Wechat"] %}
+wechat:
+  appId: "{{cnf["Authentications"]["Wechat"]["AppId"]}}"
+  appSecret: "{{cnf["Authentications"]["Wechat"]["AppSecret"]}}"
+{% endif %}
+
 domain: "https://{{cnf["webportal_node"]}}"
 casUrl: "http://{{cnf["webportal_node"]}}/cas"
 
@@ -21,8 +32,9 @@ administrators:
 {% endfor %}
 clusters:
   {{cnf["cluster_name"]}}:
-      restfulapi: "http://{{cnf["restfulapi_node"]}}:5000/"
+      restfulapi: "http://{{cnf["restfulapi_node"]}}/apis"
       title: Grafana-endpoint-of-the-cluster
       workStorage: work
       dataStorage: data
       grafana: "https://{{cnf["webportal_node"]}}/grafana/"
+      prometheus: http://apulis-sz-dev1-infra01.sigsus.cn:9091

@@ -34,7 +34,7 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
   }
 
   if (forceAuthenticated) {
-    context.assert(context.state.user != null, 403)
+    context.assert(context.state.user != null, 401)
   }
 
   return next()

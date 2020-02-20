@@ -28,9 +28,9 @@ axios.interceptors.response.use((response: AxiosResponse) => {
       message('error', '查询参数错误，请检查');
     } else  if (status === 401) {
       message('error', '未登录，请登录');
-      history.replace('/sign-in');
+      history.push('/sign-in');
     } else if (status === 403) {
-      message('error', '无相关权限，请检查登录账户');
+      message('error', '无相关权限，请检查登录账户信息');
     } else if (status === 500) {
       message('error', '服务器程序错误');
     } else if (status === 502) {

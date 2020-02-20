@@ -99,7 +99,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
     enqueueSnackbar(msg, {
       variant: type,
     });
-  });
+  }, history);
   if (openId === undefined || group === undefined || userName === undefined || (teams !== undefined && teams.length === 0)) {
     return null;
   }

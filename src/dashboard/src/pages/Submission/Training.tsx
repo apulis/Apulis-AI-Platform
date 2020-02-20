@@ -24,8 +24,9 @@ import {
   MenuItem,
   SvgIcon, useMediaQuery
 } from "@material-ui/core";
+import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
-import { Info, Delete, Add, PortraitSharp } from "@material-ui/icons";
+import { Info, Delete, Add, PortraitSharp, ImportExportTwoTone } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import { useSnackbar } from 'notistack';
@@ -57,6 +58,11 @@ import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 interface EnvironmentVariable {
   name: string;
   value: string;
+}
+
+interface Templates {
+  name: string;
+  json: string;
 }
 
 const sanitizePath = (path: string) => {
@@ -99,12 +105,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (cluster == null || gpuModel == null) return;
     return cluster.gpus[gpuModel].perNode;
   }, [cluster, gpuModel]);
-  const {
-    data: templates,
-    get: getTemplates,
-  } = useFetch('/api');
+  const [templates, setTemplates] = useState([{name: '', json: ''}]);
+  
   React.useEffect(() => {
-    getTemplates(`/teams/${selectedTeam}/templates`);
+    axios.get(`/teams/${selectedTeam}/templates`)
+      .then(res => {
+        setTemplates(res.data)
+      })
   }, [selectedTeam]);
 
   const [type, setType] = React.useState("RegularJob");

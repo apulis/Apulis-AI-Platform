@@ -13,6 +13,8 @@ let message: Message = (type: VariantType, msg: string) => {
 
 let history: History;
 
+axios.defaults.baseURL = '/api';
+
 axios.interceptors.request.use((ruquest: AxiosRequestConfig) => {
   // TODO: JWT auth
   return ruquest;

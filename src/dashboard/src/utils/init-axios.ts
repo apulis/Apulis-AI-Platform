@@ -1,5 +1,5 @@
 import axios, {AxiosError, AxiosResponse, AxiosRequestConfig} from 'axios';
-import { VariantType } from 'notistack'
+import { VariantType } from 'notistack';
 
 import { initMessage } from './message'
 export interface Message {
@@ -39,7 +39,7 @@ axios.interceptors.response.use((response: AxiosResponse) => {
 });
 
 
-const initAxios = (msg: typeof message) => {
+const initAxios = (msg: Message) => {
   message = msg;
   initMessage(msg);
 }

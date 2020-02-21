@@ -24,8 +24,9 @@ import {
   MenuItem,
   SvgIcon, useMediaQuery
 } from "@material-ui/core";
+import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
-import { Info, Delete, Add, PortraitSharp } from "@material-ui/icons";
+import { Info, Delete, Add, PortraitSharp, ImportExportTwoTone } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import { useSnackbar } from 'notistack';
@@ -99,12 +100,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (cluster == null || gpuModel == null) return;
     return cluster.gpus[gpuModel].perNode;
   }, [cluster, gpuModel]);
-  const {
-    data: templates,
-    get: getTemplates,
-  } = useFetch('/api');
+  const [templates, setTemplates] = useState([{name: '', json: ''}]);
+  
   React.useEffect(() => {
-    getTemplates(`/teams/${selectedTeam}/templates`);
+    axios.get(`/teams/${selectedTeam}/templates`)
+      .then(res => {
+        setTemplates(res.data)
+      })
   }, [selectedTeam]);
 
   const [type, setType] = React.useState("RegularJob");
@@ -348,10 +350,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [setSaveTemplateDatabase]
   );
-  const {
-    put: saveTemplate,
-    delete: deleteTemplate,
-  } = useFetch('/api');
   const [gpus, setGpus] = React.useState(0);
   const submittable = React.useMemo(() => {
     if (!gpuModel) return false;
@@ -404,14 +402,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         plugins
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
-      await saveTemplate(url, template);
-      setSaveTemplate(true)
-      window.location.reload()
+      await axios.put(url, template);
+      setSaveTemplate(true);
+      window.location.reload();
     } catch (error) {
       enqueueSnackbar('Failed to save the template', {
         variant: 'error',
       })
-      // alert('Failed to save the template, check console (F12) for technical details.')
       console.error(error);
     }
   };
@@ -452,7 +449,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         plugins,
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
-      await deleteTemplate(url);
+      await axios.delete(url);
       setShowDeleteTemplate(true)
       window.location.reload()
     } catch (error) {

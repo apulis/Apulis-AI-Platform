@@ -97,9 +97,10 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   const { enqueueSnackbar } = useSnackbar();
   initAxios((type: VariantType, msg: string) => {
     enqueueSnackbar(msg, {
+      autoHideDuration: 3000,
       variant: type,
     });
-  });
+  }, history);
   if (openId === undefined || group === undefined || userName === undefined || (teams !== undefined && teams.length === 0)) {
     return null;
   }

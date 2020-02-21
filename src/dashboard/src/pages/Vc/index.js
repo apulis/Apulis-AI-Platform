@@ -26,7 +26,7 @@ export default class Vc extends React.Component {
   }
 
   getVcList = () => {
-    axios.get(`/api/${this.context.selectedCluster}/listVc`)
+    axios.get(`/${this.context.selectedCluster}/listVc`)
       .then((res) => {
         this.setState({
           vcList: res.data.result,
@@ -69,9 +69,9 @@ export default class Vc extends React.Component {
     }
     let url;
     if (isEdit) {
-      url = `/api/${this.context.selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
+      url = `/${this.context.selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
     } else {
-      url = `/api/${this.context.selectedCluster}/addVc/${vcName}/${quota}/${metadata}`;
+      url = `/${this.context.selectedCluster}/addVc/${vcName}/${quota}/${metadata}`;
     }
     axios.get(url)
       .then((res) => {
@@ -89,7 +89,7 @@ export default class Vc extends React.Component {
       return;
     }
     if (window.confirm('确认删除')) {
-      axios.get(`/api/${this.context.selectedCluster}/deleteVc/${item.vcName}`)
+      axios.get(`/${this.context.selectedCluster}/deleteVc/${item.vcName}`)
         .then((res) => {
           this.getVcList();
         }, () => { })

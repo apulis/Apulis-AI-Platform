@@ -25,7 +25,7 @@ export default class User extends React.Component {
   }
 
   getUserList = () => {
-    axios.get(`/api/${this.context.selectedCluster}/listUser`)
+    axios.get(`${this.context.selectedCluster}/listUser`)
       .then((res) => {
         this.setState({
           userList: res.data,
@@ -46,7 +46,7 @@ export default class User extends React.Component {
 
   save = () => {
     const { isAdmin, isAuthorized, userName } = this.state;
-    let url = `/api/${this.context.selectedCluster}/updateUserPerm/${isAdmin}/${isAuthorized}/${userName}`;
+    let url = `/${this.context.selectedCluster}/updateUserPerm/${isAdmin}/${isAuthorized}/${userName}`;
     axios.get(url).then((res) => {
       if (res.data.result === true) {
         alert(`修改成功`)

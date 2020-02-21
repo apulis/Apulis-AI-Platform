@@ -33,14 +33,19 @@ const getRedirectUrl = context => {
 /** @type {import('koa').Middleware} */
 module.exports = async context => {
   if (context.query.code) {
-    const { code } = context.query
-    const accessToken = await getAccessToken(code)
-    const openId = accessToken.data.openid
-    const unionId = accessToken.data.unionid
-    const { nickname } = await getUser(openId)
-    const userInfo = { nickname, openId, unionId }
-    const user = User.fromWechat(context, userInfo)
-    context.cookies.set('token', user.toCookieToken())
+    try {
+      const { code } = context.query
+      const accessToken = await getAccessToken(code)
+      const openId = accessToken.data.openid
+      const unionId = accessToken.data.unionid
+      const { nickname } = await getUser(openId)
+      const userInfo = { nickname, openId, unionId }
+      const user = User.fromWechat(context, userInfo)
+      await user.getAccountInfo()
+      context.cookies.set('token', user.toCookieToken())
+    } catch (error) {
+      context.log.error({ error: error }, 'wx getUserInfo failed')
+    }
     return context.redirect('/')
   } else if (context.query.error) {
     context.log.error({ error: context.query.error }, 'wx oauth failed')

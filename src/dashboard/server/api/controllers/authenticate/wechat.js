@@ -40,6 +40,7 @@ module.exports = async context => {
     const { nickname } = await getUser(openId)
     const userInfo = { nickname, openId, unionId }
     const user = User.fromWechat(context, userInfo)
+    await user.getAccountInfo()
     context.cookies.set('token', user.toCookieToken())
     return context.redirect('/')
   } else if (context.query.error) {

@@ -60,11 +60,6 @@ interface EnvironmentVariable {
   value: string;
 }
 
-interface Templates {
-  name: string;
-  json: string;
-}
-
 const sanitizePath = (path: string) => {
   path = join('/', path);
   path = join('.', path);
@@ -355,10 +350,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [setSaveTemplateDatabase]
   );
-  const {
-    put: saveTemplate,
-    delete: deleteTemplate,
-  } = useFetch('/api');
   const [gpus, setGpus] = React.useState(0);
   const submittable = React.useMemo(() => {
     if (!gpuModel) return false;
@@ -411,14 +402,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         plugins
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
-      await saveTemplate(url, template);
-      setSaveTemplate(true)
-      window.location.reload()
+      await axios.put(url, template);
+      setSaveTemplate(true);
+      window.location.reload();
     } catch (error) {
       enqueueSnackbar('Failed to save the template', {
         variant: 'error',
       })
-      // alert('Failed to save the template, check console (F12) for technical details.')
       console.error(error);
     }
   };
@@ -459,7 +449,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         plugins,
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
-      await deleteTemplate(url);
+      await axios.delete(url);
       setShowDeleteTemplate(true)
       window.location.reload()
     } catch (error) {

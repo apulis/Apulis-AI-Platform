@@ -33,11 +33,11 @@
 
     示例：
 
-    | 主机记录 | 记录类型 | 记录值 | 对应节点(参考) |
-    | ---- | ---- | ---- | ---- |
-    | apulis-chinaeast-infra01 | A | 52.130.78.51 | dev |
-    | apulis-sz-dev-infra01 | A | 115.220.9.243 | master |
-    | apulis-sz-dev-worker01 | A | 115.220.9.252 | worker |
+   | 主机记录 | 记录类型 | 记录值 | 对应节点(参考) |
+   | ---- | ---- | ---- | ---- |
+   | apulis-chinaeast-infra01 | A | 52.130.78.51 | dev |
+   | apulis-sz-dev-infra01 | A | 115.220.9.243 | master |
+   | apulis-sz-dev-worker01 | A | 115.220.9.252 | worker |
 
 3. 配置子域名快捷搜索（dev、master、worker三个机器）  
      修改文件：vim /etc/resolvconf/resolv.conf.d/base  
@@ -292,21 +292,20 @@
    ./deploy.py execonall docker pull dlws/pause-amd64:3.0
    ./deploy.py execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
     
-   ./deploy.py --verbose -y deploy
+    ./deploy.py --verbose kubeadm init
    ```
 
    设置集群节点标签
 
    ```
-   ./deploy.py --verbose -y updateworker
+   ./deploy.py --verbose kubeadm join
    ./deploy.py --verbose -y kubernetes labels
    ```
 
 10. 挂载数据共享文件夹
-
-   ```
-   ./deploy.py --verbose mount
-   ```
+    ```
+    ./deploy.py --verbose mount
+    ```
 
 11. 部署NVidia插件
 
@@ -419,35 +418,33 @@
     编译restfulapi和webui3服务
 
     ```
-    ./deploy.py --verbose docker push restfulapi
+    ./deploy.py --verbose docker push restfulapi2
     ./deploy.py --verbose docker push webui3
     ```
 
     编译GPU Reporter
 
     ```
-    cd deploy/docker-images/gpu-reporter
-    docker build -t apulistech/apulis-sz-dev_gpu-reporter .
-    docker push apulistech/apulis-sz-dev_gpu-reporter
+    ./deploy.py --verbose docker push gpu-reporter
     ```
-
+    
     配置Nginx
 
     ```
-    ./deploy.py --verbose nginx fqdn
+./deploy.py --verbose nginx fqdn
     ./deploy.py --verbose nginx config
     ```
-
+    
     启动集群应用
 
     ```
-    ./deploy.py --verbose kubernetes start mysql jobmanager restfulapi monitor nginx custommetrics
+./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
     ./deploy.py --verbose kubernetes start cloudmonitor
     ```
-
+    
     启动dashboard
 
     ```
-    ./deploy.py --verbose nginx webui3
+./deploy.py --verbose nginx webui3
     ./deploy.py --verbose kubernetes start webui3
     ```

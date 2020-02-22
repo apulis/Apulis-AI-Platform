@@ -23,7 +23,7 @@ const EmptyTeam: React.FC<RouteComponentProps> = ({ history }) => {
   }, [teams, history])
 
   const onClick = () => {
-    window.open("mailto://qianjiangyuan@aliyun.com", "_blank");
+    window.open("mailto://bifeng.peng@apulis.com", "_blank");
     return (
       <Redirect to="/" />
     )

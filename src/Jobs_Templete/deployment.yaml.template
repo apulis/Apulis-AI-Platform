@@ -29,19 +29,20 @@ spec:
       labels:
         jobId: {{ job["jobId"] }}
         worker: active
-    affinity:
-      podAffinity:
-        preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchExpressions:
-              - key: jobId
-                operator: In
-                values:
-                - {{ job["jobId"] }}
-            topologyKey: kubernetes.io/hostname
+
     spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: jobId
+                  operator: In
+                  values:
+                  - {{ job["jobId"] }}
+              topologyKey: kubernetes.io/hostname
       containers:
       - name: {{ job["podName"] }}-deployment
         image: {{ job["image"] }}

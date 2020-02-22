@@ -29,7 +29,7 @@ export default class Access extends React.Component {
   }
 
   getAccessList = () => {
-    axios.get(`/api/${this.context.selectedCluster}/GetACL`)
+    axios.get(`/${this.context.selectedCluster}/GetACL`)
       .then((res) => {
         this.setState({
           accessList: res.data.result,
@@ -37,7 +37,7 @@ export default class Access extends React.Component {
       }, () => { })
   }
   getVcList = () => {
-    axios.get(`/api/${this.context.selectedCluster}/listVc`)
+    axios.get(`/${this.context.selectedCluster}/listVc`)
       .then((res) => {
         this.setState({
           vcList: res.data.result,
@@ -79,7 +79,7 @@ export default class Access extends React.Component {
 
   save = () => {
     const { resourceType, resourceName, permissions, identityName } = this.state;
-    let url = `/api/${this.context.selectedCluster}/updateAce?resourceType=${resourceType}&resourceName=${resourceName}&permissions=${permissions}&identityName=${identityName}`;
+    let url = `/${this.context.selectedCluster}/updateAce?resourceType=${resourceType}&resourceName=${resourceName}&permissions=${permissions}&identityName=${identityName}`;
     axios.get(url).then((res) => {
       alert(`操作成功`)
       this.getAccessList();
@@ -99,7 +99,7 @@ export default class Access extends React.Component {
         resourceType = 2;
         resourceName = item.resource.split(':')[1];
       }
-      let url = `/api/${this.context.selectedCluster}/deleteAce?resourceType=${resourceType}&resourceName=${resourceName}&identityName=${item.identityName}`;
+      let url = `/${this.context.selectedCluster}/deleteAce?resourceType=${resourceType}&resourceName=${resourceName}&identityName=${item.identityName}`;
       axios.get(url)
         .then((res) => {
           this.getAccessList();

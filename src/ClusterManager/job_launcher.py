@@ -238,7 +238,7 @@ class JobDeployer:
         pod_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "Pod"]
         self._cleanup_pods(pod_names)
         deployment_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "Deployment"]
-        self._cleanup_deployment(pod_names)
+        self._cleanup_deployment(deployment_names)
         created = []
         for pod in pods:
             if pod["kind"] == "Pod":

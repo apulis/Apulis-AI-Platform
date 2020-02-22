@@ -1,16 +1,16 @@
 # DLWS集群安装步骤
 
 ### 配置说明 & 示例
-| 名称 | 配置 | GPU | 操作系统 | 公网IP | 子网IP | 描述 |
-| ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| dev | 4C16G | N/A | ubuntu 16.04 LTS/18.04 LTS | 52.130.78.51 | N/A | 执行部署操作 |
-| master | 1C8G | N/A | ubuntu 16.04 LTS/18.04 LTS | 115.220.9.243 | 192.168.0.195 | k8s master节点 |
-| worker | 8C64G | >=1 |  ubuntu 16.04 LTS/18.04 LTS | 115.220.9.252 | 192.168.0.63 | k8s worker节点 |
+| 节点 | 配置|  操作系统 | 公网IP | 子网IP | 备注 |
+| ---- | ---- | ---- | ---- | ---- | ---- |
+| dev | 4CPU core, 16G RAM | ubuntu 18.04 LTS | 52.130.78.51 | N/A |开发节点|
+| master | 4CPU core, 8G RAM | ubuntu 18.04 LTS | 115.220.9.243 | 192.168.0.195 |k8s主节点|
+| worker | 8CPU core, 16G RAM 1GPU | ubuntu 18.04 LTS | 115.220.9.252 | 192.168.0.63 |k8s工作节点|
 
 
 其中：
 1. master和worker需在同一个子网或VPC，dev与master、worker可以不在同一个子网或VPC
-2. worker节点需携带GPU，GPU类别为NVidia，安装驱动（driver）版本>= 430  
+2. worker节点携带Nvidia GPU，驱动版本>= 430  
 
 
 ### 安装准备
@@ -33,7 +33,7 @@
 
     示例：
 
-   | 主机记录 | 记录类型 | 记录值 | 对应节点(参考) |
+   | 主机名 | 记录类型 | 记录值 | 对应节点(参考) |
    | ---- | ---- | ---- | ---- |
    | apulis-chinaeast-infra01 | A | 52.130.78.51 | dev |
    | apulis-sz-dev-infra01 | A | 115.220.9.243 | master |

@@ -559,11 +559,11 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                     "DingTalk": 3004
                 }
                 if group in GROUP_DICT:
-                    groups = [group]
                     gid = GROUP_DICT[group]
                 else:
                     gid = 3999
-                    groups = ['Other']
+                    # groups = ['Other']
+                groups = [group]
                 dataHandler.UpdateIdentityInfo(userName, accountInfo["uid"], gid, groups)
 
                 # Update Ace

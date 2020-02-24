@@ -563,7 +563,7 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                 else:
                     gid = 3999
                     # groups = ['Other']
-                groups = [group]
+                groups = [gid]
                 dataHandler.UpdateIdentityInfo(userName, accountInfo["uid"], gid, groups)
 
                 # Update Ace

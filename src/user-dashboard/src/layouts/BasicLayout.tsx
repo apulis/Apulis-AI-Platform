@@ -91,25 +91,16 @@ const defaultFooterDom = (
 );
 
 const footerRender: BasicLayoutProps['footerRender'] = () => {
-  if (!isAntDesignPro()) {
-    return defaultFooterDom;
-  }
+
   return (
     <>
-      {defaultFooterDom}
       <div
         style={{
-          padding: '0px 24px 24px',
+          padding: '10px 24px 10px 10px',
           textAlign: 'center',
         }}
       >
-        <a href="https://www.netlify.com" target="_blank" rel="noopener noreferrer">
-          <img
-            src="https://www.netlify.com/img/global/badges/netlify-color-bg.svg"
-            width="82px"
-            alt="netlify logo"
-          />
-        </a>
+        DLWS 后台管理系统
       </div>
     </>
   );
@@ -149,8 +140,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
       logo={logo}
       menuHeaderRender={(logoDom, titleDom) => (
         <Link to="/">
-          {logoDom}
-          {titleDom}
+          {/* {logoDom} */}
+          {/* {titleDom} */}
         </Link>
       )}
       onCollapse={handleMenuCollapse}

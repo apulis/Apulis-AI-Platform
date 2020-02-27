@@ -25,12 +25,12 @@ const GlobalHeaderRight: React.SFC<GlobalHeaderRightProps> = props => {
 
   return (
     <div className={className}>
-      <HeaderSearch
+      {/* <HeaderSearch
         className={`${styles.action} ${styles.search}`}
         placeholder={formatMessage({
           id: 'component.globalHeader.search',
         })}
-        defaultValue="umi ui"
+        defaultValue=""
         dataSource={[
           formatMessage({
             id: 'component.globalHeader.search.example1',
@@ -48,21 +48,7 @@ const GlobalHeaderRight: React.SFC<GlobalHeaderRightProps> = props => {
         onPressEnter={value => {
           console.log('enter', value);
         }}
-      />
-      <Tooltip
-        title={formatMessage({
-          id: 'component.globalHeader.help',
-        })}
-      >
-        <a
-          target="_blank"
-          href="https://pro.ant.design/docs/getting-started"
-          rel="noopener noreferrer"
-          className={styles.action}
-        >
-          <Icon type="question-circle-o" />
-        </a>
-      </Tooltip>
+      /> */}
       <Avatar />
       <SelectLang className={styles.action} />
     </div>

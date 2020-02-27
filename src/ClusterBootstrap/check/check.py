@@ -88,7 +88,7 @@ def query(func):
         else:
             print("failed")
             check_result[func.__name__] = "no"
-            sys.exit()
+            #sys.exit()
 
     return do_check
 
@@ -316,7 +316,53 @@ class DeploymentChecker(object):
             self.cluster_ssh_cmd(host, cmd)    
 
         return
+    
+    @query
+    def check_dns(self):
 
+        cmd = 'sudo ping -c 2 '
+        for host in self.get_master_nodes():
+
+            self.cluster_ssh_cmd(host, cmd + host)  
+
+            for worker in self.get_worker_nodes():
+                self.cluster_ssh_cmd(host, cmd + worker)
+
+        return
+
+    @query
+    def check_nvidia_driver(self):
+
+        cmd = 'sudo nvidia-docker run --rm dlws/cuda nvidia-smi'
+        for host in self.get_worker_nodes():
+            self.cluster_ssh_cmd(host, cmd)      
+
+        cmd = 'docker run --rm -ti dlws/cuda nvidia-smi'
+        for host in self.get_worker_nodes():
+            self.cluster_ssh_cmd(host, cmd)      
+
+        return
+
+    @query
+    def check_k8s(self):
+
+        cmd = 'export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl get po --all-namespaces'
+        for host in self.get_master_nodes():
+            self.cluster_ssh_cmd(host, cmd)      
+
+        return
+
+    @query
+    def check_nfs(self):
+
+        cmd = 'sudo df -h | grep -v /var/lib/'
+        for host in self.get_master_nodes():
+            self.cluster_ssh_cmd(host, cmd) 
+
+        for host in self.get_worker_nodes():
+            self.cluster_ssh_cmd(host, cmd)         
+
+        return
     
 
 

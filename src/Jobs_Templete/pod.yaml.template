@@ -222,6 +222,8 @@ spec:
     env:
     - name: FAMILY_TOKEN
       value: {{ job["familyToken"] }}
+    - name: IDENTIT_TOKEN
+      value: {{ job["identityToken"] }}
     - name: DLWS_REST_API
       value: {{ job["rest-api"] }}
     - name: DLWS_JOB_ID

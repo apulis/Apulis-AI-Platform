@@ -9,3 +9,4 @@ requests
 MySQL-python
 DButils
 subprocess32
+PyJWT

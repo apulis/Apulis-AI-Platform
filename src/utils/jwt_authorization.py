@@ -6,9 +6,9 @@ def create_jwt_token_for_claims(claims):
     payload = {
         'iat': time.time(),
         'claims': claims,
-        "iss":  config["hostname"],
-        "aud ": config["hostname"],
-        "exp": time.time() + config["jwt"]["token_ttl"],
+        "iss":  config["webportal_node"],
+        "aud ": config["webportal_node"],
+        "exp": time.time() + int(config["jwt"]["token_ttl"]),
         "nbf": time.time()-1
     }
     headers = {

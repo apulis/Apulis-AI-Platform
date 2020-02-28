@@ -580,7 +580,7 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
     return ret
 
 
-def GetAccountByOpenId(openId, group,password):
+def GetAccountByOpenId(openId, group,password=None):
     ret = None
     try:
         dataHandler = DataHandler()

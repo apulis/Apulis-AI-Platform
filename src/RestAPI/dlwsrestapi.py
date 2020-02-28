@@ -957,11 +957,7 @@ class GetAccountUserInfo(Resource):
 
         return resp
 
-
-##
-## Actually setup the Api resource routing here
-##
-api.add_resource(GetAccountByOpenId, '/getAccountInfo')
+api.add_resource(GetAccountUserInfo, '/getAccountUserInfo')
 
 class GetAllUsers(Resource):
     def get(self):

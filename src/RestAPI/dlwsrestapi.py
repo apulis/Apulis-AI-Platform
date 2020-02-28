@@ -938,16 +938,14 @@ class GetAccountUserInfo(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
-        parser.add_argument('group')
         parser.add_argument('userName')
         args = parser.parse_args()
 
         openId = args["openId"]
-        group = args["group"]
         userName = args["userName"]
 
         if AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
-            ret = JobRestAPIUtils.GetAccountByOpenId(openId, group)
+            ret = JobRestAPIUtils.GetAccountByUserName(openId)
             resp = jsonify(ret)
         else:
             return "wrong permission",403

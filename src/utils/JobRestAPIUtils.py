@@ -580,11 +580,11 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
     return ret
 
 
-def GetAccountByOpenId(openId, group,password=None):
+def GetAccountByOpenId(openId, group):
     ret = None
     try:
         dataHandler = DataHandler()
-        lst = dataHandler.GetAccountByOpenId(openId, group,password)
+        lst = dataHandler.GetAccountByOpenId(openId, group)
         dataHandler.Close()
         if len(lst) > 0:
             ret = lst[0]

@@ -889,7 +889,7 @@ class SignIn(Resource):
         group = args["group"]
         password = args["password"]
         if group=="Account":
-            ret = JobRestAPIUtils.GetAccountByOpenId(openId, group, password)
+            ret = DataHandler().GetAccountByOpenIdAndPassword(openId, group, password)
         else:
             ret = None
         resp = jsonify(ret)

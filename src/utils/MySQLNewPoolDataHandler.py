@@ -430,14 +430,23 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetAccountByOpenId(self, openId, group,password=None):
+    def GetAccountByOpenId(self, openId, group):
         query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []
-        if group=="Account":
-            if password:
-                query += " and `password` = '%s'" % (password)
-            else:
-                return ret
+        try:
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                ret.append(one)
+
+        except Exception as e:
+            logger.exception('GetAccountByOpenId Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetAccountByOpenIdAndPassword(self, openId,group,password):
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s' and `password`='%s'" % (self.accounttablename, openId, group,password)
+        ret = []
         try:
             with MysqlConn() as conn:
                 rets = conn.select_many(query)

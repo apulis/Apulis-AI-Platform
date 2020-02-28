@@ -111,6 +111,8 @@ class DataHandler(object):
                     `nickName` varchar(64) NOT NULL,
                     `userName` varchar(64) NOT NULL,
                     `password` varchar(64) NOT NULL,
+                    `phoneNumber` varchar(64) DEFAULT NULL,
+                    `email` varchar(64) DEFAULT NULL,
                     `isAdmin` int(11) NOT NULL,
                     `isAuthorized` int(11) NOT NULL,
                     `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -428,9 +430,14 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetAccountByOpenId(self, openId, group):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
+    def GetAccountByOpenId(self, openId, group,password):
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []
+        if group=="Account":
+            if password:
+                query += " and `password` = '%s'" % (password)
+            else:
+                return ret
         try:
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -466,6 +473,21 @@ class DataHandler(object):
                 sql = "update `%s` set `nickName` = '%s', `userName` = '%s', `password` = '%s', `isAdmin` = '%s', isAuthorized = '%s' where `openId` = '%s' and `group` = '%s'"
                 with MysqlConn() as conn:
                     conn.insert_one(sql, (self.accounttablename, nickName, userName, password, isAdmin, isAuthorized, openId, group))
+                    conn.commit()
+            return True
+        except Exception as e:
+            logger.exception('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+    @record
+    def UpdateEmailAndPhone(self,openId, group,email,phone):
+        try:
+            if len(self.GetAccountByOpenId(openId, group)) == 0:
+                return False
+            else:
+                sql = "update `%s` set `email` = '%s', phoneNumber = '%s' where `openId` = '%s' and `group` = '%s'"
+                with MysqlConn() as conn:
+                    conn.insert_one(sql, (self.accounttablename, email,phone,openId, group))
                     conn.commit()
             return True
         except Exception as e:

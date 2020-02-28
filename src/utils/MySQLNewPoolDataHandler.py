@@ -430,7 +430,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetAccountByOpenId(self, openId, group,password):
+    def GetAccountByOpenId(self, openId, group,password=None):
         query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []
         if group=="Account":

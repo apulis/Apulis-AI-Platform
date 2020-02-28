@@ -296,7 +296,7 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
             vc_usage.add_used(vc, gpu_type, used_gpu)
 
     labels = pod["metadata"].get("labels")
-    if labels is None or "app" not in labels:
+    if labels is None or "app" not in labels :
         logger.info("unknown pod %s", pod["metadata"]["name"])
         return None
 
@@ -313,7 +313,7 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
     else:
         phase = "unknown"
 
-    initialized = pod_scheduled = ready = "unknown"
+    initialized = pod_scheduled = ready = ContainersReady = "unknown"
 
     conditions = status.get("conditions")
     if conditions is not None:
@@ -327,6 +327,8 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
                 pod_scheduled = cond_status
             elif cond_t == "Ready":
                 ready = cond_status
+            elif cond_t == "ContainersReady":
+                ContainersReady = cond_status
             else:
                 error_counter.labels(type="unknown_pod_cond").inc()
                 logger.error("unexpected condition %s in pod %s", cond_t, pod_name)

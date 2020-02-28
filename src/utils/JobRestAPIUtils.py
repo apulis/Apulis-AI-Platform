@@ -381,7 +381,6 @@ def ResumeJob(userName, jobId):
         if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Collaborator):
             ret = dataHandler.UpdateJobTextField(jobId, "jobStatus", "unapproved")
     dataHandler.Close()
-    InvalidateJobListCache(jobs[0]["vcName"])
     return ret
 
 

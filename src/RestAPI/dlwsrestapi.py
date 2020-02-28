@@ -17,7 +17,6 @@ import thread
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
-config["datasource"] = "MySQL"
 import JobRestAPIUtils
 from authorization import ResourceType, Permission, AuthorizationManager, ACLManager
 

@@ -559,11 +559,11 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                     "DingTalk": 3004
                 }
                 if group in GROUP_DICT:
-                    groups = [group]
                     gid = GROUP_DICT[group]
                 else:
                     gid = 3999
-                    groups = ['Other']
+                    # groups = ['Other']
+                groups = [gid]
                 dataHandler.UpdateIdentityInfo(userName, accountInfo["uid"], gid, groups)
 
                 # Update Ace
@@ -913,7 +913,10 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, interactive_ports):
         if job_type == "RegularJob":
             pod_names.append(jobId)
         else:
-            nums = {"ps": int(job_params["numps"]), "worker": int(job_params["numpsworker"])}
+            if "numps" in job_params and "numpsworker" in job_params:
+                nums = {"ps": int(job_params["numps"]), "worker": int(job_params["numpsworker"])}
+            else:
+                nums = {"ps": 0, "worker": 1}
             for role in ["ps", "worker"]:
                 for i in range(nums[role]):
                     pod_names.append(jobId + "-" + role + str(i))

@@ -239,7 +239,7 @@ install_gpu_utils() {
         fi
     fi
 
-    set_install_flag "install_shell_utils"
+    set_install_flag "install_gpu_utils"
 }
 
 

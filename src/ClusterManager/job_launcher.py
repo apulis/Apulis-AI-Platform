@@ -28,6 +28,7 @@ from dist_pod_template import DistPodTemplate
 from config import config
 
 from cluster_manager import record
+import jwt_authorization
 
 logger = logging.getLogger(__name__)
 
@@ -238,7 +239,7 @@ class JobDeployer:
         pod_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "Pod"]
         self._cleanup_pods(pod_names)
         deployment_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "Deployment"]
-        self._cleanup_deployment(pod_names)
+        self._cleanup_deployment(deployment_names)
         created = []
         for pod in pods:
             if pod["kind"] == "Pod":
@@ -598,6 +599,9 @@ class PythonLauncher(Launcher):
             if "envs" not in job_object.params:
                 job_object.params["envs"] =[]
             job_object.params["envs"].append({"name": "DLTS_JOB_TOKEN", "value": job_object.params["job_token"]})              
+            job_object.params["envs"].append({"name": "IDENTITY_TOKEN", "value": jwt_authorization.create_jwt_token_for_claims(
+                {"userName":job_object.params["userName"],"userId":job_object.params["uid"]}
+            )})
 
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()
             blobfuse_secret_template = job_object.get_blobfuse_secret_template()

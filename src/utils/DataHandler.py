@@ -2,7 +2,7 @@ from config import config
 from cache import fcache
 
 if "datasource" in config and config["datasource"] == "MySQL":
-    from MySQLDataHandler import DataHandler
+    from MySQLNewPoolDataHandler import DataHandler
 elif "datasource" in config and config["datasource"] == "MySQLPool":
     from MySQLPoolDataHandler import DataHandler
 elif "datasource" in config and config["datasource"] == "MySQLDBUtilsPool":

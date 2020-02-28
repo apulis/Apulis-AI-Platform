@@ -494,9 +494,9 @@ class DataHandler(object):
             if len(self.GetAccountByOpenId(openId, group)) == 0:
                 return False
             else:
-                sql = "update %s set `email` = %s, `phoneNumber` = %s where `openId` = %s and `group` = %s"
+                sql = "update `%s` set `email` = '%s', `phoneNumber` = '%s' where `openId` = '%s' and `group` = '%s'" % (self.accounttablename,email,phone,openId, group)
                 with MysqlConn() as conn:
-                    conn.insert_one(sql, (self.accounttablename,email,phone,openId, group))
+                    conn.insert_one(sql)
                     conn.commit()
             return True
         except Exception as e:

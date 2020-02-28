@@ -481,7 +481,7 @@ class DataHandler(object):
             else:
                 sql = "update `%s` set `nickName` = '%s', `userName` = '%s', `password` = '%s', `isAdmin` = '%s', isAuthorized = '%s' where `openId` = '%s' and `group` = '%s'"
                 with MysqlConn() as conn:
-                    conn.insert_one(sql, (self.accounttablename, nickName, userName, password, isAdmin, isAuthorized, openId, group))
+                    conn.insert_one(sql % (self.accounttablename, nickName, userName, password, isAdmin, isAuthorized, openId, group))
                     conn.commit()
             return True
         except Exception as e:

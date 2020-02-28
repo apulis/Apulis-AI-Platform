@@ -571,7 +571,7 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                 resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
                 # only for account signup
                 if group == "Account":
-                    ACLManager.UpdateAce(userName, resourceAclPath, permission, False)
+                    ACLManager.UpdateAce(userName, resourceAclPath, permission, 0)
 
         dataHandler.Close()
     except Exception as e:

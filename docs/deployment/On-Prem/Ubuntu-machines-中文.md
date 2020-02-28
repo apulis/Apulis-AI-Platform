@@ -228,9 +228,31 @@
      nfsshare1:
        type: nfs
        server: apulis-sz-dev-worker01
-       filesharename: /dev/share
-       curphysicalmountpoint: /mntdlws
+       filesharename: /home/dlwsadmin/share2
+       curphysicalmountpoint: /mntdlws/nfs
        mountpoints: ""
+     nfsshare2:
+       type: nfs
+       server: apulis-sz-dev-worker01
+       filesharename: /home/dlwsadmin/share
+       curphysicalmountpoint: /mntdlts/platform
+       mountpoints: "jobfiles"
+   repair-manager:
+     ecc_rule:
+       cordon_dry_run: True
+     alert:
+       smtp_url: smtp.office365.com
+       login: dev@apulis.com
+       password: Yitong#123
+       sender: dev@apulis.com
+       receiver: ["869071540@qq.com"]
+   jwt:
+     secret_key: apulistechjwtsecretsample001
+     algorithm: HS256
+     token_ttl: 86400
+   watchdog:
+     vc_url: "http://localhost:5000/ListVCs?userName=Administrator"
+
    ```
 
 3. 初始化部署环境

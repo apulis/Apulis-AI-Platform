@@ -61,7 +61,12 @@ const getDecodedIdToken = async context => {
     method: 'POST',
     body: params
   })
-  const data = await response.json()
+  let data
+  try {
+    data = await response.json()
+  } catch (error) {
+    context.log.error('jsonfy microsoft response error', error.message)
+  }
   context.log.info({ data }, 'Id Token response')
 
   context.assert(data['error'] == null, 502, data['error'])

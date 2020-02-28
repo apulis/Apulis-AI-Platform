@@ -596,7 +596,7 @@ def GetAccountByUserName(userName):
     ret = None
     try:
         dataHandler = DataHandler()
-        lst = dataHandler.GetAccountByOpenId(userName)
+        lst = dataHandler.GetAccountByUserName(userName)
         dataHandler.Close()
         if len(lst) > 0:
             ret = lst[0]

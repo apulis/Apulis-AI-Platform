@@ -75,20 +75,23 @@ def query(func):
         print("========================================================================")
         print("========================================================================")
 
-        func(*args, **kwargs)
+        checked = func(*args, **kwargs)
 
         print("========================================================================")
         print("========================================================================")
 
-        ret = raw_input('%s passed? type Yes/y or No/n. \n' % (func.__name__))
-        if ret.lower() == "y" or ret.lower() == "yes":
-            print("passed")
-            check_result[func.__name__] = "yes"
+        if not checked:
+            ret = raw_input('%s passed? type y/n: ' % (func.__name__))
+            if ret.lower() == "y" or ret.lower() == "yes":
+                print("passed")
+                check_result[func.__name__] = "yes"
 
+            else:
+                print("failed")
+                check_result[func.__name__] = "no"
         else:
-            print("failed")
-            check_result[func.__name__] = "no"
-            #sys.exit()
+            check_result[func.__name__] = "yes" if checked is True else "no"
+            print('%s passed? %s' % (func.__name__, check_result[func.__name__]))
 
     return do_check
 
@@ -212,18 +215,6 @@ class DeploymentChecker(object):
 
         return
 
-    ## 封装ssh函数
-    def cluster_ssh_cmd(self, host, cmd):
-
-        print("【" + host + "】:")
-        utils.SSH_exec_cmd(self.cluster_config["ssh_cert"], 
-            self.cluster_config["admin_username"], 
-            host, 
-            cmd)
-        print("")
-
-        return
-
     ## 列出所有worker节点
     def get_worker_nodes(self):
 
@@ -235,6 +226,19 @@ class DeploymentChecker(object):
 
         #pdb.set_trace()
         return self.get_nodes_from_config("infrastructure")
+
+    ## 列出所有节点
+    def get_all_nodes(self):
+        return self.get_master_nodes() + self.get_worker_nodes()
+
+    ## 列出所有节点主机名
+    def get_all_nodes_hostname(self):
+
+        hosts = []
+        for nodename in self.cluster_config["machines"]:
+            hosts.append(nodename)
+
+        return hosts
 
     ## 获取节点信息
     def get_nodes_from_config(self, machinerole):
@@ -286,85 +290,226 @@ class DeploymentChecker(object):
         print(t)
         return
 
+    ## 封装ssh函数
+    def cluster_ssh_cmd(self, host, cmd):
+
+        print("【" + host + "】:")
+
+        if len(cmd)==0:
+            return "";
+        else:
+            pass
+            
+        execmd = """ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (
+            self.cluster_config["ssh_cert"], 
+            self.cluster_config["admin_username"], 
+            host, cmd )
+        print(execmd)
+
+        try:
+            output = subprocess.check_output(execmd, shell=True)
+
+        except subprocess.CalledProcessError as e:
+            output = "Return code: " + str(e.returncode) + ", output: " + e.output.strip()
+
+        print(output)
+        return output
+
+    ## 封装ssh函数
+    ## 对SSH结果执行check_func检查，检查通过返回True，否则返回False
+    def cluster_ssh_cmd_and_check(self, host, cmd, check_func):
+
+        print("【" + host + "】:")
+
+        if len(cmd)==0:
+            return "";
+        else:
+            pass
+            
+        execmd = """ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (
+            self.cluster_config["ssh_cert"], 
+            self.cluster_config["admin_username"], 
+            host, cmd )
+        print(execmd)
+
+        try:
+            output = subprocess.check_output(execmd, shell=True)
+        except subprocess.CalledProcessError as e:
+            output = "Return code: " + str(e.returncode) + ", output: " + e.output.strip()
+            
+        print(output)
+        return check_func(output)
+
 
     ####################################################
     ## 以下区域开始定义用于执行实际检测步骤的各个函数
     ## 所有函数必须按照如下格式命名，否则无法执行:
     ## def check_xxxx
+    ## 
     ####################################################
 
     @query
-    def check_sudo(self):
+    def check_01_sudo(self):
 
-        cmd = 'sudo -v'
-        for host in self.get_master_nodes():
-            self.cluster_ssh_cmd(host, cmd)  
+        cmd = 'sudo -l -U %s' % (self.cluster_config["admin_username"])
+        expect = "(ALL)NOPASSWD:ALL"
+        
+        def check_expect(output):
+            output = output.replace(" ", "")
 
-        for host in self.get_worker_nodes():
-            self.cluster_ssh_cmd(host, cmd)    
+            if expect not in output:
+                return False
+            else:
+                pass  
 
-        return
+            return True
+
+        for host in self.get_all_nodes():
+            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)
+        
+            if not passed:
+                return False
+            else:
+                pass
+              
+        return True
 
     @query
-    def check_hostname(self):
+    def check_02_hostname(self):
 
-        cmd = 'sudo hostnamectl'
-        for host in self.get_master_nodes():
-            self.cluster_ssh_cmd(host, cmd)    
+        cmd = 'sudo hostname'
+        expect = ""
+                
+        def check_expect(output):
+            output = output.strip()
 
-        for host in self.get_worker_nodes():
-            self.cluster_ssh_cmd(host, cmd)    
+            if expect != output:
+                return False
+            else:
+                pass  
 
-        return
+            return True
+
+        #pdb.set_trace()
+        for host in self.get_all_nodes_hostname():
+            expect = host
+            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+        
+            if not passed:
+                return False
+            else:
+                pass
+
+        return True
     
     @query
-    def check_dns(self):
+    def check_03_dns(self):
 
-        cmd = 'sudo ping -c 2 '
-        for host in self.get_master_nodes():
+        cmd = 'sudo ping -c 3 '
+        expect = "time="
+                
+        def check_expect(output):
+            output = output.strip()
 
-            self.cluster_ssh_cmd(host, cmd + host)  
+            if expect not in output:
+                return False
+            else:
+                pass  
 
-            for worker in self.get_worker_nodes():
-                self.cluster_ssh_cmd(host, cmd + worker)
+            return True
 
-        return
+        #pdb.set_trace()
+        for host in self.get_all_nodes():
+            passed = self.cluster_ssh_cmd_and_check(host, cmd + host, check_expect)  
+        
+            if not passed:
+                return False
+            else:
+                pass
+            
+
+        return True
 
     @query
-    def check_nvidia_driver(self):
+    def check_04_nvidia_driver(self):
 
-        cmd = 'sudo nvidia-docker run --rm dlws/cuda nvidia-smi'
+        expect1 = "NVIDIA-SMI"
+        expect2 = "Driver Version"
+
+        def check_expect(output):
+            output = output.strip()
+
+            if expect1 not in output:
+                return False
+            else:
+                pass  
+
+            if expect2 not in output:
+                return False
+            else:
+                pass  
+
+            return True
+
         for host in self.get_worker_nodes():
-            self.cluster_ssh_cmd(host, cmd)      
+            cmd = 'sudo nvidia-docker run --rm dlws/cuda nvidia-smi'
+            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+        
+            if not passed:
+                return False
+            else:
+                pass     
 
-        cmd = 'docker run --rm -ti dlws/cuda nvidia-smi'
-        for host in self.get_worker_nodes():
-            self.cluster_ssh_cmd(host, cmd)      
+            cmd = 'sudo docker run --rm -ti dlws/cuda nvidia-smi'
+            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+        
+            if not passed:
+                return False
+            else:
+                pass    
 
-        return
+        return True
 
     @query
-    def check_k8s(self):
+    def check_05_k8s(self):
 
         cmd = 'export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl get po --all-namespaces'
         for host in self.get_master_nodes():
             self.cluster_ssh_cmd(host, cmd)      
 
-        return
+        return True
 
     @query
-    def check_nfs(self):
+    def check_06_nfs(self):
 
-        cmd = 'sudo df -h | grep -v /var/lib/'
-        for host in self.get_master_nodes():
-            self.cluster_ssh_cmd(host, cmd) 
+        #pdb.set_trace()
+        share_name = fetch_dictionary(self.cluster_config, ["mountpoints", "nfsshare1", "filesharename"])
+        if share_name is None:
+            return False
+        else:
+            pass
+
+        cmd = 'sudo df -h | grep %s' % (share_name)
+        expect = share_name
+        
+        def check_expect(output):
+            if expect in output:
+                return False
+            else:
+                pass  
+
+            return True
 
         for host in self.get_worker_nodes():
-            self.cluster_ssh_cmd(host, cmd)         
+            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+        
+            if not passed:
+                return False
+            else:
+                pass       
 
-        return
+        return True
     
-
 
 def main():
     # the program always run at the current directory.

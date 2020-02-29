@@ -1,11 +1,13 @@
 apiVersion: v1
 data:
   bootstrap.sh: "#! /bin/bash\nset -ex\n\n. /dlts-runtime/env/init.env\nsh -x /dlts-runtime/install.sh\n\nSCRIPT_DIR=/pod/scripts\n\necho
-    bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log\n\nif [ \"$DLWS_ROLE_NAME\"
-    != \"inferenceworker\" ];\nthen\n\t# Dir for saving running status\n\texport PROC_DIR=/pod/running\n\trm
-    -rf ${PROC_DIR}\n\tmkdir -p ${PROC_DIR}\n\n\t# Dir for logs\n\texport LOG_DIR=/pod/logs\n\trm
-    -rf ${LOG_DIR}\n\tmkdir -p ${LOG_DIR}\n\n\t# Save the pid.\n\tPID_FILE=${PROC_DIR}/pid\n\techo
-    $$ > $PID_FILE\nfi\n\n# Setup container\nbash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log\n\nif
+    bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log\n\n# https://stackoverflow.com/a/26759734/845762\nif
+    ! [ -x \"$(command -v sudo)\" ] ; then\n    time apt-get update && time apt-get
+    install -y sudo\nfi\n\nif [ \"$DLWS_ROLE_NAME\" != \"inferenceworker\" ];\nthen\n\t#
+    Dir for saving running status\n\texport PROC_DIR=/pod/running\n\trm -rf ${PROC_DIR}\n\tmkdir
+    -p ${PROC_DIR}\n\n\t# Dir for logs\n\texport LOG_DIR=/pod/logs\n\trm -rf ${LOG_DIR}\n\tmkdir
+    -p ${LOG_DIR}\n\n\t# Save the pid.\n\tPID_FILE=${PROC_DIR}/pid\n\techo $$ > $PID_FILE\nfi\n\n#
+    Setup container\nbash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log\n\nif
     [ \"$DLWS_ROLE_NAME\" != \"inferenceworker\" ];\nthen\n\ttouch ${PROC_DIR}/CONTAINER_READY\nfi\n\n#
     Setup roles\nbash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log\n\nif
     [ \"$DLWS_ROLE_NAME\" != \"inferenceworker\" ];\nthen\n    bash ${SCRIPT_DIR}/setup_ssh_config.sh
@@ -111,6 +113,23 @@ data:
 
     # any command should run as ${DLWS_USER_NAME}
     #runuser -l ${DLWS_USER_NAME} -c your_commands
+  install.sh: |
+    cwd=`dirname $0`
+    ssh_root="$cwd/ssh_build/usr"
+
+    mkdir -p /usr/etc
+    cp $ssh_root/etc/* /usr/etc
+    cp $cwd/ssh_config/sshd/sshd_config /usr/etc/sshd_config
+
+    cp $cwd/ssh_config/init.d/* /etc/init.d
+    cp $cwd/ssh_config/default/* /etc/default
+    chmod +x /etc/init.d/ssh
+
+    cp -r $ssh_root/bin $ssh_root/sbin $ssh_root/lib $ssh_root/libexec /usr/
+
+    ssh-keygen -t dsa -f /usr/etc/ssh_host_dsa_key -N ""
+    ssh-keygen -t rsa -f /usr/etc/ssh_host_rsa_key -N ""
+    ssh-keygen -t ecdsa -f /usr/etc/ssh_host_ecdsa_key -N ""
   setup_ssh_config.sh: |
     #! /bin/bash
     set -x
@@ -277,20 +296,13 @@ data:
     }
 
     function setup_sshd {
-        time apt-get update && time apt-get install -y openssh-server
+        SSH_PORT=$DLWS_SD_SELF_SSH_PORT
+        sed -i -E "s/^#?Port 22/Port ${SSH_PORT}/" /usr/etc/sshd_config || exit 1
 
-        # if "DLWS_HOST_NETWORK" enabled, randomly generate port in range: 40000-49999
-        if [ "$DLWS_HOST_NETWORK" = "enable" ];
-        then
-            SSH_PORT=$(( $RANDOM % 10000 + 40000 ))
-            sed -i -E "s/^#?Port 22/Port ${SSH_PORT}/" /etc/ssh/sshd_config || exit 1
-        else
-            SSH_PORT=22
-        fi
         echo "${SSH_PORT}" > ${PROC_DIR}/SSH_PORT
         echo "${POD_IP}" > ${PROC_DIR}/POD_IP
 
-        time service ssh restart || exit 1
+        time /etc/init.d/ssh restart || exit 1
     }
 
     retry setup_sshd

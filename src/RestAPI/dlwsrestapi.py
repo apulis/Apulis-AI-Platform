@@ -876,6 +876,87 @@ class GetAccountByOpenId(Resource):
 api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
 
+class SignIn(Resource):
+
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('openId')
+        parser.add_argument('group')
+        parser.add_argument('password')
+        args = parser.parse_args()
+
+        openId = args["openId"]
+        group = args["group"]
+        password = args["password"]
+        if group=="Account":
+            ret = DataHandler().GetAccountByOpenIdAndPassword(openId, group, password)
+        else:
+            ret = None
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+api.add_resource(SignIn, '/signIn')
+
+class AddUserV2(Resource):
+    def post(self):
+        params = request.get_json(silent=True)
+        openId = params["openId"]
+        group = params["group"]
+        nickName = params["nickName"]
+        userName = params["userName"]
+        password = params["password"]
+        email = params["email"]
+        phoneNumber = params["phoneNumber"]
+        isAdmin = params["isAdmin"]
+        isAuthorized = params["isAuthorized"]
+
+        if group!="Account":
+            return "wrong group type",400
+        ret = {}
+        output = JobRestAPIUtils.SignUp(openId, group, nickName, userName, password, isAdmin, isAuthorized)
+        if "error" in output:
+            ret["result"] = False
+            ret["error"] = output["error"]
+        else:
+            dataHander = DataHandler()
+            dataHander.UpdateEmailAndPhone(openId, group, email, phoneNumber)
+            ret["result"] = True
+
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+api.add_resource(AddUserV2, '/addUser2')
+
+class GetAccountUserInfo(Resource):
+
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('openId')
+        parser.add_argument('userName')
+        args = parser.parse_args()
+
+        openId = args["openId"]
+        userName = args["userName"]
+
+        if AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            ret = JobRestAPIUtils.GetAccountByUserName(openId)
+            resp = jsonify(ret)
+        else:
+            return "wrong permission",403
+
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+api.add_resource(GetAccountUserInfo, '/getAccountUserInfo')
+
 class GetAllUsers(Resource):
     def get(self):
         data_handler = None

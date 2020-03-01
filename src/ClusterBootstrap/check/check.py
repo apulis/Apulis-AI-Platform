@@ -206,7 +206,8 @@ class DeploymentChecker(object):
 
     ## 执行所有check_xxx函数
     def start_check(self):
-        for name in dir(self):
+
+        for name in sorted(dir(self)):
             if name.startswith('check_'):
                 method = getattr(self, name)
                 method()
@@ -282,9 +283,11 @@ class DeploymentChecker(object):
         print("check result: ") 
 
         global check_result
-        t = PrettyTable(['item', 'status'])
 
-        for key, value in check_result.items():
+        t = PrettyTable(['item', 'status'])
+        t.align = "l"
+
+        for key, value in sorted(check_result.items()):
             t.add_row([key, value])
 
         print(t)
@@ -471,16 +474,7 @@ class DeploymentChecker(object):
         return True
 
     @query
-    def check_05_k8s(self):
-
-        cmd = 'export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl get po --all-namespaces'
-        for host in self.get_master_nodes():
-            self.cluster_ssh_cmd(host, cmd)      
-
-        return True
-
-    @query
-    def check_06_nfs(self):
+    def check_05_nfs(self):
 
         #pdb.set_trace()
         share_name = fetch_dictionary(self.cluster_config, ["mountpoints", "nfsshare1", "filesharename"])
@@ -493,7 +487,7 @@ class DeploymentChecker(object):
         expect = share_name
         
         def check_expect(output):
-            if expect in output:
+            if expect not in output:
                 return False
             else:
                 pass  
@@ -508,6 +502,107 @@ class DeploymentChecker(object):
             else:
                 pass       
 
+        return True
+
+    @query
+    def check_06_k8s(self):
+
+        global check_result
+
+        func_name = "check_06_k8s"
+        cmd = 'export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl get po --all-namespaces'
+        components_list = [
+
+            ## k8s组件
+            "custom-metrics-apiserver",
+            "prometheus-operator",
+            "device-plugin",
+            "cloud-collectd-node-agent",
+            "coredns",
+            "etcd",
+            "grafana",
+            "job-exporter",
+            "kube-apiserver",
+            "kube-controller-manager",
+            "kube-proxy",
+            "mysql",
+            "node-exporter",
+            "prometheus-deployment",
+            "watchdog",
+            "weave-net",
+
+            ## 应用组件
+            "jobmanager",
+            "nginx",
+            "restfulapi",
+            "webui"
+        ]
+
+        expect_name   = ""
+        expect_status = "running"
+        expect_restart = "3"
+        svc_states = []
+
+        def check_expect(output):
+
+            pod_state_mapping = {}
+            pod_list = output.split("\n")
+            #pdb.set_trace()
+
+            ## 服务名称
+            for svc_name in components_list:
+
+                ## 可能有多个
+                svc_pod_count = 0
+                check_item_name = ""
+
+                for pod_line in pod_list:
+
+                    if svc_name in pod_line:
+
+                        svc_pod_count += 1
+
+                        svc_states = pod_line.split()
+                        check_item_name = func_name + "_" + svc_name + "_" + str(svc_pod_count)
+
+                        if len(svc_states) < 6 or svc_states[3].lower() != expect_status:
+                            check_result[check_item_name] = "no"
+                            print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
+                            continue
+                        else:
+                            pass  
+
+                        if len(svc_states) < 6 or svc_states[4].lower() > expect_restart:
+                            check_result[check_item_name] = "no"
+                            print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
+                            continue
+                        else:
+                            pass 
+
+                        check_result[check_item_name] = "yes"
+                        print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
+
+                    else:
+                        pass 
+
+                ## 搜索完毕，判断是否找到服务
+                if svc_pod_count == 0:
+                    ## 未找到服务
+                    check_item_name = func_name + "_" + svc_name
+                    check_result[check_item_name] = "no"
+                    print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
+
+                else:
+                    ## 找到服务
+                    ## 服务状态在 已在for循环中处理过
+                    pass
+
+            return True
+
+
+        for host in self.get_master_nodes():
+            self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+     
         return True
     
 

@@ -431,21 +431,21 @@
     
     配置Nginx
 
-    ```
-./deploy.py --verbose nginx fqdn
+    ```  
+    ./deploy.py --verbose nginx fqdn
     ./deploy.py --verbose nginx config
     ```
     
     启动集群应用
 
     ```
-./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
+    ./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
     ./deploy.py --verbose kubernetes start cloudmonitor
     ```
     
     启动dashboard
 
     ```
-./deploy.py --verbose nginx webui3
+    ./deploy.py --verbose nginx webui3
     ./deploy.py --verbose kubernetes start webui3
     ```

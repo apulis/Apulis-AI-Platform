@@ -478,7 +478,9 @@ class DeploymentChecker(object):
 
         #pdb.set_trace()
         share_name = fetch_dictionary(self.cluster_config, ["mountpoints", "nfsshare1", "filesharename"])
-        if share_name is None:
+        server_name = fetch_dictionary(self.cluster_config, ["mountpoints", "nfsshare1", "server"])
+
+        if share_name is None or server_name is None:
             return False
         else:
             pass
@@ -495,12 +497,15 @@ class DeploymentChecker(object):
             return True
 
         for host in self.get_worker_nodes():
-            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-        
-            if not passed:
-                return False
+            if server_name not in host:
+                passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+            
+                if not passed:
+                    return False
+                else:
+                    pass       
             else:
-                pass       
+                pass
 
         return True
 
@@ -603,7 +608,7 @@ class DeploymentChecker(object):
         for host in self.get_master_nodes():
             self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
      
-        return True
+        return False
     
 
 def main():

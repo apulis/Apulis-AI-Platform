@@ -3119,45 +3119,70 @@ def get_service_yaml( use_service ):
     return fname
 
 def kubernetes_label_node(cmdoptions, nodename, label):
+    
+    #pdb.set_trace()
+    print(nodename, label)
     run_kubectl(["label nodes %s %s %s" % (cmdoptions, nodename, label)])
+    return
 
 # Get the list of nodes for a particular service
 #
 def get_node_lists_for_service(service):
         if "etcd_node" not in config or "worker_node" not in config:
             check_master_ETCD_status()
+        else:
+            pass
+
         labels = fetch_config(config, ["kubelabels"])
         nodetype = labels[service] if service in labels else labels["default"]
+         
         if nodetype == "worker_node":
             nodes = config["worker_node"]
+        
         elif nodetype == "mysqlserver_node":
             nodes = config["mysqlserver_node"]
+        
         elif nodetype == "nfs_node":
             nodes = config["nfs_node"]
+        
         elif nodetype == "etcd_node":
             nodes = config["etcd_node"]
+        
         elif nodetype.find( "etcd_node_" )>=0:
+            
             nodenumber = int(nodetype[nodetype.find( "etcd_node_" )+len("etcd_node_"):])
+            
             if len(config["etcd_node"])>=nodenumber:
                 nodes = [ config["etcd_node"][nodenumber-1] ]
             else:
                 nodes = []
+        
         elif nodetype == "all":
             nodes = config["worker_node"] + config["etcd_node"]
+        
         elif nodetype.startswith("node:"):
             nodename = nodetype[5:]
             return [nodename]
+        
         else:
             machines = fetch_config(config, ["machines"])
             if machines is None:
                 print "Service %s has a nodes type %s, but there is no machine configuration to identify node" % (service, nodetype)
                 exit(-1)
+            else:
+                pass
+
             allnodes = config["worker_node"] + config["etcd_node"]
             nodes = []
+
             for node in allnodes:
                 nodename = kubernetes_get_node_name(node)
+                
                 if nodename in machines and nodetype in machines[nodename]:
                     nodes.append(node)
+                else:
+                    pass
+
         return nodes
 
 # Label kubernete nodes according to a service.
@@ -3170,12 +3195,16 @@ def get_node_lists_for_service(service):
 
 def kubernetes_label_nodes( verb, servicelists, force ):
     servicedic = get_all_services()
+
     if verbose: 
         print ( "servicedic == %s" % servicedic )
+        
     get_nodes(config["clusterId"])
     labels = fetch_config(config, ["kubelabels"])
+    
     if verbose: 
         print ( "labels == %s " % labels )
+        
     for service, serviceinfo in servicedic.iteritems():
         if verbose:
             print("Examine service %s" % service)
@@ -3189,24 +3218,35 @@ def kubernetes_label_nodes( verb, servicelists, force ):
         for service in servicelists:
             if (not service in labels) and "default" in labels:
                 labels[service] = labels["default"]
+
     print servicelists
+
     for label in servicelists:
         nodes = get_node_lists_for_service(label)
+        
         if verbose:
             print "kubernetes: apply action %s to label %s to nodes: %s" %(verb, label, nodes)
+        else:
+            pass
+        
         if force:
             cmdoptions = "--overwrite"
         else:
             cmdoptions = ""
+
         for node in nodes:
             nodename = kubernetes_get_node_name(node)
+            
             if verb == "active":
                 kubernetes_label_node(cmdoptions, nodename, label+"=active")
             elif verb == "inactive":
                 kubernetes_label_node(cmdoptions, nodename, label+"=inactive")
             elif verb == "remove":
                 kubernetes_label_node(cmdoptions, nodename, label+"-")
+            else:
+                pass
 
+    return
 
 # Label kubernete nodes with gpu types.skip for CPU workers
 def kubernetes_label_GpuTypes():

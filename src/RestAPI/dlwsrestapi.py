@@ -899,7 +899,7 @@ class OpenSignIn(Resource):
                                                                                             "client_secret":config["Authentication"]["Microsoft"]["ClientSecret"],
                                                                                             "code":code,
                                                                                             "grant_type":"authorization_code",
-                                                                                            "redirect_uri":config["webportal_node"]+url_for("opensignin",signinType="microsoft")})
+                                                                                            "redirect_uri":"https://"+config["webportal_node"]+url_for("opensignin",signinType="microsoft")})
         if not re:
             logging.error(re.content)
             return redirect("/login?error=get-token-failed")

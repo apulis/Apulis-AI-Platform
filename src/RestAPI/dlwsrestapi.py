@@ -901,6 +901,7 @@ class OpenSignIn(Resource):
                                                                                             "grant_type":"authorization_code",
                                                                                             "redirect_uri":config["webportal_node"]+url_for("opensignin",signinType="microsoft")})
         if not re:
+            logging.error(re.content)
             return redirect("/login?error=get-token-failed")
         response = json.loads(re.content.decode())
         access_token =response.get("access_token")
@@ -912,22 +913,23 @@ class OpenSignIn(Resource):
         elif signinType == "microsoft":
             re = requests.get("https://graph.microsoft.com/v1.0/me",headers={"Authorization":"Bearer "+access_token})
         if not re:
+            logging.error(re.content)
             return redirect("/login?error=get-info-failed")
         info_response = json.loads(re.content.decode())
         if signinType == "microsoft":
             nickName = info_response.get("displayName")
             email = info_response.get("mail")
             openId = info_response.get("id")
-            group = "microsoft"
+            group = "Microsoft"
             if not nickName:
                 nickName = email
         elif signinType == "wechat":
             nickName = info_response.get("nickname")
             openId = info_response.get("unionid")
             email = info_response.get("email")
-            group = "wechat"
+            group = "Wechat"
         else:
-            return redirect("/login?error=get-info-failed")
+            return redirect("/login?error=get-detail-failed")
         info = JobRestAPIUtils.GetAccountByOpenId(openId, group)
         if not info:
             return redirect("/signup?openId={}&nickName={}&group={}".format(openId,nickName,group))

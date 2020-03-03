@@ -933,6 +933,7 @@ class OpenSignIn(Resource):
             return redirect("/signup?openId={}&nickName={}&group={}".format(openId,nickName,group))
         token = create_jwt_token_with_message(info)
         return redirect("/?token=" + token)
+api.add_resource(OpenSignIn, '/signin/<signinType>')
 
 class SignIn(Resource):
 

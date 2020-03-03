@@ -10,3 +10,4 @@ MySQL-python
 DButils
 subprocess32
 PyJWT
+flask-jwt-extended

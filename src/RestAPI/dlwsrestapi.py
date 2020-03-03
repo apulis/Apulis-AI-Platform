@@ -46,7 +46,7 @@ with open(os.path.join(dir_path, 'logging.yaml'), 'r') as f:
 logger = logging.getLogger('restfulapi')
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = config["jwt"]["secret"]
+app.config['JWT_SECRET_KEY'] = config["jwt"]["secret_key"]
 jwt = JWTManager(app)
 api = Api(app)
 verbose = True

@@ -47,6 +47,7 @@ logger = logging.getLogger('restfulapi')
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = config["jwt"]["secret_key"]
+app.config['PROPAGATE_EXCEPTIONS'] = True
 jwt = JWTManager(app)
 api = Api(app)
 verbose = True
@@ -904,7 +905,7 @@ class OpenSignIn(Resource):
         if not re:
             logging.error(re.content)
             return redirect("/login?error=get-token-failed")
-        response = json.loads(re.content.decode())
+        response = json.loads(re.content.decode("utf-8"))
         access_token =response.get("access_token")
         refresh_token =response.get("refresh_token")
         openid =response.get("openid")
@@ -916,7 +917,7 @@ class OpenSignIn(Resource):
         if not re:
             logging.error(re.content)
             return redirect("/login?error=get-info-failed")
-        info_response = json.loads(re.content.decode())
+        info_response = json.loads(re.content.decode("utf-8"))
         if signinType == "microsoft":
             nickName = info_response.get("displayName")
             email = info_response.get("mail")
@@ -933,10 +934,10 @@ class OpenSignIn(Resource):
             return redirect("/login?error=get-detail-failed")
         info = JobRestAPIUtils.GetAccountByOpenId(openId, group)
         if not info:
-            return redirect("/signup?openId={}&nickName={}&group={}".format(openId,nickName,group))
+            return redirect("/signup?openId={}&group={}".format(openId,group))
         token = create_jwt_token_with_message(info)
         return redirect("/?token=" + token)
-api.add_resource(OpenSignIn, '/signin/<signinType>')
+api.add_resource(OpenSignIn, '/login/<signinType>')
 
 class SignIn(Resource):
 

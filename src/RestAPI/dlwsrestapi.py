@@ -2,13 +2,17 @@ import sys
 import json
 import os
 
-from flask import Flask, Response
-from flask_restful import reqparse, abort, Api, Resource
+from flask import Flask, Response,redirect
+from flask_restful import reqparse, abort, Api, Resource,url_for
 from flask import request, jsonify
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 import base64
 import yaml
 import uuid
-
+import requests
 import logging
 import timeit
 from logging.config import dictConfig
@@ -24,6 +28,7 @@ from config import global_vars
 import authorization
 
 from DataHandler import DataHandler
+from jwt_authorization import create_jwt_token_with_message
 
 import time
 import sys
@@ -41,6 +46,8 @@ with open(os.path.join(dir_path, 'logging.yaml'), 'r') as f:
 logger = logging.getLogger('restfulapi')
 
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = config["jwt"]["secret"]
+jwt = JWTManager(app)
 api = Api(app)
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
@@ -854,7 +861,6 @@ api.add_resource(SignUp, '/SignUp')
 
 
 class GetAccountByOpenId(Resource):
-    
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
@@ -875,6 +881,58 @@ class GetAccountByOpenId(Resource):
 ##
 api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
+class OpenSignIn(Resource):
+    def get(self,signinType):
+        parser = reqparse.RequestParser()
+        parser.add_argument('remoteError')
+        parser.add_argument('code')
+        parser.add_argument('state')
+        args = parser.parse_args()
+        code = args["code"]
+        re = None
+        if signinType == "wechat":
+            re = requests.get(url="https://api.weixin.qq.com/sns/oauth2/access_token?appid="+config["Authentication"]["WeChat"]["AppId"]+"&secret="+
+                             config["Authentication"]["WeChat"]["AppSecret"]+"&code="+code+"&grant_type=authorization_code")
+
+        elif signinType=="microsoft":
+            re = requests.post(url="https://login.microsoftonline.com/common/oauth2/token",data={"client_id":config["Authentication"]["Microsoft"]["ClientId"],
+                                                                                            "client_secret":config["Authentication"]["Microsoft"]["ClientSecret"],
+                                                                                            "code":code,
+                                                                                            "grant_type":"authorization_code",
+                                                                                            "redirect_uri":config["webportal_node"]+url_for("opensignin",signinType="microsoft")})
+        if not re:
+            return redirect("/login?error=get-token-failed")
+        response = json.loads(re.content.decode())
+        access_token =response.get("access_token")
+        refresh_token =response.get("refresh_token")
+        openid =response.get("openid")
+        re = None
+        if signinType == "wechat":
+            re = requests.get("https://api.weixin.qq.com/sns/userinfo?access_token="+access_token+"&openid="+openid+"&lang=zh_CN")
+        elif signinType == "microsoft":
+            re = requests.get("https://graph.microsoft.com/v1.0/me",headers={"Authorization":"Bearer "+access_token})
+        if not re:
+            return redirect("/login?error=get-info-failed")
+        info_response = json.loads(re.content.decode())
+        if signinType == "microsoft":
+            nickName = info_response.get("displayName")
+            email = info_response.get("mail")
+            openId = info_response.get("id")
+            group = "microsoft"
+            if not nickName:
+                nickName = email
+        elif signinType == "wechat":
+            nickName = info_response.get("nickname")
+            openId = info_response.get("unionid")
+            email = info_response.get("email")
+            group = "wechat"
+        else:
+            return redirect("/login?error=get-info-failed")
+        info = JobRestAPIUtils.GetAccountByOpenId(openId, group)
+        if not info:
+            return redirect("/signup?openId={}&nickName={}&group={}".format(openId,nickName,group))
+        token = create_jwt_token_with_message(info)
+        return redirect("/?token=" + token)
 
 class SignIn(Resource):
 
@@ -888,20 +946,24 @@ class SignIn(Resource):
         openId = args["openId"]
         group = args["group"]
         password = args["password"]
+        token = None
         if group=="Account":
             ret = DataHandler().GetAccountByOpenIdAndPassword(openId, group, password)
-        else:
-            ret = None
-        resp = jsonify(ret)
+            if ret:
+                token = create_jwt_token_with_message(ret[0])
+        resp = jsonify(token)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
 
-        return resp
+        return redirect("/?token="+token)
 
 api.add_resource(SignIn, '/signIn')
 
+
 class AddUserV2(Resource):
+    @jwt_required
     def post(self):
+        current_user = get_jwt_identity()
         params = request.get_json(silent=True)
         openId = params["openId"]
         group = params["group"]
@@ -916,6 +978,8 @@ class AddUserV2(Resource):
         if group!="Account":
             return "wrong group type",400
         ret = {}
+        if not AuthorizationManager.HasAccess(current_user["userName"], ResourceType.Cluster, "", Permission.Admin):
+            return 403
         output = JobRestAPIUtils.SignUp(openId, group, nickName, userName, password, isAdmin, isAuthorized)
         if "error" in output:
             ret["result"] = False
@@ -934,17 +998,15 @@ class AddUserV2(Resource):
 api.add_resource(AddUserV2, '/addUser2')
 
 class GetAccountUserInfo(Resource):
-
+    @jwt_required
     def get(self):
+        current_user = get_jwt_identity()
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
-        parser.add_argument('userName')
         args = parser.parse_args()
-
         openId = args["openId"]
-        userName = args["userName"]
 
-        if AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+        if AuthorizationManager.HasAccess(current_user["userName"], ResourceType.Cluster, "", Permission.Admin):
             ret = JobRestAPIUtils.GetAccountByUserName(openId)
             resp = jsonify(ret)
         else:

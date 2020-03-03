@@ -381,7 +381,6 @@ def ResumeJob(userName, jobId):
         if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Collaborator):
             ret = dataHandler.UpdateJobTextField(jobId, "jobStatus", "unapproved")
     dataHandler.Close()
-    InvalidateJobListCache(jobs[0]["vcName"])
     return ret
 
 
@@ -556,7 +555,8 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                     "Microsoft": 3001,
                     "Zhejianglab": 3002,
                     "Wechat": 3003,
-                    "DingTalk": 3004
+                    "DingTalk": 3004,
+                    "Account": 3005
                 }
                 if group in GROUP_DICT:
                     gid = GROUP_DICT[group]
@@ -569,8 +569,9 @@ def SignUp(openId, group, nickName, userName, password, isAdmin = False, isAutho
                 # Update Ace
                 permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
                 resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-                # delete of default admin permissions
-                # ACLManager.UpdateAce(userName, resourceAclPath, permission, False)
+                # only for account signup
+                if group == "Account":
+                    ACLManager.UpdateAce(userName, resourceAclPath, permission, 0)
 
         dataHandler.Close()
     except Exception as e:
@@ -595,7 +596,7 @@ def GetAccountByUserName(userName):
     ret = None
     try:
         dataHandler = DataHandler()
-        lst = dataHandler.GetAccountByOpenId(userName)
+        lst = dataHandler.GetAccountByUserName(userName)
         dataHandler.Close()
         if len(lst) > 0:
             ret = lst[0]

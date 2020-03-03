@@ -278,6 +278,7 @@
    ```
    nvidia-docker run --rm dlws/cuda nvidia-smi
    docker run --rm -ti dlws/cuda nvidia-smi
+   
    保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
    
    如nvidia-docker指令执行正常，但docker指令执行错误，则修改/etc/docker/daemon.json，
@@ -430,21 +431,21 @@
     
     配置Nginx
 
-    ```
-./deploy.py --verbose nginx fqdn
+    ```  
+    ./deploy.py --verbose nginx fqdn
     ./deploy.py --verbose nginx config
     ```
     
     启动集群应用
 
     ```
-./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
+    ./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
     ./deploy.py --verbose kubernetes start cloudmonitor
     ```
     
     启动dashboard
 
     ```
-./deploy.py --verbose nginx webui3
+    ./deploy.py --verbose nginx webui3
     ./deploy.py --verbose kubernetes start webui3
     ```

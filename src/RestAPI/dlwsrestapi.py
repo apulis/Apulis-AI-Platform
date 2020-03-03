@@ -975,8 +975,8 @@ class AddUserV2(Resource):
         nickName = params["nickName"]
         userName = params["userName"]
         password = params["password"]
-        email = params["email"]
-        phoneNumber = params["phoneNumber"]
+        email = params.get("email","")
+        phoneNumber = params.get("phoneNumber","")
         isAdmin = params["isAdmin"]
         isAuthorized = params["isAuthorized"]
 

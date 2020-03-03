@@ -190,10 +190,10 @@ spec:
     - name: authorized-keys-volume
       mountPath: /home/{{ job["user"] }}/.ssh/authorized_keys
       readOnly: true
-    {% if not job["dnsPolicy"] %}
-    - mountPath: /etc/resolv.conf
-      name: resolv
-    {% endif %}
+    #{% if not job["dnsPolicy"] %}
+    #- mountPath: /etc/resolv.conf
+    #  name: resolv
+    #{% endif %}
     {% for mp in job["mountpoints"] %}
     {% if mp.enabled %}
     - mountPath: {{ mp.containerPath }}

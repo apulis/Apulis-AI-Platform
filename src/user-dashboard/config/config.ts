@@ -93,46 +93,65 @@ export default {
         {
           path: '/',
           component: '../layouts/BasicLayout',
-          authority: ['admin', 'user'],
+          // authority: ['admin', 'user'],
           routes: [
             {
               path: '/',
-              redirect: '/welcome',
-            },
-            {
-              path: '/welcome',
-              name: 'welcome',
-              icon: 'smile',
-              component: './Welcome',
+              name: 'index',
+              icon: 'dashboard',
+              component: './Index',
             },
             {
               path: '/admin',
               name: 'admin',
               icon: 'crown',
-              //component: './Admin',
-              //authority: ['admin'],
+              // component: './Admin',
+              // authority: ['admin'],
               routes: [
                 {
-                  name: '用户管理',
+                  name: 'user',
                   icon: 'smile',
                   path: '/admin/user',
-                  component: './admin/User',
-                  authority: ['admin', 'user'],
+                  // authority: ['admin', 'user'],
+                  routes: [
+                    {
+                      name: 'list',
+                      icon: 'smile',
+                      path: '/admin/user/list',
+                      component: './admin/User',
+                    },
+                    {
+                      name: 'add',
+                      icon: 'smile',
+                      path: '/admin/user/add',
+                      component: './admin/User/Add',
+                    }
+                  ]
                 },
                 {
-                  name: '角色管理',
+                  name: 'groups',
                   icon: 'smile',
-                  path: '/admin/role',
-                  component: './admin/Role',
-                  authority: ['admin'],
+                  path: '/admin/group',
+                  component: './admin/Groups',
+                  // authority: ['admin', 'user'],
+                  routes: [
+
+                  ]
                 },
-                {
-                  name: '权限管理',
-                  icon: 'smile',
-                  path: '/admin/permission',
-                  component: './admin/Permission',
-                  authority: ['admin'],
-                },
+                // {
+                //   name: '角色管理',
+                //   icon: 'smile',
+                //   path: '/admin/role',
+                //   component: './admin/Role',
+                //   // authority: ['admin'],
+                // },
+                // {
+                //   name: '权限管理',
+                //   icon: 'smile',
+                //   path: '/admin/permission',
+                //   component: './admin/Permission',
+                //   // authority: ['admin'],
+                // },
               ]
             },
             {

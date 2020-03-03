@@ -422,8 +422,10 @@ def add_additional_cloud_config():
     translate_config_entry( config, ["coreos", "startupScripts"], "startupscripts", basestring )
 
 def init_deployment():
+
     gen_new_key = True
     regenerate_key = False
+    
     if (os.path.exists("./deploy/clusterID.yml")):
         clusterID = utils.get_cluster_ID_from_file()
         response = raw_input_with_default("There is a cluster (ID:%s) deployment in './deploy', do you want to keep the existing ssh key and CA certificates (y/n)?" % clusterID)
@@ -435,6 +437,7 @@ def init_deployment():
             gen_new_key = False
     else:
         create_cluster_id()
+    
     if gen_new_key:
         os.system("mkdir -p ./deploy/cloud-config")
         os.system("rm -r ./deploy/cloud-config")
@@ -450,7 +453,6 @@ def init_deployment():
     sshkey_public = f.read()
     print sshkey_public
     f.close()
-
 
 
     print "Cluster Id is : %s" % clusterID
@@ -481,7 +483,6 @@ def init_deployment():
     copy_to_ISO()
 
 
-
     template_file = "./template/iso-creator/mkimg.sh.template"
     target_file = "./deploy/iso-creator/mkimg.sh"
     utils.render_template( template_file, target_file ,config)
@@ -492,19 +493,25 @@ def init_deployment():
 
     with open("./deploy/ssl/kubelet/apiserver.pem", 'r') as f:
         content = f.read()
+    
     config["apiserver.pem"] = base64.b64encode(content.encode('utf-8')).decode('utf-8')
     config["worker.pem"] = base64.b64encode(content.encode('utf-8')).decode('utf-8')
 
     with open("./deploy/ssl/kubelet/apiserver-key.pem", 'r') as f:
         content = f.read()
+
     config["apiserver-key.pem"] = base64.b64encode(content.encode('utf-8')).decode('utf-8')
     config["worker-key.pem"] = base64.b64encode(content.encode('utf-8')).decode('utf-8')
 
     add_additional_cloud_config()
     add_kubelet_config()
+
     template_file = "./template/cloud-config/cloud-config-worker.yml"
     target_file = "./deploy/cloud-config/cloud-config-worker.yml"
     utils.render_template( template_file, target_file ,config)
+
+    return
+
 
 def check_node_availability(ipAddress):
     status = os.system('ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -oBatchMode=yes %s@%s hostname > /dev/null' % (config["admin_username"], config["ssh_cert"], ipAddress))
@@ -3519,6 +3526,7 @@ def gen_warm_up_cluster_script():
     utils.render_template("./template/warmup/pre_download_images.sh.template", "scripts/pre_download_images.sh", config)
 
 def run_command( args, command, nargs, parser ):
+
     # If necessary, show parsed arguments.
     global discoverserver
     global homeinserver
@@ -3539,14 +3547,19 @@ def run_command( args, command, nargs, parser ):
         verbose = True
         utils.verbose = True
         print "Args = {0}".format(args)
+    else:
+        pass
 
+    #pdb.set_trace()
     if command == "restore":
         utils.restore_keys(nargs)
-        # Stop parsing additional command
-        exit()
+
     elif command == "restorefromdir":
         utils.restore_keys_from_dir(nargs)
         exit()
+
+    else:
+        pass
 
     # Cluster Config
     config_cluster = os.path.join(dirpath,"cluster.yaml")
@@ -3568,9 +3581,14 @@ def run_command( args, command, nargs, parser ):
             tmp = yaml.load(f, Loader=yaml.FullLoader)
             if "clusterId" in tmp:
                 config["clusterId"] = tmp["clusterId"]
+                
     if "copy_sshtemp" in config and config["copy_sshtemp"]:
+
         if "ssh_origfile" not in config:
             config["ssh_origfile"] = config["ssh_cert"]
+        else:
+            pass
+
         sshfile = os.path.join(dirpath,config["ssh_origfile"])
         if os.path.exists(sshfile):
             _, sshtempfile = tempfile.mkstemp(dir='/tmp')
@@ -3584,18 +3602,22 @@ def run_command( args, command, nargs, parser ):
             print "SSH Key {0} not found using original".format(sshfile)
 
     add_acs_config(command)
+
     if verbose and config["isacs"]:
         print "Using Azure Container Services"
+    else:
+        pass
+
     if os.path.exists("./deploy/clusterID.yml"):
         update_config()
     else:
         apply_config_mapping(config, default_config_mapping)
         update_docker_image_config()
+
     # additional glusterfs launch parameter.
     config["launch-glusterfs-opt"] = args.glusterfs;
-    get_ssh_config()
 
-    #pdb.set_trace()
+    get_ssh_config()
     configuration( config, verbose )
 
     if args.yes:
@@ -3616,11 +3638,14 @@ def run_command( args, command, nargs, parser ):
         # Second part of restore, after config has been read.
         if os.path.exists("./deploy/acs_kubeclusterconfig"):
             acs_tools.acs_get_config()
+        else:
+            pass
+
         bForce = args.force if args.force is not None else False
         get_kubectl_binary(force=args.force)
         exit()
 
-    if command =="clean":
+    elif command =="clean":
         clean_deployment()
         exit()
 

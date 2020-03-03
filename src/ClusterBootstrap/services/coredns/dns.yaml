@@ -69,7 +69,7 @@ data:
             ttl 30
         }
         prometheus :9153
-        forward . 8.8.8.8
+        forward . 223.5.5.5
         cache 30
         reload
         loadbalance

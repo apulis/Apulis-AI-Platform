@@ -48,4 +48,14 @@ export default {
   'menu.editor.flow': '流程编辑器',
   'menu.editor.mind': '脑图编辑器',
   'menu.editor.koni': '拓扑编辑器',
+  // 
+  'menu.index': '控制台',
+  'menu.admin.user': '用户',
+  'menu.admin.user.add': '新建子用户',
+  'menu.admin.user.addRole': '赋予角色',
+  'menu.admin.user.finished': '子用户完成',
+  'menu.admin.user.detail': '用户详情',
+  'menu.admin.user.list': '用户列表',
+  'menu.admin.groups': '用户组',
+
 };

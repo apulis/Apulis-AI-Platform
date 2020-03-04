@@ -77,3 +77,16 @@ jwt:
   secret_key: {{cnf["jwt"]["secret_key"]}}
   algorithm: {{cnf["jwt"]["algorithm"]}}
   token_ttl: {{cnf["jwt"]["token_ttl"]}}
+
+Authentication:
+  WeChat:
+    AppId: "{{cnf["Authentications"]["Wechat"]["AppId"]}}"
+    AppSecret: "{{cnf["Authentications"]["Wechat"]["AppSecret"]}}"
+  Microsoft:
+    ClientId: "{{cnf["Authentications"]["Microsoft"]["ClientId"]}}"
+    ClientSecret: "{{cnf["Authentications"]["Microsoft"]["ClientSecret"]}}"
+
+administrators:
+{% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
+  - {{admin}}
+{% endfor %}

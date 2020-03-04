@@ -882,6 +882,16 @@ class GetAccountByOpenId(Resource):
 ##
 api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
+class OpenSignInRedirect(Resource):
+    def get(self,signinType):
+        if signinType == "wechat":
+            return redirect("https://open.weixin.qq.com/connect/qrconnect?appid={}&redirect_uri=https%3A%2F%2F{}%2Fapi/login/wechat&response_type=code&scope=snsapi_userinfo,snsapi_login&state=".format(config["Authentication"]["WeChat"]["AppId"],config["webportal_node"]))
+        elif signinType == "microsoft":
+            return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={}&scope=https%3A%2F%2Fgraph.microsoft.com%2Fuser.read&response_type=code&redirect_uri=https%3A%2F%2F{}%2Fapi%2Flogin%2Fmicrosoft&state=".format(config["Authentication"]["Microsoft"]["ClientId"],config["webportal_node"]))
+        else:
+            return redirect("/")
+api.add_resource(OpenSignInRedirect, '/openLogin/<signinType>')
+
 class OpenSignIn(Resource):
     def get(self,signinType):
         parser = reqparse.RequestParser()

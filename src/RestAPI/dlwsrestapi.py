@@ -60,6 +60,11 @@ if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     global_vars["initAdminAccess"] = True
     logger.info('setting admin access!')
     ACLManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, 0)
+    if config.get("administrators") and config["administrators"]:
+        for one in config["administrators"]:
+            if len(one.split("@"))==2:
+                ACLManager.UpdateAce(one.split("@")[0], AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster),
+                                     Permission.Admin, 0)
     logger.info('admin access given!')
 
 

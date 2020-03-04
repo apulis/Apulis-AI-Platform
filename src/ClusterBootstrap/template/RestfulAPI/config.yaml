@@ -85,3 +85,8 @@ Authentication:
   Microsoft:
     ClientId: "{{cnf["Authentications"]["Microsoft"]["ClientId"]}}"
     ClientSecret: "{{cnf["Authentications"]["Microsoft"]["ClientSecret"]}}"
+
+administrators:
+{% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
+  - {{admin}}
+{% endfor %}

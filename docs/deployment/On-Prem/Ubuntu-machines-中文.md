@@ -228,31 +228,9 @@
      nfsshare1:
        type: nfs
        server: apulis-sz-dev-worker01
-       filesharename: /home/dlwsadmin/share2
-       curphysicalmountpoint: /mntdlws/nfs
+       filesharename: /dev/share
+       curphysicalmountpoint: /mntdlws
        mountpoints: ""
-     nfsshare2:
-       type: nfs
-       server: apulis-sz-dev-worker01
-       filesharename: /home/dlwsadmin/share
-       curphysicalmountpoint: /mntdlts/platform
-       mountpoints: "jobfiles"
-   repair-manager:
-     ecc_rule:
-       cordon_dry_run: True
-     alert:
-       smtp_url: smtp.office365.com
-       login: dev@apulis.com
-       password: Yitong#123
-       sender: dev@apulis.com
-       receiver: ["869071540@qq.com"]
-   jwt:
-     secret_key: apulistechjwtsecretsample001
-     algorithm: HS256
-     token_ttl: 86400
-   watchdog:
-     vc_url: "http://localhost:5000/ListVCs?userName=Administrator"
-
    ```
 
 3. 初始化部署环境
@@ -300,6 +278,7 @@
    ```
    nvidia-docker run --rm dlws/cuda nvidia-smi
    docker run --rm -ti dlws/cuda nvidia-smi
+   
    保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
    
    如nvidia-docker指令执行正常，但docker指令执行错误，则修改/etc/docker/daemon.json，
@@ -452,21 +431,21 @@
     
     配置Nginx
 
-    ```
-./deploy.py --verbose nginx fqdn
+    ```  
+    ./deploy.py --verbose nginx fqdn
     ./deploy.py --verbose nginx config
     ```
     
     启动集群应用
 
     ```
-./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
+    ./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
     ./deploy.py --verbose kubernetes start cloudmonitor
     ```
     
     启动dashboard
 
     ```
-./deploy.py --verbose nginx webui3
+    ./deploy.py --verbose nginx webui3
     ./deploy.py --verbose kubernetes start webui3
     ```

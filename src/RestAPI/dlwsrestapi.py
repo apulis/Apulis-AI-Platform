@@ -70,6 +70,7 @@ if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
 
 def _stacktraces():
    code = []
+
    for threadId, stack in sys._current_frames().items():
        code.append("\n# ThreadID: %s" % threadId)
        for filename, lineno, name, line in traceback.extract_stack(stack):
@@ -971,11 +972,12 @@ class SignIn(Resource):
             ret = DataHandler().GetAccountByOpenIdAndPassword(openId, group, password)
             if ret:
                 token = create_jwt_token_with_message(ret[0])
+                return redirect("/?token=" + token)
         resp = jsonify(token)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
+        return redirect("/")
 
-        return redirect("/?token="+token)
 
 api.add_resource(SignIn, '/signIn')
 

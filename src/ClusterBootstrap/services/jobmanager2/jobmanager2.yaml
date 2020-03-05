@@ -32,9 +32,8 @@ spec:
         - name: INIT_CONTAINER_IMAGE
           value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}
         volumeMounts:
-        - mountPath: /usr/bin/kubectl
-          name: kubectl-binary
-          readOnly: true
+        - mountPath: /etc/kubernetes/pki
+          name: certs
         - mountPath: /root/.kube/config 
           name: kubeconfig
           readOnly: true          
@@ -106,9 +105,9 @@ spec:
           name: prom-ign-redis
           protocol: TCP
       volumes:
-      - name: kubectl-binary
+      - name: certs
         hostPath:
-          path: /usr/bin/kubectl         
+          path: /etc/kubernetes/pki
       - name: kubeconfig
         hostPath:
           path: /etc/kubernetes/admin.conf
@@ -142,4 +141,3 @@ spec:
         operator: Exists
       - key: node-role.kubernetes.io/master
         effect: NoSchedule   
-        

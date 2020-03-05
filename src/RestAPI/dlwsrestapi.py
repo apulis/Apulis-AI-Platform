@@ -972,11 +972,11 @@ class SignIn(Resource):
             ret = DataHandler().GetAccountByOpenIdAndPassword(openId, group, password)
             if ret:
                 token = create_jwt_token_with_message(ret[0])
-                return redirect("/?token=" + token)
+                return token
         resp = jsonify(token)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
-        return redirect("/")
+        return "user account not exist!"
 
 
 api.add_resource(SignIn, '/signIn')

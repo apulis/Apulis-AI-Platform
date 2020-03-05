@@ -17,7 +17,7 @@ import logging
 import timeit
 from logging.config import dictConfig
 import thread
-
+import signal
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
@@ -28,6 +28,7 @@ from config import global_vars
 import authorization
 
 from DataHandler import DataHandler
+from mysql_conn_pool import MysqlConn
 from jwt_authorization import create_jwt_token_with_message
 
 import time
@@ -1577,10 +1578,24 @@ class JobPriority(Resource):
 api.add_resource(JobPriority, '/jobs/priorities')
 
 
+def dumpstacks(signal, frame):
+    code = []
+    logging.info("received signum %d", signal)
+    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+    # logging.info("\nfeature_count:\n{}".format(feature_count))
+    for threadId, stack in sys._current_frames().items():
+        code.append("n# Thread: %d" % (threadId))
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
+            if line:
+                code.append(" %s" % (line.strip()))
+    logging.info("\n".join(code))
+
 @app.route("/metrics")
 def metrics():
     return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)
 

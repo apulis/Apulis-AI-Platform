@@ -1,8 +1,6 @@
 FROM apulistech/backendbase:1.8
 MAINTAINER Jin Li <jin.li@apulis.com>
 
-COPY kubectl /usr/local/bin/kubectl
-RUN chmod +x /usr/local/bin/kubectl
 # kubectl will be mapped by service
 RUN rm /etc/apache2/mods-enabled/mpm_*
 COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf

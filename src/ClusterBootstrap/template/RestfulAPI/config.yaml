@@ -8,7 +8,7 @@ mysql :
   port : {{cnf["mysql_port"]}}
   username : {{cnf["mysql_username"]}}
   password : "{{cnf["mysql_password"]}}"
-kubelet-path : /usr/local/bin/kubectl
+kubelet-path : {% if cnf["kubelet-path"] %} {{cnf["kubelet-path"]}} {% else %} /usr/local/bin/kubectl {% endif %}
 storage-mount-path : {{cnf["storage-mount-path"]}}
 dltsdata-storage-mount-path : {{cnf["dltsdata-storage-mount-path"]}}
 folder_auto_share: {{cnf["folder_auto_share"]}}

@@ -112,8 +112,6 @@ spec:
     volumeMounts:
     - mountPath: /dlts-runtime
       name: dlts-runtime
-    - mountPath: /root/.kube/config
-      name: kubeconfig
     command:
     - sh
     - /dlts-init/init.sh
@@ -289,9 +287,6 @@ spec:
 
   restartPolicy: Never
   volumes:
-  - name: kubeconfig
-    hostPath:
-      path: /etc/kubernetes/kubelet.conf
   - name: "dlws-scripts"
     configMap:
       name: "dlws-scripts"

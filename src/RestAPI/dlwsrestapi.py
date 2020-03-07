@@ -1,6 +1,7 @@
 import sys
 import json
 import os
+import signal
 
 from flask import Flask, Response,redirect
 from flask_restful import reqparse, abort, Api, Resource,url_for
@@ -17,7 +18,7 @@ import logging
 import timeit
 from logging.config import dictConfig
 import thread
-import signal
+
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
@@ -1577,6 +1578,18 @@ class JobPriority(Resource):
 ##
 api.add_resource(JobPriority, '/jobs/priorities')
 
+def dumpstacks(signal, frame):
+    code = []
+    logging.info("received signum %d", signal)
+    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+    # logging.info("\nfeature_count:\n{}".format(feature_count))
+    for threadId, stack in sys._current_frames().items():
+        code.append("n# Thread: %d" % (threadId))
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
+            if line:
+                code.append(" %s" % (line.strip()))
+    logging.info("\n".join(code))
 
 def dumpstacks(signal, frame):
     code = []

@@ -74,9 +74,9 @@ def create_own_config(k8s_core_api, job_name, pod_name, ip, ssh_port):
     for i in range(2):
         try:
             k8s_core_api.create_namespaced_config_map(
-                    namespace=job_namespace,
-                    body=body,
-                    )
+                namespace=job_namespace,
+                body=body,
+            )
         except ApiException as e:
             if e.status == 409:
                 logger.info("configmap already exist, maybe from previous retry, delete it, retry %d", i)
@@ -124,7 +124,7 @@ def main(args):
                 {"pod_name": pod_name, "job_name": job_name, "ip": ip})
         sys.exit(ERROR_EXIT_CODE["environment"])
 
-    k8s_config.load_incluster_config()
+    k8s_config.load_kube_config()
     k8s_core_api = k8s_client.CoreV1Api()
     # k8s_apps_api = k8s_client.AppsV1Api()
 

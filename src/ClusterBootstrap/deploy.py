@@ -2837,6 +2837,8 @@ def exec_on_rand_master(args, supressWarning = False):
 
 # run a shell script on one remote node
 def run_script(node, args, sudo = False, supressWarning = False):
+
+
     if ".py" in args[0]:
         if sudo:
             fullcmd = "sudo /opt/bin/python"
@@ -2847,6 +2849,7 @@ def run_script(node, args, sudo = False, supressWarning = False):
             fullcmd = "sudo bash"
         else:
             fullcmd = "bash"
+
     nargs = len(args)
     for i in range(nargs):
         if i==0:
@@ -3255,13 +3258,6 @@ def kubernetes_label_nodes( verb, servicelists, force ):
 
     return
 
-# Label kubernete nodes with gpu types.skip for CPU workers
-def kubernetes_label_GpuTypes():
-    for nodename,nodeInfo in config["machines"].items():
-        if nodeInfo["role"] == "worker":
-            kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
-
-
 def populate_machine_sku(machine_info):
     """Potentially adds sku for and returns the modified machine_info.
 
@@ -3314,6 +3310,50 @@ def get_sku_meta(cnf):
     """
     return cnf.get("sku_meta", {})
 
+
+# Label kubernete nodes with gpu types.skip for CPU workers
+def kubernetes_label_GpuTypes():
+    for nodename,nodeInfo in config["machines"].items():
+        if nodeInfo["role"] == "worker":
+            kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
+
+# Label kubernetes worker nodes
+def kubernetes_label_worker():
+
+    node_type = ["cpu", "npu", "gpu", "storage"]
+    specific_processor_type = ["npu", "gpu"]
+    set_active = "=active"
+
+    for nodename,nodeInfo in config["machines"].items():
+        if nodeInfo["role"] == "worker":
+
+            # node type: cpu\gpu\npu\storage
+            if nodeInfo["type"] in node_type:
+                kubernetes_label_node("--overwrite", nodename, nodeInfo["type"] + "=active")
+            else:
+                pass
+
+            if nodeInfo["type"] in specific_processor_type:
+                kubernetes_label_node("--overwrite", nodename, nodeInfo["vendor"] + "=active")
+
+                if "series" in nodeInfo:
+                    kubernetes_label_node("--overwrite", nodename, nodeInfo["series"] + "=active")
+                else:
+                    pass
+                
+            else:
+                pass
+
+            # gpuType=nvidia/huawei for compatibility
+            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo and "series" in nodeInfo:
+                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"])
+            else:
+                pass
+
+        else:
+            pass
+
+    return
 
 def kubernetes_label_cpuworker():
     """Label kubernetes nodes with cpuworker=active."""
@@ -4251,7 +4291,7 @@ def run_command( args, command, nargs, parser ):
                 for servicename in servicenames:
                     replace_kube_service(servicename)
 
-            elif nargs[0] == "labels":
+            elif nargs[0] == "labelservice":
                 if len(nargs)>=2 and ( nargs[1] == "active" or nargs[1] == "inactive" or nargs[1] == "remove" ):
                     kubernetes_label_nodes(nargs[1], nargs[2:], args.yes)
                 elif len(nargs)==1:
@@ -4288,6 +4328,9 @@ def run_command( args, command, nargs, parser ):
             parser.print_help()
             print "Error: kubernetes need a subcommand."
             exit()
+
+    elif command == "labelworker":
+        kubernetes_label_worker()
 
     elif command == "gpulabel":
         kubernetes_label_GpuTypes()

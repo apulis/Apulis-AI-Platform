@@ -382,10 +382,11 @@ def GetJobStatus(jobId):
 def get_node_labels(key):
     if config["deploy_method"]=="kubeadm":
         responseStr = kubectl_exec(" get nodes -o yaml")
+        nodes = yaml.load(responseStr)
     else:
         url = "%s/api/v1/nodes" % (config["apiserver"])
         responseStr = curl_get(url)
-    nodes = json.loads(responseStr)
+        nodes = json.loads(responseStr)
     ret = []
 
     if "items" in nodes:

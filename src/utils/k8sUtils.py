@@ -380,7 +380,7 @@ def GetJobStatus(jobId):
 
 
 def get_node_labels(key):
-    if config["isacs"]:
+    if config["deploy_method"]=="kubeadm":
         responseStr = kubectl_exec(" get nodes -o yaml")
     else:
         url = "%s/api/v1/nodes" % (config["apiserver"])

@@ -124,7 +124,7 @@ def main(args):
                 {"pod_name": pod_name, "job_name": job_name, "ip": ip})
         sys.exit(ERROR_EXIT_CODE["environment"])
 
-    k8s_config.load_kube_config()
+    k8s_config.load_incluster_config()
     k8s_core_api = k8s_client.CoreV1Api()
     # k8s_apps_api = k8s_client.AppsV1Api()
 

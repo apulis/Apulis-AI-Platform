@@ -161,13 +161,16 @@ class PodTemplate():
             pods.append(pod)
 
         k8s_pods = []
+        gpuMapping = {"huawei_a910": "npu.huawei.com/NPU", "nvidia": "nvidia.com/gpu"}
+
         for idx,pod in enumerate(pods):
             pod["numps"] = 0
             pod["numworker"] = 1
             pod["fragmentGpuJob"] = True
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
-
+            if "gpuStr" not in pod:
+                pod["gpuStr"] = gpuMapping[pod["gpuType"]]
 
             if params["jobtrainingtype"] == "InferenceJob":
                 pod["gpuLimit"] = 0

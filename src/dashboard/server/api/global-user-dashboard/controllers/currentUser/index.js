@@ -1,4 +1,13 @@
 module.exports = async context => {
   const { user } = context.state
-  context.body = user
+  const currentAuthority = []
+  if (user.isAdmin) currentAuthority.push('admin')
+  if (user.isAuthorized) currentAuthority.push('user')
+  context.body = {
+    userName: user.userName,
+    nickName: user.nickName,
+    currentAuthority,
+    uid: user.uid,
+    group: user.group
+  }
 }

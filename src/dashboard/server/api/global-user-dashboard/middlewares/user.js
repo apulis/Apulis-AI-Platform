@@ -20,8 +20,16 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
       const user = context.state.user = User.fromPassword(context, email, password)
       context.log.debug(user, 'Authenticated by password')
     }
-  } else if (context.headers) {
-    console.log(111, context.headers.authorization)
+  } else if (context.headers.authorization) {
+    const { authorization } = context.headers
+    try {
+      const token = authorization
+      const user = context.state.user = User.parseTokenToUserInfo(token.replace(/^Bearer /, ''))
+      console.log('context.state.user', context.state.user)
+      context.log.info(user, 'Authenticated by cookie')
+    } catch (error) {
+      context.log.error(error, 'Error in cookie authentication')
+    }
   }
 
   if (forceAuthenticated) {

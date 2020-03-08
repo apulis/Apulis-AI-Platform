@@ -184,8 +184,8 @@ class User extends Service {
       nickName: nickName,
       userName: userName,
       password: password,
-      isAdmin: false,
-      isAuthorized: false
+      isAdmin: true,
+      isAuthorized: true
     }))
     const clusterId = clusterIds[0]
     const response = await new Cluster(context, clusterId).fetch('/SignUp?' + params)
@@ -208,7 +208,8 @@ class User extends Service {
       isAuthorized: this.isAuthorized,
       gid: this.gid,
       familyName: this.familyName,
-      givenName: this.givenName
+      givenName: this.givenName,
+      exp: new Date().getTime() / 1000 + 2 * 24 * 60 * 60
     }, sign)
   }
 
@@ -225,7 +226,7 @@ class User extends Service {
       gid: this.gid,
       familyName: this.familyName,
       givenName: this.givenName,
-      exp: new Date().getTime / 1000 + 2 * 24 * 60 * 60
+      exp: new Date().getTime() / 1000 + 2 * 24 * 60 * 60
     }, sign)
   }
 

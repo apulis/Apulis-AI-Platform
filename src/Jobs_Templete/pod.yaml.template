@@ -157,7 +157,7 @@ spec:
         - SYS_ADMIN
     resources:
       limits:
-        nvidia.com/gpu: {{ job["gpuLimit"] }}
+        {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
       {% if job["cpulimit"] %}
         cpu: {{ job["cpulimit"]  }}
       {% endif %}

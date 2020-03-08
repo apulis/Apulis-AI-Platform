@@ -890,6 +890,24 @@ class GetAccountByOpenId(Resource):
 ##
 api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
+class GetAccountByuserName(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+
+        ret = JobRestAPIUtils.GetAccountByUserName(userName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAccountByuserName, '/getAccountInfoByUserName')
+
 class OpenSignInRedirect(Resource):
     def get(self,signinType):
         if signinType == "wechat":

@@ -1039,28 +1039,6 @@ class AddUserV2(Resource):
 
 api.add_resource(AddUserV2, '/addUser2')
 
-class GetAccountUserInfo(Resource):
-    @jwt_required
-    def get(self):
-        current_user = get_jwt_identity()
-        parser = reqparse.RequestParser()
-        parser.add_argument('openId')
-        args = parser.parse_args()
-        openId = args["openId"]
-
-        if AuthorizationManager.HasAccess(current_user["userName"], ResourceType.Cluster, "", Permission.Admin):
-            ret = JobRestAPIUtils.GetAccountByUserName(openId)
-            resp = jsonify(ret)
-        else:
-            return "wrong permission",403
-
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        resp.headers["dataType"] = "json"
-
-        return resp
-
-api.add_resource(GetAccountUserInfo, '/getAccountUserInfo')
-
 class GetAllUsers(Resource):
     def get(self):
         data_handler = None

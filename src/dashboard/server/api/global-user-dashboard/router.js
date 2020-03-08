@@ -14,3 +14,6 @@ router.post('/signIn',
 router.post('/signUp',
   require('./middlewares/body')('signUp'),
   require('./controllers/signup/account'))
+router.get('/userList',
+  require('./middlewares/user')(),
+  require('./controllers/userList'))

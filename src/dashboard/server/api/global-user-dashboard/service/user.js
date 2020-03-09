@@ -9,11 +9,8 @@ const Cluster = require('./cluster')
 const clusterIds = Object.keys(config.get('clusters'))
 
 const sign = config.get('sign')
-// const winbind = config.get('winbind')
-const winbind = config.has('winbind') ? config.get('winbind') : undefined
 const masterToken = config.get('masterToken')
 
-const TOKEN = Symbol('token')
 
 class User extends Service {
   /**
@@ -43,16 +40,6 @@ class User extends Service {
    * @param {object} userinfo
    * @return {User}
    */
-  static fromDingtalk(context, userinfo) {
-    const user = new User(context, userinfo['openid'], 'DingTalk')
-    user.nickName = userinfo['nick']
-    return user
-  }
-  /**
-   * @param {import('koa').Context} context
-   * @param {object} userinfo
-   * @return {User}
-   */
   static fromWechat(context, userInfo) {
     // 对于微信，首先选择 unionId 作为 openId
     let userId = ''
@@ -63,17 +50,6 @@ class User extends Service {
     }
     const user = new User(context, userId, 'Wechat')
     user.nickName = userInfo.nickname
-    return user
-  }
-
-  /**
-   * @param {import('koa').Context} context
-   * @param {String} openId
-   * @return {User}
-   */
-  static fromZjlab(context, zjlabId) {
-    const user = new User(context, `ZJ${zjlabId}`, 'Zjlab')
-    user.nickName = `User ${zjlabId}`
     return user
   }
 
@@ -103,10 +79,6 @@ class User extends Service {
     return user
   }
 
-  static parseTokenToUserInfo(token) {
-    const payload = jwt.verify(token, sign)
-    return payload
-  }
   /**
    * @param {import('koa').Context} context
    * @param {string} cookieToken
@@ -137,36 +109,6 @@ class User extends Service {
     return this._token
   }
 
-  async fillIdFromWinbind () {
-    if (winbind == null) {
-      this.context.log.warn('No winbind server, user will have no uid / gid, and will not sync user info to any cluster.')
-      return null
-    }
-
-    const params = new URLSearchParams({ userName: this.email })
-    const url = `${winbind}/domaininfo/GetUserId?${params}`
-    this.context.log.info({ url }, 'Winbind request')
-    const response = await fetch(url)
-    const data = await response.json()
-    this.context.log.info({ data }, 'Winbind response')
-
-    this.uid = data['uid']
-    this.gid = data['gid']
-    return data
-  }
-
-  async addUserToCluster (data) {
-    if (data == null) return
-
-    // Fix groups format
-    if (Array.isArray(data['groups'])) {
-      data['groups'] = JSON.stringify(data['groups'].map(e => String(e)))
-    }
-    const params = new URLSearchParams(Object.assign({ userName: this.userName }, data))
-    for (const clusterId of clusterIds) {
-      new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
-    }
-  }
   /**
    * @param {string} email
    * @return {Buffer}
@@ -177,14 +119,6 @@ class User extends Service {
     return hash.digest()
   }
 
-  /*
-  get token () {
-    if (this[TOKEN] == null) {
-      this[TOKEN] = User.generateToken(this.email)
-    }
-    return this[TOKEN]
-  }*/
-
   async loginWithMicrosoft() {
     const params = new URLSearchParams(Object.assign({
       identityName: this.userName,
@@ -192,19 +126,6 @@ class User extends Service {
       Group: "Microsoft",
       isAdmin: true,
       isAuthorized: true
-    }))
-    const clusterId = clusterIds[0]
-    const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
-    return await response.json()
-  }
-  
-  async loginWithDingtalk() {
-    const params = new URLSearchParams(Object.assign({
-      identityName: this.userName,
-      Alias: this.Alias,
-      Group: "DingTalk",
-      isAdmin: false,
-      isAuthorized: false
     }))
     const clusterId = clusterIds[0]
     const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
@@ -234,18 +155,40 @@ class User extends Service {
     return data
   }
 
-  async signup(nickName, userName, password) {
+  static async getAccountInfoByUserName (context, userName) {
     const params = new URLSearchParams(Object.assign({
-      openId: this.openId,
-      group: this.group,
+      userName: userName,
+    }))
+
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(context, clusterId).fetch('/getAccountInfoByUserName?' + params)
+    const data = await response.json()
+    context.log.warn(data, 'getAccountInfo')
+    if (data) {
+      this.uid = data['uid']
+      this.nickName = data['nickName']
+      this.userName = data['userName']
+      this.password = data['password']
+      this.isAdmin = data['isAdmin']
+      this.isAuthorized = data['isAuthorized']
+      this.openId = data['openId']
+      this.group = data['group']
+    }
+    return data
+  }
+
+  static async signupWithAccount(context, nickName, userName, password) {
+    const params = new URLSearchParams(Object.assign({
+      openId: userName,
+      group: 'Account',
       nickName: nickName,
       userName: userName,
       password: password,
-      isAdmin: false,
-      isAuthorized: false,
+      isAdmin: true,
+      isAuthorized: true
     }))
     const clusterId = clusterIds[0]
-    const response = await new Cluster(this.context, clusterId).fetch('/SignUp?' + params)
+    const response = await new Cluster(context, clusterId).fetch('/SignUp?' + params)
     return await response.json()
   }
 

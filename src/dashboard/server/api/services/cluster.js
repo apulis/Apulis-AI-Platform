@@ -409,6 +409,13 @@ class Cluster extends Service {
     return data
   }
 
+  async getAllUsers () {
+    const response = await this.fetch(`/GetAllAccountUser`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
   async listVc (params) {
     const { userName } = params
     const response = await this.fetch(`/ListVCs?userName=${userName}`)

@@ -406,7 +406,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ssh,
         ipython,
         tensorboard,
-        plugins
+        plugins,
+        gpuType,
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);

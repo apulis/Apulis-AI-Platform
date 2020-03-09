@@ -1170,6 +1170,33 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetAllAccountUser(self):
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s`" % (self.accounttablename)
+        ret = []
+        try:
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                ret.append(one)
+
+        except Exception as e:
+            logger.exception('GetAllAccountUser Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetUsers(self):
+        ret = []
+        try:
+            query = "SELECT `identityName`,`uid` FROM `%s`" % (self.identitytablename)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                ret.append((one["identityName"],one["uid"]))
+        except Exception as e:
+            logger.exception('GetUsers Exception: %s', str(e))
+        return ret
+
+    @record
     def GetActiveJobsCount(self):
         ret = 0
         try:

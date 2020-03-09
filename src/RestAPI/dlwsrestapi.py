@@ -1060,6 +1060,23 @@ class GetAllUsers(Resource):
 ##
 api.add_resource(GetAllUsers, '/GetAllUsers')
 
+class GetAllAccountUser(Resource):
+    def get(self):
+        data_handler = None
+        try:
+            data_handler = DataHandler()
+            ret = data_handler.GetAllAccountUser()
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+            return resp
+        except Exception as e:
+            return "Internal Server Error. " + str(e), 400
+        finally:
+            if data_handler is not None:
+                data_handler.Close()
+
+api.add_resource(GetAllAccountUser, '/GetAllAccountUser')
 
 class UpdateAce(Resource):
     def get(self):

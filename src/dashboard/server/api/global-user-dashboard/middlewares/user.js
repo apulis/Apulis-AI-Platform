@@ -25,7 +25,6 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
     try {
       const token = authorization
       const user = context.state.user = User.parseTokenToUserInfo(token.replace(/^Bearer /, ''))
-      console.log('context.state.user', context.state.user)
       context.log.info(user, 'Authenticated by cookie')
     } catch (error) {
       context.log.error(error, 'Error in cookie authentication')

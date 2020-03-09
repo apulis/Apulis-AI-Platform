@@ -489,6 +489,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         setSsh(false);
         setIpython(false);
         setTensorboard(false);
+        setGpuType(availbleGpu![0].type || '')
       } else {
         const {
           name,
@@ -507,7 +508,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           ssh,
           ipython,
           tensorboard,
-          plugins
+          plugins,
+          gpuType
         } = JSON.parse(event.target.value as string);
         if (name !== undefined) setName(name);
         if (type !== undefined) setType(type);
@@ -525,6 +527,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         if (ssh !== undefined) setSsh(ssh);
         if (ipython !== undefined) setIpython(ipython);
         if (tensorboard !== undefined) setTensorboard(tensorboard);
+        if (gpuType !== undefined) setGpuType(gpuType);
         if (plugins === undefined) {
           setAccountName("");
           setAccountKey("");

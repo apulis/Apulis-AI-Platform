@@ -66,7 +66,7 @@ const sanitizePath = (path: string) => {
   return path;
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
-  const { selectedCluster,saveSelectedCluster } = React.useContext(ClustersContext);
+  const { selectedCluster,saveSelectedCluster, availbleGpu } = React.useContext(ClustersContext);
   const { userName, uid } = React.useContext(UserContext);
   const { teams, selectedTeam }= React.useContext(TeamsContext);
   const { enqueueSnackbar } = useSnackbar()
@@ -118,11 +118,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   );
 
   const [preemptible, setPreemptible] = React.useState(false);
+  const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
   const onPreemptibleChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
       setPreemptible(event.target.value === 'true');
     },
     [setPreemptible]
+  );
+  const onGpuTypeChange = React.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setGpuType(event.target.value);
+    },
+    [setGpuType]
   );
 
 
@@ -602,7 +609,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       userName: userName,
       userId: uid,
       jobType: 'training',
-      gpuType: gpuModel,
+      gpuType: gpuType,
       vcName: selectedTeam,
       containerUserId: 0,
       jobName: name,
@@ -876,8 +883,25 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <MenuItem value="true">YES</MenuItem>
                 </TextField>
               </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="GPU type"
+                  fullWidth
+                  variant="filled"
+                  value={String(gpuType)}
+                  onChange={onGpuTypeChange}
+                >
+                  {
+                    availbleGpu?.map(gpu => (
+                      <MenuItem value={gpu.type}>{gpu.type}</MenuItem>
+                    ))
+                  }
+                  
+                </TextField>
+              </Grid>
               { (type === 'RegularJob' ||  type === 'InferenceJob') && (
-                <Grid item xs={12}>
+                <Grid item xs={6}>
                   <TextField
                     type="number"
                     error={gpus > (type === 'InferenceJob' ? Number.MAX_VALUE : gpusPerNode)}

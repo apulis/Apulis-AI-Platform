@@ -33,10 +33,10 @@ administrators:
 
 clusters:
   apulis-dev:
-    restfulapi: "https://apulis-sz-dev-infra01.sigsus.cn/apis"
+    restfulapi: "https://apulis-china-infra01.sigsus.cn/apis"
     title: Grafana-endpoint-of-the-cluster
     workStorage: work
     dataStorage: data
-    grafana: "https://apulis-sz-dev-infra01.sigsus.cn/grafana/"
+    grafana: "https://apulis-china-infra01.sigsus.cn/grafana/"
     prometheus: http://apulis-sz-dev-infra01.sigsus.cn:9091
-    
+

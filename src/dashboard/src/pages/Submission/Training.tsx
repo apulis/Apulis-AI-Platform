@@ -96,10 +96,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (cluster == null) return;
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
-  const gpusPerNode = React.useMemo(() => {
-    if (cluster == null || gpuModel == null) return;
-    return cluster.gpus[gpuModel].perNode;
-  }, [cluster, gpuModel]);
+  const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
+  // const gpusPerNode = React.useMemo(() => {
+  //   if (cluster == null || gpuModel == null) return;
+  //   console.log('nnnnnnnnnnn', cluster.gpus[gpuType].perNode)
+  //   return cluster.gpus[gpuModel].perNode;
+  // }, [cluster, gpuModel, gpuType]);
+  const [gpusPerNode, setGpusPerNode] = useState(0)
+  React.useEffect(() => {
+    const cluster = team.clusters.find((cluster: any) => cluster.id === selectedCluster);
+    setGpusPerNode(cluster.gpus[gpuType].quota)
+  }, [gpuType, cluster])
   const [templates, setTemplates] = useState([{name: '', json: ''}]);
   
   React.useEffect(() => {
@@ -118,19 +125,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   );
 
   const [preemptible, setPreemptible] = React.useState(false);
-  const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
   const onPreemptibleChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
       setPreemptible(event.target.value === 'true');
     },
     [setPreemptible]
   );
-  const onGpuTypeChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setGpuType(event.target.value);
-    },
-    [setGpuType]
-  );
+  const onGpuTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setGpuType(event.target.value);
+  };
+
 
 
 
@@ -824,6 +828,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   data-test="cluster-item"
                   fullWidth
                   cluster={selectedCluster}
+                  gpuType={gpuType}
                   onClusterChange={saveSelectedCluster}
                 />
                 <Tooltip title="View Cluster GPU Status Per Node">

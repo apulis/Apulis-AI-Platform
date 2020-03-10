@@ -51,27 +51,48 @@ const renderData = (data: any) => {
 export const TeamVirtualClusterStatus = (props: TeamVC) => {
   const{vcStatus,selectedValue,handleChange, children} = props;
   const theme = useTheme();
-  console.log(vcStatus)
+  console.log('vcStatus', vcStatus)
+  const gpuCapacity = vcStatus.length > 0 ? vcStatus[0].gpu_capacity : {};
+  const gpuUnschedulable = vcStatus.length > 0 ? vcStatus[0].gpu_unschedulable : {};
+  const gpuUsed = vcStatus.length > 0 ? vcStatus[0].gpu_used : {};
+  const gpuPreemptableUsed = vcStatus.length > 0 ? vcStatus[0].gpu_preemptable_used : {};
+  const gpuAvaliable = vcStatus.length > 0 ? vcStatus[0].gpu_avaliable : {};
+  const gpuAvaliableJobNum = vcStatus.length > 0 ? vcStatus[0].AvaliableJobNum : {}
+  const gpuStatusList: any = Object.keys(gpuCapacity).map(val => {
+    return {
+      type: val,
+      total: gpuCapacity[val] || 0,
+      unschedulable: gpuUnschedulable[val] || 0,
+      used: gpuUsed[val] || 0,
+      preemptibleUsed: gpuPreemptableUsed[val] || 0,
+      avaliable: gpuAvaliable[val] || 0,
+      avaliableJobNum: gpuAvaliableJobNum[val] || 0,
+      clusterName: vcStatus.length > 0 ? vcStatus[0].ClusterName : '',
+    }
+  })
+  console.log('gpuStatusList', gpuStatusList)
   return (
     <MuiThemeProvider theme={useCheckIsDesktop ? theme : tableTheme}>
       {
-        vcStatus.length > 0 ?  <MaterialTable
+        gpuStatusList.length > 0 ? 
+        <MaterialTable
           title=""
           columns={[
-            {title: 'Name', field: 'ClusterName', render:(rowData: any)=><div><Radio
+            {title: 'Name', field: 'clusterName', render: (rowData: any)=><div><Radio
               checked={selectedValue === rowData['ClusterName']}
               onChange={handleChange}
-              value={rowData['ClusterName']}
-              name={rowData['ClusterName']}/>{rowData['ClusterName']}</div>, customSort:(a, b) => a['ClusterName'].localeCompare(b['ClusterName'])},
-            {title: 'Total GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_capacity']),customSort:(a, b) => sumValues(a['gpu_capacity']) - sumValues(b['gpu_capacity'])},
-            {title: 'Unschedulable GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_unschedulable']), customSort:(a, b) => sumValues(a['gpu_unschedulable']) - sumValues(b['gpu_unschedulable'])},
-            {title: 'Used GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_used']),customSort: (a, b) => sumValues(a['gpu_used']) - sumValues(b['gpu_used'])},
-            {title: 'Preemptible Used GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_preemptable_used']), customSort: (a, b) => !a || !b ? -1 : sumValues(a['gpu_preemptable_used']) - sumValues(b['gpu_preemptable_used'])},
-            {title: 'Available GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_avaliable']),customSort: (a, b) => sumValues(a['gpu_avaliable']) - sumValues(b['gpu_avaliable'])},
-            {title: 'Active Jobs', field: '', render:(rowData: any)=><span>{ Number(sumValues(rowData['AvaliableJobNum'])) || 0}</span>, customSort: (a, b) => sumValues(a['AvaliableJobNum']) - sumValues(b['AvaliableJobNum'])}
+              value={rowData['clusterName']}
+              name={rowData['clusterName']}/>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
+            {title: 'Total GPU', field: 'total'},
+            {title: 'GPU Type', field: 'type', },
+            {title: 'Unschedulable GPU', field: 'unschedulable'},
+            {title: 'Used GPU', field: 'used'},
+            {title: 'Preemptible Used GPU', field: 'preemptibleUsed'},
+            {title: 'Available GPU', field: 'avaliable'},
+            {title: 'Active Jobs', field: 'avaliableJobNum'}
           ]}
-          data={vcStatus}
-          options={{filtering: false,paging: true, pageSize: vcStatus.length < 10 ? vcStatus.length  : 10 ,pageSizeOptions:[10],sorting: true}}
+          data={gpuStatusList}
+          options={{filtering: false, paging: true, pageSize: gpuStatusList.length < 10 ? gpuStatusList.length : 10, pageSizeOptions: [10], sorting: true}}
         /> :
           <CircularProgress/>
       }
@@ -79,3 +100,24 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
 
   )
 }
+
+
+
+// <MaterialTable
+//   title=""
+//   columns={[
+    // {title: 'Name', field: 'ClusterName', render:(rowData: any)=><div><Radio
+    //   checked={selectedValue === rowData['ClusterName']}
+    //   onChange={handleChange}
+    //   value={rowData['ClusterName']}
+    //   name={rowData['ClusterName']}/>{rowData['ClusterName']}</div>, customSort:(a, b) => a['ClusterName'].localeCompare(b['ClusterName'])},
+//     {title: 'Total GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_capacity']),customSort:(a, b) => sumValues(a['gpu_capacity']) - sumValues(b['gpu_capacity'])},
+    // {title: 'Unschedulable GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_unschedulable']), customSort:(a, b) => sumValues(a['gpu_unschedulable']) - sumValues(b['gpu_unschedulable'])},
+    // {title: 'Used GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_used']),customSort: (a, b) => sumValues(a['gpu_used']) - sumValues(b['gpu_used'])},
+    // {title: 'Preemptible Used GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_preemptable_used']), customSort: (a, b) => !a || !b ? -1 : sumValues(a['gpu_preemptable_used']) - sumValues(b['gpu_preemptable_used'])},
+    // {title: 'Available GPU', field: '', render:(rowData: any)=>renderData(rowData['gpu_avaliable']),customSort: (a, b) => sumValues(a['gpu_avaliable']) - sumValues(b['gpu_avaliable'])},
+    // {title: 'Active Jobs', field: '', render:(rowData: any)=><span>{ Number(sumValues(rowData['AvaliableJobNum'])) || 0}</span>, customSort: (a, b) => sumValues(a['AvaliableJobNum']) - sumValues(b['AvaliableJobNum'])}
+//   ]}
+//   data={gpuStatusList}
+//   options={{filtering: false,paging: true, pageSize: vcStatus.length < 10 ? vcStatus.length  : 10 ,pageSizeOptions:[10],sorting: true}}
+// />

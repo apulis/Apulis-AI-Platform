@@ -38,7 +38,12 @@ const Brief: FunctionComponent = () => {
         <ListItemText
           primary="Command"
           secondary={job['jobParams']['cmd']}
-          secondaryTypographyProps={{ component: 'pre' }}
+          secondaryTypographyProps={{ component: 'div' }}
+          style={{
+            wordWrap:'break-word',
+            wordBreak:'break-all',
+            overflow: 'hidden'
+          }}
         />
       </ListItem>
       <CopyableTextListItem

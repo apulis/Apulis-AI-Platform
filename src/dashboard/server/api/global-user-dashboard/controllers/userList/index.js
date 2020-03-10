@@ -14,6 +14,9 @@ module.exports = async context => {
       if (r.isAdmin) {
         r.role = 'Admin'
       }
+      if (r.password) {
+        delete r.password
+      }
     })
   }
   context.body = {

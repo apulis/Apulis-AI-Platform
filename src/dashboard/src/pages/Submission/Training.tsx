@@ -97,16 +97,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
   const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
-  // const gpusPerNode = React.useMemo(() => {
-  //   if (cluster == null || gpuModel == null) return;
-  //   console.log('nnnnnnnnnnn', cluster.gpus[gpuType].perNode)
-  //   return cluster.gpus[gpuModel].perNode;
-  // }, [cluster, gpuModel, gpuType]);
   const [gpusPerNode, setGpusPerNode] = useState(0)
-  React.useEffect(() => {
-    const cluster = team.clusters.find((cluster: any) => cluster.id === selectedCluster);
-    setGpusPerNode(cluster.gpus[gpuType].quota)
-  }, [gpuType, cluster])
   const [templates, setTemplates] = useState([{name: '', json: ''}]);
   
   React.useEffect(() => {
@@ -830,6 +821,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   cluster={selectedCluster}
                   gpuType={gpuType}
                   onClusterChange={saveSelectedCluster}
+                  onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
                 />
                 <Tooltip title="View Cluster GPU Status Per Node">
                   <IconButton color="secondary" size="small" onClick={handleClickOpen} aria-label="delete">

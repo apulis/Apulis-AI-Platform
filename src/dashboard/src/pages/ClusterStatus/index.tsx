@@ -143,7 +143,8 @@ const ClusterStatus: FC = () => {
             fetchIdes.push(idleTmp);
           }
         }
-        fetch(userfetchs['getIdleGPUPerUserUrl']+params).then(async (response: any) => {
+        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params).replace(/\+/, '');
+        fetch(fetchUserGPUUrl).then(async (response: any) => {
           const res = await response.json();
           for (let item of res['data']["result"]) {
             let idleUser: any = {};

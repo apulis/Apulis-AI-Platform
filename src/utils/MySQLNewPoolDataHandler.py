@@ -785,6 +785,22 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetGpuTypeActiveJobCount(self):
+        ret = {}
+        try:
+            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running'" % (
+                self.jobtablename)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                jobParam = json.loads(base64.b64decode(one["jobParams"]))
+                ret.setdefault(jobParam["gpuType"],0)
+                ret[jobParam["gpuType"]]+=1
+        except Exception as e:
+            logger.exception('GetActiveJobList Exception: %s', str(e))
+        return ret
+
+    @record
     def GetJob(self, **kwargs):
         valid_keys = ["jobId", "familyToken", "isParent", "jobName", "userName", "vcName", "jobStatus", "jobType",
                       "jobTime"]
@@ -1194,6 +1210,19 @@ class DataHandler(object):
                 ret.append((one["identityName"],one["uid"]))
         except Exception as e:
             logger.exception('GetUsers Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetActiveJobsCount(self):
+        ret = 0
+        try:
+            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running'" % (self.jobtablename)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for c in rets:
+                ret = c["c"]
+        except Exception as e:
+            logger.exception('GetActiveJobsCount Exception: %s', str(e))
         return ret
 
     @record

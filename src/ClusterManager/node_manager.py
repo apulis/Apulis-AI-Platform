@@ -269,7 +269,7 @@ def get_cluster_status():
         logger.exception("get cluster status")
 
     dataHandler = DataHandler()
-    cluster_status["AvaliableJobNum"] = dataHandler.GetActiveJobsCount()
+    cluster_status["AvaliableJobNum"] = dataHandler.GetGpuTypeActiveJobCount()
 
     if "cluster_status" in config and check_cluster_status_change(config["cluster_status"],cluster_status):
         logger.info("updating the cluster status...")

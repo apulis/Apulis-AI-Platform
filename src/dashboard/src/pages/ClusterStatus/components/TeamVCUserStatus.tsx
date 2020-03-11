@@ -14,7 +14,7 @@ interface TeamUsr {
 }
 
 export const TeamVCUserStatus = (props: TeamUsr) => {
-  const{userStatus, showCurrentUser,handleSwitch, currentCluster } = props;
+  const {userStatus, showCurrentUser,handleSwitch, currentCluster } = props;
   if (currentCluster === 'Lab-RR1-V100') {
     return (
       <>

@@ -49,9 +49,8 @@ const renderData = (data: any) => {
   )
 }
 export const TeamVirtualClusterStatus = (props: TeamVC) => {
-  const{vcStatus,selectedValue,handleChange, children} = props;
+  const {vcStatus,selectedValue,handleChange, children} = props;
   const theme = useTheme();
-  console.log('vcStatus', vcStatus)
   const gpuCapacity = vcStatus.length > 0 ? vcStatus[0].gpu_capacity : {};
   const gpuUnschedulable = vcStatus.length > 0 ? vcStatus[0].gpu_unschedulable : {};
   const gpuUsed = vcStatus.length > 0 ? vcStatus[0].gpu_used : {};
@@ -78,11 +77,7 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
         <MaterialTable
           title=""
           columns={[
-            {title: 'Name', field: 'clusterName', render: (rowData: any)=><div><Radio
-              checked={selectedValue === rowData['ClusterName']}
-              onChange={handleChange}
-              value={rowData['clusterName']}
-              name={rowData['clusterName']}/>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
+            {title: 'Name', field: 'clusterName', render: (rowData: any)=><div>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
             {title: 'Total GPU', field: 'total'},
             {title: 'GPU Type', field: 'type', },
             {title: 'Unschedulable GPU', field: 'unschedulable'},

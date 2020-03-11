@@ -2,7 +2,7 @@
 # This command will be executed under directory 
 # src/ClusterBootstrap/deploy/docker-images/.../
 
-rm -rf RepairManager2
+rm -rf RepairManager
 cp -r ../../../../RepairManager RepairManager
 
 # Render config file for email credentials

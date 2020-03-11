@@ -425,7 +425,7 @@ class Cluster extends Service {
       body: user
     })
     this.context.assert(response.ok, 502)
-    const data = await response.json()
+    const data = await response.text()
     return data
   }
 

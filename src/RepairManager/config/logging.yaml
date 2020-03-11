@@ -20,7 +20,7 @@ handlers:
     backupCount: 10
 loggers:
   basic:
-    level: DEBUG
+    level: INFO
     handlers: ['console','file']
     propagate: no
 root:

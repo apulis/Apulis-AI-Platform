@@ -2,8 +2,25 @@ cordon_dry_run: {{cnf['repair-manager']['ecc_rule']['cordon_dry_run']}}
 prometheus:
   ip: {{cnf['repair-manager']['prometheus-ip']}}
   port: {{cnf['repair-manager']['prometheus-port']}}
-  ecc_error_query: 'nvidiasmi_ecc_error_count{type="volatile_double"}>0'
-  step: 1m
-  interval: 10 # minutes
-  percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
-  
+  metrics:
+    - query_expression: 'nvidiasmi_ecc_error_count{type="volatile_double"}>0'
+      step: 1m
+      interval: 10 # minutes
+      percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
+      name: nvidiasmi_ecc_error_count
+    - query_expression: '(100 - (avg by (instance)(irate(node_cpu_seconds_total{mode="idle"}[300s])) * 100))>80'
+      step: 1m
+      interval: 10 # minutes
+      percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
+      name: "cpu utilization more than 80%"
+    - query_expression: '(node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes)/
+          node_memory_MemTotal_bytes > 0.8'
+      step: 1m
+      interval: 10 # minutes
+      percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
+      name: "memory utilization more than 80%"
+    - query_expression: 'node_filesystem_free_bytes / node_filesystem_size_bytes > 0.8'
+      step: 1m
+      interval: 10 # minutes
+      percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
+      name: "filesystem left space less than 20%"

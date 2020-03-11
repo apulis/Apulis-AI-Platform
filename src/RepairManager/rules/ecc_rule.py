@@ -103,9 +103,7 @@ class ECCRule(Rule):
                         self.ecc_node_hostnames[metric["name"]]=[]
                         for ip in ecc_node_ips:
                             self.ecc_node_hostnames[metric["name"]].append(address_map[ip])
-                        logging.info(f'Uncorrectable ECC metric {metric["name"]} found: {self.ecc_node_hostnames}')
-
-                        return True
+                        logging.info(f'Uncorrectable ECC metric {metric["name"]} found: {self.ecc_node_hostnames[metric["name"]]}')
                     else:
                         logging.info(f'No uncorrectable ECC {metric["name"]} metrics found.')
                 else:
@@ -113,13 +111,15 @@ class ECCRule(Rule):
             except:
                 logging.exception(f'Error retrieving data from {ecc_url}')
 
+        if self.ecc_node_hostnames:
+            return True
         return False
 
 
     def take_action(self):
-        node_status = []
-        action_taken = False
         for ecc_name,ecc_node_hostnames in self.ecc_node_hostnames.items():
+            node_status = []
+            action_taken = False
             for node_name in ecc_node_hostnames:
                 if k8s_util.is_node_cordoned(self.node_info, node_name):
                     output = f'no action taken: {node_name} already cordoned'

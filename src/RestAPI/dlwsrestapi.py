@@ -1003,14 +1003,14 @@ api.add_resource(SignIn, '/signIn')
 
 
 class AddUserV2(Resource):
-    @jwt_required
     def post(self):
-        current_user = get_jwt_identity()
+        # current_user = get_jwt_identity()
         params = request.get_json(silent=True)
         openId = params["openId"]
         group = params["group"]
         nickName = params["nickName"]
         userName = params["userName"]
+        identityName = params["identityName"]
         password = params["password"]
         email = params.get("email","")
         phoneNumber = params.get("phoneNumber","")
@@ -1020,9 +1020,9 @@ class AddUserV2(Resource):
         if group!="Account":
             return "wrong group type",400
         ret = {}
-        if not AuthorizationManager.HasAccess(current_user["userName"], ResourceType.Cluster, "", Permission.Admin):
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
             return 403
-        output = JobRestAPIUtils.SignUp(openId, group, nickName, userName, password, isAdmin, isAuthorized)
+        output = JobRestAPIUtils.SignUp(openId, group, nickName, identityName, password, isAdmin, isAuthorized)
         if "error" in output:
             ret["result"] = False
             ret["error"] = output["error"]
@@ -1038,6 +1038,40 @@ class AddUserV2(Resource):
         return resp
 
 api.add_resource(AddUserV2, '/addUser2')
+
+class UpdateUserPermission(Resource):
+    def patch(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        isAdmin = params["isAdmin"]
+        isAuthorized = params["isAuthorized"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(identityName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret = ACLManager.UpdateAce(userName, resourceAclPath, permission, 0)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(UpdateUserPermission, '/UpdateUserPermission')
+
+class DeleteUser(Resource):
+    def delete(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret =  ACLManager.DeleteAce(identityName, resourceAclPath)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(DeleteUser, '/DeleteUser')
 
 class GetAllUsers(Resource):
     def get(self):

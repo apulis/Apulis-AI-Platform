@@ -758,12 +758,13 @@ def GetVC(userName, vcName):
     for vc in vc_list:
         if vc["vcName"] == vcName and AuthorizationManager.HasAccess(userName, ResourceType.VC, vcName, Permission.User):
 
-            num_active_jobs = 0
+            num_active_jobs = {}
             for job in active_job_list:
                 if job["vcName"] == vcName and job["jobStatus"] == "running":
-                    num_active_jobs += 1
                     username = job["userName"]
                     jobParam = json.loads(base64.b64decode(job["jobParams"]))
+                    num_active_jobs.setdefault(jobParam["gpuType"],0)
+                    num_active_jobs[jobParam["gpuType"]] += 1
                     if "gpuType" in jobParam:
                         if not jobParam["preemptionAllowed"]:
                             if username not in user_status:

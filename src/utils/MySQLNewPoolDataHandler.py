@@ -430,6 +430,19 @@ class DataHandler(object):
         return ret
 
     @record
+    def DeleteUser(self,userName):
+        query = "Delete FROM `%s` where `userName`='%s'" % (self.accounttablename,userName)
+        ret = False
+        try:
+            with MysqlConn() as conn:
+                conn.insert_one(query)
+                conn.commit()
+                ret = True
+        except Exception as e:
+            logger.exception('DeleteUser Exception: %s', str(e))
+        return ret
+
+    @record
     def GetAccountByOpenId(self, openId, group):
         query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []

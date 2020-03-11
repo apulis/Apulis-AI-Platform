@@ -1066,6 +1066,8 @@ class DeleteUser(Resource):
             return 403
         resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
         ret =  ACLManager.DeleteAce(identityName, resourceAclPath)
+        if ret:
+            ret = DataHandler().DeleteUser(identityName)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

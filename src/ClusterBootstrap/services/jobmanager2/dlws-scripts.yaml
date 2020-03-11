@@ -15,10 +15,10 @@ data:
     TODO\n\ttouch ${PROC_DIR}/JOB_READY\nfi\n\necho bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log\n\nset
     +e\n# Execute user's command for the job\nif [ \"$DLWS_ROLE_NAME\" = \"worker\"
     ];\nthen\n    runuser -l ${DLWS_USER_NAME} -c \"sleep infinity\"\nelse\n    printenv
-    DLWS_LAUNCH_CMD > /pod/job_command.sh\n    chmod +x /pod/job_command.sh\n    runuser
-    -l ${DLWS_USER_NAME} -c /pod/job_command.sh\n    # Save exit code\n    EXIT_CODE=$?\n
-    \   echo  `date` \": ${EXIT_CODE}\"  > ${PROC_DIR}/EXIT_CODE\nfi\n\n# exit\nexit
-    ${EXIT_CODE}\n"
+    DLWS_LAUNCH_CMD > /pod/job_command.sh\n    chmod ugo+rx /pod/job_command.sh\n
+    \   chmod ugo+rx /pod.env\n    runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh\n
+    \   # Save exit code\n    EXIT_CODE=$?\n    echo  `date` \": ${EXIT_CODE}\"  >
+    ${PROC_DIR}/EXIT_CODE\nfi\n\n# exit\nexit ${EXIT_CODE}\n"
   init_user.sh: |
     #/bin/bash
     set -ex

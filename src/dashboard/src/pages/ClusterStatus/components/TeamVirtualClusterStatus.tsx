@@ -69,7 +69,6 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
       clusterName: vcStatus.length > 0 ? vcStatus[0].ClusterName : '',
     }
   })
-  console.log('gpuStatusList', gpuStatusList)
   return (
     <MuiThemeProvider theme={useCheckIsDesktop ? theme : tableTheme}>
       {
@@ -78,8 +77,8 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
           title=""
           columns={[
             {title: 'Name', field: 'clusterName', render: (rowData: any)=><div>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
+            {title: 'GPU Type', field: 'type'},
             {title: 'Total GPU', field: 'total'},
-            {title: 'GPU Type', field: 'type', },
             {title: 'Unschedulable GPU', field: 'unschedulable'},
             {title: 'Used GPU', field: 'used'},
             {title: 'Preemptible Used GPU', field: 'preemptibleUsed'},

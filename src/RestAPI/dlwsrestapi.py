@@ -1046,11 +1046,11 @@ class UpdateUserPermission(Resource):
         isAdmin = params["isAdmin"]
         isAuthorized = params["isAuthorized"]
         identityName = params["identityName"]
-        if not AuthorizationManager.HasAccess(identityName, ResourceType.Cluster, "", Permission.Admin):
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
             return 403
         permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
         resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
-        ret = ACLManager.UpdateAce(userName, resourceAclPath, permission, 0)
+        ret = ACLManager.UpdateAce(identityName, resourceAclPath, permission, 0)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

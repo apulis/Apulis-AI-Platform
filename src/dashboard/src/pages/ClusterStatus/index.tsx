@@ -54,7 +54,6 @@ const ClusterStatus: FC = () => {
   const fetchVC = async (cluster: string) => {
     const response = await request.get(`/teams/${selectedTeam}/clusters/${cluster}`);
     const responseUrls = await requestGrafana.get(`/${cluster}`);
-    console.log('responseUrls', responseUrls, cluster)
     if (!response || !responseUrls) {
       return;
     }
@@ -172,20 +171,24 @@ const ClusterStatus: FC = () => {
           });
           let finalUserStatus = _.values(mergeTwoObjsByKey(tmpMerged,prometheusResp,'userName'));
           let totalRow: any = {};
-          totalRow['userName'] = 'Total';
           totalRow['booked'] = 0;
           totalRow['idle'] = 0;
           totalRow['usedGPU'] = 0;
           totalRow['idleGPU'] = 0;
           totalRow['preemptableGPU'] = 0;
           for (let us of finalUserStatus) {
-            console.log(us['preemptableGPU']);
             totalRow['booked'] += parseInt(us['booked']);
             totalRow['idle'] += parseInt(us['idle']);
             totalRow['usedGPU'] += parseInt(us['usedGPU']);
             totalRow['idleGPU'] += parseInt(us['idleGPU']);
             totalRow['preemptableGPU'] += parseInt(us['preemptableGPU']);
           }
+          for (const t in totalRow) {
+            if (isNaN(totalRow[t])) {
+              totalRow[t] = undefined
+            }
+          }
+          totalRow['userName'] = 'Total';
           finalUserStatus.push(totalRow);
 
           setUserStatus(finalUserStatus)

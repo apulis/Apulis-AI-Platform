@@ -106,7 +106,7 @@ def get_monthly_idleness(prometheus_url):
 
     metrics = walk_json_field_safe(obj, "data", "result")
 
-    default = lambda : {"booked": 0, "idle": 0}
+    default = lambda : {"booked": collections.defaultdict(lambda : 0), "idle": collections.defaultdict(lambda : 0)}
 
     # the first level is vc, the second level is user
     result = collections.defaultdict(lambda : collections.defaultdict(default))
@@ -114,7 +114,8 @@ def get_monthly_idleness(prometheus_url):
     for metric in metrics:
         username = walk_json_field_safe(metric, "metric", "username")
         vc_name = walk_json_field_safe(metric, "metric", "vc_name")
-        if username is None or vc_name is None:
+        gpu_type = walk_json_field_safe(metric, "metric", "gpu_type")
+        if username is None or vc_name is None or gpu_type is None:
             logger.warning("username or vc_name is missing for metric %s",
                     walk_json_field_safe(metric, "metric"))
             continue
@@ -131,8 +132,8 @@ def get_monthly_idleness(prometheus_url):
             if utils <= IDLENESS_THRESHOLD:
                 idleness_seconds += step_seconds
 
-        result[vc_name][username]["booked"] += booked_seconds
-        result[vc_name][username]["idle"] += idleness_seconds
+        result[vc_name][username]["booked"][gpu_type] += booked_seconds
+        result[vc_name][username]["idle"][gpu_type] += idleness_seconds
 
     return result
 

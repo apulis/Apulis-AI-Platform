@@ -16,8 +16,9 @@ module.exports = async context => {
   let clusterId = clusterIds[0]
   const payload = {
     openId,
-    userName: context.state.userName,
+    userName: context.state.user.userName,
     identityName: userName,
+    group: 'Account',
     password,
     nickName,
     phoneNumber,
@@ -25,6 +26,7 @@ module.exports = async context => {
     isAdmin,
     isAuthorized
   }
+  console.log('payload', payload)
   const response = await new Cluster(context, clusterId).addUser2(payload)
   context.body = {
     success: true,

@@ -422,7 +422,7 @@ class Cluster extends Service {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: user
+      body: JSON.stringify(user)
     })
     this.context.assert(response.ok, 502)
     const data = await response.text()

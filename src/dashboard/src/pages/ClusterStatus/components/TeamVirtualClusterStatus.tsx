@@ -77,12 +77,12 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
           title=""
           columns={[
             {title: 'Name', field: 'clusterName', render: (rowData: any)=><div>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
-            {title: 'Device Type', field: 'type'},
-            {title: 'Total Device', field: 'total'},
-            {title: 'Unschedulable Device', field: 'unschedulable'},
-            {title: 'Used Device', field: 'used'},
-            {title: 'Preemptible Used Device', field: 'preemptibleUsed'},
-            {title: 'Available Device', field: 'avaliable'},
+            {title: 'Type', field: 'type'},
+            {title: 'Total', field: 'total'},
+            {title: 'Unschedulable', field: 'unschedulable'},
+            {title: 'Used', field: 'used'},
+            {title: 'Preemptible Used', field: 'preemptibleUsed'},
+            {title: 'Available', field: 'avaliable'},
             {title: 'Active Jobs', field: 'avaliableJobNum'}
           ]}
           data={gpuStatusList}

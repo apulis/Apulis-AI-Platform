@@ -887,7 +887,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   select
-                  label="Device type"
+                  label="Device"
                   fullWidth
                   variant="filled"
                   value={String(gpuType)}

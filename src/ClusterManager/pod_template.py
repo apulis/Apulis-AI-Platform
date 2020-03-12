@@ -161,7 +161,7 @@ class PodTemplate():
             pods.append(pod)
 
         k8s_pods = []
-        gpuMapping = {"huawei_a910": "npu.huawei.com/NPU", "nvidia": "nvidia.com/gpu"}
+        gpuMapping = {"Huawei_A910": "npu.huawei.com/NPU", "nvidia": "nvidia.com/gpu"}
 
         for idx,pod in enumerate(pods):
             pod["numps"] = 0

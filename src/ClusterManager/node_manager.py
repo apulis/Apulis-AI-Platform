@@ -91,7 +91,7 @@ def get_job_gpu_usage(jobId):
 def get_cluster_status():
     cluster_status={}
     gpuStr = "nvidia.com/gpu"
-    gpuMapping = {"huawei_a910":"npu.huawei.com/NPU","nvidia":"nvidia.com/gpu"}
+    gpuMapping = {"Huawei_A910":"npu.huawei.com/NPU","nvidia":"nvidia.com/gpu"}
 
     try:
         output = k8sUtils.kubectl_exec(" get nodes -o yaml")

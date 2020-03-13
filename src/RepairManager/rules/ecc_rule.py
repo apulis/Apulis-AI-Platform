@@ -134,6 +134,6 @@ class ECCRule(Rule):
 
             if action_taken and not self.ecc_config['cordon_dry_run']:
                 logging.info(f"An action has been taken on one or more of the following nodes: {node_status}")
-                self.alert.send_alert("ecc_rule", subject, body, ecc_node_hostnames)
+                self.alert.send_alert(ecc_name,"ecc_rule", subject, body, ecc_node_hostnames)
             else:
-                self.alert.handle_alert("ecc_rule", subject, body, ecc_node_hostnames)
+                self.alert.handle_alert(ecc_name,"ecc_rule", subject, body, ecc_node_hostnames)

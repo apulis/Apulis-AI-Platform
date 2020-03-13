@@ -53,28 +53,30 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
 
             ratio[vc_name][gpu_type] = max(vc_quota - used, 0)
 
-    ratio_sum = 0
+    ratio_sum = collections.defaultdict(lambda : 0 )
     for vc_name, gpu_info in ratio.items():
         for gpu_type, cur_ratio in gpu_info.items():
-            ratio_sum += cur_ratio
+            ratio_sum[gpu_type] += cur_ratio
 
+    # 除去已经使用了的和不可调度的GPU数量，返回剩下的数量
     logger.debug("ratio %s, ratio_sum %s", ratio, ratio_sum)
 
+    # 计算出还没有正在running的job的vc以及有running job但该gpu-type没有正在running的job的vc的vc_used，vc_available，vc_unschedulable
     for vc_name, gpu_info in ratio.items():
         for gpu_type, cur_ratio in gpu_info.items():
             if vc_usage.get(vc_name, {}).get(gpu_type, 0) == 0:
                 # no job running in this vc.
-                if ratio_sum == 0:
+                if ratio_sum[gpu_type] == 0:
                     available = 0
                 else:
                     # calculate per vc available num according to the cluster total num on percent
-                    available = int(math.floor(float(cluster_available.get(gpu_type, 0)) * cur_ratio / ratio_sum))
+                    available = int(math.floor(min(float(cluster_available.get(gpu_type, 0)),ratio_sum[gpu_type]) * cur_ratio / ratio_sum[gpu_type]))
                 quota = vc_info[vc_name][gpu_type]
 
                 vc_used[vc_name][gpu_type] = 0
                 vc_available[vc_name][gpu_type] = available
                 vc_unschedulable[vc_name][gpu_type] = max(0, quota - available)
-
+    # 计算有正在running job的vc的gpu-type的vc_used，vc_available，vc_unschedulable
     for vc_name, vc_usage_info in vc_usage.items():
         for gpu_type, vc_usage in vc_usage_info.items():
             if vc_name not in vc_info:
@@ -87,10 +89,10 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
 
             cur_ratio = ratio[vc_name][gpu_type]
             quota = vc_info[vc_name][gpu_type]
-            if ratio_sum == 0:
+            if ratio_sum[gpu_type] == 0:
                 available = 0
             else:
-                available = int(math.floor(float(cluster_available.get(gpu_type, 0)) * cur_ratio / ratio_sum))
+                available = int(math.floor(min(float(cluster_available.get(gpu_type, 0)),ratio_sum[gpu_type]) * cur_ratio / ratio_sum[gpu_type]))
             vc_used[vc_name][gpu_type] = vc_usage
             vc_available[vc_name][gpu_type] = available
             vc_unschedulable[vc_name][gpu_type] = max(0, quota - vc_usage - available)
@@ -102,7 +104,12 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
 if __name__ == '__main__':
     vc_usage = collections.defaultdict(lambda :
             collections.defaultdict(lambda : 0))
-    vc_usage["platform"] = {u'nvidia': 0}
-    re = calculate_vc_gpu_counts({u'nvidia': 1},{u'nvidia': 1},{u'nvidia': 0},{'platform': {u'nvidia': 1}, 'hanxianjie': {u'nvidia': 1}},vc_usage)
+    vc_usage["platform"] = {u'Huawei_A910': 3,'nvidia': 2}
+    vc_usage["hanxianjie"] = {u'Huawei_A910': 2,'nvidia': 4}
+    vc_usage["hanxianjie2"] = {u'Huawei_A910': 1,'nvidia': 2}
+    re = calculate_vc_gpu_counts({u'Huawei_A910': 15, u'nvidia': 20},{u'Huawei_A910': 15, u'nvidia': 20},{u'Huawei_A910': 0, u'nvidia': 0},
+                                 {'platform': {u'Huawei_A910': 0, u'nvidia': 0},
+                                  'hanxianjie': {u'Huawei_A910': 0, u'nvidia': 0},
+                                  'hanxianjie2': {u'Huawei_A910': 0, u'nvidia': 0}},vc_usage)
     for i in re:
         print(i)

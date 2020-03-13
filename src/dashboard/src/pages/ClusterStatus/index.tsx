@@ -134,15 +134,20 @@ const ClusterStatus: FC = () => {
         let prometheusResp: any = [];
         let fetchIdes: any = [];
         if (userfetchs['gpu_idle'] != null) {
+          console.log('123123', userfetchs['gpu_idle'])
           for (let [key, value] of Object.entries(userfetchs['gpu_idle'])) {
-            let idleTmp: any = {}
-            idleTmp['userName'] = key;
-            let arr: any = value;
-            idleTmp['booked'] = Math.floor(arr['booked'] / 3600);
-            idleTmp['idle'] = Math.floor(arr['idle'] / 3600);
-            fetchIdes.push(idleTmp);
+            console.log('key value', key, value)
+            let obj: any = value;
+            for (let gpuType in obj['booked']) {
+              const idleTmp: any = {};
+              idleTmp['userName'] = key;
+              idleTmp['booked'] = Math.floor(obj['booked'][gpuType] / 3600);
+              idleTmp['idle'] = Math.floor(obj['idle'][gpuType] / 3600);
+              fetchIdes.push(idleTmp);
+            }
           }
         }
+        console.log('fetchIdes', fetchIdes)
         const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params);
         fetch(fetchUserGPUUrl).then(async (response: any) => {
           const res = await response.json();
@@ -170,7 +175,7 @@ const ClusterStatus: FC = () => {
               mu['preemptableGPU'] = "0";
             }
           });
-          let finalUserStatus = _.values(mergeTwoObjsByKey(tmpMerged,prometheusResp,'userName'));
+          let finalUserStatus = _.values(mergeTwoObjsByKey(tmpMerged, prometheusResp, 'userName'));
           let totalRow: any = {};
           totalRow['booked'] = 0;
           totalRow['idle'] = 0;
@@ -197,10 +202,10 @@ const ClusterStatus: FC = () => {
         })
 
         setIframeUrl(userfetchs['GranaUrl'] );
-        console.log(userfetchs['GranaUrl'])
+        console.log('GranaUrl', userfetchs['GranaUrl'])
         setNodeStatus(userfetchs['node_status']);
         setIframeUrlForPerVC(userfetchs['GPUStatisticPerVC']);
-        console.log(userfetchs['GPUStatisticPerVC'])
+        console.log('GPUStatisticPerVC', userfetchs['GPUStatisticPerVC'])
         setVcStatus(res);
       })
     }

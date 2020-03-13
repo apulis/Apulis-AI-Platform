@@ -26,7 +26,6 @@ module.exports = async context => {
     isAdmin,
     isAuthorized
   }
-  console.log('payload', payload)
   const response = await new Cluster(context, clusterId).addUser2(payload)
   context.body = {
     success: true,

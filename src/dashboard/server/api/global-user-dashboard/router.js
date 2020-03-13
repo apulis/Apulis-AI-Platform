@@ -17,11 +17,11 @@ router.post('/signUp',
 router.get('/userList',
   require('./middlewares/user')(),
   require('./controllers/userList'))
-router.delete('/user/id',
+router.delete('/user/:userName',
   require('./middlewares/user')(),
   require('./controllers/userList/deleteUser')
 )
-router.patch('/userRole',
+router.patch('/userRole/:userName/role/:role',
   require('./middlewares/user')(),
   require('./controllers/userList/editUserRole')
 )

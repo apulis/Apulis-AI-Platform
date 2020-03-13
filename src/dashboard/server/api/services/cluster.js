@@ -443,7 +443,6 @@ class Cluster extends Service {
   }
 
   async editUserRole (payload) {
-    console.log('payload', payload)
     const response = await this.fetch('/UpdateUserPermission', {
       headers: {
         'Content-Type': 'application/json'

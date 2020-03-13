@@ -140,6 +140,7 @@ const ClusterStatus: FC = () => {
             let obj: any = value;
             for (let gpuType in obj['booked']) {
               const idleTmp: any = {};
+              idleTmp['gpuType'] = gpuType;
               idleTmp['userName'] = key;
               idleTmp['booked'] = Math.floor(obj['booked'][gpuType] / 3600);
               idleTmp['idle'] = Math.floor(obj['idle'][gpuType] / 3600);

@@ -517,6 +517,18 @@ class DataHandler(object):
             return False
 
     @record
+    def UpdateAccountPermission(self,userName, isAdmin,isAuthorized):
+        try:
+            sql = "update `%s` set `isAdmin` = '%s', `isAuthorized` = '%s' where `userName` = '%s'" % (self.accounttablename,isAdmin,isAuthorized,userName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+            return True
+        except Exception as e:
+            logger.exception('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+    @record
     def GetIdentityInfo(self, identityName):
         ret = []
         try:

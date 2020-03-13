@@ -1051,6 +1051,8 @@ class UpdateUserPermission(Resource):
         permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
         resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
         ret = ACLManager.UpdateAce(identityName, resourceAclPath, permission, 0)
+        if ret:
+            DataHandler().UpdateAccountPermission(identityName,isAdmin,isAuthorized)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

@@ -1072,22 +1072,38 @@ def deploy_masters_by_kubeadm(force = False):
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     #temporary hard-coding, will be fixed after refactoring of config/render logic
     config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
+    
     if verbose:
         print( "Restapi information == %s " % config["restapi"])
+    else:
+        pass
+
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     render_service_templates()
     utils.exec_cmd_local("./scripts/install_kubeadm.sh")
+
     for i,kubernetes_master in enumerate(kubernetes_masters):
-        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s
-            """ % kubernetes_master0
+
+        # please note:
+        # control-plain-endpoint can only be used for kubeadm version >= v1.16
+        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s""" % kubernetes_master0
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
+        
         if i==0:
             utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
+        else:
+            pass
+
     if not os.path.exists("./deploy/bin/kubectl") and os.path.exists("/usr/bin/kubectl"):
         utils.exec_cmd_local("mkdir -p  ./deploy/bin; ln -s /usr/bin/kubectl ./deploy/bin/kubectl" )
+    else:
+        pass
+
     kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
     run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
+    return
+
 
 def clean_etcd():
     etcd_servers = config["etcd_node"]
@@ -1464,6 +1480,7 @@ def update_worker_nodes_by_kubeadm( nargs ):
     workerNodes = get_worker_nodes(config["clusterId"], False)
     workerNodes = limit_nodes(workerNodes)
     worker_ssh_user = config["admin_username"]
+    k8sAPIport = config["k8sAPIport"]
 
     tokencmd = "sudo kubeadm token create"
     tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
@@ -1473,11 +1490,19 @@ def update_worker_nodes_by_kubeadm( nargs ):
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
+
         if in_list(node, nargs):
-            workercmd = "sudo kubeadm join --token %s %s:6443 --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, hash)
+            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
             if verbose:
                 print(workercmd)
+            else:
+                pass
+            
             utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
+        else:
+            pass
+
+    return
 
 def reset_worker_nodes_by_kubeadm( nargs ):
     write_nodelist_yaml()

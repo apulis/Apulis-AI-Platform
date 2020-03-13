@@ -58,10 +58,10 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
         for gpu_type, cur_ratio in gpu_info.items():
             ratio_sum[gpu_type] += cur_ratio
 
-    # 除去已经使用了的和不可调度的GPU数量，返回剩下的数量
+    # subtract used and unshcduled GPU num，return the left
     logger.debug("ratio %s, ratio_sum %s", ratio, ratio_sum)
 
-    # 计算出还没有正在running的job的vc以及有running job但该gpu-type没有正在running的job的vc的vc_used，vc_available，vc_unschedulable
+    # calculate vc_used，vc_available，vc_unschedulable of vc not having running job and having a gputype which has not running job
     for vc_name, gpu_info in ratio.items():
         for gpu_type, cur_ratio in gpu_info.items():
             if vc_usage.get(vc_name, {}).get(gpu_type, 0) == 0:
@@ -76,7 +76,7 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
                 vc_used[vc_name][gpu_type] = 0
                 vc_available[vc_name][gpu_type] = available
                 vc_unschedulable[vc_name][gpu_type] = max(0, quota - available)
-    # 计算有正在running job的vc的gpu-type的vc_used，vc_available，vc_unschedulable
+    # calculate vc_used，vc_available，vc_unschedulable of vc having a gputype which has not running job
     for vc_name, vc_usage_info in vc_usage.items():
         for gpu_type, vc_usage in vc_usage_info.items():
             if vc_name not in vc_info:

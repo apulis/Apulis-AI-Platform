@@ -67,7 +67,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
             Toolbar: props => (
               <div>
                 <MTableToolbar {...props} />
-                <Tooltip title="Show Current User">
+                <Tooltip title={showCurrentUser ? "Show Current User" : "Show All User"}>
                   <Switch
                     checked={showCurrentUser}
                     onChange={handleSwitch}

@@ -69,7 +69,7 @@ const ClusterStatus: FC = () => {
   const fetchClusterStatus = (mount: boolean) => {
     if (clusters && mount) {
       const params = new URLSearchParams({
-        query:`count (task_gpu_percent{vc_name="${selectedTeam}"} == 0) by (username)`,
+        query:`count (task_gpu_percent{vc_name="${selectedTeam}"} == 0) by (username,gpu_type)`,
       });
       const filterclusters = convertToArrayByKey(clusters, 'id');
       setSelectedValue(filterclusters[0]);
@@ -169,12 +169,14 @@ const ClusterStatus: FC = () => {
             }
           }
         }
-        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params);
+        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params + '&time=' + ((new Date().getTime() / 1000)));
         fetch(fetchUserGPUUrl).then(async (response: any) => {
           const res = await response.json();
-          for (let item of res['data']["result"]) {
+          console.log('res.data', res)
+          for (let item of res["data"]["result"]) {
             let idleUser: any = {};
             idleUser['userName'] = item['metric']['username'];
+            idleUser['gpuType'] = item['metric']['gpu_Type']
             idleUser['idleGPU'] = item['value'][1];
             prometheusResp.push(idleUser)
           }

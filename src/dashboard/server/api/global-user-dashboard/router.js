@@ -30,3 +30,6 @@ router.post('/user',
   require('./middlewares/body')('addUser'),
   require('./controllers/userList/addUser')
 )
+
+router.get('/auth/wechat', require('./controllers/auth/wechat'))
+router.get('/auth/microsoft', require('./controllers/auth/microsoft'))

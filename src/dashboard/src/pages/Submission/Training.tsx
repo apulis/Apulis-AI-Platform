@@ -931,7 +931,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     disabled
                     type="number"
-                    label="Total Number of GPUs"
+                    label="Total Number of Devices"
                     value = {workers * gpusPerNode}
                     fullWidth
                     variant="filled"

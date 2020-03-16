@@ -60,7 +60,8 @@ then
     runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
 else
     printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
-    chmod +x /pod/job_command.sh
+    chmod ugo+rx /pod/job_command.sh
+    chmod ugo+rx /pod.env
     runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh
     # Save exit code
     EXIT_CODE=$?

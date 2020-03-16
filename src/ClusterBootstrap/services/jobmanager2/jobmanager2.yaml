@@ -35,15 +35,15 @@ spec:
         - mountPath: /usr/bin/kubectl
           name: kubectl-binary
           readOnly: true
-        - mountPath: /root/.kube/config 
+        - mountPath: /root/.kube/config
           name: kubeconfig
-          readOnly: true          
-        - mountPath: /RestfulAPI 
+          readOnly: true
+        - mountPath: /RestfulAPI
           name: restfulapiconfig
         - mountPath: {{cnf["storage-mount-path"]}}/work
           name: dlwsdatawork
         - mountPath: {{cnf["storage-mount-path"]}}/storage
-          name: dlwsdatadata 
+          name: dlwsdatadata
         - mountPath: {{cnf["storage-mount-path"]}}/jobfiles
           name: dlwsdatajobfiles
         - mountPath: {{cnf["dltsdata-storage-mount-path"]}}
@@ -108,7 +108,7 @@ spec:
       volumes:
       - name: kubectl-binary
         hostPath:
-          path: /usr/bin/kubectl         
+          path: /usr/bin/kubectl
       - name: kubeconfig
         hostPath:
           path: /etc/kubernetes/admin.conf
@@ -117,13 +117,13 @@ spec:
           path: /etc/RestfulAPI
       - name: dlwsdatawork
         hostPath:
-          path: {{cnf["storage-mount-path"]}}/work 
+          path: {{cnf["storage-mount-path"]}}/work
       - name: dlwsdatadata
         hostPath:
           path: {{cnf["storage-mount-path"]}}/storage
       - name: dlwsdatajobfiles
         hostPath:
-          path: {{cnf["storage-mount-path"]}}/jobfiles           
+          path: {{cnf["storage-mount-path"]}}/jobfiles
       - name: dltsdata
         hostPath:
           path: {{cnf["dltsdata-storage-mount-path"]}}
@@ -135,11 +135,10 @@ spec:
           path: /var/log/clustermanager
       - name: resolv
         hostPath:
-          path: /etc/resolv.conf        
-   
+          path: /etc/resolv.conf
+
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
       - key: node-role.kubernetes.io/master
-        effect: NoSchedule   
-        
+        effect: NoSchedule

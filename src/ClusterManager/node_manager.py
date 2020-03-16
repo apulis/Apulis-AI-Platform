@@ -91,6 +91,8 @@ def get_job_gpu_usage(jobId):
 def get_cluster_status():
     cluster_status={}
     gpuStr = "nvidia.com/gpu"
+    gpuMapping = {"Huawei_A910":"npu.huawei.com/NPU","nvidia":"nvidia.com/gpu"}
+
     try:
         output = k8sUtils.kubectl_exec(" get nodes -o yaml")
         nodeInfo = yaml.load(output)
@@ -112,6 +114,7 @@ def get_cluster_status():
                     if l == "gpuType":
                         node_status["scheduled_service"].append(s)
                         node_status["gpuType"] = s
+                        gpuStr = gpuMapping[s]
 
                 if (gpuStr in node["status"]["allocatable"]):
                     node_status["gpu_allocatable"] = ResourceInfo({node_status["gpuType"]: int(node["status"]["allocatable"][gpuStr])}).ToSerializable()
@@ -266,7 +269,7 @@ def get_cluster_status():
         logger.exception("get cluster status")
 
     dataHandler = DataHandler()
-    cluster_status["AvaliableJobNum"] = dataHandler.GetActiveJobsCount()
+    cluster_status["AvaliableJobNum"] = dataHandler.GetGpuTypeActiveJobCount()
 
     if "cluster_status" in config and check_cluster_status_change(config["cluster_status"],cluster_status):
         logger.info("updating the cluster status...")

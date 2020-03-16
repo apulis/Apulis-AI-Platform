@@ -8,7 +8,8 @@ mysql :
   port : {{cnf["mysql_port"]}}
   username : {{cnf["mysql_username"]}}
   password : "{{cnf["mysql_password"]}}"
-kubelet-path : /usr/local/bin/kubectl
+kubelet-path : {% if cnf["deploy_method"]=="kubeadm" %} /usr/bin/kubectl {% else %} /usr/local/bin/kubectl {% endif %}
+deploy_method: {{cnf["deploy_method"]}}
 storage-mount-path : {{cnf["storage-mount-path"]}}
 dltsdata-storage-mount-path : {{cnf["dltsdata-storage-mount-path"]}}
 folder_auto_share: {{cnf["folder_auto_share"]}}
@@ -77,3 +78,16 @@ jwt:
   secret_key: {{cnf["jwt"]["secret_key"]}}
   algorithm: {{cnf["jwt"]["algorithm"]}}
   token_ttl: {{cnf["jwt"]["token_ttl"]}}
+
+Authentication:
+  WeChat:
+    AppId: "{{cnf["Authentications"]["Wechat"]["AppId"]}}"
+    AppSecret: "{{cnf["Authentications"]["Wechat"]["AppSecret"]}}"
+  Microsoft:
+    ClientId: "{{cnf["Authentications"]["Microsoft"]["ClientId"]}}"
+    ClientSecret: "{{cnf["Authentications"]["Microsoft"]["ClientSecret"]}}"
+
+administrators:
+{% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
+  - {{admin}}
+{% endfor %}

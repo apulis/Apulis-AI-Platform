@@ -1,14 +1,19 @@
 import sys
 import json
 import os
+import signal
 
-from flask import Flask, Response
-from flask_restful import reqparse, abort, Api, Resource
+from flask import Flask, Response,redirect
+from flask_restful import reqparse, abort, Api, Resource,url_for
 from flask import request, jsonify
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 import base64
 import yaml
 import uuid
-
+import requests
 import logging
 import timeit
 from logging.config import dictConfig
@@ -24,6 +29,8 @@ from config import global_vars
 import authorization
 
 from DataHandler import DataHandler
+from mysql_conn_pool import MysqlConn
+from jwt_authorization import create_jwt_token_with_message
 
 import time
 import sys
@@ -41,6 +48,9 @@ with open(os.path.join(dir_path, 'logging.yaml'), 'r') as f:
 logger = logging.getLogger('restfulapi')
 
 app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = config["jwt"]["secret_key"]
+app.config['PROPAGATE_EXCEPTIONS'] = True
+jwt = JWTManager(app)
 api = Api(app)
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
@@ -52,11 +62,17 @@ if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     global_vars["initAdminAccess"] = True
     logger.info('setting admin access!')
     ACLManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, 0)
+    if config.get("administrators") and config["administrators"]:
+        for one in config["administrators"]:
+            if len(one.split("@"))==2:
+                ACLManager.UpdateAce(one.split("@")[0], AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster),
+                                     Permission.Admin, 0)
     logger.info('admin access given!')
 
 
 def _stacktraces():
    code = []
+
    for threadId, stack in sys._current_frames().items():
        code.append("\n# ThreadID: %s" % threadId)
        for filename, lineno, name, line in traceback.extract_stack(stack):
@@ -854,7 +870,6 @@ api.add_resource(SignUp, '/SignUp')
 
 
 class GetAccountByOpenId(Resource):
-    
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
@@ -875,6 +890,192 @@ class GetAccountByOpenId(Resource):
 ##
 api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
+class GetAccountByuserName(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+
+        ret = JobRestAPIUtils.GetAccountByUserName(userName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAccountByuserName, '/getAccountInfoByUserName')
+
+class OpenSignInRedirect(Resource):
+    def get(self,signinType):
+        if signinType == "wechat":
+            return redirect("https://open.weixin.qq.com/connect/qrconnect?appid={}&redirect_uri=https%3A%2F%2F{}%2Fapi/login/wechat&response_type=code&scope=snsapi_userinfo,snsapi_login&state=".format(config["Authentication"]["WeChat"]["AppId"],config["webportal_node"]))
+        elif signinType == "microsoft":
+            return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={}&scope=https%3A%2F%2Fgraph.microsoft.com%2Fuser.read&response_type=code&redirect_uri=https%3A%2F%2F{}%2Fapi%2Flogin%2Fmicrosoft&state=".format(config["Authentication"]["Microsoft"]["ClientId"],config["webportal_node"]))
+        else:
+            return redirect("/")
+api.add_resource(OpenSignInRedirect, '/openLogin/<signinType>')
+
+class OpenSignIn(Resource):
+    def get(self,signinType):
+        parser = reqparse.RequestParser()
+        parser.add_argument('remoteError')
+        parser.add_argument('code')
+        parser.add_argument('state')
+        args = parser.parse_args()
+        code = args["code"]
+        re = None
+        if signinType == "wechat":
+            re = requests.get(url="https://api.weixin.qq.com/sns/oauth2/access_token?appid="+config["Authentication"]["WeChat"]["AppId"]+"&secret="+
+                             config["Authentication"]["WeChat"]["AppSecret"]+"&code="+code+"&grant_type=authorization_code")
+
+        elif signinType=="microsoft":
+            re = requests.post(url="https://login.microsoftonline.com/common/oauth2/token",data={"client_id":config["Authentication"]["Microsoft"]["ClientId"],
+                                                                                            "client_secret":config["Authentication"]["Microsoft"]["ClientSecret"],
+                                                                                            "code":code,
+                                                                                            "grant_type":"authorization_code",
+                                                                                            "redirect_uri":"https://"+config["webportal_node"]+"/apis"
+                                                                                                           +url_for("opensignin",signinType="microsoft")})
+        if not re:
+            logging.error(re.content)
+            return redirect("/login?error=get-token-failed")
+        response = json.loads(re.content.decode("utf-8"))
+        access_token =response.get("access_token")
+        refresh_token =response.get("refresh_token")
+        openid =response.get("openid")
+        re = None
+        if signinType == "wechat":
+            re = requests.get("https://api.weixin.qq.com/sns/userinfo?access_token="+access_token+"&openid="+openid+"&lang=zh_CN")
+        elif signinType == "microsoft":
+            re = requests.get("https://graph.microsoft.com/v1.0/me",headers={"Authorization":"Bearer "+access_token})
+        if not re:
+            logging.error(re.content)
+            return redirect("/login?error=get-info-failed")
+        info_response = json.loads(re.content.decode("utf-8"))
+        if signinType == "microsoft":
+            nickName = info_response.get("displayName")
+            email = info_response.get("mail")
+            openId = info_response.get("id")
+            group = "Microsoft"
+            if not nickName:
+                nickName = email
+        elif signinType == "wechat":
+            nickName = info_response.get("nickname")
+            openId = info_response.get("unionid")
+            email = info_response.get("email")
+            group = "Wechat"
+        else:
+            return redirect("/login?error=get-detail-failed")
+        info = JobRestAPIUtils.GetAccountByOpenId(openId, group)
+        if not info:
+            return redirect("/signup?openId={}&group={}".format(openId,group))
+        token = create_jwt_token_with_message(info)
+        return redirect("/?token=" + token)
+api.add_resource(OpenSignIn, '/login/<signinType>')
+
+class SignIn(Resource):
+
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('openId')
+        parser.add_argument('group')
+        parser.add_argument('password')
+        args = parser.parse_args()
+
+        openId = args["openId"]
+        group = args["group"]
+        password = args["password"]
+        token = None
+        if group=="Account":
+            ret = DataHandler().GetAccountByOpenIdAndPassword(openId, group, password)
+            if ret:
+                token = create_jwt_token_with_message(ret[0])
+                return token
+        resp = jsonify(token)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return "user account not exist!"
+
+
+api.add_resource(SignIn, '/signIn')
+
+
+class AddUserV2(Resource):
+    def post(self):
+        # current_user = get_jwt_identity()
+        params = request.get_json(silent=True)
+        openId = params["openId"]
+        group = params["group"]
+        nickName = params["nickName"]
+        userName = params["userName"]
+        identityName = params["identityName"]
+        password = params["password"]
+        email = params.get("email","")
+        phoneNumber = params.get("phoneNumber","")
+        isAdmin = params["isAdmin"]
+        isAuthorized = params["isAuthorized"]
+
+        if group!="Account":
+            return "wrong group type",400
+        ret = {}
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        output = JobRestAPIUtils.SignUp(openId, group, nickName, identityName, password, isAdmin, isAuthorized)
+        if "error" in output:
+            ret["result"] = False
+            ret["error"] = output["error"]
+        else:
+            dataHander = DataHandler()
+            dataHander.UpdateEmailAndPhone(openId, group, email, phoneNumber)
+            ret["result"] = True
+
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+api.add_resource(AddUserV2, '/addUser2')
+
+class UpdateUserPermission(Resource):
+    def patch(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        isAdmin = params["isAdmin"]
+        isAuthorized = params["isAuthorized"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret = ACLManager.UpdateAce(identityName, resourceAclPath, permission, 0)
+        if ret:
+            DataHandler().UpdateAccountPermission(identityName,isAdmin,isAuthorized)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(UpdateUserPermission, '/UpdateUserPermission')
+
+class DeleteUser(Resource):
+    def delete(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret =  ACLManager.DeleteAce(identityName, resourceAclPath)
+        if ret:
+            ret = DataHandler().DeleteUser(identityName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(DeleteUser, '/DeleteUser')
 
 class GetAllUsers(Resource):
     def get(self):
@@ -897,6 +1098,23 @@ class GetAllUsers(Resource):
 ##
 api.add_resource(GetAllUsers, '/GetAllUsers')
 
+class GetAllAccountUser(Resource):
+    def get(self):
+        data_handler = None
+        try:
+            data_handler = DataHandler()
+            ret = data_handler.GetAllAccountUser()
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+            return resp
+        except Exception as e:
+            return "Internal Server Error. " + str(e), 400
+        finally:
+            if data_handler is not None:
+                data_handler.Close()
+
+api.add_resource(GetAllAccountUser, '/GetAllAccountUser')
 
 class UpdateAce(Resource):
     def get(self):
@@ -1411,11 +1629,37 @@ class JobPriority(Resource):
 ##
 api.add_resource(JobPriority, '/jobs/priorities')
 
+def dumpstacks(signal, frame):
+    code = []
+    logging.info("received signum %d", signal)
+    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+    # logging.info("\nfeature_count:\n{}".format(feature_count))
+    for threadId, stack in sys._current_frames().items():
+        code.append("n# Thread: %d" % (threadId))
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
+            if line:
+                code.append(" %s" % (line.strip()))
+    logging.info("\n".join(code))
+
+def dumpstacks(signal, frame):
+    code = []
+    logging.info("received signum %d", signal)
+    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+    # logging.info("\nfeature_count:\n{}".format(feature_count))
+    for threadId, stack in sys._current_frames().items():
+        code.append("n# Thread: %d" % (threadId))
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
+            if line:
+                code.append(" %s" % (line.strip()))
+    logging.info("\n".join(code))
 
 @app.route("/metrics")
 def metrics():
     return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)
 

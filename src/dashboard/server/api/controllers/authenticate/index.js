@@ -61,7 +61,12 @@ const getDecodedIdToken = async context => {
     method: 'POST',
     body: params
   })
-  const data = await response.json()
+  let data
+  try {
+    data = await response.json()
+  } catch (error) {
+    context.log.error('jsonfy microsoft response error', error.message)
+  }
   context.log.info({ data }, 'Id Token response')
 
   context.assert(data['error'] == null, 502, data['error'])
@@ -80,7 +85,9 @@ module.exports = async context => {
       return context.redirect('/')
     }
     const user = User.fromIdToken(context, idToken)
+    console.log('before user.getAccountInfo')
     await user.getAccountInfo()
+    console.log('after user.getAccountInfo', user.userName)
     context.cookies.set('token', user.toCookieToken())
     try {
       const stateParams = new URLSearchParams(context.query.state)

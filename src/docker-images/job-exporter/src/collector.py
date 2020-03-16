@@ -115,6 +115,8 @@ class ResourceGauges(object):
 
         self.task_labels_gpu = copy.deepcopy(self.task_labels)
         self.task_labels_gpu.append("minor_number")
+        self.task_labels_gpu_util = copy.deepcopy(self.task_labels_gpu)
+        self.task_labels_gpu_util.append("gpu_type")
 
         self.gauges = {}
 
@@ -137,7 +139,7 @@ class ResourceGauges(object):
 
         self.add_gauge("task_gpu_percent",
                 "how much percent of gpu core this task used",
-                self.task_labels_gpu)
+                self.task_labels_gpu_util)
         self.add_gauge("task_gpu_mem_percent",
                 "how much percent of gpu memory this task used",
                 self.task_labels_gpu)
@@ -619,6 +621,7 @@ class ContainerCollector(Collector):
                     nvidia_gpu_status = gpu_infos[id]
                     labels = copy.deepcopy(container_labels)
                     labels["minor_number"] = id
+                    labels["gpu_type"] = inspect_info.gpu_type or "unknown"
 
                     gauges.add_value("task_gpu_percent",
                             labels, nvidia_gpu_status.gpu_util)

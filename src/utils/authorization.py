@@ -287,8 +287,8 @@ class IdentityManager:
         winBindConfigured = False
 
         if "WinbindServers" in config:
-            if not config["WinbindServers"] and len(config["WinbindServers"]) > 0:
-                if not config["WinbindServers"][0]:
+            if config["WinbindServers"] and len(config["WinbindServers"]) > 0:
+                if config["WinbindServers"][0]:
                     try:
                         winBindConfigured = True
                         logger.info('Getting Identity Info From AD...')

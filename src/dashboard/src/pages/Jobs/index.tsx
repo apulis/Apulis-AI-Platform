@@ -501,7 +501,7 @@ const Jobs: React.FC = (props: any) => {
                 padding:'5',
               },render: (rowData: any) => renderJobStatus(rowData)},
               {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                textAlign:'left',
+                textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
               } },
@@ -609,7 +609,7 @@ const Jobs: React.FC = (props: any) => {
                 padding:'0',
               },render: (rowData: any) => renderJobStatus(rowData)},
               {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                textAlign:'left',
+                textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
               } },
@@ -700,7 +700,7 @@ const Jobs: React.FC = (props: any) => {
                 whiteSpace: 'nowrap',
               }, render: (rowData: any) => renderJobStatus(rowData)},
               {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                textAlign:'left',
+                textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
               } },
@@ -794,7 +794,7 @@ const Jobs: React.FC = (props: any) => {
                 whiteSpace: 'nowrap'
               },render: (rowData: any) => renderJobStatus(rowData)},
               {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                textAlign:'left',
+                textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
               } },
@@ -886,7 +886,7 @@ const Jobs: React.FC = (props: any) => {
                 padding:'0',
               },headerStyle:{padding:'0',textAlign:'center'},field:'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
               {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                textAlign:'left',
+                textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
               } },
@@ -971,7 +971,7 @@ const Jobs: React.FC = (props: any) => {
                       padding:'2',
                     }, field: 'jobStatus',render:(rowData: any) => renderJobStatus(rowData)},
                     {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                      textAlign:'left',
+                      textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
                     } },
@@ -1081,7 +1081,7 @@ const Jobs: React.FC = (props: any) => {
                       padding:'0',
                     },field: 'jobStatus', render: (rowData: any) => renderJobStatus(rowData)},
                     {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                      textAlign:'left',
+                      textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
                     } },
@@ -1192,7 +1192,7 @@ const Jobs: React.FC = (props: any) => {
                       padding:'0',
                     },field: 'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
                     {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                      textAlign:'left',
+                      textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
                     } },
@@ -1298,7 +1298,7 @@ const Jobs: React.FC = (props: any) => {
                       padding:'2'
                     },field:'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
                     {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                      textAlign:'left',
+                      textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
                     } },
@@ -1395,7 +1395,7 @@ const Jobs: React.FC = (props: any) => {
                       padding:'0',
                     },headerStyle:{padding:'0',textAlign:'center'},field:'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
                     {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
-                      textAlign:'left',
+                      textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
                     } },

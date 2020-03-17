@@ -507,24 +507,37 @@ class NpuCollector(Collector):
 
         ## get info via npu_smi
         #sp = subprocess.Popen(['npu-smi', 'info', '-t', "common", "-i", "255"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
-        #out_str = sp.communicate()
+        #out_str = sp.communicate()        
+        ## todo: 
+        ## huawei havn't gave us a fully tested npu-smi, until now
+        ## we are not able to fetch npu id via tool
+        ## this number must be replaced later
+        npu_id = 255 ## 
+        out_str = utils.exec_cmd("npu-smi info -t common -i {0} | grep 'NPU ID' -A10 ".format(npu_id), shell=True)
 
         ## to be removed later
         ## for test only
-        out_str = '''
-        Memory Usage Rate(%)           : 10
-        HBM Usage Rate(%)              : 0
-        Aicore Usage Rate(%)           : 0
-        Aicore Freq(MHZ)               : 1000
-        Aicore curFreq(MHZ)            : 1000
-        Temperature(C)                 : 35
-        '''
-        out_list = out_str[0].split('\n')
+        # out_str = '''
+        # Memory Usage Rate(%)           : 10
+        # HBM Usage Rate(%)              : 0
+        # Aicore Usage Rate(%)           : 0
+        # Aicore Freq(MHZ)               : 1000
+        # Aicore curFreq(MHZ)            : 1000
+        # Temperature(C)                 : 35
+        # '''
+        out_list = out_str.split('\n')
         npu_info = NpuInfo()
 
         for item in out_list:
             try:
-                key, val = item.split(':')
+                kv = item.split(':')
+
+                if len(kv) < 2:
+                    continue
+                else:
+                    pass
+
+                key, val = kv[0], kv[1]
                 key, val = key.strip(), val.strip()
 
                 if "Aicore Usage Rate" in key:
@@ -533,7 +546,7 @@ class NpuCollector(Collector):
                     # this should be replaced later
                     # the huawei-npu-smi is not ready now 
                     # npu_info.npu_util = round(random.uniform(0.5, 0.9), 2)
-                    npu_info.npu_util = int(round(random.uniform(50, 90), 2))
+                    # npu_info.npu_util = int(round(random.uniform(50, 90), 2))
                     logger.warn("npu usage rate[%s]" % npu_info.npu_util)
                     
                 elif "Memory Usage Rate" in key:
@@ -558,10 +571,13 @@ class NpuCollector(Collector):
         gauge_npu_usage_rate = gen_npu_util_gauge()
         gauge_npu_mem = gen_npu_mem_util_gauge()
 
-        #gauge_npu_usage_rate.add_metric(["huawei_npu_util"], "90")
-        #gauge_npu_mem.add_metric(["huawei_npu_mem"], "80")
-        gauge_npu_usage_rate.add_metric(["huawei_npu_util"], str(int(round(random.uniform(50, 90), 2))))
-        gauge_npu_mem.add_metric(["huawei_npu_mem"], "40")
+        npu_info = NpuCollector.huawei_npu_smi(NpuCollector.cmd_histogram, NpuCollector.cmd_timeout)
+
+        #gauge_npu_usage_rate.add_metric(["huawei_npu_util"], str(int(round(random.uniform(50, 90), 2))))
+        #gauge_npu_mem.add_metric(["huawei_npu_mem"], "40")
+
+        gauge_npu_usage_rate.add_metric(["huawei_npu_util"], str(npu_info.npu_util))
+        gauge_npu_mem.add_metric(["huawei_npu_mem"], str(npu_info.npu_mem_util))
 
         logger.debug("NpuCollector.convert_to_metrics, return [%f, %d]" % (npu_info.npu_util, npu_info.npu_mem_util))
         return [gauge_npu_usage_rate, gauge_npu_mem]

@@ -22,7 +22,7 @@ spec:
       hostNetwork: true
       {% endif %}
       nodeSelector:
-        gpuType: huawei_a910
+        gpuType: Huawei_A910
       containers:
         - name: a910-device-plugin
           env:

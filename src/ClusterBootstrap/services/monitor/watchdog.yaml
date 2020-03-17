@@ -71,7 +71,7 @@ spec:
       - name: kubeconfig
         hostPath:
           path: /etc/kubernetes/admin.conf
-          
+
       tolerations:
       - key: node.kubernetes.io/memory-pressure
         operator: Exists

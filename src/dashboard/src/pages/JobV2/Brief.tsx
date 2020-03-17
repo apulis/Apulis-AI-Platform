@@ -19,7 +19,7 @@ import Context from './Context';
 
 const Brief: FunctionComponent = () => {
   const { cluster, job } = useContext(Context);
-
+  console.log('job', job)
   return (
     <List dense>
       <ListItem>
@@ -80,6 +80,16 @@ const Brief: FunctionComponent = () => {
             <ListItemText
               primary="Total of GPUs"
               secondary={job['jobParams']['numpsworker'] * job['jobParams']['resourcegpu']}
+            />
+          </ListItem>
+        )
+      }
+      {
+        job['jobParams']['jobtrainingtype'] === 'RegularJob' && (
+          <ListItem>
+            <ListItemText
+              primary="Device Type"
+              secondary={job['jobParams']['gpuType']}
             />
           </ListItem>
         )

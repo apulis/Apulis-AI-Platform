@@ -24,9 +24,7 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
     try {
       const token = context.cookies.get('token')
       const user = context.state.user = User.fromCookieToken(context, token)
-      await user.password
-      await user.addGroupLink
-      await user.WikiLink
+      await user.getAccountInfo()
       context.log.info(user, 'Authenticated by cookie')
     } catch (error) {
       context.log.error(error, 'Error in cookie authentication')

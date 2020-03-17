@@ -172,7 +172,6 @@ const ClusterStatus: FC = () => {
         const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params + '&time=' + ((new Date().getTime() / 1000)));
         fetch(fetchUserGPUUrl).then(async (response: any) => {
           const res = await response.json();
-          console.log('res.data', res)
           for (let item of res["data"]["result"]) {
             let idleUser: any = {};
             idleUser['userName'] = item['metric']['username'];

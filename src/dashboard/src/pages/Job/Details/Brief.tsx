@@ -193,6 +193,9 @@ const Brief: React.FC<BriefProps> = ({ readonly = false }) => {
           job['jobParams']['jobtrainingtype'] === 'PSDistJob' && <ListItem><ListItemText primary="Total of GPUS" secondary={job['jobParams']['numpsworker'] * job['jobParams']['resourcegpu']}/></ListItem>
         }
         {
+          job['jobParams']['jobtrainingtype'] === 'RegularJob' && <ListItem><ListItemText primary="Device Type" secondary={job['jobParams']['gpuType']}/></ListItem>
+        }
+        {
           job['jobParams']['jobtrainingtype'] === 'RegularJob' && <ListItem><ListItemText primary="Number of Devices" secondary={job['jobParams']['resourcegpu']}/></ListItem>
         }
         <ListItem><ListItemText primary="Job Status" secondary={

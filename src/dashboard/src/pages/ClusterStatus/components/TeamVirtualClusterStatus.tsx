@@ -77,7 +77,7 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
           title=""
           columns={[
             {title: 'Name', field: 'clusterName', render: (rowData: any)=><div>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
-            {title: 'Type', field: 'type'},
+            {title: 'Device Type', field: 'type'},
             {title: 'Total', field: 'total'},
             {title: 'Unschedulable', field: 'unschedulable'},
             {title: 'Used', field: 'used'},

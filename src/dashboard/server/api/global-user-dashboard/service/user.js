@@ -35,6 +35,15 @@ class User extends Service {
     return user
   }
 
+  static parseTokenToUserInfo(token) {
+    const payload = jwt.verify(token, sign)
+    return payload
+  }
+
+  static parseTokenToUserInfoWithoutVerify(token) {
+    const payload = jwt.decode(token, sign)
+    return payload
+  }
   /**
    * @param {import('koa').Context} context
    * @param {object} userinfo
@@ -177,10 +186,10 @@ class User extends Service {
     return data
   }
 
-  static async signupWithAccount(context, nickName, userName, password) {
+  static async signupWithAccount(context, nickName, userName, password, group) {
     const params = new URLSearchParams(Object.assign({
       openId: userName,
-      group: 'Account',
+      group: group || 'Account',
       nickName: nickName,
       userName: userName,
       password: password,

@@ -906,7 +906,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     type="number"
                     error={gpus > (type === 'InferenceJob' ? Number.MAX_VALUE : gpusPerNode)}
-                    label="Number of Devices"
+                    label="Number of Device"
                     fullWidth
                     variant="filled"
                     value={gpus}
@@ -931,7 +931,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     disabled
                     type="number"
-                    label="Total Number of Devices"
+                    label="Total Number of Device"
                     value = {workers * gpusPerNode}
                     fullWidth
                     variant="filled"

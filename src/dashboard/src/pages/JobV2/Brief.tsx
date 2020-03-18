@@ -78,7 +78,7 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'PSDistJob' && (
           <ListItem>
             <ListItemText
-              primary="Total of GPUs"
+              primary="Total of Device"
               secondary={job['jobParams']['numpsworker'] * job['jobParams']['resourcegpu']}
             />
           </ListItem>
@@ -98,7 +98,7 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'RegularJob' && (
           <ListItem>
             <ListItemText
-              primary="Number of Devices"
+              primary="Number of Device"
               secondary={job['jobParams']['resourcegpu']}
             />
           </ListItem>

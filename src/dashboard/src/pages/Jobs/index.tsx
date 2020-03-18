@@ -505,7 +505,7 @@ const Jobs: React.FC = (props: any) => {
                 flexDirection: 'row',
                 padding:'0',
               } },
-              {title:'Number of Devices', field:'jobParams.resourcegpu',cellStyle: {
+              {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -613,7 +613,7 @@ const Jobs: React.FC = (props: any) => {
                 flexDirection: 'row',
                 padding:'0',
               } },
-              {title:'Number of Devices', field:'jobParams.resourcegpu',cellStyle: {
+              {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -704,7 +704,7 @@ const Jobs: React.FC = (props: any) => {
                 flexDirection: 'row',
                 padding:'0',
               } },
-              {title:'Number of Devices', field:'jobParams.resourcegpu',cellStyle: {
+              {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -798,7 +798,7 @@ const Jobs: React.FC = (props: any) => {
                 flexDirection: 'row',
                 padding:'0',
               } },
-              {title:'Number of Devices',cellStyle: {
+              {title:'Number of Device',cellStyle: {
                 textAlign:'left',
                 flexDirection: 'row',
                 padding:'0',
@@ -890,7 +890,7 @@ const Jobs: React.FC = (props: any) => {
                 flexDirection: 'row',
                 padding:'0',
               } },
-              {title:'Number of Devices', cellStyle: {
+              {title:'Number of Device', cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -975,7 +975,7 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     } },
-                    {title:'Number of Devices', field:'jobParams.resourcegpu',cellStyle: {
+                    {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
@@ -1085,7 +1085,7 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     } },
-                    {title:'Number of Devices',cellStyle: {
+                    {title:'Number of Device',cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
@@ -1196,7 +1196,7 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     } },
-                    {title:'Number of Devices',cellStyle: {
+                    {title:'Number of Device',cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
@@ -1302,7 +1302,7 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     } },
-                    {title:'Number of Devices',cellStyle: {
+                    {title:'Number of Device',cellStyle: {
                       textAlign:'right',
                       flexDirection: 'row',
                       padding:'0',
@@ -1399,7 +1399,7 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     } },
-                    {title:'Number of Devices', cellStyle: {
+                    {title:'Number of Device', cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',

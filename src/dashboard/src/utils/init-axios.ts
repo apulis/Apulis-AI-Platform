@@ -55,9 +55,11 @@ axios.interceptors.response.use((response: AxiosResponse) => {
       message('error', codeMessage[status]);
     } else if (status === 502) {
       message('error', codeMessage[status]);
+    } else {
+      message('error', codeMessage[status]);
     }
   } else {
-    message('error', codeMessage[status])
+    message('error', 'unexpected error')
   }
   
   return Promise.reject(error)

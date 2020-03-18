@@ -20,6 +20,24 @@ axios.interceptors.request.use((ruquest: AxiosRequestConfig) => {
   return ruquest;
 });
 
+const codeMessage: any = {
+  200: 'The server successfully returned the requested data',
+  201: 'New or modified data was successful.',
+  202: 'A request has been queued in the background (asynchronous task).',
+  204: 'Data deleted successfully.',
+  400: 'There was an error in the request, and the server did not create or modify data.',
+  401: 'Does not have permission.',
+  403: 'You are authorized, but access is prohibited.',
+  404: 'The request was made for a record that does not exist, and the server did not operate',
+  406: 'The requested type is not available.',
+  410: 'The requested resource is permanently deleted and is no longer available.',
+  422: 'When creating an object, a validation error occurred.',
+  500: 'A server error occurred. Please check the server.',
+  502: 'Gateway error.',
+  503: 'Service is unavailable, server is temporarily overloaded or maintained。',
+  504: 'Gateway timed out.',
+};
+
 
 axios.interceptors.response.use((response: AxiosResponse) => {
   return response;
@@ -27,19 +45,21 @@ axios.interceptors.response.use((response: AxiosResponse) => {
   if (error.response) {
     const { status } = error.response;
     if (status === 400) {
-      message('error', '查询参数错误，请检查');
+      message('error', error.response.data.message || '');
     } else  if (status === 401) {
-      message('error', '未登录，请登录');
+      message('error', codeMessage[status]);
       history.push('/sign-in');
     } else if (status === 403) {
-      message('error', '无相关权限，请检查登录账户信息');
+      message('error', codeMessage[status]);
     } else if (status === 500) {
-      message('error', '服务器程序错误');
+      message('error', codeMessage[status]);
     } else if (status === 502) {
-      message('error', '网关错误');
+      message('error', codeMessage[status]);
+    } else {
+      message('error', codeMessage[status]);
     }
   } else {
-    //
+    message('error', 'unexpected error')
   }
   
   return Promise.reject(error)

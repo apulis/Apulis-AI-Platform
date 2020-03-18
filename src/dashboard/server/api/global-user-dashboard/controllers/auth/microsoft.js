@@ -8,18 +8,48 @@ const domain = config.get('domain')
 
 const User = require('../../../services/user')
 const { basePath } = require('../../config')
+const { getDomain } = require('../../utils')
 const OAUTH2_URL = `https://login.microsoftonline.com/common/oauth2/v2.0`
+
 
 
 /**
  * @param {import('koa').Context} context
  * @return {string}
  */
-const getUriWithoutQuery = context => {
+const getUriWithQuery = context => {
   const originalUrl = context.req.originalUrl || context.request.originalUrl || ''
   if (/localhost/.test(context.origin)) {
-    const callbackRedirectURL = context.querystring
-    return 'http://localhost:8000/api/global-user-dashboard/auth/microsoft'
+    let callbackRedirectURL = ''
+    if (context.query.state) {
+      const stateParams = new URLSearchParams(context.query.state)
+      if (stateParams.has('to')) {
+        callbackRedirectURL = stateParams.get('to')
+      }
+    } else if (context.query.to) {
+      callbackRedirectURL = context.query.to
+    }
+    
+    return `${getDomain(callbackRedirectURL)}api${basePath}/auth/microsoft`
+  } else if (/127.0.0.1/.test(context.origin)) {
+    return domain + `/api${basePath}/auth/microsoft`
+  } else {
+    return (context.origin.replace('http', 'https') + originalUrl).split('?')[0] + `/api${basePath}/auth/microsoft`
+  }
+}
+/**
+ * @param {import('koa').Context} context
+ * @return {string}
+ */
+const getMSCallbackUri = context => {
+  const originalUrl = context.req.originalUrl || context.request.originalUrl || ''
+  if (/localhost/.test(context.origin)) {
+    let callbackRedirectURL = ''
+    const stateParams = new URLSearchParams(context.query.state)
+    if (stateParams.has('to')) {
+      callbackRedirectURL = stateParams.get('to')
+    }
+    return getDomain(callbackRedirectURL)+ `api${basePath}/auth/microsoft`
   } else if (/127.0.0.1/.test(context.origin)) {
     return domain + `/api${basePath}/auth/microsoft`
   } else {
@@ -27,12 +57,13 @@ const getUriWithoutQuery = context => {
   }
 }
 
+
 /**
  * @param {import('koa').Context} context
  * @return {string}
  */
 const getAuthenticationUrl = context => {
-  let redirect_uri = getUriWithoutQuery(context)
+  let redirect_uri = getUriWithQuery(context)
   const params = new URLSearchParams({
     client_id: activeDirectoryConfig.clientId,
     response_type: 'code',
@@ -54,7 +85,7 @@ const getDecodedIdToken = async context => {
     client_id: activeDirectoryConfig.clientId,
     scope: 'openid profile email',
     code,
-    redirect_uri: getUriWithoutQuery(context),
+    redirect_uri: getMSCallbackUri(context),
     grant_type: 'authorization_code',
     client_secret: activeDirectoryConfig.clientSecret
   })
@@ -87,13 +118,12 @@ module.exports = async context => {
       return context.redirect(basePath)
     }
     const user = User.fromIdToken(context, idToken)
-    console.log('before user.getAccountInfo')
     await user.getAccountInfo()
     context.cookies.set('token', user.toCookieToken())
     try {
       const stateParams = new URLSearchParams(context.query.state)
       if (stateParams.has('to')) {
-        return context.redirect(stateParams.get('to'))
+        return context.redirect(stateParams.get('to') + '?token=' + user.toCookieToken())
       }
     } finally {}
     return context.redirect(basePath + '?token=' + user.toCookieToken())

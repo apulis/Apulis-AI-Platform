@@ -20,5 +20,5 @@
       "type": "string"
     }
   },
-  "required": ["userName", "password", "phoneNumber", "email", "nickName", "role"]
+  "required": ["userName", "password", "role"]
 }

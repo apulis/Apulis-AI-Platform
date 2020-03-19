@@ -559,7 +559,7 @@ class NpuCollector(Collector):
         out_str = ""
         time_passed = int(time.time()) - NpuCollector.npu_collect_start_time
 
-        if time_passed % 60 == 0:
+        if time_passed % 2 == 0:
             out_str = out_str_3
         else: 
             out_str = out_str_2
@@ -585,7 +585,7 @@ class NpuCollector(Collector):
                     # this should be replaced later
                     # the huawei-npu-smi is not ready now 
                     # npu_info.npu_util = round(random.uniform(0.5, 0.9), 2)
-                    # npu_info.npu_util = int(round(random.uniform(50, 90), 2))
+                    npu_info.npu_util = int(round(random.uniform(50, 60), 2))
                     logger.warn("npu usage rate[%s]" % npu_info.npu_util)
                     
                 elif "Memory Usage Rate" in key:

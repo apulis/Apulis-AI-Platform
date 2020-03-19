@@ -1,5 +1,6 @@
 const config = require('config')
 const Cluster = require('../../service/cluster')
+const User = require('../../service/user')
 
 const clusterIds = Object.keys(config.get('clusters'))
 
@@ -26,7 +27,16 @@ module.exports = async context => {
     isAdmin,
     isAuthorized
   }
-  const response = await new Cluster(context, clusterId).addUser2(payload)
+  const cluster = new Cluster(context, clusterId)
+  const isUserExist = await User.getAccountInfoByUserName(context, userName)
+  if (isUserExist) {
+    context.body = {
+      success: false,
+      message: `UserName ${userName} is exist!`
+    }
+    return
+  }
+  const response = await cluster.addUser2(payload)
   context.body = {
     success: true,
     message: 'success'

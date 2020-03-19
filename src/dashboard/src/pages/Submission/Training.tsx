@@ -697,8 +697,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const fetchGrafanaUrl = `/api/clusters`;
   const request = useFetch(fetchGrafanaUrl);
   const fetchGrafana = async () => {
-    const {grafana} = await request.get(`/${selectedCluster}`);
-    setGrafanaUrl(grafana);
+    const result = await request.get(`/${selectedCluster}`);
+    if (result) {
+      const { grafana } = result
+      setGrafanaUrl(grafana);
+    }
   }
   const handleCloseGPUGramentation = () => {
     setShowGPUFragmentation(false);

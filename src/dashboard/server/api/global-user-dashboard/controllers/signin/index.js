@@ -23,5 +23,10 @@ module.exports = async context => {
         message: 'userName or password dont match'
       }
     }
+  } else {
+    context.body = {
+      success: false,
+      message: 'userName or password dont match'
+    }
   }
 }

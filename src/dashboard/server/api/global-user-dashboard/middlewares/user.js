@@ -10,7 +10,6 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
       const token = authorization
       const clientUserData = User.parseTokenToUserInfo(token.replace(/^Bearer /, ''))
       const isSignuped = typeof clientUserData.userName === 'undefined' ? false : true
-      console.log('isSignuped', isSignuped, clientUserData)
       if (isSignuped) {
         // 验证用户是否被删除
         const serverUserData = await User.getAccountInfoByUserName(context, clientUserData.userName)
@@ -20,7 +19,6 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
       } else {
         context.state.user = clientUserData;
       }
-      context.log.info(serverUserData, 'Authenticated by cookie')
       
     } catch (error) {
       context.log.error(error, 'Error in cookie authentication')

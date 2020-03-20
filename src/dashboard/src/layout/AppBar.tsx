@@ -206,7 +206,6 @@ const UserButton: React.FC = () => {
           />
         </Snackbar>
       </Dialog>
-
     </main>
   );
 };

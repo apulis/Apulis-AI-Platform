@@ -180,7 +180,7 @@ const UserButton: React.FC = () => {
             </ListItem>
             <Divider />
             <ListItem button>
-              <ListItemText primary="Username" secondary={userName}  onClick={()=>handleCopy(userName)}/>
+              <ListItemText primary="UserName" secondary={userName}  onClick={()=>handleCopy(userName)}/>
             </ListItem>
             <Divider />
             <Divider />

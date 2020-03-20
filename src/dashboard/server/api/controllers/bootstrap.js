@@ -8,10 +8,13 @@ const authEnabled = config.get('authEnabled')
 
 /** @type {import('koa').Middleware<State>} */
 module.exports = (context) => {
-  const { user } = context.state
+  let { user } = context.state
   context.type = 'js'
   if (user) {
-    context.body = `bootstrap(${JSON.stringify({ ...user, authEnabled, password: '******' })})`
+    if (user.password) {
+      delete user.password
+    }
+    context.body = `bootstrap(${JSON.stringify({ ...user, authEnabled })})`
   } else {
     context.body = `bootstrap(${JSON.stringify({ authEnabled })})`
   }

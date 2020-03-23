@@ -66,7 +66,7 @@ const sanitizePath = (path: string) => {
   return path;
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
-  const { selectedCluster,saveSelectedCluster, availbleGpu } = React.useContext(ClustersContext);
+  const { selectedCluster, saveSelectedCluster } = React.useContext(ClustersContext);
   const { userName, uid } = React.useContext(UserContext);
   const { teams, selectedTeam }= React.useContext(TeamsContext);
   const { enqueueSnackbar } = useSnackbar()
@@ -82,6 +82,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [setName]
   );
+  const [availbleGpu, setAvailbleGpu] = useState<{type: string}[]>([{type: ''}]);
   const team = React.useMemo(() => {
     if (teams == null) return;
     if (selectedTeam == null) return;
@@ -96,7 +97,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (cluster == null) return;
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
-  const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
+  const [gpuType, setGpuType] = React.useState('');
   const [gpusPerNode, setGpusPerNode] = useState(0)
   const [templates, setTemplates] = useState([{name: '', json: ''}]);
   
@@ -824,7 +825,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   cluster={selectedCluster}
                   gpuType={gpuType}
                   onClusterChange={saveSelectedCluster}
-                  onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
+                  onAvailbleGpuNumChange={(number, availbleGpu) => {setGpusPerNode(number);setAvailbleGpu(availbleGpu);setGpuType(availbleGpu[0].type)}}
                 />
                 <Tooltip title="View Cluster GPU Status Per Node">
                   <IconButton color="secondary" size="small" onClick={handleClickOpen} aria-label="delete">

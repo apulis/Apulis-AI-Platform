@@ -1203,7 +1203,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   </TextField>
                 </Grid>
                 <Button type="button" color="primary" onClick={onSaveTemplateClick}>Save</Button>
-                <Button type="button" color="secondary" onClick={onDeleteTemplateClick}>Delete</Button>
+                <Button type="button" disabled={!saveTemplateName} color="secondary" onClick={onDeleteTemplateClick}>Delete</Button>
               </Grid>
             </CardContent>
           </Collapse>

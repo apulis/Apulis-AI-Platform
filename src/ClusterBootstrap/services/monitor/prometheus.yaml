@@ -90,7 +90,6 @@ spec:
       nodeSelector:
         prometheus: active
       hostNetwork: true
-      serviceAccountName: prometheus
       initContainers:
       - name: init
         image: bash:4

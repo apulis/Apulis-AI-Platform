@@ -519,7 +519,7 @@ class DataHandler(object):
     @record
     def UpdateAccountPermission(self,userName, isAdmin,isAuthorized):
         try:
-            sql = "update `%s` set `isAdmin` = '%s', `isAuthorized` = '%s' where `userName` = '%s'" % (self.accounttablename,isAdmin,isAuthorized,userName)
+            sql = "update `%s` set `isAdmin` = '%s', `isAuthorized` = '%s' where `userName` = '%s'" % (self.accounttablename,int(isAdmin),int(isAuthorized),userName)
             with MysqlConn() as conn:
                 conn.insert_one(sql)
                 conn.commit()

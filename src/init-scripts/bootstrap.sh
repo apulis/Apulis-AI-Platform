@@ -4,6 +4,8 @@ set -ex
 . /dlts-runtime/env/init.env
 sh -x /dlts-runtime/install.sh
 
+sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list && apt-get update
+
 SCRIPT_DIR=/pod/scripts
 
 echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log

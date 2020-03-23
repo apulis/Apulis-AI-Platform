@@ -406,6 +406,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         tensorboard,
         plugins,
         gpuType,
+        preemptible
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);
@@ -492,6 +493,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         setIpython(false);
         setTensorboard(false);
         setGpuType(availbleGpu![0].type || '')
+        setPreemptible(false);
       } else {
         const {
           name,
@@ -511,7 +513,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           ipython,
           tensorboard,
           plugins,
-          gpuType
+          gpuType,
+          preemptible
         } = JSON.parse(event.target.value as string);
         if (name !== undefined) setName(name);
         if (type !== undefined) setType(type);
@@ -530,6 +533,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         if (ipython !== undefined) setIpython(ipython);
         if (tensorboard !== undefined) setTensorboard(tensorboard);
         if (gpuType !== undefined) setGpuType(gpuType);
+        if (preemptible !== undefined) setPreemptible(preemptible);
+        console.log('preemptible', preemptible)
         if (plugins === undefined) {
           setAccountName("");
           setAccountKey("");

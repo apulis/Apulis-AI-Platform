@@ -13,7 +13,7 @@ interface ClusterSelectFieldProps {
   cluster: string | undefined;
   onClusterChange(value: string): void;
   gpuType?: string;
-  onAvailbleGpuNumChange?(number: number, avaliableGpu: any[]): void;
+  onAvailbleGpuNumChange?(value: number): void;
 }
 
 const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps> = (
@@ -53,13 +53,7 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
       }
       const gpuCapacity =  isEmpty(res) ? 0 : res['gpu_capacity'][clusterName];
       const gpuAvailable =  isEmpty(res) ? 0 : res['gpu_avaliable'][clusterName];
-      const avaliableGpu = Object.keys(res.gpu_avaliable).map(val => {
-        return {
-          type: val,
-          perNode: res.gpu_capacity[val]
-        }
-      })
-      props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, avaliableGpu);
+      props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity);
       setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} to use)`);
     })
     if (selectedCluster) {

@@ -890,6 +890,24 @@ class GetAccountByOpenId(Resource):
 ##
 api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
+class GetAccountByuserName(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+
+        ret = JobRestAPIUtils.GetAccountByUserName(userName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAccountByuserName, '/getAccountInfoByUserName')
+
 class OpenSignInRedirect(Resource):
     def get(self,signinType):
         if signinType == "wechat":
@@ -985,14 +1003,14 @@ api.add_resource(SignIn, '/signIn')
 
 
 class AddUserV2(Resource):
-    @jwt_required
     def post(self):
-        current_user = get_jwt_identity()
+        # current_user = get_jwt_identity()
         params = request.get_json(silent=True)
         openId = params["openId"]
         group = params["group"]
         nickName = params["nickName"]
         userName = params["userName"]
+        identityName = params["identityName"]
         password = params["password"]
         email = params.get("email","")
         phoneNumber = params.get("phoneNumber","")
@@ -1002,9 +1020,9 @@ class AddUserV2(Resource):
         if group!="Account":
             return "wrong group type",400
         ret = {}
-        if not AuthorizationManager.HasAccess(current_user["userName"], ResourceType.Cluster, "", Permission.Admin):
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
             return 403
-        output = JobRestAPIUtils.SignUp(openId, group, nickName, userName, password, isAdmin, isAuthorized)
+        output = JobRestAPIUtils.SignUp(openId, group, nickName, identityName, password, isAdmin, isAuthorized)
         if "error" in output:
             ret["result"] = False
             ret["error"] = output["error"]
@@ -1021,27 +1039,43 @@ class AddUserV2(Resource):
 
 api.add_resource(AddUserV2, '/addUser2')
 
-class GetAccountUserInfo(Resource):
-    @jwt_required
-    def get(self):
-        current_user = get_jwt_identity()
-        parser = reqparse.RequestParser()
-        parser.add_argument('openId')
-        args = parser.parse_args()
-        openId = args["openId"]
-
-        if AuthorizationManager.HasAccess(current_user["userName"], ResourceType.Cluster, "", Permission.Admin):
-            ret = JobRestAPIUtils.GetAccountByUserName(openId)
-            resp = jsonify(ret)
-        else:
-            return "wrong permission",403
-
+class UpdateUserPermission(Resource):
+    def patch(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        isAdmin = params["isAdmin"]
+        isAuthorized = params["isAuthorized"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret = ACLManager.UpdateAce(identityName, resourceAclPath, permission, 0)
+        if ret:
+            DataHandler().UpdateAccountPermission(identityName,isAdmin,isAuthorized)
+        resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(UpdateUserPermission, '/UpdateUserPermission')
 
+class DeleteUser(Resource):
+    def delete(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret =  ACLManager.DeleteAce(identityName, resourceAclPath)
+        if ret:
+            ret = DataHandler().DeleteUser(identityName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
         return resp
 
-api.add_resource(GetAccountUserInfo, '/getAccountUserInfo')
+api.add_resource(DeleteUser, '/DeleteUser')
 
 class GetAllUsers(Resource):
     def get(self):
@@ -1064,6 +1098,23 @@ class GetAllUsers(Resource):
 ##
 api.add_resource(GetAllUsers, '/GetAllUsers')
 
+class GetAllAccountUser(Resource):
+    def get(self):
+        data_handler = None
+        try:
+            data_handler = DataHandler()
+            ret = data_handler.GetAllAccountUser()
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+            return resp
+        except Exception as e:
+            return "Internal Server Error. " + str(e), 400
+        finally:
+            if data_handler is not None:
+                data_handler.Close()
+
+api.add_resource(GetAllAccountUser, '/GetAllAccountUser')
 
 class UpdateAce(Resource):
     def get(self):

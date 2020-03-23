@@ -35,7 +35,7 @@ def Run():
                     r_class = getattr(rule_module, class_name)
                     rule = r_class(alert, config)
 
-                    logger.debug(f'Executing {class_name} from module {module_name}')
+                    logger.info(f'Executing {class_name} from module {module_name}')
 
                     if rule.check_status():
                         rule.take_action()

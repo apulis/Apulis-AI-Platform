@@ -76,8 +76,8 @@ def set_user_directory():
 
         if not os.path.exists(authorized_keyspath):
             logger.info("Creating authorized_keys for user %s" % (username))
+            os.system("cat " + pubkeypath + " >> " + authorized_keyspath)
             os.system("chown -R "+str(userid)+":"+"500000513 "+authorized_keyspath)
-            os.system("cat "+pubkeypath+" >> "+authorized_keyspath)
             os.system("chmod 644 "+authorized_keyspath)
 
 def Run():

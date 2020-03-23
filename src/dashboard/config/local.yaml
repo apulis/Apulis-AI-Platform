@@ -39,4 +39,4 @@ clusters:
     dataStorage: data
     grafana: "https://apulis-sz-dev-infra01.sigsus.cn/grafana/"
     prometheus: http://apulis-sz-dev-infra01.sigsus.cn:9091
-    
+

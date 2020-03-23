@@ -157,7 +157,7 @@ spec:
         - SYS_ADMIN
     resources:
       limits:
-        nvidia.com/gpu: {{ job["gpuLimit"] }}
+        {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
       {% if job["cpulimit"] %}
         cpu: {{ job["cpulimit"]  }}
       {% endif %}
@@ -230,6 +230,8 @@ spec:
       value: "{{ job["numps"] }}"
     - name: DLWS_NUM_WORKER
       value: "{{ job["numworker"] }}"
+    - name: DLWS_GPU_TYPE
+      value: "{{ job["gpuType"] }}"
     {% if job["gpuLimit"]|int < 1  %}
     - name: NVIDIA_VISIBLE_DEVICES
       value: ""

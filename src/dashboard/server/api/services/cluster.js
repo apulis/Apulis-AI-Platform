@@ -409,6 +409,53 @@ class Cluster extends Service {
     return data
   }
 
+  async getAllUsers () {
+    const response = await this.fetch(`/GetAllAccountUser`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
+  async addUser2 (user) {
+    const response = await this.fetch(`/addUser2`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(user)
+    })
+    this.context.assert(response.ok, 502)
+    const data = await response.text()
+    return data
+  }
+
+  async deleteUser ({ userName, identityName }) {
+    const response = await this.fetch('/DeleteUser', {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ userName, identityName }),
+      method: 'DELETE'
+    })
+    this.context.assert(response.ok, 502)
+    const data = await response.text()
+    return data
+  }
+
+  async editUserRole (payload) {
+    const response = await this.fetch('/UpdateUserPermission', {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    })
+    console.log('payload', payload)
+    this.context.assert(response.ok, 502)
+    const data = await response.text()
+    return data
+  }
+
   async listVc (params) {
     const { userName } = params
     const response = await this.fetch(`/ListVCs?userName=${userName}`)

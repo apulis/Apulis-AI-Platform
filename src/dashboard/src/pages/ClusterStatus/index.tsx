@@ -15,7 +15,7 @@ import ClusterContext from '../../contexts/Clusters';
 import useFetch from "use-http";
 
 import _ from "lodash";
-import { mergeTwoObjsByKey, convertToArrayByKey } from '../../utlities/ObjUtlities';
+import { mergeTwoObjsByKey, convertToArrayByKey, mergePropertyByKey, mergePropertyByUserNameAndGPUType, sumObjectValues } from '../../utlities/ObjUtlities';
 import {handleChangeIndex} from "../../utlities/interactionUtlties";
 import {DLTSTabs} from "../CommonComponents/DLTSTabs";
 import {
@@ -54,7 +54,6 @@ const ClusterStatus: FC = () => {
   const fetchVC = async (cluster: string) => {
     const response = await request.get(`/teams/${selectedTeam}/clusters/${cluster}`);
     const responseUrls = await requestGrafana.get(`/${cluster}`);
-    console.log('responseUrls', responseUrls, cluster)
     if (!response || !responseUrls) {
       return;
     }
@@ -70,7 +69,7 @@ const ClusterStatus: FC = () => {
   const fetchClusterStatus = (mount: boolean) => {
     if (clusters && mount) {
       const params = new URLSearchParams({
-        query:`count (task_gpu_percent{vc_name="${selectedTeam}"} == 0) by (username)`,
+        query:`count (task_gpu_percent{vc_name="${selectedTeam}"} == 0) by (username,gpu_type)`,
       });
       const filterclusters = convertToArrayByKey(clusters, 'id');
       setSelectedValue(filterclusters[0]);
@@ -91,112 +90,148 @@ const ClusterStatus: FC = () => {
         return;
       }
       Promise.all(fetchs).then((res: any) => {
-        //init user status & node status when loading page
+        // init user status & node status when loading page
         let userfetchs: any = [];
         if (localStorage.getItem("selectedCluster") === null)  {
-          userfetchs = res[0];
+          userfetchs = res[0] || {};
         } else {
-          userfetchs = res.filter((vc: any) => vc['ClusterName'] === localStorage.getItem('selectedCluster'))[0];
+          userfetchs = res.filter((vc: any) => vc['ClusterName'] === localStorage.getItem('selectedCluster'))[0] || {};
         }
         const newuserStatusPreemptable: any = [];
         if (userfetchs['user_status_preemptable']) {
-          userfetchs['user_status_preemptable'].map( (item: any) => {
-            newuserStatusPreemptable.push(
-              _.mapKeys( item, ( value, key ) => {
-                let newKey = key;
-                if( key === 'userGPU' ) {
-                  newKey = 'preemptableGPU';
-                }
-                return newKey;
-              })
-            )
+          userfetchs['user_status_preemptable'].forEach((item: any) => {
+            // newuserStatusPreemptable.push(
+            //   _.mapKeys( item, ( value, key ) => {
+            //     let newKey = key;
+            //     if (key === 'userGPU') {
+            //       newKey = 'preemptableGPU';
+            //     }
+            //     return newKey;
+            //   })
+            // )
+            for (const gpu in item.userGPU) {
+              const preemptableGPU = item.userGPU[gpu];
+              const userStatusPreemptableItem = {
+                gpuType: gpu,
+                userName: item.userName,
+                preemptableGPU
+              }
+              newuserStatusPreemptable.push(userStatusPreemptableItem);
+            }
           });
         }
-        let tmpMergedUsers = _.values(mergeTwoObjsByKey(userfetchs['user_status'],newuserStatusPreemptable,'userName'));
-        let fetchUsrs: any = []
-        for (let fetchedUser of tmpMergedUsers ) {
-          let tmpUser: any ={};
+        const newUserStatus: any = [];
+        if (userfetchs['user_status']) {
+          userfetchs['user_status'].forEach((item: any) => {
+            for (const gpu in item.userGPU) {
+              newUserStatus.push({
+                gpuType: gpu,
+                userName: item.userName,
+                usedGPU: item.userGPU[gpu]
+              })
+            }
+          })
+        }
+        const tmpMergedUsers = mergePropertyByUserNameAndGPUType(newuserStatusPreemptable, newUserStatus);
+        const fetchUsrs: any = [];
+        // GET usedGPU AND preemptableGPU
+        for (const fetchedUser of tmpMergedUsers ) {
+          const tmpUser: any ={};
           tmpUser['userName'] = fetchedUser['userName'];
-          if (fetchedUser['userGPU']) {
-            tmpUser['usedGPU'] = (String)(Object.values(fetchedUser['userGPU'])[0]);
+          if (fetchedUser['usedGPU']) {
+            tmpUser['usedGPU'] = fetchedUser['usedGPU'];
           } else {
             tmpUser['usedGPU'] = 0;
           }
+          if (fetchedUser['gpuType']) {
+            tmpUser['gpuType'] = fetchedUser['gpuType'];
+          }
 
           if (fetchedUser['preemptableGPU']) {
-            tmpUser['preemptableGPU'] = Object.values(fetchedUser['preemptableGPU'])[0]
+            tmpUser['preemptableGPU'] = fetchedUser['preemptableGPU']
           } else {
             tmpUser['preemptableGPU'] = 0;
           }
           fetchUsrs.push(tmpUser)
         }
-        console.log('--->', fetchUsrs)
-
         let prometheusResp: any = [];
         let fetchIdes: any = [];
         if (userfetchs['gpu_idle'] != null) {
           for (let [key, value] of Object.entries(userfetchs['gpu_idle'])) {
-            let idleTmp: any = {}
-            idleTmp['userName'] = key;
-            let arr: any = value;
-            idleTmp['booked'] = Math.floor(arr['booked'] / 3600);
-            idleTmp['idle'] = Math.floor(arr['idle'] / 3600);
-            fetchIdes.push(idleTmp);
+            let obj: any = value;
+            for (let gpuType in obj['booked']) {
+              const idleTmp: any = {};
+              idleTmp['gpuType'] = gpuType;
+              idleTmp['userName'] = key;
+              idleTmp['booked'] = Math.floor(obj['booked'][gpuType] / 3600);
+              idleTmp['idle'] = Math.floor(obj['idle'][gpuType] / 3600);
+              fetchIdes.push(idleTmp);
+            }
           }
         }
-        fetch(userfetchs['getIdleGPUPerUserUrl']+params).then(async (response: any) => {
+        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params + '&time=' + ((new Date().getTime() / 1000)));
+        fetch(fetchUserGPUUrl).then(async (response: any) => {
           const res = await response.json();
-          for (let item of res['data']["result"]) {
+          for (let item of res["data"]["result"]) {
             let idleUser: any = {};
             idleUser['userName'] = item['metric']['username'];
+            idleUser['gpuType'] = item['metric']['gpu_Type']
             idleUser['idleGPU'] = item['value'][1];
             prometheusResp.push(idleUser)
           }
-          let tmpMerged = _.values(mergeTwoObjsByKey(fetchIdes,fetchUsrs,'userName'));
+          // fetchIdes
+          // let tmpMerged = _.values(mergePropertyByKey([
+          //   {gpuType: "nvidia", userName: "zenglong.chen", booked: 13, idle: 1},
+          //   {gpuType: "v100", userName: "zenglong.chen", booked: 2, idle: 34}
+          // ],fetchUsrs), 'userName');
+          let tmpMerged = mergePropertyByUserNameAndGPUType(fetchIdes,fetchUsrs);
           _.values(tmpMerged).forEach((mu: any)=>{
             if (!mu.hasOwnProperty('usedGPU')) {
-              mu['usedGPU'] = "0";
+              mu['usedGPU'] = 0;
             }
             if (!mu.hasOwnProperty('idleGPU')) {
-              mu['idleGPU'] = "0";
+              mu['idleGPU'] = 0;
             }
             if (!mu.hasOwnProperty('booked')) {
-              mu['booked'] = "0";
-            }
-            if (!mu.hasOwnProperty('booked')) {
-              mu['booked'] = "0";
+              mu['booked'] = 0;
             }
             if (!mu.hasOwnProperty('preemptableGPU')) {
-              mu['preemptableGPU'] = "0";
+              mu['preemptableGPU'] = 0;
             }
           });
-          let finalUserStatus = _.values(mergeTwoObjsByKey(tmpMerged,prometheusResp,'userName'));
+          let finalUserStatus = _.values(mergePropertyByKey(tmpMerged, prometheusResp, 'userName'));
           let totalRow: any = {};
-          totalRow['userName'] = 'Total';
           totalRow['booked'] = 0;
           totalRow['idle'] = 0;
           totalRow['usedGPU'] = 0;
           totalRow['idleGPU'] = 0;
           totalRow['preemptableGPU'] = 0;
+          let GPUTypesSet = new Set();
           for (let us of finalUserStatus) {
-            console.log(us['preemptableGPU']);
             totalRow['booked'] += parseInt(us['booked']);
             totalRow['idle'] += parseInt(us['idle']);
             totalRow['usedGPU'] += parseInt(us['usedGPU']);
             totalRow['idleGPU'] += parseInt(us['idleGPU']);
             totalRow['preemptableGPU'] += parseInt(us['preemptableGPU']);
+            GPUTypesSet.add(us['gpuType']);
           }
+          for (const t in totalRow) {
+            if (typeof totalRow[t] === 'number' && isNaN(totalRow[t])) {
+              totalRow[t] = undefined
+            }
+          }
+          totalRow['gpuType'] = (Array.from(GPUTypesSet)).join(',')
+          totalRow['userName'] = 'Total';
           finalUserStatus.push(totalRow);
-
           setUserStatus(finalUserStatus)
 
         })
 
         setIframeUrl(userfetchs['GranaUrl'] );
-        console.log(userfetchs['GranaUrl'])
+        console.log('GranaUrl', userfetchs['GranaUrl'])
         setNodeStatus(userfetchs['node_status']);
         setIframeUrlForPerVC(userfetchs['GPUStatisticPerVC']);
-        console.log(userfetchs['GPUStatisticPerVC'])
+        console.log('GPUStatisticPerVC', userfetchs['GPUStatisticPerVC'])
         setVcStatus(res);
       })
     }

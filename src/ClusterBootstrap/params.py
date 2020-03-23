@@ -218,22 +218,16 @@ default_config_parameters = {
     #   - label : all <tag to be applied to all nodes
     "kubelabels": {
         "infrastructure": "etcd_node",
-        "worker": "worker_node",
-        "all": "all",
-        "default": "all",
-        "glusterfs": "worker_node",
+
         # HDFS node selector
         "hdfs": "worker_node",
         "zookeeper": "etcd_node",
         "journalnode": "etcd_node",
         "namenode1": "etcd_node_1",
         "namenode2": "etcd_node_2",
+
         "datanode": "all",
-        "webportal": "etcd_node_1",
-        "restfulapi": "etcd_node_1",
-        "jobmanager": "etcd_node_1",
-        "repairmanager": "etcd_node_1",
-        "FragmentGPUJob": "all",
+
         "grafana": "etcd_node_1",
         "prometheus": "etcd_node_1",
         "alert-manager": "etcd_node_1",
@@ -242,9 +236,29 @@ default_config_parameters = {
         "kibana": "etcd_node_1",
         "mysql": "etcd_node_1",
         "mysql-server": "mysqlserver_node",
-        "nginx": "all",
         "storagemanager": "nfs_node",
         "user-synchronizer": "etcd_node_1",
+
+        ## worker labels
+        "worker": "worker_node",
+        "glusterfs": "worker_node",
+        "FragmentGPUJob": "all",
+        "a910-device-plugin": "worker_node",
+
+        ## applications
+        "nginx": "all",
+        "webportal": "etcd_node_1",
+        "restfulapi": "etcd_node_1",
+        "jobmanager": "etcd_node_1",
+        "repairmanager": "etcd_node_1",
+
+        "webui3": "etcd_node_1",
+        "restfulapi2": "etcd_node_1",
+        "jobmanager2": "etcd_node_1",
+
+        ## default labels
+        "all": "all",
+        "default": "all",
     },
 
     "kubemarks": ["rack", "sku"],

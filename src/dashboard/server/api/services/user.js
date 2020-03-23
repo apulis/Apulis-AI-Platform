@@ -103,6 +103,10 @@ class User extends Service {
     return user
   }
 
+  static parseTokenToUserInfo(token) {
+    const payload = jwt.verify(token, sign)
+    return payload
+  }
   /**
    * @param {import('koa').Context} context
    * @param {string} cookieToken
@@ -237,8 +241,8 @@ class User extends Service {
       nickName: nickName,
       userName: userName,
       password: password,
-      isAdmin: true,
-      isAuthorized: true
+      isAdmin: false,
+      isAuthorized: false,
     }))
     const clusterId = clusterIds[0]
     const response = await new Cluster(this.context, clusterId).fetch('/SignUp?' + params)
@@ -261,7 +265,8 @@ class User extends Service {
       isAuthorized: this.isAuthorized,
       gid: this.gid,
       familyName: this.familyName,
-      givenName: this.givenName
+      givenName: this.givenName,
+      exp: new Date().getTime() / 1000 + 2 * 24 * 60 * 60
     }, sign)
   }
 
@@ -277,7 +282,8 @@ class User extends Service {
       isAuthorized: this.isAuthorized,
       gid: this.gid,
       familyName: this.familyName,
-      givenName: this.givenName
+      givenName: this.givenName,
+      exp: new Date().getTime() / 1000 + 2 * 24 * 60 * 60
     }, sign)
   }
 

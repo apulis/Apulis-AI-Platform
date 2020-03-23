@@ -42,7 +42,6 @@ import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
-import message from 'antd/es/message';
 import Paper, { PaperProps } from '@material-ui/core/Paper';
 import Draggable from 'react-draggable'
 import {TransitionProps} from "@material-ui/core/transitions";
@@ -54,7 +53,7 @@ import {
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-
+import message from '../../utils/message'
 interface EnvironmentVariable {
   name: string;
   value: string;
@@ -66,7 +65,7 @@ const sanitizePath = (path: string) => {
   return path;
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
-  const { selectedCluster,saveSelectedCluster } = React.useContext(ClustersContext);
+  const { selectedCluster,saveSelectedCluster, availbleGpu } = React.useContext(ClustersContext);
   const { userName, uid } = React.useContext(UserContext);
   const { teams, selectedTeam }= React.useContext(TeamsContext);
   const { enqueueSnackbar } = useSnackbar()
@@ -96,10 +95,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (cluster == null) return;
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
-  const gpusPerNode = React.useMemo(() => {
-    if (cluster == null || gpuModel == null) return;
-    return cluster.gpus[gpuModel].perNode;
-  }, [cluster, gpuModel]);
+  const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
+  const [gpusPerNode, setGpusPerNode] = useState(0)
   const [templates, setTemplates] = useState([{name: '', json: ''}]);
   
   React.useEffect(() => {
@@ -124,6 +121,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [setPreemptible]
   );
+  const onGpuTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setGpuType(event.target.value);
+  };
+
 
 
 
@@ -363,6 +364,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }, [gpuModel, selectedTeam, name, image, command, type, gpus, gpusPerNode]);
   const onSaveTemplateClick = async () => {
+    if (!saveTemplateName) {
+      message('error', 'Need input template name')
+      return
+    }
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -399,7 +404,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ssh,
         ipython,
         tensorboard,
-        plugins
+        plugins,
+        gpuType,
+        preemptible
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);
@@ -414,6 +421,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false)
   const onDeleteTemplateClick = async () => {
+    if (!saveTemplateName) {
+      message('error', 'Need input template name')
+      return
+    }
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -481,6 +492,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         setSsh(false);
         setIpython(false);
         setTensorboard(false);
+        setGpuType(availbleGpu![0].type || '')
+        setPreemptible(false);
       } else {
         const {
           name,
@@ -499,7 +512,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           ssh,
           ipython,
           tensorboard,
-          plugins
+          plugins,
+          gpuType,
+          preemptible
         } = JSON.parse(event.target.value as string);
         if (name !== undefined) setName(name);
         if (type !== undefined) setType(type);
@@ -517,6 +532,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         if (ssh !== undefined) setSsh(ssh);
         if (ipython !== undefined) setIpython(ipython);
         if (tensorboard !== undefined) setTensorboard(tensorboard);
+        if (gpuType !== undefined) setGpuType(gpuType);
+        if (preemptible !== undefined) setPreemptible(preemptible);
+        console.log('preemptible', preemptible)
         if (plugins === undefined) {
           setAccountName("");
           setAccountKey("");
@@ -602,7 +620,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       userName: userName,
       userId: uid,
       jobType: 'training',
-      gpuType: gpuModel,
+      gpuType: gpuType,
       vcName: selectedTeam,
       containerUserId: 0,
       jobName: name,
@@ -691,8 +709,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const fetchGrafanaUrl = `/api/clusters`;
   const request = useFetch(fetchGrafanaUrl);
   const fetchGrafana = async () => {
-    const {grafana} = await request.get(`/${selectedCluster}`);
-    setGrafanaUrl(grafana);
+    const result = await request.get(`/${selectedCluster}`);
+    if (result) {
+      const { grafana } = result
+      setGrafanaUrl(grafana);
+    }
   }
   const handleCloseGPUGramentation = () => {
     setShowGPUFragmentation(false);
@@ -813,7 +834,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   data-test="cluster-item"
                   fullWidth
                   cluster={selectedCluster}
+                  gpuType={gpuType}
                   onClusterChange={saveSelectedCluster}
+                  onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
                 />
                 <Tooltip title="View Cluster GPU Status Per Node">
                   <IconButton color="secondary" size="small" onClick={handleClickOpen} aria-label="delete">
@@ -876,12 +899,29 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <MenuItem value="true">YES</MenuItem>
                 </TextField>
               </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Device Type"
+                  fullWidth
+                  variant="filled"
+                  value={String(gpuType)}
+                  onChange={onGpuTypeChange}
+                >
+                  {
+                    availbleGpu?.map(gpu => (
+                      <MenuItem value={gpu.type}>{gpu.type}</MenuItem>
+                    ))
+                  }
+                  
+                </TextField>
+              </Grid>
               { (type === 'RegularJob' ||  type === 'InferenceJob') && (
-                <Grid item xs={12}>
+                <Grid item xs={6}>
                   <TextField
                     type="number"
                     error={gpus > (type === 'InferenceJob' ? Number.MAX_VALUE : gpusPerNode)}
-                    label="Number of GPUs"
+                    label="Number of Device"
                     fullWidth
                     variant="filled"
                     value={gpus}
@@ -906,7 +946,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     disabled
                     type="number"
-                    label="Total Number of GPUs"
+                    label="Total Number of Device"
                     value = {workers * gpusPerNode}
                     fullWidth
                     variant="filled"

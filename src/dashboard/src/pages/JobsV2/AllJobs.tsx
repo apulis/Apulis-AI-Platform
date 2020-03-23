@@ -45,7 +45,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
       render: renderId, disableClick: true },
     { title: 'Name', type: 'string', field: 'jobName' },
     { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus },
-    { title: 'GPU', type: 'numeric',
+    { title: 'Number of Device', type: 'numeric',
       render: renderGPU, customSort: sortGPU },
     { title: 'User', type: 'string', render: renderUser},
     { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},

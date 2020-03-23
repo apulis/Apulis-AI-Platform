@@ -32,18 +32,18 @@ const EmptyTeam: React.FC<RouteComponentProps> = ({ history }) => {
     <Box display="flex">
       <Dialog open>
         <DialogTitle>
-          {"提示"}
+          {"Notice"}
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {"您当前没有使用权限，请联系系统管理员将您添加到小组中"}
+            {"You currently do not have permission to use it, please contact your system administrator to add you to the group"}
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
+        {/* <DialogActions>
           <Button onClick={onClick} color="primary">
             去发邮件
           </Button>
-        </DialogActions>
+        </DialogActions> */}
       </Dialog>
     </Box>
   )

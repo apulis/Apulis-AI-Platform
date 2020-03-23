@@ -19,7 +19,7 @@ import Context from './Context';
 
 const Brief: FunctionComponent = () => {
   const { cluster, job } = useContext(Context);
-
+  console.log('job', job)
   return (
     <List dense>
       <ListItem>
@@ -38,7 +38,12 @@ const Brief: FunctionComponent = () => {
         <ListItemText
           primary="Command"
           secondary={job['jobParams']['cmd']}
-          secondaryTypographyProps={{ component: 'pre' }}
+          secondaryTypographyProps={{ component: 'div' }}
+          style={{
+            wordWrap:'break-word',
+            wordBreak:'break-all',
+            overflow: 'hidden'
+          }}
         />
       </ListItem>
       <CopyableTextListItem
@@ -73,7 +78,7 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'PSDistJob' && (
           <ListItem>
             <ListItemText
-              primary="Total of GPUs"
+              primary="Total of Device"
               secondary={job['jobParams']['numpsworker'] * job['jobParams']['resourcegpu']}
             />
           </ListItem>
@@ -83,7 +88,17 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'RegularJob' && (
           <ListItem>
             <ListItemText
-              primary="Number of GPUS"
+              primary="Device Type"
+              secondary={job['jobParams']['gpuType']}
+            />
+          </ListItem>
+        )
+      }
+      {
+        job['jobParams']['jobtrainingtype'] === 'RegularJob' && (
+          <ListItem>
+            <ListItemText
+              primary="Number of Device"
               secondary={job['jobParams']['resourcegpu']}
             />
           </ListItem>

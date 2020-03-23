@@ -11,6 +11,9 @@ const router = require('./router')
 app.use(mount('/v2', require('./v2/router').routes()))
 app.use(mount('/v2', require('./v2/router').allowedMethods()))
 
+app.use(mount('/global-user-dashboard', require('./global-user-dashboard/router').routes()))
+app.use(mount('/global-user-dashboard', require('./global-user-dashboard/router').allowedMethods()))
+
 app.keys = ['some secret hurr...']
 app.use(Session(app))
 

@@ -18,8 +18,8 @@ const CopyableTextListItem: FunctionComponent<CopyableTextListItemProps> = ({ pr
   const { enqueueSnackbar } = useSnackbar();
   const onClick = useCallback(() => {
     copy(secondary).then(
-      () => enqueueSnackbar(`Copied to clipboard`, { variant: 'success' }),
-      () => enqueueSnackbar('Failed to copy text', { variant: 'error' })
+      () => enqueueSnackbar(`Copied to clipboard`, { variant: 'success', autoHideDuration: 3000 }),
+      () => enqueueSnackbar('Failed to copy text', { variant: 'error', autoHideDuration: 3000 })
     )
   }, [secondary, enqueueSnackbar]);
   return (

@@ -1072,22 +1072,38 @@ def deploy_masters_by_kubeadm(force = False):
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     #temporary hard-coding, will be fixed after refactoring of config/render logic
     config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
+    
     if verbose:
         print( "Restapi information == %s " % config["restapi"])
+    else:
+        pass
+
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     render_service_templates()
     utils.exec_cmd_local("./scripts/install_kubeadm.sh")
+
     for i,kubernetes_master in enumerate(kubernetes_masters):
-        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s
-            """ % kubernetes_master0
+
+        # please note:
+        # control-plain-endpoint can only be used for kubeadm version >= v1.16
+        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s""" % kubernetes_master0
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
+        
         if i==0:
             utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
+        else:
+            pass
+
     if not os.path.exists("./deploy/bin/kubectl") and os.path.exists("/usr/bin/kubectl"):
         utils.exec_cmd_local("mkdir -p  ./deploy/bin; ln -s /usr/bin/kubectl ./deploy/bin/kubectl" )
+    else:
+        pass
+
     kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
     run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
+    return
+
 
 def clean_etcd():
     etcd_servers = config["etcd_node"]
@@ -1464,6 +1480,7 @@ def update_worker_nodes_by_kubeadm( nargs ):
     workerNodes = get_worker_nodes(config["clusterId"], False)
     workerNodes = limit_nodes(workerNodes)
     worker_ssh_user = config["admin_username"]
+    k8sAPIport = config["k8sAPIport"]
 
     tokencmd = "sudo kubeadm token create"
     tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
@@ -1473,11 +1490,19 @@ def update_worker_nodes_by_kubeadm( nargs ):
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
+
         if in_list(node, nargs):
-            workercmd = "sudo kubeadm join --token %s %s:6443 --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, hash)
+            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
             if verbose:
                 print(workercmd)
+            else:
+                pass
+            
             utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
+        else:
+            pass
+
+    return
 
 def reset_worker_nodes_by_kubeadm( nargs ):
     write_nodelist_yaml()
@@ -2837,6 +2862,8 @@ def exec_on_rand_master(args, supressWarning = False):
 
 # run a shell script on one remote node
 def run_script(node, args, sudo = False, supressWarning = False):
+
+
     if ".py" in args[0]:
         if sudo:
             fullcmd = "sudo /opt/bin/python"
@@ -2847,6 +2874,7 @@ def run_script(node, args, sudo = False, supressWarning = False):
             fullcmd = "sudo bash"
         else:
             fullcmd = "bash"
+
     nargs = len(args)
     for i in range(nargs):
         if i==0:
@@ -3126,45 +3154,70 @@ def get_service_yaml( use_service ):
     return fname
 
 def kubernetes_label_node(cmdoptions, nodename, label):
+    
+    #pdb.set_trace()
+    print(nodename, label)
     run_kubectl(["label nodes %s %s %s" % (cmdoptions, nodename, label)])
+    return
 
 # Get the list of nodes for a particular service
 #
 def get_node_lists_for_service(service):
         if "etcd_node" not in config or "worker_node" not in config:
             check_master_ETCD_status()
+        else:
+            pass
+
         labels = fetch_config(config, ["kubelabels"])
         nodetype = labels[service] if service in labels else labels["default"]
+         
         if nodetype == "worker_node":
             nodes = config["worker_node"]
+        
         elif nodetype == "mysqlserver_node":
             nodes = config["mysqlserver_node"]
+        
         elif nodetype == "nfs_node":
             nodes = config["nfs_node"]
+        
         elif nodetype == "etcd_node":
             nodes = config["etcd_node"]
+        
         elif nodetype.find( "etcd_node_" )>=0:
+            
             nodenumber = int(nodetype[nodetype.find( "etcd_node_" )+len("etcd_node_"):])
+            
             if len(config["etcd_node"])>=nodenumber:
                 nodes = [ config["etcd_node"][nodenumber-1] ]
             else:
                 nodes = []
+        
         elif nodetype == "all":
             nodes = config["worker_node"] + config["etcd_node"]
+        
         elif nodetype.startswith("node:"):
             nodename = nodetype[5:]
             return [nodename]
+        
         else:
             machines = fetch_config(config, ["machines"])
             if machines is None:
                 print "Service %s has a nodes type %s, but there is no machine configuration to identify node" % (service, nodetype)
                 exit(-1)
+            else:
+                pass
+
             allnodes = config["worker_node"] + config["etcd_node"]
             nodes = []
+
             for node in allnodes:
                 nodename = kubernetes_get_node_name(node)
+                
                 if nodename in machines and nodetype in machines[nodename]:
                     nodes.append(node)
+                else:
+                    pass
+
         return nodes
 
 # Label kubernete nodes according to a service.
@@ -3177,12 +3230,16 @@ def get_node_lists_for_service(service):
 
 def kubernetes_label_nodes( verb, servicelists, force ):
     servicedic = get_all_services()
+
     if verbose: 
         print ( "servicedic == %s" % servicedic )
+        
     get_nodes(config["clusterId"])
     labels = fetch_config(config, ["kubelabels"])
+    
     if verbose: 
         print ( "labels == %s " % labels )
+        
     for service, serviceinfo in servicedic.iteritems():
         if verbose:
             print("Examine service %s" % service)
@@ -3196,31 +3253,35 @@ def kubernetes_label_nodes( verb, servicelists, force ):
         for service in servicelists:
             if (not service in labels) and "default" in labels:
                 labels[service] = labels["default"]
+
     print servicelists
+
     for label in servicelists:
         nodes = get_node_lists_for_service(label)
+        
         if verbose:
             print "kubernetes: apply action %s to label %s to nodes: %s" %(verb, label, nodes)
+        else:
+            pass
+        
         if force:
             cmdoptions = "--overwrite"
         else:
             cmdoptions = ""
+
         for node in nodes:
             nodename = kubernetes_get_node_name(node)
+            
             if verb == "active":
                 kubernetes_label_node(cmdoptions, nodename, label+"=active")
             elif verb == "inactive":
                 kubernetes_label_node(cmdoptions, nodename, label+"=inactive")
             elif verb == "remove":
                 kubernetes_label_node(cmdoptions, nodename, label+"-")
+            else:
+                pass
 
-
-# Label kubernete nodes with gpu types.skip for CPU workers
-def kubernetes_label_GpuTypes():
-    for nodename,nodeInfo in config["machines"].items():
-        if nodeInfo["role"] == "worker":
-            kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
-
+    return
 
 def populate_machine_sku(machine_info):
     """Potentially adds sku for and returns the modified machine_info.
@@ -3274,6 +3335,50 @@ def get_sku_meta(cnf):
     """
     return cnf.get("sku_meta", {})
 
+
+# Label kubernete nodes with gpu types.skip for CPU workers
+def kubernetes_label_GpuTypes():
+    for nodename,nodeInfo in config["machines"].items():
+        if nodeInfo["role"] == "worker":
+            kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
+
+# Label kubernetes worker nodes
+def kubernetes_label_worker():
+
+    node_type = ["cpu", "npu", "gpu", "storage"]
+    specific_processor_type = ["npu", "gpu"]
+    set_active = "=active"
+
+    for nodename,nodeInfo in config["machines"].items():
+        if nodeInfo["role"] == "worker":
+
+            # node type: cpu\gpu\npu\storage
+            if nodeInfo["type"] in node_type:
+                kubernetes_label_node("--overwrite", nodename, nodeInfo["type"] + "=active")
+            else:
+                pass
+
+            if nodeInfo["type"] in specific_processor_type:
+                kubernetes_label_node("--overwrite", nodename, nodeInfo["vendor"] + "=active")
+
+                if "series" in nodeInfo:
+                    kubernetes_label_node("--overwrite", nodename, nodeInfo["series"] + "=active")
+                else:
+                    pass
+                
+            else:
+                pass
+
+            # gpuType=nvidia/huawei for compatibility
+            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo and "series" in nodeInfo:
+                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"])
+            else:
+                pass
+
+        else:
+            pass
+
+    return
 
 def kubernetes_label_cpuworker():
     """Label kubernetes nodes with cpuworker=active."""
@@ -4211,7 +4316,7 @@ def run_command( args, command, nargs, parser ):
                 for servicename in servicenames:
                     replace_kube_service(servicename)
 
-            elif nargs[0] == "labels":
+            elif nargs[0] == "labelservice":
                 if len(nargs)>=2 and ( nargs[1] == "active" or nargs[1] == "inactive" or nargs[1] == "remove" ):
                     kubernetes_label_nodes(nargs[1], nargs[2:], args.yes)
                 elif len(nargs)==1:
@@ -4248,6 +4353,9 @@ def run_command( args, command, nargs, parser ):
             parser.print_help()
             print "Error: kubernetes need a subcommand."
             exit()
+
+    elif command == "labelworker":
+        kubernetes_label_worker()
 
     elif command == "gpulabel":
         kubernetes_label_GpuTypes()

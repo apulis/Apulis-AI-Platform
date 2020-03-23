@@ -32,6 +32,8 @@ import re
 import collections
 import datetime
 import math
+import json
+import subprocess
 
 import yaml
 import prometheus_client
@@ -87,6 +89,10 @@ def gen_k8s_node_gpu_total():
     return GaugeMetricFamily("k8s_node_gpu_total", "gpu capacity on k8s node",
             labels=["host_ip"])
 
+def gen_gauge_node_gpu_used():
+    return GaugeMetricFamily("k8s_node_gpu_used", "npu used on k8s node",
+            labels=["host_ip"])
+
 def gen_k8s_node_gpu_allocatable():
     return GaugeMetricFamily("k8s_node_gpu_allocatable",
             "gpu allocatable on k8s node, this include used allocatable",
@@ -99,6 +105,33 @@ def gen_k8s_node_gpu_available():
 def gen_k8s_node_preemptable_gpu_available():
     return GaugeMetricFamily("k8s_node_preemptable_gpu_available",
             "gpu available on k8s node for preemptable job",
+            labels=["host_ip"])
+
+def gen_gauge_node_gpu_reserved():
+    return GaugeMetricFamily("k8s_node_gpu_reserved",
+            "npu reserved on k8s node",
+            labels=["host_ip"])
+
+def gen_gauge_node_npu_total():
+    return GaugeMetricFamily("k8s_node_npu_total", "npu capacity on k8s node",
+            labels=["host_ip"])
+
+def gen_gauge_node_npu_available():
+    return GaugeMetricFamily("k8s_node_npu_available", "npu available on k8s node",
+            labels=["host_ip"])
+
+def gen_gauge_node_npu_used():
+    return GaugeMetricFamily("k8s_node_npu_used", "npu used on k8s node",
+            labels=["host_ip"])
+
+def gen_gauge_node_preemptable_npu_available():
+    return GaugeMetricFamily("k8s_node_preemptable_npu_available",
+            "npu available on k8s node for preemptable job",
+            labels=["host_ip"])
+
+def gen_gauge_node_npu_reserved():
+    return GaugeMetricFamily("k8s_node_npu_reserved",
+            "npu reserved on k8s node",
             labels=["host_ip"])
 
 service_response_histogram = Histogram("service_response_latency_seconds",
@@ -163,6 +196,19 @@ def convert_to_byte(data):
     else:
         return number
 
+class ResourceMark(object):
+
+    label_huawei_npu = "npu.huawei.com/NPU"
+    label_nvidia_gpu = "nvidia.com/gpu"
+    resource_mark_list = [label_huawei_npu, label_nvidia_gpu]
+
+    @staticmethod
+    def is_npu_resource(mark):
+        return mark.strip().lower() == ResourceMark.label_huawei_npu.strip().lower()
+
+    @staticmethod
+    def is_gpu_resource(mark):
+        return mark.strip().lower() == ResourceMark.label_nvidia_gpu.strip().lower()
 
 class AtomicRef(object):
     """ a thread safe way to store and get object,
@@ -221,13 +267,15 @@ def catch_exception(fn, msg, default, *args, **kwargs):
         return default
 
 class PodInfo(object):
-    def __init__(self, name, preemptable, gpu):
+    def __init__(self, name, preemptable, used_processor, resource_mark):
+
         self.name = name
         self.preemptable = preemptable
-        self.gpu = gpu
+        self.used_processor = used_processor
+        self.resource_mark = resource_mark
 
     def __repr__(self):
-        return "%s, %s: %s" % (self.name, self.preemptable, self.gpu)
+        return "%s, %s, %s, %s" % (self.name, self.preemptable, self.used_processor, self.resource_mark)
 
 def process_service_endpoints(service_name, host_ip, annotations, service_endpoints):
     annotation_ns = "monitor.watchdog"
@@ -262,47 +310,90 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
     Because we are parsing json outputed by k8s, its format is subjected to change,
     we should test if field exists before accessing it to avoid KeyError """
 
+    logger.debug("calling parse_pod_item")
+
     pod_name = pod["metadata"]["name"]
     namespace = walk_json_field_safe(pod, "metadata", "namespace") or "default"
     host_ip = walk_json_field_safe(pod, "status", "hostIP") or "unscheduled"
+
     preemptable_str = walk_json_field_safe(pod, "metadata", "labels", "preemptionAllowed") or False
     preemptable = preemptable_str == "True" or preemptable_str == "true"
-    using_gpu = True
 
-    used_gpu = 0
+    using_gpu = True
+    using_npu = True
+    using_processor = True
+
+    # one precondition here: 
+    # for one server, there sould be only one type of processor
+    used_processor = 0  
+    resource_mark = ResourceMark.label_nvidia_gpu
+
     containers = walk_json_field_safe(pod, "spec", "containers")
     if containers is not None:
-        for container in containers:
-            req_gpu = int(walk_json_field_safe(container, "resources", "requests",
-                    "nvidia.com/gpu") or 0)
-            limit_gpu = int(walk_json_field_safe(container, "resources", "limits",
-                    "nvidia.com/gpu") or 0)
-            used_gpu += max(req_gpu, limit_gpu)
-            phase = walk_json_field_safe(pod, "status", "phase")
-            if phase == "Succeeded" or phase == "Failed":
-                using_gpu = False
+        for container in containers:    
 
+            ## loop through resource mark list 
+            for mark in ResourceMark.resource_mark_list:
+
+                ## process gpu info
+                req_processor = int(walk_json_field_safe(container, "resources", "requests", mark) or 0)
+                limit_processor = int(walk_json_field_safe(container, "resources", "limits", mark) or 0)
+                used_processor += max(req_processor, limit_processor)
+
+                phase = walk_json_field_safe(pod, "status", "phase")
+                if phase == "Succeeded" or phase == "Failed":
+                    using_processor = False
+                else:
+                    pass
+
+                if req_processor > 0:
+                    ## matched
+                    ## set resource type
+                    resource_mark = mark
+                    logger.debug("found resource: %s" % mark)
+                    break
+                else:
+                    ## mark doesn't match the label info from container
+                    continue
+    else:
+        pass
+
+    # save used_gpus to pod_info which will be used later
+    # in parse_node_status for computing gpus/npus
     vc = walk_json_field_safe(pod, "metadata", "labels", "vcName")
+    if vc is not None and preemptable is not None and using_processor:
 
-    if vc is not None and preemptable is not None and using_gpu:
-        pods_info[host_ip].append(PodInfo(pod_name, preemptable, used_gpu))
+        pods_info[host_ip].append(PodInfo(pod_name, preemptable, used_processor, resource_mark))
         gpu_type = walk_json_field_safe(pod, "metadata", "labels", "gpuType")
+
+        logger.debug("append pod resource. pod name[%s], preemptable[%d], used_processor[%d], resource_mark[%s]" % 
+                    (pod_name, preemptable, used_processor, resource_mark))
+
+        # for huawei, gpu_type=Huawei_A910
+        # for nvidia, gpu_type=nvidia
         if gpu_type is None:
             gpu_type = ""
-
-        if preemptable:
-            vc_usage.add_preemptable_used(vc, gpu_type, used_gpu)
         else:
-            vc_usage.add_used(vc, gpu_type, used_gpu)
+            pass
+
+        logger.debug("append pod resource. pod name[%s], gpu_type[%s], used_processor[%d]" % (pod_name, gpu_type, used_processor))
+        if preemptable:
+            vc_usage.add_preemptable_used(vc, gpu_type, used_processor)
+        else:
+            vc_usage.add_used(vc, gpu_type, used_processor)
+    else:
+        pass
 
     labels = pod["metadata"].get("labels")
     if labels is None or "app" not in labels :
         logger.info("unknown pod %s", pod["metadata"]["name"])
         return None
+    else:
+        pass
 
     service_name = labels["app"] # get pai service name from label
-
     annotations = walk_json_field_safe(pod, "metadata", "annotations") or {}
+
     if host_ip != "unscheduled":
         process_service_endpoints(service_name, host_ip, annotations, service_endpoints)
 
@@ -379,7 +470,8 @@ def collect_healthz(gauge, histogram, scheme, address, port, url, ca_path, heade
     with histogram.time():
         error = "ok"
         try:
-            error = requests.get("{}://{}:{}{}".format(scheme, address, port, url), headers = headers, verify = ca_path).text
+            error = "heathy"
+            #error = requests.get("{}://{}:{}{}".format(scheme, address, port, url), headers = headers, verify = ca_path).text
         except Exception as e:
             error_counter.labels(type="healthz").inc()
             error = str(e)
@@ -397,13 +489,30 @@ def collect_k8s_component(api_server_scheme, api_server_ip, api_server_port, ca_
     return [k8s_gauge]
 
 
-def parse_node_item(node, pai_node_gauge,
-        node_gpu_avail, node_gpu_preemptable_avail, node_gpu_total,
-        node_gpu_allocatable, pods_info, cluster_gpu_info):
+## we separate gpu and npu into different instances
+## coz the cluster is heterogeneous, there are npus and gpus there
+## and we need to monitor them respectively
+def parse_node_item(node, 
+        pai_node_gauge,
+        gauge_node_gpu_avail, 
+        gauge_node_gpu_used,
+        gauge_node_gpu_reserved,
+        gauge_node_gpu_total,
+
+        gauge_node_npu_avail,
+        gauge_node_npu_used,
+        gauge_node_npu_reserved,
+        gauge_node_npu_total,
+
+        pods_info, 
+        cluster_gpu_info,
+        cluster_npu_info
+        ):
 
     ip = None
-
     addresses = walk_json_field_safe(node, "status", "addresses")
+    logger.debug("calling parse_node_item")
+
     if addresses is not None:
         for addr in addresses:
             if addr.get("type") == "InternalIP":
@@ -412,6 +521,9 @@ def parse_node_item(node, pai_node_gauge,
     if ip is None:
         ip = node["metadata"]["name"]
 
+    processor_resource_mark = ""
+    device_capacity = 0
+    device_allocatable = 0
     disk_pressure = memory_pressure = out_of_disk = ready = unschedulable = "unknown"
 
     if node.get("status") is not None:
@@ -434,40 +546,144 @@ def parse_node_item(node, pai_node_gauge,
                 else:
                     error_counter.labels(type="unknown_node_cond").inc()
                     logger.error("unexpected condition %s in node %s", cond_t, ip)
+        else:
+            pass
 
-        # https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/node-allocatable.md
-        # [Allocatable] = [Node Capacity] - [Kube-Reserved] - [System-Reserved] - [Hard-Eviction-Threshold]
-        gpu_capacity = int(walk_json_field_safe(status, "capacity", "nvidia.com/gpu") or 0)
-        gpu_allocatable = int(walk_json_field_safe(status, "allocatable", "nvidia.com/gpu") or 0)
-        node_gpu_total.add_metric([ip], gpu_capacity)
-        cluster_gpu_info.capacity += gpu_capacity
 
+        # loop through mark list to find out what type the processor is
+        for resource_mark in ResourceMark.resource_mark_list:
+
+            # https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/node-allocatable.md
+            # [Allocatable] = [Node Capacity] - [Kube-Reserved] - [System-Reserved] - [Hard-Eviction-Threshold]
+            device_capacity = int(walk_json_field_safe(status, "capacity", resource_mark) or 0)
+            device_allocatable = int(walk_json_field_safe(status, "allocatable", resource_mark) or 0)
+            
+            if device_capacity > 0: 
+
+                if ResourceMark.is_gpu_resource(resource_mark):
+
+                    #gauge_node_gpu_avail.add_metric([ip], device_capacity)
+                    cluster_gpu_info.capacity += device_capacity
+
+                    processor_resource_mark = resource_mark
+                    logger.debug("gpu data. ip[%s], total capacity found[%d], new capacity to add[%d], mark[%s]" % 
+                                    ([ip], cluster_gpu_info.capacity, device_capacity, resource_mark))
+                    break
+                
+                elif ResourceMark.is_npu_resource(resource_mark):
+                                        
+                    #gauge_node_npu_avail.add_metric([ip], device_capacity)
+                    cluster_npu_info.capacity += device_capacity
+
+                    processor_resource_mark = resource_mark
+                    logger.debug("npu data. ip[%s], total capacity found[%d], new capacity to add[%d], mark[%s]" % 
+                                    ([ip], cluster_npu_info.capacity, device_capacity, resource_mark))
+                    break
+
+                else:
+                    pass
+            else:
+                ## node doesn't have any npu/gpu/tpu 
+                continue
+            
         # Because k8s api's node api do not record how much resource left for
         # allocation, so we have to compute it ourselves.
-        used_gpu = 0
-        preemptable_used_gpu = 0
+        # there must be only one type of processor within the node
+        used_processor = 0         ## processors exclude preemptable ones
+        total_used_processor = 0   ## processors include preemptable ones
+        preemptable_processor = 0
 
+        # compute npu/gpu resouces used by all pods
+        # used_processor = sum(pod_info.used_processor)
+        # available = total - used_processor
         if pods_info.get(ip) is not None:
             for pod in pods_info[ip]:
-                if pod.preemptable:
-                    preemptable_used_gpu += pod.gpu
+
+                if pod.resource_mark != processor_resource_mark:
+                    continue
                 else:
-                    used_gpu += pod.gpu
+                    pass
 
-        if walk_json_field_safe(node, "spec", "unschedulable") != True and ready == "true":
-            available = max(0, gpu_allocatable - used_gpu)
-            preemptable_available = max(0, gpu_allocatable - used_gpu - preemptable_used_gpu)
-            node_gpu_avail.add_metric([ip], available)
-            node_gpu_preemptable_avail.add_metric([ip], preemptable_available)
-            node_gpu_allocatable.add_metric([ip], gpu_allocatable)
+                ## preemptable processor is considered as allocable resource?
+                ## so it doesn't be part of used processors?
+                if pod.preemptable:
+                    preemptable_processor += pod.preemptable
+                else:
+                    used_processor += pod.used_processor
 
-            cluster_gpu_info.available += available
-            cluster_gpu_info.preemptable_available += preemptable_available
-            cluster_gpu_info.allocatable += gpu_allocatable
+                total_used_processor += used_processor
         else:
-            node_gpu_avail.add_metric([ip], 0)
-            node_gpu_preemptable_avail.add_metric([ip], 0)
-            node_gpu_allocatable.add_metric([ip], 0)
+            pass
+
+        logger.debug("used_processor[%d], preemptable_processor[%d]" % (used_processor, preemptable_processor))
+        if walk_json_field_safe(node, "spec", "unschedulable") != True and ready == "true":
+
+            available = max(0, device_capacity - total_used_processor)
+            preemptable_available = max(0, device_allocatable - used_processor - preemptable_processor)
+
+            # dispatch gpu/npu info to prometheus by node ip
+            if ResourceMark.is_gpu_resource(processor_resource_mark):
+
+                gauge_node_gpu_total.add_metric([ip], device_capacity)
+                gauge_node_gpu_avail.add_metric([ip], available)
+                gauge_node_gpu_used.add_metric([ip], total_used_processor)
+                gauge_node_gpu_reserved.add_metric([ip], 0)
+
+                gauge_node_npu_total.add_metric([ip], 0)
+                gauge_node_npu_avail.add_metric([ip], 0)
+                gauge_node_npu_used.add_metric([ip], 0)
+                gauge_node_npu_reserved.add_metric([ip], 0)
+
+                cluster_gpu_info.available += available
+                cluster_gpu_info.preemptable_available += preemptable_available
+                cluster_gpu_info.allocatable += device_allocatable
+            
+                logger.debug("dispatch gauge info. found gpu: ip[%s], device_capacity[%d], preemptable_available[%d], device_allocatable[%d]" % 
+                               (ip, device_capacity, preemptable_available, device_allocatable))
+
+            elif ResourceMark.is_npu_resource(processor_resource_mark):
+                
+                gauge_node_npu_total.add_metric([ip], device_capacity)
+                gauge_node_npu_avail.add_metric([ip], available)
+                gauge_node_npu_used.add_metric([ip], total_used_processor)
+                gauge_node_npu_reserved.add_metric([ip], 0)
+
+                gauge_node_gpu_total.add_metric([ip], 0)
+                gauge_node_gpu_avail.add_metric([ip], 0)
+                gauge_node_gpu_used.add_metric([ip], 0)
+                gauge_node_gpu_reserved.add_metric([ip], 0)
+
+                cluster_npu_info.available += available
+                cluster_npu_info.preemptable_available += preemptable_available
+                cluster_npu_info.allocatable += device_allocatable
+
+                logger.debug("dispatch gauge info. found npu: ip[%s], device_capacity[%d], available[%d], total_used_processor[%d]" % 
+                                (ip, device_capacity, available, total_used_processor))
+            else:
+                gauge_node_npu_total.add_metric([ip], 0)
+                gauge_node_npu_avail.add_metric([ip], 0)
+                gauge_node_npu_used.add_metric([ip], 0)
+                gauge_node_npu_reserved.add_metric([ip], 0)
+
+                gauge_node_gpu_total.add_metric([ip], 0)
+                gauge_node_gpu_avail.add_metric([ip], 0)
+                gauge_node_gpu_used.add_metric([ip], 0)
+                gauge_node_gpu_reserved.add_metric([ip], 0)
+
+        else:
+            ## this node is unschedulable
+            gauge_node_gpu_total.add_metric([ip], 0)
+            gauge_node_gpu_avail.add_metric([ip], 0)
+            gauge_node_gpu_used.add_metric([ip], 0)
+            gauge_node_gpu_reserved.add_metric([ip], 0)
+
+            gauge_node_npu_total.add_metric([ip], 0)
+            gauge_node_npu_avail.add_metric([ip], 0)
+            gauge_node_npu_reserved.add_metric([ip], 0)
+            gauge_node_npu_used.add_metric([ip], 0)
+
+            logger.debug("node is unschedulable. ip[%s]" % (ip))
+
     else:
         logger.warning("unexpected structure of node %s: %s", ip, json.dumps(node))
 
@@ -478,14 +694,29 @@ def parse_node_item(node, pai_node_gauge,
         unschedulable = "false"
 
     pai_node_gauge.add_metric([ip, disk_pressure, memory_pressure, out_of_disk, ready, unschedulable], 1)
+    return
 
-
-def process_nodes_status(nodes_object, pods_info, cluster_gpu_info):
+## pods_info
+## dict{}
+## key:   string, pod_ip
+## value: list,   PodInfo
+def process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_info):
+    
+    logger.debug("calling process_nodes_status")
     pai_node_gauge = gen_pai_node_gauge()
-    node_gpu_avail = gen_k8s_node_gpu_available()
-    node_gpu_preemptable_avail = gen_k8s_node_preemptable_gpu_available()
-    node_gpu_allocatable = gen_k8s_node_gpu_allocatable()
-    node_gpu_total = gen_k8s_node_gpu_total()
+
+    # gpu statistics
+    gauge_node_gpu_avail = gen_k8s_node_gpu_available()
+    gauge_node_gpu_used = gen_gauge_node_gpu_used()
+    gauge_node_gpu_reserved = gen_gauge_node_gpu_reserved()
+    gauge_node_gpu_total = gen_k8s_node_gpu_total()
+
+    # npu statistics
+    # number of npu used is calculated by belowing three items
+    gauge_node_npu_avail = gen_gauge_node_npu_available()
+    gauge_node_npu_used = gen_gauge_node_npu_used()
+    gauge_node_npu_reserved = gen_gauge_node_npu_reserved()
+    gauge_node_npu_total = gen_gauge_node_npu_total()
 
     def _map_fn(item):
         return catch_exception(parse_node_item,
@@ -493,18 +724,28 @@ def process_nodes_status(nodes_object, pods_info, cluster_gpu_info):
                 None,
                 item,
                 pai_node_gauge,
-                node_gpu_avail,
-                node_gpu_preemptable_avail,
-                node_gpu_total,
-                node_gpu_allocatable,
+
+                gauge_node_gpu_avail,
+                gauge_node_gpu_used,
+                gauge_node_gpu_reserved,
+                gauge_node_gpu_total,
+
+                gauge_node_npu_avail,
+                gauge_node_npu_used,
+                gauge_node_npu_reserved,
+                gauge_node_npu_total,
+
                 pods_info,
-                cluster_gpu_info)
+                cluster_gpu_info,
+                cluster_npu_info)
 
     list(map(_map_fn, nodes_object["items"]))
 
     return [pai_node_gauge,
-            node_gpu_avail, node_gpu_preemptable_avail,
-            node_gpu_total, node_gpu_allocatable]
+            gauge_node_gpu_avail, gauge_node_gpu_used,
+            gauge_node_gpu_reserved, gauge_node_gpu_total,
+            gauge_node_npu_avail, gauge_node_npu_used, 
+            gauge_node_npu_reserved, gauge_node_npu_total]
 
 
 def process_vc_quota(vc_object):
@@ -519,11 +760,13 @@ def process_vc_quota(vc_object):
 
 
 def query_vc_quota_info(vc_quota_url):
+
     if vc_quota_url is None:
         return {}
+    else:
+        pass
 
-    vc_object = request_with_histogram(vc_quota_url, list_vc_quota_histogram,
-            None, None)
+    vc_object = get_vc_quota_info(vc_quota_url, list_vc_quota_histogram)
     return process_vc_quota(vc_object)
 
 
@@ -655,10 +898,9 @@ def process_pods(k8s_api_addr, ca_path, headers, pods_info, service_endpoints, v
     pai_container_gauge = gen_pai_container_gauge()
 
     try:
-        pods_object = request_with_histogram(list_pods_url, list_pods_histogram,
-                ca_path, headers)
-        process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge,
-                pods_info, service_endpoints, vc_usage)
+        pods_object = get_pods_info(list_pods_histogram)
+        process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage)
+    
     except Exception as e:
         error_counter.labels(type="parse").inc()
         logger.exception("failed to process pods")
@@ -666,24 +908,68 @@ def process_pods(k8s_api_addr, ca_path, headers, pods_info, service_endpoints, v
     return [pai_pod_gauge, pai_container_gauge]
 
 
-def process_nodes(k8s_api_addr, ca_path, headers, pods_info, cluster_gpu_info):
+def process_nodes(k8s_api_addr, ca_path, headers, pods_info, 
+    cluster_gpu_info, cluster_npu_info):
+
+    logger.debug("calling process_nodes")
+
     list_nodes_url = "{}/api/v1/nodes/".format(k8s_api_addr)
+    nodes_object = get_nodes_info(list_nodes_histogram)
 
-    nodes_object = request_with_histogram(list_nodes_url, list_nodes_histogram,
-            ca_path, headers)
-
-    return process_nodes_status(nodes_object, pods_info, cluster_gpu_info)
+    return process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_info)
 
 
 def load_machine_list(configFilePath):
     with open(configFilePath, "r") as f:
         return yaml.load(f)["hosts"]
 
+# Execute a ssh cmd 
+# Return the output of the remote command to local
+def local_ssh_exec_cmd_with_output(cmd, supressWarning = False):
+
+    if len(cmd)==0:
+        return "";
+
+    if supressWarning:
+        cmd += " 2>/dev/null"
+
+    execmd = cmd
+    print(execmd)
+
+    try:
+        output = subprocess.check_output( execmd, shell=True).decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        output = "Return code: " + str(e.returncode) + ", output: " + e.output.strip()
+        
+    #print output
+    return output
+
+def get_pods_info(histogram):
+
+    pods = json.loads(local_ssh_exec_cmd_with_output("kubectl get pods --all-namespaces -o json"))
+
+    if "apiVersion" in pods:
+        logger.debug("get_pods_info succ. apiVersion: %s" % pods["apiVersion"])
+    else:
+        logger.error("get_pods_info fail. apiVersion not found. pods[%s]" % pods)
+
+    return pods
+
+def get_nodes_info(histogram):
+
+    pods = json.loads(local_ssh_exec_cmd_with_output("kubectl get nodes -o json"))
+    return pods
+
+def get_vc_quota_info(vc_url, histogram):
+
+    logger.debug("get_vc_quota_info vc_url[%s]" % vc_url)
+    #pods = json.loads(local_ssh_exec_cmd_with_output("kubectl get pods --all-namespaces -o json"))
+    
+    return pods
 
 def request_with_histogram(url, histogram, ca_path, headers):
     with histogram.time():
         return requests.get(url, headers = headers, verify = ca_path).json()
-
 
 def try_remove_old_prom_file(path):
     """ try to remove old prom file, since old prom file are exposed by node-exporter,
@@ -719,10 +1005,9 @@ class HealthResource(Resource):
 def main(args):
     register_stack_trace_dump()
     burninate_gc_collector()
+
     log_dir = args.log
-
     try_remove_old_prom_file(log_dir + "/watchdog.prom")
-
     decay_time = datetime.timedelta(seconds=float(args.interval) * 2)
 
     services_ref = AtomicRef(decay_time)
@@ -801,8 +1086,26 @@ class ClusterGPUInfo(object):
                 self.allocatable,
                 )
 
+class ClusterNPUInfo(object):
+    def __init__(self):
+        self.capacity = 0
+        self.available = 0
+        self.preemptable_available = 0 # npu available for preemptable job
+        self.allocatable = 0
+
+    def __repr__(self):
+        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d" % (
+                self.capacity,
+                self.available,
+                self.preemptable_available,
+                self.allocatable,
+                )
+
 
 def loop(args, services_ref, result_ref):
+   
+    logger.debug("calling loop")
+
     address = args.k8s_api
     parse_result = urllib.parse.urlparse(address)
     api_server_scheme = parse_result.scheme
@@ -810,17 +1113,23 @@ def loop(args, services_ref, result_ref):
     api_server_port = parse_result.port or 80
 
     vc_quota_url = args.vc_url
-
     ca_path = args.ca
     bearer_path = args.bearer
+
     if (ca_path is None and bearer_path is not None) or (ca_path is not None and bearer_path is None):
         logger.warning("please provide bearer_path and ca_path at the same time or not")
+    else:
+        pass
 
     headers = None
     if not os.path.isfile(ca_path):
         ca_path = None
+    else:
+        pass
+
     if not os.path.isfile(bearer_path):
         bearer_path = None
+
     if bearer_path is not None:
         with open(bearer_path, 'r') as bearer_file:
            bearer = bearer_file.read()
@@ -828,11 +1137,12 @@ def loop(args, services_ref, result_ref):
 
     while True:
         result = []
+
         try:
+            logger.debug("going to update node status")
             pods_info = collections.defaultdict(lambda : [])
 
             service_endpoints = []
-
             vc_usage = VcUsage()
 
             result.extend(process_pods(address, ca_path, headers, pods_info,
@@ -841,22 +1151,22 @@ def loop(args, services_ref, result_ref):
             services_ref.set(service_endpoints, datetime.datetime.now())
 
             cluster_gpu_info = ClusterGPUInfo()
+            cluster_npu_info = ClusterNPUInfo()
 
-            result.extend(process_nodes(address, ca_path, headers, pods_info, cluster_gpu_info))
-
+            result.extend(process_nodes(address, ca_path, headers, pods_info, cluster_gpu_info, cluster_npu_info))
             result.extend(process_vc_info(vc_quota_url, vc_usage, cluster_gpu_info))
-
             result.extend(collect_k8s_component(api_server_scheme, api_server_ip, api_server_port, ca_path, headers))
+        
         except Exception as e:
             error_counter.labels(type="unknown").inc()
             logger.exception("watchdog failed in one iteration")
 
         result_ref.set(result, datetime.datetime.now())
-
         time.sleep(float(args.interval))
 
 
 def get_logging_level():
+
     mapping = {
             "DEBUG": logging.DEBUG,
             "INFO": logging.INFO,
@@ -868,6 +1178,7 @@ def get_logging_level():
     if os.environ.get("LOGGING_LEVEL") is not None:
         level = os.environ["LOGGING_LEVEL"]
         result = mapping.get(level.upper())
+
         if result is None:
             sys.stderr.write("unknown logging level " + level + ", default to INFO\n")
             result = logging.INFO

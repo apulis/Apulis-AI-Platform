@@ -12,6 +12,8 @@ import {sumValues} from "../../../utlities/ObjUtlities";
 interface ClusterSelectFieldProps {
   cluster: string | undefined;
   onClusterChange(value: string): void;
+  gpuType?: string;
+  onAvailbleGpuNumChange?(value: number): void;
 }
 
 const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps> = (
@@ -43,18 +45,21 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
   }
   React.useEffect(() => {
     fetchVC().then((res)=>{
-      let clusterName = '';
+      let clusterName = props.gpuType || '';
       if (!isEmpty(res)) {
-        clusterName = (String)(Object.keys(res['gpu_capacity'])[0])
+        if (!clusterName) {
+          clusterName = (String)(Object.keys(res['gpu_capacity'])[0]);
+        }
       }
-      const gpuCapacity =  isEmpty(res) ? 0 : (String)(sumValues(res['gpu_capacity']));
-      const gpuAvailable =  isEmpty(res) ? 0 : (String)(sumValues(res['gpu_avaliable']));
+      const gpuCapacity =  isEmpty(res) ? 0 : res['gpu_capacity'][clusterName];
+      const gpuAvailable =  isEmpty(res) ? 0 : res['gpu_avaliable'][clusterName];
+      props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity);
       setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} to use)`);
     })
     if (selectedCluster) {
       onClusterChange(selectedCluster);
     }
-  }, [clusters, onClusterChange, selectedCluster]);
+  }, [clusters, onClusterChange, selectedCluster, props.gpuType]);
 
   if (cluster === undefined) {
     return null;

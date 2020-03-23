@@ -24,6 +24,7 @@ import base64
 from shutil import copyfile, copytree
 import urllib
 import socket,struct
+import pdb
 
 
 verbose = False

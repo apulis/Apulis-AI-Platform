@@ -4,7 +4,6 @@ import { Link } from 'umi';
 
 
 const Index: React.FC = () => {
-  console.log('index')
   return (
     <>
       <Row>

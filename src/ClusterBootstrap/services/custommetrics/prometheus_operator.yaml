@@ -21,6 +21,9 @@ rules:
   - alertmanagers
   - prometheuses
   - servicemonitors
+  - prometheusrules
+  - thanosrulers
+  - podmonitors
   verbs:
   - "*"
 - apiGroups:
@@ -88,7 +91,7 @@ spec:
       serviceAccountName: prometheus-operator
       containers:
        - name: prometheus-operator
-         image: dlws/prometheus-operator:v0.13.0
+         image: bitnami/prometheus-operator:0.37.0
          resources:
            requests:
              cpu: 100m

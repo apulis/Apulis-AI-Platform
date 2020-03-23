@@ -42,7 +42,6 @@ import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
-import message from 'antd/es/message';
 import Paper, { PaperProps } from '@material-ui/core/Paper';
 import Draggable from 'react-draggable'
 import {TransitionProps} from "@material-ui/core/transitions";
@@ -54,7 +53,7 @@ import {
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-
+import message from '../../utils/message'
 interface EnvironmentVariable {
   name: string;
   value: string;
@@ -365,6 +364,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }, [gpuModel, selectedTeam, name, image, command, type, gpus, gpusPerNode]);
   const onSaveTemplateClick = async () => {
+    if (!saveTemplateName) {
+      message('error', 'Need input template name')
+      return
+    }
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -417,6 +420,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false)
   const onDeleteTemplateClick = async () => {
+    if (!saveTemplateName) {
+      message('error', 'Need input template name')
+      return
+    }
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -1203,7 +1210,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   </TextField>
                 </Grid>
                 <Button type="button" color="primary" onClick={onSaveTemplateClick}>Save</Button>
-                <Button type="button" disabled={!saveTemplateName} color="secondary" onClick={onDeleteTemplateClick}>Delete</Button>
+                <Button type="button" color="secondary" onClick={onDeleteTemplateClick}>Delete</Button>
               </Grid>
             </CardContent>
           </Collapse>

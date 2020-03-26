@@ -18,9 +18,9 @@ nvidiaDriverPath : {{cnf["nvidia-driver-path"]}}
 clusterId : {{cnf["clusterId"]}}
 domain : {{cnf["network"]["domain"]}}
 apiserver: {{cnf["api_servers"]}}
-certificate-authority: /etc/kubernetes/pki/ca.crt
-client-certificate: /etc/kubernetes/pki/apiserver.crt
-client-key: /etc/kubernetes/pki/apiserver.key
+certificate-authority: /etc/kubernetes/ssl/ca.pem
+client-certificate: /etc/kubernetes/ssl/apiserver.pem
+client-key: /etc/kubernetes/ssl/apiserver-key.pem
 pod_ip_range: {{cnf["pod_ip_range"]}}
 per_user_gpu_limit: {{cnf["per_user_gpu_limit"]}}
 rest-api: {{cnf["rest-api"]}}

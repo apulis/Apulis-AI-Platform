@@ -54,8 +54,8 @@ def get_job_info_from_nodes(nodes):
     return jobs
 
 
-def create_email_body(cluster_name, node_status, jobs):
-        body = f'<h3>Uncorrectable ECC Error found in {cluster_name} cluster on the following nodes:</h3>'
+def create_email_body(cluster_name, node_status, jobs,ecc_name):
+        body = f'<h3>Uncorrectable ECC:{ecc_name} Error found in {cluster_name} cluster on the following nodes:</h3>'
         body += tabulate(node_status, headers=['node name', 'action status'], tablefmt="html").replace('<table>','<table border="1">')
 
         job_table = []
@@ -72,7 +72,7 @@ class ECCRule(Rule):
     def __init__(self, alert, config):
         self.config = config
         self.ecc_config = self.load_ecc_config()
-        self.ecc_node_hostnames = []
+        self.ecc_node_hostnames = {}
         self.node_info = {}
         self.alert = alert
 
@@ -84,51 +84,56 @@ class ECCRule(Rule):
 
     def check_status(self):
         url = f"http://{self.ecc_config['prometheus']['ip']}:{self.ecc_config['prometheus']['port']}"
-        query = self.ecc_config['prometheus']['ecc_error_query']
-        step = self.ecc_config['prometheus']['step']
-        interval = self.ecc_config['prometheus']['interval']
-        ecc_url = prometheus_url.format_prometheus_url_from_interval(url, query, step, interval)
+        metrics = self.ecc_config['prometheus']['metrics']
+        for metric in metrics:
+            query = metric['query_expression']
+            step = metric['step']
+            interval = metric['interval']
+            ecc_url = prometheus_url.format_prometheus_url_from_interval(url, query, step, interval)
 
-        try:
-            response = requests.get(ecc_url, timeout=10)
-            if response:
-                ecc_data = response.json()
-                percent_threshold = self.ecc_config['prometheus']['percent_threshold']
-                ecc_node_ips = extract_ips_from_ecc_data(ecc_data, percent_threshold, interval)
-                if ecc_node_ips:
-                    self.node_info = k8s_util.list_node() # save node info to reduce API calls
-                    address_map = get_node_address_info(self.node_info)
-                    for ip in ecc_node_ips:
-                        self.ecc_node_hostnames.append(address_map[ip])
-                    logging.info(f'Uncorrectable ECC metrics found: {self.ecc_node_hostnames}')
-                    return True
+            try:
+                response = requests.get(ecc_url, timeout=10)
+                if response:
+                    ecc_data = response.json()
+                    percent_threshold = metric['percent_threshold']
+                    ecc_node_ips = extract_ips_from_ecc_data(ecc_data, percent_threshold, interval)
+                    if ecc_node_ips:
+                        self.node_info = k8s_util.list_node() # save node info to reduce API calls
+                        address_map = get_node_address_info(self.node_info)
+                        self.ecc_node_hostnames[metric["name"]]=[]
+                        for ip in ecc_node_ips:
+                            self.ecc_node_hostnames[metric["name"]].append(address_map[ip])
+                        logging.info(f'Uncorrectable ECC metric {metric["name"]} found: {self.ecc_node_hostnames[metric["name"]]}')
+                    else:
+                        logging.info(f'No uncorrectable ECC {metric["name"]} metrics found.')
                 else:
-                    logging.debug('No uncorrectable ECC metrics found.')
-            else:
-                logging.warning(f'Response from {ecc_url} was None.')
-        except:
-            logging.exception(f'Error retrieving data from {ecc_url}')
+                    logging.warning(f'Response from {ecc_url} was None.')
+            except:
+                logging.exception(f'Error retrieving data from {ecc_url}')
 
+        if self.ecc_node_hostnames:
+            return True
         return False
 
 
     def take_action(self):
-        node_status = []
-        action_taken = False
-        for node_name in self.ecc_node_hostnames:
-            if k8s_util.is_node_cordoned(self.node_info, node_name):
-                output = f'no action taken: {node_name} already cordoned'
+        for ecc_name,ecc_node_hostnames in self.ecc_node_hostnames.items():
+            node_status = []
+            action_taken = False
+            for node_name in ecc_node_hostnames:
+                if k8s_util.is_node_cordoned(self.node_info, node_name):
+                    output = f'no action taken: {node_name} already cordoned'
+                else:
+                    output = k8s_util.cordon_node(node_name, dry_run=self.ecc_config['cordon_dry_run'])
+                    action_taken = True
+                node_status.append([node_name, output])
+
+            jobs = get_job_info_from_nodes(ecc_node_hostnames)
+            subject = f'Repair Manager Alert [ERROR:{ecc_name}] [{self.config["cluster_name"]}]'
+            body = create_email_body(self.config["cluster_name"], node_status, jobs,ecc_name)
+
+            if action_taken and not self.ecc_config['cordon_dry_run']:
+                logging.info(f"An action has been taken on one or more of the following nodes: {node_status}")
+                self.alert.send_alert(ecc_name,"ecc_rule", subject, body, ecc_node_hostnames)
             else:
-                output = k8s_util.cordon_node(node_name, dry_run=self.ecc_config['cordon_dry_run'])
-                action_taken = True
-            node_status.append([node_name, output])
-
-        jobs = get_job_info_from_nodes(self.ecc_node_hostnames)
-        subject = f'Repair Manager Alert [ECC ERROR] [{self.config["cluster_name"]}]'
-        body = create_email_body(self.config["cluster_name"], node_status, jobs)
-
-        if action_taken and not self.ecc_config['cordon_dry_run']:
-            logging.info(f"An action has been taken on one or more of the following nodes: {node_status}")
-            self.alert.send_alert("ecc_rule", subject, body, self.ecc_node_hostnames)
-        else: 
-            self.alert.handle_alert("ecc_rule", subject, body, self.ecc_node_hostnames)
+                self.alert.handle_alert(ecc_name,"ecc_rule", subject, body, ecc_node_hostnames)

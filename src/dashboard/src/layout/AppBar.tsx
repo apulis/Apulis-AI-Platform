@@ -137,7 +137,7 @@ TeamMenu = () => {
 const UserButton: React.FC = () => {
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
-  const { nickName, userName,  password, isAdmin, isAuthorized, token } = React.useContext(UserContext);
+  const { nickName, userName, isAdmin, isAuthorized } = React.useContext(UserContext);
   const styles = useStyles();
   // const Username = typeof openId === 'string' ?  openId.split('@', 1)[0] : openId;
   const accountType = isAdmin ? 'Admin' : (isAuthorized ? 'User' : 'Unauthorized')
@@ -180,20 +180,14 @@ const UserButton: React.FC = () => {
             </ListItem>
             <Divider />
             <ListItem button>
-              <ListItemText primary="Username" secondary={userName}  onClick={()=>handleCopy(userName)}/>
+              <ListItemText primary="UserName" secondary={userName}  onClick={()=>handleCopy(userName)}/>
             </ListItem>
             <Divider />
-            <ListItem button >
-              <ListItemText primary="Password" secondary={password} onClick={()=>handleCopy(password)}/>
-            </ListItem>
             <Divider />
             <ListItem button >
               <ListItemText primary="AccountType" secondary={accountType}/>
             </ListItem>
             <Divider />
-            <ListItem button >
-              <ListItemText primary="token" secondary={token} onClick={()=>handleCopy(token)}/>
-            </ListItem>
           </List>
         </Box>
         <Snackbar
@@ -212,7 +206,6 @@ const UserButton: React.FC = () => {
           />
         </Snackbar>
       </Dialog>
-
     </main>
   );
 };

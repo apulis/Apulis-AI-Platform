@@ -72,7 +72,8 @@ const initAxios = (msg: Message, h: History<any>) => {
   initMessage(msg);
 }
 
-
-
+export const request = async (options: AxiosRequestConfig) => {
+  return await axios(options)
+}
 
 export default initAxios;

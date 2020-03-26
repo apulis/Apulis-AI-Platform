@@ -93,9 +93,9 @@ const ClusterStatus: FC = () => {
         // init user status & node status when loading page
         let userfetchs: any = [];
         if (localStorage.getItem("selectedCluster") === null)  {
-          userfetchs = res[0];
+          userfetchs = res[0] || {};
         } else {
-          userfetchs = res.filter((vc: any) => vc['ClusterName'] === localStorage.getItem('selectedCluster'))[0];
+          userfetchs = res.filter((vc: any) => vc['ClusterName'] === localStorage.getItem('selectedCluster'))[0] || {};
         }
         const newuserStatusPreemptable: any = [];
         if (userfetchs['user_status_preemptable']) {

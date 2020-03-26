@@ -37,4 +37,4 @@ clusters:
       workStorage: work
       dataStorage: data
       grafana: "https://{{cnf["webportal_node"]}}/grafana/"
-      prometheus: http://apulis-sz-dev1-infra01.sigsus.cn:9091
+      prometheus: http://{{cnf["restfulapi_node"]}}:9091

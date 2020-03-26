@@ -92,6 +92,7 @@ def get_cluster_status():
     cluster_status={}
     gpuStr = "nvidia.com/gpu"
     gpuMapping = {"Huawei_A910":"npu.huawei.com/NPU","nvidia":"nvidia.com/gpu"}
+    typeMapping = {"nvidia":"gpu","Huawei_A910":"npu"}
 
     try:
         output = k8sUtils.kubectl_exec(" get nodes -o yaml")
@@ -157,6 +158,7 @@ def get_cluster_status():
         podsInfo = yaml.load(output)
         if "items" in podsInfo:
             for pod in podsInfo["items"]:
+                gpuStr = gpuMapping.get(pod["metadata"]["labels"]["gpuType"])
                 if "status" in pod and "phase" in pod["status"]:
                     phase = pod["status"]["phase"]
                     if phase == "Succeeded" or phase == "Failed":
@@ -193,6 +195,7 @@ def get_cluster_status():
                     if "containers" in pod["spec"] :
                         for container in pod["spec"]["containers"]:
                             containerGPUs = 0
+
                             if "resources" in container and "requests" in container["resources"] and gpuStr in container["resources"]["requests"]:
                                 containerGPUs = int(container["resources"]["requests"][gpuStr])
                             if container["name"] in pod_info_cont:
@@ -202,7 +205,7 @@ def get_cluster_status():
                                 preemptable_gpus += containerGPUs
                             else:
                                 gpus += containerGPUs
-                            pod_name += " (gpu #:" + str(containerGPUs) + ")"
+                            pod_name += " ({} #:".format(typeMapping.get(pod["metadata"]["labels"]["gpuType"]),"device num") + str(containerGPUs) + ")"
 
                     if node_name in nodes_status:
                         # NOTE gpu_used may include those unallocatable gpus

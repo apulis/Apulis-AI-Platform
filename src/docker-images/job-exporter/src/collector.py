@@ -527,44 +527,14 @@ class NpuCollector(Collector):
         else:
             pass       
 
-        ## to be removed later
-        ## for test only
-        out_str_1 = '''
-        Memory Usage Rate(%)           : 10
-        HBM Usage Rate(%)              : 0
-        Aicore Usage Rate(%)           : 0
-        Aicore Freq(MHZ)               : 1000
-        Aicore curFreq(MHZ)            : 1000
-        Temperature(C)                 : 35
-        '''
+        npu_log_file = "/usr/local/sbin/npu_smi.log"
+        if not os.path.isfile(npu_log_file):
+            return None
+        else:
+            pass      
 
-        out_str_2 = '''
-        Memory Usage Rate(%)           : 23
-        HBM Usage Rate(%)              : 49
-        Aicore Usage Rate(%)           : 45
-        Aicore Freq(MHZ)               : 1000
-        Aicore curFreq(MHZ)            : 1000
-        Temperature(C)                 : 56
-        '''
-
-        out_str_3 = '''
-        Memory Usage Rate(%)           : 23
-        HBM Usage Rate(%)              : 49
-        Aicore Usage Rate(%)           : 50
-        Aicore Freq(MHZ)               : 1000
-        Aicore curFreq(MHZ)            : 1000
-        Temperature(C)                 : 56
-        '''
-
-        out_str = ""
-        time_passed = int(time.time()) - NpuCollector.npu_collect_start_time
-
-        if time_passed % 2 == 0:
-            out_str = out_str_3
-        else: 
-            out_str = out_str_2
-
-        out_list = out_str.split('\n')
+        f = open(npu_log_file, "r")
+        out_list = f.readlines()
         npu_info = NpuInfo()
 
         for item in out_list:
@@ -579,16 +549,16 @@ class NpuCollector(Collector):
                 key, val = kv[0], kv[1]
                 key, val = key.strip(), val.strip()
 
-                if "Aicore Usage Rate" in key:
+                if "Aicore Usage Rate".lower() in key.lower():
                     npu_info.npu_util = int(val)
                 
                     # this should be replaced later
                     # the huawei-npu-smi is not ready now 
                     # npu_info.npu_util = round(random.uniform(0.5, 0.9), 2)
-                    npu_info.npu_util = int(round(random.uniform(50, 60), 2))
+                    # npu_info.npu_util = int(round(random.uniform(50, 60), 2))
                     logger.warn("npu usage rate[%s]" % npu_info.npu_util)
                     
-                elif "Memory Usage Rate" in key:
+                elif "Memory Usage Rate".lower() in key.lower():
                     npu_info.npu_mem_util = int(val)
                     logger.warn("npu mem usage rate[%s]" % npu_info.npu_mem_util)
 

@@ -158,7 +158,7 @@ def get_cluster_status():
         podsInfo = yaml.load(output)
         if "items" in podsInfo:
             for pod in podsInfo["items"]:
-                gpuStr = gpuMapping.get(pod["metadata"]["labels"]["gpuType"])
+                gpuStr = gpuMapping.get(pod["metadata"]["labels"].get("gpuType",gpuStr))
                 if "status" in pod and "phase" in pod["status"]:
                     phase = pod["status"]["phase"]
                     if phase == "Succeeded" or phase == "Failed":
@@ -205,7 +205,7 @@ def get_cluster_status():
                                 preemptable_gpus += containerGPUs
                             else:
                                 gpus += containerGPUs
-                            pod_name += " ({} #:".format(typeMapping.get(pod["metadata"]["labels"]["gpuType"]),"device num") + str(containerGPUs) + ")"
+                            pod_name += " ({} #:".format(typeMapping.get(pod["metadata"]["labels"].get("gpuType"),"device num")) + str(containerGPUs) + ")"
 
                     if node_name in nodes_status:
                         # NOTE gpu_used may include those unallocatable gpus

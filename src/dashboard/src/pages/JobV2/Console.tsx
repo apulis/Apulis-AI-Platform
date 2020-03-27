@@ -54,18 +54,27 @@ const Console: FunctionComponent = () => {
 
   useEffect(() => {
     if (error === undefined) return;
-
     const key = enqueueSnackbar(`Failed to fetch job log: ${clusterId}/${jobId}`, {
       variant: 'error',
-      persist: true
+      persist: true,
+      autoHideDuration: 3000,
     });
     return () => {
       if (key !== null) closeSnackbar(key);
     }
   }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
 
-  if (log === undefined) {
+  if (log === undefined && !error) {
     return <Loading/>;
+  }
+  if (error) {
+    return (
+      <Box p={1} style={{ overflow: 'auto' }}>
+        <Box m={0} component="pre">
+          log is not availble now
+        </Box>
+      </Box>
+    )
   }
 
   return (

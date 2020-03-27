@@ -180,7 +180,6 @@ export default class Access extends React.Component {
             modifyFlag ?
               <div style={{ width: '25%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
                 <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
-                {!isEdit ? <p>理论上不用新增，用户第三方登录后就会有ACL记录</p> : null}
                 <form>
 
                   {

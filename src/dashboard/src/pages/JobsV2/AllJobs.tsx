@@ -18,6 +18,8 @@ import ClusterContext from './ClusterContext';
 import { renderId, renderGPU, sortGPU, renderDate, sortDate, renderStatus } from './tableUtils';
 import PriorityField from './PriorityField';
 
+import { pollInterval } from '../../utils/front-config';
+
 const renderUser = (job: any) => job['userName'].split('@', 1)[0];
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
@@ -87,13 +89,19 @@ const AllJobs: FunctionComponent = () => {
     [cluster.id, selectedTeam]
   );
   const [jobs, setJobs] = useState<any[]>();
+  const [requesting, setRequesting] = useState(false);
   useEffect(() => {
     setJobs(undefined);
   }, [cluster.id]);
   useEffect(() => {
     if (data !== undefined) {
       setJobs(data);
-      const timeout = setTimeout(get, 3000);
+      const timeout = setTimeout(() => {
+        if (!requesting) {
+          setRequesting(true);
+          get();
+        }
+      }, pollInterval);
       return () => {
         clearTimeout(timeout);
       }
@@ -135,14 +143,16 @@ const AllJobs: FunctionComponent = () => {
     if (pausedJobs.length === 0) return undefined;
     return pausedJobs
   }, [jobs]);
-
+  console.log('jobs', jobs)
   if (jobs !== undefined) return (
     <>
       {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}
       {queuingJobs && <JobsTable title="Queuing Jobs" jobs={queuingJobs}/>}
       {unapprovedJobs && <JobsTable title="Unapproved Jobs" jobs={unapprovedJobs}/>}
       {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>}
-      {jobs.length === 0 && <JobsTable title="All Jobs" jobs={jobs} />}
+      {jobs.length === 0 &&
+        <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3>
+      }
     </>
   );
   if (error !== undefined) return null;

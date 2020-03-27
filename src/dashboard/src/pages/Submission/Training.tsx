@@ -703,7 +703,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
     } else {
-      history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
+      history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
     }
   }, [postJobData]);
   const fetchGrafanaUrl = `/api/clusters`;
@@ -724,7 +724,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (postEndpointsData) {
       setOpen(true);
       setTimeout(()=>{
-        history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
+        history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
       }, 2000)
 
     }

@@ -3,9 +3,11 @@ import {
   Table,
   TableHead,
   TableRow, TableCell, TableBody, Button, TextField, Grid,
+  Container
 } from "@material-ui/core";
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
+
 
 export default class Vc extends React.Component {
   static contextType = ClustersContext
@@ -134,78 +136,81 @@ export default class Vc extends React.Component {
   render() {
     const { vcList, modifyFlag, isEdit, vcName, quota, metadata } = this.state;
     return (
-      <div>
-        <div>
-          <Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>{modifyFlag && !isEdit ? '收起新增' : '新增VC'}</Button>
-        </div>
-        <Table style={{ width: '70%', float: 'left', marginTop: 20 }}>
-          <TableHead>
-            <TableRow style={{ backgroundColor: '#7583d1' }}>
-              <TableCell style={{ color: '#fff' }}>vcName</TableCell>
-              <TableCell style={{ color: '#fff' }}>quota</TableCell>
-              <TableCell style={{ color: '#fff' }}>metadata</TableCell>
-              <TableCell style={{ color: '#fff' }}>admin</TableCell>
-              <TableCell style={{ color: '#fff' }}>actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {vcList.map(item => (
-              <TableRow key={item.vcName}>
-                <TableCell>{item.vcName} </TableCell>
-                <TableCell>{item.quota} </TableCell>
-                <TableCell>{item.metadata} </TableCell>
-                <TableCell>{item.admin ? '管理员' : '用户'} </TableCell>
-                <TableCell>
-                  <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
-                  <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
-                </TableCell>
+      <Container fixed maxWidth="xl">
+        <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
+          <div>
+            <Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>{modifyFlag && !isEdit ? '收起新增' : '新增VC'}</Button>
+          </div>
+          <Table style={{ width: '80%', marginTop: 20 }}>
+            <TableHead>
+              <TableRow style={{ backgroundColor: '#7583d1' }}>
+                <TableCell style={{ color: '#fff' }}>vcName</TableCell>
+                <TableCell style={{ color: '#fff' }}>quota</TableCell>
+                <TableCell style={{ color: '#fff' }}>metadata</TableCell>
+                <TableCell style={{ color: '#fff' }}>admin</TableCell>
+                <TableCell style={{ color: '#fff' }}>actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        {
-          modifyFlag ?
-            <div style={{ width: '25%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
-              <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
-              <form>
-                <Grid item xs={8}>
-                  <TextField
-                    required
-                    label="vcName"
-                    value={vcName}
-                    onChange={this.vcNameChange.bind(this)}
-                    margin="normal"
-                    fullWidth={true}
-                  />
-                </Grid>
-                <Grid item xs={8}>
-                  <TextField
-                    required
-                    label="quota"
-                    value={quota}
-                    onChange={this.quotaChange.bind(this)}
-                    margin="normal"
-                    fullWidth={true}
-                  />
-                </Grid>
-                <Grid item xs={8}>
-                  <TextField
-                    required
-                    label="metadata"
-                    value={metadata}
-                    onChange={this.metadataChange.bind(this)}
-                    margin="normal"
-                    fullWidth={true}
-                  />
-                </Grid>
-                <Grid item xs={8}>
-                  <Button variant="outlined" size="medium" color="primary" type="button" onClick={this.save}>Save</Button>
-                </Grid>
-              </form>
-            </div>
-            : null
-        }
-      </div>
+            </TableHead>
+            <TableBody>
+              {vcList.map(item => (
+                <TableRow key={item.vcName}>
+                  <TableCell>{item.vcName} </TableCell>
+                  <TableCell>{item.quota} </TableCell>
+                  <TableCell>{item.metadata} </TableCell>
+                  <TableCell>{item.admin ? '管理员' : '用户'} </TableCell>
+                  <TableCell>
+                    <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
+                    <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {
+            modifyFlag ?
+              <div style={{ width: '25%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
+                <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
+                <form>
+                  <Grid item xs={8}>
+                    <TextField
+                      required
+                      label="vcName"
+                      value={vcName}
+                      onChange={this.vcNameChange.bind(this)}
+                      margin="normal"
+                      fullWidth={true}
+                    />
+                  </Grid>
+                  <Grid item xs={8}>
+                    <TextField
+                      required
+                      label="quota"
+                      value={quota}
+                      onChange={this.quotaChange.bind(this)}
+                      margin="normal"
+                      fullWidth={true}
+                    />
+                  </Grid>
+                  <Grid item xs={8}>
+                    <TextField
+                      required
+                      label="metadata"
+                      value={metadata}
+                      onChange={this.metadataChange.bind(this)}
+                      margin="normal"
+                      fullWidth={true}
+                    />
+                  </Grid>
+                  <Grid item xs={8}>
+                    <Button variant="outlined" size="medium" color="primary" type="button" onClick={this.save}>Save</Button>
+                  </Grid>
+                </form>
+              </div>
+              : null
+          }
+        </div>
+      </Container>
+      
     )
   }
 }

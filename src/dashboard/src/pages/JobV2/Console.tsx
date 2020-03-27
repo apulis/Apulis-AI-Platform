@@ -20,7 +20,7 @@ interface RouteParams {
 const Console: FunctionComponent = () => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { error, data, get } = useFetch(
+  const { error, data, get, response } = useFetch(
     `/api/clusters/${clusterId}/jobs/${jobId}/log`, {
       onNewData (currentData, newData) {
         if (currentData === undefined || currentData.cursor == null) {
@@ -54,6 +54,7 @@ const Console: FunctionComponent = () => {
 
   useEffect(() => {
     if (error === undefined) return;
+    if (response.status === 404) return;
     const key = enqueueSnackbar(`Failed to fetch job log: ${clusterId}/${jobId}`, {
       variant: 'error',
       persist: true,
@@ -63,15 +64,14 @@ const Console: FunctionComponent = () => {
       if (key !== null) closeSnackbar(key);
     }
   }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
-
   if (log === undefined && !error) {
     return <Loading/>;
   }
-  if (error) {
+  if (error && response.status === 404) {
     return (
       <Box p={1} style={{ overflow: 'auto' }}>
         <Box m={0} component="pre">
-          log is not availble now
+          Because this job has not started, it is not availble now
         </Box>
       </Box>
     )

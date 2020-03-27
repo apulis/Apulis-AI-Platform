@@ -45,7 +45,7 @@ const Console: FunctionComponent = () => {
     if (data === undefined) return;
 
     const cursor = data.cursor;
-    const timeout = setTimeout(get, 3000,
+    const timeout = setTimeout(get, 1500,
       cursor ? `?cursor=${encodeURIComponent(cursor)}` : '');
     return () => {
       clearTimeout(timeout);

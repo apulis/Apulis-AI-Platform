@@ -49,8 +49,8 @@ const ClusterStatus: FC = () => {
   const fetchVcStatusUrl = `/api`;
   const fetchiGrafanaUrl = `/api/clusters`;
 
-  const request = useFetch(fetchVcStatusUrl,options);
-  const requestGrafana = useFetch(fetchiGrafanaUrl, options);
+  const request = useFetch(fetchVcStatusUrl);
+  const requestGrafana = useFetch(fetchiGrafanaUrl);
   const fetchVC = async (cluster: string) => {
     const response = await request.get(`/teams/${selectedTeam}/clusters/${cluster}`);
     const responseUrls = await requestGrafana.get(`/${cluster}`);

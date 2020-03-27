@@ -53,7 +53,7 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
             <Grid container direction="column" spacing={10} alignItems="center" justify="space-between">
               <Grid item>
                 <Typography variant="h2" component="h1" align="center">
-                  慧瞳 AI 平台
+                  智瞳 AI 平台
                 </Typography>
               </Grid>
 

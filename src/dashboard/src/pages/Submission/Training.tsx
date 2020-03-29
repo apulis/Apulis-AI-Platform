@@ -347,7 +347,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [saveTemplateDatabase, setSaveTemplateDatabase] = React.useState("user");
   const onSaveTemplateDatabaseChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
-      setSaveTemplateDatabase(event.target.value as string);
+      console.log('event.target.value ', event.target.value )
+      let value: string = (event.target.value) as string;
+      if (value === 'team') {
+        value = 'vc';
+      }
+      setSaveTemplateDatabase(value);
     },
     [setSaveTemplateDatabase]
   );

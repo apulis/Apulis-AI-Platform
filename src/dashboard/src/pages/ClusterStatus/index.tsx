@@ -50,8 +50,8 @@ const ClusterStatus: FC = () => {
   const fetchVcStatusUrl = `/api`;
   const fetchiGrafanaUrl = `/api/clusters`;
 
-  const request = useFetch(fetchVcStatusUrl,options);
-  const requestGrafana = useFetch(fetchiGrafanaUrl, options);
+  const request = useFetch(fetchVcStatusUrl);
+  const requestGrafana = useFetch(fetchiGrafanaUrl);
   const fetchVC = async (cluster: string) => {
     const response = await request.get(`/teams/${selectedTeam}/clusters/${cluster}`);
     const responseUrls = await requestGrafana.get(`/${cluster}`);
@@ -94,9 +94,9 @@ const ClusterStatus: FC = () => {
         // init user status & node status when loading page
         let userfetchs: any = [];
         if (localStorage.getItem("selectedCluster") === null)  {
-          userfetchs = res[0];
+          userfetchs = res[0] || {};
         } else {
-          userfetchs = res.filter((vc: any) => vc['ClusterName'] === localStorage.getItem('selectedCluster'))[0];
+          userfetchs = res.filter((vc: any) => vc['ClusterName'] === localStorage.getItem('selectedCluster'))[0] || {};
         }
         const newuserStatusPreemptable: any = [];
         if (userfetchs['user_status_preemptable']) {

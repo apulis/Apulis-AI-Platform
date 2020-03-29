@@ -165,7 +165,7 @@ const Chart: React.FC<{
       </g>
     );
   };
-  const[activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(1);
   const onPieEnter = (data: any, index: number) => {
     setActiveIndex(index)
   }
@@ -269,10 +269,12 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   const request = useFetch(fetchDiretoryUrl);
   const fetchDirectories = async () => {
     const data = await request.get('');
-    const name = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
-    setDataStorage(data.dataStorage);
-    setWorkStorage(`${data.workStorage}/${name}`);
-    return data;
+    if (data) {
+      const name = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
+      setDataStorage(data.dataStorage);
+      setWorkStorage(`${data.workStorage}/${name}`);
+      return data;
+    }
   }
   const fetchClusterStatusUrl = `/api`;
   const requestClusterStatus = useFetch(fetchClusterStatusUrl);
@@ -287,8 +289,10 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
       let fetchStorage = [];
       let availBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_avail_bytes%7Bfstype%3D%27nfs4%27%7D';
       let sizeBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_size_bytes%7Bfstype%3D%27nfs4%27%7D';
-      fetchStorage.push(fetch(`${res['grafana']}${availBytesSubPath}`));
-      fetchStorage.push(fetch(`${res['grafana']}${sizeBytesSubPath}`));
+      if (res && res.grafana) {
+        fetchStorage.push(fetch(`${res['grafana']}${availBytesSubPath}`));
+        fetchStorage.push(fetch(`${res['grafana']}${sizeBytesSubPath}`));
+      }
       let storageRes: any = [];
       let tmpStorage: any = [];
       Promise.all(fetchStorage).then((responses) => {
@@ -352,14 +356,17 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
       });
     });
     fetchClusterStatus().then((res) => {
-      const availableGpu = !checkObjIsEmpty(res['gpu_avaliable']) ? (Number)(sumValues(res['gpu_avaliable'])) : 0;
-      setAvailable(availableGpu);
-      const usedGpu = !checkObjIsEmpty(res['gpu_used']) ? (Number)(sumValues(res['gpu_used'])) : 0;
-      setUsed(usedGpu);
-      const reversedGpu = !checkObjIsEmpty(res['gpu_unschedulable']) ? (Number)(sumValues(res['gpu_unschedulable'])) : 0;
-      setReserved(reversedGpu);
-      setActiveJobs((Number)(sumValues(res['AvaliableJobNum'])));
-      setActivate(true);
+      if (res) {
+        const availableGpu = !checkObjIsEmpty(res['gpu_avaliable']) ? (Number)(sumValues(res['gpu_avaliable'])) : 0;
+        setAvailable(availableGpu);
+        const usedGpu = !checkObjIsEmpty(res['gpu_used']) ? (Number)(sumValues(res['gpu_used'])) : 0;
+        setUsed(usedGpu);
+        const reversedGpu = !checkObjIsEmpty(res['gpu_unschedulable']) ? (Number)(sumValues(res['gpu_unschedulable'])) : 0;
+        setReserved(reversedGpu);
+        setActiveJobs((Number)(sumValues(res['AvaliableJobNum'])));
+        setActivate(true);
+      }
+      
     }).catch(err => {
       console.log('err', err)
     })

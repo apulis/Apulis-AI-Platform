@@ -71,6 +71,7 @@ class DistPodTemplate():
             return None, "Missing required parameters!"
         assert(params["jobtrainingtype"] == "PSDistJob")
 
+
         vc_without_shared_storage = job.get_vc_without_shared_storage()
 
         job.job_path = params["jobPath"]
@@ -139,10 +140,13 @@ class DistPodTemplate():
             params["nccl_ib_disable"] = True
 
         pods = []
+        gpuMapping = {"Huawei_A910": "npu.huawei.com/NPU", "nvidia": "nvidia.com/gpu"}
         nums = {"ps": int(params["numps"]), "worker": int(params["numpsworker"])}
         for role in ["ps", "worker"]:
             for idx in range(nums[role]):
                 pod = copy.deepcopy(params)
+                if "gpuStr" not in pod:
+                    pod["gpuStr"] = gpuMapping[pod["gpuType"]]
                 pod["distRole"] = role
                 pod["distRoleIdx"] = idx
                 pod["distId"] = "%s%d" % (role, idx)

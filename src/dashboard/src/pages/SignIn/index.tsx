@@ -53,11 +53,11 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
             <Grid container direction="column" spacing={10} alignItems="center" justify="space-between">
               <Grid item>
                 <Typography variant="h2" component="h1" align="center">
-                  依瞳 AI 平台
+                  智瞳 AI 平台
                 </Typography>
               </Grid>
 
-              <Grid container direction="column" alignItems="center" justify="space-between" style={{ height: 150 }}>
+              <Grid container direction="column" alignItems="center" justify="space-between" style={{ height: 110 }}>
                 {
                   (authEnabled.microsoft === 1) && <Grid item>
                     <Button

@@ -35,7 +35,7 @@ class RuleAlertHandler():
 
 
     # send alert if items not cached or reminder is due
-    def handle_alert(self, rule, subject, body, cache_items):
+    def handle_alert(self, rule, rule_name, subject, body, cache_items):
         self.config = load_rule_config() # refresh config
 
         if rule not in self.rule_cache:
@@ -49,14 +49,14 @@ class RuleAlertHandler():
                 new_item_found = True
             self.rule_cache[rule][item] = 1 # update cache
 
-        if self.config[rule]['alerts_enabled']:
+        if self.config[rule_name]['alerts_enabled']:
             if new_item_found or self._is_time_to_send_reminder(rule):
                 self.email_handler.send(subject, body)
                 if self._reminders_are_enabled(rule):
                     self._update_next_reminder(rule)
 
 
-    def send_alert(self, rule, subject, body, cache_items):
+    def send_alert(self, rule,rule_name, subject, body, cache_items):
         self.config = load_rule_config()
 
         if rule not in self.rule_cache:
@@ -68,7 +68,7 @@ class RuleAlertHandler():
         for item in cache_items:
             self.rule_cache[rule][item] = 1
 
-        if self.config[rule]['alerts_enabled']:
+        if self.config[rule_name]['alerts_enabled']:
             self.email_handler.send(subject, body)
             if self._reminders_are_enabled(rule):
                 self._update_next_reminder(rule)

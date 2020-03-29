@@ -430,6 +430,19 @@ class DataHandler(object):
         return ret
 
     @record
+    def DeleteUser(self,userName):
+        query = "Delete FROM `%s` where `userName`='%s'" % (self.accounttablename,userName)
+        ret = False
+        try:
+            with MysqlConn() as conn:
+                conn.insert_one(query)
+                conn.commit()
+                ret = True
+        except Exception as e:
+            logger.exception('DeleteUser Exception: %s', str(e))
+        return ret
+
+    @record
     def GetAccountByOpenId(self, openId, group):
         query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
         ret = []
@@ -498,6 +511,18 @@ class DataHandler(object):
                 with MysqlConn() as conn:
                     conn.insert_one(sql)
                     conn.commit()
+            return True
+        except Exception as e:
+            logger.exception('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+    @record
+    def UpdateAccountPermission(self,userName, isAdmin,isAuthorized):
+        try:
+            sql = "update `%s` set `isAdmin` = '%s', `isAuthorized` = '%s' where `userName` = '%s'" % (self.accounttablename,int(isAdmin),int(isAuthorized),userName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
             return True
         except Exception as e:
             logger.exception('UpdateIdentityInfo Exception: %s', str(e))
@@ -780,6 +805,22 @@ class DataHandler(object):
             for one in rets:
                 ret.append(one)
 
+        except Exception as e:
+            logger.exception('GetActiveJobList Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetGpuTypeActiveJobCount(self):
+        ret = {}
+        try:
+            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running'" % (
+                self.jobtablename)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                jobParam = json.loads(base64.b64decode(one["jobParams"]))
+                ret.setdefault(jobParam["gpuType"],0)
+                ret[jobParam["gpuType"]]+=1
         except Exception as e:
             logger.exception('GetActiveJobList Exception: %s', str(e))
         return ret
@@ -1167,6 +1208,46 @@ class DataHandler(object):
                 ret.append((one["identityName"],one["uid"]))
         except Exception as e:
             logger.exception('GetUsers Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetAllAccountUser(self):
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s`" % (self.accounttablename)
+        ret = []
+        try:
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                ret.append(one)
+
+        except Exception as e:
+            logger.exception('GetAllAccountUser Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetUsers(self):
+        ret = []
+        try:
+            query = "SELECT `identityName`,`uid` FROM `%s`" % (self.identitytablename)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for one in rets:
+                ret.append((one["identityName"],one["uid"]))
+        except Exception as e:
+            logger.exception('GetUsers Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetActiveJobsCount(self):
+        ret = 0
+        try:
+            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running'" % (self.jobtablename)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+            for c in rets:
+                ret = c["c"]
+        except Exception as e:
+            logger.exception('GetActiveJobsCount Exception: %s', str(e))
         return ret
 
     @record

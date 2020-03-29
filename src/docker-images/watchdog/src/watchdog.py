@@ -599,6 +599,11 @@ def parse_node_item(node,
         if pods_info.get(ip) is not None:
             for pod in pods_info[ip]:
 
+                if pod.resource_mark != processor_resource_mark:
+                    continue
+                else:
+                    pass
+
                 ## preemptable processor is considered as allocable resource?
                 ## so it doesn't be part of used processors?
                 if pod.preemptable:

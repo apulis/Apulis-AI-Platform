@@ -42,7 +42,6 @@ import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
-import message from 'antd/es/message';
 import Paper, { PaperProps } from '@material-ui/core/Paper';
 import Draggable from 'react-draggable'
 import {TransitionProps} from "@material-ui/core/transitions";
@@ -54,7 +53,7 @@ import {
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-
+import message from '../../utils/message'
 interface EnvironmentVariable {
   name: string;
   value: string;
@@ -365,6 +364,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }, [gpuModel, selectedTeam, name, image, command, type, gpus, gpusPerNode]);
   const onSaveTemplateClick = async () => {
+    if (!saveTemplateName) {
+      message('error', 'Need input template name')
+      return
+    }
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -403,6 +406,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         tensorboard,
         plugins,
         gpuType,
+        preemptible
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);
@@ -417,6 +421,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false)
   const onDeleteTemplateClick = async () => {
+    if (!saveTemplateName) {
+      message('error', 'Need input template name')
+      return
+    }
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -485,6 +493,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         setIpython(false);
         setTensorboard(false);
         setGpuType(availbleGpu![0].type || '')
+        setPreemptible(false);
       } else {
         const {
           name,
@@ -504,7 +513,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           ipython,
           tensorboard,
           plugins,
-          gpuType
+          gpuType,
+          preemptible
         } = JSON.parse(event.target.value as string);
         if (name !== undefined) setName(name);
         if (type !== undefined) setType(type);
@@ -523,6 +533,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         if (ipython !== undefined) setIpython(ipython);
         if (tensorboard !== undefined) setTensorboard(tensorboard);
         if (gpuType !== undefined) setGpuType(gpuType);
+        if (preemptible !== undefined) setPreemptible(preemptible);
+        console.log('preemptible', preemptible)
         if (plugins === undefined) {
           setAccountName("");
           setAccountKey("");
@@ -691,14 +703,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
     } else {
-      history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
+      history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
     }
   }, [postJobData]);
   const fetchGrafanaUrl = `/api/clusters`;
   const request = useFetch(fetchGrafanaUrl);
   const fetchGrafana = async () => {
-    const {grafana} = await request.get(`/${selectedCluster}`);
-    setGrafanaUrl(grafana);
+    const result = await request.get(`/${selectedCluster}`);
+    if (result) {
+      const { grafana } = result
+      setGrafanaUrl(grafana);
+    }
   }
   const handleCloseGPUGramentation = () => {
     setShowGPUFragmentation(false);
@@ -709,7 +724,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (postEndpointsData) {
       setOpen(true);
       setTimeout(()=>{
-        history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
+        history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
       }, 2000)
 
     }
@@ -906,7 +921,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     type="number"
                     error={gpus > (type === 'InferenceJob' ? Number.MAX_VALUE : gpusPerNode)}
-                    label="Number of Devices"
+                    label="Number of Device"
                     fullWidth
                     variant="filled"
                     value={gpus}
@@ -931,7 +946,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     disabled
                     type="number"
-                    label="Total Number of Devices"
+                    label="Total Number of Device"
                     value = {workers * gpusPerNode}
                     fullWidth
                     variant="filled"

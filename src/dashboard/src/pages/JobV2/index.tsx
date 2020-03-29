@@ -43,6 +43,7 @@ import Brief from './Brief';
 import Endpoints from './Endpoints';
 import Metrics from './Metrics';
 import Console from './Console';
+import { pollInterval } from '../../utils/front-config';
 
 interface RouteParams {
   clusterId: string;
@@ -175,7 +176,7 @@ const JobContent: FunctionComponent = () => {
   const admin = useMemo(() => {
     return accessible && Boolean(teamCluster.admin);
   }, [accessible, teamCluster]);
-  const { error: jobError, data: jobData, get: getJob } =
+  const { error: jobError, data: jobData, get: getJob, abort } =
     useFetch(`/api/v2/clusters/${clusterId}/jobs/${jobId}`,
       [clusterId, jobId]);
   const { error: clusterError, data: cluster } =
@@ -215,8 +216,9 @@ const JobContent: FunctionComponent = () => {
   useEffect(() => {
     if (jobData !== undefined) {
       setJob(jobData);
-
-      const timeout = setTimeout(getJob, 3000);
+      const timeout = setTimeout(() => {
+        getJob();
+      }, pollInterval);
       return () => {
         clearTimeout(timeout);
       }

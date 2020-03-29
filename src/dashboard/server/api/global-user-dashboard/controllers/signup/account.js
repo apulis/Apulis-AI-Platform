@@ -2,16 +2,25 @@ const User = require('../../service/user')
 
 module.exports = async context => {
   const { userName, password, nickName } = context.request.body
-  let response = await User.signupWithAccount(context, userName, password, nickName)
+  const group = context.state.user && context.state.user.group
+  const isExist = await User.getAccountInfoByUserName(context, userName)
+  if (isExist) {
+    context.body = {
+      success: false,
+      message: `UserName ${userName} is already in use`
+    }
+    return
+  }
+  let response = await User.signupWithAccount(context, nickName, userName, password, group)
   if (response.result === true) {
     context.body = {
       success: true,
-      message: 'sign up success'
+      message: 'Signup succed'
     }
   } else {
     context.body = {
       success: false,
-      message: 'sign up failed, please contact the administer'
+      message: response.error
     }
   }
 }

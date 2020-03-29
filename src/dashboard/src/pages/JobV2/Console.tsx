@@ -20,7 +20,7 @@ interface RouteParams {
 const Console: FunctionComponent = () => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { error, data, get } = useFetch(
+  const { error, data, get, response } = useFetch(
     `/api/clusters/${clusterId}/jobs/${jobId}/log`, {
       onNewData (currentData, newData) {
         if (currentData === undefined || currentData.cursor == null) {
@@ -45,7 +45,7 @@ const Console: FunctionComponent = () => {
     if (data === undefined) return;
 
     const cursor = data.cursor;
-    const timeout = setTimeout(get, 3000,
+    const timeout = setTimeout(get, 1500,
       cursor ? `?cursor=${encodeURIComponent(cursor)}` : '');
     return () => {
       clearTimeout(timeout);
@@ -54,18 +54,27 @@ const Console: FunctionComponent = () => {
 
   useEffect(() => {
     if (error === undefined) return;
-
+    if (response.status === 404) return;
     const key = enqueueSnackbar(`Failed to fetch job log: ${clusterId}/${jobId}`, {
       variant: 'error',
-      persist: true
+      persist: true,
+      autoHideDuration: 3000,
     });
     return () => {
       if (key !== null) closeSnackbar(key);
     }
   }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
-
-  if (log === undefined) {
+  if (log === undefined && !error) {
     return <Loading/>;
+  }
+  if (error && response.status === 404) {
+    return (
+      <Box p={1} style={{ overflow: 'auto' }}>
+        <Box m={0} component="pre">
+          Because this job has not started, it is not availble now
+        </Box>
+      </Box>
+    )
   }
 
   return (

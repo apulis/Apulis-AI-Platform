@@ -54,20 +54,26 @@ export const judgeContainsSameKey = (arr1: any[], arr2: any[], keys: string[]) =
 
 }
 export const mergePropertyByUserNameAndGPUType = (arr1: any[], arr2: any[]) => {
-  console.log('arr', arr1, arr2)
   const result: any = [];
   // userName 和 gpu 相同的部分：合并
   arr1.forEach(val1 => {
     arr2.forEach((val2) => {
       if (val1.userName === val2.userName && val1.gpuType === val2.gpuType) {
         val1.usedGPU = val2.usedGPU;
-        const newObj = Object.assign({}, val1, val2);
+        const newObj: any = {}
+        const keys = Object.keys(Object.assign({}, {...val1}, {...val2}));
+        keys.forEach(key => {
+          if (/^[0-9]+$/.test(String(val1[key])) && /^[0-9]+$/.test(String(val2[key]))) {
+            newObj[key] = Number(val1[key]) || Number(val2[key]) || 0;
+          } else {
+            newObj[key] = val1[key] || val2[key] || 0;
+          }
+        })
         result.push(newObj);
       }
     })
   })
   const mergedArrUserNameAndGpu = result.map((val: any) => val.userName + '-----' + val.gpuType).join('');
-  console.log('mergedArrUserNameAndGpu', mergedArrUserNameAndGpu)
   // 不存在相同的部分，则直接push进去
   arr1.forEach(val => {
     const { userName, gpuType } = val;
@@ -83,9 +89,9 @@ export const mergePropertyByUserNameAndGPUType = (arr1: any[], arr2: any[]) => {
       result.push(val);
     }
   })
-  console.log('result', result)
   return result;
 }
+
 
 export const sumObjectValues = (obj: any) => {
   let count = 0;

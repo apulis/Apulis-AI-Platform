@@ -347,7 +347,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [saveTemplateDatabase, setSaveTemplateDatabase] = React.useState("user");
   const onSaveTemplateDatabaseChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
-      setSaveTemplateDatabase(event.target.value as string);
+      setSaveTemplateDatabase((event.target.value) as string);
     },
     [setSaveTemplateDatabase]
   );
@@ -459,7 +459,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         tensorboard,
         plugins,
       };
-      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
+      let dataBase = saveTemplateDatabase;
+      if (dataBase === 'team') {
+        dataBase = 'vc';
+      }
+      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${dataBase}`;
       await axios.delete(url);
       setShowDeleteTemplate(true)
       window.location.reload()

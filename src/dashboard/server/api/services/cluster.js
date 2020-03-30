@@ -450,7 +450,6 @@ class Cluster extends Service {
       method: 'PATCH',
       body: JSON.stringify(payload)
     })
-    console.log('payload', payload)
     this.context.assert(response.ok, 502)
     const data = await response.text()
     return data

@@ -17,6 +17,7 @@ import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
 import { renderId, renderGPU, sortGPU, renderStatus, renderDate, sortDate } from './tableUtils';
 import PriorityField from './PriorityField';
+import { pollInterval } from '../../utils/front-config';
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(
@@ -102,7 +103,7 @@ const MyJobs: FunctionComponent = () => {
   useEffect(() => {
     if (data !== undefined) {
       setJobs(data);
-      const timeout = setTimeout(get, 3000);
+      const timeout = setTimeout(get, pollInterval);
       return () => {
         clearTimeout(timeout);
       }

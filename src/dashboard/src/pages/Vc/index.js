@@ -78,6 +78,7 @@ export default class Vc extends React.Component {
     axios.get(url)
       .then((res) => {
         alert(`${isEdit ? '修改' : '新增'}成功`)
+        this.getVcList();
       }, (e) => {
         console.log(e);
         alert(`${isEdit ? '修改' : '新增'}失败`)
@@ -179,6 +180,7 @@ export default class Vc extends React.Component {
                       onChange={this.vcNameChange.bind(this)}
                       margin="normal"
                       fullWidth={true}
+                      disabled={this.state.isEdit}
                     />
                   </Grid>
                   <Grid item xs={8}>

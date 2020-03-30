@@ -89,7 +89,6 @@ const AllJobs: FunctionComponent = () => {
     [cluster.id, selectedTeam]
   );
   const [jobs, setJobs] = useState<any[]>();
-  const [requesting, setRequesting] = useState(false);
   useEffect(() => {
     setJobs(undefined);
   }, [cluster.id]);
@@ -97,10 +96,7 @@ const AllJobs: FunctionComponent = () => {
     if (data !== undefined) {
       setJobs(data);
       const timeout = setTimeout(() => {
-        if (!requesting) {
-          setRequesting(true);
-          get();
-        }
+        get();
       }, pollInterval);
       return () => {
         clearTimeout(timeout);

@@ -71,7 +71,7 @@ const Console: FunctionComponent = () => {
     return (
       <Box p={1} style={{ overflow: 'auto' }}>
         <Box m={0} component="pre">
-          Because this job has not started, it is not availble now
+          Because this job has not started, there is no logs
         </Box>
       </Box>
     )

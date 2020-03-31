@@ -228,7 +228,7 @@ const Title: React.FC = () => {
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
         <Typography component="h1" variant="h6" align="left">
-          智瞳
+          YTung
         </Typography>
       </Link>
     </Box>

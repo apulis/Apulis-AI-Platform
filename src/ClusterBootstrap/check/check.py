@@ -241,7 +241,7 @@ class DeploymentChecker(object):
 
         return hosts
 
-    ## 获取节点信息
+    ## 获取节点信息 -- 仅返回域名信息
     def get_nodes_from_config(self, machinerole):
 
         machinerole = "infrastructure" if machinerole == "infra" else machinerole
@@ -263,6 +263,37 @@ class DeploymentChecker(object):
                         Nodes.append(nodename)
 
             return sorted(Nodes)
+
+    
+    ## 获取节点信息 -- 仅返回域名信息
+    def get_nodes_info(self, machinerole):
+
+        machinerole = "infrastructure" if machinerole == "infra" else machinerole
+        if "machines" not in self.cluster_config:
+            return {}
+
+        else:
+
+            domain = self.get_domain()
+            Nodes = {}
+
+            for nodename in self.cluster_config["machines"]:
+
+                nodeInfo = self.cluster_config["machines"][nodename]
+
+                if "role" in nodeInfo and nodeInfo["role"]==machinerole:
+
+                    if len(nodename.split(".")) < 3:
+                        Nodes[nodename+domain] = nodeInfo
+                    else:
+                        Nodes[nodename] = nodeInfo
+
+                else:
+                    pass
+
+            return Nodes
+        
+        return {}
 
     ## 获取域名
     def get_domain(self):
@@ -433,11 +464,50 @@ class DeploymentChecker(object):
 
         return True
 
-    @query
-    def check_04_nvidia_driver(self):
+    # @query
+    # def check_04_nvidia_driver(self):
 
-        expect1 = "NVIDIA-SMI"
-        expect2 = "Driver Version"
+    #     expect1 = "NVIDIA-SMI"
+    #     expect2 = "Driver Version"
+
+    #     def check_expect(output):
+    #         output = output.strip()
+
+    #         if expect1 not in output:
+    #             return False
+    #         else:
+    #             pass  
+
+    #         if expect2 not in output:
+    #             return False
+    #         else:
+    #             pass  
+
+    #         return True
+
+    #     for host in self.get_worker_nodes():
+    #         cmd = 'sudo nvidia-docker run --rm dlws/cuda nvidia-smi'
+    #         passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+        
+    #         if not passed:
+    #             return False
+    #         else:
+    #             pass     
+
+    #         cmd = 'sudo docker run --rm -ti dlws/cuda nvidia-smi'
+    #         passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
+        
+    #         if not passed:
+    #             return False
+    #         else:
+    #             pass    
+
+    #     return True
+    @query
+    def check_04_npu_driver(self):
+    
+        expect1 = "NPU ID"
+        expect2 = "Chip ID"
 
         def check_expect(output):
             output = output.strip()
@@ -454,8 +524,20 @@ class DeploymentChecker(object):
 
             return True
 
-        for host in self.get_worker_nodes():
-            cmd = 'sudo nvidia-docker run --rm dlws/cuda nvidia-smi'
+        nodes_data = self.get_nodes_info("worker") 
+        #pdb.set_trace()
+
+        for host in nodes_data.keys():
+
+            host_info = nodes_data[host]
+            worker_type = host_info["type"]
+
+            if worker_type is None or worker_type.lower() != "npu":
+                continue
+            else:
+                pass
+
+            cmd = 'sudo /usr/local/sbin/npu-smi info -t common -i 255 | grep "NPU ID" -A10'
             passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
         
             if not passed:
@@ -463,15 +545,8 @@ class DeploymentChecker(object):
             else:
                 pass     
 
-            cmd = 'sudo docker run --rm -ti dlws/cuda nvidia-smi'
-            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-        
-            if not passed:
-                return False
-            else:
-                pass    
-
         return True
+    
 
     @query
     def check_05_nfs(self):
@@ -519,7 +594,7 @@ class DeploymentChecker(object):
         components_list = [
 
             ## k8s组件
-            "custom-metrics-apiserver",
+            #"custom-metrics-apiserver",
             "prometheus-operator",
             "device-plugin",
             "cloud-collectd-node-agent",
@@ -545,7 +620,7 @@ class DeploymentChecker(object):
 
         expect_name   = ""
         expect_status = "running"
-        expect_restart = "3"
+        expect_restart = 30
         svc_states = []
 
         def check_expect(output):
@@ -577,7 +652,7 @@ class DeploymentChecker(object):
                         else:
                             pass  
 
-                        if len(svc_states) < 6 or svc_states[4].lower() > expect_restart:
+                        if len(svc_states) < 6 or int(svc_states[4].lower()) > expect_restart:
                             check_result[check_item_name] = "no"
                             print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
                             continue

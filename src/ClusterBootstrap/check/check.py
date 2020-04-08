@@ -596,7 +596,8 @@ class DeploymentChecker(object):
             ## k8s组件
             #"custom-metrics-apiserver",
             "prometheus-operator",
-            "device-plugin",
+            #"device-plugin",
+            "a910-device-plugin",
             "cloud-collectd-node-agent",
             "coredns",
             "etcd",

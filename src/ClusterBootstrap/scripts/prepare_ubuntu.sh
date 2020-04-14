@@ -11,6 +11,9 @@ install_dir="/tmp/dlws_install/"
 # 用于标记是否为reboot之后，继续安装的
 exec_mode="from_begging"
 
+# 安装k8s指定版本客户端
+# 此版本号必须与config.yaml中的k8s_gitbranch一致
+k8s_version="v1.18.0"
 
 # 预安装
 install_preparation() {
@@ -18,6 +21,57 @@ install_preparation() {
     sudo killall apt-get
     sudo killall dpkg
     sudo dpkg --configure -a
+}
+
+# set source mirrors 
+set_apt_mirror() {
+
+    #sudo rm /var/lib/apt/lists/* -vf 
+    sudo cat <<EOF | sudo tee /etc/apt/sources.list 
+        deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+
+        deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+
+        deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+
+        deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+
+        deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+        deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+
+        deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu bionic stable
+EOF
+}
+
+# pull k8s images
+pull_k8s_images() {
+    sudo docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:${k8s_version}
+    sudo docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:${k8s_version}
+    sudo docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:${k8s_version}
+    sudo docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:${k8s_version}
+    sudo docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0
+    sudo docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/coredns:1.6.7
+    sudo docker pull registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
+
+    sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:${k8s_version} k8s.gcr.io/kube-apiserver:${k8s_version}
+    sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:${k8s_version} k8s.gcr.io/kube-controller-manager:${k8s_version}
+    sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:${k8s_version} k8s.gcr.io/kube-scheduler:${k8s_version}
+    sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:${k8s_version} k8s.gcr.io/kube-proxy:${k8s_version}
+    sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0 k8s.gcr.io/etcd:3.4.3-0
+    sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/coredns:1.6.7 k8s.gcr.io/coredns:1.6.7
+    sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2 k8s.gcr.io/pause:3.2
+
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:${k8s_version} 
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:${k8s_version}
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:${k8s_version}
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:${k8s_version} 
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0 
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/coredns:1.6.7 
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2 
 }
 
 # Install python on CoreOS base image
@@ -308,8 +362,6 @@ purge_install_flags() {
         del_install_flag  "set_network"
         del_install_flag  "install_gpu_utils"
         del_install_flag  "set_kubernetes"
-
-        #echo "in resume mode: $1"
     fi
 }
 
@@ -324,13 +376,19 @@ main () {
 
     purge_install_flags
     install_preparation
+
+    set_apt_mirror
+    
+    install_docker
+    pull_k8s_images
+    
     install_python
     install_shell_utils
-    install_docker
+    
     set_network
     install_gpu_utils
     set_kubernetes
-    set_azure
+    #set_azure
 }
 
 main $*

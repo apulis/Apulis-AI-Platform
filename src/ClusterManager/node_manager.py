@@ -299,7 +299,7 @@ def Run():
                 get_cluster_status()
             except Exception as e:
                 logger.exception("get cluster status failed")
-        time.sleep(30)
+        time.sleep(5)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

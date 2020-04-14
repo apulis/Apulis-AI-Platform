@@ -3,7 +3,7 @@ import base64
 import os
 import logging
 import functools
-
+import mysql.connector
 import timeit
 
 from Queue import Queue
@@ -88,14 +88,25 @@ class DataHandler(object):
         self.pool = SingletonDBPool.instance()
         elapsed = timeit.default_timer() - start_time
         logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
+        self.CreateDatabase()
 
     def CreateDatabase(self):
         if "initSQLDB" not in global_vars or not global_vars["initSQLDB"]:
             logger.info("===========init SQL database===============")
             global_vars["initSQLDB"] = True
-            with MysqlConn() as conn:
-                conn.insert_one("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET 'utf8' ", self.database)
-                conn.commit()
+
+            server = config["mysql"]["hostname"]
+            username = config["mysql"]["username"]
+            password = config["mysql"]["password"]
+
+            conn = mysql.connector.connect(user=username, password=password,
+                                          host=server)
+            sql = " CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET 'utf8' " % (self.database)
+            cursor = conn.cursor()
+            cursor.execute(sql)
+            conn.commit()
+            cursor.close()
+            conn.close()
 
     def CreateTable(self):
         if "initSQLTable" not in global_vars or not global_vars["initSQLTable"]:
@@ -168,7 +179,8 @@ class DataHandler(object):
                     `id`        INT   NOT NULL AUTO_INCREMENT,
                     `status`         LONGTEXT NOT NULL,
                     `time` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`)
+                    PRIMARY KEY (`id`),
+                    INDEX (`time`)
                 )
                 """ % (self.clusterstatustablename)
 

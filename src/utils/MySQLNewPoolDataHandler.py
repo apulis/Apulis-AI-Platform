@@ -89,6 +89,7 @@ class DataHandler(object):
         elapsed = timeit.default_timer() - start_time
         logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
         self.CreateDatabase()
+        self.CreateTable()
 
     def CreateDatabase(self):
         if "initSQLDB" not in global_vars or not global_vars["initSQLDB"]:

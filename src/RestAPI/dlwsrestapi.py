@@ -65,10 +65,11 @@ if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     if config.get("administrators") and config["administrators"]:
         for one in config["administrators"]:
             if len(one.split("@"))==2:
+                dataHandler = DataHandler()
+                dataHandler.UpdateAccountInfo(one,"Microsoft", one.split("@")[0], one.split("@")[0], "tryme2020", 1, 1)
                 ACLManager.UpdateAce(one.split("@")[0], AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster),
                                      Permission.Admin, 0)
     logger.info('admin access given!')
-
 
 def _stacktraces():
    code = []

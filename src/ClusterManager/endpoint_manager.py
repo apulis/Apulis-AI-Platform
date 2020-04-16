@@ -35,9 +35,9 @@ def is_ssh_server_ready(pod_name):
 
 
 def query_ssh_port(pod_name):
-    bash_script = "grep ^Port /usr/etc/sshd_config | cut -d' ' -f2"
+    bash_script = "\"grep ^Port /usr/etc/sshd_config | cut -d' ' -f2\""
     # status_code, output = deployer.pod_exec(pod_name, ["/bin/bash", "-c", bash_script])
-    output = k8sUtils.kubectl_exec("exec %s \"%s\"" % (pod_name, " -- " + "/bin/bash" + " -c " + bash_script))
+    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + "/bin/bash" + " -c " + bash_script))
     if output == "":
         raise RuntimeError("Query ssh port failed: {}".format(pod_name))
     # if status_code != 0:

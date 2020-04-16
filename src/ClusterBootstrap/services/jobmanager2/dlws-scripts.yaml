@@ -1,7 +1,9 @@
 apiVersion: v1
 data:
-  bootstrap.sh: "#! /bin/bash\nset -ex\n\n. /dlts-runtime/env/init.env\nsh -x /dlts-runtime/install.sh\n\nSCRIPT_DIR=/pod/scripts\n\necho
-    bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log\n\n# https://stackoverflow.com/a/26759734/845762\nif
+  bootstrap.sh: "#! /bin/bash\nset -ex\n\n. /dlts-runtime/env/init.env\nsh -x /dlts-runtime/install.sh\n\nsed
+    -i 's|https\\?://[^/]\\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list &&
+    apt-get update\n\nSCRIPT_DIR=/pod/scripts\n\necho bootstrap starts at `date` &>>
+    ${LOG_DIR}/bootstrap.log\n\n# https://stackoverflow.com/a/26759734/845762\nif
     ! [ -x \"$(command -v sudo)\" ] ; then\n    time apt-get update && time apt-get
     install -y sudo\nfi\n\nif [ \"$DLWS_ROLE_NAME\" != \"inferenceworker\" ];\nthen\n\t#
     Dir for saving running status\n\texport PROC_DIR=/pod/running\n\trm -rf ${PROC_DIR}\n\tmkdir

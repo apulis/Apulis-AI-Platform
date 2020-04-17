@@ -145,71 +145,6 @@ DNS提供商：https://dns.console.aliyun.com
 
 
 
-#### 配置子域名快捷搜索
-
-**以下机器：dev、master、worker三个机器**  
-
-- 创建目录：mkdir -p /etc/resolvconf/resolv.conf.d/
-
-  修改文件：vim /etc/resolvconf/resolv.conf.d/base  
-
-  增加数据：search sigsus.cn  
-  执行指令：sudo resolvconf -u
-
-  
-
-- 配置节点hosts文件（**单个公网IP的集群使用，router不具备短域名或局域网内DNS配置功能**）
-
-  路径：DLWorkspace/src/ClusterBootstrap/deploy/etc/hosts
-
-  作用：实现内网DNS解析
-
-  ```
-  127.0.0.1       localhost
-  127.0.1.1       ubuntu
-  
-  192.168.1.3     china-gpu02
-  192.168.1.3     china-gpu02-master
-  192.168.1.8     china-gpu02-worker1
-  192.168.1.9     china-gpu02-worker2
-  
-  192.168.1.3     china-gpu02.sigsus.cn
-  192.168.1.3     china-gpu02-master.sigsus.cn
-  192.168.1.8     china-gpu02-worker1.sigsus.cn
-  192.168.1.9     china-gpu02-worker2.sigsus.cn
-  
-  # The following lines are desirable for IPv6 capable hosts
-  ::1     localhost ip6-localhost ip6-loopback
-  ff02::1 ip6-allnodes
-  ff02::2 ip6-allrouters
-  ```
-
-- 执行hosts文件配置（deploy.py位于**DLWorkspace/src/ClusterBootstrap/**）
-
-  ```
-  ./deploy.py --verbose copytoall ./deploy/etc/hosts  /etc/hosts
-  ```
-
-  
-
-- 检查DNS配置
-  
-  在master、proxy上指令执行看是否成功 
-
-    ``` 
-    ping china-gpu02-master
-    ping china-gpu02-worker1
-    ping china-gpu02-worker2
-    ```
-
-#### 安装**DEV**执行环境
-
-```
-./scripts/prepare_ubuntu_dev.sh
-```
-
-  
-
 
 ### 执行安装
 #### 文件/路径说明  
@@ -446,6 +381,71 @@ jwt:
 
 
 
+#### 安装**DEV**执行环境
+
+```
+./scripts/prepare_ubuntu_dev.sh
+```
+
+  
+
+#### 配置子域名快捷搜索
+
+**以下机器：dev、master、worker三个机器**  
+
+- 创建目录：mkdir -p /etc/resolvconf/resolv.conf.d/
+
+  修改文件：vim /etc/resolvconf/resolv.conf.d/base  
+
+  增加数据：search sigsus.cn  
+  执行指令：sudo resolvconf -u
+
+  
+
+- 配置节点hosts文件（**单个公网IP的集群使用，router不具备短域名或局域网内DNS配置功能**）
+
+  路径：DLWorkspace/src/ClusterBootstrap/deploy/etc/hosts
+
+  作用：实现内网DNS解析
+
+  ```
+  127.0.0.1       localhost
+  127.0.1.1       ubuntu
+  
+  192.168.1.3     china-gpu02
+  192.168.1.3     china-gpu02-master
+  192.168.1.8     china-gpu02-worker1
+  192.168.1.9     china-gpu02-worker2
+  
+  192.168.1.3     china-gpu02.sigsus.cn
+  192.168.1.3     china-gpu02-master.sigsus.cn
+  192.168.1.8     china-gpu02-worker1.sigsus.cn
+  192.168.1.9     china-gpu02-worker2.sigsus.cn
+  
+  # The following lines are desirable for IPv6 capable hosts
+  ::1     localhost ip6-localhost ip6-loopback
+  ff02::1 ip6-allnodes
+  ff02::2 ip6-allrouters
+  ```
+
+- 执行hosts文件配置（deploy.py位于**DLWorkspace/src/ClusterBootstrap/**）
+
+  ```
+  ./deploy.py --verbose copytoall ./deploy/etc/hosts  /etc/hosts
+  ```
+
+- 检查DNS配置
+
+  在master、proxy上指令执行看是否成功 
+
+  ``` 
+    ping china-gpu02-master
+    ping china-gpu02-worker1
+    ping china-gpu02-worker2
+  ```
+
+  
+
 #### 初始化部署环境
 
 ```
@@ -513,12 +513,23 @@ nvidia-docker run --rm dlws/cuda nvidia-smi
 docker run --rm -ti dlws/cuda nvidia-smi
 保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
 
-如nvidia-docker指令执行正常，但docker指令执行错误，则修改/etc/docker/daemon.json，
+如docker指令执行正常，但nvidia-docker指令执行错误，则修改/etc/docker/daemon.json，
 将nvidia-docker设置为default runtime
 
 vim /etc/docker/daemon.json
 增加
 "default-runtime": "nvidia",
+
+完整例子：
+{
+    "default-runtime": "nvidia",
+    "runtimes": {
+        "nvidia": {
+            "path": "nvidia-container-runtime",
+            "runtimeArgs": []
+        }
+    }
+}
 ```
 
 

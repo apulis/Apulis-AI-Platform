@@ -165,7 +165,7 @@ const Chart: React.FC<{
       </g>
     );
   };
-  const[activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(1);
   const onPieEnter = (data: any, index: number) => {
     setActiveIndex(index)
   }

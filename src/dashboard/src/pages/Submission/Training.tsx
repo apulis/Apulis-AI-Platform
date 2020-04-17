@@ -347,7 +347,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [saveTemplateDatabase, setSaveTemplateDatabase] = React.useState("user");
   const onSaveTemplateDatabaseChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
-      setSaveTemplateDatabase(event.target.value as string);
+      setSaveTemplateDatabase((event.target.value) as string);
     },
     [setSaveTemplateDatabase]
   );
@@ -459,7 +459,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         tensorboard,
         plugins,
       };
-      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
+      let dataBase = saveTemplateDatabase;
+      if (dataBase === 'team') {
+        dataBase = 'vc';
+      }
+      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${dataBase}`;
       await axios.delete(url);
       setShowDeleteTemplate(true)
       window.location.reload()
@@ -703,7 +707,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
     } else {
-      history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
+      history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
     }
   }, [postJobData]);
   const fetchGrafanaUrl = `/api/clusters`;
@@ -724,7 +728,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (postEndpointsData) {
       setOpen(true);
       setTimeout(()=>{
-        history.push(`/job/${selectedTeam}/${selectedCluster}/${jobId.current}`);
+        history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
       }, 2000)
 
     }

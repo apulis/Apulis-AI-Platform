@@ -39,6 +39,20 @@ def exec_cmd(*args, **kwargs):
         return subprocess.check_output(*args, **kwargs).decode("utf-8")
 
 
+def exec_shell_cmd(cmd):
+
+    logger.debug("about to exec %s", cmd)
+    output = ""
+
+    try:
+        output = subprocess.check_output(
+            cmd, stderr=subprocess.STDOUT, shell=True, timeout=3,
+            universal_newlines=True)
+    except subprocess.CalledProcessError as exc:
+        print("Status : FAIL", exc.returncode, exc.output)
+
+    return output
+
 def walk_json_field_safe(obj, *fields):
     """ for example a=[{"a": {"b": 2}}]
     walk_json_field_safe(a, 0, "a", "b") will get 2

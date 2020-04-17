@@ -26,6 +26,7 @@ import {TeamVirtualClusterStatus} from "./components/TeamVirtualClusterStatus";
 import {TeamVCUserStatus} from "./components/TeamVCUserStatus";
 import {ClusterUsage} from "./components/ClusterUsage";
 import {PhysicalClusterNodeStatus} from "./components/PhysicalClusterNodeStatus";
+import { MarkunreadSharp } from "@material-ui/icons";
 
 const ClusterStatus: FC = () => {
   const theme = useTheme();
@@ -49,8 +50,8 @@ const ClusterStatus: FC = () => {
   const fetchVcStatusUrl = `/api`;
   const fetchiGrafanaUrl = `/api/clusters`;
 
-  const request = useFetch(fetchVcStatusUrl,options);
-  const requestGrafana = useFetch(fetchiGrafanaUrl, options);
+  const request = useFetch(fetchVcStatusUrl);
+  const requestGrafana = useFetch(fetchiGrafanaUrl);
   const fetchVC = async (cluster: string) => {
     const response = await request.get(`/teams/${selectedTeam}/clusters/${cluster}`);
     const responseUrls = await requestGrafana.get(`/${cluster}`);
@@ -165,18 +166,19 @@ const ClusterStatus: FC = () => {
               idleTmp['userName'] = key;
               idleTmp['booked'] = Math.floor(obj['booked'][gpuType] / 3600);
               idleTmp['idle'] = Math.floor(obj['idle'][gpuType] / 3600);
+              idleTmp['idleGPU'] = 0;
               fetchIdes.push(idleTmp);
             }
           }
         }
-        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params + '&time=' + ((new Date().getTime() / 1000)));
+        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params + '&time=' + Math.floor((1584265252)));
         fetch(fetchUserGPUUrl).then(async (response: any) => {
           const res = await response.json();
           for (let item of res["data"]["result"]) {
             let idleUser: any = {};
             idleUser['userName'] = item['metric']['username'];
-            idleUser['gpuType'] = item['metric']['gpu_Type']
-            idleUser['idleGPU'] = item['value'][1];
+            idleUser['gpuType'] = item['metric']['gpu_type'];
+            idleUser['idleGPU'] = Number(item['value'][1]);
             prometheusResp.push(idleUser)
           }
           // fetchIdes
@@ -199,7 +201,15 @@ const ClusterStatus: FC = () => {
               mu['preemptableGPU'] = 0;
             }
           });
-          let finalUserStatus = _.values(mergePropertyByKey(tmpMerged, prometheusResp, 'userName'));
+          prometheusResp.forEach((val1: any) => {
+            const { userName, gpuType } = val1;
+            tmpMerged.forEach((val2: any) => {
+              if (userName === val2.userName && gpuType === val2.gpuType) {
+                val2.idleGPU = val1.idleGPU;
+              }
+            })
+          })
+          let finalUserStatus = tmpMerged;
           let totalRow: any = {};
           totalRow['booked'] = 0;
           totalRow['idle'] = 0;

@@ -32,7 +32,17 @@ const getUriWithQuery = context => {
     
     return `${getDomain(callbackRedirectURL)}api${basePath}/auth/microsoft`
   } else if (/127.0.0.1/.test(context.origin)) {
-    return domain + `/api${basePath}/auth/microsoft`
+    let callbackRedirectURL = ''
+    if (context.query.state) {
+      const stateParams = new URLSearchParams(context.query.state)
+      if (stateParams.has('to')) {
+        callbackRedirectURL = stateParams.get('to')
+      }
+    } else if (context.query.to) {
+      callbackRedirectURL = context.query.to
+    }
+    
+    return `${getDomain(callbackRedirectURL)}api${basePath}/auth/microsoft`
   } else {
     return (context.origin.replace('http', 'https') + originalUrl).split('?')[0] + `/api${basePath}/auth/microsoft`
   }
@@ -51,7 +61,7 @@ const getMSCallbackUri = context => {
     }
     return getDomain(callbackRedirectURL)+ `api${basePath}/auth/microsoft`
   } else if (/127.0.0.1/.test(context.origin)) {
-    return domain + `/api${basePath}/auth/microsoft`
+    return domain + `/api${basePath}/auth/microsoft`;
   } else {
     return (context.origin.replace('http', 'https') + originalUrl).split('?')[0]
   }

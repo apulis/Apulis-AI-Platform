@@ -3,6 +3,7 @@ import {
   Table,
   TableHead,
   TableRow, TableCell, TableBody, Button, Grid, FormControl, InputLabel, Select, MenuItem,
+  Container,
 } from "@material-ui/core";
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
@@ -78,8 +79,9 @@ export default class User extends React.Component {
   render() {
     const { userList, modifyFlag, userName, isAdmin, isAuthorized } = this.state;
     return (
-      <div>
-        <Table style={{ float: 'left', width: '70%' }}>
+      <Container fixed maxWidth="xl">
+        <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
+        <Table style={{ width: '85%' }}>
           <TableHead>
             <TableRow style={{ backgroundColor: '#7583d1' }}>
               <TableCell style={{ color: '#fff' }}>uid</TableCell>
@@ -147,6 +149,7 @@ export default class User extends React.Component {
             : null
         }
       </div>
+      </Container>
     )
   }
 }

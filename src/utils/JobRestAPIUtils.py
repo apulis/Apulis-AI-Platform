@@ -885,7 +885,7 @@ def GetEndpoints(userName, jobId):
                         if "nodeName" in endpoint:
                             epItem["nodeName"] = endpoint["nodeName"]
                         if epItem["name"] == "ssh":
-                            desc = yaml.loadbase64.b64decode(job["jobDescription"])
+                            desc = yaml.full_load(base64.b64decode(job["jobDescription"]))
                             for i in desc["spec"]["containers"][0]["env"]:
                                 if i["name"] == "DLTS_JOB_TOKEN":
                                     epItem["password"] = i["value"]

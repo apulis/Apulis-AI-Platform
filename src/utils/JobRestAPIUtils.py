@@ -858,7 +858,7 @@ def GetEndpoints(userName, jobId):
     dataHandler = DataHandler()
     ret = []
     try:
-        job = dataHandler.GetJobTextFields(jobId, ["userName", "vcName", "endpoints"])
+        job = dataHandler.GetJobTextFields(jobId, ["userName", "vcName", "endpoints","jobDescription"])
         if job is not None:
             if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Admin):
                 endpoints = {}
@@ -884,6 +884,11 @@ def GetEndpoints(userName, jobId):
                         epItem["port"] = port
                         if "nodeName" in endpoint:
                             epItem["nodeName"] = endpoint["nodeName"]
+                        if epItem["name"] == "ssh":
+                            desc = yaml.full_load(base64.b64decode(job["jobDescription"]))
+                            for i in desc["spec"]["containers"][0]["env"]:
+                                if i["name"] == "DLTS_JOB_TOKEN":
+                                    epItem["password"] = i["value"]
                     ret.append(epItem)
     except Exception as e:
         logger.error("Get endpoint exception, ex: %s", str(e))

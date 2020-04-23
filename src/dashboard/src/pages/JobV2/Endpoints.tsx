@@ -46,7 +46,7 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     const identify = `${cluster['workStorage'].replace(/^file:\/\//i, '//')}/${job['jobParams']['workPath']}/.ssh/id_rsa`
     const host = `${endpoint['nodeName']}.${endpoint['domain']}`;
     const task = job['jobParams']['jobtrainingtype'] === 'PSDistJob' ? endpoint['podName'].split('-').pop() : '';
-    const command = `ssh -i ${identify} -p ${endpoint['port']} ${endpoint['username']}@${host}`
+    const command = `ssh -i ${identify} -p ${endpoint['port']} ${endpoint['username']}@${host}` + ` [Password: ${endpoint['password'] ? endpoint['password'] : ''}]`
     return <CopyableTextListItem primary={`SSH${task ? ` to ${task}` : ''}`} secondary={command}/>;
   }
   const url = `http://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/`

@@ -529,19 +529,28 @@ def get_domain():
 # Get a list of nodes DNS from cluster.yaml
 def get_nodes_from_config(machinerole):
     machinerole = "infrastructure" if machinerole == "infra" else machinerole
+
     if "machines" not in config:
         return []
+
     else:
         domain = get_domain()
         Nodes = []
+
         for nodename in config["machines"]:
             nodeInfo = config["machines"][nodename]
+
+
             if "role" in nodeInfo and nodeInfo["role"]==machinerole:
                 if len(nodename.split("."))<3:
                     Nodes.append(nodename+domain)
                 else:
                     Nodes.append(nodename)
+            else:
+                pass
+
         return sorted(Nodes)
+
 
 def get_node_full_name(nodename):
     return nodename + get_domain() if len(nodename.split("."))<3 else nodename
@@ -1066,6 +1075,8 @@ def deploy_masters_by_kubeadm(force = False):
     print "==============================================="
 
     kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_version = config["k8s-gitbranch"]
+
     kubernetes_master0 = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
 
@@ -1087,7 +1098,7 @@ def deploy_masters_by_kubeadm(force = False):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
-        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s""" % kubernetes_master0
+        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s""" % (kubernetes_master0, kubernetes_version)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
         
         if i==0:
@@ -3061,18 +3072,27 @@ def run_kubectl( commands ):
     else:
         run_kube( "./deploy/bin/kubectl", commands)
 
+# node can be either of fqdn or private-ip
 def kubernetes_get_node_name(node):
+    
     kube_node_name = ""
     domain = get_domain()
+
     if len(domain) < 2:
         kube_node_name = node
+    
     elif domain in node:
         kube_node_name = node[:-(len(domain))]
+    
     else:
         kube_node_name = node
+    
     if config["isacs"]:
         acs_tools.acs_set_node_from_dns(kube_node_name)
         kube_node_name = config["acs_node_from_dns"][kube_node_name]
+    else:
+        pass
+    
     return kube_node_name
 
 def set_zookeeper_cluster():
@@ -3370,8 +3390,11 @@ def kubernetes_label_worker():
                 pass
 
             # gpuType=nvidia/huawei for compatibility
-            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo and "series" in nodeInfo:
-                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"])
+            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo: 
+                if "series" in nodeInfo and nodeInfo["series"] is not "":
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"])
+                else:
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"])
             else:
                 pass
 

@@ -171,7 +171,7 @@ const ClusterStatus: FC = () => {
             }
           }
         }
-        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl']+params + '&time=' + Math.floor((1584265252)));
+        const fetchUserGPUUrl = (userfetchs['getIdleGPUPerUserUrl'] + params);
         fetch(fetchUserGPUUrl).then(async (response: any) => {
           const res = await response.json();
           for (let item of res["data"]["result"]) {

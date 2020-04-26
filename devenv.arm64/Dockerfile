@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libcurl4-openssl-dev libssl-dev \
         dirmngr
 
-RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 
 RUN add-apt-repository \
    "deb [arch=arm64] https://download.docker.com/linux/ubuntu \

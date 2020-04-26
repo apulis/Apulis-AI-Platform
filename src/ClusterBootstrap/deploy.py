@@ -1538,7 +1538,7 @@ def reset_worker_nodes_by_kubeadm( nargs ):
             run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename]) 
             run_kubectl( ['delete node %s' % nodename])
 
-            workercmd = "sudo kubeadm reset" 
+            workercmd = "sudo kubeadm reset -f" 
             if verbose:
                 print(workercmd)
             else:

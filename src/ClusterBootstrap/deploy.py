@@ -3617,6 +3617,33 @@ def run_docker_image( imagename, native = False, sudo = False ):
         else:
             run_docker( matches[0], prompt = imagename, dockerConfig = dockerConfig, sudo = sudo )
 
+def sync_uid_and_gid(database,server,username,password):
+    from mysql_conn_pool import MysqlConn
+    sql = "select uid,gid,Password,Email,isAdmin,isAuthorized from User"
+    with MysqlConn(database=database,server=server,username=username,password=password) as conn:
+        rets = conn.select_many(sql)
+    MysqlConn._db_pools = {}
+    global config
+    clusterId = config["clusterId"]
+    mysql_node = config["mysql_node"]
+    mysql_password = config["mysql_password"]
+    old_config = config
+    from MySQLNewPoolDataHandler import DataHandler
+    from config import config
+    config.update(old_config)
+    config["gpu_count_per_node"] = 8
+    config["worker_node_num"] = 2
+    config["gpu_type"]= "nvidia"
+    config["mysql"]={"hostname":mysql_node,"username":"root","password":mysql_password}
+    config["clusterId"] = clusterId
+    config["database"]={"hostname":"","username":"","password":""}
+    dataHandler = DataHandler()
+    for one in rets:
+        username = one["Email"].split("@")[0]
+        print "sync user %s" % username
+        dataHandler.UpdateAccountInfo(one["Email"], "Microsoft", username, username, one["Password"], int(bool(one["isAdmin"])), int(bool(one["isAuthorized"])))
+        dataHandler.UpdateIdentityInfo(username, one["uid"], one["gid"], [3001])
+
 def gen_dns_config_script():
     utils.render_template("./template/dns/dns.sh.template", "scripts/dns.sh", config)
 
@@ -4513,6 +4540,9 @@ def run_command( args, command, nargs, parser ):
         gen_configs()
         upgrade_masters()
         upgrade_workers(nargs)
+    elif command == "sync_uid":
+        assert len(nargs)==4
+        sync_uid_and_gid(nargs[0],nargs[1],nargs[2],nargs[3])
     elif command in scriptblocks:
         run_script_blocks(args.verbose, scriptblocks[command])
     else:

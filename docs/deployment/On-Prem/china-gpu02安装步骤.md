@@ -567,7 +567,7 @@ sudo vim /etc/fstab
 ./deploy.py --verbose execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
 
 ./deploy.py --verbose kubeadm init
-./deploy.py copytoall ./deploy/sshkey/admin.conf /root/.kube/config
+./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
 ```
 
 ##### 设置集群节点标签

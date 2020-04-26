@@ -44,7 +44,9 @@ RUN apt-key fingerprint 0EBFCD88
 RUN apt-get update && apt-get install -y --no-install-recommends docker-ce
 
 # PIP installation
-RUN pip install --upgrade pip && pip install setuptools && pip install pyyaml jinja2 flask flask.restful tzlocal pycurl
+RUN pip install --upgrade pip && pip install setuptools && pip install pyyaml jinja2 flask flask.restful tzlocal pycurl requests subprocess32
+
+RUN chmod og+rx  -R /usr/local/lib
 
 # RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
 #    gpg --dearmor | \

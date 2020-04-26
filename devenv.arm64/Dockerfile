@@ -1,5 +1,5 @@
 # Docker environment for development of DL workspace
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 # Software package installation

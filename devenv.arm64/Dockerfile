@@ -2,6 +2,8 @@
 FROM ubuntu:18.04
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Software package installation
 RUN apt-get update && apt-get install -y --no-install-recommends \
         apt-utils \

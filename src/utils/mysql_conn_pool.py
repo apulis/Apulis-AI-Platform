@@ -100,17 +100,17 @@ class MysqlConn(object):
         return ret, max_ret
 
 
-    def __init__(self, db_type="risk"):
+    def __init__(self, db_type="risk",database=None,server=None,username=None,password=None):
         if db_type not in ["risk", "master", "db4", "reptile", "tidb", "riskloanread","model"]:
             raise Exception("db_type must be risk or master or reptile")
         if not MysqlConn._db_pools.has_key(db_type):
             MysqlConn._lock.acquire()
             try:
                 if not MysqlConn._db_pools.has_key(db_type):
-                    database = "DLWSCluster-%s" % config["clusterId"]
-                    server = config["mysql"]["hostname"]
-                    username = config["mysql"]["username"]
-                    password = config["mysql"]["password"]
+                    database = database if database else "DLWSCluster-%s" % config["clusterId"]
+                    server =server if server else  config["mysql"]["hostname"]
+                    username =username if username else  config["mysql"]["username"]
+                    password =password if password else  config["mysql"]["password"]
                     if db_type == "risk":
                         MysqlConn._db_pools[db_type] = PooledDB(creator=MySQLdb, mincached=MysqlConn._risk_min_cached,
                                                                 maxcached=MysqlConn._risk_max_cached,

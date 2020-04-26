@@ -17,11 +17,9 @@
 ### 安装准备
 #### DEV节点创建非ROOT用户
 
-**可选；如果有root用户，或者sudo权限用户，可略过此步骤**
+**（可选；如果有root用户，或者sudo权限用户，可略过此步骤）**
 
-假设用户名：bifeng.peng，密码：bifeng
-
-./create_user.sh  bifeng.peng  bifeng
+**./create_user.sh  用户名  密码**
 
 ```
 #! /bin/bash
@@ -389,7 +387,7 @@ jwt:
 
   
 
-#### 配置子域名快捷搜索
+#### 配置DNS内网解析
 
 **以下机器：dev、master、worker三个机器**  
 
@@ -404,6 +402,8 @@ jwt:
 
 - 配置节点hosts文件（**单个公网IP的集群使用，router不具备短域名或局域网内DNS配置功能**）
 
+  执行：mkdir -p deploy/etc
+
   路径：DLWorkspace/src/ClusterBootstrap/deploy/etc/hosts
 
   作用：实现内网DNS解析
@@ -417,13 +417,27 @@ jwt:
   192.168.1.8     china-gpu02-worker1
   192.168.1.9     china-gpu02-worker2
   
+  
+  10.200.0.1      china-gpu02-master-ib
+  10.200.0.2      china-gpu02-worker1-ib
+  10.200.0.3      china-gpu02-worker2-ib
+  10.200.0.4      storage-server
+  
   192.168.1.3     china-gpu02.sigsus.cn
   192.168.1.3     china-gpu02-master.sigsus.cn
   192.168.1.8     china-gpu02-worker1.sigsus.cn
   192.168.1.9     china-gpu02-worker2.sigsus.cn
   
+  
+  10.200.0.1      china-gpu02-master-ib.sigsus.cn
+  10.200.0.2      china-gpu02-worker1-ib.sigsus.cn
+  10.200.0.3      china-gpu02-worker2-ib.sigsus.cn
+  10.200.0.4      storage-server.sigsus.cn
+  
   # The following lines are desirable for IPv6 capable hosts
   ::1     localhost ip6-localhost ip6-loopback
+  fe00::0 ip6-localnet
+  ff00::0 ip6-mcastprefix
   ff02::1 ip6-allnodes
   ff02::2 ip6-allrouters
   ```
@@ -431,6 +445,7 @@ jwt:
 - 执行hosts文件配置（deploy.py位于**DLWorkspace/src/ClusterBootstrap/**）
 
   ```
+  sudo cp ./deploy/etc/hosts  /etc/hosts
   ./deploy.py --verbose copytoall ./deploy/etc/hosts  /etc/hosts
   ```
 
@@ -486,8 +501,9 @@ echo "your_root_password" > "rootpasswd"
 
 ```
 ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
-./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh continue
 
+上一个语句会重启worker节点。需等待所有服务器 启动完毕，再执行以下步骤
+./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh continue
 ./deploy.py --verbose execonall sudo usermod -aG docker dlwsadmin
 ```
 
@@ -566,7 +582,7 @@ sudo vim /etc/fstab
 
 #### 挂载数据共享文件夹
 
-##### 安装NFS服务（所有节点）
+##### 安装NFS服务（所有节点，包括存储点）
 
 ```
 apt-get update

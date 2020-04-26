@@ -3630,7 +3630,7 @@ def sync_uid_and_gid(database,server,username,password):
         print "sync user %s" % username
         dataHandler.UpdateAccountInfo(one["Email"], "Microsoft", username, username, one["Password"], 1 if one["isAdmin"]=="true" else 0, 1 if one["isAuthorized"]=="true" else 0)
         dataHandler.UpdateIdentityInfo(username, one["uid"], one["gid"], [3001])
-        dataHandler.UpdateAce(username, one["uid"], "Cluster", 7 if one["isAdmin"]=="true" else 1, 0)
+        dataHandler.UpdateAce(username, one["uid"], "Cluster", 7 if one["isAdmin"]=="true" else 1 if one["isAuthorized"]=="true" else 0, 0)
 
 def gen_dns_config_script():
     utils.render_template("./template/dns/dns.sh.template", "scripts/dns.sh", config)

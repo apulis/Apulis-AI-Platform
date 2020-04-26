@@ -1,4 +1,5 @@
-FROM library/nginx:1.15.11
+# FROM library/nginx:1.15.11
+FROM nginx/nginx:1.18.0
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

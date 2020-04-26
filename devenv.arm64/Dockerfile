@@ -28,7 +28,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         sshpass \
         bison \
         libcurl4-openssl-dev libssl-dev \
-        dirmngr
+        dirmngr \
+        gnupg-agent
 
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 

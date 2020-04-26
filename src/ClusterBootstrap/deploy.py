@@ -1531,13 +1531,24 @@ def reset_worker_nodes_by_kubeadm( nargs ):
     for node in workerNodes:
         if verbose:
             print ("Worker node %s" % node)
+
         if in_list(node, nargs):
+
             nodename = kubernetes_get_node_name(node)
-            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename, 'delete node %s' %nodename ] ) 
+            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename]) 
+            run_kubectl( ['delete node %s' % nodename])
+
             workercmd = "sudo kubeadm reset" 
             if verbose:
                 print(workercmd)
+            else:
+                pass
+
             utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user,node,workercmd)
+        else:
+            pass
+
+    return
 
 
 def update_worker_nodes_in_parallel(nargs):

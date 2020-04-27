@@ -419,6 +419,9 @@ class DataHandler(object):
     def UpdateVC(self, vcName, quota, metadata):
         ret = False
         try:
+            quota = quota.replace('"','\\"')
+            metadata = metadata.replace('"','\\"')
+            vcName = vcName.replace('"','\\"')
             sql = """update `%s` set quota = \"%s\", metadata = \"%s\" where vcName = \"%s\" """ % (
             self.vctablename, quota, metadata, vcName)
             with MysqlConn() as conn:

@@ -7,7 +7,7 @@ import {
 } from "@material-ui/core";
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
-
+import message from '../../utils/message';
 
 export default class Vc extends React.Component {
   static contextType = ClustersContext
@@ -20,6 +20,11 @@ export default class Vc extends React.Component {
       vcName: '',
       quota: '',
       metadata: '',
+      vcNameValidateObj: {
+        required: false,
+        helperText: '',
+        error: false
+      }
     }
   }
 
@@ -51,7 +56,7 @@ export default class Vc extends React.Component {
   updateVc = (item) => {
     const { modifyFlag } = this.state;
     this.setState({
-      modifyFlag: !modifyFlag,
+      modifyFlag: true,
       isEdit: 1,
       vcName: item.vcName,
       quota: item.quota,
@@ -60,7 +65,8 @@ export default class Vc extends React.Component {
   }
 
   save = () => {
-    const { isEdit, vcName, quota, metadata } = this.state;
+    const { isEdit, vcName, quota, metadata, vcNameValidateObj } = this.state;
+    if (!vcName || vcNameValidateObj.error) return;
     if (!this.isJSON(quota)) {
       alert('quota必须是json格式');
       return;
@@ -77,11 +83,11 @@ export default class Vc extends React.Component {
     }
     axios.get(url)
       .then((res) => {
-        alert(`${isEdit ? '修改' : '新增'}成功`)
+        message(`${isEdit ? '修改' : '新增'}成功`);
+        this.setState({ modifyFlag: false });
         this.getVcList();
       }, (e) => {
-        console.log(e);
-        alert(`${isEdit ? '修改' : '新增'}失败`)
+        message(`${isEdit ? '修改' : '新增'}失败`)
       })
   }
 
@@ -100,10 +106,17 @@ export default class Vc extends React.Component {
     // 删除逻辑todo: 关联的表记录删除
   }
 
-  //change
   vcNameChange(e) {
-    this.setState({
-      vcName: e.target.value
+    const val = e.target.value;
+    const reg = /^\w+$/;
+    const error = !val || !reg.test(val) ? true : false;
+    const text = !val ? 'vcName is required！' : !reg.test(val) ? 'vcName Must be composed of Chinese, English, numbers or underscore！' : '';
+    this.setState({ 
+      vcName: val,
+      vcNameValidateObj: {
+        error: error,
+        helperText: text
+      }
     })
   }
 
@@ -135,7 +148,7 @@ export default class Vc extends React.Component {
   }
 
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, quota, metadata } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, quota, metadata, vcNameValidateObj } = this.state;
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
@@ -148,7 +161,7 @@ export default class Vc extends React.Component {
                 <TableCell style={{ color: '#fff' }}>vcName</TableCell>
                 <TableCell style={{ color: '#fff' }}>quota</TableCell>
                 <TableCell style={{ color: '#fff' }}>metadata</TableCell>
-                <TableCell style={{ color: '#fff' }}>admin</TableCell>
+                <TableCell style={{ color: '#fff' }}>permissions</TableCell>
                 <TableCell style={{ color: '#fff' }}>actions</TableCell>
               </TableRow>
             </TableHead>
@@ -158,7 +171,7 @@ export default class Vc extends React.Component {
                   <TableCell>{item.vcName} </TableCell>
                   <TableCell>{item.quota} </TableCell>
                   <TableCell>{item.metadata} </TableCell>
-                  <TableCell>{item.admin ? '管理员' : '用户'} </TableCell>
+                  <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
                   <TableCell>
                     <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
                     <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
@@ -167,20 +180,20 @@ export default class Vc extends React.Component {
               ))}
             </TableBody>
           </Table>
-          {
-            modifyFlag ?
-              <div style={{ width: '25%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
+          {modifyFlag ?
+              <div style={{ width: '35%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
                 <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
                 <form>
-                  <Grid item xs={8}>
+                  <Grid item xs={8}> 
                     <TextField
-                      required
                       label="vcName"
                       value={vcName}
                       onChange={this.vcNameChange.bind(this)}
                       margin="normal"
+                      error={vcNameValidateObj.error}
                       fullWidth={true}
                       disabled={this.state.isEdit}
+                      helperText={vcNameValidateObj.helperText}
                     />
                   </Grid>
                   <Grid item xs={8}>
@@ -205,6 +218,7 @@ export default class Vc extends React.Component {
                   </Grid>
                   <Grid item xs={8}>
                     <Button variant="outlined" size="medium" color="primary" type="button" onClick={this.save}>Save</Button>
+                    <Button variant="outlined" size="medium" color="primary" type="button" style={{ marginLeft: 10 }} onClick={() => this.setState({ modifyFlag: false })}>Cancel</Button>
                   </Grid>
                 </form>
               </div>

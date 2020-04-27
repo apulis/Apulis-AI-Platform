@@ -30,12 +30,10 @@ import { Info, Delete, Add, PortraitSharp, ImportExportTwoTone } from "@material
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import { useSnackbar } from 'notistack';
-
 import { useForm, Controller } from 'react-hook-form';
 import useFetch from "use-http";
 import { join } from 'path';
 import _ from "lodash";
-
 import ClusterSelectField from "./components/ClusterSelectField";
 import UserContext from "../../contexts/User";
 import ClustersContext from '../../contexts/Clusters';
@@ -53,7 +51,8 @@ import {
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-import message from '../../utils/message'
+import message from '../../utils/message';
+
 interface EnvironmentVariable {
   name: string;
   value: string;
@@ -815,7 +814,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       >
         <BarChart width={500} height={700} data={gpuFragmentation}  margin={{top: 20}}>
           <CartesianGrid strokeDasharray="10 10"/>
-          <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', offset:0,position:'insideBottom'}}>
+          <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', offset:10, position:'insideBottom'}}>
           </XAxis>
           <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} />
           <Bar dataKey="value[1]" fill="#8884d8" >

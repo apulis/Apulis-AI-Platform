@@ -139,7 +139,6 @@ const AllJobs: FunctionComponent = () => {
     if (pausedJobs.length === 0) return undefined;
     return pausedJobs
   }, [jobs]);
-  console.log('jobs', jobs)
   if (jobs !== undefined) return (
     <>
       {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}

@@ -50,13 +50,14 @@ const renderData = (data: any) => {
 }
 export const TeamVirtualClusterStatus = (props: TeamVC) => {
   const {vcStatus,selectedValue,handleChange, children} = props;
+  const hasLen = vcStatus.length > 0 && vcStatus[0];
   const theme = useTheme();
-  const gpuCapacity = vcStatus.length > 0 ? vcStatus[0].gpu_capacity : {};
-  const gpuUnschedulable = vcStatus.length > 0 ? vcStatus[0].gpu_unschedulable : {};
-  const gpuUsed = vcStatus.length > 0 ? vcStatus[0].gpu_used : {};
-  const gpuPreemptableUsed = vcStatus.length > 0 ? vcStatus[0].gpu_preemptable_used : {};
-  const gpuAvaliable = vcStatus.length > 0 ? vcStatus[0].gpu_avaliable : {};
-  const gpuAvaliableJobNum = vcStatus.length > 0 ? vcStatus[0].AvaliableJobNum : {}
+  const gpuCapacity = hasLen ? vcStatus[0].gpu_capacity : {};
+  const gpuUnschedulable = hasLen ? vcStatus[0].gpu_unschedulable : {};
+  const gpuUsed = hasLen ? vcStatus[0].gpu_used : {};
+  const gpuPreemptableUsed = hasLen ? vcStatus[0].gpu_preemptable_used : {};
+  const gpuAvaliable = hasLen ? vcStatus[0].gpu_avaliable : {};
+  const gpuAvaliableJobNum = hasLen ? vcStatus[0].AvaliableJobNum : {}
   const gpuStatusList: any = Object.keys(gpuCapacity).map(val => {
     return {
       type: val,
@@ -66,7 +67,7 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
       preemptibleUsed: gpuPreemptableUsed[val] || 0,
       avaliable: gpuAvaliable[val] || 0,
       avaliableJobNum: gpuAvaliableJobNum[val] || 0,
-      clusterName: vcStatus.length > 0 ? vcStatus[0].ClusterName : '',
+      clusterName: hasLen ? vcStatus[0].ClusterName : '',
     }
   })
   return (

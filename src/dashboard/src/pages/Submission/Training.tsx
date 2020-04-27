@@ -1,5 +1,4 @@
-import React, {useState} from "react";
-
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Card,
   CardHeader,
@@ -30,7 +29,6 @@ import { Info, Delete, Add, PortraitSharp, ImportExportTwoTone } from "@material
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import { useSnackbar } from 'notistack';
-import { useForm, Controller } from 'react-hook-form';
 import useFetch from "use-http";
 import { join } from 'path';
 import _ from "lodash";
@@ -52,6 +50,7 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
+import { NameReg, NameErrorText } from '../../const';
 
 interface EnvironmentVariable {
   name: string;
@@ -69,43 +68,40 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const { teams, selectedTeam }= React.useContext(TeamsContext);
   const { enqueueSnackbar } = useSnackbar()
   //const team = 'platform';
-  // const { control, handleSubmit } = useForm()
-  const [showGPUFragmentation, setShowGPUFragmentation] = React.useState(false)
-  const [grafanaUrl, setGrafanaUrl] = React.useState('');
-  const [name, setName] = React.useState("");
-  const [gpuFragmentation, setGpuFragmentation] = React.useState<any[]>([]);
-  const onNameChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setName(event.target.value);
-    },
-    [setName]
-  );
-  const team = React.useMemo(() => {
+  const [showGPUFragmentation, setShowGPUFragmentation] = useState(false)
+  const [grafanaUrl, setGrafanaUrl] = useState('');
+  const [name, setName] = useState("");
+  const [gpuFragmentation, setGpuFragmentation] = useState<any[]>([]);
+  const onNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setName(val);
+  };
+  const team = useMemo(() => {
     if (teams == null) return;
     if (selectedTeam == null) return;
     return teams.filter((team: any) => team.id === selectedTeam)[0];
   }, [teams, selectedTeam]);
-  const cluster = React.useMemo(() => {
+  const cluster = useMemo(() => {
     if (team == null) return;
     if (selectedCluster == null) return;
     return team.clusters.filter((cluster: any) => cluster.id === selectedCluster)[0];
   }, [team, selectedCluster]);
-  const gpuModel = React.useMemo(() => {
+  const gpuModel = useMemo(() => {
     if (cluster == null) return;
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
-  const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
+  const [gpuType, setGpuType] = useState(availbleGpu![0].type || '');
   const [gpusPerNode, setGpusPerNode] = useState(0)
   const [templates, setTemplates] = useState([{name: '', json: ''}]);
   
-  React.useEffect(() => {
+  useEffect(() => {
     axios.get(`/teams/${selectedTeam}/templates`)
       .then(res => {
         setTemplates(res.data)
       })
   }, [selectedTeam]);
 
-  const [type, setType] = React.useState("RegularJob");
+  const [type, setType] = useState("RegularJob");
   const onTypeChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
       setType(event.target.value as string);
@@ -113,7 +109,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setType]
   );
 
-  const [preemptible, setPreemptible] = React.useState(false);
+  const [preemptible, setPreemptible] = useState(false);
   const onPreemptibleChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
       setPreemptible(event.target.value === 'true');
@@ -127,7 +123,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
 
 
-  const [workers, setWorkers] = React.useState(0);
+  const [workers, setWorkers] = useState(0);
   const onWorkersChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       let value = event.target.valueAsNumber || 0;
@@ -138,7 +134,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setWorkers]
   );
 
-  const [image, setImage] = React.useState("");
+  const [image, setImage] = useState("");
   const onImageChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setImage(event.target.value);
@@ -146,7 +142,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setImage]
   );
 
-  const [command, setCommand] = React.useState("");
+  const [command, setCommand] = useState("");
   const onCommandChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setCommand(event.target.value);
@@ -154,7 +150,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setCommand]
   );
 
-  const [interactivePorts, setInteractivePorts] = React.useState("");
+  const [interactivePorts, setInteractivePorts] = useState("");
   const onInteractivePortsChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setInteractivePorts(event.target.value);
@@ -162,7 +158,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setInteractivePorts]
   );
 
-  const [ssh, setSsh] = React.useState(false);
+  const [ssh, setSsh] = useState(false);
   const onSshChange = React.useCallback(
     (event: unknown, checked: boolean) => {
       setSsh(checked);
@@ -170,7 +166,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setSsh]
   );
 
-  const [ipython, setIpython] = React.useState(false);
+  const [ipython, setIpython] = useState(false);
   const onIpythonChange = React.useCallback(
     (event: unknown, checked: boolean) => {
       setIpython(checked);
@@ -178,7 +174,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setIpython]
   );
 
-  const [tensorboard, setTensorboard] = React.useState(false);
+  const [tensorboard, setTensorboard] = useState(false);
   const onTensorboardChange = React.useCallback(
     (event: unknown, checked: boolean) => {
       setTensorboard(checked);
@@ -186,15 +182,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setTensorboard]
   );
 
-  const [advanced, setAdvanced] = React.useState(false);
+  const [advanced, setAdvanced] = useState(false);
   const onAdvancedClick = () => {
     setAdvanced(!advanced);
   }
-  const [accountName, setAccountName] = React.useState("");
-  const [accountKey, setAccountKey] = React.useState("");
-  const [containerName, setContainerName] = React.useState("");
-  const [mountPath, setMountPath] = React.useState("");
-  const [mountOptions, setMountOptions] = React.useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountKey, setAccountKey] = useState("");
+  const [containerName, setContainerName] = useState("");
+  const [mountPath, setMountPath] = useState("");
+  const [mountOptions, setMountOptions] = useState("");
   const onAccountNameChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setAccountName(event.target.value);
@@ -225,16 +221,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [setMountOptions]
   )
-  const [workPath, setWorkPath] = React.useState("");
+  const [workPath, setWorkPath] = useState("");
   const onWorkPathChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setWorkPath(event.target.value);
     },
     [setWorkPath]
   )
-  const [dockerRegistry, setDockerRegistry] = React.useState("");
-  const [dockerUsername, setDockerUsername] = React.useState("");
-  const [dockerPassword, setDockerPassword] = React.useState("");
+  const [dockerRegistry, setDockerRegistry] = useState("");
+  const [dockerUsername, setDockerUsername] = useState("");
+  const [dockerPassword, setDockerPassword] = useState("");
   const onDockerRegistryChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setDockerRegistry(event.target.value)
@@ -253,7 +249,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [setDockerPassword]
   )
-  const [enableWorkPath, setEnableWorkPath] = React.useState(true);
+  const [enableWorkPath, setEnableWorkPath] = useState(true);
   const onEnableWorkPathChange = React.useCallback(
     (event: unknown, checked: boolean) => {
       setEnableWorkPath(checked);
@@ -261,7 +257,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setEnableWorkPath]
   );
 
-  const [dataPath, setDataPath] = React.useState("");
+  const [dataPath, setDataPath] = useState("");
   const onDataPathChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setDataPath(event.target.value);
@@ -269,7 +265,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setDataPath]
   )
 
-  const [enableDataPath, setEnableDataPath] = React.useState(true);
+  const [enableDataPath, setEnableDataPath] = useState(true);
   const onEnableDataPathChange = React.useCallback(
     (event: unknown, checked: boolean) => {
       setEnableDataPath(checked);
@@ -277,7 +273,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setEnableDataPath]
   );
 
-  const [jobPath, setJobPath] = React.useState("");
+  const [jobPath, setJobPath] = useState("");
 
   const onJobPathChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,15 +283,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     [setJobPath]
   )
 
-  const [enableJobPath, setEnableJobPath] = React.useState(true);
+  const [enableJobPath, setEnableJobPath] = useState(true);
   const onEnableJobPathChange = React.useCallback(
     (event: unknown, checked: boolean) => {
       setEnableJobPath(checked);
     },
     [setEnableJobPath]
   );
-  const [showSaveTemplate, setSaveTemplate] = React.useState(false);
-  const [environmentVariables, setEnvironmentVariables] = React.useState<EnvironmentVariable[]>([]);
+  const [showSaveTemplate, setSaveTemplate] = useState(false);
+  const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
   const onEnvironmentVariableNameChange = React.useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const newEnvironmentVariables = environmentVariables.slice()
@@ -326,7 +322,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         [{ name: "", value: "" }]));
   }, [environmentVariables]);
 
-  const [database, setDatabase] = React.useState(false);
+  const [database, setDatabase] = useState(false);
   // const onDatabaseClick = React.useCallback(() => {
   //   setDatabase(true);
   // }, []);
@@ -335,26 +331,23 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
 
 
-  const [saveTemplateName, setSaveTemplateName] = React.useState("");
-  const onSaveTemplateNameChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSaveTemplateName(event.target.value);
-    },
-    [setSaveTemplateName]
-  );
+  const [saveTemplateName, setSaveTemplateName] = useState("");
+  const onSaveTemplateNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSaveTemplateName(event.target.value);
+  };
 
-  const [saveTemplateDatabase, setSaveTemplateDatabase] = React.useState("user");
+  const [saveTemplateDatabase, setSaveTemplateDatabase] = useState("user");
   const onSaveTemplateDatabaseChange = React.useCallback(
     (event: React.ChangeEvent<{ value: unknown }>) => {
       setSaveTemplateDatabase((event.target.value) as string);
     },
     [setSaveTemplateDatabase]
   );
-  const [gpus, setGpus] = React.useState(0);
-  const submittable = React.useMemo(() => {
+  const [gpus, setGpus] = useState(0);
+  const submittable = useMemo(() => {
     if (!gpuModel) return false;
     if (!selectedTeam) return false;
-    if (!name) return false;
+    if (!name || !NameReg.test(name)) return false;
     if (!image) return false;
     if (!command.trim()) return false;
     if (type === 'RegularJob' && gpus > gpusPerNode) return false;
@@ -419,27 +412,56 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false)
+
   const onDeleteTemplateClick = async () => {
     if (!saveTemplateName) {
       message('error', 'Need input template name')
       return
     }
     try {
-      let plugins: any = {};
-      plugins['blobfuse'] = [];
-      let blobfuseObj: any = {};
-      blobfuseObj['accountName'] = accountName || '';
-      blobfuseObj['accountKey'] = accountKey || '';
-      blobfuseObj['containerName'] = containerName || '';
-      blobfuseObj['mountPath'] = mountPath || '';
-      plugins['blobfuse'].push(blobfuseObj);
-      plugins['imagePull'] = [];
-      let imagePullObj: any = {};
-      imagePullObj['registry'] = dockerRegistry
-      imagePullObj['username'] = dockerUsername
-      imagePullObj['password'] = dockerPassword
-      plugins['imagePull'].push(imagePullObj)
-      const template = {
+      let dataBase = saveTemplateDatabase;
+      if (dataBase === 'team') {
+        dataBase = 'vc';
+      }
+      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${dataBase}`;
+      await axios.delete(url);
+      setShowDeleteTemplate(true)
+      // window.location.reload()
+    } catch (error) {
+      enqueueSnackbar('Failed to delete the template', {
+        variant: 'error',
+      })
+      // alert('Failed to delete the template, check console (F12) for technical details.')
+      console.error(error);
+    }
+  }
+
+  const [json, setJson] = useState('');
+  const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
+  const onTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === 'None (Apply a Template)') {
+      setName("");
+      setType("RegularJob");
+      setGpus(0);
+      setWorkers(0);
+      setImage("");
+      setCommand("");
+      setWorkPath("");
+      setEnableWorkPath(true);
+      setDataPath("");
+      setEnableDataPath(true);
+      setJobPath("");
+      setEnableJobPath(true);
+      setEnvironmentVariables([]);
+      setSsh(false);
+      setIpython(false);
+      setTensorboard(false);
+      setGpuType(availbleGpu![0].type || '')
+      setPreemptible(false);
+      setSelectTPName(val);
+    } else {
+      const {
         name,
         type,
         gpus,
@@ -457,118 +479,59 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ipython,
         tensorboard,
         plugins,
-      };
-      let dataBase = saveTemplateDatabase;
-      if (dataBase === 'team') {
-        dataBase = 'vc';
+        gpuType,
+        preemptible
+      } = JSON.parse(templates.find(i => i.name === val)!.json);
+      if (name !== undefined) setName(name);
+      if (type !== undefined) setType(type);
+      if (gpus !== undefined) setGpus(gpus);
+      if (workers !== undefined) setWorkers(workers);
+      if (image !== undefined) setImage(image);
+      if (command !== undefined) setCommand(command);
+      if (workPath !== undefined) setWorkPath(workPath);
+      if (enableWorkPath !== undefined) setEnableWorkPath(enableWorkPath);
+      if (dataPath !== undefined) setDataPath(dataPath);
+      if (enableDataPath !== undefined) setEnableDataPath(enableDataPath);
+      if (jobPath !== undefined) setJobPath(jobPath);
+      if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
+      if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
+      if (ssh !== undefined) setSsh(ssh);
+      if (ipython !== undefined) setIpython(ipython);
+      if (tensorboard !== undefined) setTensorboard(tensorboard);
+      if (gpuType !== undefined) setGpuType(gpuType);
+      if (preemptible !== undefined) setPreemptible(preemptible);
+      // console.log('preemptible', preemptible)
+      if (plugins === undefined) {
+        setAccountName("");
+        setAccountKey("");
+        setContainerName("");
+        setMountPath("");
+        setMountOptions("");
+        setDockerRegistry("")
+        setDockerUsername("")
+        setDockerPassword("")
       }
-      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${dataBase}`;
-      await axios.delete(url);
-      setShowDeleteTemplate(true)
-      window.location.reload()
-    } catch (error) {
-      enqueueSnackbar('Failed to delete the template', {
-        variant: 'error',
-      })
-      // alert('Failed to delete the template, check console (F12) for technical details.')
-      console.error(error);
-    }
-  }
-  const [json, setJson] = React.useState('-1');
-  const onTemplateChange = React.useCallback(
-    (event: React.ChangeEvent<{ value: unknown }>) => {
-      setJson(event.target.value as string)
-      if (event.target.value === -1) {
-        setName("");
-        setType("RegularJob");
-        setGpus(0);
-        setWorkers(0);
-        setImage("");
-        setCommand("");
-        setWorkPath("");
-        setEnableWorkPath(true);
-        setDataPath("");
-        setEnableDataPath(true);
-        setJobPath("");
-        setEnableJobPath(true);
-        setEnvironmentVariables([]);
-        setSsh(false);
-        setIpython(false);
-        setTensorboard(false);
-        setGpuType(availbleGpu![0].type || '')
-        setPreemptible(false);
-      } else {
-        const {
-          name,
-          type,
-          gpus,
-          workers,
-          image,
-          command,
-          workPath,
-          enableWorkPath,
-          dataPath,
-          enableDataPath,
-          jobPath,
-          enableJobPath,
-          environmentVariables,
-          ssh,
-          ipython,
-          tensorboard,
-          plugins,
-          gpuType,
-          preemptible
-        } = JSON.parse(event.target.value as string);
-        if (name !== undefined) setName(name);
-        if (type !== undefined) setType(type);
-        if (gpus !== undefined) setGpus(gpus);
-        if (workers !== undefined) setWorkers(workers);
-        if (image !== undefined) setImage(image);
-        if (command !== undefined) setCommand(command);
-        if (workPath !== undefined) setWorkPath(workPath);
-        if (enableWorkPath !== undefined) setEnableWorkPath(enableWorkPath);
-        if (dataPath !== undefined) setDataPath(dataPath);
-        if (enableDataPath !== undefined) setEnableDataPath(enableDataPath);
-        if (jobPath !== undefined) setJobPath(jobPath);
-        if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
-        if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
-        if (ssh !== undefined) setSsh(ssh);
-        if (ipython !== undefined) setIpython(ipython);
-        if (tensorboard !== undefined) setTensorboard(tensorboard);
-        if (gpuType !== undefined) setGpuType(gpuType);
-        if (preemptible !== undefined) setPreemptible(preemptible);
-        console.log('preemptible', preemptible)
-        if (plugins === undefined) {
-          setAccountName("");
-          setAccountKey("");
-          setContainerName("");
-          setMountPath("");
-          setMountOptions("");
-          setDockerRegistry("")
-          setDockerUsername("")
-          setDockerPassword("")
+      if (plugins !== undefined) {
+        if (plugins.hasOwnProperty("blobfuse") && Array.isArray(plugins['blobfuse'])) {
+          let blobfuseObj = plugins['blobfuse'][0];
+          setAccountName(blobfuseObj['accountName']);
+          setAccountKey(blobfuseObj['accountKey']);
+          setContainerName(blobfuseObj['containerName']);
+          setMountPath(blobfuseObj['mountPath']);
+          setMountOptions(blobfuseObj['mountOptions']);
         }
-        if (plugins !== undefined) {
-          if (plugins.hasOwnProperty("blobfuse") && Array.isArray(plugins['blobfuse'])) {
-            let blobfuseObj = plugins['blobfuse'][0];
-            setAccountName(blobfuseObj['accountName']);
-            setAccountKey(blobfuseObj['accountKey']);
-            setContainerName(blobfuseObj['containerName']);
-            setMountPath(blobfuseObj['mountPath']);
-            setMountOptions(blobfuseObj['mountOptions']);
-          }
 
-          if (plugins.hasOwnProperty('imagePull') && Array.isArray(plugins['imagePull'])) {
-            let imagePullObj = plugins['imagePull'][0];
-            setDockerRegistry(imagePullObj['registry'])
-            setDockerUsername(imagePullObj['username'])
-            setDockerPassword(imagePullObj['password'])
-          }
+        if (plugins.hasOwnProperty('imagePull') && Array.isArray(plugins['imagePull'])) {
+          let imagePullObj = plugins['imagePull'][0];
+          setDockerRegistry(imagePullObj['registry'])
+          setDockerUsername(imagePullObj['username'])
+          setDockerPassword(imagePullObj['password'])
         }
       }
-    },
-    []
-  );
+    }
+    setSelectTPName(val);
+    setJson(templates.find(i => i.name === val)!.json);
+  }
 
   const {
     data: postJobData,
@@ -585,7 +548,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
 
 
-  const [enableSubmit, setEnableSubmit] = React.useState(submittable);
+  const [enableSubmit, setEnableSubmit] = useState(submittable);
 
   const onGpusChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -600,7 +563,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [gpusPerNode, type]
   );
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!submittable) return;
@@ -678,7 +641,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   const jobId = React.useRef<string>();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (postJobData == null) return;
     if (postJobData.error) {
       enqueueSnackbar(postJobData.error, {
@@ -722,7 +685,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     setShowGPUFragmentation(false);
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchGrafana()
     if (postEndpointsData) {
       setOpen(true);
@@ -733,7 +696,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }, [history, postEndpointsData, selectedCluster, selectedTeam])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (postJobError) {
       enqueueSnackbar('Job submission failed', {
         variant: 'error',
@@ -741,7 +704,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }, [postJobError])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (postEndpointsError) {
       // alert('Enable endpoints failed')
       enqueueSnackbar('Enable endpoints failed', {
@@ -759,7 +722,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     setSaveTemplate(false)
     setShowDeleteTemplate(false)
   }
-  React.useEffect(() => {
+  useEffect(() => {
     if (!grafanaUrl) return;
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params = new URLSearchParams({
@@ -852,12 +815,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Job Name"
+                  name="jobName"
                   fullWidth
                   variant="filled"
                   value={name}
-                  error={/^\d+$/.test(name)}
+                  error={name ? !NameReg.test(name) : false}
                   onChange={onNameChange}
+                  helperText={name ? !NameReg.test(name) ? NameErrorText : '' : ''}
                 />
+                {errors.jobName && errors.jobName.message}
               </Grid>
               <Grid item xs={12}>
                 <TextField
@@ -866,12 +832,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   label="Job Template"
                   fullWidth
                   variant="filled"
-                  value={json}
+                  value={selectTPName}
                   onChange={onTemplateChange}
                 >
-                  <MenuItem value={-1} divider>None (Apply a Template)</MenuItem>
+                  <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                   {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
-                    <MenuItem key={index} value={json}>{name}</MenuItem>
+                    <MenuItem key={index} value={name}>{name}</MenuItem>
                   ))}
                 </TextField>
               </Grid>

@@ -38,7 +38,6 @@
     "react-dom": "^16.8.6",
     "react-draggable": "^3.3.2",
     "react-helmet": "^5.2.1",
-    "react-hook-form": "^4.5.5",
     "react-iframe": "^1.8.0",
     "react-json-view": "^1.19.1",
     "react-router-dom": "^5.0.1",

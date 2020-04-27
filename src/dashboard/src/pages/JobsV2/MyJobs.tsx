@@ -9,7 +9,7 @@ import React, {
 import MaterialTable, { Column, Options } from 'material-table';
 import { useSnackbar } from 'notistack';
 import useFetch from 'use-http-2';
-
+import _ from "lodash";
 import TeamsContext from '../../contexts/Teams';
 import useActions from '../../hooks/useActions';
 import Loading from '../../components/Loading';
@@ -17,7 +17,7 @@ import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
 import { renderId, renderGPU, sortGPU, renderStatus, renderDate, sortDate } from './tableUtils';
 import PriorityField from './PriorityField';
-import { pollInterval } from '../../utils/front-config';
+import { pollInterval } from '../../const';
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(
@@ -88,6 +88,7 @@ const MyJobs: FunctionComponent = () => {
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [limit, setLimit] = useState(20);
+  // const [jobDataDiff, setJobDataDiff] = useState(true);
   const { error, data, get } = useFetch(
     `/api/v2/clusters/${cluster.id}/teams/${selectedTeam}/jobs?limit=${limit}`,
     [cluster.id, selectedTeam, limit]
@@ -102,13 +103,16 @@ const MyJobs: FunctionComponent = () => {
   }, [cluster.id]);
   useEffect(() => {
     if (data !== undefined) {
-      setJobs(data);
+      if (!_.isEqual(jobs,data)) {
+        setJobs(data);
+        // setJobDataDiff(true);
+      }
       const timeout = setTimeout(get, pollInterval);
       return () => {
         clearTimeout(timeout);
       }
     }
-  }, [data, get]);
+  }, [data]);
   useEffect(() => {
     if (error !== undefined) {
       const key = enqueueSnackbar(`Failed to fetch jobs from cluster: ${cluster.id}`, {

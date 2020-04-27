@@ -18,7 +18,7 @@ import ClusterContext from './ClusterContext';
 import { renderId, renderGPU, sortGPU, renderDate, sortDate, renderStatus } from './tableUtils';
 import PriorityField from './PriorityField';
 
-import { pollInterval } from '../../utils/front-config';
+import { pollInterval } from '../../const';
 
 const renderUser = (job: any) => job['userName'].split('@', 1)[0];
 

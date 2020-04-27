@@ -43,7 +43,7 @@ import Brief from './Brief';
 import Endpoints from './Endpoints';
 import Metrics from './Metrics';
 import Console from './Console';
-import { pollInterval } from '../../utils/front-config';
+import { pollInterval } from '../../const';
 
 interface RouteParams {
   clusterId: string;

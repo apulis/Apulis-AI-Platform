@@ -565,6 +565,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     for sji in jobsInfo:
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))
         vc_name = sji["job"]["vcName"]
+        if vc_name not in vc_resources:
+            data_handler.UpdateJobTextField(sji["jobId"], "jobStatus","Killed")
+            continue
         vc_resource = vc_resources[vc_name]
 
         if (not sji["preemptionAllowed"]) and (vc_resource.CanSatisfy(sji["globalResInfo"])):

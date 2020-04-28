@@ -1076,6 +1076,7 @@ def deploy_masters_by_kubeadm(force = False):
 
     kubernetes_masters = config["kubernetes_master_node"]
     kubernetes_version = config["k8s-gitbranch"]
+    kubernetes_ip_range = config["network"]["container-network-iprange"]
 
     kubernetes_master0 = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
@@ -1098,6 +1099,7 @@ def deploy_masters_by_kubeadm(force = False):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
+        #deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s --pod-network-cidr=%s""" % (kubernetes_master0, kubernetes_version, kubernetes_ip_range)
         deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s""" % (kubernetes_master0, kubernetes_version)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
         
@@ -1530,13 +1532,24 @@ def reset_worker_nodes_by_kubeadm( nargs ):
     for node in workerNodes:
         if verbose:
             print ("Worker node %s" % node)
+
         if in_list(node, nargs):
+
             nodename = kubernetes_get_node_name(node)
-            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename, 'delete node %s' %nodename ] ) 
-            workercmd = "sudo kubeadm reset" 
+            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename]) 
+            run_kubectl( ['delete node %s' % nodename])
+
+            workercmd = "sudo kubeadm reset -f" 
             if verbose:
                 print(workercmd)
+            else:
+                pass
+
             utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user,node,workercmd)
+        else:
+            pass
+
+    return
 
 
 def update_worker_nodes_in_parallel(nargs):

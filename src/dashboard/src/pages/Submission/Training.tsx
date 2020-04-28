@@ -51,6 +51,7 @@ import {
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
 import { NameReg, NameErrorText } from '../../const';
+import styles from './Training.less';
 
 interface EnvironmentVariable {
   name: string;
@@ -119,9 +120,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const onGpuTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setGpuType(event.target.value);
   };
-
-
-
 
   const [workers, setWorkers] = useState(0);
   const onWorkersChange = React.useCallback(
@@ -768,6 +766,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   return (
 
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
+      <div className={styles.test}>11111</div>
       <DLTSDialog open={showGPUFragmentation}
         message={null}
         handleClose={handleCloseGPUGramentation}
@@ -823,7 +822,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   onChange={onNameChange}
                   helperText={name ? !NameReg.test(name) ? NameErrorText : '' : ''}
                 />
-                {errors.jobName && errors.jobName.message}
               </Grid>
               <Grid item xs={12}>
                 <TextField
@@ -972,13 +970,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   onChange={onIpythonChange}
                 />
               </Grid>
-              <Grid item xs={4} container justify="center">
+              <Grid item xs={4} container justify="center" >
                 <FormControlLabel
                   control={<Checkbox />}
-                  label={<>{"Tensorboard "}<Info fontSize="inherit"/></>}
+                  label="Tensorboard"
                   checked={tensorboard}
                   onChange={onTensorboardChange}
                 />
+                <Info fontSize="default"/>
               </Grid>
               <Grid item xs={12} container justify="flex-end">
                 <Chip

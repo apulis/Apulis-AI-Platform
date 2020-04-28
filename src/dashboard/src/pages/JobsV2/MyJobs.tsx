@@ -12,12 +12,14 @@ import useFetch from 'use-http-2';
 import _ from "lodash";
 import TeamsContext from '../../contexts/Teams';
 import useActions from '../../hooks/useActions';
+import useInterval from '../../hooks/useInterval';
 import Loading from '../../components/Loading';
-
+import axios from 'axios';
 import ClusterContext from './ClusterContext';
 import { renderId, renderGPU, sortGPU, renderStatus, renderDate, sortDate } from './tableUtils';
 import PriorityField from './PriorityField';
 import { pollInterval } from '../../const';
+import message from '../../utils/message';
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(
@@ -88,42 +90,33 @@ const MyJobs: FunctionComponent = () => {
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [limit, setLimit] = useState(20);
-  // const [jobDataDiff, setJobDataDiff] = useState(true);
-  const { error, data, get } = useFetch(
-    `/api/v2/clusters/${cluster.id}/teams/${selectedTeam}/jobs?limit=${limit}`,
-    [cluster.id, selectedTeam, limit]
-  );
   const [jobs, setJobs] = useState<any[]>();
   const onExpectMoreJobs = useCallback((count: number) => {
     setLimit((limit: number) => limit + count);
   }, []);
+
   useEffect(() => {
     setJobs(undefined);
     setLimit(20);
   }, [cluster.id]);
+
   useEffect(() => {
-    if (data !== undefined) {
-      if (!_.isEqual(jobs,data)) {
-        setJobs(data);
-        // setJobDataDiff(true);
-      }
-      const timeout = setTimeout(get, pollInterval);
-      return () => {
-        clearTimeout(timeout);
-      }
-    }
-  }, [data]);
-  useEffect(() => {
-    if (error !== undefined) {
-      const key = enqueueSnackbar(`Failed to fetch jobs from cluster: ${cluster.id}`, {
-        variant: 'error',
-        persist: true
-      });
-      return () => {
-        if (key !== null) closeSnackbar(key);
-      }
-    }
-  }, [error, enqueueSnackbar, closeSnackbar, cluster.id]);
+    getData();
+  }, [cluster.id, selectedTeam, limit]);
+
+  useInterval(() => {
+    getData();
+  }, pollInterval);
+
+  const getData = () => {
+    axios.get(`/v2/clusters/${cluster.id}/teams/${selectedTeam}/jobs?limit=${limit}`)
+        .then(res => {
+          const { data } = res;
+          if (!_.isEqual(jobs, data)) setJobs(res.data);
+        }, () => {
+          message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
+        })
+  }
 
   if (jobs !== undefined) return (
     <JobsTable
@@ -131,7 +124,6 @@ const MyJobs: FunctionComponent = () => {
       onExpectMoreJobs={onExpectMoreJobs}
     />
   );
-  if (error) return null;
 
   return <Loading/>;
 };

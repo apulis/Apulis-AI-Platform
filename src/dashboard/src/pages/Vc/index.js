@@ -99,11 +99,6 @@ export default class Vc extends React.Component {
   }
 
   delete = (item) => {
-    const { vcList } = this.state;
-    if (vcList.length === 1) {
-      alert('必须保留一个vc');
-      return;
-    }
     if (window.confirm('确认删除')) {
       axios.get(`/${this.context.selectedCluster}/deleteVc/${item.vcName}`)
         .then((res) => {
@@ -182,7 +177,7 @@ export default class Vc extends React.Component {
                   <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
                   <TableCell>
                     <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
-                    <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
+                    <Button color="primary" disabled={item.vcName === this.context.selectedTeam} onClick={() => this.delete(item)}>Delete</Button>
                   </TableCell>
                 </TableRow>
               ))}

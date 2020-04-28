@@ -51,7 +51,7 @@ import {
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
 import { NameReg, NameErrorText } from '../../const';
-import styles from './Training.less';
+import './Training.less';
 
 interface EnvironmentVariable {
   name: string;
@@ -341,6 +341,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [setSaveTemplateDatabase]
   );
+
+  const [iconInfoShow, setIconInfoShow] = useState(false);
+
   const [gpus, setGpus] = useState(0);
   const submittable = useMemo(() => {
     if (!gpuModel) return false;
@@ -401,7 +404,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);
       setSaveTemplate(true);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       enqueueSnackbar('Failed to save the template', {
         variant: 'error',
@@ -564,7 +567,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [open, setOpen] = useState(false);
   const onSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!submittable) return;
+    // if (!submittable) return;
     let plugins: any = {};
     plugins['blobfuse'] = [];
     let blobfuseObj: any = {};
@@ -601,16 +604,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       env: environmentVariables,
       hostNetwork : type === 'PSDistJob',
       isPrivileged : type === 'PSDistJob',
+      interactivePorts: interactivePorts,
       plugins: plugins,
     };
-    let totalGpus = gpus;
+    let totalGpus = Number(gpus) >= 0 ? Number(gpus) : 0;
     if (type === 'PSDistJob') {
       job.numps = 1;
       job.resourcegpu = gpusPerNode;
       job.numpsworker = workers;
       totalGpus = gpusPerNode * workers;
     } else {
-      job.resourcegpu = gpus;
+      job.resourcegpu = Number(gpus) >= 0 ? Number(gpus) : 0;
     }
 
     // if (totalGpus > (cluster.userQuota)) {
@@ -659,6 +663,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         });
       }
     }
+    console.log('endpoints', endpoints)
 
     if (ssh) endpoints.push('ssh');
     if (ipython) endpoints.push('ipython');
@@ -670,6 +675,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
     }
   }, [postJobData]);
+
   const fetchGrafanaUrl = `/api/clusters`;
   const request = useFetch(fetchGrafanaUrl);
   const fetchGrafana = async () => {
@@ -752,7 +758,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const renderCustomizedLabel = (props: any) => {
     const { x, y, width, height, value } = props;
     const radius = 10;
-
     return (
       <g>
         <circle cx={x + width / 2} cy={y - radius} r={radius} fill="#fff" />
@@ -766,7 +771,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   return (
 
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
-      <div className={styles.test}>11111</div>
       <DLTSDialog open={showGPUFragmentation}
         message={null}
         handleClose={handleCloseGPUGramentation}
@@ -774,11 +778,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         title={"View Cluster GPU Status Per Node"}
         titleStyle={{color:grey[400]}}
       >
-        <BarChart width={500} height={700} data={gpuFragmentation}  margin={{top: 20}}>
+        <BarChart width={500} height={600} data={gpuFragmentation}  margin={{top: 20}}>
           <CartesianGrid strokeDasharray="10 10"/>
-          <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', offset:10, position:'insideBottom'}}>
+          <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', position:'insideBottomLeft'}}>
           </XAxis>
-          <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} />
+          <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
           <Bar dataKey="value[1]" fill="#8884d8" >
             <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
           </Bar>
@@ -849,8 +853,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   onChange={onTypeChange}
                 >
                   <MenuItem value="RegularJob">Regular Job</MenuItem>
-                  <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
-                  <MenuItem value="InferenceJob">Inference Job</MenuItem>
+                  {/* <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
+                  <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
                 </TextField>
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -970,21 +974,21 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   onChange={onIpythonChange}
                 />
               </Grid>
-              <Grid item xs={4} container justify="center" >
+              <Grid item xs={4} container justify="center" className="icon-grid">
                 <FormControlLabel
                   control={<Checkbox />}
                   label="Tensorboard"
                   checked={tensorboard}
                   onChange={onTensorboardChange}
                 />
-                <Info fontSize="default"/>
+                <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
               </Grid>
-              <Grid item xs={12} container justify="flex-end">
+              {iconInfoShow && <Grid item xs={12} container justify="flex-end">
                 <Chip
                   icon={<Info/>}
                   label="Tensorboard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
                 />
-              </Grid>
+              </Grid>}
             </Grid>
           </CardContent>
           <Collapse in={advanced}>
@@ -1194,7 +1198,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Button type="button" color="secondary"  onClick={onAdvancedClick}>Advanced</Button>
                 <Button type="button" color="secondary"  onClick={onTemplateClick}>Template</Button>
               </Grid>
-              <Button type="submit" color="primary" variant="contained" disabled={!submittable || enableSubmit || postJobLoading || postEndpointsLoading || open }>Submit</Button>
+              <Button type="submit" color="primary" variant="contained" disabled={enableSubmit || postJobLoading || postEndpointsLoading || open }>Submit</Button>
             </Grid>
           </CardActions>
         </Card>

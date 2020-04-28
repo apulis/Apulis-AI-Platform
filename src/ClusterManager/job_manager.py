@@ -229,6 +229,7 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
                 break
         if vc is None:
             logger.warning("Vc not exising! job {}, vc {}".format(job_id, vcName))
+            dataHandler.UpdateJobTextField(job_id, "jobStatus","Killed")
             if dataHandlerOri is None:
                 dataHandler.Close()
             return False

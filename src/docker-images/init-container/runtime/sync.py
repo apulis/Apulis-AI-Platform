@@ -59,7 +59,7 @@ def get_worker_number():
     return int(os.environ.get("DLWS_NUM_WORKER", 0))
 
 def create_own_config(k8s_core_api, job_name, pod_name, ip, ssh_port):
-    pod_name="546d155b-7371-4903-ac44-3e4108c02731";job_name="546d155b-7371-4903-ac44-3e4108c02731";ip="10.36.0.0";ssh_port=22;job_namespace = "default";
+    # pod_name="546d155b-7371-4903-ac44-3e4108c02731";job_name="546d155b-7371-4903-ac44-3e4108c02731";ip="10.36.0.0";ssh_port=22;job_namespace = "default";
     config_name = "c-" + pod_name
 
     metadata = k8s_client.V1ObjectMeta(

@@ -26,6 +26,7 @@ const getStartedDate = (job: any) => new Date(
   job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['startedAt']);
 const getFinishedDate = (job: any) => new Date(
   job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['finishedAt']);
+const _renderId = (job: any) => renderId(job, 1);
 
 interface JobsTableProps {
   jobs: any[];
@@ -50,7 +51,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
 
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'Id', type: 'string', field: 'jobId',
-      render: renderId, disableClick: true },
+      render: _renderId, disableClick: true },
     { title: 'Name', type: 'string', field: 'jobName' },
     { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus },
     { title: 'Number of Device', type: 'numeric',

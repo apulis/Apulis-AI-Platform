@@ -11,7 +11,8 @@ import { capitalize } from 'lodash';
 import { usePrevious } from 'react-use';
 import {
   Link,
-  useParams
+  useParams,
+  withRouter
 } from 'react-router-dom';
 import Helmet from 'react-helmet';
 import {
@@ -73,7 +74,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) 
       </Tooltip>
     )
   })
-
+  
   return (
     <Toolbar disableGutters variant="dense">
       {accessible && (
@@ -81,7 +82,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) 
           edge="start"
           color="inherit"
           component={Link}
-          to="./"
+          to={`/jobs-v2/apulis-dev/${window.location.search}`}
         >
           <ArrowBack />
         </IconButton>

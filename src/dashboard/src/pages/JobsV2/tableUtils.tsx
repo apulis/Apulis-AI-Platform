@@ -4,8 +4,8 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import JobStatus from '../../components/JobStatus';
 
-export const renderId = (job: any) => (
-  <UILink to={job['jobId']} component={RouterLink}>
+export const renderId = (job: any, index: number = 0) => (
+  <UILink to={`${job['jobId']}?index=${index}`} component={RouterLink}>
     {job['jobId']}
   </UILink>
 )

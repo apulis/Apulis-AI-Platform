@@ -1,5 +1,4 @@
-import React, {useState} from "react";
-
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import {
   Card,
   CardHeader,
@@ -26,11 +25,10 @@ import {
 } from "@material-ui/core";
 import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
-import { Info, Delete, Add, PortraitSharp, ImportExportTwoTone } from "@material-ui/icons";
+import { Info, Delete, Add } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import { useSnackbar } from 'notistack';
-import { useForm, Controller } from 'react-hook-form';
 import useFetch from "use-http";
 import { join } from 'path';
 import _ from "lodash";
@@ -40,10 +38,6 @@ import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
-import Paper, { PaperProps } from '@material-ui/core/Paper';
-import Draggable from 'react-draggable'
-import {TransitionProps} from "@material-ui/core/transitions";
-import Slide from "@material-ui/core/Slide";
 import {green, grey, red} from "@material-ui/core/colors";
 import {DLTSDialog} from "../CommonComponents/DLTSDialog";
 import {
@@ -52,6 +46,9 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
+import { NameReg, NameErrorText } from '../../const';
+import './Training.less';
+import { useForm } from "react-hook-form";
 
 interface EnvironmentVariable {
   name: string;
@@ -64,238 +61,58 @@ const sanitizePath = (path: string) => {
   return path;
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
-  const { selectedCluster,saveSelectedCluster, availbleGpu } = React.useContext(ClustersContext);
-  const { userName, uid } = React.useContext(UserContext);
-  const { teams, selectedTeam }= React.useContext(TeamsContext);
+  const { selectedCluster,saveSelectedCluster, availbleGpu } = useContext(ClustersContext);
+  const { userName, uid } = useContext(UserContext);
+  const { teams, selectedTeam }= useContext(TeamsContext);
   const { enqueueSnackbar } = useSnackbar()
   //const team = 'platform';
-  // const { control, handleSubmit } = useForm()
-  const [showGPUFragmentation, setShowGPUFragmentation] = React.useState(false)
-  const [grafanaUrl, setGrafanaUrl] = React.useState('');
-  const [name, setName] = React.useState("");
-  const [gpuFragmentation, setGpuFragmentation] = React.useState<any[]>([]);
-  const onNameChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setName(event.target.value);
-    },
-    [setName]
-  );
-  const team = React.useMemo(() => {
+  const [showGPUFragmentation, setShowGPUFragmentation] = useState(false)
+  const [grafanaUrl, setGrafanaUrl] = useState('');
+  const [name, setName] = useState("");
+  const [gpuFragmentation, setGpuFragmentation] = useState<any[]>([]);
+  const team = useMemo(() => {
     if (teams == null) return;
     if (selectedTeam == null) return;
     return teams.filter((team: any) => team.id === selectedTeam)[0];
   }, [teams, selectedTeam]);
-  const cluster = React.useMemo(() => {
+  const cluster = useMemo(() => {
     if (team == null) return;
     if (selectedCluster == null) return;
     return team.clusters.filter((cluster: any) => cluster.id === selectedCluster)[0];
   }, [team, selectedCluster]);
-  const gpuModel = React.useMemo(() => {
+  const gpuModel = useMemo(() => {
     if (cluster == null) return;
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
-  const [gpuType, setGpuType] = React.useState(availbleGpu![0].type || '');
+  const [gpuType, setGpuType] = useState(availbleGpu![0].type || '');
   const [gpusPerNode, setGpusPerNode] = useState(0)
   const [templates, setTemplates] = useState([{name: '', json: ''}]);
-  
-  React.useEffect(() => {
-    axios.get(`/teams/${selectedTeam}/templates`)
-      .then(res => {
-        setTemplates(res.data)
-      })
-  }, [selectedTeam]);
-
-  const [type, setType] = React.useState("RegularJob");
-  const onTypeChange = React.useCallback(
-    (event: React.ChangeEvent<{ value: unknown }>) => {
-      setType(event.target.value as string);
-    },
-    [setType]
-  );
-
-  const [preemptible, setPreemptible] = React.useState(false);
-  const onPreemptibleChange = React.useCallback(
-    (event: React.ChangeEvent<{ value: unknown }>) => {
-      setPreemptible(event.target.value === 'true');
-    },
-    [setPreemptible]
-  );
-  const onGpuTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setGpuType(event.target.value);
-  };
-
-
-
-
-  const [workers, setWorkers] = React.useState(0);
-  const onWorkersChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      let value = event.target.valueAsNumber || 0;
-      if (value < 0) { value = 0; }
-      if (value > 0) { value = 26; }
-      setWorkers(event.target.valueAsNumber);
-    },
-    [setWorkers]
-  );
-
-  const [image, setImage] = React.useState("");
-  const onImageChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setImage(event.target.value);
-    },
-    [setImage]
-  );
-
-  const [command, setCommand] = React.useState("");
-  const onCommandChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setCommand(event.target.value);
-    },
-    [setCommand]
-  );
-
-  const [interactivePorts, setInteractivePorts] = React.useState("");
-  const onInteractivePortsChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setInteractivePorts(event.target.value);
-    },
-    [setInteractivePorts]
-  );
-
-  const [ssh, setSsh] = React.useState(false);
-  const onSshChange = React.useCallback(
-    (event: unknown, checked: boolean) => {
-      setSsh(checked);
-    },
-    [setSsh]
-  );
-
-  const [ipython, setIpython] = React.useState(false);
-  const onIpythonChange = React.useCallback(
-    (event: unknown, checked: boolean) => {
-      setIpython(checked);
-    },
-    [setIpython]
-  );
-
-  const [tensorboard, setTensorboard] = React.useState(false);
-  const onTensorboardChange = React.useCallback(
-    (event: unknown, checked: boolean) => {
-      setTensorboard(checked);
-    },
-    [setTensorboard]
-  );
-
-  const [advanced, setAdvanced] = React.useState(false);
-  const onAdvancedClick = () => {
-    setAdvanced(!advanced);
-  }
-  const [accountName, setAccountName] = React.useState("");
-  const [accountKey, setAccountKey] = React.useState("");
-  const [containerName, setContainerName] = React.useState("");
-  const [mountPath, setMountPath] = React.useState("");
-  const [mountOptions, setMountOptions] = React.useState("");
-  const onAccountNameChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setAccountName(event.target.value);
-    },
-    [setAccountName]
-  )
-  const onAccountKeyChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setAccountKey(event.target.value);
-    },
-    [setAccountKey]
-  )
-  const onContainerNameChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setContainerName(event.target.value);
-    },
-    [setContainerName]
-  )
-  const onMountPathChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setMountPath(event.target.value);
-    },
-    [setMountPath]
-  )
-  const onMountOptionsChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setMountOptions(event.target.value);
-    },
-    [setMountOptions]
-  )
-  const [workPath, setWorkPath] = React.useState("");
-  const onWorkPathChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setWorkPath(event.target.value);
-    },
-    [setWorkPath]
-  )
-  const [dockerRegistry, setDockerRegistry] = React.useState("");
-  const [dockerUsername, setDockerUsername] = React.useState("");
-  const [dockerPassword, setDockerPassword] = React.useState("");
-  const onDockerRegistryChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setDockerRegistry(event.target.value)
-    },
-    [setDockerRegistry]
-  )
-  const onDockerUsernameChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setDockerUsername(event.target.value)
-    },
-    [setDockerUsername]
-  )
-  const onDockerPasswordChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setDockerPassword(event.target.value)
-    },
-    [setDockerPassword]
-  )
-  const [enableWorkPath, setEnableWorkPath] = React.useState(true);
-  const onEnableWorkPathChange = React.useCallback(
-    (event: unknown, checked: boolean) => {
-      setEnableWorkPath(checked);
-    },
-    [setEnableWorkPath]
-  );
-
-  const [dataPath, setDataPath] = React.useState("");
-  const onDataPathChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setDataPath(event.target.value);
-    },
-    [setDataPath]
-  )
-
-  const [enableDataPath, setEnableDataPath] = React.useState(true);
-  const onEnableDataPathChange = React.useCallback(
-    (event: unknown, checked: boolean) => {
-      setEnableDataPath(checked);
-    },
-    [setEnableDataPath]
-  );
-
-  const [jobPath, setJobPath] = React.useState("");
-
-  const onJobPathChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { value } = event.target
-      setJobPath(value);
-    },
-    [setJobPath]
-  )
-
-  const [enableJobPath, setEnableJobPath] = React.useState(true);
-  const onEnableJobPathChange = React.useCallback(
-    (event: unknown, checked: boolean) => {
-      setEnableJobPath(checked);
-    },
-    [setEnableJobPath]
-  );
-  const [showSaveTemplate, setSaveTemplate] = React.useState(false);
-  const [environmentVariables, setEnvironmentVariables] = React.useState<EnvironmentVariable[]>([]);
+  const [type, setType] = useState("RegularJob");
+  const [preemptible, setPreemptible] = useState(false);
+  const [workers, setWorkers] = useState(0);
+  const [image, setImage] = useState("");
+  const [command, setCommand] = useState("");
+  const [interactivePorts, setInteractivePorts] = useState("");
+  const [ssh, setSsh] = useState(false);
+  const [ipython, setIpython] = useState(false);
+  const [tensorboard, setTensorboard] = useState(false);
+  const [advanced, setAdvanced] = useState(false);
+  const [accountName, setAccountName] = useState("");
+  const [accountKey, setAccountKey] = useState("");
+  const [containerName, setContainerName] = useState("");
+  const [mountPath, setMountPath] = useState("");
+  const [mountOptions, setMountOptions] = useState("");
+  const [workPath, setWorkPath] = useState("");
+  const [dockerRegistry, setDockerRegistry] = useState("");
+  const [dockerUsername, setDockerUsername] = useState("");
+  const [dockerPassword, setDockerPassword] = useState("");
+  const [enableWorkPath, setEnableWorkPath] = useState(true);
+  const [dataPath, setDataPath] = useState("");
+  const [enableDataPath, setEnableDataPath] = useState(true);
+  const [jobPath, setJobPath] = useState("");
+  const [enableJobPath, setEnableJobPath] = useState(true);
+  const [showSaveTemplate, setSaveTemplate] = useState(false);
+  const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
   const onEnvironmentVariableNameChange = React.useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const newEnvironmentVariables = environmentVariables.slice()
@@ -325,43 +142,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       environmentVariables.concat(
         [{ name: "", value: "" }]));
   }, [environmentVariables]);
-
-  const [database, setDatabase] = React.useState(false);
-  // const onDatabaseClick = React.useCallback(() => {
-  //   setDatabase(true);
-  // }, []);
-  const onTemplateClick = () => {
-    setDatabase(!database);
-  }
-
-
-  const [saveTemplateName, setSaveTemplateName] = React.useState("");
-  const onSaveTemplateNameChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSaveTemplateName(event.target.value);
-    },
-    [setSaveTemplateName]
-  );
-
-  const [saveTemplateDatabase, setSaveTemplateDatabase] = React.useState("user");
-  const onSaveTemplateDatabaseChange = React.useCallback(
-    (event: React.ChangeEvent<{ value: unknown }>) => {
-      setSaveTemplateDatabase((event.target.value) as string);
-    },
-    [setSaveTemplateDatabase]
-  );
-  const [gpus, setGpus] = React.useState(0);
-  const submittable = React.useMemo(() => {
-    if (!gpuModel) return false;
-    if (!selectedTeam) return false;
-    if (!name) return false;
-    if (!image) return false;
-    if (!command.trim()) return false;
-    if (type === 'RegularJob' && gpus > gpusPerNode) return false;
-    if (/^\d+$/.test(name)) return false;
-
-    return true;
-  }, [gpuModel, selectedTeam, name, image, command, type, gpus, gpusPerNode]);
+  const [database, setDatabase] = useState(false);
+  const [saveTemplateName, setSaveTemplateName] = useState("");
+  const [saveTemplateDatabase, setSaveTemplateDatabase] = useState("user");
+  const [iconInfoShow, setIconInfoShow] = useState(false);
+  const { handleSubmit, register, errors, setValue } = useForm({ mode: "onBlur" });
+  const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
     if (!saveTemplateName) {
       message('error', 'Need input template name')
@@ -370,7 +156,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
-
       let blobfuseObj: any = {};
       blobfuseObj['accountName'] = accountName || '';
       blobfuseObj['accountKey'] = accountKey || '';
@@ -378,13 +163,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       blobfuseObj['mountPath'] = mountPath || '';
       blobfuseObj['mountOptions'] = mountOptions || '';
       plugins['blobfuse'].push(blobfuseObj);
-
       plugins['imagePull'] = [];
       let imagePullObj: any = {};
-      imagePullObj['registry'] = dockerRegistry
-      imagePullObj['username'] = dockerUsername
-      imagePullObj['password'] = dockerPassword
-      plugins['imagePull'].push(imagePullObj)
+      imagePullObj['registry'] = dockerRegistry;
+      imagePullObj['username'] = dockerUsername;
+      imagePullObj['password'] = dockerPassword;
+      plugins['imagePull'].push(imagePullObj);
 
       const template = {
         name,
@@ -405,12 +189,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         tensorboard,
         plugins,
         gpuType,
-        preemptible
+        preemptible,
+        interactivePorts
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);
       setSaveTemplate(true);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       enqueueSnackbar('Failed to save the template', {
         variant: 'error',
@@ -418,28 +203,54 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       console.error(error);
     }
   };
-  const [showDeleteTemplate, setShowDeleteTemplate] = useState(false)
+  const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
     if (!saveTemplateName) {
       message('error', 'Need input template name')
       return
     }
     try {
-      let plugins: any = {};
-      plugins['blobfuse'] = [];
-      let blobfuseObj: any = {};
-      blobfuseObj['accountName'] = accountName || '';
-      blobfuseObj['accountKey'] = accountKey || '';
-      blobfuseObj['containerName'] = containerName || '';
-      blobfuseObj['mountPath'] = mountPath || '';
-      plugins['blobfuse'].push(blobfuseObj);
-      plugins['imagePull'] = [];
-      let imagePullObj: any = {};
-      imagePullObj['registry'] = dockerRegistry
-      imagePullObj['username'] = dockerUsername
-      imagePullObj['password'] = dockerPassword
-      plugins['imagePull'].push(imagePullObj)
-      const template = {
+      let dataBase = saveTemplateDatabase;
+      if (dataBase === 'team') {
+        dataBase = 'vc';
+      }
+      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${dataBase}`;
+      await axios.delete(url);
+      setShowDeleteTemplate(true)
+      // window.location.reload()
+    } catch (error) {
+      enqueueSnackbar('Failed to delete the template', {
+        variant: 'error',
+      })
+      console.error(error);
+    }
+  }
+  const [json, setJson] = useState('');
+  const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
+  const onTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === 'None (Apply a Template)') {
+      setName("");
+      setType("RegularJob");
+      setGpus(0);
+      setWorkers(0);
+      setImage("");
+      setCommand("");
+      setWorkPath("");
+      setEnableWorkPath(true);
+      setDataPath("");
+      setEnableDataPath(true);
+      setJobPath("");
+      setEnableJobPath(true);
+      setEnvironmentVariables([]);
+      setSsh(false);
+      setIpython(false);
+      setTensorboard(false);
+      setGpuType(availbleGpu![0].type || '')
+      setPreemptible(false);
+      setSelectTPName(val);
+    } else {
+      const {
         name,
         type,
         gpus,
@@ -457,119 +268,72 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ipython,
         tensorboard,
         plugins,
-      };
-      let dataBase = saveTemplateDatabase;
-      if (dataBase === 'team') {
-        dataBase = 'vc';
+        gpuType,
+        preemptible,
+        interactivePorts
+      } = JSON.parse(templates.find(i => i.name === val)!.json);
+      if (name !== undefined) {
+        setName(name);
+        setValue('jobName', name);
       }
-      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${dataBase}`;
-      await axios.delete(url);
-      setShowDeleteTemplate(true)
-      window.location.reload()
-    } catch (error) {
-      enqueueSnackbar('Failed to delete the template', {
-        variant: 'error',
-      })
-      // alert('Failed to delete the template, check console (F12) for technical details.')
-      console.error(error);
+      if (type !== undefined) setType(type);
+      if (gpus !== undefined) setGpus(gpus);
+      if (workers !== undefined) setWorkers(workers);
+      if (image !== undefined) {
+        setImage(image);
+        setValue('image', image);
+      }
+      if (command !== undefined) {
+        setCommand(command);
+        setValue('command', command);
+      }
+      if (workPath !== undefined) setWorkPath(workPath);
+      if (enableWorkPath !== undefined) setEnableWorkPath(enableWorkPath);
+      if (dataPath !== undefined) setDataPath(dataPath);
+      if (enableDataPath !== undefined) setEnableDataPath(enableDataPath);
+      if (jobPath !== undefined) setJobPath(jobPath);
+      if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
+      if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
+      if (ssh !== undefined) setSsh(ssh);
+      if (ipython !== undefined) setIpython(ipython);
+      if (tensorboard !== undefined) setTensorboard(tensorboard);
+      if (gpuType !== undefined) setGpuType(gpuType);
+      if (preemptible !== undefined) setPreemptible(preemptible);
+      if (interactivePorts !== undefined) {
+        setInteractivePorts(interactivePorts);
+        setValue('interactivePorts', interactivePorts);
+      }
+      if (plugins === undefined) {
+        setAccountName("");
+        setAccountKey("");
+        setContainerName("");
+        setMountPath("");
+        setMountOptions("");
+        setDockerRegistry("")
+        setDockerUsername("")
+        setDockerPassword("")
+      }
+      if (plugins !== undefined) {
+        if (plugins.hasOwnProperty("blobfuse") && Array.isArray(plugins['blobfuse'])) {
+          let blobfuseObj = plugins['blobfuse'][0];
+          setAccountName(blobfuseObj['accountName']);
+          setAccountKey(blobfuseObj['accountKey']);
+          setContainerName(blobfuseObj['containerName']);
+          setMountPath(blobfuseObj['mountPath']);
+          setMountOptions(blobfuseObj['mountOptions']);
+        }
+
+        if (plugins.hasOwnProperty('imagePull') && Array.isArray(plugins['imagePull'])) {
+          let imagePullObj = plugins['imagePull'][0];
+          setDockerRegistry(imagePullObj['registry'])
+          setDockerUsername(imagePullObj['username'])
+          setDockerPassword(imagePullObj['password'])
+        }
+      }
     }
+    setSelectTPName(val);
+    setJson(templates.find(i => i.name === val)!.json);
   }
-  const [json, setJson] = React.useState('-1');
-  const onTemplateChange = React.useCallback(
-    (event: React.ChangeEvent<{ value: unknown }>) => {
-      setJson(event.target.value as string)
-      if (event.target.value === -1) {
-        setName("");
-        setType("RegularJob");
-        setGpus(0);
-        setWorkers(0);
-        setImage("");
-        setCommand("");
-        setWorkPath("");
-        setEnableWorkPath(true);
-        setDataPath("");
-        setEnableDataPath(true);
-        setJobPath("");
-        setEnableJobPath(true);
-        setEnvironmentVariables([]);
-        setSsh(false);
-        setIpython(false);
-        setTensorboard(false);
-        setGpuType(availbleGpu![0].type || '')
-        setPreemptible(false);
-      } else {
-        const {
-          name,
-          type,
-          gpus,
-          workers,
-          image,
-          command,
-          workPath,
-          enableWorkPath,
-          dataPath,
-          enableDataPath,
-          jobPath,
-          enableJobPath,
-          environmentVariables,
-          ssh,
-          ipython,
-          tensorboard,
-          plugins,
-          gpuType,
-          preemptible
-        } = JSON.parse(event.target.value as string);
-        if (name !== undefined) setName(name);
-        if (type !== undefined) setType(type);
-        if (gpus !== undefined) setGpus(gpus);
-        if (workers !== undefined) setWorkers(workers);
-        if (image !== undefined) setImage(image);
-        if (command !== undefined) setCommand(command);
-        if (workPath !== undefined) setWorkPath(workPath);
-        if (enableWorkPath !== undefined) setEnableWorkPath(enableWorkPath);
-        if (dataPath !== undefined) setDataPath(dataPath);
-        if (enableDataPath !== undefined) setEnableDataPath(enableDataPath);
-        if (jobPath !== undefined) setJobPath(jobPath);
-        if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
-        if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
-        if (ssh !== undefined) setSsh(ssh);
-        if (ipython !== undefined) setIpython(ipython);
-        if (tensorboard !== undefined) setTensorboard(tensorboard);
-        if (gpuType !== undefined) setGpuType(gpuType);
-        if (preemptible !== undefined) setPreemptible(preemptible);
-        console.log('preemptible', preemptible)
-        if (plugins === undefined) {
-          setAccountName("");
-          setAccountKey("");
-          setContainerName("");
-          setMountPath("");
-          setMountOptions("");
-          setDockerRegistry("")
-          setDockerUsername("")
-          setDockerPassword("")
-        }
-        if (plugins !== undefined) {
-          if (plugins.hasOwnProperty("blobfuse") && Array.isArray(plugins['blobfuse'])) {
-            let blobfuseObj = plugins['blobfuse'][0];
-            setAccountName(blobfuseObj['accountName']);
-            setAccountKey(blobfuseObj['accountKey']);
-            setContainerName(blobfuseObj['containerName']);
-            setMountPath(blobfuseObj['mountPath']);
-            setMountOptions(blobfuseObj['mountOptions']);
-          }
-
-          if (plugins.hasOwnProperty('imagePull') && Array.isArray(plugins['imagePull'])) {
-            let imagePullObj = plugins['imagePull'][0];
-            setDockerRegistry(imagePullObj['registry'])
-            setDockerUsername(imagePullObj['username'])
-            setDockerPassword(imagePullObj['password'])
-          }
-        }
-      }
-    },
-    []
-  );
-
   const {
     data: postJobData,
     loading: postJobLoading,
@@ -582,28 +346,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     error: postEndpointsError,
     post: postEndpoints,
   } = useFetch('/api');
-
-
-
-  const [enableSubmit, setEnableSubmit] = React.useState(submittable);
-
-  const onGpusChange = React.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      let value = event.target.valueAsNumber || 0;
-      if (value < 0) { value = 0; }
-      if (value > 0) { value = 26; }
-      setGpus(event.target.valueAsNumber);
-      setEnableSubmit(false)
-      if (type === 'RegularJob' && event.target.valueAsNumber > gpusPerNode)  {
-        setEnableSubmit(true);
-      }
-    },
-    [gpusPerNode, type]
-  );
-  const [open, setOpen] = React.useState(false);
-  const onSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!submittable) return;
+  const [open, setOpen] = useState(false);
+  const onSubmit = (data: any) => {
     let plugins: any = {};
     plugins['blobfuse'] = [];
     let blobfuseObj: any = {};
@@ -640,6 +384,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       env: environmentVariables,
       hostNetwork : type === 'PSDistJob',
       isPrivileged : type === 'PSDistJob',
+      interactivePorts: interactivePorts,
       plugins: plugins,
     };
     let totalGpus = gpus;
@@ -651,15 +396,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     } else {
       job.resourcegpu = gpus;
     }
-
-    // if (totalGpus > (cluster.userQuota)) {
-    //   if (!window.confirm('Your job will be using gpus more than the quota.\nProceed?')) {
-    //     return;
-    //   }
-    // }
-
     if (type === 'PSDistJob') {
-      // Check GPU fragmentation
       let workersNeeded = workers;
       for (const { metric, value } of gpuFragmentation) {
         if (Number(metric['gpu_available']) >= gpusPerNode) {
@@ -674,11 +411,20 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       }
     }
     postJob(`/clusters/${selectedCluster}/jobs`, job);
-  }; // Too many dependencies, do not cache.
+  };
 
   const jobId = React.useRef<string>();
+  const fetchGrafanaUrl = `/api/clusters`;
+  const request = useFetch(fetchGrafanaUrl);
+  const fetchGrafana = async () => {
+    const result = await request.get(`/${selectedCluster}`);
+    if (result) {
+      const { grafana } = result
+      setGrafanaUrl(grafana);
+    }
+  }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (postJobData == null) return;
     if (postJobData.error) {
       enqueueSnackbar(postJobData.error, {
@@ -698,6 +444,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         });
       }
     }
+    console.log('endpoints', endpoints)
 
     if (ssh) endpoints.push('ssh');
     if (ipython) endpoints.push('ipython');
@@ -709,20 +456,30 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       history.push(`/jobs-v2/${selectedCluster}/${jobId.current}`);
     }
   }, [postJobData]);
-  const fetchGrafanaUrl = `/api/clusters`;
-  const request = useFetch(fetchGrafanaUrl);
-  const fetchGrafana = async () => {
-    const result = await request.get(`/${selectedCluster}`);
-    if (result) {
-      const { grafana } = result
-      setGrafanaUrl(grafana);
+
+  const validateInteractivePorts = (val: string) => {
+    if (val) {
+      let flag = true;
+      if (val.split(',').length) {
+        val.split(',').forEach(n => {
+          if (Number(n) < 40000 || Number(n) > 49999) flag = false;
+        });
+      } else {
+        flag = Number(val) >= 40000 && Number(val) <= 49999;
+      }
+      return flag;
     }
-  }
-  const handleCloseGPUGramentation = () => {
-    setShowGPUFragmentation(false);
+    return true;
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
+    axios.get(`/teams/${selectedTeam}/templates`)
+      .then(res => {
+        setTemplates(res.data)
+      })
+  }, [selectedTeam]);
+
+  useEffect(() => {
     fetchGrafana()
     if (postEndpointsData) {
       setOpen(true);
@@ -733,7 +490,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }, [history, postEndpointsData, selectedCluster, selectedTeam])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (postJobError) {
       enqueueSnackbar('Job submission failed', {
         variant: 'error',
@@ -741,25 +498,21 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }, [postJobError])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (postEndpointsError) {
-      // alert('Enable endpoints failed')
       enqueueSnackbar('Enable endpoints failed', {
         variant: 'error',
       })
     }
   }, [postEndpointsError])
 
-
-  const handleClickOpen = () => {
-    setShowGPUFragmentation(true)
-  }
   const handleClose = () => {
     setOpen(false)
     setSaveTemplate(false)
     setShowDeleteTemplate(false)
   }
-  React.useEffect(() => {
+
+  useEffect(() => {
     if (!grafanaUrl) return;
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params = new URLSearchParams({
@@ -774,7 +527,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [grafanaUrl])
 
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
-
   const showMessage = (open: boolean,showDeleteTemplate: boolean,showSaveTemplate: boolean) => {
     let message = '';
     if (open) {
@@ -791,7 +543,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const renderCustomizedLabel = (props: any) => {
     const { x, y, width, height, value } = props;
     const radius = 10;
-
     return (
       <g>
         <circle cx={x + width / 2} cy={y - radius} r={radius} fill="#fff" />
@@ -802,27 +553,27 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     );
   };
   const styleSnack={backgroundColor:showDeleteTemplate ? red[400] : green[400]};
-  return (
 
+  return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <DLTSDialog open={showGPUFragmentation}
         message={null}
-        handleClose={handleCloseGPUGramentation}
+        handleClose={() => setShowGPUFragmentation(false)}
         handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
         title={"View Cluster GPU Status Per Node"}
         titleStyle={{color:grey[400]}}
       >
-        <BarChart width={500} height={700} data={gpuFragmentation}  margin={{top: 20}}>
+        <BarChart width={500} height={600} data={gpuFragmentation}  margin={{top: 20}}>
           <CartesianGrid strokeDasharray="10 10"/>
-          <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', offset:10, position:'insideBottom'}}>
+          <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', position:'insideBottomLeft'}}>
           </XAxis>
-          <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} />
+          <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
           <Bar dataKey="value[1]" fill="#8884d8" >
             <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
           </Bar>
         </BarChart>
       </DLTSDialog>
-      <form onSubmit={onSubmit}>
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Card>
           <CardHeader title="Submit Training Job"/>
           <Divider/>
@@ -842,7 +593,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
                 />
                 <Tooltip title="View Cluster GPU Status Per Node">
-                  <IconButton color="secondary" size="small" onClick={handleClickOpen} aria-label="delete">
+                  <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
                     <SvgIcon>
                       <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/><path fill="none" d="M0 0h24v24H0z"/>
                     </SvgIcon>
@@ -852,11 +603,21 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Job Name"
+                  name="jobName"
                   fullWidth
                   variant="filled"
-                  value={name}
-                  error={/^\d+$/.test(name)}
-                  onChange={onNameChange}
+                  defaultValue={name}
+                  error={Boolean(errors.jobName)}
+                  onChange={e => setName(e.target.value)}
+                  helperText={errors.jobName ? errors.jobName.message : ''}
+                  InputLabelProps={{ shrink: true }}
+                  inputRef={register({
+                    required: 'Job Name is required！',
+                    pattern: {
+                      value: NameReg,
+                      message: NameErrorText
+                    }
+                  })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -866,12 +627,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   label="Job Template"
                   fullWidth
                   variant="filled"
-                  value={json}
+                  value={selectTPName}
                   onChange={onTemplateChange}
                 >
-                  <MenuItem value={-1} divider>None (Apply a Template)</MenuItem>
+                  <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                   {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
-                    <MenuItem key={index} value={json}>{name}</MenuItem>
+                    <MenuItem key={index} value={name}>{name}</MenuItem>
                   ))}
                 </TextField>
               </Grid>
@@ -882,11 +643,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   fullWidth
                   variant="filled"
                   value={type}
-                  onChange={onTypeChange}
+                  onChange={e => setType(e.target.value as string)}
                 >
                   <MenuItem value="RegularJob">Regular Job</MenuItem>
-                  <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
-                  <MenuItem value="InferenceJob">Inference Job</MenuItem>
+                  {/* <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
+                  <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
                 </TextField>
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -896,7 +657,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   fullWidth
                   variant="filled"
                   value={String(preemptible)}
-                  onChange={onPreemptibleChange}
+                  onChange={e => setPreemptible(e.target.value === 'true')}
                 >
                   <MenuItem value="false">NO</MenuItem>
                   <MenuItem value="true">YES</MenuItem>
@@ -909,26 +670,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   fullWidth
                   variant="filled"
                   value={String(gpuType)}
-                  onChange={onGpuTypeChange}
+                  onChange={e => setGpuType(e.target.value)}
                 >
-                  {
-                    availbleGpu?.map(gpu => (
-                      <MenuItem value={gpu.type}>{gpu.type}</MenuItem>
-                    ))
-                  }
-                  
+                  {availbleGpu?.map(gpu => (
+                    <MenuItem value={gpu.type}>{gpu.type}</MenuItem>
+                  ))}
                 </TextField>
               </Grid>
-              { (type === 'RegularJob' ||  type === 'InferenceJob') && (
+              {(type === 'RegularJob' ||  type === 'InferenceJob') && (
                 <Grid item xs={6}>
                   <TextField
                     type="number"
-                    error={gpus > (type === 'InferenceJob' ? Number.MAX_VALUE : gpusPerNode)}
+                    name="gpus"
                     label="Number of Device"
                     fullWidth
                     variant="filled"
                     value={gpus}
-                    onChange={onGpusChange}
+                    onChange={e => setGpus(Number(e.target.value))}
+                    inputProps={{ min: 0, max: gpusPerNode, step: 1 }}
                   />
                 </Grid>
               )}
@@ -940,7 +699,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     fullWidth
                     variant="filled"
                     value={workers}
-                    onChange={onWorkersChange}
+                    onChange={e => setWorkers(Number(e.target.value))}
                   />
                 </Grid>
               )}
@@ -961,9 +720,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   label="Docker Image"
                   fullWidth
                   variant="filled"
-                  value={image}
-                  error={!image}
-                  onChange={onImageChange}
+                  defaultValue={image}
+                  InputLabelProps={{ shrink: true }}
+                  name="image"
+                  onChange={e => setImage(e.target.value)}
+                  error={Boolean(errors.image)}
+                    helperText={errors.image ? errors.image.message : ''}
+                    inputRef={register({
+                      required: 'Docker Image is required！'
+                    })}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -971,11 +736,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     multiline
                     label="Command"
+                    name="command"
                     fullWidth
                     variant="filled"
                     rows="10"
-                    value={command}
-                    onChange={onCommandChange}
+                    defaultValue={command}
+                    InputLabelProps={{ shrink: true }}
+                    onChange={e => setCommand(e.target.value)}
+                    error={Boolean(errors.command)}
+                    helperText={errors.command ? errors.command.message : ''}
+                    inputRef={register({
+                      required: 'Command is required！'
+                    })}
                   />
                 </MonospacedThemeProvider>
               </Grid>
@@ -986,8 +758,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   fullWidth
                   variant="filled"
                   rows="10"
-                  value={interactivePorts}
-                  onChange={onInteractivePortsChange}
+                  name="interactivePorts"
+                  defaultValue={interactivePorts}
+                  InputLabelProps={{ shrink: true }}
+                  onChange={e => setInteractivePorts(e.target.value)}
+                  error={Boolean(errors.interactivePorts)}
+                  helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}
+                  inputRef={register({
+                    validate: val => validateInteractivePorts(val)
+                  })}
                 />
               </Grid>
               <Grid item xs={4} container justify="center">
@@ -995,7 +774,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   control={<Checkbox />}
                   label="SSH"
                   checked={ssh}
-                  onChange={onSshChange}
+                  onChange={(e, checked) => setSsh(checked)}
                 />
               </Grid>
               <Grid item xs={4} container justify="center">
@@ -1003,23 +782,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   control={<Checkbox />}
                   label="iPython"
                   checked={ipython}
-                  onChange={onIpythonChange}
+                  onChange={(e, checked) => setIpython(checked)}
                 />
               </Grid>
-              <Grid item xs={4} container justify="center">
+              <Grid item xs={4} container justify="center" className="icon-grid">
                 <FormControlLabel
                   control={<Checkbox />}
-                  label={<>{"Tensorboard "}<Info fontSize="inherit"/></>}
+                  label="Tensorboard"
                   checked={tensorboard}
-                  onChange={onTensorboardChange}
+                  onChange={(e, checked) => setTensorboard(checked)}
                 />
+                <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
               </Grid>
-              <Grid item xs={12} container justify="flex-end">
+              {iconInfoShow && <Grid item xs={12} container justify="flex-end">
                 <Chip
                   icon={<Info/>}
                   label="Tensorboard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
                 />
-              </Grid>
+              </Grid>}
             </Grid>
           </CardContent>
           <Collapse in={advanced}>
@@ -1035,7 +815,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12}>
                   <TextField
                     value={dockerRegistry}
-                    onChange={onDockerRegistryChange}
+                    onChange={e => setDockerRegistry(e.target.value)}
                     label="Registry"
                     fullWidth
                     variant="filled"
@@ -1044,7 +824,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12}>
                   <TextField
                     value={dockerUsername}
-                    onChange={onDockerUsernameChange}
+                    onChange={e => setDockerUsername(e.target.value)}
                     label="Username"
                     fullWidth
                     variant="filled"
@@ -1053,7 +833,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12}>
                   <TextField
                     value={dockerPassword}
-                    onChange={onDockerPasswordChange}
+                    onChange={e => setDockerPassword(e.target.value)}
                     label="Password"
                     fullWidth
                     variant="filled"
@@ -1081,14 +861,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         margin="dense"
                         variant="filled"
                         value={workPath}
-                        onChange={onWorkPathChange}
+                        onChange={e => setWorkPath(e.target.value)}
                       />
                     </TableCell>
                     <TableCell align="center">
                       <Switch
                         value={enableWorkPath}
                         checked={enableWorkPath}
-                        onChange={onEnableWorkPathChange}
+                        onChange={(e, checked) => setEnableWorkPath(checked)}
                       />
                     </TableCell>
                   </TableRow>
@@ -1101,14 +881,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         margin="dense"
                         variant="filled"
                         value={dataPath}
-                        onChange={onDataPathChange}
+                        onChange={e => setDataPath(e.target.value)}
                       />
                     </TableCell>
                     <TableCell align="center">
                       <Switch
                         value={enableDataPath}
                         checked={enableDataPath}
-                        onChange={onEnableDataPathChange}
+                        onChange={(e, checked) => setEnableDataPath(checked)}
                       />
                     </TableCell>
                   </TableRow>
@@ -1121,14 +901,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         margin="dense"
                         variant="filled"
                         value={jobPath}
-                        onChange={onJobPathChange}
+                        onChange={e => setJobPath(e.target.value)}
                       />
                     </TableCell>
                     <TableCell align="center">
                       <Switch
                         value={enableJobPath}
                         checked={enableJobPath}
-                        onChange={onEnableJobPathChange}
+                        onChange={(e, checked) => setEnableJobPath(checked)}
                       />
                     </TableCell>
                   </TableRow>
@@ -1146,37 +926,35 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {
-                    environmentVariables.map(({ name, value }, index) => (
-                      <TableRow key={index}>
-                        <TableCell>
-                          <TextField
-                            label="Environment Variable Name"
-                            fullWidth
-                            margin="dense"
-                            variant="filled"
-                            value={name}
-                            onChange={onEnvironmentVariableNameChange(index)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <TextField
-                            label="Environment Variable Value"
-                            fullWidth
-                            margin="dense"
-                            variant="filled"
-                            value={value}
-                            onChange={onEnvironmentVariableValueChange(index)}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton size="small" color="secondary" onClick={onRemoveEnvironmentVariableClick(index)}>
-                            <Delete/>
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  }
+                  {environmentVariables.map(({ name, value }, index) => (
+                    <TableRow key={index}>
+                      <TableCell>
+                        <TextField
+                          label="Environment Variable Name"
+                          fullWidth
+                          margin="dense"
+                          variant="filled"
+                          value={name}
+                          onChange={onEnvironmentVariableNameChange(index)}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          label="Environment Variable Value"
+                          fullWidth
+                          margin="dense"
+                          variant="filled"
+                          value={value}
+                          onChange={onEnvironmentVariableValueChange(index)}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <IconButton size="small" color="secondary" onClick={onRemoveEnvironmentVariableClick(index)}>
+                          <Delete/>
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                   <TableRow>
                     <TableCell/>
                     <TableCell/>
@@ -1201,7 +979,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     fullWidth
                     variant="filled"
                     value={saveTemplateName}
-                    onChange={onSaveTemplateNameChange}
+                    onChange={e => setSaveTemplateName(e.target.value)}
                   />
                 </Grid>
                 <Grid item xs>
@@ -1211,7 +989,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     fullWidth
                     variant="filled"
                     value={saveTemplateDatabase}
-                    onChange={onSaveTemplateDatabaseChange}
+                    onChange={e => setSaveTemplateDatabase((e.target.value) as string)}
                   >
                     <MenuItem value="user">user</MenuItem>
                     <MenuItem value="team">team</MenuItem>
@@ -1226,10 +1004,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           <CardActions>
             <Grid item xs={12} container justify="space-between">
               <Grid item xs container>
-                <Button type="button" color="secondary"  onClick={onAdvancedClick}>Advanced</Button>
-                <Button type="button" color="secondary"  onClick={onTemplateClick}>Template</Button>
+                <Button type="button" color="secondary"  onClick={() => setAdvanced(!advanced)}>Advanced</Button>
+                <Button type="button" color="secondary"  onClick={() => setDatabase(!database)}>Template</Button>
               </Grid>
-              <Button type="submit" color="primary" variant="contained" disabled={!submittable || enableSubmit || postJobLoading || postEndpointsLoading || open }>Submit</Button>
+              <Button type="submit" color="primary" variant="contained" disabled={postJobLoading || postEndpointsLoading || open }>Submit</Button>
             </Grid>
           </CardActions>
         </Card>

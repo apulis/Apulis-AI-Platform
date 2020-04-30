@@ -8,7 +8,7 @@ import {
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
 import message from '../../utils/message';
-
+import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 export default class Vc extends React.Component {
   static contextType = ClustersContext
   constructor() {
@@ -21,8 +21,7 @@ export default class Vc extends React.Component {
       quota: '',
       metadata: '',
       vcNameValidateObj: {
-        required: false,
-        helperText: '',
+        text: '',
         error: false
       }
     }
@@ -66,7 +65,15 @@ export default class Vc extends React.Component {
 
   save = () => {
     const { isEdit, vcName, quota, metadata, vcNameValidateObj } = this.state;
-    if (!vcName || vcNameValidateObj.error) return;
+    if (!vcName || vcNameValidateObj.error) {
+      this.setState({
+        vcNameValidateObj: {
+          error: true,
+          text: vcNameValidateObj.text || 'vcName is required！'
+        }
+      })
+      return;
+    };
     if (!this.isJSON(quota)) {
       alert('quota必须是json格式');
       return;
@@ -87,16 +94,11 @@ export default class Vc extends React.Component {
         this.setState({ modifyFlag: false });
         this.getVcList();
       }, (e) => {
-        message(`${isEdit ? '修改' : '新增'}失败`)
+        message(`${isEdit ? '修改' : '新增'}失败`);
       })
   }
 
   delete = (item) => {
-    const { vcList } = this.state;
-    if (vcList.length === 1) {
-      alert('必须保留一个vc');
-      return;
-    }
     if (window.confirm('确认删除')) {
       axios.get(`/${this.context.selectedCluster}/deleteVc/${item.vcName}`)
         .then((res) => {
@@ -107,15 +109,16 @@ export default class Vc extends React.Component {
   }
 
   vcNameChange(e) {
+    const { vcList } = this.state;
     const val = e.target.value;
-    const reg = /^\w+$/;
-    const error = !val || !reg.test(val) ? true : false;
-    const text = !val ? 'vcName is required！' : !reg.test(val) ? 'vcName Must be composed of Chinese, English, numbers or underscore！' : '';
+    const hasNames = vcList.map(i => i.vcName);
+    const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
+    const text = !val ? 'vcName is required！' : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
     this.setState({ 
       vcName: val,
       vcNameValidateObj: {
         error: error,
-        helperText: text
+        text: text
       }
     })
   }
@@ -174,7 +177,7 @@ export default class Vc extends React.Component {
                   <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
                   <TableCell>
                     <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
-                    <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
+                    <Button color="primary" disabled={item.vcName === this.context.selectedTeam} onClick={() => this.delete(item)}>Delete</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -193,7 +196,7 @@ export default class Vc extends React.Component {
                       error={vcNameValidateObj.error}
                       fullWidth={true}
                       disabled={this.state.isEdit}
-                      helperText={vcNameValidateObj.helperText}
+                      helperText={vcNameValidateObj.text}
                     />
                   </Grid>
                   <Grid item xs={8}>

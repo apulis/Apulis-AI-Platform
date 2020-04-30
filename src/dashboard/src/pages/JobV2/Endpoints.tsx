@@ -21,18 +21,16 @@ import {
   ListItemText,
   Switch,
   TextField,
-  Typography
+  Typography,
+  Chip
 } from '@material-ui/core';
-import {
-  Send
-} from '@material-ui/icons';
+import { Send, Info } from '@material-ui/icons';
 import useFetch from 'use-http-2';
 import { useSnackbar } from 'notistack';
-
 import Loading from '../../components/Loading';
 import CopyableTextListItem from '../../components/CopyableTextListItem';
-
 import Context from './Context';
+import { useForm } from "react-hook-form";
 
 interface RouteParams {
   clusterId: string;
@@ -41,6 +39,8 @@ interface RouteParams {
 
 const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) => {
   const { cluster, job } = useContext(Context);
+  console.log('jobbbb',job)
+
   if (endpoint.status !== "running") return null;
   if (endpoint.name === 'ssh') {
     const identify = `${cluster['workStorage'].replace(/^file:\/\//i, '//')}/${job['jobParams']['workPath']}/.ssh/id_rsa`
@@ -99,8 +99,10 @@ const EndpointsList: FunctionComponent<{
   )
 };
 
-
 const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoints }) => {
+  const { job } = useContext(Context);
+  const { jobStatus } = job;
+  const disabled = jobStatus === 'error' || jobStatus === 'killed' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing';
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar } = useSnackbar();
   const ssh = useMemo(() => {
@@ -127,10 +129,8 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
       enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
-  const onSubmit = useCallback((event: FormEvent) => {
-    event.preventDefault();
-    if (portInput.current === undefined) return;
-    const port = portInput.current.valueAsNumber;
+  const onSubmit = useCallback((data: any) => {
+    const port = Number(data.interactivePorts);
     enqueueSnackbar(`Exposing port ${port}...`);
     post({
       endpoints: [{
@@ -143,47 +143,67 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
       enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
     });
   }, [post, enqueueSnackbar]);
+  const [iconInfoShow, setIconInfoShow] = useState(false);
+  const { handleSubmit, register, errors } = useForm({ mode: "onBlur" });
+  const validateInteractivePorts = (val: string) => {
+    if (val) {
+      let flag = true;
+      if (val.split(',').length) {
+        val.split(',').forEach(n => {
+          if (Number(n) < 40000 || Number(n) > 49999) flag = false;
+        });
+      } else {
+        flag = Number(val) >= 40000 && Number(val) <= 49999;
+      }
+      return flag;
+    }
+    return true;
+  }
 
   return (
     <Box px={2}>
       <FormGroup aria-label="position" row>
         <FormControlLabel
           checked={ssh || undefined}
-          disabled={ssh}
+          disabled={ssh || disabled}
           control={<Switch/>}
           label="SSH"
           onChange={onChange('SSH')}
         />
         <FormControlLabel
           checked={ipython || undefined}
-          disabled={ipython}
+          disabled={ipython || disabled}
           control={<Switch/>}
           label="iPython"
           onChange={onChange('iPython')}
         />
         <FormControlLabel
           checked={tensorboard || undefined}
-          disabled={tensorboard}
+          disabled={tensorboard || disabled}
           control={<Switch/>}
-          label="Tensorboard *"
+          label="Tensorboard"
           onChange={onChange('Tensorboard')}
         />
+        <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
       </FormGroup>
-      <Typography>
-        *: Tensorboard will listen on directory
-        <code> ~/tensorboard/$DLWS_JOB_ID/logs </code>
-        inside docker container.
-      </Typography>
-      <Box pt={1} pb={2} component="form" onSubmit={onSubmit}>
+      {iconInfoShow && <Chip icon={<Info/>}
+        label={<p>Tensorboard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
+      />}
+      <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>
         <TextField
-          inputRef={portInput}
           type="number"
           fullWidth
           label="New Interactive Port"
-          placeholder="40000 - 49999"
-          inputProps={{ min: "40000", max: "49999" }}
+          placeholder="40000 - 49999. Separated by comma."
+          disabled={disabled}
+          name="interactivePorts"
+          error={Boolean(errors.interactivePorts)}
+          helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}
+          inputRef={register({
+            validate: val => validateInteractivePorts(val)
+          })}
           InputProps={{
-            endAdornment: (
+            endAdornment: !disabled && (
               <InputAdornment position="end">
                 <IconButton type="submit">
                   <Send/>

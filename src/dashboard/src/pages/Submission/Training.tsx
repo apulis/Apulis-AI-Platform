@@ -146,7 +146,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [saveTemplateName, setSaveTemplateName] = useState("");
   const [saveTemplateDatabase, setSaveTemplateDatabase] = useState("user");
   const [iconInfoShow, setIconInfoShow] = useState(false);
-  const { handleSubmit, register, errors } = useForm({ mode: "onBlur" });
+  const { handleSubmit, register, errors, setValue } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
     if (!saveTemplateName) {
@@ -189,7 +189,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         tensorboard,
         plugins,
         gpuType,
-        preemptible
+        preemptible,
+        interactivePorts
       };
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);
@@ -268,14 +269,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         tensorboard,
         plugins,
         gpuType,
-        preemptible
+        preemptible,
+        interactivePorts
       } = JSON.parse(templates.find(i => i.name === val)!.json);
-      if (name !== undefined) setName(name);
+      if (name !== undefined) {
+        setName(name);
+        setValue('jobName', name);
+      }
       if (type !== undefined) setType(type);
       if (gpus !== undefined) setGpus(gpus);
       if (workers !== undefined) setWorkers(workers);
-      if (image !== undefined) setImage(image);
-      if (command !== undefined) setCommand(command);
+      if (image !== undefined) {
+        setImage(image);
+        setValue('image', image);
+      }
+      if (command !== undefined) {
+        setCommand(command);
+        setValue('command', command);
+      }
       if (workPath !== undefined) setWorkPath(workPath);
       if (enableWorkPath !== undefined) setEnableWorkPath(enableWorkPath);
       if (dataPath !== undefined) setDataPath(dataPath);
@@ -288,6 +299,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       if (tensorboard !== undefined) setTensorboard(tensorboard);
       if (gpuType !== undefined) setGpuType(gpuType);
       if (preemptible !== undefined) setPreemptible(preemptible);
+      if (interactivePorts !== undefined) {
+        setInteractivePorts(interactivePorts);
+        setValue('interactivePorts', interactivePorts);
+      }
       if (plugins === undefined) {
         setAccountName("");
         setAccountKey("");
@@ -333,7 +348,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   } = useFetch('/api');
   const [open, setOpen] = useState(false);
   const onSubmit = (data: any) => {
-  // const onSubmit = (event: React.FormEvent) => {
     let plugins: any = {};
     plugins['blobfuse'] = [];
     let blobfuseObj: any = {};
@@ -382,13 +396,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     } else {
       job.resourcegpu = gpus;
     }
-
-    // if (totalGpus > (cluster.userQuota)) {
-    //   if (!window.confirm('Your job will be using gpus more than the quota.\nProceed?')) {
-    //     return;
-    //   }
-    // }
-
     if (type === 'PSDistJob') {
       let workersNeeded = workers;
       for (const { metric, value } of gpuFragmentation) {
@@ -404,7 +411,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       }
     }
     postJob(`/clusters/${selectedCluster}/jobs`, job);
-  }; // Too many dependencies, do not cache.
+  };
+
   const jobId = React.useRef<string>();
   const fetchGrafanaUrl = `/api/clusters`;
   const request = useFetch(fetchGrafanaUrl);
@@ -566,7 +574,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         </BarChart>
       </DLTSDialog>
       <form onSubmit={handleSubmit(onSubmit)}>
-      {/* <form onSubmit={onSubmit}> */}
         <Card>
           <CardHeader title="Submit Training Job"/>
           <Divider/>
@@ -603,6 +610,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   error={Boolean(errors.jobName)}
                   onChange={e => setName(e.target.value)}
                   helperText={errors.jobName ? errors.jobName.message : ''}
+                  InputLabelProps={{ shrink: true }}
                   inputRef={register({
                     required: 'Job Name is required！',
                     pattern: {
@@ -713,6 +721,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   fullWidth
                   variant="filled"
                   defaultValue={image}
+                  InputLabelProps={{ shrink: true }}
                   name="image"
                   onChange={e => setImage(e.target.value)}
                   error={Boolean(errors.image)}
@@ -732,6 +741,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     variant="filled"
                     rows="10"
                     defaultValue={command}
+                    InputLabelProps={{ shrink: true }}
                     onChange={e => setCommand(e.target.value)}
                     error={Boolean(errors.command)}
                     helperText={errors.command ? errors.command.message : ''}
@@ -750,6 +760,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   rows="10"
                   name="interactivePorts"
                   defaultValue={interactivePorts}
+                  InputLabelProps={{ shrink: true }}
                   onChange={e => setInteractivePorts(e.target.value)}
                   error={Boolean(errors.interactivePorts)}
                   helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}

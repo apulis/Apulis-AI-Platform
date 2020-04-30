@@ -12,13 +12,15 @@ interface Context {
   selectedCluster?: string;
   saveSelectedCluster(team: React.SetStateAction<string>): void;
   availbleGpu?: AvailbleGpuType[];
+  selectedTeam: string;
 }
 
 const Context = React.createContext<Context>({
   clusters: [],
   selectedCluster: '',
   saveSelectedCluster: function(team: React.SetStateAction<string>) {},
-  availbleGpu: []
+  availbleGpu: [],
+  selectedTeam: ''
 });
 
 export default Context;
@@ -67,7 +69,7 @@ export const Provider: React.FC = ({ children }) => {
   }
   return (
     <Context.Provider
-      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu}}
+      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu, selectedTeam}}
       children={children}
     />
   );

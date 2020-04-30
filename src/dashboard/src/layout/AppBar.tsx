@@ -74,7 +74,7 @@ const OpenDrawerButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
   const onClick = React.useCallback(() => setOpen(!open), [setOpen, open]);
   return (
-    <Tooltip title={"Go to pages"}>
+    <Tooltip title={open ? 'Hide' : 'Show'}>
       <IconButton edge="start" color="inherit" onClick={onClick}>
         <MenuRounded />
       </IconButton>

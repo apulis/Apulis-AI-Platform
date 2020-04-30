@@ -34,7 +34,7 @@ interface RouteParams {
 }
 
 const TabView: FunctionComponent = () => {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(Number(window.location.search.split('index=')[1]) || 0);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
   }, [setIndex]);
@@ -76,14 +76,11 @@ const ClusterJobs: FunctionComponent<{ cluster: any }> = ({ cluster }) => {
 
 const Jobs: FunctionComponent = () => {
   const { clusters } = useContext(ClustersContext);
-
   const history = useHistory();
   const { clusterId } = useParams<RouteParams>();
-
   const cluster = useMemo(() => {
     return clusters.filter(cluster => cluster.id === clusterId)[0]
   }, [clusters, clusterId]);
-
   const onClusterChange = useCallback((cluster: any) => {
     history.replace(`/jobs-v2/${cluster.id}`)
   }, [history]);

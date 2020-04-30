@@ -18,13 +18,14 @@ import ClusterContext from './ClusterContext';
 import { renderId, renderGPU, sortGPU, renderDate, sortDate, renderStatus } from './tableUtils';
 import PriorityField from './PriorityField';
 
-import { pollInterval } from '../../utils/front-config';
+import { pollInterval } from '../../const';
 
 const renderUser = (job: any) => job['userName'].split('@', 1)[0];
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(job['jobStatusDetail'] && job['jobStatusDetail'][0]['startedAt']);
 const getFinishedDate = (job: any) => new Date(job['jobStatusDetail'] && job['jobStatusDetail'][0]['finishedAt']);
+const _renderId = (job: any) => renderId(job, 1);
 
 interface JobsTableProps {
   title: string;
@@ -41,10 +42,9 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
   const renderPrioirty = useCallback((job: any) => (
     <PriorityField job={job}/>
   ), [])
-
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'Id', type: 'string', field: 'jobId',
-      render: renderId, disableClick: true },
+      render: _renderId, disableClick: true },
     { title: 'Name', type: 'string', field: 'jobName' },
     { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus },
     { title: 'Number of Device', type: 'numeric',
@@ -139,7 +139,6 @@ const AllJobs: FunctionComponent = () => {
     if (pausedJobs.length === 0) return undefined;
     return pausedJobs
   }, [jobs]);
-  console.log('jobs', jobs)
   if (jobs !== undefined) return (
     <>
       {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}

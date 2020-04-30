@@ -7,8 +7,8 @@ import {
 } from "@material-ui/core";
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
-
-
+import message from '../../utils/message';
+import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 export default class Vc extends React.Component {
   static contextType = ClustersContext
   constructor() {
@@ -20,6 +20,10 @@ export default class Vc extends React.Component {
       vcName: '',
       quota: '',
       metadata: '',
+      vcNameValidateObj: {
+        text: '',
+        error: false
+      }
     }
   }
 
@@ -51,7 +55,7 @@ export default class Vc extends React.Component {
   updateVc = (item) => {
     const { modifyFlag } = this.state;
     this.setState({
-      modifyFlag: !modifyFlag,
+      modifyFlag: true,
       isEdit: 1,
       vcName: item.vcName,
       quota: item.quota,
@@ -60,7 +64,16 @@ export default class Vc extends React.Component {
   }
 
   save = () => {
-    const { isEdit, vcName, quota, metadata } = this.state;
+    const { isEdit, vcName, quota, metadata, vcNameValidateObj } = this.state;
+    if (!vcName || vcNameValidateObj.error) {
+      this.setState({
+        vcNameValidateObj: {
+          error: true,
+          text: vcNameValidateObj.text || 'vcName is required！'
+        }
+      })
+      return;
+    };
     if (!this.isJSON(quota)) {
       alert('quota必须是json格式');
       return;
@@ -77,20 +90,15 @@ export default class Vc extends React.Component {
     }
     axios.get(url)
       .then((res) => {
-        alert(`${isEdit ? '修改' : '新增'}成功`)
+        message(`${isEdit ? '修改' : '新增'}成功`);
+        this.setState({ modifyFlag: false });
         this.getVcList();
       }, (e) => {
-        console.log(e);
-        alert(`${isEdit ? '修改' : '新增'}失败`)
+        message(`${isEdit ? '修改' : '新增'}失败`);
       })
   }
 
   delete = (item) => {
-    const { vcList } = this.state;
-    if (vcList.length === 1) {
-      alert('必须保留一个vc');
-      return;
-    }
     if (window.confirm('确认删除')) {
       axios.get(`/${this.context.selectedCluster}/deleteVc/${item.vcName}`)
         .then((res) => {
@@ -100,10 +108,18 @@ export default class Vc extends React.Component {
     // 删除逻辑todo: 关联的表记录删除
   }
 
-  //change
   vcNameChange(e) {
-    this.setState({
-      vcName: e.target.value
+    const { vcList } = this.state;
+    const val = e.target.value;
+    const hasNames = vcList.map(i => i.vcName);
+    const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
+    const text = !val ? 'vcName is required！' : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
+    this.setState({ 
+      vcName: val,
+      vcNameValidateObj: {
+        error: error,
+        text: text
+      }
     })
   }
 
@@ -135,7 +151,7 @@ export default class Vc extends React.Component {
   }
 
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, quota, metadata } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, quota, metadata, vcNameValidateObj } = this.state;
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
@@ -148,7 +164,7 @@ export default class Vc extends React.Component {
                 <TableCell style={{ color: '#fff' }}>vcName</TableCell>
                 <TableCell style={{ color: '#fff' }}>quota</TableCell>
                 <TableCell style={{ color: '#fff' }}>metadata</TableCell>
-                <TableCell style={{ color: '#fff' }}>admin</TableCell>
+                <TableCell style={{ color: '#fff' }}>permissions</TableCell>
                 <TableCell style={{ color: '#fff' }}>actions</TableCell>
               </TableRow>
             </TableHead>
@@ -158,29 +174,29 @@ export default class Vc extends React.Component {
                   <TableCell>{item.vcName} </TableCell>
                   <TableCell>{item.quota} </TableCell>
                   <TableCell>{item.metadata} </TableCell>
-                  <TableCell>{item.admin ? '管理员' : '用户'} </TableCell>
+                  <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
                   <TableCell>
                     <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
-                    <Button color="primary" onClick={() => this.delete(item)}>Delete</Button>
+                    <Button color="primary" disabled={item.vcName === this.context.selectedTeam} onClick={() => this.delete(item)}>Delete</Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-          {
-            modifyFlag ?
-              <div style={{ width: '25%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
+          {modifyFlag ?
+              <div style={{ width: '35%', float: 'left', padding: 10, margin: 10, borderWidth: 2, borderColor: '#999', borderStyle: 'solid' }}>
                 <h2 id="simple-modal-title">{isEdit ? '编辑' : '新增'}</h2>
                 <form>
-                  <Grid item xs={8}>
+                  <Grid item xs={8}> 
                     <TextField
-                      required
                       label="vcName"
                       value={vcName}
                       onChange={this.vcNameChange.bind(this)}
                       margin="normal"
+                      error={vcNameValidateObj.error}
                       fullWidth={true}
                       disabled={this.state.isEdit}
+                      helperText={vcNameValidateObj.text}
                     />
                   </Grid>
                   <Grid item xs={8}>
@@ -205,6 +221,7 @@ export default class Vc extends React.Component {
                   </Grid>
                   <Grid item xs={8}>
                     <Button variant="outlined" size="medium" color="primary" type="button" onClick={this.save}>Save</Button>
+                    <Button variant="outlined" size="medium" color="primary" type="button" style={{ marginLeft: 10 }} onClick={() => this.setState({ modifyFlag: false })}>Cancel</Button>
                   </Grid>
                 </form>
               </div>

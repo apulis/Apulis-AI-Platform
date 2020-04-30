@@ -21,7 +21,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
   const { cluster } = useContext(ClusterContext);
   const [editing, setEditing] = useState(false);
   const [textFieldDisabled, setTextFieldDisabled] = useState(false);
-  const input = useRef<HTMLInputElement>();
+  // const input = useRef<HTMLInputElement>();
   const buttonEnabled = useMemo(() => {
     return (
       job['jobStatus'] === 'running' ||
@@ -32,13 +32,10 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
       job['jobStatus'] === 'pausing'
     )
   }, [job])
-  const priority = useMemo(() => {
-    if (job['priority'] == null) {
-      return 100;
-    }
-    return job['priority'];
-  }, [job])
-  const setPriority = useCallback((priority: number) => {
+  const [priority, setPriority] = useState(Number(job['priority']) || 100);
+  const onBlur = (event: KeyboardEvent<HTMLInputElement>) => {
+    setEditing(false);
+    setPriority(priority < 1 ? 1 : priority > 1000 ? 1000 : priority);
     if (priority === job['priority']) return;
     enqueueSnackbar('Priority is being set...');
     setTextFieldDisabled(true);
@@ -59,35 +56,18 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
     }).then(() => {
       setTextFieldDisabled(false);
     });
-  }, [enqueueSnackbar, job, cluster.id]);
-  const onBlur = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    setEditing(false);
-    if (input.current) {
-      setPriority(input.current.valueAsNumber);
-    }
-  }, [setPriority]);
-  const onKeyDown = useCallback((event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && input.current) {
-      setPriority(input.current.valueAsNumber);
-    }
-    if (event.key === 'Escape') {
-      setEditing(false);
-    }
-  }, [setPriority, setEditing]);
-  const onClick = useCallback(() => {
-    setEditing(true);
-  }, [setEditing])
+  }
 
   if (editing) {
     return (
       <TextField
-        inputRef={input}
+        // inputRef={input}
         type="number"
-        defaultValue={priority}
+        value={priority}
         disabled={textFieldDisabled}
         fullWidth
         onBlur={onBlur}
-        onKeyDown={onKeyDown}
+        onChange={e => setPriority(Number(e.target.value))}
       />
     );
   } else {
@@ -95,7 +75,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
       <Button
         fullWidth
         variant={buttonEnabled ? 'outlined' : 'text'}
-        onClick={buttonEnabled ? onClick : undefined}
+        onClick={buttonEnabled ? () => setEditing(true) : undefined}
       >
         {priority}
       </Button>

@@ -9,21 +9,24 @@ import React, {
 import MaterialTable, { Column, Options } from 'material-table';
 import { useSnackbar } from 'notistack';
 import useFetch from 'use-http-2';
-
+import _ from "lodash";
 import TeamsContext from '../../contexts/Teams';
 import useActions from '../../hooks/useActions';
+import useInterval from '../../hooks/useInterval';
 import Loading from '../../components/Loading';
-
+import axios from 'axios';
 import ClusterContext from './ClusterContext';
 import { renderId, renderGPU, sortGPU, renderStatus, renderDate, sortDate } from './tableUtils';
 import PriorityField from './PriorityField';
-import { pollInterval } from '../../utils/front-config';
+import { pollInterval } from '../../const';
+import message from '../../utils/message';
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(
   job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['startedAt']);
 const getFinishedDate = (job: any) => new Date(
   job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['finishedAt']);
+const _renderId = (job: any) => renderId(job, 1);
 
 interface JobsTableProps {
   jobs: any[];
@@ -48,7 +51,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
 
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'Id', type: 'string', field: 'jobId',
-      render: renderId, disableClick: true },
+      render: _renderId, disableClick: true },
     { title: 'Name', type: 'string', field: 'jobName' },
     { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus },
     { title: 'Number of Device', type: 'numeric',
@@ -87,39 +90,34 @@ const MyJobs: FunctionComponent = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
-  const [limit, setLimit] = useState(20);
-  const { error, data, get } = useFetch(
-    `/api/v2/clusters/${cluster.id}/teams/${selectedTeam}/jobs?limit=${limit}`,
-    [cluster.id, selectedTeam, limit]
-  );
+  const [limit, setLimit] = useState(100);
   const [jobs, setJobs] = useState<any[]>();
   const onExpectMoreJobs = useCallback((count: number) => {
     setLimit((limit: number) => limit + count);
   }, []);
+
   useEffect(() => {
     setJobs(undefined);
     setLimit(20);
   }, [cluster.id]);
+
   useEffect(() => {
-    if (data !== undefined) {
-      setJobs(data);
-      const timeout = setTimeout(get, pollInterval);
-      return () => {
-        clearTimeout(timeout);
-      }
-    }
-  }, [data, get]);
-  useEffect(() => {
-    if (error !== undefined) {
-      const key = enqueueSnackbar(`Failed to fetch jobs from cluster: ${cluster.id}`, {
-        variant: 'error',
-        persist: true
-      });
-      return () => {
-        if (key !== null) closeSnackbar(key);
-      }
-    }
-  }, [error, enqueueSnackbar, closeSnackbar, cluster.id]);
+    getData();
+  }, [cluster.id, selectedTeam, limit]);
+
+  useInterval(() => {
+    getData();
+  }, pollInterval);
+
+  const getData = () => {
+    axios.get(`/v2/clusters/${cluster.id}/teams/${selectedTeam}/jobs?limit=${limit}`)
+        .then(res => {
+          const { data } = res;
+          if (!_.isEqual(jobs, data)) setJobs(res.data);
+        }, () => {
+          message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
+        })
+  }
 
   if (jobs !== undefined) return (
     <JobsTable
@@ -127,7 +125,6 @@ const MyJobs: FunctionComponent = () => {
       onExpectMoreJobs={onExpectMoreJobs}
     />
   );
-  if (error) return null;
 
   return <Loading/>;
 };

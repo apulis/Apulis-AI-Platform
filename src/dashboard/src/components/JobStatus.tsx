@@ -35,18 +35,16 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
   const label = useMemo(() => capitalize(status), [status]);
 
   const detail = useMemo<Array<any>>(() => job['jobStatusDetail'], [job]);
-  const title = useMemo(() => {
-    if (!Array.isArray(detail)) return null;
-    if (detail.length === 0) return null;
+  const title = () => {
+    if (!Array.isArray(detail)) return '';
+    if (detail.length === 0) return '';
     const firstDetail = detail[0];
-    if (typeof firstDetail !== 'object') return null;
+    if (typeof firstDetail !== 'object') return '';
     const firstDetailMessage = firstDetail.message;
     if (typeof firstDetailMessage === 'string') return firstDetailMessage;
-    if (typeof firstDetailMessage === 'object') return (
-      <pre>{JSON.stringify(firstDetailMessage, null, 2)}</pre>
-    );
-    return <pre>{JSON.stringify(firstDetail, null, 2)}</pre>;
-  }, [detail]);
+    if (typeof firstDetailMessage === 'object') return `${JSON.stringify(firstDetailMessage, null, 2)}`;
+    return `${JSON.stringify(firstDetail, null, 2)}`;
+  };
   return (
     <Tooltip title={title} placement="right" interactive>
       <Chip icon={icon} label={label}/>

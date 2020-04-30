@@ -114,13 +114,20 @@ const Chart: React.FC<{
 
 }> = ({ available, used, reserved ,isActive}) => {
   const theme = useTheme();
-  let data = [
-    { name: "Available", value: available, color: lightGreen[400] },
-    { name: "Used", value: used, color: theme.palette.grey[500] },
-    { name: "Unschedulable", value: reserved, color: deepOrange[400]},
-  ];
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  let data = [];
+  if (available === 0 && used === 0 && reserved === 0) {
+    data = [{ name: "NO Active Jobs", value: 100, color: "#e0e0e0" }];
+  } else {
+    data = [
+      { name: "Available", value: available, color: lightGreen[400] },
+      { name: "Used", value: used, color: theme.palette.grey[500] },
+      { name: "Unschedulable", value: reserved, color: deepOrange[400]},
+    ];
+  }
   if (reserved === 0) {
-    data = data.filter((item)=>item.name !== 'Reserved')
+    data = data.filter((item)=>item.name !== 'Reserved');
   }
   const styles = useStyles();
   const renderActiveShape = (props: any) => {
@@ -132,7 +139,7 @@ const Chart: React.FC<{
     const sx = cx + (outerRadius + 10) * cos;
     const sy = cy + (outerRadius + 10) * sin;
     const mx = cx + (outerRadius + 20) * cos;
-    const my = cy + (outerRadius + 20) * sin;
+    const my = cy + (outerRadius + 30) * sin;
     const ex = mx + (cos >= 0 ? 1 : -1) * 8;
     const ey = my;
     const textAnchor = cos >= 0 ? 'start' : 'end';
@@ -165,10 +172,10 @@ const Chart: React.FC<{
       </g>
     );
   };
-  const [activeIndex, setActiveIndex] = useState(1);
   const onPieEnter = (data: any, index: number) => {
-    setActiveIndex(index)
+    setActiveIndex(index);
   }
+  
   return (
     <>
       <ResponsiveContainer aspect={8 / 8} width='100%' height='100%'>

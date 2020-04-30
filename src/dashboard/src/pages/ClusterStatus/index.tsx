@@ -238,11 +238,11 @@ const ClusterStatus: FC = () => {
         })
 
         setIframeUrl(userfetchs['GranaUrl'] );
-        console.log('GranaUrl', userfetchs['GranaUrl'])
+        // console.log('GranaUrl', userfetchs['GranaUrl'])
         setNodeStatus(userfetchs['node_status']);
         setIframeUrlForPerVC(userfetchs['GPUStatisticPerVC']);
-        console.log('GPUStatisticPerVC', userfetchs['GPUStatisticPerVC'])
-        setVcStatus(res);
+        // console.log('GPUStatisticPerVC', userfetchs['GPUStatisticPerVC'])
+        setVcStatus(res.filter(Boolean));
       })
     }
   }
@@ -269,11 +269,11 @@ const ClusterStatus: FC = () => {
     setSelectedValue(event.target.value);
     localStorage.setItem('selectedCluster', event.target.value);
     const filteredVCStatus: any = vcStatus.filter((vc)=>vc['ClusterName'] === event.target.value);
-    console.log(vcStatus)
     fetchClusterStatus(mount)
     setNodeStatus(filteredVCStatus[0]['node_status']);
     setIframeUrl((filteredVCStatus[0]['GranaUrl']));
   }
+
   if (vcStatus){
     return (
       <>

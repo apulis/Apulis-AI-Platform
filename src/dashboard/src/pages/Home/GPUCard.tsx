@@ -344,13 +344,13 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
             }
           });
           finalStorageRes = finalStorageRes.filter((item: any) => {
-            return !(item["mountpointName"].indexOf("dlts") === -1 && item["mountpointName"].indexOf("dlws/nfs") === -1);
+            return !(item["mountpointName"].indexOf("dlts") === -1 && item["mountpointName"].indexOf("dlws/nfs") === -1 && item["mountpointName"].indexOf("dlws") === -1);
           })
           setNfsStorage(finalStorageRes.filter((store: any) => {
             if (selectedTeam === 'MMBellevue' && store['mountpointName'].indexOf('/mntdlws/nfs') !== -1) {
               return null;
             }
-            return store['mountpointName'].indexOf(selectedTeam) !== -1 || store['mountpointName'].indexOf("dlws/nfs") !== -1;
+            return store['mountpointName'].indexOf(selectedTeam) !== -1 || store['mountpointName'].indexOf("dlws/nfs") !== -1||store['mountpointName'].indexOf("dlws") !== -1;
           }));
         });
       });
@@ -366,7 +366,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
         setActiveJobs((Number)(sumValues(res['AvaliableJobNum'])));
         setActivate(true);
       }
-      
+
     }).catch(err => {
       console.log('err', err)
     })

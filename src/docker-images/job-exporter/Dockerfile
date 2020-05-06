@@ -25,7 +25,7 @@ FROM python:3.7
 
 ARG DCGM_VERSION=1.7.2
 
-RUN curl -SL https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz \
+RUN curl -SL https://download.docker.com/linux/static/stable/$(uname -m)/docker-19.03.8.tgz \
     | tar -xzvC /usr/local && \
     mv /usr/local/docker/* /usr/bin && \
     apt-get update && apt-get --no-install-recommends install -y iftop lsof \

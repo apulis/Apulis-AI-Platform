@@ -39,8 +39,8 @@ spec:
         - {{cnf["watchdog"]["vc_url"]}}
         {% endif %}
         env:
-        - name: LOGGING_NOTSET
-          value: NOTSET
+        - name: LOGGING_LEVEL
+          value: INFO
         volumeMounts:
         - mountPath: /usr/bin/kubectl
           name: kubectl-binary
@@ -72,6 +72,9 @@ spec:
         hostPath:
           path: /etc/kubernetes/admin.conf
 
+      {% if cnf["private_docker_registry_username"] %}
+      - name: svccred
+      {% endif %}
       tolerations:
       - key: node.kubernetes.io/memory-pressure
         operator: Exists

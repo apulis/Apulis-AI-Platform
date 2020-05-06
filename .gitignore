@@ -11,6 +11,7 @@
 **/id_rsa
 **/id_rsa.pub
 **/deploy/*
+src/ClusterBootstrap/*.yaml
 
 *.iso
 *.srl
@@ -30,8 +31,12 @@ src/ClusterBootstrap/.nfs*
 src/ClusterBootstrap/iso-creator/mkimg.sh
 
 src/ClusterBootstrap/deploy_backup/*
+src/ClusterBootstrap/cloudinit/*
+src/ClusterBootstrap/cloudinit.tar
 
-
+src/ClusterBootstrap/scripts/deploy_framework.sh
+src/ClusterBootstrap/scripts/add_machines.sh
+src/ClusterBootstrap/scripts/pass_secret.sh
 
 #ASP.NET core
 src/**/dotnet/.vs/**
@@ -59,7 +64,7 @@ src/**/dotnet/WebPortal/hosting.json
 **/storage.ide
 
 src/RepairManager/.vs/*
-src/RepairManager/mock-data/*
+src/RepairManager/test/mock-data/*
 /.vs/slnx.sqlite
 /.vs/ProjectSettings.json
 /.vs/VSWorkspaceState.json

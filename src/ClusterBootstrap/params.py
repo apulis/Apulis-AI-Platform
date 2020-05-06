@@ -1,7 +1,7 @@
 # These are the default configuration parameter
 default_config_parameters = {
     "supported_platform": ["azure_cluster", "onpremise"],
-    "allroles": {"infra", "infrastructure", "worker", "nfs", "sql", "dev", "etcd", "kubernetes_master", "mysqlserver"},
+    "allroles": {"infra", "infrastructure", "worker", "nfs", "sql", "dev", "etcd", "kubernetes_master", "mysqlserver", "elasticsearch", "samba"},
     # Kubernetes setting
     "service_cluster_ip_range": "10.3.0.0/16",
     "pod_ip_range": "10.2.0.0/16",
@@ -15,8 +15,24 @@ default_config_parameters = {
     "cloud_elasticsearch_node": "dlws-influxdb.westus.cloudapp.azure.com",
     "cloud_elasticsearch_port": "9200",
 
-    "elasticsearch_db_port": "9200",
-    "elasticsearch_tp_port": "9300",
+    "fluent_bit": { "port": 2020 },
+
+    "elasticsearch": {
+        "enabled": False,
+        "port": {
+            "http": 9200,
+            "transport": 9300,
+            "exporter": 9114,
+            "kibana": 5601,
+        },
+    },
+
+    "azure_blob_log": {
+        "enabled": False,
+        "port": {
+            "adapter": 6200
+        }
+    },
 
     "influxdb_port": "8086",
     "influxdb_tp_port": "25826",
@@ -43,6 +59,14 @@ default_config_parameters = {
     },
     "repair-manager": { "prometheus-ip": "localhost", "prometheus-port": 9091},
 
+    "repair-manager": {
+        "prometheus-ip": "localhost",
+        "prometheus-port": 9091,
+        "etcd": {
+            "data-dir": "/etc/RepairManager/etcd"
+        }
+    },
+
     "mysql_port": "3306",
     "mysql_username": "root",
     "mysql_data_path": "/var/lib/mysql",
@@ -67,10 +91,12 @@ default_config_parameters = {
     # StorageManager mapping
     "storagemanager": "storagemanager",
     "repairmanager": "repairmanager",
+    "repairmanageretcd": "repairmanageretcd",
     "ssh_cert": "./deploy/sshkey/id_rsa",
     "admin_username": "core",
     # the path of where dfs/nfs is source linked and consumed on each node,
     # default /dlwsdata
+    "nfs-mnt-src-path": "/data/share",
     "storage-mount-path": "/dlwsdata",
     # the path where dlts vc storages are linked and consumed on each node.
     # TODO: merge with storage-mount-path when dlts vc migration completes.
@@ -80,8 +106,10 @@ default_config_parameters = {
     # the path of where local device is mounted.
     "local-mount-path": "/mnt",
 
+    "physical-mount-path-vc": "/mntdlts/nfs",
+
     # required storage folder under storage-mount-path
-    "default-storage-folders": ["jobfiles", "storage", "work", "namenodeshare"],
+    "default-storage-folders": ["jobfiles", "storage", "work"],
     "per_user_gpu_limit": "-1",
 
     # the path of where nvidia driver is installed on each node, default
@@ -227,12 +255,15 @@ default_config_parameters = {
         "namenode2": "etcd_node_2",
 
         "datanode": "all",
-
+        "webportal": "etcd_node_1",
+        "restfulapi": "etcd_node_1",
+        "jobmanager": "etcd_node_1",
+        "repairmanager": "etcd_node_1",
         "grafana": "etcd_node_1",
         "prometheus": "etcd_node_1",
         "alert-manager": "etcd_node_1",
         "watchdog": "etcd_node_1",
-        "elasticsearch": "etcd_node_1",
+        "elasticsearch": "elasticsearch_node",
         "kibana": "etcd_node_1",
         "mysql": "etcd_node_1",
         "mysql-server": "mysqlserver_node",
@@ -260,6 +291,47 @@ default_config_parameters = {
         "all": "all",
         "default": "all",
     },
+
+    "default_kube_labels_by_node_role": {
+        'infra': {
+            "infrastructure": "active",
+            "jobmanager": "active",
+            "watchdog": "active",
+            "mysql": "active",
+            "dashboard": "active",
+            "repairmanager": "active",
+            "grafana": "active",
+            "prometheus": "active",
+            "restfulapi": "active",
+            "user-synchronizer": "active",
+            "alert-manager": "active",
+            "beta.kubernetes.io/os": "linux"
+            },
+        'worker': {
+            "worker": "active",
+            "beta.kubernetes.io/os": "linux",
+            },
+        'mysqlserver': {
+            "mysql-server": "active"
+            },
+        'nfs': {
+            "storagemanager": "active"
+            },
+        'elasticsearch': {
+            "elasticsearch": "active"
+        },
+    },
+
+    "kube_services_2_start": [
+        "nvidia-device-plugin",
+        "flexvolume",
+        "mysql",
+        "jobmanager",
+        "restfulapi",
+        "monitor",
+        "dashboard",
+        "user-synchronizer",
+    ],
 
     "kubemarks": ["rack", "sku"],
 
@@ -431,8 +503,8 @@ default_config_parameters = {
     "DeployAuthentications": ["Corp", "Live", "Gmail"],
     # You should remove WinBindServers if you will use
     # UserGroups for authentication.
-    "workFolderAccessPoint": "",
-    "dataFolderAccessPoint": "",
+    "workFolderAccessPoint": "/",
+    "dataFolderAccessPoint": "/",
 
     "kube_configchanges": ["/opt/addons/kube-addons/weave.yaml"],
     "kube_addons": ["/opt/addons/kube-addons/dashboard.yaml",
@@ -552,7 +624,7 @@ default_config_parameters = {
             # For use at zhejianglab.com
             "ClientId": "db3c8fdf-2539-4f17-b8ac-cd1a3e38a933",
             "ClientSecret": "tlvQBQQB91509@*dualUB){"
-        }, 
+        },
         "WeChat": {
             "AppId": "wx9a56d5d3147bbfc6",
             "AppSecret": "e9e21e5b6bd11e822abcc5dd87c67a09"
@@ -567,7 +639,7 @@ default_config_parameters = {
             # "servers": // Specify influxDBserver.
         },
         "grafana": {
-            "url" : "grafana", 
+            "url" : "grafana",
             "port": 3000,
         },
         "hdfs": {
@@ -581,9 +653,9 @@ default_config_parameters = {
     # This section will be used to govern the initial user used by the cluster
     "inituser": {
         "gid": 500,
-        "uid": 500, 
-        "group": "dlwsadmin", 
-    }, 
+        "uid": 500,
+        "group": "dlwsadmin",
+    },
 
     # There are two docker registries, one for infrastructure (used for pre-deployment)
     # and one for worker docker (pontentially in cluser)
@@ -622,15 +694,15 @@ default_config_parameters = {
             "tutorial-fastai": {},
             "tutorial-imagenet18": {},
             "algorithm-bert": {},
-            "algorithm-segmentation": {}, 
+            "algorithm-segmentation": {},
             "gobld": {},
             "kubernetes": {},
             "backendbase": {},
         },
         "customize": {
             "webui": {},
-            "webui2": {}, 
-            "webui3": {}, 
+            "webui2": {},
+            "webui3": {},
             "restfulapi": {},
             "restfulapi2": {},
             "gpu-reporter": {}
@@ -651,6 +723,9 @@ default_config_parameters = {
             "etcd":{"fullname":"dlws/etcd:3.1.10"},
             "mysql":{"fullname":"dlws/mysql:5.6"},
             "phpmyadmin":{"fullname":"dlws/phpmyadmin:4.7.6"},
+            "elasticsearch":{"fullname":"dlws/elasticsearch:6.8.5"},
+            "elasticsearch-exporter":{"fullname":"dlws/elasticsearch-exporter:1.1.0"},
+            "kibana":{"fullname":"dlws/kibana:6.8.5"},
             "fluentd-elasticsearch":{"fullname":"dlws/fluentd-elasticsearch:v2.0.2"},
             "binstore":{"fullname":"dlws/binstore:v1.0"},
 
@@ -664,20 +739,20 @@ default_config_parameters = {
         "container": {},
     },
 
-    "cloud_config": {
+    "cloud_config_nsg_rules": {
         "vnet_range": "192.168.0.0/16",
-        "default_admin_username": "dlwsadmin",
+        "default_admin_username": "core",
         "tcp_port_for_pods": "30000-49999",
         "tcp_port_ranges": "80 443 30000-49999 25826 3000 22222 9091 9092",
         # There is no udp port requirement for now
         #"udp_port_ranges": "25826",
         "inter_connect": {
-            "tcp_port_ranges": "22 1443 2379 3306 5000 8086 10250",
+            "tcp_port_ranges": "22 1443 2379 3306 5000 8086 9092 9114 9200 9300 10250",
             # Need to white list dev machines to connect
             # "source_addresses_prefixes": [ "52.151.0.0/16"]
         },
         "dev_network": {
-            "tcp_port_ranges": "22 1443 2379 3306 5000 8086 10250 10255 22222",
+            "tcp_port_ranges": "22 1443 2379 3306 5000 8086 5601 10250 10255 22222",
             # Need to white list dev machines to connect
             # "source_addresses_prefixes": [ "52.151.0.0/16"]
         },
@@ -700,27 +775,13 @@ default_config_parameters = {
     },
     "registry_credential": {},
     "priority": "regular",
-    "sku_mapping": {
-        "Standard_ND6s":{"gpu-type": "P40","gpu-count": 1},
-        "Standard_NV24": {"gpu-type": "M60", "gpu-count": 4},
-        "Standard_ND12s": {"gpu-type": "P40", "gpu-count": 2},
-        "Standard_ND24rs": {"gpu-type": "P40", "gpu-count": 4},
-        "Standard_NV12": {"gpu-type": "M60", "gpu-count": 2},
-        "Standard_NV48s_v3": {"gpu-type": "M60", "gpu-count": 4},
-        "Standard_ND40s_v2": {"gpu-type": "V100", "gpu-count": 8},
-        "Standard_NC6s_v3": {"gpu-type": "V100", "gpu-count": 1},
-        "Standard_NC6s_v2": {"gpu-type": "P100", "gpu-count": 1},
-        "Standard_ND24s": {"gpu-type": "P40", "gpu-count": 4},
-        "Standard_NV24s_v3": {"gpu-type": "M60", "gpu-count": 2},
-        "Standard_NV6": {"gpu-type": "M60", "gpu-count": 1},
-        "Standard_NV12s_v3": {"gpu-type": "M60", "gpu-count": 1},
-        "Standard_NC24s_v2": {"gpu-type": "P100", "gpu-count": 4},
-        "Standard_NC24s_v3": {"gpu-type": "V100", "gpu-count": 4},
-        "Standard_NC12s_v3": {"gpu-type": "V100", "gpu-count": 2},
-        "Standard_NC12s_v2": {"gpu-type": "P100", "gpu-count": 2},
-        "Standard_NC24rs_v3": {"gpu-type": "V100", "gpu-count": 4},
-        "Standard_NC24rs_v2": {"gpu-type": "P100", "gpu-count": 4},
-        "default": {"gpu-type": "None", "gpu-count": 0},
+    "service_2_docker_map": {
+        "monitor": ["watchdog", "gpu-reporter", "reaper", "job-exporter"],
+        "dashboard": ["dashboard"],
+        "restfulapi": ["restfulapi"],
+        "repairmanager": ["repairmanager, repairmanageretcd"],
+        "storagemanager": ["storagemanager"],
+        "user-synchronizer": ["user-synchronizer"],
     },
     "infiniband_mounts": [],
     "custom_mounts": [],
@@ -731,7 +792,6 @@ default_config_parameters = {
     # 2. enable_cpuworker is set to True
     # 3. default_cpu_sku is set to a valid value that exists in sku_meta
     "enable_cpuworker": False,
-    "enable_blobfuse": False,
     "enable_custom_registry_secrets": False,
     "default_cpu_sku": "Standard_D2s_v3",
 
@@ -748,16 +808,16 @@ default_config_parameters = {
             "memory": 8,
             "memory_ratio": 0.9
         }
-    }
+    },
 }
 
 # These are super scripts
 scriptblocks = {
     "restart-main": [
-        "mount", 
+        "mount",
         "kubernetes labels",
-        "kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml", 
-        "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics", 
+        "kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml",
+        "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics",
     ],
     "azure": [
         "runscriptonroles infra worker ./scripts/prepare_vm_disk.sh",

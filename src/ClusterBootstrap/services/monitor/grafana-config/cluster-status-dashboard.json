@@ -938,6 +938,7 @@
     },
     "timezone": "browser",
     "title": "Cluster Status",
-    "version": 3
+    "version": 3,
+    "uid": "cluster-status"
   }
 }

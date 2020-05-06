@@ -25,6 +25,7 @@ import utils
 
 logger = logging.getLogger(__name__)
 
+
 class InspectResult(object):
     """ Represents a task meta data, parsed from docker inspect result """
     def __init__(self, username, job_name, role_name, task_index, pod_name,
@@ -34,7 +35,7 @@ class InspectResult(object):
         self.role_name = role_name
         self.task_index = task_index
         self.pod_name = pod_name
-        self.gpu_ids = gpu_ids # comma seperated str, str may be minor_number or UUID
+        self.gpu_ids = gpu_ids  # comma seperated str, str may be minor_number or UUID
         self.pid = pid
         self.email = email # None on no value
         self.vc_name = vc_name # None on no value
@@ -55,12 +56,28 @@ class InspectResult(object):
                 self.gpu_ids == o.gpu_ids and \
                 self.pid == o.pid and \
                 self.email == o.email and \
-                self.vc_name == o.vc_name
+                self.vc_name == o.vc_name and \
+                self.is_host_network == o.is_host_network
 
+
+keys = {
+    "PAI_JOB_NAME", "PAI_USER_NAME", "PAI_CURRENT_TASK_ROLE_NAME", "GPU_ID",
+    "PAI_TASK_INDEX", "POD_NAME", "FC_TASK_INDEX", "DLWS_JOB_ID",
+    "DLWS_USER_NAME", "DLWS_USER_EMAIL", "DLWS_VC_NAME", "DLWS_ROLE_NAME",
+    "DLWS_ROLE_IDX", "DLWS_HOST_NETWORK", "DLTS_JOB_ID", "DLTS_USER_NAME",
+    "DLTS_USER_EMAIL", "DLTS_VC_NAME", "DLTS_ROLE_NAME", "DLTS_ROLE_IDX",
+    "DLTS_HOST_NETWORK"
+}
 
 keys = {"PAI_JOB_NAME", "PAI_USER_NAME", "PAI_CURRENT_TASK_ROLE_NAME", "GPU_ID",
         "PAI_TASK_INDEX", "DLWS_JOB_ID", "DLWS_USER_NAME", "POD_NAME","DLWS_GPU_TYPE",
         "DLWS_USER_EMAIL", "DLWS_VC_NAME", "DLWS_ROLE_NAME", "DLWS_ROLE_IDX"}
+
+def select_value_with_key(m, keys):
+    for key in keys:
+        if key in m:
+            return m[key]
+    return None
 
 
 def parse_docker_inspect(inspect_output):
@@ -88,6 +105,7 @@ def parse_docker_inspect(inspect_output):
                 m["GPU_ID"] = v
 
     pid = utils.walk_json_field_safe(obj, 0, "State", "Pid")
+    logger.info("m is %s", m)
 
     return InspectResult(
             m.get("PAI_USER_NAME") or m.get("DLWS_USER_NAME"),
@@ -104,14 +122,13 @@ def parse_docker_inspect(inspect_output):
 
 def inspect(container_id, histogram, timeout):
     try:
-        result = utils.exec_cmd(
-                ["docker", "inspect", container_id],
-                histogram=histogram,
-                timeout=timeout)
+        result = utils.exec_cmd(["docker", "inspect", container_id],
+                                histogram=histogram,
+                                timeout=timeout)
         return parse_docker_inspect(result)
     except subprocess.CalledProcessError as e:
-        logger.exception("command '%s' return with error (code %d): %s",
-                e.cmd, e.returncode, e.output)
+        logger.exception("command '%s' return with error (code %d): %s", e.cmd,
+                         e.returncode, e.output)
     except subprocess.TimeoutExpired:
         logger.warning("docker inspect timeout")
     except Exception:

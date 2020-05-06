@@ -71,6 +71,10 @@ spec:
         - containerPort: {{cnf['job-exporter']['port']}}
           hostPort: {{cnf['job-exporter']['port']}}
           name: main
+      {% if cnf["private_docker_registry_username"] %}
+      imagePullSecrets:
+      - name: svccred
+      {% endif %}
       volumes:
         - name: docker-socket
           hostPath:

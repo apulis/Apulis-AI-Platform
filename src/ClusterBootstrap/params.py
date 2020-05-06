@@ -674,7 +674,7 @@ default_config_parameters = {
         # Hub is docker.io/
         "hub": "apulistech/",
         #"hub": "registry.docker-cn.com/dlws/",
-        "tag": "1.8", # migrate docker to 1.8 for QianJiangYuan
+        "tag": "1.9", # migrate docker to 1.9 for Apulis
         "system": {
             "nginx": {},
             "zookeeper": {},

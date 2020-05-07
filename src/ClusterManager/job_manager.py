@@ -393,6 +393,25 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                     job["userName"], job["jobId"], result.strip()))
 
     elif result == "Pending":
+        jump = False
+        for one_pod in details:
+            if "status" in one_pod and "container_statuses" in one_pod["status"]:
+                for one_container_status in one_pod["status"]["container_statuses"]:
+                    if "state" in one_container_status and "waiting" in one_container_status["state"] and "reason" in one_container_status["state"]["waiting"]\
+                        and one_container_status["state"]["waiting"]["reason"]=="ImagePullBackOff":
+                        dataFields = {
+                            "jobStatusDetail": base64.b64encode(json.dumps(get_scheduling_job_details(details))),
+                            "jobStatus": "error",
+                            "errorMsg": one_container_status["state"]["waiting"]["message"]
+                        }
+                        conditionFields = {"jobId": job["jobId"]}
+                        dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+                        job_deployer = JobDeployer()
+                        job_deployer.delete_job(job["jobId"], force=True)
+                        jump = True
+                        break
+                if jump:
+                    break
         detail = get_scheduling_job_details(details)
         dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
 
@@ -567,7 +586,10 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))
         vc_name = sji["job"]["vcName"]
         if vc_name not in vc_resources:
-            data_handler.UpdateJobTextField(sji["jobId"], "jobStatus","Killed")
+            if sji["job"]["jobStatus"] in ["scheduling", "running"]:
+                data_handler.UpdateJobTextField(sji["jobId"], "jobStatus","killing")
+            else:
+                data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
             continue
         vc_resource = vc_resources[vc_name]
 

@@ -76,6 +76,7 @@ def get_task_attempt_id():
 
 def create_own_config(k8s_core_api, job_name, pod_name, ip, ssh_port,
                       framework_attempt, task_attempt):
+    # pod_name="546d155b-7371-4903-ac44-3e4108c02731";job_name="546d155b-7371-4903-ac44-3e4108c02731";ip="10.36.0.0";ssh_port=22;job_namespace = "default";
     config_name = "c-" + pod_name
 
     labels = {

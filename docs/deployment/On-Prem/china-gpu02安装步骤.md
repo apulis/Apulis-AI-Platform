@@ -17,11 +17,9 @@
 ### 安装准备
 #### DEV节点创建非ROOT用户
 
-**可选；如果有root用户，或者sudo权限用户，可略过此步骤**
+**（可选；如果有root用户，或者sudo权限用户，可略过此步骤）**
 
-假设用户名：bifeng.peng，密码：bifeng
-
-./create_user.sh  bifeng.peng  bifeng
+**./create_user.sh  用户名  密码**
 
 ```
 #! /bin/bash
@@ -139,7 +137,7 @@ DNS提供商：https://dns.console.aliyun.com
 
 | 主机记录 | 记录类型 | 记录值 | 对应节点(参考) |
 | ---- | ---- | ---- | ---- |
-| china-gpu02-master | A | 121.46.18.83 | master |
+| china-gpu02 | A | 121.46.18.83 | master |
 | china-gpu02-worker1 | A | 121.46.18.83 | woker01 |
 | china-gpu02-worker2 | A        | 121.46.18.83 | worker02      |
 
@@ -208,7 +206,7 @@ mounthomefolder : True
 # # kube_custom_cri : True
 # # kube_custom_scheduler: True
 kubepresleep: 1
-cloud_influxdb_node: china-gpu02-master.sigsus.cn
+cloud_influxdb_node: china-gpu02.sigsus.cn
 
 DeployAuthentications:
 - Microsoft
@@ -249,7 +247,7 @@ platform-scripts : ubuntu
 
 
 machines:
-  china-gpu02-master:
+  china-gpu02:
     role: infrastructure
     private-ip: 192.168.1.3
   china-gpu02-worker1:
@@ -289,7 +287,7 @@ cloud_config:
   udp_port_ranges: '25826'
   vnet_range: 116.66.187.0/24
 
-cloud_elasticsearch_node: china-gpu02-master.sigsus.cn
+cloud_elasticsearch_node: china-gpu02.sigsus.cn
 cloud_elasticsearch_port: '9200'
 
 cloud_influxdb_port: '8086'
@@ -339,21 +337,20 @@ onpremise_cluster:
 mountpoints:
   nfsshare1:
     type: nfs
-    server: china-gpu02-master
-    filesharename: /data/nfsshare
+    server: storage-server
+    filesharename: /mypool
     curphysicalmountpoint: /mntdlws
     mountpoints: ""
 
-
 nfs_disk_mnt:
-  china-gpu02-master:
+  storage-server:
     fileshares:
-    - /data/nfsshare
-    path: /data
+    - mypool
+    path: /
     role: nfs
 
 nfs_client_CIDR:
-  node_range: 
+  node_range:
   - 116.66.187.0/24
 
 basic_auth: d368c36acb3343b4,admin,1000
@@ -369,10 +366,12 @@ repair-manager:
   alert:
     smtp_url: smtp.office365.com
     login: dev@apulis.com
+    smtp_url: smtp.office365.com
+    login: dev@apulis.com
     password: Yitong#123
     sender: dev@apulis.com
     receiver: ["181330729@qq.com"]
-
+    
 jwt:
   secret_key: "Sign key for JWT"
   algorithm: HS256
@@ -389,7 +388,7 @@ jwt:
 
   
 
-#### 配置子域名快捷搜索
+#### 配置DNS内网解析
 
 **以下机器：dev、master、worker三个机器**  
 
@@ -404,6 +403,8 @@ jwt:
 
 - 配置节点hosts文件（**单个公网IP的集群使用，router不具备短域名或局域网内DNS配置功能**）
 
+  执行：mkdir -p deploy/etc
+
   路径：DLWorkspace/src/ClusterBootstrap/deploy/etc/hosts
 
   作用：实现内网DNS解析
@@ -413,24 +414,37 @@ jwt:
   127.0.1.1       ubuntu
   
   192.168.1.3     china-gpu02
-  192.168.1.3     china-gpu02-master
   192.168.1.8     china-gpu02-worker1
   192.168.1.9     china-gpu02-worker2
   
+  
+  10.200.0.1      china-gpu02-master-ib
+  10.200.0.2      china-gpu02-worker1-ib
+  10.200.0.3      china-gpu02-worker2-ib
+  10.200.0.4      storage-server
+  
   192.168.1.3     china-gpu02.sigsus.cn
-  192.168.1.3     china-gpu02-master.sigsus.cn
   192.168.1.8     china-gpu02-worker1.sigsus.cn
   192.168.1.9     china-gpu02-worker2.sigsus.cn
   
+  
+  10.200.0.1      china-gpu02-master-ib.sigsus.cn
+  10.200.0.2      china-gpu02-worker1-ib.sigsus.cn
+  10.200.0.3      china-gpu02-worker2-ib.sigsus.cn
+  10.200.0.4      storage-server.sigsus.cn
+  
   # The following lines are desirable for IPv6 capable hosts
   ::1     localhost ip6-localhost ip6-loopback
+  fe00::0 ip6-localnet
+  ff00::0 ip6-mcastprefix
   ff02::1 ip6-allnodes
   ff02::2 ip6-allrouters
   ```
-
+  
 - 执行hosts文件配置（deploy.py位于**DLWorkspace/src/ClusterBootstrap/**）
 
   ```
+  sudo cp ./deploy/etc/hosts  /etc/hosts
   ./deploy.py --verbose copytoall ./deploy/etc/hosts  /etc/hosts
   ```
 
@@ -439,7 +453,7 @@ jwt:
   在master、proxy上指令执行看是否成功 
 
   ``` 
-    ping china-gpu02-master
+    ping china-gpu02
     ping china-gpu02-worker1
     ping china-gpu02-worker2
   ```
@@ -486,15 +500,50 @@ echo "your_root_password" > "rootpasswd"
 
 ```
 ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
-./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh continue
 
+上一个语句会重启worker节点。需等待所有服务器 启动完毕，再执行以下步骤！！
+./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh continue
 ./deploy.py --verbose execonall sudo usermod -aG docker dlwsadmin
 ```
 
 
 其中：
 
-dlwsadmin为操作集群机器所采用的用户名，配置于config.yaml
+- dlwsadmin为操作集群机器所采用的用户名，配置于config.yaml
+- 如果nvidia驱动安装不成功，可能与具体的设备配置有关，譬如secure boot问题等等，请联系开发人员定位和完善
+- 
+
+#### Worker机器状态确认
+
+```
+1、指令确认
+   nvidia-docker run --rm dlws/cuda nvidia-smi
+   docker run --rm -ti dlws/cuda nvidia-smi
+   保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
+
+2、问题定位
+   如docker指令执行正常，但nvidia-docker指令执行错误，则修改/etc/docker/daemon.json，
+   将nvidia-docker设置为default runtime
+
+   vim /etc/docker/daemon.json
+   增加
+   "default-runtime": "nvidia",
+
+    完整例子：
+    {
+        "default-runtime": "nvidia",
+        "runtimes": {
+            "nvidia": {
+                "path": "nvidia-container-runtime",
+                "runtimeArgs": []
+            }
+        }
+    }
+    
+    然后重启docker：
+    systemctl daemon-reload
+    systemctl restart docker
+```
 
 
 
@@ -506,35 +555,13 @@ dlwsadmin为操作集群机器所采用的用户名，配置于config.yaml
 
 
 
-#### Worker机器状态确认
-
-```
-nvidia-docker run --rm dlws/cuda nvidia-smi
-docker run --rm -ti dlws/cuda nvidia-smi
-保证以上两条指令均能够正常输出，才表明nvidia驱动与nvidia-docker均已正常安装
-
-如docker指令执行正常，但nvidia-docker指令执行错误，则修改/etc/docker/daemon.json，
-将nvidia-docker设置为default runtime
-
-vim /etc/docker/daemon.json
-增加
-"default-runtime": "nvidia",
-
-完整例子：
-{
-    "default-runtime": "nvidia",
-    "runtimes": {
-        "nvidia": {
-            "path": "nvidia-container-runtime",
-            "runtimeArgs": []
-        }
-    }
-}
-```
-
-
-
 #### 安装K8S集群平台
+
+##### 各节点关闭swap
+
+```
+./deploy.py --verbose execonall sudo swapoff -a
+```
 
 ##### master节点关闭swap
 
@@ -551,7 +578,7 @@ sudo vim /etc/fstab
 ./deploy.py --verbose execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
 
 ./deploy.py --verbose kubeadm init
-./deploy.py copytoall ./deploy/sshkey/admin.conf /root/.kube/config
+./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
 ```
 
 ##### 设置集群节点标签
@@ -566,7 +593,7 @@ sudo vim /etc/fstab
 
 #### 挂载数据共享文件夹
 
-##### 安装NFS服务（所有节点）
+##### 安装NFS服务（所有节点，包括存储点）
 
 ```
 apt-get update
@@ -578,13 +605,17 @@ sudo ln -s /etc/init.d/nfs-kernel-server /etc/init.d/nfs
 
 
 
-##### 配置挂载目录（master节点）
+##### 配置挂载目录（存储节点）
 
-编辑文件 /etc/exports，并增加挂载目录的IP白名单
+- 创建目录。假设所要挂载的目录是：/data/nfsshare
 
-```
-/data/nfsshare     192.168.1.0/24(rw,fsid=0,insecure,no_subtree_check,async,no_root_squash)
-```
+  mkdir -p /data/nfsshare 
+
+-  设置白名单
+
+  编辑文件 /etc/exports，并增加挂载目录的IP白名单
+
+   > /data/nfsshare           192.168.1.0/24(rw,fsid=0,insecure,no_subtree_check,async,no_root_squash)
 
 
 
@@ -593,8 +624,6 @@ sudo ln -s /etc/init.d/nfs-kernel-server /etc/init.d/nfs
 ```
 exportfs -a
 ```
-
-
 
 ##### 执行挂载
 
@@ -680,6 +709,10 @@ clusters:
 
 
 #### 部署集群应用
+
+##### 登录docker hub （用户名为config.yaml所配置）
+
+> docker login
 
 ##### 生成dashboard, jobmanager等服务的配置文件
 

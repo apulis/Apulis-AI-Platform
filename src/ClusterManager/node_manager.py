@@ -91,8 +91,8 @@ def get_job_gpu_usage(jobId):
 def get_cluster_status():
     cluster_status={}
     gpuStr = "nvidia.com/gpu"
-    gpuMapping = {"Huawei_A910":"npu.huawei.com/NPU","nvidia":"nvidia.com/gpu"}
-    typeMapping = {"nvidia":"gpu","Huawei_A910":"npu"}
+    gpuStrList = {"npu.huawei.com/NPU","nvidia.com/gpu"}
+    gpuMapping = {}
 
     try:
         output = k8sUtils.kubectl_exec(" get nodes -o yaml")
@@ -115,14 +115,18 @@ def get_cluster_status():
                     if l == "gpuType":
                         node_status["scheduled_service"].append(s)
                         node_status["gpuType"] = s
-                        gpuStr = gpuMapping[s]
 
-                if (gpuStr in node["status"]["allocatable"]):
+                canUseGpuStrSet = set(node["status"]["allocatable"].keys()).intersection(gpuStrList)
+                gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else gpuStr
+                if node_status["gpuType"]:
+                    gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0}
+                if canUseGpuStrSet:
                     node_status["gpu_allocatable"] = ResourceInfo({node_status["gpuType"]: int(node["status"]["allocatable"][gpuStr])}).ToSerializable()
                 else:
                     node_status["gpu_allocatable"] = ResourceInfo().ToSerializable()
                 if (gpuStr in node["status"]["capacity"]):
                     node_status["gpu_capacity"] = ResourceInfo({node_status["gpuType"] : int(node["status"]["capacity"][gpuStr])}).ToSerializable()
+                    gpuMapping[node_status["gpuType"]]["capacity"] = int(node["status"]["capacity"][gpuStr])
                 else:
                     node_status["gpu_capacity"] = ResourceInfo().ToSerializable()
                 node_status["gpu_used"] = ResourceInfo().ToSerializable()
@@ -158,7 +162,8 @@ def get_cluster_status():
         podsInfo = yaml.load(output)
         if "items" in podsInfo:
             for pod in podsInfo["items"]:
-                gpuStr = gpuMapping.get(pod["metadata"]["labels"].get("gpuType",gpuStr))
+                gpuStrDict = gpuMapping.get(pod["metadata"]["labels"].get("gpuType"))
+                gpuStr = gpuStrDict.get("deviceStr") if gpuStrDict else "nvidia.com/gpu"
                 if "status" in pod and "phase" in pod["status"]:
                     phase = pod["status"]["phase"]
                     if phase == "Succeeded" or phase == "Failed":
@@ -205,7 +210,7 @@ def get_cluster_status():
                                 preemptable_gpus += containerGPUs
                             else:
                                 gpus += containerGPUs
-                            pod_name += " ({} #:".format(typeMapping.get(pod["metadata"]["labels"].get("gpuType"),"device num")) + str(containerGPUs) + ")"
+                            pod_name += " ({} #:".format(gpuStr.split("/")[1]) + str(containerGPUs) + ")"
 
                     if node_name in nodes_status:
                         # NOTE gpu_used may include those unallocatable gpus
@@ -281,6 +286,9 @@ def get_cluster_status():
         logger.info("nothing changed in cluster, skipping the cluster status update...")
 
     config["cluster_status"] = copy.deepcopy(cluster_status)
+    for gpuType,gpuStrDict in gpuMapping.items():
+        if gpuType:
+            dataHandler.AddDevice(gpuType,gpuStrDict["deviceStr"],gpuStrDict["capacity"])
     dataHandler.Close()
     return cluster_status
 

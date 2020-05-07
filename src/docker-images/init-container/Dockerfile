@@ -1,6 +1,9 @@
 FROM ubuntu:18.04 as builder
 
-RUN apt-get update && apt-get install -y wget gzip build-essential
+RUN  sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
+RUN  apt-get clean
+RUN  apt-get update && apt-get install -y wget gzip build-essential \
+     net-tools inetutils-traceroute iputils-ping
 
 WORKDIR /ssh_build
 

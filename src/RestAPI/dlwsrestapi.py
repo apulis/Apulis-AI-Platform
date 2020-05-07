@@ -463,6 +463,18 @@ class ListJobsV2(Resource):
 ##
 api.add_resource(ListJobsV2, '/ListJobsV2')
 
+class GetAllDevice(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+        result = JobRestAPIUtils.GetAllDevice(userName)
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(GetAllDevice, '/GetAllDevice')
 
 class KillJob(Resource):
     def get(self):

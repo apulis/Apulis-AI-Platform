@@ -29,7 +29,7 @@ from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
 import quota
-
+from job_launcher import JobDeployer
 import copy
 import logging
 from cachetools import cached, TTLCache
@@ -826,6 +826,11 @@ def DeleteVC(userName, vcName):
     ret = None
     dataHandler = DataHandler()
     if AuthorizationManager.IsClusterAdmin(userName):
+        jobs = dataHandler.GetJobList("all", "all", num=None,status="running,scheduling,killing,pausing")
+        for job in jobs:
+            job_deployer = JobDeployer()
+            errors = job_deployer.delete_job(job["jobId"], force=True)
+        ret = dataHandler.DeleteJobByVc(vcName)
         ret =  dataHandler.DeleteVC(vcName)
         if ret:
             with vc_cache_lock:
@@ -852,6 +857,13 @@ def UpdateVC(userName, vcName, quota, metadata):
     else:
         ret = "Access Denied!"
     dataHandler.Close()
+    return ret
+
+def GetAllDevice(userName):
+    ret = {}
+    if AuthorizationManager.IsClusterAdmin(userName):
+        dataHandler = DataHandler()
+        ret = dataHandler.GetAllDevice()
     return ret
 
 def GetEndpoints(userName, jobId):

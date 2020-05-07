@@ -10,7 +10,8 @@ import copy
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
-
+from config import config
+from DataHandler import DataHandler
 
 class PodTemplate():
     def __init__(self, template, deployment_template=None, enable_custom_scheduler=False, secret_templates=None):
@@ -161,7 +162,7 @@ class PodTemplate():
             pods.append(pod)
 
         k8s_pods = []
-        gpuMapping = {"Huawei_A910": "npu.huawei.com/NPU", "nvidia": "nvidia.com/gpu"}
+        gpuMapping = DataHandler().GetAllDevice()
 
         for idx,pod in enumerate(pods):
             pod["numps"] = 0
@@ -170,7 +171,7 @@ class PodTemplate():
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
             if "gpuStr" not in pod:
-                pod["gpuStr"] = gpuMapping[pod["gpuType"]]
+                pod["gpuStr"] = gpuMapping.get(pod["gpuType"]).get("deviceStr")
 
             if params["jobtrainingtype"] == "InferenceJob":
                 pod["gpuLimit"] = 0

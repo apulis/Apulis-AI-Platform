@@ -55,7 +55,6 @@ const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) 
   const { clusterId } = useParams<RouteParams>();
   const { accessible, admin, job } = useContext(Context);
   const { support, approve, kill, pause, resume } = useActions(clusterId);
-
   const availableActions = useMemo(() => {
     const actions = [support];
     if (manageable && admin) actions.push(approve);
@@ -189,7 +188,7 @@ const JobContent: FunctionComponent = () => {
     return false;
   }, [jobData, admin, email]);
   const [job, setJob] = useState<any>();
-
+  
   useEffect(() => {
     if (jobError !== undefined) {
       const key = enqueueSnackbar(`Failed to fetch job: ${clusterId}/${jobId}`, {
@@ -243,8 +242,8 @@ const JobContent: FunctionComponent = () => {
         <JobToolbar manageable={manageable}/>
         <Paper elevation={2}>
           <>
-            {manageable && <ManagableJob/>}
-            {manageable || <UnmanagableJob/>}
+            <ManagableJob/>
+            {/* {manageable || <UnmanagableJob/>} */}
           </>
         </Paper>
       </Container>

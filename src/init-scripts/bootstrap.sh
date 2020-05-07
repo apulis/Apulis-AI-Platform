@@ -4,10 +4,15 @@ set -ex
 . /dlts-runtime/env/init.env
 sh -x /dlts-runtime/install.sh
 
-sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list && apt-get update
+# set apt mirrors for foreign sources
+#sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list 
+
+# to avoid apt-get update error: 
+# download.nvidia.cn: connection timeout
+rm -rf /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/cuda.list.save /etc/apt/sources.list.d/graphics-drivers-ubuntu-ppa-bionic.list /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/nvidia-ml.list.save
 
 SCRIPT_DIR=/pod/scripts
-
 echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 
 # https://stackoverflow.com/a/26759734/845762
@@ -24,7 +29,7 @@ then
 
 	# Dir for logs
 	export LOG_DIR=/pod/logs
-	rm -rf ${LOG_DIR}
+	#rm -rf ${LOG_DIR}
 	mkdir -p ${LOG_DIR}
 
 	# Save the pid.

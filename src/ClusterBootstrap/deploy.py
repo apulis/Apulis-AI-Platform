@@ -1076,6 +1076,7 @@ def deploy_masters_by_kubeadm(force = False):
 
     kubernetes_masters = config["kubernetes_master_node"]
     kubernetes_version = config["k8s-gitbranch"]
+    kubernetes_ip_range = config["network"]["container-network-iprange"]
 
     kubernetes_master0 = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
@@ -1098,6 +1099,7 @@ def deploy_masters_by_kubeadm(force = False):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
+        #deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s --pod-network-cidr=%s""" % (kubernetes_master0, kubernetes_version, kubernetes_ip_range)
         deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s""" % (kubernetes_master0, kubernetes_version)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
         
@@ -1530,13 +1532,24 @@ def reset_worker_nodes_by_kubeadm( nargs ):
     for node in workerNodes:
         if verbose:
             print ("Worker node %s" % node)
+
         if in_list(node, nargs):
+
             nodename = kubernetes_get_node_name(node)
-            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename, 'delete node %s' %nodename ] ) 
-            workercmd = "sudo kubeadm reset" 
+            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename]) 
+            run_kubectl( ['delete node %s' % nodename])
+
+            workercmd = "sudo kubeadm reset -f" 
             if verbose:
                 print(workercmd)
+            else:
+                pass
+
             utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user,node,workercmd)
+        else:
+            pass
+
+    return
 
 
 def update_worker_nodes_in_parallel(nargs):
@@ -3604,6 +3617,34 @@ def run_docker_image( imagename, native = False, sudo = False ):
         else:
             run_docker( matches[0], prompt = imagename, dockerConfig = dockerConfig, sudo = sudo )
 
+def sync_uid_and_gid(database,server,username,password):
+    from mysql_conn_pool import MysqlConn
+    sql = "select uid,gid,Password,Email,isAdmin,isAuthorized from User"
+    with MysqlConn(database=database,server=server,username=username,password=password) as conn:
+        rets = conn.select_many(sql)
+    MysqlConn._db_pools = {}
+    global config
+    clusterId = config["clusterId"]
+    mysql_node = config["mysql_node"]
+    mysql_password = config["mysql_password"]
+    old_config = config
+    from MySQLNewPoolDataHandler import DataHandler
+    from config import config
+    config.update(old_config)
+    config["gpu_count_per_node"] = 8
+    config["worker_node_num"] = 2
+    config["gpu_type"]= "nvidia"
+    config["mysql"]={"hostname":mysql_node,"username":"root","password":mysql_password}
+    config["clusterId"] = clusterId
+    config["database"]={"hostname":"","username":"","password":""}
+    dataHandler = DataHandler()
+    for one in rets:
+        username = one["Email"].split("@")[0]
+        print "sync user %s" % username
+        dataHandler.UpdateAccountInfo(one["Email"], "Microsoft", username, username, one["Password"], 1 if one["isAdmin"]=="true" else 0, 1 if one["isAuthorized"]=="true" else 0)
+        dataHandler.UpdateIdentityInfo(username, one["uid"], one["gid"], [3001])
+        dataHandler.UpdateAce(username, one["uid"], "Cluster", 7 if one["isAdmin"]=="true" else 1 if one["isAuthorized"]=="true" else 0, 0)
+
 def gen_dns_config_script():
     utils.render_template("./template/dns/dns.sh.template", "scripts/dns.sh", config)
 
@@ -4500,6 +4541,9 @@ def run_command( args, command, nargs, parser ):
         gen_configs()
         upgrade_masters()
         upgrade_workers(nargs)
+    elif command == "sync_uid":
+        assert len(nargs)==4
+        sync_uid_and_gid(nargs[0],nargs[1],nargs[2],nargs[3])
     elif command in scriptblocks:
         run_script_blocks(args.verbose, scriptblocks[command])
     else:

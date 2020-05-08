@@ -789,7 +789,7 @@ def load_az_params_as_default():
 def on_premise_params():
     print("Warning: remember to set parameters:\ngpu_count_per_node, gpu_type, worker_node_num\n when using on premise machine!")
 
-def load_platform_type():
+def load_pplatformlatform_type():
 
     platform_type = []
     if "supported_platform" in config.keys():
@@ -4498,11 +4498,11 @@ def run_command( args, command, nargs, parser ):
 
             if nargs[0] == "build":
                 check_buildable_images(nargs[1:])
-                build_docker_images(nargs[1:], platform=args.platform)
+                build_docker_images(nargs[1:], arch=args.arch)
 
             elif nargs[0] == "push":
                 check_buildable_images(nargs[1:])
-                push_docker_images(nargs[1:], platform=args.platform)
+                push_docker_images(nargs[1:], arch=args.arch)
 
             elif nargs[0] == "run":
                 if len(nargs)>=2:
@@ -4826,8 +4826,8 @@ Command:
         action="store",
         default=None
         )
-    parser.add_argument("--platform",
-        help = "Build docker platform [e.g., atlas]",
+    parser.add_argument("--arch",
+        help = "Build docker arch [e.g., x86_64, aarch64]",
         action="store",
         default=None
         )

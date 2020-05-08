@@ -522,6 +522,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params = new URLSearchParams({
       query:'count_values("gpu_available", k8s_node_gpu_available)'
+      // query: 'sum(pai_node_count{deviceType!="Huawei_A910"})'
     });
     fetch(getNodeGpuAva+params).then(async (res: any) => {
       const {data} = await res.json();

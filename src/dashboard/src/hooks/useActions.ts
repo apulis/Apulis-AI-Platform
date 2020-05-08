@@ -1,10 +1,8 @@
 import { useCallback, useContext } from 'react';
 import { useSnackbar } from 'notistack';
 import { Action } from 'material-table';
-
 import ConfigContext from '../contexts/Config';
 import UserContext from '../contexts/User';
-
 import useConfirm from './useConfirm';
 
 const APPROVABLE_STATUSES = [
@@ -28,11 +26,10 @@ const KILLABLE_STATUSES = [
 ];
 
 const useActions = (clusterId: string) => {
-  const { familyName, givenName } = useContext(UserContext);
-  const { support: supportMail } = useContext(ConfigContext);
+  const { familyName, givenName, administrators } = useContext(UserContext);
+  const supportMail = administrators![0];
   const confirm = useConfirm();
   const { enqueueSnackbar } = useSnackbar();
-
   const updateStatus = useCallback((jobId: string, status: string) => {
     const url = `/api/clusters/${clusterId}/jobs/${jobId}/status`;
     return fetch(url, {

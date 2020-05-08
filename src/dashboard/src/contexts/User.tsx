@@ -14,6 +14,7 @@ interface Context {
   authEnabled?: {
     [propsName: string]: 1 | 0;
   };
+  administrators?: Array<[]>
 }
 
 const Context = React.createContext<Context>({});
@@ -31,12 +32,13 @@ interface ProviderProps {
   authEnabled?: {
     [propsName: string]: 0 | 1;
   };
+  administrators?: Array<[]>
 }
 
-export const Provider: React.FC<ProviderProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled }) => {
+export const Provider: React.FC<ProviderProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled, administrators }) => {
   return (
     <Context.Provider
-      value={{ uid, openId, group, nickName, userName, isAdmin, isAuthorized, authEnabled }}
+      value={{ uid, openId, group, nickName, userName, isAdmin, isAuthorized, authEnabled, administrators }}
       children={children}
     />
   );

@@ -248,9 +248,9 @@ class DataHandler(object):
                     PRIMARY KEY (`id`),
                     CONSTRAINT `hierarchy` FOREIGN KEY (`parent`) REFERENCES `%s` (`vcName`)
                 )
-                AS SELECT \'%s\' AS vcName, NULL AS parent, '{"%s":%s}' AS quota, '{"%s":{"num_gpu_per_node":%s}}' AS metadata;
+                AS SELECT \'%s\' AS vcName, NULL AS parent, '{"%s":%s}' AS quota, '{}' AS metadata;
                 """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'], gpu_type,
-                       gpu_count_per_node * worker_node_num, gpu_type, gpu_count_per_node)
+                       gpu_count_per_node * worker_node_num)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)
@@ -362,11 +362,38 @@ class DataHandler(object):
             sql = """select deviceType, deviceStr, capacity from `%s`""" %(self.deviceStatusTableName)
             with MysqlConn() as conn:
                 rets = conn.select_many(sql)
-                conn.commit()
             for one in rets:
                 ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"]}
         except Exception as e:
             logger.exception('AddStorage Exception: %s', str(e))
+        return ret
+
+    @record
+    def DeleteDeviceType(self,deviceType):
+        ret = True
+        try:
+            sql = "DELETE FROM `%s` where `deviceType`=%s" % (self.deviceStatusTableName,"%s")
+            with MysqlConn() as conn:
+                conn.insert_one(sql,[deviceType])
+                conn.commit()
+        except Exception as e:
+            logger.exception('AddStorage Exception: %s', str(e))
+            ret = False
+        return ret
+
+    @record
+    def CountJobByStatus(self,vcName,status=None):
+        sql  = """select count(1) from `%s` where vcName=%s""" % (self.jobtablename,"%s")
+        params = [vcName]
+        if status is not None:
+            if "," not in status:
+                sql += " and jobStatus = %s"
+                params.append(status)
+            else:
+                sql += " and jobStatus in %s"
+                params.append([s for s in status.split(",")])
+        with MysqlConn() as conn:
+            ret = conn.select_one_value(sql, params)
         return ret
 
     @record

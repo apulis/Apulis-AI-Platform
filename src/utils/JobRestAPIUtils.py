@@ -29,7 +29,7 @@ from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
 import quota
-from job_launcher import JobDeployer
+
 import copy
 import logging
 from cachetools import cached, TTLCache
@@ -823,6 +823,7 @@ def GetJobTotalGpu(jobParams):
 
 
 def DeleteVC(userName, vcName):
+    from job_launcher import JobDeployer
     ret = None
     dataHandler = DataHandler()
     if AuthorizationManager.IsClusterAdmin(userName):
@@ -864,6 +865,13 @@ def GetAllDevice(userName):
     if AuthorizationManager.IsClusterAdmin(userName):
         dataHandler = DataHandler()
         ret = dataHandler.GetAllDevice()
+    return ret
+
+def CountJobByStatus(userName,vcName,targetStatus):
+    ret = -1
+    if AuthorizationManager.IsClusterAdmin(userName):
+        dataHandler = DataHandler()
+        ret = dataHandler.CountJobByStatus(vcName,targetStatus)
     return ret
 
 def GetEndpoints(userName, jobId):

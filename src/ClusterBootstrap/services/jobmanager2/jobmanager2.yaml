@@ -98,7 +98,7 @@ spec:
             port: 9200
           timeoutSeconds: 10
       - name: redis
-        image: redis:5.0.6-alpine
+        image: {{cnf["dockers"]["container"]["redis"]["fullname"]}}
         command: ["redis-server", "--port", "9300", "--maxmemory", "100mb", "--maxmemory-policy", "allkeys-lru"]
         ports:
         - containerPort: 9300

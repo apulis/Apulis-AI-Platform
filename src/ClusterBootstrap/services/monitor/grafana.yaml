@@ -21,7 +21,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: grafana
-        image: dlws/grafana:5.0.4
+        image: {{cnf["dockers"]["container"]["grafana"]["fullname"]}}
         imagePullPolicy: Always
         ports:
         - containerPort: {{cnf["grafana"]["port"]}}

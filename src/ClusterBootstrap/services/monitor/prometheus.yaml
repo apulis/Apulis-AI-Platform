@@ -92,7 +92,7 @@ spec:
       hostNetwork: true
       initContainers:
       - name: init
-        image: bash:4
+        image: {{cnf["dockers"]["container"]["bash"]["fullname"]}}
         volumeMounts:
         - name: prometheus-data
           mountPath: /prometheus-data
@@ -104,7 +104,7 @@ spec:
       {% endif %}
       containers:
       - name: prometheus
-        image: prom/prometheus:v2.16.0
+        image: {{cnf["dockers"]["container"]["prometheus"]["fullname"]}}
         resources:
           limits:
             memory: "10Gi"

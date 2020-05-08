@@ -3576,20 +3576,20 @@ def render_docker_images():
         print "Rendering docker-images from template ..."
     utils.render_template_directory("../docker-images/","./deploy/docker-images",config, verbose)
 
-def build_docker_images(nargs, platform=None):
+def build_docker_images(nargs, arch=None):
     render_docker_images()
     if verbose:
         print "Build docker ..."
-    build_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, platform=platform)
+    build_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, arch=arch)
 
-def push_docker_images(nargs, platform=None):
+def push_docker_images(nargs, arch=None):
     render_docker_images()
 
     if verbose:
         print "Build & push docker images to docker register  ..."
         print "Nocache: {0}".format(nocache)
 
-    push_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, platform=platform)
+    push_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, arch=arch)
     return
 
 def check_buildable_images(nargs):

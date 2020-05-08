@@ -12,14 +12,16 @@ import grp
 from os.path import expanduser
 from DirectoryUtils import cd
 
-def build_docker(dockername, dirname, verbose=False, nocache=False, platform=None):
+def build_docker(dockername, dirname, verbose=False, nocache=False, arch=None):
     # docker name is designed to use lower case.
     dockername = dockername.lower()
 
     dockerfile_default_name = "Dockerfile"
     dockerfile_name = dockerfile_default_name
-    if isinstance(platform, str):
-        dockerfile_name = dockerfile_name + "_" + platform
+    if isinstance(arch, str):
+        arch = arch.lower()
+        if arch == "aarch64" or arch == "arm64":
+            dockerfile_name = dockerfile_name + "_aarch64"
 
     if verbose:
         print("Building docker ... " + dockername + " .. @" + dirname)
@@ -40,9 +42,9 @@ def build_docker(dockername, dirname, verbose=False, nocache=False, platform=Non
         os.system(cmd)
     return dockername
 
-def build_docker_with_config(dockername, config, verbose=False, nocache=False, platform=None):
+def build_docker_with_config(dockername, config, verbose=False, nocache=False, arch=None):
     usedockername = dockername.lower()
-    build_docker(config["dockers"]["container"][dockername]["name"], config["dockers"]["container"][dockername]["dirname"], verbose, nocache, platform=platform)
+    build_docker(config["dockers"]["container"][dockername]["name"], config["dockers"]["container"][dockername]["dirname"], verbose, nocache, arch=arch)
 
 def push_docker( dockername, docker_register, verbose=False):
     # docker name is designed to use lower case.
@@ -322,31 +324,31 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
     return
 
 
-def build_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, platform=None):
+def build_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, arch=None):
     configuration(config, verbose)
     docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
     # print rootdir
     for _, tupl in docker_list.iteritems():
         dockername, _ = tupl
-        build_docker_with_config(dockername, config, verbose, nocache=nocache, platform=platform)
+        build_docker_with_config(dockername, config, verbose, nocache=nocache, arch=arch)
 
-def build_one_docker(dirname, dockerprefix, dockertag, basename, config, verbose=False, nocache=False, platform=None):
+def build_one_docker(dirname, dockerprefix, dockertag, basename, config, verbose=False, nocache=False, arch=None):
     configuration(config, verbose)
-    return build_docker_with_config(basename, config, verbose, nocache=nocache, platform=platform)
+    return build_docker_with_config(basename, config, verbose, nocache=nocache, arch=arch)
 
-def push_one_docker(dirname, dockerprefix, tag, basename, config, verbose=False, nocache=False, platform=None):
+def push_one_docker(dirname, dockerprefix, tag, basename, config, verbose=False, nocache=False, arch=None):
     configuration(config, verbose)
-    build_docker_with_config(basename, config, verbose, nocache=nocache, platform=platform)
+    build_docker_with_config(basename, config, verbose, nocache=nocache, arch=arch)
     push_docker_with_config( basename, config, verbose, nocache = nocache )
 
-def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, platform=None):
+def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, arch=None):
 
     configuration(config, verbose)
     docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
 
     for _, tupl in docker_list.iteritems():
         dockername, _ = tupl
-        build_docker_with_config(dockername, config, verbose, nocache=nocache, platform=platform)
+        build_docker_with_config(dockername, config, verbose, nocache=nocache, arch=arch)
         push_docker_with_config( dockername, config, verbose, nocache = nocache )
 
     return

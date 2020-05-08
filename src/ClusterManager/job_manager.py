@@ -199,6 +199,7 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
         update_job_state_latency(redis_conn, job_id, "created", event_time=job["jobTime"])
 
         jobParams = json.loads(base64.b64decode(job["jobParams"]))
+        deviceType = jobParams["gpuType"]
         job_total_gpus = GetJobTotalGpu(jobParams)
 
         if dataHandlerOri is None:
@@ -247,13 +248,15 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
                 running_gpus += running_job_total_gpus
 
             logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata["user_quota"]))
-            if job_total_gpus > 0 and int(metadata["user_quota"]) < (running_gpus + job_total_gpus):
-                logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, metadata["user_quota"]))
-                detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, metadata["user_quota"])}]
-                dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
-                if dataHandlerOri is None:
-                    dataHandler.Close()
-                return False
+            if deviceType in metadata["user_quota"]:
+                user_quota_num = metadata["user_quota"]["deviceType"]
+                if job_total_gpus > 0 and int(user_quota_num) < (running_gpus + job_total_gpus):
+                    logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, user_quota_num))
+                    detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, user_quota_num)}]
+                    dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
+                    if dataHandlerOri is None:
+                        dataHandler.Close()
+                    return False
 
         detail = [{"message": "waiting for available resource."}]
 

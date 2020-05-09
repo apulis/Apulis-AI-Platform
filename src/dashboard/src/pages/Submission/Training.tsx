@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
+import React, { useState, useEffect, useMemo, useContext, useCallback } from "react";
 import {
   Card,
   CardHeader,
@@ -21,7 +21,8 @@ import {
   TableBody,
   Switch,
   MenuItem,
-  SvgIcon, useMediaQuery
+  SvgIcon, useMediaQuery,
+  Dialog, DialogActions, DialogContent, DialogTitle
 } from "@material-ui/core";
 import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -112,8 +113,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [jobPath, setJobPath] = useState("");
   const [enableJobPath, setEnableJobPath] = useState(true);
   const [showSaveTemplate, setSaveTemplate] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
-  const onEnvironmentVariableNameChange = React.useCallback(
+  const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const newEnvironmentVariables = environmentVariables.slice()
       environmentVariables[index].name = event.target.value;
@@ -121,7 +123,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [environmentVariables]
   );
-  const onEnvironmentVariableValueChange = React.useCallback(
+  const onEnvironmentVariableValueChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const newEnvironmentVariables = environmentVariables.slice()
       environmentVariables[index].value = event.target.value;
@@ -129,7 +131,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [environmentVariables]
   );
-  const onRemoveEnvironmentVariableClick = React.useCallback(
+  const onRemoveEnvironmentVariableClick = useCallback(
     (index: number) => () => {
       const newEnvironmentVariables = environmentVariables.slice();
       newEnvironmentVariables.splice(index, 1);
@@ -137,13 +139,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [environmentVariables]
   )
-  const onAddEnvironmentVariableClick = React.useCallback(() => {
+  const onAddEnvironmentVariableClick = useCallback(() => {
     setEnvironmentVariables(
       environmentVariables.concat(
         [{ name: "", value: "" }]));
   }, [environmentVariables]);
   const [database, setDatabase] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState("");
+  const [selectDelTPName, setSelectDelTPName] = useState('');
   const [saveTemplateDatabase, setSaveTemplateDatabase] = useState("user");
   const [iconInfoShow, setIconInfoShow] = useState(false);
   const { handleSubmit, register, errors, setValue } = useForm({ mode: "onBlur" });
@@ -205,19 +208,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
-    if (!saveTemplateName) {
-      message('error', 'Need input template name')
+    if (!selectDelTPName) {
+      message('error', 'Need select one template')
       return
     }
     try {
-      let dataBase = saveTemplateDatabase;
-      if (dataBase === 'team') {
-        dataBase = 'vc';
-      }
-      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${dataBase}`;
+      const url = `/teams/${selectedTeam}/templates/${selectDelTPName}`;
       await axios.delete(url);
-      setShowDeleteTemplate(true)
-      // window.location.reload()
+      setShowDeleteTemplate(true);
+      setDeleteModal(false);
+      setSelectDelTPName('');
+      getTemplates();
     } catch (error) {
       enqueueSnackbar('Failed to delete the template', {
         variant: 'error',
@@ -473,11 +474,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
 
   useEffect(() => {
+    getTemplates();
+  }, [selectedTeam]);
+
+  const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
       .then(res => {
         setTemplates(res.data)
       })
-  }, [selectedTeam]);
+  }
 
   useEffect(() => {
     fetchGrafana()
@@ -515,16 +520,30 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   useEffect(() => {
     if (!grafanaUrl) return;
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
-    const params = new URLSearchParams({
-      query:'count_values("gpu_available", k8s_node_gpu_available)'
+    const params1 = new URLSearchParams({
+      // query:'count_values("gpu_available", k8s_node_gpu_available)'
+      query: `count_values("device_available",k8s_node_device_available{deviceType="${gpuType}"})`
     });
-    fetch(getNodeGpuAva+params).then(async (res: any) => {
-      const {data} = await res.json();
-      const result = data['result'];
-      const sortededResult = result.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
-      setGpuFragmentation(sortededResult)
+    const params2 = new URLSearchParams({
+      query: `sum(pai_node_count{deviceType!="${gpuType}"})`
     })
-  }, [grafanaUrl])
+    fetch(getNodeGpuAva+params1).then(async (res1: any) => {
+      fetch(getNodeGpuAva+params2).then(async (res2: any) => {
+        let data1 = await res1.json();
+        let data2 = await res2.json();
+        let result1 = data1.data.result, sortededResult = [{metric: {device_available: "0"}, value: data2.data.result[0].value}];
+        result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
+          if (i.metric.device_available === '0') {
+            sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
+          } else {
+            sortededResult.push(i);
+          }
+        });
+        sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
+        setGpuFragmentation(sortededResult)
+      })
+    })
+  }, [grafanaUrl, gpuType])
 
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const showMessage = (open: boolean,showDeleteTemplate: boolean,showSaveTemplate: boolean) => {
@@ -996,7 +1015,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   </TextField>
                 </Grid>
                 <Button type="button" color="primary" onClick={onSaveTemplateClick}>Save</Button>
-                <Button type="button" color="secondary" onClick={onDeleteTemplateClick}>Delete</Button>
+                <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>Delete</Button>
               </Grid>
             </CardContent>
           </Collapse>
@@ -1012,6 +1031,33 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           </CardActions>
         </Card>
       </form>
+      {deleteModal && 
+      <Dialog open={deleteModal} maxWidth='xs' fullWidth onClose={() => setDeleteModal(false)}>
+        <DialogTitle>Delete Template</DialogTitle>
+        <DialogContent>
+          <TextField
+            disabled={!Array.isArray(templates)}
+            select
+            label="Select Template"
+            fullWidth
+            variant="filled"
+            value={selectDelTPName}
+            onChange={e => setSelectDelTPName(e.target.value)}
+          >
+            {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
+              <MenuItem key={index} value={name}>{name}</MenuItem>
+            ))}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteModal(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={onDeleteTemplateClick} color="secondary">
+          Delete
+          </Button>
+        </DialogActions>
+      </Dialog>}
       <DLTSSnackbar message={showMessage(open,showDeleteTemplate,showSaveTemplate)}
         open={open || showSaveTemplate || showDeleteTemplate}
         style={styleSnack}

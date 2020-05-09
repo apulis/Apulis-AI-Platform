@@ -26,7 +26,6 @@ export default class Vc extends React.Component {
         error: false
       },
       deleteModifyFlag: false,
-      deleteItem: {},
       btnLoading: false,
       allDevice: {},
       qSelectData: {},
@@ -138,23 +137,18 @@ export default class Vc extends React.Component {
   }
 
   delete = () => {
-    const { selectedCluster, userName } = this.context;
-    const { vcName } = this.state.deleteItem;
-    axios.get(`/${selectedCluster}/countJobByStatus?userName=${userName}&targetStatus=running,scheduling,killing,pausing&vcName=${vcName}`)
-    .then((res) => {
-      if (res.data > 0) {
-        message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
-        return
-      } else {
-        axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
-        .then((res) => {
-          message('success', 'Delete successfully！');
-          this.getVcList();
-        }, () => { 
-          message('error', 'Delete failed！');
-        })
-      }
-    })
+    const { selectedCluster } = this.context;
+    const { vcName } = this.state.delItem;
+    this.setState({ btnLoading: true });
+    axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
+      .then((res) => {
+        message('success', 'Delete successfully！');
+        this.setState({ deleteModifyFlag: false, btnLoading: false });
+        this.getVcList();
+      }, () => { 
+        message('error', 'Delete failed！');
+        this.setState({ btnLoading: false });
+      })
   }
 
   vcNameChange = e => {
@@ -203,7 +197,7 @@ export default class Vc extends React.Component {
             label="Value"
             variant="outlined"
             className="select-value"
-            value={isEdit ? val : null}
+            value={val}
             onChange={e => this.setState({ [key]: { ...oldVal, [m]: e.target.value } })}
           >
             {this.getOptions(options[m], val)}
@@ -222,8 +216,22 @@ export default class Vc extends React.Component {
     return content;
   }
 
+  onClickDel = item => {
+    const { selectedCluster, userName } = this.context;
+    const { vcName } = item;
+    axios.get(`/${selectedCluster}/countJobByStatus?userName=${userName}&targetStatus=running,scheduling,killing,pausing&vcName=${vcName}`)
+    .then((res) => {
+      if (res.data > 0) {
+        message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
+        return
+      } else {
+        this.setState({ deleteModifyFlag: true, delItem: item });
+      }
+    })
+  }
+
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, vcNameValidateObj, deleteModifyFlag, deleteItem, btnLoading, qSelectData, mSelectData, allDevice } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, vcNameValidateObj, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice } = this.state;
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
@@ -248,7 +256,7 @@ export default class Vc extends React.Component {
                   <TableCell>
                     <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
                     <Button color="secondary" disabled={item.vcName === this.context.selectedTeam} 
-                      onClick={() => this.setState({ deleteModifyFlag: true, deleteItem: item })}>Delete</Button>
+                      onClick={() => this.onClickDel(item)}>Delete</Button>
                   </TableCell>
                 </TableRow>
               ))}

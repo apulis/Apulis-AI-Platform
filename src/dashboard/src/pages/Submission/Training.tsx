@@ -232,11 +232,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     const val = e.target.value;
     if (val === 'None (Apply a Template)') {
       setName("");
+      setValue('jobName', '');
       setType("RegularJob");
       setGpus(0);
       setWorkers(0);
       setImage("");
+      setValue('image', '');
       setCommand("");
+      setValue('command', '');
       setWorkPath("");
       setEnableWorkPath(true);
       setDataPath("");
@@ -249,7 +252,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setTensorboard(false);
       setGpuType(availbleGpu![0].type || '')
       setPreemptible(false);
-      setSelectTPName(val);
+      setValue('interactivePorts', '');
     } else {
       const {
         name,
@@ -331,9 +334,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           setDockerPassword(imagePullObj['password'])
         }
       }
+      setJson(templates.find(i => i.name === val)!.json);
     }
     setSelectTPName(val);
-    setJson(templates.find(i => i.name === val)!.json);
   }
   const {
     data: postJobData,
@@ -445,8 +448,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         });
       }
     }
-    console.log('endpoints', endpoints)
-
     if (ssh) endpoints.push('ssh');
     if (ipython) endpoints.push('ipython');
     if (tensorboard) endpoints.push('tensorboard');
@@ -461,7 +462,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const validateInteractivePorts = (val: string) => {
     if (val) {
       let flag = true;
-      if (val.split(',').length) {
+      if (val.split(',').length > 1) {
         val.split(',').forEach(n => {
           if (Number(n) < 40000 || Number(n) > 49999) flag = false;
         });
@@ -470,7 +471,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       }
       return flag;
     }
-    return true;
+    return false;
   }
 
   useEffect(() => {

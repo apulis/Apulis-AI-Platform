@@ -520,17 +520,30 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   useEffect(() => {
     if (!grafanaUrl) return;
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
-    const params = new URLSearchParams({
-      query:'count_values("gpu_available", k8s_node_gpu_available)'
-      // query: 'sum(pai_node_count{deviceType!="Huawei_A910"})'
+    const params1 = new URLSearchParams({
+      // query:'count_values("gpu_available", k8s_node_gpu_available)'
+      query: `count_values("device_available",k8s_node_device_available{deviceType="${gpuType}"})`
     });
-    fetch(getNodeGpuAva+params).then(async (res: any) => {
-      const {data} = await res.json();
-      const result = data['result'];
-      const sortededResult = result.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
-      setGpuFragmentation(sortededResult)
+    const params2 = new URLSearchParams({
+      query: `sum(pai_node_count{deviceType!="${gpuType}"})`
     })
-  }, [grafanaUrl])
+    fetch(getNodeGpuAva+params1).then(async (res1: any) => {
+      fetch(getNodeGpuAva+params2).then(async (res2: any) => {
+        let data1 = await res1.json();
+        let data2 = await res2.json();
+        let result1 = data1.data.result, sortededResult = [{metric: {device_available: "0"}, value: data2.data.result[0].value}];
+        result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
+          if (i.metric.device_available === '0') {
+            sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
+          } else {
+            sortededResult.push(i);
+          }
+        });
+        sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
+        setGpuFragmentation(sortededResult)
+      })
+    })
+  }, [grafanaUrl, gpuType])
 
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const showMessage = (open: boolean,showDeleteTemplate: boolean,showSaveTemplate: boolean) => {

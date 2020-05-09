@@ -172,33 +172,6 @@ export default class Vc extends React.Component {
     })
   }
 
-  quotaChange = e => {
-    this.setState({
-      quota: e.target.value
-    })
-  }
-
-  metadataChange = e => {
-    this.setState({
-      metadata: e.target.value
-    })
-  }
-
-  isJSON(str) {
-    if (typeof str == 'string') {
-      try {
-        var obj = JSON.parse(str);
-        if (typeof obj == 'object' && obj) {
-          return true;
-        } else {
-          return false;
-        }
-      } catch (e) {
-        return false;
-      }
-    }
-  }
-
   getSelectHtml = (type) => {
     const { allDevice, qSelectData, mSelectData, vcList, isEdit } = this.state;
     return Object.keys(allDevice).map(m => {
@@ -228,16 +201,17 @@ export default class Vc extends React.Component {
             value={isEdit ? val : null}
             onChange={e => this.setState({ [key]: { ...oldVal, [m]: e.target.value } })}
           >
-            {this.getOptions(options[m])}
+            {this.getOptions(options[m], val)}
           </TextField>
         </div>
       )
     })
   }
 
-  getOptions = (data) => {
+  getOptions = (data, val) => {
     let content = [];
-    for(let i = 0; i <= data; i++){
+    const _data = val !== null && val > data ? val : data; 
+    for(let i = 0; i <= _data; i++){
       content.push(<MenuItem key={i} value={i}>{i}</MenuItem>)
     }
     return content;
@@ -245,7 +219,6 @@ export default class Vc extends React.Component {
 
   render() {
     const { vcList, modifyFlag, isEdit, vcName, quota, metadata, vcNameValidateObj, deleteModifyFlag, deleteItem, btnLoading, qSelectData, mSelectData } = this.state;
-
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
@@ -293,32 +266,15 @@ export default class Vc extends React.Component {
                   helperText={vcNameValidateObj.text}
                 />
                 <h3>quota</h3>
-                {/* <TextField
-                  required
-                  label="quota"
-                  value={quota}
-                  onChange={this.quotaChange}
-                  margin="normal"
-                  fullWidth={true}
-                /> */}
                 {this.getSelectHtml(1)}
-                <h3>metadata</h3>
-                {/* <TextField
-                  required
-                  label="metadata"
-                  value={metadata}
-                  onChange={this.metadataChange}
-                  margin="normal"
-                  fullWidth={true}
-                /> */}
+                <h3>metadata/user_quota</h3>
                 {this.getSelectHtml(2)}
               </form>
             </DialogContent>
             <DialogActions>
               <Button onClick={() => this.setState({modifyFlag: false})} color="primary" variant="outlined">Cancel</Button>
               <Button onClick={this.save} color="primary" variant="contained" disabled={btnLoading}>
-                {btnLoading && <CircularProgress size={20}/>}
-                Save
+                {btnLoading && <CircularProgress size={20}/>}Save
               </Button>
             </DialogActions>
           </Dialog>}
@@ -331,8 +287,7 @@ export default class Vc extends React.Component {
               <DialogActions>
                 <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">Cancel</Button>
                 <Button onClick={this.delete} color="secondary" variant="contained" disabled={btnLoading}>
-                  {btnLoading && <CircularProgress size={20}/>}
-                  Delete
+                  {btnLoading && <CircularProgress size={20}/>}Delete
                 </Button>
               </DialogActions>
             </Dialog>

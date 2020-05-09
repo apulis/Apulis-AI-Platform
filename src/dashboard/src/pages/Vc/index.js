@@ -299,7 +299,7 @@ export default class Vc extends React.Component {
               </DialogContent>
               <DialogActions>
                 <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">Cancel</Button>
-                <Button onClick={this.delete} color="secondary" variant="contained" disabled={btnLoading}>
+                <Button onClick={this.delete} color="secondary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
                   {btnLoading && <CircularProgress size={20}/>}Delete
                 </Button>
               </DialogActions>

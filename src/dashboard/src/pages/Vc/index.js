@@ -21,8 +21,6 @@ export default class Vc extends React.Component {
       modifyFlag: false,
       isEdit: 0, 
       vcName: '',
-      quota: '',
-      metadata: '',
       vcNameValidateObj: {
         text: '',
         error: false
@@ -41,7 +39,6 @@ export default class Vc extends React.Component {
     this.getVcList();
     axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
       .then((res) => {
-        console.log('allDevice',res.data)
         const allDevice = res.data;
         let qSelectData = {}, mSelectData = {};
         Object.keys(allDevice).forEach(i => {
@@ -55,7 +52,6 @@ export default class Vc extends React.Component {
   getVcList = () => {
     axios.get(`/${this.context.selectedCluster}/listVc`)
       .then((res) => {
-        console.log('vcList',res.data.result)
         this.setState({
           vcList: res.data.result,
         })
@@ -68,9 +64,7 @@ export default class Vc extends React.Component {
     this.setState({
       modifyFlag: !modifyFlag,
       isEdit: 0,
-      vcName: '',
-      quota: '',
-      metadata: '',
+      vcName: ''
     })
   }
 
@@ -96,7 +90,7 @@ export default class Vc extends React.Component {
   }
 
   save = async () => {
-    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData } = this.state;
+    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice } = this.state;
     const { selectedCluster } = this.context;
     if (!vcName || vcNameValidateObj.error) {
       this.setState({
@@ -107,19 +101,23 @@ export default class Vc extends React.Component {
       })
       return;
     };
-    let url, quota = _.cloneDeep(qSelectData), metadata = _.cloneDeep(mSelectData), canSave = true;
-    Object.keys(quota).forEach(i => {
-      if (quota[i] === null) quota[i] = 0;
-      if (metadata[i] === null) metadata[i] = 0;
-      if (metadata[i] > quota[i]) {
-        message('error', 'The value of metadata cannot be greater than the value of quota！');
-        canSave = false;
-        return;
-      }
-    });
+    let url, quota = {}, metadata = {}, canSave = true;
+    if (Object.keys(allDevice).length > 0) {
+      quota = _.cloneDeep(qSelectData);
+      metadata = _.cloneDeep(mSelectData);
+      Object.keys(quota).forEach(i => {
+        if (quota[i] === null) quota[i] = 0;
+        if (metadata[i] === null) metadata[i] = 0;
+        if (metadata[i] > quota[i]) {
+          message('error', 'The value of metadata cannot be greater than the value of quota！');
+          canSave = false;
+          return;
+        }
+      });
+    }
     if (!canSave) return;
     quota = JSON.stringify(quota);
-    metadata = JSON.stringify({user_quota: metadata});
+    metadata = JSON.stringify(Object.keys(metadata).length ? {user_quota: metadata} : {});
     this.setState({ btnLoading: true });
     if (isEdit) {
       url = `/${selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
@@ -218,7 +216,7 @@ export default class Vc extends React.Component {
   }
 
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, quota, metadata, vcNameValidateObj, deleteModifyFlag, deleteItem, btnLoading, qSelectData, mSelectData } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, vcNameValidateObj, deleteModifyFlag, deleteItem, btnLoading, qSelectData, mSelectData, allDevice } = this.state;
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
@@ -266,14 +264,14 @@ export default class Vc extends React.Component {
                   helperText={vcNameValidateObj.text}
                 />
                 <h3>quota</h3>
-                {this.getSelectHtml(1)}
+                {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}
                 <h3>metadata/user_quota</h3>
-                {this.getSelectHtml(2)}
+                {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)}
               </form>
             </DialogContent>
             <DialogActions>
               <Button onClick={() => this.setState({modifyFlag: false})} color="primary" variant="outlined">Cancel</Button>
-              <Button onClick={this.save} color="primary" variant="contained" disabled={btnLoading}>
+              <Button onClick={this.save} color="primary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
                 {btnLoading && <CircularProgress size={20}/>}Save
               </Button>
             </DialogActions>

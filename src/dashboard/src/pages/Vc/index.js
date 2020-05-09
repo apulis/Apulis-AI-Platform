@@ -78,12 +78,14 @@ export default class Vc extends React.Component {
         return
       } else {
         const { modifyFlag } = this.state;
+        const qSelectData = JSON.parse(quota);
+        const _mSelectData = JSON.parse(metadata);
         this.setState({
           modifyFlag: true,
           isEdit: 1,
           vcName: vcName,
-          qSelectData: JSON.parse(quota),
-          mSelectData: JSON.parse(metadata).user_quota
+          qSelectData,
+          mSelectData: Object.keys(_mSelectData).length> 0 ? _mSelectData.user_quota : {}
         })
       }
     })
@@ -174,8 +176,13 @@ export default class Vc extends React.Component {
     const { allDevice, qSelectData, mSelectData, vcList, isEdit } = this.state;
     return Object.keys(allDevice).map(m => {
       let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
-      type === 1 ? val = qSelectData[m] : val = mSelectData[m];
-      type === 1 ? oldVal = qSelectData : oldVal = mSelectData;
+      if (type == 1) {
+        val = qSelectData[m];
+        oldVal = qSelectData;
+      } else {
+        val = mSelectData[m];
+        oldVal = mSelectData;
+      }
       vcList.forEach(n => {
         const useNum = JSON.parse(n.quota)[m];
         num = useNum ? num - useNum : num;

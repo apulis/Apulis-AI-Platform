@@ -24,7 +24,8 @@ spec:
       hostNetwork: true
       containers:
       - name: alert-manager
-        image: prom/alertmanager:v0.18.0
+        #image: prom/alertmanager:v0.18.0
+        image: {{cnf["dockers"]["container"]["alertmanager"]["fullname"]}}
         args:
           - '--config.file=/etc/alertmanager/config.yml'
           - '--storage.path=/alertmanager'

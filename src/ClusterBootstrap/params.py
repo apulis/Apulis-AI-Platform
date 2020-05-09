@@ -733,6 +733,9 @@ default_config_parameters = {
             "bash": {"fullname": "bash:5"},
             "prometheus": {"fullname": "prom/prometheus:v2.18.0"},
             "grafana": {"fullname": "apulistech/grafana:6.7.3"},
+            "alertmanager": {"fullname": "prom/alertmanager:v0.20.0"},
+            "prometheus-operator": {"fullname": "jessestuart/prometheus-operator:v0.38.0"},
+            "k8s-prometheus-adapter": {"fullname": "directxman12/k8s-prometheus-adapter:v0.7.0"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

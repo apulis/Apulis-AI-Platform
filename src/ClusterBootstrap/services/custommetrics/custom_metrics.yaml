@@ -103,7 +103,7 @@ spec:
       serviceAccountName: custom-metrics-apiserver
       containers:
       - name: custom-metrics-server
-        image: dlws/k8s-prometheus-adapter:v0.2.0-beta.0
+        image: {{cnf["dockers"]["container"]["k8s-prometheus-adapter"]["fullname"]}}
         args:
         - --prometheus-url=http://metrics-prometheus.default.svc:9090
         - --metrics-relist-interval=30s

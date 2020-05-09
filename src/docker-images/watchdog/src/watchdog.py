@@ -92,13 +92,8 @@ def gen_pai_container_gauge():
 
 
 def gen_pai_node_gauge():
-    return GaugeMetricFamily("pai_node_count",
-                             "count of pai node",
-                             labels=[
-                                 "name", "disk_pressure", "memory_pressure",
-                                 "out_of_disk", "ready", "unschedulable"
-                             ])
-
+    return GaugeMetricFamily("pai_node_count", "count of pai node",
+            labels=["name", "disk_pressure", "memory_pressure", "out_of_disk", "ready", "unschedulable","deviceType"])
 
 def gen_k8s_api_gauge():
     return GaugeMetricFamily("k8s_api_server_count",
@@ -160,6 +155,28 @@ def gen_gauge_node_npu_reserved():
     return GaugeMetricFamily("k8s_node_npu_reserved",
             "npu reserved on k8s node",
             labels=["host_ip"])
+
+def gen_gauge_node_device_total():
+    return GaugeMetricFamily("k8s_node_device_total", "device capacity on k8s node",
+            labels=["host_ip","deviceType"])
+
+def gen_gauge_node_device_available():
+    return GaugeMetricFamily("k8s_node_device_available", "device available on k8s node",
+            labels=["host_ip","deviceType"])
+
+def gen_gauge_node_device_used():
+    return GaugeMetricFamily("k8s_node_device_used", "device used on k8s node",
+            labels=["host_ip","deviceType"])
+
+def gen_gauge_node_preemptable_device_available():
+    return GaugeMetricFamily("k8s_node_preemptable_device_available",
+            "device available on k8s node for preemptable job",
+            labels=["host_ip","deviceType"])
+
+def gen_gauge_node_device_reserved():
+    return GaugeMetricFamily("k8s_node_device_reserved",
+            "device reserved on k8s node",
+            labels=["host_ip","deviceType"])
 
 service_response_histogram = Histogram("service_response_latency_seconds",
             "response latency of each service",
@@ -555,6 +572,11 @@ def parse_node_item(node,
         gauge_node_npu_total,
 
         pods_info,
+        gauge_node_device_avail,
+        gauge_node_device_used,
+        gauge_node_device_reserved,
+        gauge_node_device_total,
+
         cluster_gpu_info,
         cluster_npu_info
         ):
@@ -575,6 +597,7 @@ def parse_node_item(node,
     device_capacity = 0
     device_allocatable = 0
     disk_pressure = memory_pressure = out_of_disk = ready = unschedulable = "unknown"
+    deviceType = walk_json_field_safe(node, "metadata", "labels", "gpuType") or ""
 
     if node.get("status") is not None:
         status = node["status"]
@@ -602,40 +625,32 @@ def parse_node_item(node,
 
         # loop through mark list to find out what type the processor is
         for resource_mark in ResourceMark.resource_mark_list:
+            if walk_json_field_safe(status, "capacity", resource_mark):
+                processor_resource_mark = resource_mark
+                break
 
             # https://github.com/kubernetes/community/blob/master/contributors/design-proposals/node/node-allocatable.md
             # [Allocatable] = [Node Capacity] - [Kube-Reserved] - [System-Reserved] - [Hard-Eviction-Threshold]
-            device_capacity = int(walk_json_field_safe(status, "capacity", resource_mark) or 0)
-            device_allocatable = int(walk_json_field_safe(status, "allocatable", resource_mark) or 0)
 
-            if device_capacity > 0:
+        device_capacity = int(walk_json_field_safe(status, "capacity", resource_mark) or 0)
+        device_allocatable = int(walk_json_field_safe(status, "allocatable", resource_mark) or 0)
+            
+        if device_capacity > 0:
+            if ResourceMark.is_gpu_resource(processor_resource_mark):
+                #gauge_node_gpu_avail.add_metric([ip], device_capacity)
+                cluster_gpu_info.capacity += device_capacity
+                logger.debug("gpu data. ip[%s], total capacity found[%d], new capacity to add[%d], mark[%s]" %
+                                ([ip], cluster_gpu_info.capacity, device_capacity, processor_resource_mark))
 
-                if ResourceMark.is_gpu_resource(resource_mark):
-
-                    #gauge_node_gpu_avail.add_metric([ip], device_capacity)
-                    cluster_gpu_info.capacity += device_capacity
-
-                    processor_resource_mark = resource_mark
-                    logger.debug("gpu data. ip[%s], total capacity found[%d], new capacity to add[%d], mark[%s]" %
-                                    ([ip], cluster_gpu_info.capacity, device_capacity, resource_mark))
-                    break
-
-                elif ResourceMark.is_npu_resource(resource_mark):
-
-                    #gauge_node_npu_avail.add_metric([ip], device_capacity)
-                    cluster_npu_info.capacity += device_capacity
-
-                    processor_resource_mark = resource_mark
-                    logger.debug("npu data. ip[%s], total capacity found[%d], new capacity to add[%d], mark[%s]" %
-                                    ([ip], cluster_npu_info.capacity, device_capacity, resource_mark))
-                    break
-
-                else:
-                    pass
+            elif ResourceMark.is_npu_resource(processor_resource_mark):
+                #gauge_node_npu_avail.add_metric([ip], device_capacity)
+                cluster_npu_info.capacity += device_capacity
+                logger.debug("npu data. ip[%s], total capacity found[%d], new capacity to add[%d], mark[%s]" %
+                                ([ip], cluster_npu_info.capacity, device_capacity, processor_resource_mark))
             else:
                 ## node doesn't have any npu/gpu/tpu
-                continue
-
+                pass
+            
         # Because k8s api's node api do not record how much resource left for
         # allocation, so we have to compute it ourselves.
         # there must be only one type of processor within the node
@@ -666,10 +681,17 @@ def parse_node_item(node,
             pass
 
         logger.debug("used_processor[%d], preemptable_processor[%d]" % (used_processor, preemptable_processor))
+
         if walk_json_field_safe(node, "spec", "unschedulable") != True and ready == "true":
 
-            available = max(0, device_capacity - total_used_processor)
+            available = max(0, device_allocatable - used_processor)
             preemptable_available = max(0, device_allocatable - used_processor - preemptable_processor)
+            reserved = max(0,device_capacity-device_allocatable)
+
+            gauge_node_device_total.add_metric([ip,deviceType], device_capacity)
+            gauge_node_device_avail.add_metric([ip,deviceType], available)
+            gauge_node_device_used.add_metric([ip,deviceType], total_used_processor)
+            gauge_node_device_reserved.add_metric([ip,deviceType], reserved)
 
             # dispatch gpu/npu info to prometheus by node ip
             if ResourceMark.is_gpu_resource(processor_resource_mark):
@@ -732,6 +754,11 @@ def parse_node_item(node,
             gauge_node_npu_reserved.add_metric([ip], 0)
             gauge_node_npu_used.add_metric([ip], 0)
 
+            gauge_node_device_total.add_metric([ip, deviceType], 0)
+            gauge_node_device_avail.add_metric([ip, deviceType], 0)
+            gauge_node_device_used.add_metric([ip, deviceType], 0)
+            gauge_node_device_reserved.add_metric([ip, deviceType], 0)
+
             logger.debug("node is unschedulable. ip[%s]" % (ip))
 
     else:
@@ -744,7 +771,7 @@ def parse_node_item(node,
     else:
         unschedulable = "false"
 
-    pai_node_gauge.add_metric([ip, disk_pressure, memory_pressure, out_of_disk, ready, unschedulable], 1)
+    pai_node_gauge.add_metric([ip, disk_pressure, memory_pressure, out_of_disk, ready, unschedulable,deviceType], 1)
     return
 
 ## pods_info
@@ -769,6 +796,12 @@ def process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_
     gauge_node_npu_reserved = gen_gauge_node_npu_reserved()
     gauge_node_npu_total = gen_gauge_node_npu_total()
 
+    # all type of device
+    gauge_node_device_avail = gen_gauge_node_device_available()
+    gauge_node_device_used = gen_gauge_node_device_used()
+    gauge_node_device_reserved = gen_gauge_node_device_reserved()
+    gauge_node_device_total = gen_gauge_node_device_total()
+
     def _map_fn(item):
         return catch_exception(parse_node_item,
                 "catch exception when parsing node item",
@@ -786,6 +819,11 @@ def process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_
                 gauge_node_npu_reserved,
                 gauge_node_npu_total,
 
+                gauge_node_device_avail,
+                gauge_node_device_used,
+                gauge_node_device_reserved,
+                gauge_node_device_total,
+
                 pods_info,
                 cluster_gpu_info,
                 cluster_npu_info)
@@ -795,8 +833,9 @@ def process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_
     return [pai_node_gauge,
             gauge_node_gpu_avail, gauge_node_gpu_used,
             gauge_node_gpu_reserved, gauge_node_gpu_total,
-            gauge_node_npu_avail, gauge_node_npu_used,
-            gauge_node_npu_reserved, gauge_node_npu_total]
+            gauge_node_npu_avail, gauge_node_npu_used, 
+            gauge_node_npu_reserved, gauge_node_npu_total,gauge_node_device_avail,
+            gauge_node_device_used,gauge_node_device_reserved,gauge_node_device_total]
 
 
 def process_vc_quota(vc_object):
@@ -812,13 +851,11 @@ def process_vc_quota(vc_object):
 
 
 def query_vc_quota_info(vc_quota_url):
-
     if vc_quota_url is None:
         return {}
-    else:
-        pass
 
-    vc_object = get_vc_quota_info(vc_quota_url, list_vc_quota_histogram)
+    vc_object = request_with_histogram(vc_quota_url, list_vc_quota_histogram,
+            None, None)
     return process_vc_quota(vc_object)
 
 
@@ -1042,13 +1079,6 @@ def get_pods_info(histogram):
 def get_nodes_info(histogram):
 
     pods = json.loads(local_ssh_exec_cmd_with_output("kubectl get nodes -o json"))
-    return pods
-
-def get_vc_quota_info(vc_url, histogram):
-
-    logger.debug("get_vc_quota_info vc_url[%s]" % vc_url)
-    #pods = json.loads(local_ssh_exec_cmd_with_output("kubectl get pods --all-namespaces -o json"))
-
     return pods
 
 def request_with_histogram(url, histogram, ca_path, headers):
@@ -1296,10 +1326,7 @@ if __name__ == "__main__":
                         default="9101")
     parser.add_argument("--ca", "-c", help="ca file path")
     parser.add_argument("--bearer", "-b", help="bearer token file path")
-    parser.add_argument("--vc_url",
-                        "-u",
-                        required=False,
-                        help="url to list vc quota")
+    parser.add_argument("--vc_url", "-u", required=False, help="url to list vc quota",default="http://localhost:5000/apis/ListVCs?userName=Administrator")
     args = parser.parse_args()
 
     logging.basicConfig(

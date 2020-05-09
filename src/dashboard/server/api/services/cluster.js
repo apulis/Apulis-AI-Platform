@@ -471,6 +471,22 @@ class Cluster extends Service {
     return data
   }
 
+  async countJobByStatus (params) {
+    const { userName, targetStatus, vcName } = params
+    const response = await this.fetch(`/CountJobByStatus?userName=${userName}&targetStatus=${targetStatus}&vcName=${vcName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
+  async getAllDevice (params) {
+    const { userName } = params
+    const response = await this.fetch(`/GetAllDevice?userName=${userName}`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
 
   /**
    * USER

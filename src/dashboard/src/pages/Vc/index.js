@@ -107,6 +107,10 @@ export default class Vc extends React.Component {
       quota = _.cloneDeep(qSelectData);
       metadata = _.cloneDeep(mSelectData);
       Object.keys(quota).forEach(i => {
+        if (!allDevice[i]) { 
+          delete quota[i];
+          delete metadata[i];
+        }
         if (quota[i] === null) quota[i] = 0;
         if (metadata[i] === null) metadata[i] = 0;
         if (metadata[i] > quota[i]) {

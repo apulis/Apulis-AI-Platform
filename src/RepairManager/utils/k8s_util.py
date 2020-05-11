@@ -27,11 +27,11 @@ def is_node_cordoned(node_info, node_name):
 
 
 def list_node():
-    config.load_kube_config(config_file='/etc/kubernetes/restapi-kubeconfig.yaml')
+    config.load_kube_config()
     api_instance = client.CoreV1Api()
     return api_instance.list_node()
 
 def list_pod_for_all_namespaces():
-    config.load_kube_config(config_file='/etc/kubernetes/restapi-kubeconfig.yaml',)
+    config.load_kube_config()
     api_instance = client.CoreV1Api()
     return api_instance.list_pod_for_all_namespaces()

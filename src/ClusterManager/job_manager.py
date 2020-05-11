@@ -236,7 +236,7 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
             return False
         metadata = json.loads(vc["metadata"])
 
-        if "user_quota" in metadata:
+        if deviceType in metadata and "user_quota" in metadata[deviceType]:
             user_running_jobs = dataHandler.GetJobList(job["userName"], vcName, status="running,queued,scheduling", op=("=", "or"))
             running_gpus = 0
             for running_job in user_running_jobs:
@@ -248,15 +248,15 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
                 running_gpus += running_job_total_gpus
 
             logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata["user_quota"]))
-            if deviceType in metadata["user_quota"]:
-                user_quota_num = metadata["user_quota"]["deviceType"]
-                if job_total_gpus > 0 and int(user_quota_num) < (running_gpus + job_total_gpus):
-                    logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, user_quota_num))
-                    detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, user_quota_num)}]
-                    dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
-                    if dataHandlerOri is None:
-                        dataHandler.Close()
-                    return False
+
+            user_quota_num = metadata[deviceType]["user_quota"]
+            if job_total_gpus > 0 and int(user_quota_num) < (running_gpus + job_total_gpus):
+                logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, user_quota_num))
+                detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, user_quota_num)}]
+                dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
+                if dataHandlerOri is None:
+                    dataHandler.Close()
+                return False
 
         detail = [{"message": "waiting for available resource."}]
 

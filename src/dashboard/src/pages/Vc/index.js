@@ -84,7 +84,7 @@ export default class Vc extends React.Component {
           isEdit: 1,
           vcName: vcName,
           qSelectData,
-          mSelectData: Object.keys(_mSelectData).length> 0 ? _mSelectData.user_quota : {}
+          mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {}
         })
       }
     })
@@ -122,7 +122,14 @@ export default class Vc extends React.Component {
     }
     if (!canSave) return;
     quota = JSON.stringify(quota);
-    metadata = JSON.stringify(Object.keys(metadata).length ? {user_quota: metadata} : {});
+    // const keys = Object.keys(metadata);
+    // if (keys.length) {
+    //   keys.forEach(i => {
+    //     const val = metadata[i];
+    //     metadata[i] = { user_quota: val };
+    //   })
+    // }
+    metadata = JSON.stringify(metadata);
     this.setState({ btnLoading: true });
     if (isEdit) {
       url = `/${selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
@@ -178,7 +185,7 @@ export default class Vc extends React.Component {
         val = qSelectData[m];
         oldVal = qSelectData;
       } else {
-        val = mSelectData[m];
+        val = mSelectData[m].user_quota;
         oldVal = mSelectData;
       }
       vcList.forEach(n => {
@@ -202,7 +209,7 @@ export default class Vc extends React.Component {
             variant="outlined"
             className="select-value"
             value={val}
-            onChange={e => this.setState({ [key]: { ...oldVal, [m]: e.target.value } })}
+            onChange={e => this.setState({ [key]: { ...oldVal, [m]: type === 1 ? e.target.value : { user_quota: e.target.value }}})}
           >
             {this.getOptions(options[m], val)}
           </TextField>
@@ -210,7 +217,7 @@ export default class Vc extends React.Component {
       )
     })
   }
-
+  
   getOptions = (data, val) => {
     let content = [];
     const _data = val !== null && val > data ? val : data; 

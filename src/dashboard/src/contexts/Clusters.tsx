@@ -12,7 +12,7 @@ interface Context {
   clusters: any[];
   selectedCluster?: string;
   saveSelectedCluster(team: React.SetStateAction<string>): void;
-  availbleGpu?: AvailbleGpuType[];
+  availbleGpu: AvailbleGpuType[];
   selectedTeam: string;
   userName?: string;
 }

@@ -100,7 +100,7 @@ const ActionIconButton: React.FC<{cluster?: string}> = ({cluster}) => {
         onClose={onMenuClose}
       >
         <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
-        <MenuItem component={Link} to={`/jobs/${cluster}`}>View Jobs</MenuItem>
+        <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
       </Menu>
     </>
   )

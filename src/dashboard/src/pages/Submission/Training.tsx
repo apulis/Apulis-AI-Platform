@@ -471,7 +471,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       }
       return flag;
     }
-    return false;
+    return true;
   }
 
   useEffect(() => {

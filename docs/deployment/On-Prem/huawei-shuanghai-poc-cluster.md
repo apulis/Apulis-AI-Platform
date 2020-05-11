@@ -590,10 +590,10 @@ echo "your_root_password" > "rootpasswd"
   每个节点可看到/data/nfsshare被挂载
   ```
 
-#### 3.15 部署NVidia插件
+#### 3.15 部署A910插件
 
 ```
-./deploy.py --verbose kubernetes start nvidia-device-plugin
+./deploy.py --verbose kubernetes start a910-device-plugin
 ```
 
 ​    
@@ -690,6 +690,12 @@ clusters:
   ./deploy.py --verbose docker push gpu-reporter
   ```
 
+- ##### 编译RepaireManager
+
+  ```
+  ./deploy.py --verbose docker push RepairManager
+  ```
+
 - ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
 
   ```
@@ -706,7 +712,7 @@ clusters:
 - ##### 启动集群应用
 
   ```
-  ./deploy.py --verbose kubernetes start mysql jobmanager2 restfulapi2 monitor nginx custommetrics
+  ./deploy.py --verbose kubernetes start mysql jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2
   ./deploy.py --verbose kubernetes start cloudmonitor
   ```
 

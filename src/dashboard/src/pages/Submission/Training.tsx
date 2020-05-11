@@ -532,16 +532,20 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       fetch(getNodeGpuAva+params2).then(async (res2: any) => {
         let data1 = await res1.json();
         let data2 = await res2.json();
-        let result1 = data1.data.result, sortededResult = [{metric: {device_available: "0"}, value: data2.data.result[0].value}];
-        result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
-          if (i.metric.device_available === '0') {
-            sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
-          } else {
-            sortededResult.push(i);
-          }
-        });
-        sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
-        setGpuFragmentation(sortededResult)
+        let result1 = data1.data.result, result2 = data2.data.result;
+        if (result1.length && result2.length) {
+          let sortededResult = [{metric: {device_available: "0"}, value: result2[0].value}]
+          sortededResult[0].value = result2[0].value;
+          result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
+            if (i.metric.device_available === '0') {
+              sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
+            } else {
+              sortededResult.push(i);
+            }
+          });
+          sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
+          setGpuFragmentation(sortededResult)
+        }
       })
     })
   }, [grafanaUrl, gpuType])

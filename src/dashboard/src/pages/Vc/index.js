@@ -29,7 +29,8 @@ export default class Vc extends React.Component {
       btnLoading: false,
       allDevice: {},
       qSelectData: {},
-      mSelectData: {}
+      mSelectData: {},
+      clickItem: {}
     }
   }
 
@@ -84,7 +85,8 @@ export default class Vc extends React.Component {
           isEdit: 1,
           vcName: vcName,
           qSelectData,
-          mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {}
+          mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
+          clickItem: item
         })
       }
     })
@@ -112,7 +114,9 @@ export default class Vc extends React.Component {
           delete metadata[i];
         }
         if (quota[i] === null) quota[i] = 0;
-        if (metadata[i] === null) metadata[i] = 0;
+        console.log('metadatametadata',metadata[i])
+
+        if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
         if (metadata[i] > quota[i]) {
           message('error', 'The value of metadata cannot be greater than the value of quota！');
           canSave = false;
@@ -171,7 +175,7 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
-    const { allDevice, qSelectData, mSelectData, vcList, isEdit } = this.state;
+    const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem } = this.state;
     return Object.keys(allDevice).map(m => {
       let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
       if (type == 1) {
@@ -204,7 +208,7 @@ export default class Vc extends React.Component {
             value={val}
             onChange={e => this.setState({ [key]: { ...oldVal, [m]: type === 1 ? e.target.value : { user_quota: e.target.value }}})}
           >
-            {this.getOptions(options[m], val)}
+            {this.getOptions(options[m], isEdit ?  JSON.parse(clickItem[type === 1 ? 'metadata' : 'quota'])[m] : null)}
           </TextField>
         </div>
       )
@@ -213,7 +217,8 @@ export default class Vc extends React.Component {
   
   getOptions = (data, val) => {
     let content = [];
-    const _data = val !== null && val > data ? val : data; 
+    const _val = val !== null && val.constructor  === Object ? val.user_quota : val;
+    const _data = _val !== null && _val > data ? _val : data; 
     for(let i = 0; i <= _data; i++){
       content.push(<MenuItem key={i} value={i}>{i}</MenuItem>)
     }

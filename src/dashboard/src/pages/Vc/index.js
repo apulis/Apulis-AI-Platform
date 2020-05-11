@@ -122,13 +122,6 @@ export default class Vc extends React.Component {
     }
     if (!canSave) return;
     quota = JSON.stringify(quota);
-    // const keys = Object.keys(metadata);
-    // if (keys.length) {
-    //   keys.forEach(i => {
-    //     const val = metadata[i];
-    //     metadata[i] = { user_quota: val };
-    //   })
-    // }
     metadata = JSON.stringify(metadata);
     this.setState({ btnLoading: true });
     if (isEdit) {
@@ -178,14 +171,14 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
-    const { allDevice, qSelectData, mSelectData, vcList, isEdit } = this.state;
+    const { allDevice, qSelectData, mSelectData, vcList, isEdit, modifyFlag } = this.state;
     return Object.keys(allDevice).map(m => {
       let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
       if (type == 1) {
-        val = qSelectData[m];
+        val = isEdit ? qSelectData[m] : null;
         oldVal = qSelectData;
       } else {
-        val = mSelectData[m].user_quota;
+        val =  mSelectData[m] && isEdit ? mSelectData[m].user_quota : null;
         oldVal = mSelectData;
       }
       vcList.forEach(n => {

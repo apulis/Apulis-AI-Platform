@@ -175,10 +175,10 @@ export default class Vc extends React.Component {
     return Object.keys(allDevice).map(m => {
       let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
       if (type == 1) {
-        val = isEdit ? qSelectData[m] : null;
+        val = qSelectData[m];
         oldVal = qSelectData;
       } else {
-        val =  mSelectData[m] && isEdit ? mSelectData[m].user_quota : null;
+        val =  mSelectData[m] && mSelectData[m].user_quota !== null ? mSelectData[m].user_quota : null;
         oldVal = mSelectData;
       }
       vcList.forEach(n => {

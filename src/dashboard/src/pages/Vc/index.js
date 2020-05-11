@@ -171,7 +171,7 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
-    const { allDevice, qSelectData, mSelectData, vcList, isEdit, modifyFlag } = this.state;
+    const { allDevice, qSelectData, mSelectData, vcList, isEdit } = this.state;
     return Object.keys(allDevice).map(m => {
       let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
       if (type == 1) {
@@ -234,8 +234,18 @@ export default class Vc extends React.Component {
     })
   }
 
+  onCloseDialog = () => {
+    this.setState({
+      modifyFlag: false,
+      vcNameValidateObj: {
+        text: '',
+        error: false
+      }
+    })
+  }
+
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, vcNameValidateObj, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice, vcNameValidateObj } = this.state;
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
@@ -267,7 +277,7 @@ export default class Vc extends React.Component {
             </TableBody>
           </Table>
           {modifyFlag && 
-          <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth onClose={() => this.setState({modifyFlag: false})}>
+          <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth>
             <DialogTitle>{isEdit ? 'Modify' : 'ADD'}</DialogTitle>
             <DialogContent dividers>
               <form>
@@ -289,7 +299,7 @@ export default class Vc extends React.Component {
               </form>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => this.setState({modifyFlag: false})} color="primary" variant="outlined">Cancel</Button>
+              <Button onClick={this.onCloseDialog} color="primary" variant="outlined">Cancel</Button>
               <Button onClick={this.save} color="primary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
                 {btnLoading && <CircularProgress size={20}/>}Save
               </Button>

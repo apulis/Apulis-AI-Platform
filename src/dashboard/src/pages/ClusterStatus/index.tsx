@@ -274,7 +274,7 @@ const ClusterStatus: FC = () => {
     setIframeUrl((filteredVCStatus[0]['GranaUrl']));
   }
 
-  if (vcStatus){
+  // if (vcStatus){
     return (
       <>
         <DLTSTabs value={value} setShowIframe={setShowIframe} setValue={setValue} titles={ClusterStatusTitles} />
@@ -284,7 +284,7 @@ const ClusterStatus: FC = () => {
           onChangeIndex={(value) => handleChangeIndex(value, setValue)}
         >
           <DLTSTabPanel value={value} index={0} dir={theme.direction} title={ClusterStatusTitles[value]}>
-            <TeamVirtualClusterStatus vcStatus={vcStatus} selectedValue={selectedValue} handleChange={(event: React.ChangeEvent<HTMLInputElement>) => handleChange(event, true)}/>
+            <TeamVirtualClusterStatus vcStatus={vcStatus || []} selectedValue={selectedValue} handleChange={(event: React.ChangeEvent<HTMLInputElement>) => handleChange(event, true)}/>
           </DLTSTabPanel>
           <DLTSTabPanel value={value} index={1} dir={theme.direction} title={ClusterStatusTitles[value]}>
             <TeamVCUserStatus userStatus={userStatus} currentCluster={selectedValue} showCurrentUser={showCurrentUser} handleSwitch={handleSwitch}/>
@@ -302,14 +302,13 @@ const ClusterStatus: FC = () => {
         </SwipeableViews>
       </>
     )
-  } else {
-    return (
-      <Box display="flex" justifyContent="center">
-        <CircularProgress/>
-      </Box>
-    )
-  }
-
+  // } else {
+  //   return (
+  //     <Box display="flex" justifyContent="center">
+  //       <CircularProgress/>
+  //     </Box>
+  //   )
+  // }
 }
 
 export default ClusterStatus;

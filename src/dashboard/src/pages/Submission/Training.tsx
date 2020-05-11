@@ -235,6 +235,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setValue('jobName', '');
       setType("RegularJob");
       setGpus(0);
+      setValue('setGpus', 0);
       setWorkers(0);
       setImage("");
       setValue('image', '');
@@ -281,7 +282,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         setValue('jobName', name);
       }
       if (type !== undefined) setType(type);
-      if (gpus !== undefined) setGpus(gpus);
+      if (gpus !== undefined) {
+        setGpus(gpus);
+        setValue('gpus', gpus);
+      }
       if (workers !== undefined) setWorkers(workers);
       if (image !== undefined) {
         setImage(image);
@@ -379,11 +383,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       preemptionAllowed: preemptible ? 'True' : 'False',
       image,
       cmd: command,
-      workPath: sanitizePath(workPath || ''),
+      workPath: sanitizePath(enableWorkPath ? workPath : ''),
       enableworkpath: enableWorkPath,
-      dataPath: sanitizePath(dataPath || ''),
+      dataPath: sanitizePath(enableDataPath ? dataPath : ''),
       enabledatapath: enableDataPath,
-      jobPath: sanitizePath(jobPath || ''),
+      jobPath: sanitizePath(enableJobPath ? jobPath : ''),
       enablejobpath: enableJobPath,
       env: environmentVariables,
       hostNetwork : type === 'PSDistJob',
@@ -470,6 +474,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         flag = Number(val) >= 40000 && Number(val) <= 49999;
       }
       return flag;
+    }
+    return true;
+  }
+
+  const validateNumDevices = (val: string) => {
+    if (val) {
+      const _val = Number(val);
+      return (!(_val < 0) && Number.isInteger(_val) && !(_val > gpusPerNode));
     }
     return true;
   }
@@ -704,14 +716,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               {(type === 'RegularJob' ||  type === 'InferenceJob') && (
                 <Grid item xs={6}>
                   <TextField
-                    type="number"
                     name="gpus"
                     label="Number of Device"
                     fullWidth
                     variant="filled"
-                    value={gpus}
+                    defaultValue={gpus}
+                    error={Boolean(errors.gpus)}
                     onChange={e => setGpus(Number(e.target.value))}
-                    inputProps={{ min: 0, max: gpusPerNode, step: 1 }}
+                    helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
+                    inputRef={register({
+                      validate: val => validateNumDevices(val)
+                    })}
                   />
                 </Grid>
               )}

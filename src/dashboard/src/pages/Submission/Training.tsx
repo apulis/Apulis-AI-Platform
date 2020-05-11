@@ -592,498 +592,500 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
-      <DLTSDialog open={showGPUFragmentation}
-        message={null}
-        handleClose={() => setShowGPUFragmentation(false)}
-        handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
-        title={"View Cluster GPU Status Per Node"}
-        titleStyle={{color:grey[400]}}
-      >
-        <BarChart width={500} height={600} data={gpuFragmentation}  margin={{top: 20}}>
-          <CartesianGrid strokeDasharray="10 10"/>
-          <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', position:'insideBottomLeft'}}>
-          </XAxis>
-          <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
-          <Bar dataKey="value[1]" fill="#8884d8" >
-            <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
-          </Bar>
-        </BarChart>
-      </DLTSDialog>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Card>
-          <CardHeader title="Submit Training Job"/>
-          <Divider/>
-          <CardContent>
-            <Grid
-              container
-              wrap="wrap"
-              spacing={1}
-            >
-              <Grid item xs={12} sm={6}>
-                <ClusterSelectField
-                  data-test="cluster-item"
-                  fullWidth
-                  cluster={selectedCluster}
-                  gpuType={gpuType}
-                  onClusterChange={saveSelectedCluster}
-                  onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
-                />
-                <Tooltip title="View Cluster GPU Status Per Node">
-                  <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
-                    <SvgIcon>
-                      <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/><path fill="none" d="M0 0h24v24H0z"/>
-                    </SvgIcon>
-                  </IconButton>
-                </Tooltip>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Job Name"
-                  name="jobName"
-                  fullWidth
-                  variant="filled"
-                  defaultValue={name}
-                  error={Boolean(errors.jobName)}
-                  onChange={e => setName(e.target.value)}
-                  helperText={errors.jobName ? errors.jobName.message : ''}
-                  InputLabelProps={{ shrink: true }}
-                  inputRef={register({
-                    required: 'Job Name is required！',
-                    pattern: {
-                      value: NameReg,
-                      message: NameErrorText
-                    }
-                  })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  disabled={!Array.isArray(templates)}
-                  select
-                  label="Job Template"
-                  fullWidth
-                  variant="filled"
-                  value={selectTPName}
-                  onChange={onTemplateChange}
-                >
-                  <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
-                  {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
-                    <MenuItem key={index} value={name}>{name}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Job Type"
-                  fullWidth
-                  variant="filled"
-                  value={type}
-                  onChange={e => setType(e.target.value as string)}
-                >
-                  <MenuItem value="RegularJob">Regular Job</MenuItem>
-                  {/* <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
-                  <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Preemptible Job"
-                  fullWidth
-                  variant="filled"
-                  value={String(preemptible)}
-                  onChange={e => setPreemptible(e.target.value === 'true')}
-                >
-                  <MenuItem value="false">NO</MenuItem>
-                  <MenuItem value="true">YES</MenuItem>
-                </TextField>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Device Type"
-                  fullWidth
-                  variant="filled"
-                  value={String(gpuType)}
-                  onChange={e => setGpuType(e.target.value)}
-                >
-                  {availbleGpu?.map(gpu => (
-                    <MenuItem value={gpu.type}>{gpu.type}</MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-              {(type === 'RegularJob' ||  type === 'InferenceJob') && (
-                <Grid item xs={6}>
-                  <TextField
-                    name="gpus"
-                    label="Number of Device"
-                    fullWidth
-                    variant="filled"
-                    defaultValue={gpus}
-                    error={Boolean(errors.gpus)}
-                    onChange={e => setGpus(Number(e.target.value))}
-                    helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
-                    inputRef={register({
-                      validate: val => validateNumDevices(val)
-                    })}
-                  />
-                </Grid>
-              )}
-              { type === 'PSDistJob'  && (
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    type="number"
-                    label="Number of Nodes"
-                    fullWidth
-                    variant="filled"
-                    value={workers}
-                    onChange={e => setWorkers(Number(e.target.value))}
-                  />
-                </Grid>
-              )}
-              { type === 'PSDistJob' && (
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    disabled
-                    type="number"
-                    label="Total Number of Device"
-                    value = {workers * gpusPerNode}
-                    fullWidth
-                    variant="filled"
-                  />
-                </Grid>
-              )}
-              <Grid item xs={12}>
-                <TextField
-                  label="Docker Image"
-                  fullWidth
-                  variant="filled"
-                  defaultValue={image}
-                  InputLabelProps={{ shrink: true }}
-                  name="image"
-                  onChange={e => setImage(e.target.value)}
-                  error={Boolean(errors.image)}
-                    helperText={errors.image ? errors.image.message : ''}
-                    inputRef={register({
-                      required: 'Docker Image is required！'
-                    })}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <MonospacedThemeProvider>
-                  <TextField
-                    multiline
-                    label="Command"
-                    name="command"
-                    fullWidth
-                    variant="filled"
-                    rows="10"
-                    defaultValue={command}
-                    InputLabelProps={{ shrink: true }}
-                    onChange={e => setCommand(e.target.value)}
-                    error={Boolean(errors.command)}
-                    helperText={errors.command ? errors.command.message : ''}
-                    inputRef={register({
-                      required: 'Command is required！'
-                    })}
-                  />
-                </MonospacedThemeProvider>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Interactive Ports"
-                  placeholder="40000 - 49999. Separated by comma."
-                  fullWidth
-                  variant="filled"
-                  rows="10"
-                  name="interactivePorts"
-                  defaultValue={interactivePorts}
-                  InputLabelProps={{ shrink: true }}
-                  onChange={e => setInteractivePorts(e.target.value)}
-                  error={Boolean(errors.interactivePorts)}
-                  helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}
-                  inputRef={register({
-                    validate: val => validateInteractivePorts(val)
-                  })}
-                />
-              </Grid>
-              <Grid item xs={4} container justify="center">
-                <FormControlLabel
-                  control={<Checkbox />}
-                  label="SSH"
-                  checked={ssh}
-                  onChange={(e, checked) => setSsh(checked)}
-                />
-              </Grid>
-              <Grid item xs={4} container justify="center">
-                <FormControlLabel
-                  control={<Checkbox />}
-                  label="iPython"
-                  checked={ipython}
-                  onChange={(e, checked) => setIpython(checked)}
-                />
-              </Grid>
-              <Grid item xs={4} container justify="center" className="icon-grid">
-                <FormControlLabel
-                  control={<Checkbox />}
-                  label="Tensorboard"
-                  checked={tensorboard}
-                  onChange={(e, checked) => setTensorboard(checked)}
-                />
-                <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
-              </Grid>
-              {iconInfoShow && <Grid item xs={12} container justify="flex-end">
-                <Chip
-                  icon={<Info/>}
-                  label="Tensorboard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
-                />
-              </Grid>}
-            </Grid>
-          </CardContent>
-          <Collapse in={advanced}>
+      <div className="training-wrap" >
+        <DLTSDialog open={showGPUFragmentation}
+          message={null}
+          handleClose={() => setShowGPUFragmentation(false)}
+          handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
+          title={"View Cluster GPU Status Per Node"}
+          titleStyle={{color:grey[400]}}
+        >
+          <BarChart width={500} height={600} data={gpuFragmentation}  margin={{top: 20}}>
+            <CartesianGrid strokeDasharray="10 10"/>
+            <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', position:'insideBottomLeft'}}>
+            </XAxis>
+            <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
+            <Bar dataKey="value[1]" fill="#8884d8" >
+              <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
+            </Bar>
+          </BarChart>
+        </DLTSDialog>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Card>
+            <CardHeader title="Submit Training Job"/>
             <Divider/>
             <CardContent>
-              <Typography component="div" variant="h6" >Custom Docker Registry</Typography>
               <Grid
                 container
                 wrap="wrap"
                 spacing={1}
-                align-items-xs-baseline
               >
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6}>
+                  <ClusterSelectField
+                    data-test="cluster-item"
+                    fullWidth
+                    cluster={selectedCluster}
+                    gpuType={gpuType}
+                    onClusterChange={saveSelectedCluster}
+                    onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
+                  />
+                  <Tooltip title="View Cluster GPU Status Per Node">
+                    <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
+                      <SvgIcon>
+                        <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/><path fill="none" d="M0 0h24v24H0z"/>
+                      </SvgIcon>
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+                <Grid item xs={12} sm={6}>
                   <TextField
-                    value={dockerRegistry}
-                    onChange={e => setDockerRegistry(e.target.value)}
-                    label="Registry"
+                    label="Job Name"
+                    name="jobName"
                     fullWidth
                     variant="filled"
+                    defaultValue={name}
+                    error={Boolean(errors.jobName)}
+                    onChange={e => setName(e.target.value)}
+                    helperText={errors.jobName ? errors.jobName.message : ''}
+                    InputLabelProps={{ shrink: true }}
+                    inputRef={register({
+                      required: 'Job Name is required！',
+                      pattern: {
+                        value: NameReg,
+                        message: NameErrorText
+                      }
+                    })}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    value={dockerUsername}
-                    onChange={e => setDockerUsername(e.target.value)}
-                    label="Username"
+                    disabled={!Array.isArray(templates)}
+                    select
+                    label="Job Template"
                     fullWidth
                     variant="filled"
+                    value={selectTPName}
+                    onChange={onTemplateChange}
+                  >
+                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
+                    {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
+                      <MenuItem key={index} value={name}>{name}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select
+                    label="Job Type"
+                    fullWidth
+                    variant="filled"
+                    value={type}
+                    onChange={e => setType(e.target.value as string)}
+                  >
+                    <MenuItem value="RegularJob">Regular Job</MenuItem>
+                    {/* <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
+                    <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select
+                    label="Preemptible Job"
+                    fullWidth
+                    variant="filled"
+                    value={String(preemptible)}
+                    onChange={e => setPreemptible(e.target.value === 'true')}
+                  >
+                    <MenuItem value="false">NO</MenuItem>
+                    <MenuItem value="true">YES</MenuItem>
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select
+                    label="Device Type"
+                    fullWidth
+                    variant="filled"
+                    value={String(gpuType)}
+                    onChange={e => setGpuType(e.target.value)}
+                  >
+                    {availbleGpu?.map(gpu => (
+                      <MenuItem value={gpu.type}>{gpu.type}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                {(type === 'RegularJob' ||  type === 'InferenceJob') && (
+                  <Grid item xs={6}>
+                    <TextField
+                      name="gpus"
+                      label="Number of Device"
+                      fullWidth
+                      variant="filled"
+                      defaultValue={gpus}
+                      error={Boolean(errors.gpus)}
+                      onChange={e => setGpus(Number(e.target.value))}
+                      helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
+                      inputRef={register({
+                        validate: val => validateNumDevices(val)
+                      })}
+                    />
+                  </Grid>
+                )}
+                { type === 'PSDistJob'  && (
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      type="number"
+                      label="Number of Nodes"
+                      fullWidth
+                      variant="filled"
+                      value={workers}
+                      onChange={e => setWorkers(Number(e.target.value))}
+                    />
+                  </Grid>
+                )}
+                { type === 'PSDistJob' && (
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      disabled
+                      type="number"
+                      label="Total Number of Device"
+                      value = {workers * gpusPerNode}
+                      fullWidth
+                      variant="filled"
+                    />
+                  </Grid>
+                )}
+                <Grid item xs={12}>
+                  <TextField
+                    label="Docker Image"
+                    fullWidth
+                    variant="filled"
+                    defaultValue={image}
+                    InputLabelProps={{ shrink: true }}
+                    name="image"
+                    onChange={e => setImage(e.target.value)}
+                    error={Boolean(errors.image)}
+                      helperText={errors.image ? errors.image.message : ''}
+                      inputRef={register({
+                        required: 'Docker Image is required！'
+                      })}
                   />
                 </Grid>
                 <Grid item xs={12}>
+                  <MonospacedThemeProvider>
+                    <TextField
+                      multiline
+                      label="Command"
+                      name="command"
+                      fullWidth
+                      variant="filled"
+                      rows="10"
+                      defaultValue={command}
+                      InputLabelProps={{ shrink: true }}
+                      onChange={e => setCommand(e.target.value)}
+                      error={Boolean(errors.command)}
+                      helperText={errors.command ? errors.command.message : ''}
+                      inputRef={register({
+                        required: 'Command is required！'
+                      })}
+                    />
+                  </MonospacedThemeProvider>
+                </Grid>
+                <Grid item xs={12}>
                   <TextField
-                    value={dockerPassword}
-                    onChange={e => setDockerPassword(e.target.value)}
-                    label="Password"
+                    label="Interactive Ports"
+                    placeholder="40000 - 49999. Separated by comma."
                     fullWidth
                     variant="filled"
+                    rows="10"
+                    name="interactivePorts"
+                    defaultValue={interactivePorts}
+                    InputLabelProps={{ shrink: true }}
+                    onChange={e => setInteractivePorts(e.target.value)}
+                    error={Boolean(errors.interactivePorts)}
+                    helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}
+                    inputRef={register({
+                      validate: val => validateInteractivePorts(val)
+                    })}
                   />
                 </Grid>
+                <Grid item xs={4} container justify="center">
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label="SSH"
+                    checked={ssh}
+                    onChange={(e, checked) => setSsh(checked)}
+                  />
+                </Grid>
+                <Grid item xs={4} container justify="center">
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label="iPython"
+                    checked={ipython}
+                    onChange={(e, checked) => setIpython(checked)}
+                  />
+                </Grid>
+                <Grid item xs={4} container justify="center" className="icon-grid">
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label="Tensorboard"
+                    checked={tensorboard}
+                    onChange={(e, checked) => setTensorboard(checked)}
+                  />
+                  <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
+                </Grid>
+                {iconInfoShow && <Grid item xs={12} container justify="flex-end">
+                  <Chip
+                    icon={<Info/>}
+                    label="Tensorboard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
+                  />
+                </Grid>}
               </Grid>
             </CardContent>
-            <CardContent>
-              <Typography component="span" variant="h6">Mount Directories</Typography>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Path in Container</TableCell>
-                    <TableCell>Path on Host Machine / Storage Server</TableCell>
-                    <TableCell align="center">Enable</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>/work</TableCell>
-                    <TableCell>
-                      <TextField
-                        label="Work Path"
-                        fullWidth
-                        margin="dense"
-                        variant="filled"
-                        value={workPath}
-                        onChange={e => setWorkPath(e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Switch
-                        value={enableWorkPath}
-                        checked={enableWorkPath}
-                        onChange={(e, checked) => setEnableWorkPath(checked)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>/data</TableCell>
-                    <TableCell>
-                      <TextField
-                        label="Data Path"
-                        fullWidth
-                        margin="dense"
-                        variant="filled"
-                        value={dataPath}
-                        onChange={e => setDataPath(e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Switch
-                        value={enableDataPath}
-                        checked={enableDataPath}
-                        onChange={(e, checked) => setEnableDataPath(checked)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>/job</TableCell>
-                    <TableCell>
-                      <TextField
-                        label="Job Path"
-                        fullWidth
-                        margin="dense"
-                        variant="filled"
-                        value={jobPath}
-                        onChange={e => setJobPath(e.target.value)}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <Switch
-                        value={enableJobPath}
-                        checked={enableJobPath}
-                        onChange={(e, checked) => setEnableJobPath(checked)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardContent>
-              <Typography component="span" variant="h6">Environment Variables</Typography>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Value</TableCell>
-                    <TableCell/>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {environmentVariables.map(({ name, value }, index) => (
-                    <TableRow key={index}>
+            <Collapse in={advanced}>
+              <Divider/>
+              <CardContent>
+                <Typography component="div" variant="h6" >Custom Docker Registry</Typography>
+                <Grid
+                  container
+                  wrap="wrap"
+                  spacing={1}
+                  align-items-xs-baseline
+                >
+                  <Grid item xs={12}>
+                    <TextField
+                      value={dockerRegistry}
+                      onChange={e => setDockerRegistry(e.target.value)}
+                      label="Registry"
+                      fullWidth
+                      variant="filled"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      value={dockerUsername}
+                      onChange={e => setDockerUsername(e.target.value)}
+                      label="Username"
+                      fullWidth
+                      variant="filled"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      value={dockerPassword}
+                      onChange={e => setDockerPassword(e.target.value)}
+                      label="Password"
+                      fullWidth
+                      variant="filled"
+                    />
+                  </Grid>
+                </Grid>
+              </CardContent>
+              <CardContent>
+                <Typography component="span" variant="h6">Mount Directories</Typography>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Path in Container</TableCell>
+                      <TableCell>Path on Host Machine / Storage Server</TableCell>
+                      <TableCell align="center">Enable</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>/work</TableCell>
                       <TableCell>
                         <TextField
-                          label="Environment Variable Name"
+                          label="Work Path"
                           fullWidth
                           margin="dense"
                           variant="filled"
-                          value={name}
-                          onChange={onEnvironmentVariableNameChange(index)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <TextField
-                          label="Environment Variable Value"
-                          fullWidth
-                          margin="dense"
-                          variant="filled"
-                          value={value}
-                          onChange={onEnvironmentVariableValueChange(index)}
+                          value={workPath}
+                          onChange={e => setWorkPath(e.target.value)}
                         />
                       </TableCell>
                       <TableCell align="center">
-                        <IconButton size="small" color="secondary" onClick={onRemoveEnvironmentVariableClick(index)}>
-                          <Delete/>
+                        <Switch
+                          value={enableWorkPath}
+                          checked={enableWorkPath}
+                          onChange={(e, checked) => setEnableWorkPath(checked)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>/data</TableCell>
+                      <TableCell>
+                        <TextField
+                          label="Data Path"
+                          fullWidth
+                          margin="dense"
+                          variant="filled"
+                          value={dataPath}
+                          onChange={e => setDataPath(e.target.value)}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Switch
+                          value={enableDataPath}
+                          checked={enableDataPath}
+                          onChange={(e, checked) => setEnableDataPath(checked)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>/job</TableCell>
+                      <TableCell>
+                        <TextField
+                          label="Job Path"
+                          fullWidth
+                          margin="dense"
+                          variant="filled"
+                          value={jobPath}
+                          onChange={e => setJobPath(e.target.value)}
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Switch
+                          value={enableJobPath}
+                          checked={enableJobPath}
+                          onChange={(e, checked) => setEnableJobPath(checked)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+              <CardContent>
+                <Typography component="span" variant="h6">Environment Variables</Typography>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Value</TableCell>
+                      <TableCell/>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {environmentVariables.map(({ name, value }, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <TextField
+                            label="Environment Variable Name"
+                            fullWidth
+                            margin="dense"
+                            variant="filled"
+                            value={name}
+                            onChange={onEnvironmentVariableNameChange(index)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            label="Environment Variable Value"
+                            fullWidth
+                            margin="dense"
+                            variant="filled"
+                            value={value}
+                            onChange={onEnvironmentVariableValueChange(index)}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton size="small" color="secondary" onClick={onRemoveEnvironmentVariableClick(index)}>
+                            <Delete/>
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell/>
+                      <TableCell/>
+                      <TableCell align="center">
+                        <IconButton size="small" color="secondary" onClick={onAddEnvironmentVariableClick}>
+                          <Add/>
                         </IconButton>
                       </TableCell>
                     </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell/>
-                    <TableCell/>
-                    <TableCell align="center">
-                      <IconButton size="small" color="secondary" onClick={onAddEnvironmentVariableClick}>
-                        <Add/>
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Collapse>
-          <Collapse in={database}>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Collapse>
+            <Collapse in={database}>
+              <Divider/>
+              <CardContent>
+                <Typography component="span" variant="h6">Template Management</Typography>
+                <Grid container wrap="wrap" spacing={1}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Template name"
+                      fullWidth
+                      variant="filled"
+                      value={saveTemplateName}
+                      onChange={e => setSaveTemplateName(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs>
+                    <TextField
+                      label="Scope"
+                      select
+                      fullWidth
+                      variant="filled"
+                      value={saveTemplateDatabase}
+                      onChange={e => setSaveTemplateDatabase((e.target.value) as string)}
+                    >
+                      <MenuItem value="user">user</MenuItem>
+                      <MenuItem value="team">team</MenuItem>
+                    </TextField>
+                  </Grid>
+                  <Button type="button" color="primary" onClick={onSaveTemplateClick}>Save</Button>
+                  <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>Delete</Button>
+                </Grid>
+              </CardContent>
+            </Collapse>
             <Divider/>
-            <CardContent>
-              <Typography component="span" variant="h6">Template Management</Typography>
-              <Grid container wrap="wrap" spacing={1}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Template name"
-                    fullWidth
-                    variant="filled"
-                    value={saveTemplateName}
-                    onChange={e => setSaveTemplateName(e.target.value)}
-                  />
+            <CardActions>
+              <Grid item xs={12} container justify="space-between">
+                <Grid item xs container>
+                  <Button type="button" color="secondary"  onClick={() => setAdvanced(!advanced)}>Advanced</Button>
+                  <Button type="button" color="secondary"  onClick={() => setDatabase(!database)}>Template</Button>
                 </Grid>
-                <Grid item xs>
-                  <TextField
-                    label="Scope"
-                    select
-                    fullWidth
-                    variant="filled"
-                    value={saveTemplateDatabase}
-                    onChange={e => setSaveTemplateDatabase((e.target.value) as string)}
-                  >
-                    <MenuItem value="user">user</MenuItem>
-                    <MenuItem value="team">team</MenuItem>
-                  </TextField>
-                </Grid>
-                <Button type="button" color="primary" onClick={onSaveTemplateClick}>Save</Button>
-                <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>Delete</Button>
+                <Button type="submit" color="primary" variant="contained" disabled={postJobLoading || postEndpointsLoading || open }>Submit</Button>
               </Grid>
-            </CardContent>
-          </Collapse>
-          <Divider/>
-          <CardActions>
-            <Grid item xs={12} container justify="space-between">
-              <Grid item xs container>
-                <Button type="button" color="secondary"  onClick={() => setAdvanced(!advanced)}>Advanced</Button>
-                <Button type="button" color="secondary"  onClick={() => setDatabase(!database)}>Template</Button>
-              </Grid>
-              <Button type="submit" color="primary" variant="contained" disabled={postJobLoading || postEndpointsLoading || open }>Submit</Button>
-            </Grid>
-          </CardActions>
-        </Card>
-      </form>
-      {deleteModal && 
-      <Dialog open={deleteModal} maxWidth='xs' fullWidth onClose={() => setDeleteModal(false)}>
-        <DialogTitle>Delete Template</DialogTitle>
-        <DialogContent>
-          <TextField
-            disabled={!Array.isArray(templates)}
-            select
-            label="Select Template"
-            fullWidth
-            variant="filled"
-            value={selectDelTPName}
-            onChange={e => setSelectDelTPName(e.target.value)}
-          >
-            {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
-              <MenuItem key={index} value={name}>{name}</MenuItem>
-            ))}
-          </TextField>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteModal(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={onDeleteTemplateClick} color="secondary">
-          Delete
-          </Button>
-        </DialogActions>
-      </Dialog>}
-      <DLTSSnackbar message={showMessage(open,showDeleteTemplate,showSaveTemplate)}
-        open={open || showSaveTemplate || showDeleteTemplate}
-        style={styleSnack}
-        handleWarnClose={handleClose}
-        autoHideDuration={1000}
-      />
+            </CardActions>
+          </Card>
+        </form>
+        {deleteModal && 
+        <Dialog open={deleteModal} maxWidth='xs' fullWidth onClose={() => setDeleteModal(false)}>
+          <DialogTitle>Delete Template</DialogTitle>
+          <DialogContent>
+            <TextField
+              disabled={!Array.isArray(templates)}
+              select
+              label="Select Template"
+              fullWidth
+              variant="filled"
+              value={selectDelTPName}
+              onChange={e => setSelectDelTPName(e.target.value)}
+            >
+              {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
+                <MenuItem key={index} value={name}>{name}</MenuItem>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteModal(false)} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={onDeleteTemplateClick} color="secondary">
+            Delete
+            </Button>
+          </DialogActions>
+        </Dialog>}
+        <DLTSSnackbar message={showMessage(open,showDeleteTemplate,showSaveTemplate)}
+          open={open || showSaveTemplate || showDeleteTemplate}
+          style={styleSnack}
+          handleWarnClose={handleClose}
+          autoHideDuration={1000}
+        />
+      </div>
     </Container>
   );
 });

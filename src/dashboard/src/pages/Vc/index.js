@@ -114,8 +114,6 @@ export default class Vc extends React.Component {
           delete metadata[i];
         }
         if (quota[i] === null) quota[i] = 0;
-        console.log('metadatametadata',metadata[i])
-
         if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
         if (metadata[i] > quota[i]) {
           message('error', 'The value of metadata cannot be greater than the value of quota！');

@@ -62,7 +62,7 @@ const sanitizePath = (path: string) => {
   return path;
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
-  const { selectedCluster,saveSelectedCluster, availbleGpu } = useContext(ClustersContext);
+  const { selectedCluster, saveSelectedCluster, availbleGpu } = useContext(ClustersContext);
   const { userName, uid } = useContext(UserContext);
   const { teams, selectedTeam }= useContext(TeamsContext);
   const { enqueueSnackbar } = useSnackbar()
@@ -85,7 +85,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (cluster == null) return;
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
-  const [gpuType, setGpuType] = useState(availbleGpu![0].type || '');
+  const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
   const [gpusPerNode, setGpusPerNode] = useState(0)
   const [templates, setTemplates] = useState([{name: '', json: ''}]);
   const [type, setType] = useState("RegularJob");

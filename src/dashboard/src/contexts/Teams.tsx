@@ -32,9 +32,13 @@ export const Provider: React.FC = ({ children }) => {
   const [selectedTeam, setSelectedTeam] = React.useState<string>('');
   const saveSelectedTeam = (team: React.SetStateAction<string>) => {
     setSelectedTeam(team);
-    localStorage.setItem('team',team.toString())
-    window.location.reload()
-  };
+    localStorage.setItem('team',team.toString());
+    if (window.location.pathname.split('/apulis-dev/')[1]) {
+      window.location.href = '/jobs-v2/apulis-dev/'
+    } else {
+      window.location.reload();
+    }
+  }
   useEffect(()=> {
     if (localStorage.getItem('team')) {
       setSelectedTeam((String)(localStorage.getItem('team')))

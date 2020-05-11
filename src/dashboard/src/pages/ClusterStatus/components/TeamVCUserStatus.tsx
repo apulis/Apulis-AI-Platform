@@ -5,7 +5,7 @@ import {
   CircularProgress
 } from "@material-ui/core";
 import MaterialTable, {MTableToolbar} from "material-table";
-
+import UserContext from '../../../contexts/User';
 interface TeamUsr {
   userStatus: any;
   showCurrentUser: boolean;
@@ -15,6 +15,8 @@ interface TeamUsr {
 
 export const TeamVCUserStatus = (props: TeamUsr) => {
   const { userStatus, showCurrentUser, handleSwitch, currentCluster } = props;
+  const { userName } = React.useContext(UserContext);
+
   if (currentCluster === 'Lab-RR1-V100') {
     return (
       <>
@@ -61,7 +63,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
             {title: 'Past Month Idle Hour', field: 'idle',type:'numeric'},
             {title: 'Past Month Idle Hour %', field: '',type:'numeric', render: (rowData: any) => currentCluster === 'Lab-RR1-V100' ? null : <span style={{ color: Math.floor((rowData['idle'] / rowData['booked']) * 100) > 50 ? "red" : "black" }}>{rowData['booked'] == '0' ? '-' : Math.floor(((rowData['idle'] || 0) / (rowData['booked'])) * 100)}</span>, customSort: (a: any, b: any) => {return Math.floor((a['idle'] / a['booked']) * 100) - Math.floor((b['idle'] / b['booked']) * 100)}}
           ]}
-          data={showCurrentUser ? userStatus.filter((uc: any)=>uc['usedGPU'] > 0 && uc['userName'] !== 'Total') : userStatus}
+          data={showCurrentUser ? userStatus.filter((uc: any)=> uc['userName'] === userName) : userStatus}
           options={{filtering: false, paging: false, sorting: true}}
           components={{
             Toolbar: props => (

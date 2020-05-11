@@ -802,6 +802,19 @@ def load_pplatformlatform_type():
     platform_type = platform_type[0]
     config["platform_type"] = platform_type
 
+def load_platform_type():
+    
+    platform_type = []
+    if "supported_platform" in config.keys():
+        platform_type = config["supported_platform"]
+    else:
+        pass
+
+    assert len(platform_type) == 1 and "platform type should be specified explicitly and unique!"
+
+    platform_type = platform_type[0]
+    config["platform_type"] = platform_type
+    
 def gen_platform_wise_config():
 
     load_platform_type()

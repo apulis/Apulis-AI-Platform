@@ -286,6 +286,12 @@ def get_cluster_status():
         logger.info("nothing changed in cluster, skipping the cluster status update...")
 
     config["cluster_status"] = copy.deepcopy(cluster_status)
+    # update newest device type info
+    currentDeviceMapping = dataHandler.GetAllDevice()
+    remveDeviceMapping = set(currentDeviceMapping.keys()).difference(set(gpuMapping.keys()))
+    if remveDeviceMapping:
+        for one_device_type in list(remveDeviceMapping):
+            dataHandler.DeleteDeviceType(one_device_type)
     for gpuType,gpuStrDict in gpuMapping.items():
         if gpuType:
             dataHandler.AddDevice(gpuType,gpuStrDict["deviceStr"],gpuStrDict["capacity"])

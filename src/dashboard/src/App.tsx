@@ -53,6 +53,7 @@ interface BootstrapProps {
   authEnabled?: {
     [props: string]: 1 | 0;
   };
+  administrators?: Array<[]>
 }
 
 const Loading = (
@@ -63,10 +64,10 @@ const Loading = (
 
 
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled }) => (
+const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled, administrators }) => (
   <BrowserRouter>
     <ConfigProvider>
-      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} authEnabled={authEnabled} >
+      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} authEnabled={authEnabled} administrators={administrators} >
           <ConfirmProvider>
             <TeamProvider>
               <ClustersProvider>

@@ -2,42 +2,39 @@ import sys
 import json
 import os
 import signal
-
-from flask import Flask, Response,redirect
-from flask_restful import reqparse, abort, Api, Resource,url_for
-from flask import request, jsonify
-from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token,
-    get_jwt_identity
-)
 import base64
 import yaml
 import uuid
 import requests
 import logging
 import timeit
-from logging.config import dictConfig
 import thread
+import time
+import sys
+import traceback
+import threading
+from logging.config import dictConfig
+from flask import Flask, Response,redirect,render_template
+from flask_restful import reqparse, abort,url_for
+from flask_restplus import Resource, Api, apidoc
+from flask import request, jsonify
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
+import prometheus_client
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
 import JobRestAPIUtils
 from authorization import ResourceType, Permission, AuthorizationManager, ACLManager
-
-from config import global_vars
+import model
 import authorization
-
+from config import global_vars
 from DataHandler import DataHandler
 from mysql_conn_pool import MysqlConn
 from jwt_authorization import create_jwt_token_with_message
-
-import time
-import sys
-import traceback
-import threading
-
-import prometheus_client
 
 CONTENT_TYPE_LATEST = str("text/plain; version=0.0.4; charset=utf-8")
 
@@ -48,10 +45,30 @@ with open(os.path.join(dir_path, 'logging.yaml'), 'r') as f:
 logger = logging.getLogger('restfulapi')
 
 app = Flask(__name__)
+# jwt configure
 app.config['JWT_SECRET_KEY'] = config["jwt"]["secret_key"]
 app.config['PROPAGATE_EXCEPTIONS'] = True
 jwt = JWTManager(app)
-api = Api(app)
+# swagger docs configure
+api = Api(app, version='1.0', title='restful API',
+    description='A simple API',doc="/apis/docs/",prefix="/apis"
+)
+custom_apidoc = apidoc.Apidoc('restplus_custom_doc', __name__,
+                              template_folder='templates',
+                              static_folder=os.path.dirname(apidoc.__file__) + '/static',
+                              static_url_path='/swaggerui')
+
+@custom_apidoc.add_app_template_global
+def swagger_static(filename):
+    return url_for('restplus_custom_doc.static',
+                   filename='{0}'.format(filename))
+
+app.register_blueprint(custom_apidoc, url_prefix='/apis/docs')
+@api.documentation
+def custom_ui():
+    return render_template("swagger-ui.html", title=api.title, specs_url="/apis/swagger.json")
+# end
+
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
 logger.info("%s", config)
@@ -148,6 +165,8 @@ def get_query_params(*args,**kwargs):
     return [args[name] for name in args]
 
 class SubmitJob(Resource):
+    @api.doc(params=model.SubmitJob.params)
+    @api.response(200, "succeed", api.model("SubmitJob", model.SubmitJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobName')
@@ -338,6 +357,8 @@ api.add_resource(SubmitJob, '/SubmitJob')
 
 
 class PostJob(Resource):
+    @api.expect(api.model("PostJobModel", model.PostJob(api).params))
+    @api.response(200, "succeed", api.model("PostJob", model.PostJob(api).model))
     def post(self):
         params = request.get_json(force=True)
         logger.info("Post Job")
@@ -367,6 +388,8 @@ api.add_resource(PostJob, '/PostJob')
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):
+    @api.doc(params=model.ListJobs.params)
+    @api.response(200, "succeed", api.model("ListJobs", model.ListJobs.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -436,6 +459,7 @@ api.add_resource(ListJobs, '/ListJobs')
 
 # shows a list of all jobs, and lets you POST to add new tasks
 class ListJobsV2(Resource):
+    @api.doc(params=model.ListJobsV2.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -464,6 +488,8 @@ class ListJobsV2(Resource):
 api.add_resource(ListJobsV2, '/ListJobsV2')
 
 class GetAllDevice(Resource):
+    @api.doc(params=model.GetAllDevice.params)
+    @api.response(200, "succeed", api.model("GetAllDevice", model.GetAllDevice.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -476,7 +502,27 @@ class GetAllDevice(Resource):
         return resp
 api.add_resource(GetAllDevice, '/GetAllDevice')
 
+class CountJobByStatus(Resource):
+    @api.doc(params=model.CountJobByStatus.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        parser.add_argument('targetStatus')
+        parser.add_argument('vcName')
+        args = parser.parse_args()
+        userName = args["userName"]
+        targetStatus = args["targetStatus"]
+        vcName = args["vcName"]
+        result = JobRestAPIUtils.CountJobByStatus(userName,vcName,targetStatus)
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(CountJobByStatus, '/CountJobByStatus')
+
 class KillJob(Resource):
+    @api.doc(params=model.KillJob.params)
+    @api.response(200, "succeed", api.model("KillJob", model.KillJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -506,6 +552,8 @@ api.add_resource(KillJob, '/KillJob')
 
 
 class PauseJob(Resource):
+    @api.doc(params=model.PauseJob.params)
+    @api.response(200, "succeed", api.model("PauseJob", model.PauseJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -533,6 +581,8 @@ api.add_resource(PauseJob, '/PauseJob')
 
 
 class ResumeJob(Resource):
+    @api.doc(params=model.ResumeJob.params)
+    @api.response(200, "succeed", api.model("ResumeJob", model.ResumeJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -560,6 +610,8 @@ api.add_resource(ResumeJob, '/ResumeJob')
 
 
 class CloneJob(Resource):
+    @api.doc(params=model.CloneJob.params)
+    @api.response(200, "succeed", api.model("CloneJob", model.CloneJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -587,6 +639,8 @@ api.add_resource(CloneJob, '/CloneJob')
 
 
 class ApproveJob(Resource):
+    @api.doc(params=model.ApproveJob.params)
+    @api.response(200, "succeed", api.model("ApproveJob", model.ApproveJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -614,6 +668,7 @@ api.add_resource(ApproveJob, '/ApproveJob')
 
 
 class GetCommands(Resource):
+    @api.doc(params=model.GetCommands.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -635,6 +690,8 @@ api.add_resource(GetCommands, '/GetCommands')
 
 
 class GetJobDetail(Resource):
+    @api.doc(params=model.GetJobDetail.params)
+    @api.response(200, "succeed", api.model("GetJobDetail", model.GetJobDetail.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -668,6 +725,8 @@ api.add_resource(GetJobDetail, '/GetJobDetail')
 
 
 class GetJobDetailV2(Resource):
+    @api.doc(params=model.GetJobDetailV2.params)
+    @api.response(200, "succeed", api.model("GetJobDetailV2", model.GetJobDetailV2.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -686,6 +745,7 @@ api.add_resource(GetJobDetailV2, '/GetJobDetailV2')
 
 
 class GetJobLog(Resource):
+    @api.doc(params=model.GetJobLog.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId', required=True)
@@ -701,6 +761,7 @@ api.add_resource(GetJobLog, '/GetJobLog')
 
 
 class GetJobStatus(Resource):
+    @api.doc(params=model.GetJobStatus.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -719,6 +780,7 @@ api.add_resource(GetJobStatus, '/GetJobStatus')
 
 
 class GetClusterStatus(Resource):
+    @api.doc(params=model.GetClusterStatus.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -738,6 +800,8 @@ api.add_resource(GetClusterStatus, '/GetClusterStatus')
 
 
 class AddCommand(Resource):
+    @api.doc(params=model.AddCommand.params)
+    @api.response(200, "succeed", api.model("AddCommand", model.AddCommand.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -768,6 +832,7 @@ class AddCommand(Resource):
 api.add_resource(AddCommand, '/AddCommand')
 
 class AddUser(Resource):
+    @api.doc(params=model.AddUser.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -816,6 +881,7 @@ class ListUser(Resource):
 api.add_resource(ListUser, '/ListUser')
 
 class UpdateUserPerm(Resource):
+    @api.doc(params=model.UpdateUserPerm.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('isAdmin')
@@ -835,6 +901,7 @@ class UpdateUserPerm(Resource):
 api.add_resource(UpdateUserPerm, '/UpdateUserPerm')
 
 class SignUp(Resource):
+    @api.doc(params=model.SignUp.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
@@ -883,6 +950,7 @@ api.add_resource(SignUp, '/SignUp')
 
 
 class GetAccountByOpenId(Resource):
+    @api.doc(params=model.GetAccountByOpenId.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
@@ -904,6 +972,7 @@ class GetAccountByOpenId(Resource):
 api.add_resource(GetAccountByOpenId, '/getAccountInfo')
 
 class GetAccountByuserName(Resource):
+    @api.doc(params=model.GetAccountByuserName.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -922,6 +991,7 @@ class GetAccountByuserName(Resource):
 api.add_resource(GetAccountByuserName, '/getAccountInfoByUserName')
 
 class OpenSignInRedirect(Resource):
+    @api.doc(params=model.OpenSignIn.params)
     def get(self,signinType):
         if signinType == "wechat":
             return redirect("https://open.weixin.qq.com/connect/qrconnect?appid={}&redirect_uri=https%3A%2F%2F{}%2Fapi/login/wechat&response_type=code&scope=snsapi_userinfo,snsapi_login&state=".format(config["Authentication"]["WeChat"]["AppId"],config["webportal_node"]))
@@ -989,7 +1059,7 @@ class OpenSignIn(Resource):
 api.add_resource(OpenSignIn, '/login/<signinType>')
 
 class SignIn(Resource):
-
+    @api.doc(params=model.SignIn.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('openId')
@@ -1016,6 +1086,7 @@ api.add_resource(SignIn, '/signIn')
 
 
 class AddUserV2(Resource):
+    @api.expect(api.model("AddUserV2", model.AddUserV2.params))
     def post(self):
         # current_user = get_jwt_identity()
         params = request.get_json(silent=True)
@@ -1053,6 +1124,7 @@ class AddUserV2(Resource):
 api.add_resource(AddUserV2, '/addUser2')
 
 class UpdateUserPermission(Resource):
+    @api.expect(api.model("UpdateUserPermission", model.UpdateUserPermission.params))
     def patch(self):
         params = request.get_json(silent=True)
         userName = params["userName"]
@@ -1073,6 +1145,7 @@ class UpdateUserPermission(Resource):
 api.add_resource(UpdateUserPermission, '/UpdateUserPermission')
 
 class DeleteUser(Resource):
+    @api.expect(api.model("DeleteUser", model.DeleteUser.params))
     def delete(self):
         params = request.get_json(silent=True)
         userName = params["userName"]
@@ -1130,6 +1203,7 @@ class GetAllAccountUser(Resource):
 api.add_resource(GetAllAccountUser, '/GetAllAccountUser')
 
 class UpdateAce(Resource):
+    @api.doc(params=model.UpdateAce.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -1157,6 +1231,7 @@ api.add_resource(UpdateAce, '/UpdateAce')
 
 
 class DeleteAce(Resource):
+    @api.doc(params=model.DeleteAce.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -1182,6 +1257,7 @@ api.add_resource(DeleteAce, '/DeleteAce')
 
 
 class IsClusterAdmin(Resource):
+    @api.doc(params=model.IsClusterAdmin.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -1201,6 +1277,7 @@ api.add_resource(IsClusterAdmin, '/IsClusterAdmin')
 
 
 class GetACL(Resource):
+    @api.doc(params=model.GetACL.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -1235,6 +1312,7 @@ api.add_resource(GetAllACL, '/GetAllACL')
 
 
 class ListVCs(Resource):
+    @api.doc(params=model.ListVCs.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -1255,6 +1333,7 @@ api.add_resource(ListVCs, '/ListVCs')
 
 
 class GetVC(Resource):
+    @api.doc(params=model.GetVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -1277,6 +1356,7 @@ api.add_resource(GetVC, '/GetVC')
 
 
 class AddVC(Resource):
+    @api.doc(params=model.AddVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -1302,6 +1382,7 @@ api.add_resource(AddVC, '/AddVC')
 
 
 class DeleteVC(Resource):
+    @api.doc(params=model.DeleteVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -1323,6 +1404,7 @@ api.add_resource(DeleteVC, '/DeleteVC')
 
 
 class UpdateVC(Resource):
+    @api.doc(params=model.UpdateVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -1349,6 +1431,7 @@ api.add_resource(UpdateVC, '/UpdateVC')
 
 
 class ListStorages(Resource):
+    @api.doc(params=model.ListStorages.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -1370,6 +1453,7 @@ api.add_resource(ListStorages, '/ListStorages')
 
 
 class AddStorage(Resource):
+    @api.doc(params=model.AddStorage.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -1401,6 +1485,7 @@ api.add_resource(AddStorage, '/AddStorage')
 
 
 class DeleteStorage(Resource):
+    @api.doc(params=model.DeleteStorage.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -1424,6 +1509,7 @@ api.add_resource(DeleteStorage, '/DeleteStorage')
 
 
 class UpdateStorage(Resource):
+    @api.doc(params=model.UpdateStorage.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -1455,6 +1541,7 @@ api.add_resource(UpdateStorage, '/UpdateStorage')
 
 
 class Endpoint(Resource):
+    @api.doc(params=model.Endpoint.params)
     def get(self):
         '''return job["endpoints"]: curl -X GET /endpoints?jobId=...&userName=...'''
         parser = reqparse.RequestParser()
@@ -1471,6 +1558,8 @@ class Endpoint(Resource):
         resp = generate_response(ret)
         return resp
 
+    @api.doc(params=model.EndpointPost.params)
+    @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
         '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
         parser = reqparse.RequestParser()
@@ -1509,6 +1598,7 @@ api.add_resource(Endpoint, '/endpoints')
 
 
 class Templates(Resource):
+    @api.doc(params=model.Templates.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName', location="args")
@@ -1528,6 +1618,7 @@ class Templates(Resource):
 
         return resp
 
+    @api.doc(params=model.TemplatesPost.params)
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName', location="args")
@@ -1567,6 +1658,7 @@ class Templates(Resource):
 
         return resp
 
+    @api.doc(params=model.TemplatesDelete.params)
     def delete(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName', location="args")
@@ -1613,6 +1705,7 @@ class JobPriority(Resource):
         resp.headers["dataType"] = "json"
         return resp
 
+    @api.doc(params=model.JobPriority.params)
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName', location="args")

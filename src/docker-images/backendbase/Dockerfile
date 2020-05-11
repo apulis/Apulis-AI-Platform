@@ -29,7 +29,7 @@ RUN locale-gen en_US.UTF-8
 RUN update-locale LANG=en_US.UTF-8
 RUN pip install flask
 RUN pip install flask.restful
-RUN pip install requests mysql-connector-python pyodbc tzlocal
+RUN pip install requests mysql-connector-python pyodbc tzlocal faulthandler
 
 RUN usermod -a -G sudo www-data 
 RUN echo "\nwww-data ALL=(ALL) NOPASSWD:ALL\n" > /etc/sudoers

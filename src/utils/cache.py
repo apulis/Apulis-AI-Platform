@@ -1,16 +1,13 @@
-#!/usr/bin/env python3
-
 from functools import wraps
 import threading
 from datetime import datetime
 from datetime import timedelta
 import time
-import queue
+import Queue
 import copy
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 # decorator (with different TTL for each function)
 # No removal of entries (designed for small number of entries to be always kept in memory)
@@ -24,15 +21,14 @@ def fcache(TTLInSec=30):
             if (None == val):
                 return func(*args)
             return copy.deepcopy(val[0])
-
         return wrapped_function
-
     return fcache_decorator
+
 
 
 class CacheManager(object):
     data = {}
-    taskQueue = queue.Queue()
+    taskQueue = Queue.Queue()
     pendingTasks = set()
 
     @staticmethod
@@ -53,9 +49,7 @@ class CacheManager(object):
             needUpdate = True
         else:
             val = CacheManager.data[key]
-            logger.info("Cache hit %s %s %s %s", key, str(val[1]),
-                        str(len(CacheManager.data)),
-                        str(CacheManager.taskQueue.qsize()))
+            logger.info("Cache hit %s %s %s %s", key, str(val[1]), str(len(CacheManager.data)), str(CacheManager.taskQueue.qsize()))
             if CacheManager._Invalid(val):
                 needUpdate = True
 
@@ -64,6 +58,7 @@ class CacheManager(object):
             CacheManager.pendingTasks.add(key)
 
         return val
+
 
     @staticmethod
     def _GetKey(funcName, args):
@@ -89,20 +84,16 @@ class CacheManager(object):
                     task = CacheManager.taskQueue.get()
                     key = CacheManager._GetKey(task[0].__name__, task[2])
                     if key in CacheManager.pendingTasks:
-                        if key not in CacheManager.data or CacheManager._Invalid(
-                                CacheManager.data[key]):
+                        if key not in CacheManager.data or CacheManager._Invalid(CacheManager.data[key]):
                             result = task[0](*(task[2]))
-                            CacheManager.data[key] = [
-                                result,
-                                datetime.now() + timedelta(seconds=int(task[1]))
-                            ]
+                            CacheManager.data[key] = [result, datetime.now() + timedelta(seconds=int(task[1]))]
                             logger.info("Cache inserted %s", key)
                         CacheManager.pendingTasks.remove(key)
                 time.sleep(0.001)
             except Exception as e:
                 logger.warning('cache exception: %s', str(e))
 
-
 workerThread = threading.Thread(target=CacheManager._WorkerThreadFunc, args=())
 workerThread.daemon = True
 workerThread.start()
+

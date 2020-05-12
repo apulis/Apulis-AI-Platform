@@ -43,7 +43,6 @@ export const ListLink = React.forwardRef<Link, LinkProps>(
 
 const LinkListItem: React.FC<LinkProps> = ({ to, children }) => {
   const location = useLocation();
-
   const locationPathname = location.pathname;
   const toPathname = typeof to === "string" ? to
     : typeof to === "object" ? to.pathname

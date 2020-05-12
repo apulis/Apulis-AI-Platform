@@ -35,6 +35,7 @@ import useFetch from 'use-http-2';
 
 import UserContext from '../../contexts/User';
 import ClustersContext from '../../contexts/Clusters';
+import TeamContext from '../../contexts/Teams';
 import Loading from '../../components/Loading';
 
 import useActions from '../../hooks/useActions';
@@ -81,7 +82,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) 
           edge="start"
           color="inherit"
           component={Link}
-          to={`/jobs-v2/apulis-dev/${window.location.search}`}
+          to={`/jobs-v2/${clusterId}/${window.location.search}`}
         >
           <ArrowBack />
         </IconButton>
@@ -167,6 +168,10 @@ const JobContent: FunctionComponent = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { email } = useContext(UserContext);
   const { clusters } = useContext(ClustersContext);
+  const { saveClusterId } = useContext(TeamContext);
+  console.log('11111', clusterId)
+
+  saveClusterId(clusterId);
   const teamCluster = useMemo(() => {
     return clusters.filter((cluster) => cluster.id === clusterId)[0];
   }, [clusters, clusterId]);

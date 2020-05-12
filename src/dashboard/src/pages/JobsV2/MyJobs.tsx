@@ -26,7 +26,7 @@ const getStartedDate = (job: any) => new Date(
   job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['startedAt']);
 const getFinishedDate = (job: any) => new Date(
   job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['finishedAt']);
-const _renderId = (job: any) => renderId(job, 1);
+const _renderId = (job: any) => renderId(job, 0);
 
 interface JobsTableProps {
   jobs: any[];
@@ -98,7 +98,6 @@ const MyJobs: FunctionComponent = () => {
 
   useEffect(() => {
     setJobs(undefined);
-    setLimit(20);
   }, [cluster.id]);
 
   useEffect(() => {
@@ -113,7 +112,9 @@ const MyJobs: FunctionComponent = () => {
     axios.get(`/v2/clusters/${cluster.id}/teams/${selectedTeam}/jobs?limit=${limit}`)
         .then(res => {
           const { data } = res;
-          if (!_.isEqual(jobs, data)) setJobs(res.data);
+          const temp1 = JSON.stringify(jobs?.map(i => i.jobStatus));
+          const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
+          if (!(temp1 === temp2)) setJobs(res.data);
         }, () => {
           message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
         })

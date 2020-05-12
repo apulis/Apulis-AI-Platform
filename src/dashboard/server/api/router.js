@@ -110,7 +110,7 @@ router.get('/:clusterId/listVc',
 router.get('/:clusterId/updateVc/:vcName/:quota/:metadata',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/updateVc'))
-router.get('/:clusterId/countJobByStatus',
+router.get('/:clusterId/countJobByStatus/:targetStatus/:vcName',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/countJobByStatus'))
 router.get('/:clusterId/getAllDevice',

@@ -11,30 +11,39 @@ import {
 import _ from "lodash";
 
 import ConfigContext from './Config';
+import ClustersContext from '../contexts/Clusters';
 
 interface Context {
   teams: any;
   selectedTeam: any;
   saveSelectedTeam(team: React.SetStateAction<string>): void;
+  clusterId: string;
+  saveClusterId(clusterId: React.SetStateAction<string>): void;
 }
 
 const Context = React.createContext<Context>({
   teams: [],
   selectedTeam: '',
   saveSelectedTeam: function(team: React.SetStateAction<string>) {},
+  clusterId: '',
+  saveClusterId: function(clusterId: React.SetStateAction<string>) {},
 });
 
 export default Context;
 export const Provider: React.FC = ({ children }) => {
   const fetchTeamsUrl = '/api/teams';
   const { addGroup } = useContext(ConfigContext);
+  const [clusterId, setClusterId] = React.useState<string>('');
+  const saveClusterId = (clusterId: React.SetStateAction<string>) => {
+    setClusterId(clusterId);
+  };
   const { data: teams } = useFetch(fetchTeamsUrl, { onMount: true });
   const [selectedTeam, setSelectedTeam] = React.useState<string>('');
   const saveSelectedTeam = (team: React.SetStateAction<string>) => {
     setSelectedTeam(team);
     localStorage.setItem('team',team.toString());
-    if (window.location.pathname.split('/apulis-dev/')[1]) {
-      window.location.href = '/jobs-v2/apulis-dev/'
+    if (window.location.pathname.split(`${clusterId}`)[1]) {
+      window.location.href = `/jobs-v2/${clusterId}/`
     } else {
       window.location.reload();
     }
@@ -81,7 +90,7 @@ export const Provider: React.FC = ({ children }) => {
   // }
   return (
     <Context.Provider
-      value={{ teams, selectedTeam, saveSelectedTeam }}
+      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId }}
       children={children}
     />
   );

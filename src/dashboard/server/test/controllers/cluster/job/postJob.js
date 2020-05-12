@@ -29,8 +29,8 @@ const testEndpoints = {
   }]
 }
 
-describe('POST /clusters/:clusterId/jobs/:jobId/commands', function () {
-  it('should return 201 when command is added successfully', async function () {
+describe('POST /clusters/:clusterId/jobs/:jobId/commands', () => {
+  it('should return 201 when command is added successfully', async () => {
     nock('http://universe')
       .get('/AddCommand?' + addCommandParams)
       .reply(200, {
@@ -44,7 +44,7 @@ describe('POST /clusters/:clusterId/jobs/:jobId/commands', function () {
     response.data.should.have.property('message', 'command adding succeeded')
   })
 
-  it('should return 502 Bad Gateway Error if command adding failed', async function () {
+  it('should return 502 Bad Gateway Error if command adding failed', async () => {
     nock('http://universe')
       .get('/AddCommand?' + addCommandParams)
       .reply(500)
@@ -56,8 +56,8 @@ describe('POST /clusters/:clusterId/jobs/:jobId/commands', function () {
   })
 })
 
-describe('POST /clusters/:clusterId/jobs/:jobId/endpoints', function () {
-  it('should return 200 when endpoints are added successfully', async function () {
+describe('POST /clusters/:clusterId/jobs/:jobId/endpoints', () => {
+  it('should return 200 when endpoints are added successfully', async () => {
     nock('http://universe')
       .post('/endpoints?' + addEndpointsParams)
       .reply(200, {
@@ -71,7 +71,7 @@ describe('POST /clusters/:clusterId/jobs/:jobId/endpoints', function () {
     response.data.should.have.property('message', 'endpoints adding succeeded')
   })
 
-  it('should return 502 Bad Gateway Error if endpoints adding failed', async function () {
+  it('should return 502 Bad Gateway Error if endpoints adding failed', async () => {
     nock('http://universe')
       .post('/endpoints?' + addEndpointsParams)
       .reply(500)

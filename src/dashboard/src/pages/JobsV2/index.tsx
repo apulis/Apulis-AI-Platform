@@ -68,7 +68,7 @@ const ClusterJobs: FunctionComponent<{ cluster: any }> = ({ cluster }) => {
   return (
     <ClusterContext.Provider value={{ cluster: cluster }}>
       <Paper elevation={2}>
-        <TabView/>
+        {cluster.admin ? <TabView/> : <MyJobs/>}
       </Paper>
     </ClusterContext.Provider>
   );

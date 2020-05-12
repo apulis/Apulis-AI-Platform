@@ -87,7 +87,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [cluster]);
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
   const [gpusPerNode, setGpusPerNode] = useState(0)
-  const [templates, setTemplates] = useState([{name: '', json: ''}]);
+  const [templates, setTemplates] = useState([{name: '', json: '', scope: 'user'}]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(0);
@@ -213,7 +213,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       return
     }
     try {
-      const url = `/teams/${selectedTeam}/templates/${selectDelTPName}`;
+      const temp = selectDelTPName.split('(');
+      const url = `/teams/${selectedTeam}/templates/${temp[0]}?database=${temp[1].split(')')[0]}`;
       await axios.delete(url);
       setShowDeleteTemplate(true);
       setDeleteModal(false);
@@ -255,6 +256,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setPreemptible(false);
       setValue('interactivePorts', '');
     } else {
+      const _selectName = val.split('(')[0];
       const {
         name,
         type,
@@ -276,7 +278,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         gpuType,
         preemptible,
         interactivePorts
-      } = JSON.parse(templates.find(i => i.name === val)!.json);
+      } = JSON.parse(templates.find(i => i.name === _selectName)!.json);
       if (name !== undefined) {
         setName(name);
         setValue('jobName', name);
@@ -338,7 +340,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           setDockerPassword(imagePullObj['password'])
         }
       }
-      setJson(templates.find(i => i.name === val)!.json);
+      setJson(templates.find(i => i.name === _selectName)!.json);
     }
     setSelectTPName(val);
   }
@@ -534,7 +536,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (!grafanaUrl) return;
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params1 = new URLSearchParams({
-      // query:'count_values("gpu_available", k8s_node_gpu_available)'
       query: `count_values("device_available",k8s_node_device_available{deviceType="${gpuType}"})`
     });
     const params2 = new URLSearchParams({
@@ -545,17 +546,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         let data1 = await res1.json();
         let data2 = await res2.json();
         let result1 = data1.data.result, result2 = data2.data.result;
-        if (result1.length && result2.length) {
+        if (result2.length) {
           let sortededResult = [{metric: {device_available: "0"}, value: result2[0].value}]
           sortededResult[0].value = result2[0].value;
-          result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
+          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
             if (i.metric.device_available === '0') {
               sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
             } else {
               sortededResult.push(i);
             }
           });
-          sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
+          if (sortededResult.length > 1) sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
           setGpuFragmentation(sortededResult)
         }
       })
@@ -668,8 +669,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={onTemplateChange}
                   >
                     <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
-                    {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
-                      <MenuItem key={index} value={name}>{name}</MenuItem>
+                    {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
+                      <MenuItem key={index} value={`${name}(${scope})`}>{`${name}(${scope})`}</MenuItem>
                     ))}
                   </TextField>
                 </Grid>
@@ -1044,15 +1045,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             <CardActions>
               <Grid item xs={12} container justify="space-between">
                 <Grid item xs container>
-                  <Button type="button" color="secondary"  onClick={() => setAdvanced(!advanced)}>Advanced</Button>
-                  <Button type="button" color="secondary"  onClick={() => setDatabase(!database)}>Template</Button>
+                  <Button type="button" color="secondary" onClick={() => setAdvanced(!advanced)}>Advanced</Button>
+                  <Button type="button" color="secondary" onClick={() => setDatabase(!database)}>Template</Button>
                 </Grid>
                 <Button type="submit" color="primary" variant="contained" disabled={postJobLoading || postEndpointsLoading || open }>Submit</Button>
               </Grid>
             </CardActions>
           </Card>
         </form>
-        {deleteModal && 
+        {deleteModal && templates.length > 0 &&
         <Dialog open={deleteModal} maxWidth='xs' fullWidth onClose={() => setDeleteModal(false)}>
           <DialogTitle>Delete Template</DialogTitle>
           <DialogContent>
@@ -1065,8 +1066,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               value={selectDelTPName}
               onChange={e => setSelectDelTPName(e.target.value)}
             >
-              {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json }: any, index: number) => (
-                <MenuItem key={index} value={name}>{name}</MenuItem>
+              {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
+                <MenuItem key={index} value={`${name}(${scope})`}>{`${name}(${scope})`}</MenuItem>
               ))}
             </TextField>
           </DialogContent>

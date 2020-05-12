@@ -1,5 +1,13 @@
 const ClusterV1 = require('../../services/cluster')
 
+/**
+ * @typedef {Object} State
+ * @property {import('./user')} user
+ */
+
+/**
+ * @extends {ClusterV1<State>}
+ */
 class Cluster extends ClusterV1 {
   /**
    * @param {string} teamId

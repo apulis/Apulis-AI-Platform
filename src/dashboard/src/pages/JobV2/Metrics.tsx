@@ -8,7 +8,7 @@ import {
   CardMedia
 } from '@material-ui/core';
 
-import Context from '../Context';
+import Context from './Context';
 
 const Metrics: FunctionComponent = () => {
   const { cluster, job } = useContext(Context);
@@ -27,7 +27,5 @@ const Metrics: FunctionComponent = () => {
     </Card>
   )
 }
-
-Metrics.displayName = 'Metrics'
 
 export default Metrics;

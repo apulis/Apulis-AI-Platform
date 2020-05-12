@@ -121,15 +121,15 @@ ${givenName} ${familyName}
     });
   }, [confirm, enqueueSnackbar, updateStatus]);
 
-  const support = useCallback(Object.assign((job: any): Action<any> => {
+  const support = useCallback((job: any): Action<any> => {
     return {
-      icon: 'contact_support',
+      icon: 'help',
       tooltip: 'Support',
       onClick: onSupport
     };
-  }, { position: 'row' }), [onSupport]);
+  }, [onSupport]);
 
-  const approve = useCallback(Object.assign((job: any): Action<any> => {
+  const approve = useCallback((job: any): Action<any> => {
     const hidden = APPROVABLE_STATUSES.indexOf(job['jobStatus']) === -1;
     return {
       hidden,
@@ -137,9 +137,8 @@ ${givenName} ${familyName}
       tooltip: 'Approve',
       onClick: onApprove
     }
-  }, { position: 'row' }), [onApprove]);
-
-  const pause = useCallback(Object.assign((job: any): Action<any> => {
+  }, [onApprove]);
+  const pause = useCallback((job: any): Action<any> => {
     const hidden = PAUSABLE_STATUSES.indexOf(job['jobStatus']) === -1;
     return {
       hidden,
@@ -147,9 +146,8 @@ ${givenName} ${familyName}
       tooltip: 'Pause',
       onClick: onPause
     }
-  }, { position: 'row' }), [onPause]);
-
-  const resume = useCallback(Object.assign((job: any): Action<any> => {
+  }, [onPause]);
+  const resume = useCallback((job: any): Action<any> => {
     const hidden = RESUMABLE_STATUSES.indexOf(job['jobStatus']) === -1;
     return {
       hidden,
@@ -157,9 +155,8 @@ ${givenName} ${familyName}
       tooltip: 'Resume',
       onClick: onResume
     }
-  }, { position: 'row' }), [onResume]);
-
-  const kill = useCallback(Object.assign((job: any): Action<any> => {
+  }, [onResume]);
+  const kill = useCallback((job: any): Action<any> => {
     const hidden = KILLABLE_STATUSES.indexOf(job['jobStatus']) === -1;
     return {
       hidden,
@@ -167,8 +164,7 @@ ${givenName} ${familyName}
       tooltip: 'Kill',
       onClick: onKill
     }
-  }, { position: 'row' }), [onKill]);
-
+  }, [onKill]);
   return { support, approve, pause, resume, kill };
 }
 

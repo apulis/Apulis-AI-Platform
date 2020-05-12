@@ -36,8 +36,8 @@ const fetchParams = new URLSearchParams({
   userName: 'dlts@example.com'
 })
 
-describe('GET /teams', function () {
-  it('[P-01] should return the teams info of cluster', async function () {
+describe('GET /teams', () => {
+  it('[P-01] should return the teams info of cluster', async () => {
     for (let key in clusterConfig) {
       nock(clusterConfig[key]['restfulapi'])
         .get('/ListVCs?' + fetchParams)
@@ -54,7 +54,7 @@ describe('GET /teams', function () {
     response.data[1].clusters[0].gpus.should.ownProperty('testmodel')
   })
 
-  it('[N-01] should return empty gpus info with incorrect metadata or quota format', async function () {
+  it('[N-01] should return empty gpus info with incorrect metadata or quota format', async () => {
     for (let key in clusterConfig) {
       // team data for the wrong format negative case
       const negTeamData = {
@@ -81,7 +81,7 @@ describe('GET /teams', function () {
     response.data[1].clusters[0].gpus.should.be.empty()
   })
 
-  it('[N-02] response data should be empty when there is a server error', async function () {
+  it('[N-02] response data should be empty when there is a server error', async () => {
     for (let key in clusterConfig) {
       // team data for the empty data case
       const negTeamData = {

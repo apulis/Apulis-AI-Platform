@@ -4,8 +4,7 @@ import React, {
 } from 'react';
 import {
   ListItem,
-  ListItemText,
-  Tooltip
+  ListItemText
 } from '@material-ui/core';
 import { useSnackbar } from 'notistack';
 import copy from 'clipboard-copy';
@@ -24,11 +23,9 @@ const CopyableTextListItem: FunctionComponent<CopyableTextListItemProps> = ({ pr
     )
   }, [secondary, enqueueSnackbar]);
   return (
-    <Tooltip title="Click to Copy" placement="left">
-      <ListItem button onClick={onClick}>
-        <ListItemText primary={primary} secondary={secondary}/>
-      </ListItem>
-    </Tooltip>
+    <ListItem button onClick={onClick}>
+      <ListItemText primary={primary} secondary={secondary}/>
+    </ListItem>
   );
 }
 

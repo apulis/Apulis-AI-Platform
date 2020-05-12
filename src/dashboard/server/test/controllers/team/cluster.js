@@ -14,8 +14,8 @@ const getTeamParams = new URLSearchParams({
   vcName: userParams.teamId
 })
 
-describe('GET /teams/:teamId/clusters/:clusterId', function () {
-  it('[P-01] should return team info', async function () {
+describe('GET /teams/:teamId/clusters/:clusterId', () => {
+  it('[P-01] should return team info', async () => {
     nock('http://Universe')
       .get('/GetVC?' + getTeamParams)
       .reply(200, {
@@ -30,7 +30,7 @@ describe('GET /teams/:teamId/clusters/:clusterId', function () {
     response.data.should.have.property('message', 'test team info')
   })
 
-  it('[N-01] should return 502 Bad Gateway error if team info getting failed', async function () {
+  it('[N-01] should return 502 Bad Gateway error if team info getting failed', async () => {
     nock('http://Universe')
       .get('/GetVC?' + getTeamParams)
       .reply(500)
@@ -42,7 +42,7 @@ describe('GET /teams/:teamId/clusters/:clusterId', function () {
     response.status.should.equal(502)
   })
 
-  it('[N-02] should return 404 Team is not found if returned team info is empty', async function () {
+  it('[N-02] should return 404 Team is not found if returned team info is empty', async () => {
     nock('http://Universe')
       .get('/GetVC?' + getTeamParams)
       .reply(200, null)

@@ -6,7 +6,7 @@ import functools
 import mysql.connector
 import timeit
 import time
-
+from itertools import chain
 from Queue import Queue
 import MySQLdb
 from DBUtils.PooledDB import PooledDB
@@ -87,6 +87,9 @@ class DataHandler(object):
         self.templatetablename = "templates"
         self.jobprioritytablename = "job_priorities"
         self.deviceStatusTableName = "devicestatus"
+        self.monitorConfigTableName = "monitorconfig"
+        self.monitormetricsTableName = "monitormetrics"
+        self.monitorchannelTableName = "monitorchannel"
         self.pool = SingletonDBPool.instance()
         elapsed = timeit.default_timer() - start_time
         logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
@@ -337,6 +340,47 @@ class DataHandler(object):
                         UNIQUE KEY (`deviceType`)
                     )
                     """ % (self.deviceStatusTableName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                    CREATE TABLE IF NOT EXISTS  `%s`
+                    (
+                        `id`            INT    NOT NULL AUTO_INCREMENT,
+                        `configuration` LONGTEXT   NOT NULL,
+                        `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                    """ % (self.monitorConfigTableName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                    CREATE TABLE IF NOT EXISTS  `%s`
+                    (
+                        `id`            INT    NOT NULL AUTO_INCREMENT,
+                        `name`          varchar(50)   NOT NULL,
+                        `query`         varchar(255)   NOT NULL,
+                        `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                    """ % (self.monitormetricsTableName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                    CREATE TABLE IF NOT EXISTS  `%s`
+                    (
+                        `id`            INT    NOT NULL AUTO_INCREMENT,
+                        `name`          varchar(50)   NOT NULL,
+                        `fields`        LONGTEXT      NOT NULL,
+                        `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                    """ % (self.monitorchannelTableName)
             with MysqlConn() as conn:
                 conn.insert_one(sql)
                 conn.commit()
@@ -1210,11 +1254,13 @@ class DataHandler(object):
             return ret
 
         try:
+            dataFields_keys,dataFields_values = zip(*[[k,v] for k,v in dataFields.items()]) if len(dataFields)>0 else ([],[])
+            conditionFields_keys,conditionFields_values = zip(*[[k,v] for k,v in conditionFields.items()]) if len(conditionFields)>0 else ([],[])
             sql = "update `%s` set" % (self.jobtablename) + ",".join(
-                [" `%s` = '%s'" % (field, value) for field, value in dataFields.items()]) + " where" + "and".join(
-                [" `%s` = '%s'" % (field, value) for field, value in conditionFields.items()])
+                [" `%s` = %s" % (field, "%s") for field in dataFields_keys]) + " where" + "and".join(
+                [" `%s` = %s" % (field, "%s") for field in conditionFields_keys])
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,chain(dataFields_values,conditionFields_values))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1395,6 +1441,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 rets = conn.select_many(query,[scope])
             for one in rets:
+                one["scope"] = "user" if scope.split(":")[0]=="user" else "team" if scope.split(":")[0]=="vc" else "master"
                 ret.append(one)
         except Exception as e:
             logger.exception('GetTemplates Exception: %s', str(e))

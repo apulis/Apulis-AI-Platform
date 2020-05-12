@@ -2173,11 +2173,11 @@ def config_fqdn():
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
 def config_webui(nargs):
-    
-    all_nodes = get_nodes(config["clusterId"])
+
+    nodes = get_node_lists_for_service("restfulapi")
     reponame = get_reponame("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose)
 
-    for node in all_nodes:
+    for node in nodes:
         # pull new image
         remotecmd = "sudo docker pull %s" % reponame 
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)

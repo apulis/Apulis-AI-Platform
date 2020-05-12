@@ -198,7 +198,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
       await axios.put(url, template);
       setSaveTemplate(true);
-      // window.location.reload();
+      getTemplates();
     } catch (error) {
       enqueueSnackbar('Failed to save the template', {
         variant: 'error',
@@ -588,7 +588,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       </g>
     );
   };
-  const styleSnack={backgroundColor:showDeleteTemplate ? red[400] : green[400]};
+  const styleSnack={backgroundColor: green[400]};
 
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>

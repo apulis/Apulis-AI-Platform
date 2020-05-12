@@ -71,7 +71,8 @@ export default class Vc extends React.Component {
   updateVc = (item) => {
     const { vcName, quota, metadata } = item;
     const { selectedCluster, userName } = this.context;
-    axios.get(`/${selectedCluster}/countJobByStatus?userName=${userName}&targetStatus=running,scheduling,killing,pausing&vcName=${vcName}`)
+    const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
+    axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
       if (res.data > 0) {
         message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
@@ -115,7 +116,7 @@ export default class Vc extends React.Component {
         }
         if (quota[i] === null) quota[i] = 0;
         if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
-        if (metadata[i] > quota[i]) {
+        if (metadata[i].user_quota > quota[i]) {
           message('error', 'The value of metadata cannot be greater than the value of quota！');
           canSave = false;
           return;
@@ -188,6 +189,10 @@ export default class Vc extends React.Component {
         num = useNum ? num - useNum : num;
       })
       options[m] = Number(num);
+      const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'metadata' : 'quota'])[m] : null;
+      const temp = editData !== null && editData.constructor  === Object ? editData.user_quota : editData;
+      const optionsData = temp !== null && temp > options[m] ? temp : options[m]; 
+      if (!isEdit && options[m] === 0) val = 0;
       const key = type === 1 ? 'qSelectData' : 'mSelectData';
       return (
         <div className="select-item">
@@ -206,18 +211,16 @@ export default class Vc extends React.Component {
             value={val}
             onChange={e => this.setState({ [key]: { ...oldVal, [m]: type === 1 ? e.target.value : { user_quota: e.target.value }}})}
           >
-            {this.getOptions(options[m], isEdit ?  JSON.parse(clickItem[type === 1 ? 'metadata' : 'quota'])[m] : null)}
+            {this.getOptions(optionsData)}
           </TextField>
         </div>
       )
     })
   }
   
-  getOptions = (data, val) => {
+  getOptions = (data) => {
     let content = [];
-    const _val = val !== null && val.constructor  === Object ? val.user_quota : val;
-    const _data = _val !== null && _val > data ? _val : data; 
-    for(let i = 0; i <= _data; i++){
+    for(let i = 0; i <= data; i++){
       content.push(<MenuItem key={i} value={i}>{i}</MenuItem>)
     }
     return content;

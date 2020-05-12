@@ -356,7 +356,10 @@ class Cluster extends Service {
     const params = new URLSearchParams({
       userName: user.userName,
       vcName: teamId,
-      database,
+      database: {
+        user: 'user',
+        team: 'vc'
+      }[database] || 'user',
       templateName
     })
     const response = await this.fetch('/templates?' + params, {

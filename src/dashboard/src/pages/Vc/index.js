@@ -285,8 +285,7 @@ export default class Vc extends React.Component {
             <DialogContent dividers>
               <form>
                 <TextField
-                  required
-                  label="vcName"
+                  label="vcName *"
                   value={vcName}
                   onChange={this.vcNameChange}
                   margin="normal"

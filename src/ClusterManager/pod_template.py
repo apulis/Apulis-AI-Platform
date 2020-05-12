@@ -171,7 +171,11 @@ class PodTemplate():
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
             if "gpuStr" not in pod:
-                pod["gpuStr"] = gpuMapping.get(pod["gpuType"]).get("deviceStr")
+                deviceDict = gpuMapping.get(pod["gpuType"])
+                if deviceDict is None:
+                    return None,"wrong device type"
+                else:
+                    pod["gpuStr"] = deviceDict.get("deviceStr")
 
             if params["jobtrainingtype"] == "InferenceJob":
                 pod["gpuLimit"] = 0

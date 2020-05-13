@@ -108,30 +108,31 @@ export default class Vc extends React.Component {
     let url, quota = {}, metadata = {}, canSave = true;
     if (Object.keys(allDevice).length > 0) {
       quota = _.cloneDeep(qSelectData);
-      metadata = _.cloneDeep(mSelectData);
+      // metadata = _.cloneDeep(mSelectData);
       Object.keys(quota).forEach(i => {
         if (!allDevice[i]) { 
           delete quota[i];
-          delete metadata[i];
+          // delete metadata[i];
         }
         if (quota[i] === null) quota[i] = 0;
-        if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
-        if (metadata[i].user_quota > quota[i]) {
-          message('error', 'The value of metadata cannot be greater than the value of quota！');
-          canSave = false;
-          return;
-        }
+        // if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
+        // if (metadata[i].user_quota > quota[i]) {
+        //   message('error', 'The value of metadata cannot be greater than the value of quota！');
+        //   canSave = false;
+        //   return;
+        // }
       });
     }
     if (!canSave) return;
     quota = JSON.stringify(quota);
     metadata = JSON.stringify(metadata);
     this.setState({ btnLoading: true });
-    if (isEdit) {
-      url = `/${selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
-    } else {
-      url = `/${selectedCluster}/addVc/${vcName}/${quota}/${metadata}`;
-    }
+    url = `/${selectedCluster}/${isEdit ? 'updateVc' : 'addVc'}/${vcName}/${quota}/${metadata}`;
+    // if (isEdit) {
+    //   url = `/${selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
+    // } else {
+    //   url = `/${selectedCluster}/addVc/${vcName}/${quota}/${metadata}`;
+    // }
     await axios.get(url)
       .then((res) => {
         message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
@@ -181,15 +182,15 @@ export default class Vc extends React.Component {
         val = qSelectData[m];
         oldVal = qSelectData;
       } else {
-        val =  mSelectData[m] && mSelectData[m].user_quota !== null ? mSelectData[m].user_quota : null;
-        oldVal = mSelectData;
+        // val =  mSelectData[m] && mSelectData[m].user_quota !== null ? mSelectData[m].user_quota : null;
+        // oldVal = mSelectData;
       }
       vcList.forEach(n => {
         const useNum = JSON.parse(n.quota)[m];
         num = useNum ? num - useNum : num;
       })
       options[m] = Number(num);
-      const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'metadata' : 'quota'])[m] : null;
+      const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'quota' : 'metadata'])[m] : null;
       const temp = editData !== null && editData.constructor  === Object ? editData.user_quota : editData;
       const optionsData = temp !== null && temp > options[m] ? temp : options[m]; 
       if (!isEdit && options[m] === 0) val = 0;
@@ -261,7 +262,7 @@ export default class Vc extends React.Component {
               <TableRow style={{ backgroundColor: '#7583d1' }}>
                 <TableCell style={{ color: '#fff' }}>vcName</TableCell>
                 <TableCell style={{ color: '#fff' }}>quota</TableCell>
-                <TableCell style={{ color: '#fff' }}>metadata</TableCell>
+                {/* <TableCell style={{ color: '#fff' }}>metadata</TableCell> */}
                 <TableCell style={{ color: '#fff' }}>permissions</TableCell>
                 <TableCell style={{ color: '#fff' }}>actions</TableCell>
               </TableRow>
@@ -271,7 +272,7 @@ export default class Vc extends React.Component {
                 <TableRow key={item.vcName}>
                   <TableCell>{item.vcName} </TableCell>
                   <TableCell>{item.quota} </TableCell>
-                  <TableCell>{item.metadata} </TableCell>
+                  {/* <TableCell>{item.metadata} </TableCell> */}
                   <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
                   <TableCell>
                     <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
@@ -299,8 +300,8 @@ export default class Vc extends React.Component {
                 />
                 <h3>quota</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}
-                <h3>metadata/user_quota</h3>
-                {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)}
+                {/* <h3>metadata/user_quota</h3>
+                {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)} */}
               </form>
             </DialogContent>
             <DialogActions>

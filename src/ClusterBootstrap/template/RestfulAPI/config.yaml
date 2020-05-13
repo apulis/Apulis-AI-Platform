@@ -8,7 +8,7 @@ mysql :
   port : {{cnf["mysql_port"]}}
   username : {{cnf["mysql_username"]}}
   password : "{{cnf["mysql_password"]}}"
-kubelet-path : {% if cnf["deploy_method"]!="kubeadm" %} /usr/local/bin/kubectl {% else %} /usr/bin/kubectl {% endif %}
+kubelet-path : /usr/bin/kubectl
 deploy_method: {{cnf["deploy_method"]}}
 storage-mount-path : {{cnf["storage-mount-path"]}}
 dltsdata-storage-mount-path : {{cnf["dltsdata-storage-mount-path"]}}

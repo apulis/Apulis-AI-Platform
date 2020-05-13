@@ -31,6 +31,9 @@ import Loading from '../../components/Loading';
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import Context from './Context';
 import { useForm } from "react-hook-form";
+import { InteractivePortsMsg, pollInterval } from '../../const';
+import message from '../../utils/message';
+import axios from 'axios';
 
 interface RouteParams {
   clusterId: string;
@@ -39,8 +42,6 @@ interface RouteParams {
 
 const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) => {
   const { cluster, job } = useContext(Context);
-  console.log('jobbbb',job)
-
   if (endpoint.status !== "running") return null;
   if (endpoint.name === 'ssh') {
     const identify = `${cluster['workStorage'].replace(/^file:\/\//i, '//')}/${job['jobParams']['workPath']}/.ssh/id_rsa`
@@ -99,7 +100,7 @@ const EndpointsList: FunctionComponent<{
   )
 };
 
-const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoints }) => {
+const EndpointsController: FunctionComponent<{ endpoints: any[], getData: any }> = ({ endpoints, getData }) => {
   const { job } = useContext(Context);
   const { jobStatus } = job;
   const disabled = jobStatus === 'error' || jobStatus === 'killed' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing';
@@ -139,22 +140,26 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
       }]
     }).then(() => {
       enqueueSnackbar(`Port ${port} exposed`, { variant: 'success' });
+      getData();
     }, () => {
       enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
     });
   }, [post, enqueueSnackbar]);
   const [iconInfoShow, setIconInfoShow] = useState(false);
-  const { handleSubmit, register, errors } = useForm({ mode: "onBlur" });
+  const { handleSubmit, register, errors, setError } = useForm({ mode: "onBlur" });
   const validateInteractivePorts = (val: string) => {
     if (val) {
       let flag = true;
-      if (val.split(',').length) {
-        val.split(',').forEach(n => {
-          if (Number(n) < 40000 || Number(n) > 49999) flag = false;
+      const arr = val.split(',');
+      if (arr.length > 1) {
+        arr.forEach(n => {
+          const _n = Number(n)
+          if (!_n || _n < 40000 || _n > 49999) flag = false;
         });
       } else {
         flag = Number(val) >= 40000 && Number(val) <= 49999;
       }
+      !flag && setError('interactivePorts', 'error', InteractivePortsMsg);
       return flag;
     }
     return true;
@@ -194,12 +199,13 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
           type="number"
           fullWidth
           label="New Interactive Port"
-          placeholder="40000 - 49999. Separated by comma."
+          placeholder={InteractivePortsMsg}
           disabled={disabled}
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
-          helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}
+          helperText={errors.interactivePorts ? errors.interactivePorts.message : ''}
           inputRef={register({
+            required: 'Interactive Port is required！',
             validate: val => validateInteractivePorts(val)
           })}
           InputProps={{
@@ -221,32 +227,48 @@ const Endpoints: FunctionComponent = () => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { job } = useContext(Context);
-  const { error, data, get } =
-    useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
-    [clusterId, jobId]);
   const [endpoints, setEndpoints] = useState<any[]>();
 
-  useEffect(() => {
-    if (data !== undefined) {
-      setEndpoints(data);
+  // const { error, data, get } =
+  //   useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
+  //   [clusterId, jobId]);
 
-      const timeout = setTimeout(get, 3000);
-      return () => {
-        clearTimeout(timeout);
-      }
-    }
-  }, [data, get]);
+  // useEffect(() => {
+  //   console.log('data',data)
+  //   if (data !== undefined) {
+  //     setEndpoints(data);
+      
+  //     const timeout = setTimeout(get, 3000);
+  //     return () => {
+  //       clearTimeout(timeout);
+  //     }
+  //   }
+  // }, [data, get]);
+  // useEffect(() => {
+  //   if (error !== undefined) {
+  //     const key = enqueueSnackbar(`Failed to fetch job endpoints: ${clusterId}/${jobId}`, {
+  //       variant: 'error',
+  //       persist: true
+  //     });
+  //     return () => {
+  //       if (key !== null) closeSnackbar(key);
+  //     }
+  //   }
+  // }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
+
   useEffect(() => {
-    if (error !== undefined) {
-      const key = enqueueSnackbar(`Failed to fetch job endpoints: ${clusterId}/${jobId}`, {
-        variant: 'error',
-        persist: true
-      });
-      return () => {
-        if (key !== null) closeSnackbar(key);
-      }
-    }
-  }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
+    getData();
+  }, [clusterId, jobId]);
+
+  const getData = () => {
+    axios.get(`/clusters/${clusterId}/jobs/${jobId}/endpoints`)
+        .then(res => {
+          const { data } = res;
+          if (data) setEndpoints(data);
+        }, () => {
+          message('error', `Failed to fetch job endpoints: ${clusterId}/${jobId}`);
+        })
+  }
 
   if (endpoints === undefined) {
     return <Loading/>;
@@ -255,7 +277,7 @@ const Endpoints: FunctionComponent = () => {
   return (
     <>
       {job['jobStatus'] === 'running' && <EndpointsList endpoints={endpoints}/>}
-      <EndpointsController endpoints={endpoints}/>
+      <EndpointsController endpoints={endpoints} getData={getData} />
     </>
   );
 };

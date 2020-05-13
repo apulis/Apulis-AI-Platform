@@ -17,7 +17,7 @@ module.exports = async context => {
   const templates = flatMap(await Promise.all(
     clusterIds.map(id => getClusterTemplates(id).catch(stubArray)) // ignore error and return empty array
   ))
-  const unionedTemplates = uniqBy(templates, 'name')
+  // const unionedTemplates = uniqBy(templates, 'name')
 
-  context.body = unionedTemplates
+  context.body = templates
 }

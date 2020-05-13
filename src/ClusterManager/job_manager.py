@@ -247,7 +247,7 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
                 running_job_total_gpus = GetJobTotalGpu(running_jobParams)
                 running_gpus += running_job_total_gpus
 
-            logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata["user_quota"]))
+            logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata[deviceType]))
 
             user_quota_num = metadata[deviceType]["user_quota"]
             if job_total_gpus > 0 and int(user_quota_num) < (running_gpus + job_total_gpus):

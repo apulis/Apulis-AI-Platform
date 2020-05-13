@@ -803,7 +803,7 @@ def load_pplatformlatform_type():
     config["platform_type"] = platform_type
 
 def load_platform_type():
-    
+
     platform_type = []
     if "supported_platform" in config.keys():
         platform_type = config["supported_platform"]
@@ -814,7 +814,7 @@ def load_platform_type():
 
     platform_type = platform_type[0]
     config["platform_type"] = platform_type
-    
+
 def gen_platform_wise_config():
 
     load_platform_type()
@@ -2187,10 +2187,10 @@ def config_fqdn():
 
 def config_webui(nargs):
 
-    all_nodes = get_nodes(config["clusterId"])
+    nodes = get_node_lists_for_service("restfulapi")
     reponame = get_reponame("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose)
 
-    for node in all_nodes:
+    for node in nodes:
         # pull new image
         remotecmd = "sudo docker pull %s" % reponame
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)

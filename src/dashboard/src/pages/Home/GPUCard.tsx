@@ -299,8 +299,8 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   useEffect(()=>{
     fetchDirectories().then((res) => {
       let fetchStorage = [];
-      let availBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_avail_bytes%7Bfstype%3D%27nfs4%27%7D';
-      let sizeBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_size_bytes%7Bfstype%3D%27nfs4%27%7D';
+      let availBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_avail_bytes{fstype=~"nfs[0-9]?"}';
+      let sizeBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_size_bytes{fstype=~"nfs[0-9]?"}';
       if (res && res.grafana) {
         fetchStorage.push(fetch(`${res['grafana']}${availBytesSubPath}`));
         fetchStorage.push(fetch(`${res['grafana']}${sizeBytesSubPath}`));
@@ -315,7 +315,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               let tmp = {} as any;
               if (item['metric']['__name__'] == "node_filesystem_size_bytes") {
                 let mountpointName = item['metric']['mountpoint']
-                let val = Math.floor(item['value'][1] / (Math.pow(10, 9)))
+                let val = Math.floor(item['value'][1] / (Math.pow(1024, 3)))
                 tmp['mountpointName'] = mountpointName;
                 tmp['total'] = val;
               }
@@ -323,7 +323,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               //node_filesystem_avail_bytes
               if (item['metric']['__name__'] == "node_filesystem_avail_bytes") {
                 let mountpointName = item['metric']['mountpoint']
-                let val = Math.floor(item['value'][1] / (Math.pow(10, 9)))
+                let val = Math.floor(item['value'][1] / (Math.pow(1024, 3)))
                 tmpAvail['mountpointName'] = mountpointName;
                 tmpAvail['Avail'] = val;
               }

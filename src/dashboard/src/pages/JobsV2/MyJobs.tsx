@@ -30,7 +30,7 @@ const _renderId = (job: any) => renderId(job, 0);
 
 interface JobsTableProps {
   jobs: any[];
-  onExpectMoreJobs: (length: number) => void;
+  onExpectMoreJobs?: (length: number) => void;
 }
 
 const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }) => {
@@ -39,12 +39,12 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
     setPageSize(pageSize);
   }, [setPageSize]);
-  const onChangePage = useCallback((page: number) => {
-    const maxPage = Math.ceil(jobs.length / pageSize) - 1;
-    if (page >= maxPage) {
-      onExpectMoreJobs(pageSize);
-    }
-  }, [jobs, pageSize, onExpectMoreJobs]);
+  // const onChangePage = useCallback((page: number) => {
+  //   const maxPage = Math.ceil(jobs.length / pageSize) - 1;
+  //   if (page >= maxPage) {
+  //     onExpectMoreJobs(pageSize);
+  //   }
+  // }, [jobs, pageSize, onExpectMoreJobs]);
   const renderPrioirty = useCallback((job: any) => (
     <PriorityField job={job}/>
   ), [])
@@ -81,7 +81,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
       options={options}
       actions={actions}
       onChangeRowsPerPage={onChangeRowsPerPage}
-      onChangePage={onChangePage}
+      // onChangePage={onChangePage}
     />
   );
 };
@@ -90,7 +90,7 @@ const MyJobs: FunctionComponent = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState(999);
   const [jobs, setJobs] = useState<any[]>();
   const onExpectMoreJobs = useCallback((count: number) => {
     setLimit((limit: number) => limit + count);
@@ -110,20 +110,20 @@ const MyJobs: FunctionComponent = () => {
 
   const getData = () => {
     axios.get(`/v2/clusters/${cluster.id}/teams/${selectedTeam}/jobs?limit=${limit}`)
-        .then(res => {
-          const { data } = res;
-          const temp1 = JSON.stringify(jobs?.map(i => i.jobStatus));
-          const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
-          if (!(temp1 === temp2)) setJobs(res.data);
-        }, () => {
-          message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
-        })
+      .then(res => {
+        const { data } = res;
+        const temp1 = JSON.stringify(jobs?.map(i => i.jobStatus));
+        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
+        if (!(temp1 === temp2)) setJobs(res.data);
+      }, () => {
+        message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
+      })
   }
 
   if (jobs !== undefined) return (
     <JobsTable
       jobs={jobs}
-      onExpectMoreJobs={onExpectMoreJobs}
+      // onExpectMoreJobs={onExpectMoreJobs}
     />
   );
 

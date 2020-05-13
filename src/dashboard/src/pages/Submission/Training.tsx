@@ -47,7 +47,7 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, ChineseReg, NoChineseErrorText } from '../../const';
+import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 
@@ -87,7 +87,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [cluster]);
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
   const [gpusPerNode, setGpusPerNode] = useState(0)
-  const [templates, setTemplates] = useState([{name: '', json: '', scope: 'user'}]);
+  const [templates, setTemplates] = useState<{name: string, json: string}[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(0);
@@ -149,17 +149,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [selectDelTPName, setSelectDelTPName] = useState('');
   const [saveTemplateDatabase, setSaveTemplateDatabase] = useState("user");
   const [iconInfoShow, setIconInfoShow] = useState(false);
-  const { handleSubmit, register, errors, setValue } = useForm({ mode: "onBlur" });
+  const { handleSubmit, register, errors, setValue, setError } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
     if (!saveTemplateName) {
-      setErrorTPNameObj({
-        error: true,
-        text: 'Template Name is required！'
-      });
+      setError('templateName', 'required','Template Name is required！');
       return;
     }
-    if (errorTPNameObj.error) return;
+    if (Boolean(errors.templateName)) return;
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -471,13 +468,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const validateInteractivePorts = (val: string) => {
     if (val) {
       let flag = true;
-      if (val.split(',').length > 1) {
-        val.split(',').forEach(n => {
+      const arr = val.split(',');
+      if (arr.length > 1) {
+        arr.forEach(n => {
           const _n = Number(n)
           if (!_n || _n < 40000 || _n > 49999) flag = false;
         });
       } else {
-        console.log('Number(n)', Number(val))
         flag = Number(val) >= 40000 && Number(val) <= 49999;
       }
       return flag;
@@ -596,19 +593,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const styleSnack={backgroundColor: green[400]};
 
-  const [errorTPNameObj, setErrorTPNameObj] = useState({
-    error: false,
-    text: ''
-  }) 
-  const onSaveTemplateName = (e: any) => {
-    const val = e.target.value;
-    setSaveTemplateName(val);
-    val && setErrorTPNameObj({
-      error: !NameReg.test(val),
-      text: NameReg.test(val) ? '' : NameErrorText
-    });
-  }
-
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
@@ -687,7 +671,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={onTemplateChange}
                   >
                     <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
-                    {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
+                    {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
                       <MenuItem key={index} value={`${name}(${scope})`}>{`${name}(${scope})`}</MenuItem>
                     ))}
                   </TextField>
@@ -813,7 +797,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12}>
                   <TextField
                     label="Interactive Ports"
-                    placeholder="40000 - 49999. Separated by comma."
+                    placeholder={InteractivePortsMsg}
                     fullWidth
                     variant="filled"
                     rows="10"
@@ -822,7 +806,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     InputLabelProps={{ shrink: true }}
                     onChange={e => setInteractivePorts(e.target.value)}
                     error={Boolean(errors.interactivePorts)}
-                    helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}
+                    helperText={errors.interactivePorts ? InteractivePortsMsg : ''}
                     inputRef={register({
                       validate: val => validateInteractivePorts(val)
                     })}
@@ -919,8 +903,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           fullWidth
                           margin="dense"
                           variant="filled"
-                          value={workPath}
+                          name="workPath"
+                          defaultValue={workPath}
+                          error={Boolean(errors.workPath)}
                           onChange={e => setWorkPath(e.target.value)}
+                          helperText={errors.workPath ? errors.workPath.message : ''}
+                          InputLabelProps={{ shrink: true }}
+                          inputRef={register({
+                            pattern: {
+                              value: NoChineseReg,
+                              message: NoChineseErrorText
+                            }
+                          })}
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -939,8 +933,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           fullWidth
                           margin="dense"
                           variant="filled"
-                          value={dataPath}
+                          name="dataPath"
+                          defaultValue={dataPath}
+                          error={Boolean(errors.dataPath)}
                           onChange={e => setDataPath(e.target.value)}
+                          helperText={errors.dataPath ? errors.dataPath.message : ''}
+                          InputLabelProps={{ shrink: true }}
+                          inputRef={register({
+                            pattern: {
+                              value: NoChineseReg,
+                              message: NoChineseErrorText
+                            }
+                          })}
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -959,8 +963,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           fullWidth
                           margin="dense"
                           variant="filled"
-                          value={jobPath}
+                          name="jobPath"
+                          defaultValue={jobPath}
+                          error={Boolean(errors.jobPath)}
                           onChange={e => setJobPath(e.target.value)}
+                          helperText={errors.jobPath ? errors.jobPath.message : ''}
+                          InputLabelProps={{ shrink: true }}
+                          inputRef={register({
+                            pattern: {
+                              value: NoChineseReg,
+                              message: NoChineseErrorText
+                            }
+                          })}
                         />
                       </TableCell>
                       <TableCell align="center">
@@ -1035,12 +1049,20 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       label="Template name"
+                      name="templateName"
                       fullWidth
                       variant="filled"
-                      value={saveTemplateName}
-                      error={errorTPNameObj.error}
-                      helperText={errorTPNameObj.text}
-                      onChange={onSaveTemplateName}
+                      defaultValue={saveTemplateName}
+                      error={Boolean(errors.templateName)}
+                      onChange={e => setSaveTemplateName(e.target.value)}
+                      helperText={errors.templateName ? errors.templateName.message : ''}
+                      InputLabelProps={{ shrink: true }}
+                      inputRef={register({
+                        pattern: {
+                          value: NameReg,
+                          message: NameErrorText
+                        }
+                      })}
                     />
                   </Grid>
                   <Grid item xs>
@@ -1057,7 +1079,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TextField>
                   </Grid>
                   <Button type="button" color="primary" onClick={onSaveTemplateClick}>Save</Button>
-                  <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>Delete</Button>
+                  {templates.length > 0 && <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>Delete</Button>}
                 </Grid>
               </CardContent>
             </Collapse>
@@ -1073,12 +1095,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             </CardActions>
           </Card>
         </form>
-        {deleteModal && templates.length > 0 &&
+        {deleteModal &&
         <Dialog open={deleteModal} maxWidth='xs' fullWidth onClose={() => setDeleteModal(false)}>
           <DialogTitle>Delete Template</DialogTitle>
           <DialogContent>
             <TextField
-              disabled={!Array.isArray(templates)}
+              disabled={templates.length === 0}
               select
               label="Select Template"
               fullWidth

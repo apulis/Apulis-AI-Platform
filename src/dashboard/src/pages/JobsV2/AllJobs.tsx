@@ -80,7 +80,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
 const AllJobs: FunctionComponent = () => {
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
-  const [limit, setLimit] = useState(100);
+  const [limit, setLimit] = useState(999);
   const [jobs, setJobs] = useState<any[]>();
   useEffect(() => {
     setJobs(undefined);

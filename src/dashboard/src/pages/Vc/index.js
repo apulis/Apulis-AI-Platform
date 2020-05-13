@@ -29,7 +29,8 @@ export default class Vc extends React.Component {
       btnLoading: false,
       allDevice: {},
       qSelectData: {},
-      mSelectData: {}
+      mSelectData: {},
+      clickItem: {}
     }
   }
 
@@ -70,7 +71,8 @@ export default class Vc extends React.Component {
   updateVc = (item) => {
     const { vcName, quota, metadata } = item;
     const { selectedCluster, userName } = this.context;
-    axios.get(`/${selectedCluster}/countJobByStatus?userName=${userName}&targetStatus=running,scheduling,killing,pausing&vcName=${vcName}`)
+    const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
+    axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
       if (res.data > 0) {
         message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
@@ -84,7 +86,8 @@ export default class Vc extends React.Component {
           isEdit: 1,
           vcName: vcName,
           qSelectData,
-          mSelectData: Object.keys(_mSelectData).length> 0 ? _mSelectData.user_quota : {}
+          mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
+          clickItem: item
         })
       }
     })
@@ -107,9 +110,13 @@ export default class Vc extends React.Component {
       quota = _.cloneDeep(qSelectData);
       metadata = _.cloneDeep(mSelectData);
       Object.keys(quota).forEach(i => {
+        if (!allDevice[i]) { 
+          delete quota[i];
+          delete metadata[i];
+        }
         if (quota[i] === null) quota[i] = 0;
-        if (metadata[i] === null) metadata[i] = 0;
-        if (metadata[i] > quota[i]) {
+        if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
+        if (metadata[i].user_quota > quota[i]) {
           message('error', 'The value of metadata cannot be greater than the value of quota！');
           canSave = false;
           return;
@@ -118,7 +125,7 @@ export default class Vc extends React.Component {
     }
     if (!canSave) return;
     quota = JSON.stringify(quota);
-    metadata = JSON.stringify(Object.keys(metadata).length ? {user_quota: metadata} : {});
+    metadata = JSON.stringify(metadata);
     this.setState({ btnLoading: true });
     if (isEdit) {
       url = `/${selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
@@ -167,14 +174,14 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
-    const { allDevice, qSelectData, mSelectData, vcList, isEdit } = this.state;
+    const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem } = this.state;
     return Object.keys(allDevice).map(m => {
       let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
       if (type == 1) {
         val = qSelectData[m];
         oldVal = qSelectData;
       } else {
-        val = mSelectData[m];
+        val =  mSelectData[m] && mSelectData[m].user_quota !== null ? mSelectData[m].user_quota : null;
         oldVal = mSelectData;
       }
       vcList.forEach(n => {
@@ -182,6 +189,10 @@ export default class Vc extends React.Component {
         num = useNum ? num - useNum : num;
       })
       options[m] = Number(num);
+      const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'metadata' : 'quota'])[m] : null;
+      const temp = editData !== null && editData.constructor  === Object ? editData.user_quota : editData;
+      const optionsData = temp !== null && temp > options[m] ? temp : options[m]; 
+      if (!isEdit && options[m] === 0) val = 0;
       const key = type === 1 ? 'qSelectData' : 'mSelectData';
       return (
         <div className="select-item">
@@ -198,19 +209,18 @@ export default class Vc extends React.Component {
             variant="outlined"
             className="select-value"
             value={val}
-            onChange={e => this.setState({ [key]: { ...oldVal, [m]: e.target.value } })}
+            onChange={e => this.setState({ [key]: { ...oldVal, [m]: type === 1 ? e.target.value : { user_quota: e.target.value }}})}
           >
-            {this.getOptions(options[m], val)}
+            {this.getOptions(optionsData)}
           </TextField>
         </div>
       )
     })
   }
-
-  getOptions = (data, val) => {
+  
+  getOptions = (data) => {
     let content = [];
-    const _data = val !== null && val > data ? val : data; 
-    for(let i = 0; i <= _data; i++){
+    for(let i = 0; i <= data; i++){
       content.push(<MenuItem key={i} value={i}>{i}</MenuItem>)
     }
     return content;
@@ -230,8 +240,18 @@ export default class Vc extends React.Component {
     })
   }
 
+  onCloseDialog = () => {
+    this.setState({
+      modifyFlag: false,
+      vcNameValidateObj: {
+        text: '',
+        error: false
+      }
+    })
+  }
+
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, vcNameValidateObj, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice, vcNameValidateObj } = this.state;
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
@@ -263,13 +283,12 @@ export default class Vc extends React.Component {
             </TableBody>
           </Table>
           {modifyFlag && 
-          <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth onClose={() => this.setState({modifyFlag: false})}>
+          <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth>
             <DialogTitle>{isEdit ? 'Modify' : 'ADD'}</DialogTitle>
             <DialogContent dividers>
               <form>
                 <TextField
-                  required
-                  label="vcName"
+                  label="vcName *"
                   value={vcName}
                   onChange={this.vcNameChange}
                   margin="normal"
@@ -285,7 +304,7 @@ export default class Vc extends React.Component {
               </form>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => this.setState({modifyFlag: false})} color="primary" variant="outlined">Cancel</Button>
+              <Button onClick={this.onCloseDialog} color="primary" variant="outlined">Cancel</Button>
               <Button onClick={this.save} color="primary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
                 {btnLoading && <CircularProgress size={20}/>}Save
               </Button>

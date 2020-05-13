@@ -73,7 +73,7 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
   return (
     <MuiThemeProvider theme={useCheckIsDesktop ? theme : tableTheme}>
       {
-        gpuStatusList.length > 0 ? 
+        // gpuStatusList.length > 0 ? 
         <MaterialTable
           title=""
           columns={[
@@ -86,10 +86,10 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
             {title: 'Available', field: 'avaliable'},
             {title: 'Active Jobs', field: 'avaliableJobNum'}
           ]}
-          data={gpuStatusList}
+          data={gpuStatusList || []}
           options={{filtering: false, paging: true, pageSize: gpuStatusList.length < 10 ? gpuStatusList.length : 10, pageSizeOptions: [10], sorting: true}}
-        /> :
-          <CircularProgress/>
+        /> 
+        // : <CircularProgress/>
       }
     </MuiThemeProvider>
 

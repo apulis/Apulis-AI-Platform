@@ -823,14 +823,12 @@ def GetJobTotalGpu(jobParams):
 
 
 def DeleteVC(userName, vcName):
-    from job_launcher import JobDeployer
-    ret = None
     dataHandler = DataHandler()
     if AuthorizationManager.IsClusterAdmin(userName):
-        jobs = dataHandler.GetJobList("all", "all", num=None,status="running,scheduling,killing,pausing")
-        for job in jobs:
-            job_deployer = JobDeployer()
-            errors = job_deployer.delete_job(job["jobId"], force=True)
+        # jobs = dataHandler.GetJobList("all", "all", num=None,status="running,scheduling,killing,pausing")
+        # for job in jobs:
+        #     job_deployer = JobDeployer()
+        #     errors = job_deployer.delete_job(job["jobId"], force=True)
         ret = dataHandler.DeleteJobByVc(vcName)
         ret =  dataHandler.DeleteVC(vcName)
         if ret:

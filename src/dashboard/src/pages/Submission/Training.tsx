@@ -47,7 +47,7 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText } from '../../const';
+import { NameReg, NameErrorText, ChineseReg, NoChineseErrorText } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 
@@ -153,9 +153,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
     if (!saveTemplateName) {
-      message('error', 'Need input template name')
-      return
+      setErrorTPNameObj({
+        error: true,
+        text: 'Template Name is required！'
+      });
+      return;
     }
+    if (errorTPNameObj.error) return;
     try {
       let plugins: any = {};
       plugins['blobfuse'] = [];
@@ -369,10 +373,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     plugins['blobfuse'].push(blobfuseObj);
     plugins['imagePull'] = [];
     let imagePullObj: any = {};
-    imagePullObj['registry'] = dockerRegistry
-    imagePullObj['username'] = dockerUsername
-    imagePullObj['password'] = dockerPassword
-    plugins['imagePull'].push(imagePullObj)
+    imagePullObj['registry'] = dockerRegistry;
+    imagePullObj['username'] = dockerUsername;
+    imagePullObj['password'] = dockerPassword;
+    plugins['imagePull'].push(imagePullObj);
     const job: any = {
       userName: userName,
       userId: uid,
@@ -422,7 +426,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
     postJob(`/clusters/${selectedCluster}/jobs`, job);
   };
-
   const jobId = React.useRef<string>();
   const fetchGrafanaUrl = `/api/clusters`;
   const request = useFetch(fetchGrafanaUrl);
@@ -470,9 +473,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       let flag = true;
       if (val.split(',').length > 1) {
         val.split(',').forEach(n => {
-          if (Number(n) < 40000 || Number(n) > 49999) flag = false;
+          const _n = Number(n)
+          if (!_n || _n < 40000 || _n > 49999) flag = false;
         });
       } else {
+        console.log('Number(n)', Number(val))
         flag = Number(val) >= 40000 && Number(val) <= 49999;
       }
       return flag;
@@ -590,6 +595,19 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     );
   };
   const styleSnack={backgroundColor: green[400]};
+
+  const [errorTPNameObj, setErrorTPNameObj] = useState({
+    error: false,
+    text: ''
+  }) 
+  const onSaveTemplateName = (e: any) => {
+    const val = e.target.value;
+    setSaveTemplateName(val);
+    val && setErrorTPNameObj({
+      error: !NameReg.test(val),
+      text: NameReg.test(val) ? '' : NameErrorText
+    });
+  }
 
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
@@ -1020,7 +1038,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       fullWidth
                       variant="filled"
                       value={saveTemplateName}
-                      onChange={e => setSaveTemplateName(e.target.value)}
+                      error={errorTPNameObj.error}
+                      helperText={errorTPNameObj.text}
+                      onChange={onSaveTemplateName}
                     />
                   </Grid>
                   <Grid item xs>

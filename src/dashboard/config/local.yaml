@@ -26,24 +26,7 @@ dingtalk:
   appId: "dingoap3bz8cizte9xu62e"
   appSecret: "sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj"
 
-# domain: "http://huawei-infra01.sigsus.cn/"
-# casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
-
-# administrators:
-#   - jinlmsft@hotmail.com
-#   - jinli.ccs@gmail.com
-#   - jin.li@apulis.com
-
-# clusters:
-#   apulis-dev:
-#     restfulapi: "http://huawei-infra01.sigsus.cn//apis"
-#     title: Grafana-endpoint-of-the-cluster
-#     workStorage: work
-#     dataStorage: data
-#     grafana: "http://huawei-infra01.sigsus.cn//grafana/"
-#     prometheus: http://huawei-infra01.sigsus.cn/:9091
-
-domain: "https://apulis-test.sigsus1.cn:51444"
+domain: "http://huawei-infra01.sigsus.cn/"
 casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
 
 administrators:
@@ -53,9 +36,26 @@ administrators:
 
 clusters:
   apulis-dev:
-    restfulapi: "https://apulis-test.sigsus1.cn:51444/apis"
+    restfulapi: "http://huawei-infra01.sigsus.cn//apis"
     title: Grafana-endpoint-of-the-cluster
     workStorage: work
     dataStorage: data
-    grafana: "https://apulis-test.sigsus1.cn:51444/grafana/"
+    grafana: "http://huawei-infra01.sigsus.cn//grafana/"
     prometheus: http://huawei-infra01.sigsus.cn/:9091
+
+# domain: "https://apulis-test.sigsus1.cn:51444"
+# casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
+
+# administrators:
+#   - jinlmsft@hotmail.com
+#   - jinli.ccs@gmail.com
+#   - jin.li@apulis.com
+
+# clusters:
+#   apulis-dev:
+#     restfulapi: "https://apulis-test.sigsus1.cn:51444/apis"
+#     title: Grafana-endpoint-of-the-cluster
+#     workStorage: work
+#     dataStorage: data
+#     grafana: "https://apulis-test.sigsus1.cn:51444/grafana/"
+#     prometheus: http://huawei-infra01.sigsus.cn/:9091

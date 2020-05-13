@@ -23,9 +23,9 @@ import message from '../../utils/message';
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(
-  job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['startedAt']);
+  job['jobStatusDetail'] && job['jobStatusDetail'][0] ? job['jobStatusDetail'][0]['startedAt'] : undefined);
 const getFinishedDate = (job: any) => new Date(
-  job['jobStatusDetail'] && job['jobStatusDetail'][0] && job['jobStatusDetail'][0]['finishedAt']);
+  job['jobStatusDetail'] && job['jobStatusDetail'][0] ? job['jobStatusDetail'][0]['finishedAt'] : undefined);
 const _renderId = (job: any) => renderId(job, 0);
 
 interface JobsTableProps {

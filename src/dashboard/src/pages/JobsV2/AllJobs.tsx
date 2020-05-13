@@ -20,8 +20,8 @@ import useInterval from '../../hooks/useInterval';
 
 const renderUser = (job: any) => job['userName'].split('@', 1)[0];
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
-const getStartedDate = (job: any) => new Date(job['jobStatusDetail'] && job['jobStatusDetail'][0]['startedAt']);
-const getFinishedDate = (job: any) => new Date(job['jobStatusDetail'] && job['jobStatusDetail'][0]['finishedAt']);
+const getStartedDate = (job: any) => new Date(job['jobStatusDetail'] ? job['jobStatusDetail'][0]['startedAt'] : undefined);
+const getFinishedDate = (job: any) => new Date(job['jobStatusDetail'] ? job['jobStatusDetail'][0]['finishedAt'] : undefined);
 const _renderId = (job: any) => renderId(job, 1);
 
 interface JobsTableProps {

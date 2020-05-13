@@ -196,7 +196,6 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], getData: any }>
       />}
       <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>
         <TextField
-          type="number"
           fullWidth
           label="New Interactive Port"
           placeholder={InteractivePortsMsg}

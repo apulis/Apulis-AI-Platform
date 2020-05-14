@@ -84,7 +84,7 @@ def render_template(template_file, target_file, config, verbose=False):
             if target_dir != '':
                 os.system("mkdir -p {0}".format(target_dir))
             with open(target_file, 'w') as f:
-                f.write(content)
+                f.write(content.encode('utf-8'))
             f.close()
         except Exception as e:
             print("!!! Failure !!! in render template " + template_file)

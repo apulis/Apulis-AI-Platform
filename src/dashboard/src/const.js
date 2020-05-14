@@ -1,5 +1,5 @@
 
-export const pollInterval = 2000;
+export const pollInterval = 3000;
 
 export const NameReg = /^[A-Za-z0-9-_]+$/;
 

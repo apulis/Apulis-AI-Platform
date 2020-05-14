@@ -1,100 +1,33 @@
 # DLWS集群安装步骤
 
-### 配置说明 & 示例
+### 1. 配置说明 & 示例
 | 名称       | 配置    | GPU  | 操作系统     | 公网IP       | 子网IP       | 描述                        |
 | ---------- | ------- | ---- | ------------ | ------------ | ------------ | --------------------------- |
 | dev master | 6C64G   | N/A  | ubuntu 18.04 | 121.46.18.83 | 192.168.1.3  | 部署发起节点 k8s master节点 |
 | worker-01  | 36C512G | 8    | ubuntu 18.04 | 121.46.18.83 | 192.168.1.8  | k8s worker节点              |
 | worker-02  | 36C512G | 8    | ubuntu 18.04 | 121.46.18.83 | 192.168.1.9  | k8s worker节点              |
-| freenas    | 16C187G | N/A  | freenas      | 121.46.18.83 | 192.168.1.10 | k8s worker节点              |
+| freenas    | 16C187G | N/A  | ubuntu 18.04 | 121.46.18.83 | 192.168.1.10 | k8s worker节点              |
 
 其中：
 
 1. master和worker需在同一个子网或VPC，dev与master、worker可以不在同一个子网或VPC
+
 2. worker节点需携带GPU，GPU类别为NVidia，安装驱动（driver）版本>= 430  
+****
 
+### 2. 安装准备
 
-### 安装准备
-#### DEV节点创建非ROOT用户
+#### 2.1 安装要求
 
-**（可选；如果有root用户，或者sudo权限用户，可略过此步骤）**
+- 系统：ubuntu 18.04 server
+- 用户：root用户，或具备sudo权限的非ROOT用户；所有机器允许root登录
+- 软件：预安装ssh-server
+- 硬件：worker节点SecureBoot需禁用
+- 步骤说明：执行时如提示无权限，则使用sudo权限执行
 
-**./create_user.sh  用户名  密码**
+#### 2.2 免密码配置
 
-```
-#! /bin/bash
-
-#设置变量name接收第一个参数（要创建的用户名），$n表示第n个参数，且=两边不能有空格
-name=$1
-#设置变量pass接收第二个参数（要为其设置的密码）
-pass=$2
-
-#echo语句会输出到控制台，${变量}或者 $变量 表示变量代表的字符串
-echo "you are setting username : ${name}"
-echo "you are setting password : $pass for ${name}"
-
-#添加用户$name，此处sudo需要设置为无密码，后面将会作出说明
-sudo useradd $name
-
-#如果上一个命令正常运行，则输出成功，否则提示失败并以非正常状态退出程序
-# $?表示上一个命令的执行状态，-eq表示等于，[ 也是一个命令
-# if fi 是成对使用的，后面是前面的倒置，很多这样的用法。
-if [ $? -eq 0 ];then
-   echo "user ${name} is created success!"
-else
-   echo "user ${name} is created failed!!!"
-   exit 1
-fi
-#sudo passwd $name会要求填入密码，下面将$pass作为密码传入
-#echo $pass | sudo passwd $name --stdin  &> /dev/null
-
-#ubuntu系统不支持passwd的stdin参数，所以要使用chpasswd命令
-sudo echo "$name:$pass" | chpasswd
-if [ $? -eq 0 ];then
-   echo "${name}'s password is set success!"
-else
-   echo "${name}'s password is set failed!!!"
-fi
-
-if [ -d /home/$name ]
-then
-   echo "/home/$name is already exist!"
-   exit 1
-else
-    sudo mkdir /home/$name
-    sudo chown -R $name /home/$name
-fi
-
-#添加用户组
-sudo usermod -aG $name,sudo,docker $name
-if [ $? -eq 0 ];then
-   echo "${name}'s group is set success!"
-else
-   echo "${name}'s group is set failed!!!"
-fi
-
-#设置shell
-sudo usermod -s /bin/bash $name
-if [ $? -eq 0 ];then
-   echo "${name}'s shell is set success!"
-else
-   echo "${name}'s shell is set failed!!!"
-fi
-
-#设置shell配置文件
-sudo cp .bashrc /home/$name/
-if [ $? -eq 0 ];then
-   echo "${name}'s bashrc is set success!"
-else
-   echo "${name}'s bashrc is set failed!!!"
-fi
-```
-
-
-
-#### 免密码配置
-
-**针对非root用户，需在dev、master、worker三个机器中配置**
+   **针对非root用户，需在dev、master、worker三个机器中配置**
 
 - 执行sudo visudo
 
@@ -105,15 +38,17 @@ fi
      %sudo ALL=(ALL) NOPASSWD:ALL
      ```
 
+####  2.3 配置节点Hostname
 
+在master、worker以及master节点中配置主机名
 
-#### 配置节点Hostname
-
-china-gpu02-master
+china-gpu02
 
 china-gpu02-worker1
 
 china-gpu02-worker2
+
+china-gpu02-storage
 
 
 
@@ -125,7 +60,7 @@ china-gpu02-worker2
 
   
 
-#### 配置DNS
+#### 2.4 配置DNS
 
 **需要在DNS提供商控制台进行配置**
 
@@ -139,21 +74,19 @@ DNS提供商：https://dns.console.aliyun.com
 | ---- | ---- | ---- | ---- |
 | china-gpu02 | A | 121.46.18.83 | master |
 | china-gpu02-worker1 | A | 121.46.18.83 | woker01 |
-| china-gpu02-worker2 | A        | 121.46.18.83 | worker02      |
+| china-gpu02-worker2 | A        | 121.46.18.83 | Authentications Microsoftworker02 |
 
+****
 
+### 3. 执行安装
 
+#### 3.1 文件/路径说明  
 
-### 执行安装
-#### 文件/路径说明  
+​		安装程序所在目录 ：**DLWorkspace/src/ClusterBootstrap/**  
+​		集群配置文件：**DLWorkspace/src/ClusterBootstrap/config.yaml**   
+​		安装文件：**DLWorkspace/src/ClusterBootstrap/deploy.py**
 
-安装程序所在目录 ：**DLWorkspace/src/ClusterBootstrap/**  
-集群配置文件：**DLWorkspace/src/ClusterBootstrap/config.yaml**   
-安装文件：**DLWorkspace/src/ClusterBootstrap/deploy.py**
-
-
-
-#### 设置集群配置文件
+#### 3.2 设置集群配置文件
 
 以下字段做相应修改
 
@@ -162,6 +95,10 @@ DNS提供商：https://dns.console.aliyun.com
 - cloud_influxdb_node —— master节点FQDN
 
 - DeployAuthentications —— 登录方式（如有微信，需相应增加）
+
+  [微软登录方式参数获取参考](https://github.com/apulis/dev_document/tree/master/dlts/redirect_url_registration)
+
+  
 
 - DLWSAdmins —— 增加对应的管理员名称
 
@@ -380,7 +317,7 @@ jwt:
 
 
 
-#### 安装**DEV**执行环境
+#### 3.3 安装**DEV**执行环境
 
 ```
 ./scripts/prepare_ubuntu_dev.sh
@@ -388,7 +325,7 @@ jwt:
 
   
 
-#### 配置DNS内网解析
+#### 3.4 配置DNS内网解析-1
 
 **以下机器：dev、master、worker三个机器**  
 
@@ -401,7 +338,7 @@ jwt:
 
   
 
-- 配置节点hosts文件（**单个公网IP的集群使用，router不具备短域名或局域网内DNS配置功能**）
+- 配置节点hosts文件（**在集群共享一个公网IP且Router不具备短域名或局域网内DNS配置功能**）
 
   执行：mkdir -p deploy/etc
 
@@ -445,22 +382,12 @@ jwt:
 
   ```
   sudo cp ./deploy/etc/hosts  /etc/hosts
-  ./deploy.py --verbose copytoall ./deploy/etc/hosts  /etc/hosts
-  ```
-
-- 检查DNS配置
-
-  在master、proxy上指令执行看是否成功 
-
-  ``` 
-    ping china-gpu02
-    ping china-gpu02-worker1
-    ping china-gpu02-worker2
   ```
 
   
 
-#### 初始化部署环境
+
+#### 3.5 创建集群ID
 
 ```
 ./deploy.py --verbose -y build 
@@ -468,9 +395,11 @@ jwt:
 
 
 
-#### 配置集群节点ROOT用户密码
+#### 3.6 配置节点ROOT用户密码
 
 将集群节点ROOT密码设置一致，然后执行指令：
+
+（此步骤用于为每个节点 创建安装用户）
 
 ```
 cd deploy/sshkey
@@ -480,7 +409,7 @@ echo "your_root_password" > "rootpasswd"
 
 
 
-#### 安装SSH Key到所有集群节点
+#### 3.7 安装SSH Key到所有节点
 
 ```
  ./deploy.py --verbose sshkey install
@@ -488,7 +417,24 @@ echo "your_root_password" > "rootpasswd"
 
 
 
-#### 检查集群节点是否可正常访问
+#### 3.8 配置DNS内网解析-2    
+
+```
+./deploy.py --verbose copytoall ./deploy/etc/hosts  /etc/hosts
+```
+
+检查DNS配置
+
+在master、proxy上指令执行看是否成功 
+
+``` 
+  ping china-gpu02
+  ping china-gpu02-worker1
+  ping china-gpu02-worker2
+  ping china-gpu02-storage
+```
+
+#### 3.9 检查集群节点是否可正常访问
 
 ```
 ./deploy.py --verbose execonall sudo ls -al
@@ -496,7 +442,7 @@ echo "your_root_password" > "rootpasswd"
 
 
 
-#### 设置集群节点的安装环境
+#### 3.10 设置集群节点的安装环境
 
 ```
 ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
@@ -511,9 +457,10 @@ echo "your_root_password" > "rootpasswd"
 
 - dlwsadmin为操作集群机器所采用的用户名，配置于config.yaml
 - 如果nvidia驱动安装不成功，可能与具体的设备配置有关，譬如secure boot问题等等，请联系开发人员定位和完善
-- 
 
-#### Worker机器状态确认
+  
+
+#### 3.11 Worker机器状态确认
 
 ```
 1、指令确认
@@ -547,93 +494,96 @@ echo "your_root_password" > "rootpasswd"
 
 
 
-#### 安装kubernetes kubeadm客户端
+#### 3.12 安装kubeadm客户端
+     ./deploy.py runscriptonroles infra worker           
+     ./scripts/install_kubeadm.sh
 
-```
-./deploy.py runscriptonroles infra worker ./scripts/install_kubeadm.sh
-```
+#### 3.13 安装K8S集群平台
 
+- ##### 各节点关闭swap
 
+    ```
+    ./deploy.py --verbose execonall sudo swapoff -a
+    ```
 
-#### 安装K8S集群平台
+- ##### master节点永久关闭swap
+    ```
+    sudo sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+    ```
+    
+- ##### 安装集群基础软件
 
-##### 各节点关闭swap
+    ```
+    ./deploy.py --verbose execonall docker pull dlws/pause-amd64:3.0
+    ./deploy.py --verbose execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
 
-```
-./deploy.py --verbose execonall sudo swapoff -a
-```
+    ./deploy.py --verbose kubeadm init
+    ./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
+    ```
 
-##### master节点关闭swap
-
-```
-sudo vim /etc/fstab
-注释掉带swap字段行：
-#UUID=xxxxxxxx-xxxx-xxxxx-xxx-xxxxxxxxxxx none            swap  sw
-```
-
-##### 安装集群基础软件
-
-```
-./deploy.py --verbose execonall docker pull dlws/pause-amd64:3.0
-./deploy.py --verbose execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
-
-./deploy.py --verbose kubeadm init
-./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
-```
-
-##### 设置集群节点标签
-
-```
-./deploy.py --verbose kubeadm join
-./deploy.py --verbose -y kubernetes labelservice
-./deploy.py --verbose -y labelworker
-```
+- ##### 设置集群节点标签
+  
+    ```
+    ./deploy.py --verbose kubeadm join
+    ./deploy.py --verbose -y kubernetes labelservice
+    ./deploy.py --verbose -y labelworker
+    ```
+    
+    
 
 
+#### 3.14 挂载存储节点
 
-#### 挂载数据共享文件夹
+- ##### 安装NFS服务（所有节点，包括存储点）
+    ```
+    sudo apt-get update
+    sudo apt-get install nfs-kernel-server nfs-common portmap
+    sudo ln -s /etc/init.d/nfs-kernel-server /etc/init.d/nfs
 
-##### 安装NFS服务（所有节点，包括存储点）
-
-```
-apt-get update
-apt-get install nfs-kernel-server nfs-common portmap
-sudo ln -s /etc/init.d/nfs-kernel-server /etc/init.d/nfs
-
-/etc/init.d/nfs-kernel-server restart
-```
+    /etc/init.d/nfs-kernel-server restart
+    ```
 
 
+- ##### 配置挂载目录（存储节点）
 
-##### 配置挂载目录（存储节点）
+  - 创建目录。假设所要挂载的目录是：/data/nfsshare
 
-- 创建目录。假设所要挂载的目录是：/data/nfsshare
+     挂载目录需与config.yaml中所配置一致
 
-  mkdir -p /data/nfsshare 
+     > mountpoints:
+   >   nfsshare1:
+     >     type: nfs
+   >     server: storage-server
+     >     filesharename: /data/nfsshare
+     >     curphysicalmountpoint: /mntdlws
+     >     mountpoints: ""
+  
+     执行：
+  
+     `mkdir -p /data/nfsshare` 
+  
+  - 设置白名单
+  
+     编辑文件 /etc/exports，并增加挂载目录的IP白名单
+  
+     > /data/nfsshare               192.168.1.0/24(rw,fsid=0,insecure,no_subtree_check,async,no_root_squash)
 
--  设置白名单
+- ##### 更新共享信息
 
-  编辑文件 /etc/exports，并增加挂载目录的IP白名单
+        sudo exportfs -a
+    
+- ##### 执行挂载
 
-   > /data/nfsshare           192.168.1.0/24(rw,fsid=0,insecure,no_subtree_check,async,no_root_squash)
+        ./deploy.py --verbose mount
 
+- **挂载结果确认**
 
+  ```
+  /deploy.py --verbose execonall df -h
+  每个节点可看到/data/nfsshare被挂载
+  ```
 
-##### 更新共享信息
-
-```
-exportfs -a
-```
-
-##### 执行挂载
-
-```
-./deploy.py --verbose mount
-```
-
-
-
-#### 部署NVidia插件
+#### 3.15 部署NVidia插件
 
 ```
 ./deploy.py --verbose kubernetes start nvidia-device-plugin
@@ -641,7 +591,7 @@ exportfs -a
 
 ​    
 
-#### 重置API Server服务器的NodePort端口段
+#### 3.16 重置APIServer NodePort端口段
 
 编辑文件/etc/kubernetes/manifests/kube-apiserver.yaml
 
@@ -655,7 +605,7 @@ exportfs -a
 
 
 
-#### 设置Dashboard服务配置文件
+#### 3.17 设置webui服务配置文件
 
 文件：**DLWorkspace/src/dashboard/config/local.yaml**
 
@@ -708,55 +658,49 @@ clusters:
 
 
 
-#### 部署集群应用
+#### 3.18 部署集群应用
 
-##### 登录docker hub （用户名为config.yaml所配置）
+- ##### 登录docker hub （用户名为config.yaml所配置）
+    > docker login
 
-> docker login
+- ##### 生成dashboard, jobmanager等服务的配置文件
+    ```
+    ./deploy.py --verbose webui         
+    ```
 
-##### 生成dashboard, jobmanager等服务的配置文件
+- ##### 编译restfulapi和webui3服务
+    ```
+    ./deploy.py --verbose docker push restfulapi2
+    ./deploy.py --verbose docker push webui3
+    ```
 
-```
-./deploy.py --verbose webui         
-```
+- ##### 编译GPU Reporter
+    ```
+    ./deploy.py --verbose docker push gpu-reporter
+    ```
 
-##### 编译restfulapi和webui3服务
+- ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
+    ```
+    ./deploy.py --verbose docker push init-container
+    ```
 
-```
-./deploy.py --verbose docker push restfulapi2
-./deploy.py --verbose docker push webui3
-```
+- ##### 配置Nginx
+    ```
+    ./deploy.py --verbose nginx fqdn
+    ./deploy.py --verbose nginx config
+    ```
 
-##### 编译GPU Reporter
+- ##### 启动集群应用
+    ```
+    ./deploy.py --verbose kubernetes start mysql jobmanager2 restfulapi2 monitor nginx custommetrics
+    ./deploy.py --verbose kubernetes start cloudmonitor
+    ```
 
-```
-./deploy.py --verbose docker push gpu-reporter
-```
+- ##### 启动dashboard
+    ```
+    ./deploy.py --verbose nginx webui3
+    ./deploy.py --verbose kubernetes start webui3
+    ```
 
-##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
 
-```
-./deploy.py --verbose docker push init-container
-```
-
-##### 配置Nginx
-
-```
-./deploy.py --verbose nginx fqdn
-./deploy.py --verbose nginx config
-```
-
-##### 启动集群应用
-
-```
-./deploy.py --verbose kubernetes start mysql jobmanager restfulapi2 monitor nginx custommetrics
-./deploy.py --verbose kubernetes start cloudmonitor
-```
-
-##### 启动dashboard
-
-```
-./deploy.py --verbose nginx webui3
-./deploy.py --verbose kubernetes start webui3
-```
 

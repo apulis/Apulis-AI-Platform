@@ -64,12 +64,12 @@ set +e
 # Execute user's command for the job
 if [ "$DLWS_ROLE_NAME" = "worker" ];
 then
-    runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
+    runuser ${DLWS_USER_NAME} -c "sleep infinity"
 else
     printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
     chmod ugo+rx /pod/job_command.sh
     chmod ugo+rx /pod.env
-    runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh
+    runuser ${DLWS_USER_NAME} -c /pod/job_command.sh
     # Save exit code
     EXIT_CODE=$?
     echo  `date` ": ${EXIT_CODE}"  > ${PROC_DIR}/EXIT_CODE

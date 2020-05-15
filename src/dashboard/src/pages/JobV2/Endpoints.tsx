@@ -133,7 +133,8 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
-  const onSubmit = useCallback((data: any) => {
+  const onSubmit = (data: any) => {
+    console.log('errors',errors)
     const port = Number(data.interactivePorts);
     enqueueSnackbar(`Exposing port ${port}...`);
     post({
@@ -148,7 +149,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
     }, () => {
       enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
     });
-  }, [post, enqueueSnackbar]);
+  };
   const [iconInfoShow, setIconInfoShow] = useState(false);
   const { handleSubmit, register, errors, setError, setValue } = useForm({ mode: "onBlur" });
   const validateInteractivePorts = (val: string) => {
@@ -158,17 +159,15 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       if (arr.length > 1) {
         arr.forEach(n => {
           const _n = Number(n)
-          if (!_n || _n < 40000 || _n > 49999) flag = false;
+          if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
         });
       } else {
-        flag = Number(val) >= 40000 && Number(val) <= 49999;
+        flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       }
-      !flag && setError('interactivePorts', 'error', InteractivePortsMsg);
       return flag;
     }
     return true;
   }
-
   return (
     <Box px={2}>
       <FormGroup aria-label="position" row>
@@ -202,11 +201,11 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
         <TextField
           fullWidth
           label="New Interactive Port"
-          placeholder={InteractivePortsMsg}
           disabled={disabled}
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
-          helperText={errors.interactivePorts ? errors.interactivePorts.message : ''}
+          defaultValue={''}
+          helperText={errors.interactivePorts ? InteractivePortsMsg : ''}
           inputRef={register({
             required: 'Interactive Port is required！',
             validate: val => validateInteractivePorts(val)

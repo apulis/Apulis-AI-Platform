@@ -472,10 +472,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       if (arr.length > 1) {
         arr.forEach(n => {
           const _n = Number(n)
-          if (!_n || _n < 40000 || _n > 49999) flag = false;
+          if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
         });
       } else {
-        flag = Number(val) >= 40000 && Number(val) <= 49999;
+          flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       }
       return flag;
     }
@@ -558,7 +558,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               sortededResult.push(i);
             }
           });
-          if (sortededResult.length > 1) sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['gpu_available'] - b['metric']['gpu_available']);
+          if (sortededResult.length > 1) sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['device_available'] - b['metric']['device_available']);
           setGpuFragmentation(sortededResult)
         }
       })
@@ -605,7 +605,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         >
           <BarChart width={500} height={600} data={gpuFragmentation}  margin={{top: 20}}>
             <CartesianGrid strokeDasharray="10 10"/>
-            <XAxis dataKey={"metric['gpu_available']"} label={{value: 'Available gpu count', position:'insideBottomLeft'}}>
+            <XAxis dataKey={"metric['device_available']"} label={{value: 'Available gpu count', position:'insideBottomLeft'}}>
             </XAxis>
             <YAxis label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
             <Bar dataKey="value[1]" fill="#8884d8" >

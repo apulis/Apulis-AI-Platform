@@ -41,9 +41,9 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
   ), [])
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'Id', type: 'string', field: 'jobId',
-      render: _renderId, disableClick: true },
-    { title: 'Name', type: 'string', field: 'jobName' },
-    { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus },
+      render: _renderId, disableClick: true, sorting: false },
+    { title: 'Name', type: 'string', field: 'jobName', sorting: false },
+    { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
     { title: 'Number of Device', type: 'numeric',
       render: renderGPU, customSort: sortGPU },
     { title: 'User', type: 'string', render: renderUser},

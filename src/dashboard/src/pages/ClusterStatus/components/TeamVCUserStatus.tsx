@@ -29,7 +29,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
               {title: 'Currently Idle GPU', field: 'idleGPU',type:'numeric'},
             ]}
             data={showCurrentUser ? userStatus.filter((uc: any)=>uc['usedGPU'] > 0 && uc['userName'] !== 'Total') : userStatus}
-            options={{filtering: false,paging: false,sorting: true}}
+            options={{filtering: false,paging: false,sorting: false}}
             components={{
               Toolbar: props => (
                 <div>
@@ -64,7 +64,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
             {title: 'Past Month Idle Hour %', field: '',type:'numeric', render: (rowData: any) => currentCluster === 'Lab-RR1-V100' ? null : <span style={{ color: Math.floor((rowData['idle'] / rowData['booked']) * 100) > 50 ? "red" : "black" }}>{rowData['booked'] == '0' ? '-' : Math.floor(((rowData['idle'] || 0) / (rowData['booked'])) * 100)}</span>, customSort: (a: any, b: any) => {return Math.floor((a['idle'] / a['booked']) * 100) - Math.floor((b['idle'] / b['booked']) * 100)}}
           ]}
           data={showCurrentUser ? userStatus.filter((uc: any)=>uc['usedGPU'] > 0 && uc['userName'] !== 'Total') : userStatus}
-          options={{filtering: false, paging: false, sorting: true}}
+          options={{filtering: false, paging: false, sorting: false}}
           components={{
             Toolbar: props => (
               <div>

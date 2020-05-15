@@ -42,8 +42,8 @@ export const Provider: React.FC = ({ children }) => {
   const saveSelectedTeam = (team: React.SetStateAction<string>) => {
     setSelectedTeam(team);
     localStorage.setItem('team',team.toString());
-    if (window.location.pathname.split(`${clusterId}`)[1]) {
-      window.location.href = `/jobs-v2/${clusterId}/`
+    if (clusterId && window.location.pathname.split(`${clusterId}/`)[1]) {
+      window.location.href = `/jobs-v2/${clusterId}/`;
     } else {
       window.location.reload();
     }

@@ -830,6 +830,7 @@ def DeleteVC(userName, vcName):
         #     job_deployer = JobDeployer()
         #     errors = job_deployer.delete_job(job["jobId"], force=True)
         ret = dataHandler.DeleteJobByVc(vcName)
+        ret = dataHandler.DeleteTemplateByVc("vc:"+vcName)
         ret =  dataHandler.DeleteVC(vcName)
         if ret:
             with vc_cache_lock:

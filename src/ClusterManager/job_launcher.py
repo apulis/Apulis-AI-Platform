@@ -646,14 +646,12 @@ class PythonLauncher(Launcher):
             secrets = pod_template.generate_secrets(job_object)
             job_deployer = JobDeployer()
 
-            try:
-                secrets = job_deployer.create_secrets(secrets)
-                ret["output"] = "Created secrets: {}. ".format([secret.metadata.name for secret in secrets])
-                pods = job_deployer.create_pods(pods)
-                ret["output"] += "Created pods: {}".format([pod.metadata.name for pod in pods])
-            except Exception as e:
-                ret["output"] = "Error: %s" % e.message
-                logger.error(e, exc_info=True)
+
+            secrets = job_deployer.create_secrets(secrets)
+            ret["output"] = "Created secrets: {}. ".format([secret.metadata.name for secret in secrets])
+            pods = job_deployer.create_pods(pods)
+            ret["output"] += "Created pods: {}".format([pod.metadata.name for pod in pods])
+
 
             ret["jobId"] = job_object.job_id
 
@@ -682,7 +680,7 @@ class PythonLauncher(Launcher):
 
             if retries >= 5:
                 detail = get_job_status_detail(job)
-                detail = job_status_detail_with_finished_time(detail, "error", "Server error in job submission")
+                detail = job_status_detail_with_finished_time(detail, "error", "Server error in job submission,"+str(e))
 
                 dataFields = {
                     "jobStatus": "error",

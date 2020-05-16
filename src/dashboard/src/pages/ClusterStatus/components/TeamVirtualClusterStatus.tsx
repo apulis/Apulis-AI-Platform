@@ -87,7 +87,7 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
             {title: 'Active Jobs', field: 'avaliableJobNum'}
           ]}
           data={gpuStatusList || []}
-          options={{filtering: false, paging: true, pageSize: gpuStatusList.length < 10 ? gpuStatusList.length : 10, pageSizeOptions: [10], sorting: true}}
+          options={{filtering: false, paging: true, pageSize: gpuStatusList.length < 10 ? gpuStatusList.length : 10, pageSizeOptions: [10], sorting: false}}
         /> 
         // : <CircularProgress/>
       }

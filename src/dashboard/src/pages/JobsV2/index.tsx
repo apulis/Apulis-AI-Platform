@@ -20,14 +20,13 @@ import {
   Toolbar
 } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
-
 import ClustersContext from '../../contexts/Clusters';
 import ClusterSelector from '../../components/ClusterSelector';
-
 import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
 import MyJobs from './MyJobs';
 import AllJobs from './AllJobs';
+import './index.less';
 
 interface RouteParams {
   clusterId: string;
@@ -42,7 +41,7 @@ const TabView: FunctionComponent = () => {
     setIndex(index);
   }, [setIndex]);
   return (
-    <>
+    <div className="jobs-table-wrap">
       <Tabs
         value={index}
         onChange={onChange}
@@ -60,7 +59,7 @@ const TabView: FunctionComponent = () => {
         {index === 0 ? <MyJobs/> : <div/>}
         {index === 1 ? <AllJobs/> : <div/>}
       </SwipeableViews>
-    </>
+    </div>
   );
 }
 

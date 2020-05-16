@@ -1474,6 +1474,19 @@ class DataHandler(object):
         return ret
 
     @record
+    def DeleteTemplateByVc(self, scope):
+        ret = False
+        try:
+            query = "DELETE FROM `" + self.templatetablename + "` WHERE `scope` = %s"
+            with MysqlConn() as conn:
+                conn.insert_one(query, (scope,))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('DeleteTemplate Exception: %s', str(e))
+        return ret
+
+    @record
     def get_job_priority(self):
         ret = {}
         try:

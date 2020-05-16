@@ -11,4 +11,4 @@ export const SameNameErrorText = 'Already has the same name!';
 
 export const NoChineseErrorText = 'Cannot contain Chinese characters!';
 
-export const InteractivePortsMsg = '40000 - 49999. Separated by comma.';
+export const InteractivePortsMsg = 'Must be a positive integer between 40000 and 49999！Multiple can be separated by comma.';

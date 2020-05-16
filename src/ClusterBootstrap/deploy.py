@@ -4678,6 +4678,66 @@ def upgrade_masters(hypekube_url="gcr.azk8s.cn/google-containers/hyperkube:v1.15
     """
     utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_masters[0], deploy_cmd , False)
 
+# this function is used for other modules in the scenario that it
+# needs to reuse the code of current file
+def get_config():
+    dirpath = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
+    os.chdir(dirpath)
+
+    global config
+    config = init_config(default_config_parameters)
+
+   # Cluster Config
+    config_cluster = os.path.join(dirpath,"cluster.yaml")
+    if os.path.exists(config_cluster):
+        merge_config(config, yaml.load(open(config_cluster), Loader=yaml.FullLoader))
+    else:
+        pass
+
+    config_file = os.path.join(dirpath,"config.yaml")
+
+    if not os.path.exists(config_file):
+        parser.print_help()
+        print "ERROR: config.yaml does not exist!"
+        exit()
+    else:
+        pass
+
+    with open(config_file) as f:
+        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+        f.close()
+
+    if os.path.exists("./deploy/clusterID.yml"):
+
+        with open("./deploy/clusterID.yml") as f:
+            tmp = yaml.load(f, Loader=yaml.FullLoader)
+            if "clusterId" in tmp:
+                config["clusterId"] = tmp["clusterId"]
+            else:
+                pass
+    else:
+        pass
+
+    if verbose and config["isacs"]:
+        print "Using Azure Container Services"
+    else:
+        pass
+
+    if os.path.exists("./deploy/clusterID.yml"):
+        update_config()
+    else:
+        apply_config_mapping(config, default_config_mapping)
+        update_docker_image_config()
+
+    # additional glusterfs launch parameter.
+    # config["launch-glusterfs-opt"] = args.glusterfs;
+
+    get_ssh_config()
+    configuration( config, False)
+
+    return config
+
+
 if __name__ == '__main__':
     # the program always run at the current directory.
     dirpath = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))

@@ -1,0 +1,17 @@
+FROM openresty/openresty:1.15.8.3-2-buster-fat-nosse42
+
+#FROM ubuntu:18.04
+#
+#WORKDIR /usr/local
+#
+#RUN apt update && apt-get install -y --no-install-recommends wget gnupg ca-certificates git
+#RUN wget -O - https://openresty.org/package/pubkey.gpg | apt-key add - && echo "deb http://openresty.org/package/ubuntu bionic main" \
+#    | tee /etc/apt/sources.list.d/openresty.list && apt-get update
+#RUN apt-get -y install --no-install-recommends openresty
+
+WORKDIR /usr/local
+
+ADD config/nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+ADD lib/resty /usr/local/openresty/nginx/jwt-lua/resty
+ADD start.sh /
+

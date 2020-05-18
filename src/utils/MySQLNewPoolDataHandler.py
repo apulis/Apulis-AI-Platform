@@ -681,13 +681,13 @@ class DataHandler(object):
             if (isinstance(groups, list)):
                 groups = json.dumps(groups)
             if len(self.GetIdentityInfo(identityName)) == 0:
-                sql = "insert into {0} (identityName, uid, gid, groups) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update uid='{2}', gid='{3}', groups='{4}'".format(
+                sql = "insert into {0} (`identityName`, `uid`, `gid`, `groups`) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update uid='{2}', gid='{3}', groups='{4}'".format(
                     self.identitytablename, identityName, uid, gid, groups)
                 with MysqlConn() as conn:
                     conn.insert_one(sql)
                     conn.commit()
             else:
-                sql = """update `%s` set uid = %s, gid = %s, groups = %s where `identityName` = %s """ % (
+                sql = """update `%s` set `uid` = %s, `gid` = %s, `groups` = %s where `identityName` = %s """ % (
                 self.identitytablename, "%s", "%s", "%s", "%s")
                 with MysqlConn() as conn:
                     conn.insert_one(sql,[uid, gid, groups, identityName])
@@ -1033,6 +1033,20 @@ class DataHandler(object):
     def DeleteJobByVc(self,vcname):
         try:
             sql = "DELETE FROM `%s` WHERE `vcName`= %s " %(self.jobtablename,"%s")
+            print sql
+            with MysqlConn() as conn:
+                conn.insert_one(sql, [vcname])
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('AddCommand Exception: %s', str(e))
+            ret = False
+        return ret
+
+    @record
+    def DeleteJobByVcExcludeKilling(self,vcname):
+        try:
+            sql = "DELETE FROM `%s` WHERE `vcName`= %s and jobStatus<>'killing'" %(self.jobtablename,"%s")
             print sql
             with MysqlConn() as conn:
                 conn.insert_one(sql, [vcname])
@@ -1467,6 +1481,19 @@ class DataHandler(object):
             query = "DELETE FROM `" + self.templatetablename + "` WHERE `name` = %s and `scope` = %s"
             with MysqlConn() as conn:
                 conn.insert_one(query, (name, scope))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('DeleteTemplate Exception: %s', str(e))
+        return ret
+
+    @record
+    def DeleteTemplateByVc(self, scope):
+        ret = False
+        try:
+            query = "DELETE FROM `" + self.templatetablename + "` WHERE `scope` = %s"
+            with MysqlConn() as conn:
+                conn.insert_one(query, (scope,))
                 conn.commit()
             ret = True
         except Exception as e:

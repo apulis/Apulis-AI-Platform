@@ -2201,7 +2201,7 @@ def config_webui(nargs):
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
         # copy the static assets from webui image to the host
-        remotecmd = "sudo docker cp $(docker create %s):/usr/src/app/build/ /www/static/dashboard" % reponame
+        remotecmd = "sudo docker cp $(sudo docker create %s):/usr/src/app/build/ /www/static/dashboard" % reponame
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
     return

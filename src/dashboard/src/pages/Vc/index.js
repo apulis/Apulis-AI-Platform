@@ -191,8 +191,8 @@ export default class Vc extends React.Component {
       })
       options[m] = Number(num);
       const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'quota' : 'metadata'])[m] : null;
-      const temp = editData !== null && editData.constructor  === Object ? editData.user_quota : editData;
-      const optionsData = temp !== null && temp > options[m] ? temp : options[m]; 
+      const temp = editData && editData.constructor  === Object ? editData.user_quota : editData;
+      const optionsData = temp && temp > options[m] ? temp : options[m]; 
       if (!isEdit && options[m] === 0) val = 0;
       const key = type === 1 ? 'qSelectData' : 'mSelectData';
       return (

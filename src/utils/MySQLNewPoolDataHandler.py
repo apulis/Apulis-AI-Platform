@@ -681,7 +681,7 @@ class DataHandler(object):
             if (isinstance(groups, list)):
                 groups = json.dumps(groups)
             if len(self.GetIdentityInfo(identityName)) == 0:
-                sql = "insert into {0} (`identityName`, `uid`, `gid`, `groups`) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update uid='{2}', gid='{3}', groups='{4}'".format(
+                sql = "insert into {0} (`identityName`, `uid`, `gid`, `groups`) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update `uid``='{2}', `gid`='{3}', `groups`='{4}'".format(
                     self.identitytablename, identityName, uid, gid, groups)
                 with MysqlConn() as conn:
                     conn.insert_one(sql)

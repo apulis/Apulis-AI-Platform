@@ -5,6 +5,8 @@ import { RouteComponentProps } from "react-router-dom"
 import { Box, Grid, Paper, Typography, Button, CircularProgress } from "@material-ui/core";
 import { createStyles, makeStyles } from "@material-ui/core/styles";
 
+// import config from 'config'
+
 import image1 from "./image1.jpeg";
 import image2 from "./image2.jpeg";
 import image3 from "./image3.jpeg";
@@ -20,16 +22,23 @@ const useStyles = makeStyles(() => createStyles({
 }));
 
 const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
-  const { email } = React.useContext(UserContext);
-  const [ signIn, setSignIn ] = React.useState(false);
-  const onButtonClick = React.useCallback(() => {
-    setSignIn(true);
-  }, []);
+  
+  enum SIGNIN_STATUS {
+    Initial = 0,
+    Microsoft,
+    Wechat,
+  }
+  const { openId, group, authEnabled = {} } = React.useContext(UserContext);
+  const [signInStatus, setSignInStatus] = React.useState(SIGNIN_STATUS.Initial);
+  const onButtonClick = React.useCallback((status) => {
+    setSignInStatus(status);
+  }, [])
+
   React.useEffect(() => {
-    if (email !== undefined) {
+    if (openId !== undefined && group !== undefined) {
       history.replace('/');
     }
-  }, [email, history])
+  }, [openId, group, history])
 
   const styles = useStyles();
 
@@ -41,23 +50,42 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
       >
         <Paper square elevation={6}>
           <Box paddingTop={10} paddingRight={5} paddingBottom={10} paddingLeft={5} minHeight="100%" display="flex">
-            <Grid container direction="column" spacing={10} alignItems="center" justify="center">
+            <Grid container direction="column" spacing={10} alignItems="center" justify="space-between">
               <Grid item>
                 <Typography variant="h2" component="h1" align="center">
-                  Deep Learning Training Service
+                  智瞳 AI 平台
                 </Typography>
               </Grid>
-              <Grid item>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  href="/api/authenticate"
-                  disabled={signIn}
-                  onClick={onButtonClick}
-                >
-                  { signIn ? <CircularProgress size={24}/> : 'Sign in with corp account' }
-                </Button>
+
+              <Grid container direction="column" alignItems="center" justify="space-between" style={{ height: 110 }}>
+                {
+                  (authEnabled.microsoft === 1) && <Grid item>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href="/api/authenticate"
+                      disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                      onClick={() => onButtonClick(SIGNIN_STATUS.Microsoft)}
+                    >
+                      {signInStatus === SIGNIN_STATUS.Microsoft ? <CircularProgress size={24} /> : 'Sign in with Microsoft'}
+                    </Button>
+                  </Grid>
+                }
+                {
+                  (authEnabled.wechat === 1)&& <Grid item>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      href="/api/authenticate/wechat"
+                      disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                      onClick={() => onButtonClick(SIGNIN_STATUS.Wechat)}
+                    >
+                      {signInStatus === SIGNIN_STATUS.Wechat ? <CircularProgress size={24} /> : 'Sign in with Wechat'}
+                    </Button>
+                  </Grid>
+                }
               </Grid>
+
               <Grid item>
                 <Typography variant="body2">
                   {"Built with "}

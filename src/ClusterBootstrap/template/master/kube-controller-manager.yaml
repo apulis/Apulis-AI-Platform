@@ -33,6 +33,8 @@ spec:
     - mountPath: /etc/ssl/certs
       name: ssl-certs-host
       readOnly: true
+    # - mountPath: /etc/resolv.conf
+    #   name: resolv
   volumes:
   - hostPath:
       path: /etc/kubernetes/ssl

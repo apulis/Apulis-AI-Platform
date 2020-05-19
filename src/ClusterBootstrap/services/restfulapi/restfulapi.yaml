@@ -29,8 +29,10 @@ spec:
       containers:
       - name: restfulapi
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}{{cnf["restfulapi"]}}:{{cnf["dockertag"]}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         volumeMounts:
+        - mountPath: /etc/resolv.conf
+          name: resolv
         - mountPath: /RestfulAPI
           name: apiconfig
         - mountPath: /var/log/apache2
@@ -53,6 +55,9 @@ spec:
         {% endfor %}
         {% endif %}
       volumes:
+      - name: resolv
+        hostPath:
+          path: /etc/resolv.conf
       - name: apiconfig
         hostPath:
           path: /etc/RestfulAPI

@@ -82,6 +82,7 @@ def try_remove_old_prom_file(path):
 
 
 def get_gpu_count(path):
+
     hostname = os.environ.get("HOSTNAME")
     ip = os.environ.get("HOST_IP")
 
@@ -106,6 +107,7 @@ def register_stack_trace_dump():
 
 # https://github.com/prometheus/client_python/issues/322#issuecomment-428189291
 def burninate_gc_collector():
+
     for callback in gc.callbacks[:]:
         if callback.__qualname__.startswith("GCCollector."):
             gc.callbacks.remove(callback)
@@ -125,9 +127,11 @@ class HealthResource(Resource):
 
 
 def main(args):
+
     register_stack_trace_dump()
     burninate_gc_collector()
     config_environ()
+
     try_remove_old_prom_file(args.log + "/gpu_exporter.prom")
     try_remove_old_prom_file(args.log + "/job_exporter.prom")
     try_remove_old_prom_file(args.log + "/docker.prom")
@@ -140,6 +144,7 @@ def main(args):
 
     # used to exchange gpu info between GpuCollector and ContainerCollector
     gpu_info_ref = collector.AtomicRef(decay_time)
+    npu_info_ref = collector.AtomicRef(decay_time)
 
     # used to exchange docker stats info between ContainerCollector and ZombieCollector
     stats_info_ref = collector.AtomicRef(decay_time)
@@ -155,6 +160,7 @@ def main(args):
     collector_args = [
             ("docker_daemon_collector", interval, decay_time, collector.DockerCollector),
             ("gpu_collector", interval, decay_time, collector.GpuCollector, gpu_info_ref, zombie_info_ref, args.threshold),
+            ("npu_collector", interval, decay_time, collector.NpuCollector, npu_info_ref, zombie_info_ref, args.threshold),
             ("container_collector", max(0, interval - 18), decay_time, collector.ContainerCollector,
                 gpu_info_ref, stats_info_ref, args.interface),
             ("zombie_collector", interval, decay_time, collector.ZombieCollector, stats_info_ref, zombie_info_ref),
@@ -189,7 +195,7 @@ if __name__ == "__main__":
                 "WARNING": logging.WARNING
                 }
 
-        result = logging.INFO
+        result = logging.DEBUG
 
         if os.environ.get("LOGGING_LEVEL") is not None:
             level = os.environ["LOGGING_LEVEL"]

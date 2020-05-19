@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, LinkProps, matchPath, RouteComponentProps, withRouter } from "react-router-dom";
+import { Link, LinkProps, matchPath, useLocation } from "react-router-dom";
 
 import {
   Drawer,
@@ -15,7 +15,9 @@ import {
 } from "@material-ui/core/styles";
 import { makeStyles, createStyles } from "@material-ui/core/styles";
 import Context from "./Context";
-import TeamContext from "../../contexts/Teams";
+import UserContext from '../../contexts/User';
+
+import ConfigContext from "../../contexts/Config";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
@@ -25,9 +27,9 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     textDecoration: "none"
   },
   drawerHeader: {
-    marginTop:64,
+    marginTop: 64,
     display: 'flex',
-    flexDirection:'column',
+    flexDirection: 'column',
     alignItems: 'center',
     padding: '0 8px',
     ...theme.mixins.toolbar,
@@ -36,12 +38,16 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 export const ListLink = React.forwardRef<Link, LinkProps>(
-  ({ to, ...props }, ref) => <Link ref={ref} to={to} {...props}/>
+  ({ to, ...props }, ref) => <Link ref={ref} to={to} {...props} />
 );
 
-const LinkListItem = withRouter<LinkProps & RouteComponentProps>(({ location, to, children }) => {
+const LinkListItem: React.FC<LinkProps> = ({ to, children }) => {
+  const location = useLocation();
+
   const locationPathname = location.pathname;
-  const toPathname = typeof to === "string" ? to : to.pathname;
+  const toPathname = typeof to === "string" ? to
+    : typeof to === "object" ? to.pathname
+      : undefined;
   const selected = typeof toPathname === "string"
     ? matchPath(locationPathname, toPathname) !== null
     : true;
@@ -50,30 +56,44 @@ const LinkListItem = withRouter<LinkProps & RouteComponentProps>(({ location, to
       {children}
     </ListItem>
   );
-});
+};
 
 const NavigationList: React.FC = () => {
   const styles = useStyles();
-  const { WikiLink } = React.useContext(TeamContext);
+  const { isAdmin } = React.useContext(UserContext);
+  const { wiki } = React.useContext(ConfigContext);
   return (
     <List component="nav" className={styles.drawerHeader}>
       <LinkListItem to="/submission/training">
         <ListItemText>Submit Training Job</ListItemText>
       </LinkListItem>
-      <LinkListItem to="/submission/data">
+      {/* <LinkListItem to="/submission/data">
         <ListItemText>Submit Data Job</ListItemText>
-      </LinkListItem>
-      <LinkListItem to="/jobs">
+      </LinkListItem> */}
+      {/* <LinkListItem to="/jobs">
+        <ListItemText>View and Manage Jobs</ListItemText>
+      </LinkListItem> */}
+      <LinkListItem to="/jobs-v2">
         <ListItemText>View and Manage Jobs</ListItemText>
       </LinkListItem>
       <LinkListItem to="/cluster-status">
         <ListItemText>Cluster Status</ListItemText>
       </LinkListItem>
-      <ListItem button>
-        <ListItemText>
-          <a href={WikiLink} target="_blank" style={{ textDecoration:'none' }}>DLTS Wiki</a>
-        </ListItemText>
-      </ListItem>
+      {
+        isAdmin ?
+          <div style={{ width: '100%' }}>
+            <LinkListItem to="/vc">
+              <ListItemText>Vc</ListItemText>
+            </LinkListItem>
+            <LinkListItem to="/user">
+              <ListItemText>User</ListItemText>
+            </LinkListItem>
+            <LinkListItem to="/access">
+              <ListItemText>Access</ListItemText>
+            </LinkListItem>
+          </div>
+          : null
+      }
     </List>
   );
 };
@@ -94,7 +114,7 @@ const DashboardDrawer: React.FC = () => {
       open={open}
       onClose={onClose}
     >
-      <Divider/>
+      <Divider />
       <NavigationList />
     </Drawer>
   );

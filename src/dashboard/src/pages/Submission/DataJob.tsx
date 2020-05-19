@@ -46,8 +46,9 @@ const DataJob: React.FC = (props: any) => {
   const [nfsDataStorage, setNFSDataStorage] = useState('');
   const [openDialog, setOpenDialog] = useState(false);
   const[dialogContentText, setDialogContentText] = useState('');
-  const [submittable, setSubmittable] = useState(true);
-  const {email,uid } = React.useContext(UserContext);
+  const [submittable, setSubmittable] = useState(!(formats.azureDataStorage && formats.nfsDataStorage));
+  const {userName,uid } = React.useContext(UserContext);
+  const {email} = React.useContext(UserContext);
   const {teams, selectedTeam} = React.useContext(TeamsContext);
   const { selectedCluster,saveSelectedCluster } = React.useContext(ClustersContext);
   const [workStorage, setWorkStorage ] = useState('');
@@ -75,7 +76,7 @@ const DataJob: React.FC = (props: any) => {
   const request = useFetch(fetchDiretoryUrl);
   const fetchStorage = async () => {
     const data = await request.get('/');
-    const name = typeof email === 'string' ?  email.split('@', 1)[0] : email;
+    const name = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
     setDataStorage(data.dataStorage);
     setWorkStorage(`${data.workStorage}/${name}`);
   }
@@ -83,7 +84,7 @@ const DataJob: React.FC = (props: any) => {
     const { cluster } = props.location.state || '';
     if (cluster) {saveSelectedCluster(cluster)}
     fetchStorage();
-  },[selectedCluster, props.location.state, email, saveSelectedCluster])
+  },[selectedCluster, props.location.state, userName, saveSelectedCluster])
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.name === 'azureDataStorage') {
@@ -129,16 +130,23 @@ const DataJob: React.FC = (props: any) => {
   const covert = (dataJob: any) => {
     dataJob.vcName = selectedTeam;
     dataJob.jobName = "Data Job @ " + new Date().toISOString();
-    if (azureDataStorage) {dataJob.fromFolder = azureDataStorage;}
-    if (nfsDataStorage) {dataJob.toFolder = nfsDataStorage;}
-    dataJob.userName = email;
+    if (azureDataStorage) {
+      dataJob.fromFolder = azureDataStorage;
+    } else {
+      dataJob.fromFolder = formats.azureDataStorage;
+    }
+    if (nfsDataStorage) {
+      dataJob.toFolder = nfsDataStorage;
+    } else {
+      dataJob.toFolder = formats.nfsDataStorage
+    }
+    dataJob.userName = userName;
     dataJob.jobType = 'training';
     dataJob.jobtrainingtype = "RegularJob";
     dataJob.gpuType = gpuModel;
     dataJob.runningasroot = "1";
     dataJob.resourcegpu = 0;
     dataJob.containerUserId = 0;
-    dataJob.userId = uid;
     dataJob.image = "indexserveregistry.azurecr.io/dlts-data-transfer-image";
     dataJob.cmd = [
       "cd /DataUtils && ./copy_data.sh",
@@ -194,7 +202,7 @@ const DataJob: React.FC = (props: any) => {
               value={dataStorage}
             />
             <TextField
-              error={ !azureDataStorage}
+              error={!azureDataStorage && !formats.azureDataStorage}
               name={"azureDataStorage"}
               onChange={handleChange}
               id="outlined-error"
@@ -205,7 +213,7 @@ const DataJob: React.FC = (props: any) => {
               margin="dense"
             />
             <TextField
-              error={!nfsDataStorage}
+              error={!nfsDataStorage && !formats.nfsDataStorage}
               name={"nfsDataStorage"}
               onChange={handleChange}
               id="outlined-error"
@@ -218,7 +226,7 @@ const DataJob: React.FC = (props: any) => {
           </Grid>
         </CardContent>
         <CardActions>
-          <Button type="submit"  disabled ={submittable} color="primary" variant="contained" className={styles.submitButton}  onClick={postDataJob}>Submit</Button>
+          <Button type="submit" disabled={submittable} color="primary" variant="contained" className={styles.submitButton} onClick={postDataJob}>Submit</Button>
         </CardActions>
       </Card>
       <Dialog

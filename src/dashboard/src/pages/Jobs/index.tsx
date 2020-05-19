@@ -469,7 +469,7 @@ const Jobs: React.FC = (props: any) => {
   }
   if (jobs && allJobs) {
     return (
-      <Fragment>
+      <div style={{ width: '98%'}}>
         <JobsOperationDialog handleClose={handleClose}
           titleStyle={{color:red[200]}}
           title={"Info"}
@@ -487,7 +487,7 @@ const Jobs: React.FC = (props: any) => {
               {title: 'JobId', field: 'jobId',cellStyle: {
                 textAlign:'left',
                 flexDirection: 'row',
-                padding:'3',
+                padding:'0',
               },render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}`}>{rowData.jobId}</Link>  },
               {title: 'Job Name', field: 'jobName',cellStyle: {
                 textAlign:'left',
@@ -500,7 +500,12 @@ const Jobs: React.FC = (props: any) => {
                 whiteSpace: 'nowrap',
                 padding:'5',
               },render: (rowData: any) => renderJobStatus(rowData)},
-              {title:'GPU', field:'jobParams.resourcegpu',cellStyle: {
+              {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                textAlign:'center',
+                flexDirection: 'row',
+                padding:'0',
+              } },
+              {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -585,12 +590,12 @@ const Jobs: React.FC = (props: any) => {
             }}
           /> : null}
           {filterQueuedJobs(jobs).length > 0 ? <MaterialTable
-            title="Queued  Jobs"
+            title="Queued Jobs"
             columns={[
               {title: 'JobId', field: 'jobId',cellStyle: {
                 textAlign:'left',
                 flexDirection: 'row',
-                padding:'3',
+                padding:'0',
               },render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}`}>{rowData.jobId}</Link>  },
               {title: 'Job Name', field: 'jobName',cellStyle: {
                 textAlign:'left',
@@ -603,7 +608,12 @@ const Jobs: React.FC = (props: any) => {
                 whiteSpace: 'nowrap',
                 padding:'0',
               },render: (rowData: any) => renderJobStatus(rowData)},
-              {title:'GPU', field:'jobParams.resourcegpu',cellStyle: {
+              {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                textAlign:'center',
+                flexDirection: 'row',
+                padding:'0',
+              } },
+              {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -689,7 +699,12 @@ const Jobs: React.FC = (props: any) => {
                 padding:'0',
                 whiteSpace: 'nowrap',
               }, render: (rowData: any) => renderJobStatus(rowData)},
-              {title:'GPU', field:'jobParams.resourcegpu',cellStyle: {
+              {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                textAlign:'center',
+                flexDirection: 'row',
+                padding:'0',
+              } },
+              {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -765,7 +780,7 @@ const Jobs: React.FC = (props: any) => {
               { title: 'JobId', field: 'jobId',cellStyle: {
                 textAlign:'left',
                 flexDirection: 'row',
-                padding:'3',
+                padding:'0',
               }, render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}`}>{rowData.jobId}</Link> },
               { title: 'Job Name', cellStyle: {
                 textAlign:'left',
@@ -778,7 +793,12 @@ const Jobs: React.FC = (props: any) => {
                 padding:'5',
                 whiteSpace: 'nowrap'
               },render: (rowData: any) => renderJobStatus(rowData)},
-              {title:'GPU',cellStyle: {
+              {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                textAlign:'center',
+                flexDirection: 'row',
+                padding:'0',
+              } },
+              {title:'Number of Device',cellStyle: {
                 textAlign:'left',
                 flexDirection: 'row',
                 padding:'0',
@@ -852,7 +872,7 @@ const Jobs: React.FC = (props: any) => {
               { title: 'JobId', field: 'jobId',cellStyle: {
                 textAlign:'left',
                 flexDirection: 'row',
-                padding:'3'
+                padding:'0'
               },render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}`}>{rowData.jobId}</Link> },
               { title: 'Job Name', cellStyle: {
                 textAlign:'left',
@@ -865,7 +885,12 @@ const Jobs: React.FC = (props: any) => {
                 flexDirection: 'row',
                 padding:'0',
               },headerStyle:{padding:'0',textAlign:'center'},field:'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
-              {title:'GPU', cellStyle: {
+              {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                textAlign:'center',
+                flexDirection: 'row',
+                padding:'0',
+              } },
+              {title:'Number of Device', cellStyle: {
                 textAlign:'center',
                 flexDirection: 'row',
                 padding:'0',
@@ -932,7 +957,7 @@ const Jobs: React.FC = (props: any) => {
                     {title: 'JobId',cellStyle: {
                       textAlign:'left',
                       flexDirection: 'row',
-                      padding:'3',
+                      padding:'0',
                     }, field: 'jobId',render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}`}>{rowData.jobId}</Link>},
                     {title: 'Job Name',cellStyle: {
                       textAlign:'left',
@@ -945,7 +970,12 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'2',
                     }, field: 'jobStatus',render:(rowData: any) => renderJobStatus(rowData)},
-                    {title:'GPU', field:'jobParams.resourcegpu',cellStyle: {
+                    {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                      textAlign:'center',
+                      flexDirection: 'row',
+                      padding:'0',
+                    } },
+                    {title:'Number of Device', field:'jobParams.resourcegpu',cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
@@ -1037,7 +1067,7 @@ const Jobs: React.FC = (props: any) => {
                     {title: 'JobId', field: 'jobId',cellStyle: {
                       textAlign:'left',
                       flexDirection: 'row',
-                      padding:'3',
+                      padding:'0',
                     }, render: rowData =>  <Link  className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}`}>{rowData.jobId}</Link>},
                     {title: 'Job Name',cellStyle: {
                       textAlign:'left',
@@ -1050,7 +1080,12 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     },field: 'jobStatus', render: (rowData: any) => renderJobStatus(rowData)},
-                    {title:'GPU',cellStyle: {
+                    {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                      textAlign:'center',
+                      flexDirection: 'row',
+                      padding:'0',
+                    } },
+                    {title:'Number of Device',cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
@@ -1143,7 +1178,7 @@ const Jobs: React.FC = (props: any) => {
                     {title: 'JobId', field: 'jobId',cellStyle: {
                       textAlign:'left',
                       flexDirection: 'row',
-                      padding:'3',
+                      padding:'0',
                     },render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}/${selectedTeam}`}>{rowData.jobId}</Link>},
                     {title: 'Job Name',cellStyle: {
                       textAlign:'left',
@@ -1156,10 +1191,15 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     },field: 'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
-                    {title:'GPU',cellStyle: {
+                    {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
-                      padding:'2',
+                      padding:'0',
+                    } },
+                    {title:'Number of Device',cellStyle: {
+                      textAlign:'center',
+                      flexDirection: 'row',
+                      padding:'0',
                     },field:'jobParams.resourcegpu', render: (rowData: any) => <span>{ rowData['jobParams']['jobtrainingtype'] === 'RegularJob' ||  rowData['jobParams']['jobtrainingtype'] === 'InferenceJob'  || !rowData['jobParams'].hasOwnProperty('jobtrainingtype')  ? (Number)(rowData.jobParams.resourcegpu) :  (Number)(rowData.jobParams.resourcegpu * rowData.jobParams.numpsworker)  }</span>, type: 'numeric', customSort: (a: any, b: any) => {
                       return a.jobParams.resourcegpu - b.jobParams.resourcegpu || a.jobParams.resourcegpu * a.jobParams.numpsworker - b.jobParams.resourcegpu * b.jobParams.numpsworker
                     }},
@@ -1244,7 +1284,7 @@ const Jobs: React.FC = (props: any) => {
                     { title: 'JobId',cellStyle: {
                       textAlign:'left',
                       flexDirection: 'row',
-                      padding:'3',
+                      padding:'0',
                     },field: 'jobId', render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}/${selectedTeam}`}>{rowData.jobId}</Link> },
                     { title: 'Job Name',cellStyle: {
                       textAlign:'left',
@@ -1257,10 +1297,15 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'2'
                     },field:'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
-                    {title:'GPU',cellStyle: {
+                    {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                      textAlign:'center',
+                      flexDirection: 'row',
+                      padding:'0',
+                    } },
+                    {title:'Number of Device',cellStyle: {
                       textAlign:'right',
                       flexDirection: 'row',
-                      padding:'2',
+                      padding:'0',
                     },field:'jobParams.resourcegpu', render: (rowData: any) => <span>{ rowData['jobParams']['jobtrainingtype'] === 'RegularJob' ||  rowData['jobParams']['jobtrainingtype'] === 'InferenceJob'  || !rowData['jobParams'].hasOwnProperty('jobtrainingtype')  ? (Number)(rowData.jobParams.resourcegpu) :  (Number)(rowData.jobParams.resourcegpu * rowData.jobParams.numpsworker)  }</span>, type: 'numeric', customSort: (a: any, b: any) => {
                       return a.jobParams.resourcegpu - b.jobParams.resourcegpu || a.jobParams.resourcegpu * a.jobParams.numpsworker - b.jobParams.resourcegpu * b.jobParams.numpsworker
                     } },
@@ -1336,7 +1381,7 @@ const Jobs: React.FC = (props: any) => {
                     { title: 'JobId', field: 'jobId',cellStyle: {
                       textAlign:'left',
                       flexDirection: 'row',
-                      padding:'3'
+                      padding:'0'
                     },render: rowData =>  <Link className={classes.linkStyle} to={`/job/${selectedTeam}/${rowData.cluster}/${rowData.jobId}`}>{rowData.jobId}</Link> },
                     { title: 'Job Name', cellStyle: {
                       textAlign:'left',
@@ -1349,7 +1394,12 @@ const Jobs: React.FC = (props: any) => {
                       flexDirection: 'row',
                       padding:'0',
                     },headerStyle:{padding:'0',textAlign:'center'},field:'jobStatus',render: (rowData: any) => renderJobStatus(rowData)},
-                    {title:'GPU', cellStyle: {
+                    {title:'Device Type', field:'jobParams.gpuType',cellStyle: {
+                      textAlign:'center',
+                      flexDirection: 'row',
+                      padding:'0',
+                    } },
+                    {title:'Number of Device', cellStyle: {
                       textAlign:'center',
                       flexDirection: 'row',
                       padding:'0',
@@ -1412,7 +1462,7 @@ const Jobs: React.FC = (props: any) => {
           handleWarnClose={handleWarnClose}
           autoHideDuration={1000}
         />
-      </Fragment>
+      </div>
     )
   }
   return (

@@ -1,4 +1,3 @@
-
 import json
 import os
 import time
@@ -28,7 +27,7 @@ deployer = JobDeployer()
 
 
 def is_ssh_server_ready(pod_name):
-    bash_script = "sudo service ssh status"
+    bash_script = "service ssh status"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
         return False
@@ -36,36 +35,27 @@ def is_ssh_server_ready(pod_name):
 
 
 def query_ssh_port(pod_name):
-    bash_script = "grep ^Port /etc/ssh/sshd_config | cut -d' ' -f2"
-    status_code, output = deployer.pod_exec(pod_name, ["/bin/bash", "-c", bash_script])
-    if status_code != 0:
+    bash_script = "\"grep ^Port /usr/etc/sshd_config | cut -d' ' -f2\""
+    # status_code, output = deployer.pod_exec(pod_name, ["/bin/bash", "-c", bash_script])
+    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + "/bin/bash" + " -c " + bash_script))
+    if output == "":
         raise RuntimeError("Query ssh port failed: {}".format(pod_name))
+    # if status_code != 0:
+    #     raise RuntimeError("Query ssh port failed: {}".format(pod_name))
     if not output:
         return 22
     return int(output)
 
 
-def start_ssh_server(pod_name, user_name, host_network=False, ssh_port=22):
+def start_ssh_server(pod_name):
     '''Setup the ssh server in container, and return the listening port.'''
-    bash_script = "sudo bash -c 'apt-get update && apt-get install -y openssh-server && cd /home/" + user_name + " && (chown " + user_name + " -R .ssh; chmod 600 -R .ssh/*; chmod 700 .ssh; true) && service ssh restart'"
-
-    # ssh_port = 22
-
-    # modify the script for HostNewtork
-    if host_network:
-        # if the ssh_port is default value 22, randomly choose one
-        if ssh_port == 22:
-            ssh_port = random.randint(40000, 49999)
-        # bash_script = "sed -i '/^Port 22/c Port "+str(ssh_port)+"' /etc/ssh/sshd_config && "+bash_script
-        # TODO refine the script later
-        bash_script = "sudo bash -c 'apt-get update && apt-get install -y openssh-server && sed -i \"s/^Port/#&/\" /etc/ssh/sshd_config && echo \"Port " + str(ssh_port) + "\" >> /etc/ssh/sshd_config && cd /home/" + user_name + " && (chown " + user_name + " -R .ssh; chmod 600 -R .ssh/*; chmod 700 .ssh; true) && service ssh restart'"
+    bash_script = "service ssh start" # assume ssh server already setup
 
     # TODO setup reasonable timeout
     # output = k8sUtils.kubectl_exec("exec %s %s" % (jobId, " -- " + bash_script), 1)
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
         raise Exception("Failed to setup ssh server in container. JobId: %s " % pod_name)
-    return ssh_port
 
 
 def get_k8s_endpoint(endpoint_description_path):
@@ -96,7 +86,61 @@ spec:
     return endpoint_description
 
 
+
+def setup_ssh_server(user_name, pod_name, host_network=False):
+    '''Setup ssh server on pod and return the port'''
+    # setup ssh server only is the ssh server is not up
+    if not is_ssh_server_ready(pod_name):
+        logger.info("Ssh server is not ready for pod: %s. Setup ...", pod_name)
+        start_ssh_server(pod_name)
+    ssh_port = query_ssh_port(pod_name)
+    logger.info("Ssh server is ready for pod: %s. Ssh listen on %s", pod_name, ssh_port)
+    return ssh_port
+
+
+def setup_jupyter_server(user_name, pod_name,jupyter_port,nodePort):
+    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
+    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
+    if output == "":
+        raise Exception("Failed to start jupyter server in container. JobId: %s " % pod_name)
+
+
+def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
+    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
+    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
+    if output == "":
+        raise Exception("Failed to start tensorboard in container. JobId: %s " % pod_name)
+
+
+def start_endpoint(endpoint):
+    # pending, running, stopped
+    logger.info("Starting endpoint: %s", endpoint)
+
+    pod_name = endpoint["podName"]
+    podPort = endpoint["podPort"]
+    port = endpoint["port"]
+    user_name = endpoint["username"]
+
+    port_name = endpoint["name"]
+    if port_name == "ipython":
+        setup_jupyter_server(user_name, pod_name,podPort,port)
+    elif port_name == "tensorboard":
+        setup_tensorboard(user_name, pod_name,podPort,port)
+
 def create_node_port(endpoint):
+    port_name = endpoint["name"]
+    pod_name = endpoint["podName"]
+    user_name = endpoint["username"]
+    host_network = endpoint["hostNetwork"]
+    if port_name == "ssh":
+        endpoint["podPort"] = setup_ssh_server(user_name, pod_name, host_network)
+    elif port_name == "ipython":
+        endpoint["podPort"] = random.randint(40000, 49999)
+    elif port_name == "tensorboard":
+        endpoint["podPort"] = random.randint(40000, 49999)
+    else:
+        endpoint["podPort"] = int(endpoint["podPort"])
+
     endpoint_description = generate_node_port_service(endpoint["jobId"], endpoint["podName"], endpoint["id"], endpoint["name"], endpoint["podPort"])
     endpoint_description_path = os.path.join(config["storage-mount-path"], endpoint["endpointDescriptionPath"])
     logger.info("endpointDescriptionPath: %s", endpoint_description_path)
@@ -108,61 +152,6 @@ def create_node_port(endpoint):
         raise Exception("Failed to create NodePort for ssh. JobId: %s " % endpoint["jobId"])
 
     logger.info("Submitted endpoint %s to k8s, returned with status %s", endpoint["jobId"], result)
-
-
-def setup_ssh_server(user_name, pod_name, host_network=False):
-    '''Setup ssh server on pod and return the port'''
-    # setup ssh server only is the ssh server is not up
-    if not is_ssh_server_ready(pod_name):
-        logger.info("Ssh server is not ready for pod: %s. Setup ...", pod_name)
-        ssh_port = start_ssh_server(pod_name, user_name, host_network)
-    else:
-        ssh_port = query_ssh_port(pod_name)
-    logger.info("Ssh server is ready for pod: %s. Ssh listen on %s", pod_name, ssh_port)
-    return ssh_port
-
-
-def setup_jupyter_server(user_name, pod_name):
-
-    jupyter_port = random.randint(40000, 49999)
-    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip install jupyter && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter notebook --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " &>/dev/null &\"'"
-    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
-    if output == "":
-        raise Exception("Failed to start jupyter server in container. JobId: %s " % pod_name)
-    return jupyter_port
-
-
-def setup_tensorboard(user_name, pod_name):
-    tensorboard_port = random.randint(40000, 49999)
-    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; pip install tensorboard; runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --port=" + str(tensorboard_port) + " &>/dev/null &\"'"
-    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
-    if output == "":
-        raise Exception("Failed to start tensorboard in container. JobId: %s " % pod_name)
-    return tensorboard_port
-
-
-def start_endpoint(endpoint):
-    # pending, running, stopped
-    logger.info("Starting endpoint: %s", endpoint)
-
-    # podName
-    pod_name = endpoint["podName"]
-    user_name = endpoint["username"]
-    host_network = endpoint["hostNetwork"]
-
-    port_name = endpoint["name"]
-    if port_name == "ssh":
-        endpoint["podPort"] = setup_ssh_server(user_name, pod_name, host_network)
-    elif port_name == "ipython":
-        endpoint["podPort"] = setup_jupyter_server(user_name, pod_name)
-    elif port_name == "tensorboard":
-        endpoint["podPort"] = setup_tensorboard(user_name, pod_name)
-    else:
-        endpoint["podPort"] = int(endpoint["podPort"])
-
-    # create NodePort
-    create_node_port(endpoint)
-
 
 def start_endpoints():
     try:
@@ -186,12 +175,15 @@ def start_endpoints():
                     if(output != ""):
                         endpoint_description = json.loads(output)
                         endpoint["endpointDescription"] = endpoint_description
+                        endpoint["port"] = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
+                        start_endpoint(endpoint)
                         endpoint["status"] = "running"
                         pod = k8sUtils.GetPod("podName=" + endpoint["podName"])
                         if "items" in pod and len(pod["items"]) > 0:
                             endpoint["nodeName"] = pod["items"][0]["spec"]["nodeName"]
                     else:
-                        start_endpoint(endpoint)
+                        # create NodePort
+                        create_node_port(endpoint)
 
                     endpoint["lastUpdated"] = datetime.datetime.now().isoformat()
                     data_handler.UpdateEndpoint(endpoint)

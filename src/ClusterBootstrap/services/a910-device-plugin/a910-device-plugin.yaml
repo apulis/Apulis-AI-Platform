@@ -1,0 +1,57 @@
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: a910-device-plugin
+  namespace: kube-system
+  labels:
+    app: a910-device-plugin
+spec:
+  selector:
+    matchLabels:
+      app: a910-device-plugin
+  template:
+    metadata:
+      labels:
+        app: a910-device-plugin
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      {% if true %}
+      hostNetwork: true
+      {% endif %}
+      nodeSelector:
+        gpuType: Huawei_A910
+      containers:
+        - name: a910-device-plugin
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}a910-device-plugin:{{cnf["dockertag"]}}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            # readOnlyRootFilesystem: true
+            privileged: true
+            # allowPrivilegeEscalation: false
+          volumeMounts:
+            - name: devfs
+              mountPath: /dev
+              # readOnly: true
+            - name: sysfs
+              mountPath: /sys/class/devdrv-class
+              readOnly: true
+            - name: kubeletsockets
+              mountPath: /var/lib/kubelet/device-plugins
+      volumes:
+        - name: devfs
+          hostPath:
+            path: /dev
+        - name: sysfs
+          hostPath:
+            path: /sys/class/devdrv-class
+        - name: kubeletsockets
+          hostPath:
+            path: /var/lib/kubelet/device-plugins

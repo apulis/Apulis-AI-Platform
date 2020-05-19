@@ -42,8 +42,10 @@ def record(fn):
 
 class DataHandler(object):
     def __init__(self):
+
         start_time = timeit.default_timer()
         self.database = "DLWSCluster-%s" % config["clusterId"]
+        self.accounttablename = "account"
         self.jobtablename = "jobs"
         self.identitytablename = "identity"
         self.acltablename = "acl"
@@ -53,6 +55,7 @@ class DataHandler(object):
         self.commandtablename = "commands"
         self.templatetablename = "templates"
         self.jobprioritytablename = "job_priorities"
+
         server = config["mysql"]["hostname"]
         username = config["mysql"]["username"]
         password = config["mysql"]["password"]
@@ -91,6 +94,30 @@ class DataHandler(object):
         if "initSQLTable" not in global_vars or not global_vars["initSQLTable"]:
             logger.info("===========init SQL Tables ===============")
             global_vars["initSQLTable"] = True
+
+            sql = """
+                CREATE TABLE IF NOT EXISTS `%s`
+                (
+                    `uid` int(11) NOT NULL AUTO_INCREMENT,
+                    `openId` varchar(64) NOT NULL,
+                    `group` varchar(64) NOT NULL,
+                    `nickName` varchar(64) NOT NULL,
+                    `userName` varchar(64) NOT NULL,
+                    `password` varchar(64) NOT NULL,
+                    `isAdmin` int(11) NOT NULL,
+                    `isAuthorized` int(11) NOT NULL,
+                    `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (`uid`) USING BTREE,
+                    UNIQUE KEY `userName` (`userName`) USING BTREE,
+                    UNIQUE KEY `openId-group` (`openId`,`group`) USING BTREE
+                ) AUTO_INCREMENT=30001;
+                """ % (self.accounttablename)
+
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            self.conn.commit()
+            cursor.close()
+
             sql = """
                 CREATE TABLE IF NOT EXISTS `%s`
                 (
@@ -377,7 +404,7 @@ class DataHandler(object):
                 record["metadata"] = metadata
                 ret.append(record)
         except Exception as e:
-            logger.error('Exception: %s', str(e))
+            logger.exception('Exception: %s', str(e))
             pass
         self.conn.commit()
         cursor.close()
@@ -411,6 +438,98 @@ class DataHandler(object):
             logger.error('Exception: %s', str(e))
             return False
 
+    @record
+    def ListUser(self):
+        cursor = self.conn.cursor()
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s`" % (self.accounttablename)
+        ret = []
+        try:
+            cursor.execute(query)
+            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in cursor:
+                record = {}
+                record["uid"] = uid
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+        except Exception as e:
+            logger.error('ListUser Exception: %s', str(e))
+        self.conn.commit()
+        cursor.close()
+        return ret
+
+    @record
+    def GetAccountByOpenId(self, openId, group):
+        cursor = self.conn.cursor()
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
+        ret = []
+
+        try:
+            cursor.execute(query)
+            for (uid, openId, group, nickName, userName, password, isAdmin, isAuthorized) in cursor:
+                record = {}
+                record["uid"] = uid
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+
+        except Exception as e:
+            logger.error('GetAccountByOpenId Exception: %s', str(e))
+        self.conn.commit()
+        cursor.close()
+        return ret
+
+    @record
+    def GetAccountByUserName(self, userName):
+        cursor = self.conn.cursor()
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `userName` = '%s'" % (self.accounttablename, userName)
+        ret = []
+        try:
+            cursor.execute(query)
+            for (uid, openId, group, nickName, userName,  password, isAdmin, isAuthorized) in cursor:
+                record = {}
+                record["uid"] = uid
+                record["openId"] = openId
+                record["group"] = group
+                record["nickName"] = nickName
+                record["userName"] = userName
+                record["password"] = password
+                record["isAdmin"] = isAdmin
+                record["isAuthorized"] = isAuthorized
+                ret.append(record)
+        except Exception as e:
+            logger.error('GetAccountByUserName Exception: %s', str(e))
+        self.conn.commit()
+        cursor.close()
+        return ret
+
+    @record
+    def UpdateAccountInfo(self, openId, group, nickName, userName, password, isAdmin, isAuthorized):
+        try:
+            cursor = self.conn.cursor()
+
+            if len(self.GetAccountByOpenId(openId, group)) == 0:
+                sql = "INSERT INTO `"+self.accounttablename+"` (`openId`, `group`, `nickName`, `userName`, `password`, `isAdmin`, `isAuthorized`) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+                cursor.execute(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
+            else:
+                sql = "update `%s` set `nickName` = '%s', `userName` = '%s', `password` = '%s', `isAdmin` = '%s', isAuthorized = '%s' where `openId` = '%s' and `group` = '%s'"
+                cursor.execute(sql, (self.accounttablename, nickName, userName, password, isAdmin, isAuthorized, openId, group))
+
+            self.conn.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+            return False
 
     @record
     def GetIdentityInfo(self, identityName):
@@ -448,6 +567,19 @@ class DataHandler(object):
                 sql = """update `%s` set uid = '%s', gid = '%s', groups = '%s' where `identityName` = '%s' """ % (self.identitytablename, uid, gid, groups, identityName)
                 cursor.execute(sql)
 
+            self.conn.commit()
+            cursor.close()
+            return True
+        except Exception as e:
+            logger.error('UpdateIdentityInfo Exception: %s', str(e))
+            return False
+
+    @record
+    def UpdateIdentityInfoPerm(self, identityName, isAdmin, isAuthorized):
+        try:
+            cursor = self.conn.cursor()
+            sql = """update `%s` set isAdmin = '%s', isAuthorized = '%s' where `identityName` = '%s' """ % (self.accounttablename, isAdmin, isAuthorized, identityName)
+            cursor.execute(sql)
             self.conn.commit()
             cursor.close()
             return True
@@ -541,12 +673,13 @@ class DataHandler(object):
     @record
     def GetAcl(self):
         cursor = self.conn.cursor()
-        query = "SELECT `identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s`" % (self.acltablename)
+        query = "SELECT `id`,`identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s`" % (self.acltablename)
         ret = []
         try:
             cursor.execute(query)
-            for (identityName,identityId,resource,permissions,isDeny) in cursor:
+            for (id,identityName,identityId,resource,permissions,isDeny) in cursor:
                 record = {}
+                record["id"] = id
                 record["identityName"] = identityName
                 record["identityId"] = identityId
                 record["resource"] = resource
@@ -1058,7 +1191,7 @@ class DataHandler(object):
         return True
 
     def __del__(self):
-        logger.debug("********************** deleted a DataHandler instance *******************")
+        # logger.debug("********************** deleted a DataHandler instance *******************")
         self.Close()
 
     def Close(self):
@@ -1067,7 +1200,6 @@ class DataHandler(object):
             self.conn.close()
         except Exception as e:
             pass
-
 
 if __name__ == '__main__':
     TEST_INSERT_JOB = False

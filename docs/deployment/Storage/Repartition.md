@@ -25,3 +25,17 @@ DL Workspace provides some scripts tool for you to partition the data-disk on th
    deploy.py partition create s_1, s_2, ..., s_n 
    ```
    will create n partitions. If s_i < 0, the partition will be of size s_i GB, if s_i > 0, the partition will be created roughly proportional to the value of s_i. Internally, we use 'parted --align optimal start% end%' to create data partitions, so the size of the partition will be rounded to 1% of the size of the disk. 
+
+4. Alternatively, you may manually partition a drive as follows:
+    ```
+    fdisk /dev/sda
+    n // new partition
+    p // primary partition
+    [return] // default partition number 1
+    [return] // default start (from beginning)
+    [return] // default end (from end)
+    w // write partition information to disk
+    after this, do:
+    sudo mkfs -t ext4 /dev/sda1 // to change the drive into a ext4 partition
+    ```
+    Then add the drive the /etc/fstab, and then 

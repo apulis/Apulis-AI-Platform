@@ -1,0 +1,270 @@
+apiVersion: v1
+data:
+  bootstrap.sh: "#! /bin/bash\nset -ex\n\n. /dlts-runtime/env/init.env\nsh -x /dlts-runtime/install.sh\n\n#
+    set apt mirrors for foreign sources\n#sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub\nsed
+    -i 's|https\\?://[^/]\\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list \n##
+    apt-get clean && apt-get update\n## https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/\n\n#apt-key
+    del 7FA2AF80 \n#apt-get install -y wget\n#sudo wget -qO - https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+    | sudo apt-key add -\nrm -rf /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/cuda.list.save
+    /etc/apt/sources.list.d/graphics-drivers-ubuntu-ppa-bionic.list /etc/apt/sources.list.d/nvidia-ml.list
+    /etc/apt/sources.list.d/nvidia-ml.list.save\n\nSCRIPT_DIR=/pod/scripts\necho bootstrap
+    starts at `date` &>> ${LOG_DIR}/bootstrap.log\n\n# https://stackoverflow.com/a/26759734/845762\nif
+    ! [ -x \"$(command -v sudo)\" ] ; then\n    time apt-get update && time apt-get
+    install -y sudo\nfi\n\nif [ \"$DLWS_ROLE_NAME\" != \"inferenceworker\" ];\nthen\n\t#
+    Dir for saving running status\n\texport PROC_DIR=/pod/running\n\trm -rf ${PROC_DIR}\n\tmkdir
+    -p ${PROC_DIR}\n\n\t# Dir for logs\n\texport LOG_DIR=/pod/logs\n\t#rm -rf ${LOG_DIR}\n\tmkdir
+    -p ${LOG_DIR}\n\n\t# Save the pid.\n\tPID_FILE=${PROC_DIR}/pid\n\techo $$ > $PID_FILE\nfi\n\n#
+    Setup container\nbash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log\n\nif
+    [ \"$DLWS_ROLE_NAME\" != \"inferenceworker\" ];\nthen\n\ttouch ${PROC_DIR}/CONTAINER_READY\nfi\n\n#
+    Setup roles\nbash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log\n\nif
+    [ \"$DLWS_ROLE_NAME\" != \"inferenceworker\" ];\nthen\n    bash ${SCRIPT_DIR}/setup_ssh_config.sh
+    &>> ${LOG_DIR}/bootstrap.log\n\ttouch ${PROC_DIR}/ROLE_READY\n\n\t# Setup job\n\t#
+    TODO\n\ttouch ${PROC_DIR}/JOB_READY\nfi\n\necho bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log\n\nset
+    +e\n# Execute user's command for the job\nif [ \"$DLWS_ROLE_NAME\" = \"worker\"
+    ];\nthen\n    runuser -l ${DLWS_USER_NAME} -c \"sleep infinity\"\nelse\n    printenv
+    DLWS_LAUNCH_CMD > /pod/job_command.sh\n    chmod ugo+rx /pod/job_command.sh\n
+    \   chmod ugo+rx /pod.env\n    runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh\n
+    \   # Save exit code\n    EXIT_CODE=$?\n    echo  `date` \": ${EXIT_CODE}\"  >
+    ${PROC_DIR}/EXIT_CODE\nfi\n\n# exit\nexit ${EXIT_CODE}\n"
+  init_user.sh: |
+    #/bin/bash
+    set -ex
+
+    #export POD_NAME=
+    #export DLWS_GID=
+    #export DLWS_UID=
+    #export DLWS_USER_NAME=
+    export ENV_FILE=/pod.env
+
+    # install required pkgs
+    export DEBIAN_FRONTEND=noninteractive
+    time apt-get update && time apt-get install sudo openssl -y
+
+    # setup user and group, fix permissions
+    addgroup --force-badname --gid  ${DLWS_GID} domainusers
+    adduser --force-badname --home /home/${DLWS_USER_NAME} --shell /bin/bash --uid ${DLWS_UID}  -gecos '' --gid ${DLWS_GID} --disabled-password ${DLWS_USER_NAME}
+    usermod -p $(echo ${DLTS_JOB_TOKEN} | openssl passwd -1 -stdin) ${DLWS_USER_NAME}
+    chown ${DLWS_USER_NAME} /home/${DLWS_USER_NAME}/ /home/${DLWS_USER_NAME}/.profile /home/${DLWS_USER_NAME}/.ssh || /bin/true
+    chmod 700 /home/${DLWS_USER_NAME}/.ssh || /bin/true
+
+    # setup sudoers
+    adduser $DLWS_USER_NAME sudo
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+    # export envs
+    # options '-e' for exported ENVs only
+    compgen -e | while read line; do
+            if [[ $line != HOME* ]] && [[ $line != INTERACTIVE* ]] && [[ $line != LS_COLORS* ]]  && [[ $line != PATH* ]] && [[ $line != PWD* ]]; then
+                # Since bash >= 4.4 we could use
+                # echo "export ${line}=${!line@Q}" >> "${ENV_FILE}" ;
+                # For compatible with bash < 4.4
+                printf "export ${line}=%q\n" "${!line}" >> "${ENV_FILE}" ;
+            fi; done
+    echo "export PATH=$PATH:\${PATH}" >> "${ENV_FILE}"
+    echo "export LD_LIBRARY_PATH=/usr/local/nvidia/lib64/:\${LD_LIBRARY_PATH}" >> "${ENV_FILE}"
+    # source the envs
+    grep -qx "^\s*. ${ENV_FILE}" /home/${DLWS_USER_NAME}/.profile || cat << SCRIPT >> "/home/${DLWS_USER_NAME}/.profile"
+    if [ -f ${ENV_FILE} ]; then
+        . ${ENV_FILE}
+    fi
+    SCRIPT
+
+    # any command should run as ${DLWS_USER_NAME}
+    #runuser -l ${DLWS_USER_NAME} -c your_commands
+  install.sh: |
+    cwd=`dirname $0`
+    ssh_root="$cwd/ssh_build/usr"
+
+    mkdir -p /usr/etc
+    cp $ssh_root/etc/* /usr/etc
+    cp $cwd/ssh_config/sshd/sshd_config /usr/etc/sshd_config
+
+    cp $cwd/ssh_config/init.d/* /etc/init.d
+    cp $cwd/ssh_config/default/* /etc/default
+    chmod +x /etc/init.d/ssh
+
+    cp -r $ssh_root/bin $ssh_root/sbin $ssh_root/lib $ssh_root/libexec /usr/
+
+    ssh-keygen -t dsa -f /usr/etc/ssh_host_dsa_key -N ""
+    ssh-keygen -t rsa -f /usr/etc/ssh_host_rsa_key -N ""
+    ssh-keygen -t ecdsa -f /usr/etc/ssh_host_ecdsa_key -N ""
+  setup_ssh_config.sh: |
+    #! /bin/bash
+    set -x
+
+    # generate ps host list
+    ps_host_list=""
+    for i in $(seq 0 $(( ${DLWS_NUM_PS} - 1 )) )
+    do
+        ps_host_list+="ps-${i} "
+    done
+
+    # generate worker host list
+    worker_host_list=""
+    if [ "$DLWS_ROLE_NAME" = "master" ];
+    then
+        worker_host_list="${DLWS_ROLE_NAME}"
+    else
+        for i in $(seq 0 $(( ${DLWS_NUM_WORKER} - 1 )) )
+        do
+            worker_host_list+="worker-${i} "
+        done
+    fi
+
+    # generate host list
+    host_list="${ps_host_list} ${worker_host_list}"
+
+    # generate ~/.ssh/config
+    SSH_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/config
+    >${SSH_CONFIG_FILE}
+    chown ${DLWS_USER_NAME} ${SSH_CONFIG_FILE}
+    chmod 600 ${SSH_CONFIG_FILE}
+
+    for host in ${host_list}
+    do
+        if [ "$DLWS_ROLE_NAME" = "master" ];
+        then
+            ip=$DLWS_SD_SELF_IP
+            port=$DLWS_SD_SELF_SSH_PORT
+        else
+            role=${host%%-*}
+            idx=${host##*-}
+
+            ip_key=DLWS_SD_${role}${idx}_IP
+            port_key=DLWS_SD_${role}${idx}_SSH_PORT
+            ip=$(printenv $ip_key)
+            port=$(printenv $port_key)
+        fi
+        cat >>${SSH_CONFIG_FILE} <<EOF
+
+    Host ${host}
+      HostName ${ip}
+      Port ${port}
+      User ${DLWS_USER_NAME}
+      StrictHostKeyChecking no
+      UserKnownHostsFile /dev/null
+
+    EOF
+        # also add entry to /etc/hosts
+        echo -e "${ip}\t${host}" >> /etc/hosts
+    done
+
+    envs=(
+    LD_LIBRARY_PATH
+    LIBRARY_PATH
+    PATH
+    PYTHONPATH
+    NCCL_IB_DISABLE
+    NCCL_VERSION
+    DLWS_HOST_NETWORK
+    DLWS_JOB_ID
+    DLTS_JOB_TOKEN
+    DLWS_NUM_PS
+    DLWS_NUM_WORKER
+    DLWS_NUM_GPU_PER_WORKER
+    DLWS_NUM_WORKER
+    DLWS_VC_NAME
+    DLWS_UID
+    DLWS_GID
+    DLWS_USER_NAME
+    DLWS_USER_EMAIL
+    DLWS_ROLE_NAME
+    DLWS_ROLE_IDX
+    )
+
+    SSH_ENVIRONMENT_FILE=/home/${DLWS_USER_NAME}/.ssh/environment
+    for env_key in "${envs[@]}" ; do
+        if [ "`printenv $env_key`" != "" ] ; then
+            printf $env_key >> $SSH_ENVIRONMENT_FILE
+            printf = >> $SSH_ENVIRONMENT_FILE
+            printenv $env_key >> $SSH_ENVIRONMENT_FILE
+        fi
+    done
+    chown ${DLWS_USER_NAME} ${SSH_ENVIRONMENT_FILE}
+    chmod 600 ${SSH_ENVIRONMENT_FILE}
+
+    mkdir -p /root/.ssh && cp /home/${DLWS_USER_NAME}/.ssh/* /root/.ssh/ && chown root /root/.ssh/* && chmod 600 /root/.ssh/*
+
+    # generate /job/hostfile
+    if [ "$DLWS_ROLE_NAME" = "master" ] || [ "$DLWS_ROLE_NAME" = "ps" ];
+    then
+        SLOT_FILE="/job/hostfile"
+        >${SLOT_FILE}
+        chown ${DLWS_USER_NAME} ${SLOT_FILE}
+
+        for host in ${worker_host_list}
+        do
+            slots=${DLWS_NUM_GPU_PER_WORKER}
+            cat >>${SLOT_FILE} <<EOF
+    ${host} slots=${slots}
+    EOF
+        done
+    fi
+
+    # make sure worker have sshd up and running
+    if [ "$DLWS_ROLE_NAME" = "ps" ];
+    then
+        for host in ${host_list}
+        do
+            succ=false
+            for i in `seq 1 3600` ; do
+                echo "testing $host"
+                ssh $host "echo 1"
+                # do not add code here
+                rtn=$?
+                echo "done testing $host"
+                if [ "$rtn" -eq "0" ] ; then
+                    succ=true
+                    echo "$host has done sshd setup"
+                    break
+                else
+                    echo "$host has not done sshd setup wait 1s"
+                    sleep 1
+                fi
+            done
+            if [ "$succ" = "false" ] ; then
+                exit 1
+            fi
+        done
+    fi
+  setup_sshd.sh: |
+    #! /bin/bash
+    set -ex
+
+    function fail {
+      echo $1 >&2
+      exit 1
+    }
+
+    function retry {
+      local n=1
+      local max=3
+      local delay=3
+      while true; do
+        "$@" && break || {
+          if [[ $n -lt $max ]]; then
+            ((n++))
+            echo "Command failed. Attempt $n/$max:"
+            sleep $delay;
+          else
+            fail "The command has failed after $n attempts."
+          fi
+        }
+      done
+    }
+
+    function setup_sshd {
+        SSH_PORT=$DLWS_SD_SELF_SSH_PORT
+        sed -i -E "s/^#?Port 22/Port ${SSH_PORT}/" /usr/etc/sshd_config || exit 1
+
+        echo "${SSH_PORT}" > ${PROC_DIR}/SSH_PORT
+        echo "${POD_IP}" > ${PROC_DIR}/POD_IP
+
+        time /etc/init.d/ssh restart || exit 1
+    }
+
+    retry setup_sshd
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: dlws-scripts

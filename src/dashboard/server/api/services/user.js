@@ -2,26 +2,29 @@ const { createHash } = require('crypto')
 
 const config = require('config')
 const jwt = require('jsonwebtoken')
-const fetch = require('node-fetch')
 
 const Service = require('./service')
 const Cluster = require('./cluster')
 
+const clusterIds = Object.keys(config.get('clusters'))
+
 const sign = config.get('sign')
+// const winbind = config.get('winbind')
 const winbind = config.has('winbind') ? config.get('winbind') : undefined
 const masterToken = config.get('masterToken')
-const addGroupLink = config.get('AddGroupLink')
-const WikiLink = config.get('WikiLink')
-const clusterIds = Object.keys(config.get('clusters'))
+
+const TOKEN = Symbol('token')
 
 class User extends Service {
   /**
    * @param {import('koa').Context} context
-   * @param {string} email
+   * @param {string} openId
+   * @param {string} group
    */
-  constructor (context, email) {
+  constructor(context, openId, group) {
     super(context)
-    this.email = email
+    this.openId = openId
+    this.group = group
   }
 
   /**
@@ -29,63 +32,107 @@ class User extends Service {
    * @param {object} idToken
    * @return {User}
    */
-  static fromIdToken (context, idToken) {
-    const user = new User(context, idToken['upn'])
-    user.givenName = idToken['given_name']
-    user.addGroupLink = addGroupLink
-    user.familyName = idToken['family_name']
-    user.WikiLink = WikiLink
+  static fromIdToken(context, idToken) {
+    const user = new User(context, idToken['email'], 'Microsoft')
+    user.nickName = idToken['name']
+    return user
+  }
+
+  /**
+   * @param {import('koa').Context} context
+   * @param {object} userinfo
+   * @return {User}
+   */
+  static fromDingtalk(context, userinfo) {
+    const user = new User(context, userinfo['openid'], 'DingTalk')
+    user.nickName = userinfo['nick']
+    return user
+  }
+  /**
+   * @param {import('koa').Context} context
+   * @param {object} userinfo
+   * @return {User}
+   */
+  static fromWechat(context, userInfo) {
+    // 对于微信，首先选择 unionId 作为 openId
+    let userId = ''
+    if (userInfo.unionId) {
+      userId = 'unionId--' + userInfo.unionId
+    } else {
+      userId = 'openId--' + userInfo.openId
+    }
+    const user = new User(context, userId, 'Wechat')
+    user.nickName = userInfo.nickname
+    return user
+  }
+
+  /**
+   * @param {import('koa').Context} context
+   * @param {String} openId
+   * @return {User}
+   */
+  static fromZjlab(context, zjlabId) {
+    const user = new User(context, `ZJ${zjlabId}`, 'Zjlab')
+    user.nickName = `User ${zjlabId}`
     return user
   }
 
   /**
    * @param {import('koa').Context} context
    * @param {string} email
-   * @param {string} token
+   * @param {string} password
    * @return {User}
    */
-  static fromToken (context, email, token) {
-    const user = new User(context, email)
+  static fromToken(context, openId, group, token) {
+    const user = new User(context, openId, group)
     const expectedToken = user.token
-    const actualToken = Buffer.from(token, 'hex')
+    const actualToken = Buffer.from(password, 'hex')
     context.assert(expectedToken.equals(actualToken), 403, 'Invalid token')
 
-    return user // No givenName nor familyName here
-  }
-
-  /**
-   * @param {import('koa').Context} context
-   * @param {string} token
-   * @return {User}
-   */
-  static fromCookie (context, token) {
-    const payload = jwt.verify(token, sign)
-    const user = new User(context, payload['email'])
-    user.password = this.generateToken(user.email)
-    user.givenName = payload['givenName']
-    user.addGroupLink = addGroupLink
-    user.WikiLink = WikiLink
-    user.familyName = payload['familyName']
-    user.uid = payload['uid']
-    user.gid = payload['gid']
     return user
   }
 
   /**
-   * @param {string} email
-   * @return {Buffer}
+   * @param {import('koa').Context} context
+   * @param {string} cookieToken
+   * @return {User}
    */
-  static generateToken (email) {
-    const hash = createHash('md5')
-    hash.update(`${email}:${masterToken}`)
-    return hash.digest()
+  static fromCookie(context, token) {
+    const payload = jwt.verify(token, sign)
+    const user = new User(context, payload['openId'], payload['group'])
+    return user
   }
 
-  get token () {
+  static parseTokenToUserInfo(token) {
+    const payload = jwt.verify(token, sign)
+    return payload
+  }
+  /**
+   * @param {import('koa').Context} context
+   * @param {string} cookieToken
+   * @return {User}
+   */
+  static fromCookieToken (context, cookieToken) {
+    const payload = jwt.verify(cookieToken, sign)
+    const user = new User(context, payload['email'])
+    user.givenName = payload['givenName']
+    user.familyName = payload['familyName']
+    user.uid = payload['uid']
+    user.nickName = payload['nickName']
+    user.userName = payload['userName']
+    user.password = payload['password']
+    user.isAdmin = payload['isAdmin']
+    user.isAuthorized = payload['isAuthorized']
+    user.group = payload['group']
+    user.openId = payload['openId']
+    return user
+  }
+
+  get token() {
     if (this._token == null) {
-      Object.defineProperty(this, '_token', {
-        value: User.generateToken(this.email)
-      })
+      const hash = createHash('md5')
+      hash.update(`${this.userName}:${masterToken}`)
+      this._token = hash.digest()
     }
     return this._token
   }
@@ -115,26 +162,140 @@ class User extends Service {
     if (Array.isArray(data['groups'])) {
       data['groups'] = JSON.stringify(data['groups'].map(e => String(e)))
     }
-    const params = new URLSearchParams(Object.assign({ userName: this.email }, data))
+    const params = new URLSearchParams(Object.assign({ userName: this.userName }, data))
     for (const clusterId of clusterIds) {
       new Cluster(this.context, clusterId).fetch('/AddUser?' + params)
     }
+  }
+  /**
+   * @param {string} email
+   * @return {Buffer}
+   */
+  static generateToken (email) {
+    const hash = createHash('md5')
+    hash.update(`${email}:${masterToken}`)
+    return hash.digest()
+  }
+
+  /*
+  get token () {
+    if (this[TOKEN] == null) {
+      this[TOKEN] = User.generateToken(this.email)
+    }
+    return this[TOKEN]
+  }*/
+
+  async loginWithMicrosoft() {
+    const params = new URLSearchParams(Object.assign({
+      identityName: this.userName,
+      Alias: this.Alias,
+      Group: "Microsoft",
+      isAdmin: true,
+      isAuthorized: true
+    }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
+    return await response.json()
+  }
+  
+  async loginWithDingtalk() {
+    const params = new URLSearchParams(Object.assign({
+      identityName: this.userName,
+      Alias: this.Alias,
+      Group: "DingTalk",
+      isAdmin: false,
+      isAuthorized: false
+    }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/login?' + params)
+    return await response.json()
+  }
+
+  async getAccountInfo() {
+    const params = new URLSearchParams(Object.assign({
+      openId: this.openId,
+      group: this.group,
+    }))
+
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/getAccountInfo?' + params)
+    const data = await response.json()
+    this.context.log.warn(data, 'getAccountInfo')
+    if (data) {
+      this.uid = data['uid']
+      this.nickName = data['nickName']
+      this.userName = data['userName']
+      this.password = data['password']
+      this.isAdmin = data['isAdmin']
+      this.isAuthorized = data['isAuthorized']
+      this.openId = data['openId']
+      this.group = data['group']
+    }
+    return data
+  }
+
+  async signup(nickName, userName, password) {
+    const params = new URLSearchParams(Object.assign({
+      openId: this.openId,
+      group: this.group,
+      nickName: nickName,
+      userName: userName,
+      password: password,
+      isAdmin: false,
+      isAuthorized: false,
+    }))
+    const clusterId = clusterIds[0]
+    const response = await new Cluster(this.context, clusterId).fetch('/SignUp?' + params)
+    return await response.json()
   }
 
   /**
    * @return {string}
    */
-  toCookie () {
+  toCookie() {
+    // console.log('token is ', this.token)
     return jwt.sign({
-      email: this.email,
+      openId: this.openId,
+      group: this.group,
       uid: this.uid,
+      nickName: this.nickName,
+      userName: this.userName,
+      password: this.password,
+      isAdmin: this.isAdmin,
+      isAuthorized: this.isAuthorized,
       gid: this.gid,
-      _token: this.token,
       familyName: this.familyName,
       givenName: this.givenName,
-      addGroupLink: addGroupLink,
-      WikiLink: WikiLink
+      exp: new Date().getTime() / 1000 + 2 * 24 * 60 * 60
     }, sign)
+  }
+
+  toCookieToken () {
+    return jwt.sign({
+      openId: this.openId,
+      group: this.group,
+      uid: this.uid,
+      nickName: this.nickName,
+      userName: this.userName,
+      password: this.password,
+      isAdmin: this.isAdmin,
+      isAuthorized: this.isAuthorized,
+      gid: this.gid,
+      familyName: this.familyName,
+      givenName: this.givenName,
+      exp: new Date().getTime() / 1000 + 2 * 24 * 60 * 60
+    }, sign)
+  }
+
+  toJSON () {
+    return {
+      email: this.email,
+      password: this.token.toString('hex'),
+      uid: this.uid,
+      gid: this.gid,
+      familyName: this.familyName,
+      givenName: this.givenName
+    }
   }
 }
 

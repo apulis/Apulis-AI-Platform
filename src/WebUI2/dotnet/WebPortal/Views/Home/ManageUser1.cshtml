@@ -1,0 +1,136 @@
+﻿@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<br />
+<br />
+<br />
+<h1>@ViewData["Title"]</h1>
+
+<script>
+    var app = angular.module("manageUser", ["xeditable", "ui.select", "ngMaterial", 'ngMessages']);
+
+    app.run(function (editableOptions) {
+        editableOptions.theme = 'bs3';
+    });
+
+    app.controller('MyCtrl', ["$scope", "$filter", "$http", "$log", "$timeout", function ($scope, $filter, $http, $log, $timeout, Upload) {
+
+        $scope.hasObject = function (obj) {
+            if (obj == null) {
+                return false;
+            }
+            for (var prop in obj) {
+                if (obj.hasOwnProperty(prop))
+                    return true;
+            }
+            return false;
+        };
+
+        $scope.toggle = function (item, dic) {
+            if (dic.hasOwnProperty(item)) {
+                dic[item] = !dic[item];
+            } else {
+                dic[item] = true;
+            };
+        };
+
+        $scope.status = function (item, dic) {
+            if (dic.hasOwnProperty(item)) {
+                return dic[item];
+            } else {
+                return false;
+            }
+        };
+
+        $scope.clearResult = function () {
+            delete $scope.errorMsg;
+        };
+
+        $scope.getUsers = function (onCompletion) {
+            $http.get('/api/dlws/GetUsers').then(function (response) {
+                var current = response.data;
+                $scope.current = response.data;
+                $log.log($scope.current);
+                if (onCompletion != null) {
+                    onCompletion();
+                };
+            });
+        }
+
+        $scope.onSuccess = function (tag, response, onCompletion) {
+            if (response.data.error) {
+                alert(tag + " Error: " + data.error);
+            }
+            $log.log(tag + " Success " + response.data);
+            onCompletion(response.data);
+        };
+
+        $scope.onError = function (response) {
+            alert('post request failed, check server?');
+        }
+
+        $scope.selectPrefixOld = function (onCompletion) {
+            var post = $scope.current;
+            var postInfo = $http.post('/api/Image/SelectPrefix', post);
+
+            var successFunc = function (response) {
+                $scope.onSuccess("selectPrefix", response, data => {
+                    $scope.selectedPrefix = $scope.current.prefix;
+                    $scope.prefixSelections = data.prefix;
+                    $scope.status.selectPrefix = true;
+                });
+                if (onCompletion != null) {
+                    onCompletion();
+                };
+            };
+
+            postInfo.then(successFunc, $scope.onError);
+        }
+
+        $scope.selectPrefix = function (onCompletion) {
+            var indexUrl = $scope.formUrl("index", "index.json");
+            $http.get(indexUrl).then(function (response) {
+                $scope.selectedPrefix = response.data.prefix;
+                $scope.prefixSelections = response.data.prefix;
+                $scope.status.selectPrefix = true;
+                if (onCompletion != null) {
+                    onCompletion();
+                };
+            });
+        }
+
+        $scope.doneSelectPrefix = function () {
+            $scope.downloadImageMetadata();
+            // $scope.status.selectPrefix = false;
+        }
+
+        $scope.formImageUrl = function (file) {
+            var metadataUrl = [$scope.current.cdn, $scope.current.prefix, file].join('/')
+            return metadataUrl;
+        }
+
+        $scope.changeCurrent = function () {
+            $log.log($scope.current);
+            var post = $scope.current;
+            var postInfo = $http.post('/api/Image/SetCurrent', post);
+
+            var successFunc = function (response) {
+                $scope.onSuccess("changeCurrent", response, data => $scope.current = data);
+            };
+
+            postInfo.then(successFunc, $scope.onError);
+        };
+
+
+        $scope.clearResult = function () {
+            $scope.info = [];
+            delete $scope.errorMsg;
+        };
+
+        $scope.getUsers();
+
+    }]);
+
+
+</script>

@@ -40,7 +40,6 @@ module.exports = async context => {
         }
       }
       const userQuota = metadataObject['user_quota']
-
       return { id, teamId: vcName, admin, gpus, userQuota }
     })
   }

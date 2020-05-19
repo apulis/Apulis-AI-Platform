@@ -28,6 +28,9 @@ spec:
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}{{cnf["restfulapi"]}}:{{cnf["dockertag"]}}
         command: ["/runScheduler.sh"]
         imagePullPolicy: Always
+        env:
+        - name: INIT_CONTAINER_IMAGE
+          value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}
         volumeMounts:
         - mountPath: /etc/kubernetes/ssl
           name: certs
@@ -127,9 +130,14 @@ spec:
           path: {{cnf["folder_auto_share"]}}
       - name: log
         hostPath:
-          path: /var/log/clustermanager   
+          path: /var/log/clustermanager
+      - name: resolv
+        hostPath:
+          path: /etc/resolv.conf        
+   
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
       - key: node-role.kubernetes.io/master
-        effect: NoSchedule           
+        effect: NoSchedule   
+        

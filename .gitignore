@@ -15,6 +15,7 @@
 *.iso
 *.srl
 *.swp
+.idea
 
 src/RepairManager/id_rsa
 src/ClusterBootstrap/ssl/ca/ca.srl
@@ -33,14 +34,14 @@ src/ClusterBootstrap/deploy_backup/*
 
 
 #ASP.NET core
-src/WebUI/dotnet/.vs/**
-src/WebUI/dotnet/WebPortal/dashboardConfig.json
-src/WebUI/dotnet/WebPortal/userconfig.json
-src/WebUI/dotnet/WebPortal/configAuth.json
-src/WebUI/dotnet/WebPortal/Master-Templates.json
-src/WebUI/dotnet/WebPortal/hosting.json
+src/**/dotnet/.vs/**
+src/**/dotnet/WebPortal/dashboardConfig.json
+src/**/dotnet/WebPortal/userconfig.json
+src/**/dotnet/WebPortal/configAuth.json
+src/**/dotnet/WebPortal/Master-Templates.json
+src/**/dotnet/WebPortal/hosting.json
 **package-lock.json
-**/wwwroot/*
+# **/wwwroot/*
 **/bin/Release/*
 **/bin/Debug/*
 **/obj/Release/*
@@ -58,10 +59,12 @@ src/WebUI/dotnet/WebPortal/hosting.json
 **/storage.ide
 
 src/RepairManager/.vs/*
+src/RepairManager/mock-data/*
 /.vs/slnx.sqlite
 /.vs/ProjectSettings.json
 /.vs/VSWorkspaceState.json
 /.vs/DLWorkspace/v15/.suo
+.vscode/*
 
 cluster-autoscaler
 src/ClusterBootstrap/services/monitor/grafana-config.yaml
@@ -69,3 +72,12 @@ src/ClusterBootstrap/services/monitor/prometheus-alerting.yaml
 src/ClusterBootstrap/services/monitor/alert-templates.yaml
 src/ClusterBootstrap/services/jobmanager/dlws-scripts.yaml
 src/ClusterBootstrap/services/monitor/alerting/kill-idle.rules
+
+/src/dashboard/build/*
+
+*.log
+src/ClusterBootstrap/template/*config.yaml.template
+
+**/.vscode/*
+.idea
+venv

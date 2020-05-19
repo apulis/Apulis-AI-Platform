@@ -42,10 +42,12 @@ spec:
         volumeMounts:
         #- name: collectd-config
         #  mountPath: /etc/collectd
-        - mountPath: /etc/kubernetes/ssl
-          name: certs
+        - mountPath: /usr/bin/kubectl
+          name: kubectl-binary
+          readOnly: true
         - mountPath: /root/.kube/config 
           name: kubeconfig
+          readOnly: true   
         - name: proc
           mountPath: /mnt/proc
           readOnly: true
@@ -66,12 +68,12 @@ spec:
       #    items:
       #    - key: node-collectd.conf
       #      path: collectd.conf
-      - name: certs
+      - name: kubectl-binary
         hostPath:
-          path: /etc/kubernetes/ssl
+          path: /usr/bin/kubectl         
       - name: kubeconfig
         hostPath:
-          path: /etc/kubernetes/restapi-kubeconfig.yaml
+          path: /etc/kubernetes/admin.conf
       - name: proc
         hostPath:
           path: /proc

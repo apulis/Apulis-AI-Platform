@@ -74,7 +74,7 @@ const OpenDrawerButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
   const onClick = React.useCallback(() => setOpen(!open), [setOpen, open]);
   return (
-    <Tooltip title={"Go to pages"}>
+    <Tooltip title={open ? 'Hide' : 'Show'}>
       <IconButton edge="start" color="inherit" onClick={onClick}>
         <MenuRounded />
       </IconButton>
@@ -137,9 +137,10 @@ TeamMenu = () => {
 const UserButton: React.FC = () => {
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
-  const { givenName, familyName,email,token } = React.useContext(UserContext);
+  const { nickName, userName, isAdmin, isAuthorized } = React.useContext(UserContext);
   const styles = useStyles();
-  const name = typeof email === 'string' ?  email.split('@', 1)[0] : email;
+  // const Username = typeof openId === 'string' ?  openId.split('@', 1)[0] : openId;
+  const accountType = isAdmin ? 'Admin' : (isAuthorized ? 'User' : 'Unauthorized')
   const handleClose = () => {
     setOpenUserProfile(false);
   }
@@ -159,7 +160,7 @@ const UserButton: React.FC = () => {
     <main>
       <Button variant="outlined" color="inherit" onClick={showUserProfile} className={classes.userLabel}>
         <AccountBox className={styles.leftIcon}/>
-        {`${givenName} ${familyName}`}
+        {nickName}
       </Button>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>
         <AppBar>
@@ -175,16 +176,18 @@ const UserButton: React.FC = () => {
         <Box m={10}>
           <List>
             <ListItem button>
-              <ListItemText primary="Email" secondary={email}  onClick={()=>handleCopy(email)}/>
+              <ListItemText primary="NickName" secondary={nickName}  onClick={()=>handleCopy(nickName)}/>
             </ListItem>
             <Divider />
             <ListItem button>
-              <ListItemText primary="Username" secondary={name}  onClick={()=>handleCopy(name)}/>
+              <ListItemText primary="UserName" secondary={userName}  onClick={()=>handleCopy(userName)}/>
             </ListItem>
             <Divider />
+            <Divider />
             <ListItem button >
-              <ListItemText primary="Password" secondary={token} onClick={()=>handleCopy(token)}/>
+              <ListItemText primary="AccountType" secondary={accountType}/>
             </ListItem>
+            <Divider />
           </List>
         </Box>
         <Snackbar
@@ -203,7 +206,6 @@ const UserButton: React.FC = () => {
           />
         </Snackbar>
       </Dialog>
-
     </main>
   );
 };
@@ -226,7 +228,7 @@ const Title: React.FC = () => {
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
         <Typography component="h1" variant="h6" align="left">
-          DLTS
+          YTung
         </Typography>
       </Link>
     </Box>
@@ -260,7 +262,7 @@ const DashboardAppBar: React.FC = () => {
           <Grid item >
             <TeamMenu />
           </Grid>
-          <Grid item style={{ marginLeft:'5' }}>
+          <Grid item style={{ marginLeft:'10px' }}>
             <UserButton />
           </Grid>
           <Grid item>

@@ -209,17 +209,28 @@ def get_ecc_error(ecc_errors, error_type):
             ecc_double = int(double)
     return ecc_single, ecc_double
 
+
 def nvidia_smi(histogram, timeout):
+
+    out = utils.exec_shell_cmd("command -v nvidia-smi")
+
+    if "nvidia-smi" not in out.lower():
+        return None
+    else:
+        pass
+
     try:
         smi_output = utils.exec_cmd(["nvidia-smi", "-q", "-x"],
                 histogram=histogram, timeout=timeout)
 
         return parse_smi_xml_result(smi_output)
+
     except subprocess.CalledProcessError as e:
         logger.exception("command '%s' return with error (code %d): %s",
                 e.cmd, e.returncode, e.output)
     except subprocess.TimeoutExpired:
         logger.warning("nvidia-smi timeout")
+
     except Exception:
         logger.exception("exec nvidia-smi error")
 

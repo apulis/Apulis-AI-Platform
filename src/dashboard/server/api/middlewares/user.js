@@ -4,21 +4,27 @@ const User = require('../services/user')
  * @return {import('koa').Middleware}
  */
 module.exports = (forceAuthenticated = true) => async (context, next) => {
-  if ('email' in context.query && 'token' in context.query) {
-    const { email, token } = context.query
-    const user = context.state.user = User.fromToken(context, email, token)
-    await user.fillIdFromWinbind()
-    await user.password
-    await user.addGroupLink
-    await user.WikiLink
-    context.log.info(user, 'Authenticated by token')
+  if ('userName' in context.query && 'token' in context.query) {
+    const { userName, token } = context.query
+    const user = context.state.user = User.fromToken(context, userName, token)
+    await user.getAccountInfo()
+    context.log.warn(user, 'Authenticated by token')
+  }
+  if ('email' in context.query) {
+    let { email, password } = context.query
+
+    // Backward compatibility
+    if (password === undefined) { password = context.query.token }
+
+    if (password) {
+      const user = context.state.user = User.fromPassword(context, email, password)
+      context.log.debug(user, 'Authenticated by password')
+    }
   } else if (context.cookies.get('token')) {
     try {
       const token = context.cookies.get('token')
-      const user = context.state.user = User.fromCookie(context, token)
-      await user.password
-      await user.addGroupLink
-      await user.WikiLink
+      const user = context.state.user = User.fromCookieToken(context, token)
+      await user.getAccountInfo()
       context.log.info(user, 'Authenticated by cookie')
     } catch (error) {
       context.log.error(error, 'Error in cookie authentication')
@@ -26,7 +32,7 @@ module.exports = (forceAuthenticated = true) => async (context, next) => {
   }
 
   if (forceAuthenticated) {
-    context.assert(context.state.user != null, 403)
+    context.assert(context.state.user != null, 401)
   }
 
   return next()

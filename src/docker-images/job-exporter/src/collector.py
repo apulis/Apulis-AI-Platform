@@ -35,6 +35,7 @@ import docker_inspect
 import docker_stats
 import nvidia
 import ps
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,16 @@ def gen_process_mem_usage_gauge():
             "memory usage of process, to save space in prometheus, we only expose those who consume more than 500Mb of memory",
             labels=["pid", "cmd"])
 
+def gen_npu_util_gauge():
+    return GaugeMetricFamily("huaweismi_utilization_npu",
+            "npu core utilization of card",
+            labels=["minor_number"])
+
+def gen_npu_mem_util_gauge():
+    return GaugeMetricFamily("huaweismi_utilization_memory",
+            "npu memory utilization of card",
+            labels=["minor_number"])
+
 class ResourceGauges(object):
     def __init__(self):
         self.task_labels = [
@@ -115,6 +126,8 @@ class ResourceGauges(object):
 
         self.task_labels_gpu = copy.deepcopy(self.task_labels)
         self.task_labels_gpu.append("minor_number")
+        self.task_labels_gpu_util = copy.deepcopy(self.task_labels_gpu)
+        self.task_labels_gpu_util.append("gpu_type")
 
         self.gauges = {}
 
@@ -137,7 +150,7 @@ class ResourceGauges(object):
 
         self.add_gauge("task_gpu_percent",
                 "how much percent of gpu core this task used",
-                self.task_labels_gpu)
+                self.task_labels_gpu_util)
         self.add_gauge("task_gpu_mem_percent",
                 "how much percent of gpu memory this task used",
                 self.task_labels_gpu)
@@ -236,13 +249,16 @@ class Collector(object):
         logger.debug("init %s with sleep_time %d", self.name, self.sleep_time)
 
     def collect(self):
-        while True:
-            logger.debug("collecting metrics from %s", self.name)
 
+        while True:
+
+            logger.debug("collecting metrics from %s", self.name)
             with self.collector_histogram.time():
+
                 self.iteration_counter.labels(name=self.name).inc()
                 try:
                     self.atomic_ref.set(self.collect_impl(), datetime.datetime.now())
+
                 except Exception as e:
                     logger.exception("%s collector get an exception", self.name)
 
@@ -282,7 +298,9 @@ def make_collector(name, sleep_time, decay_time, collector_class, *args):
 
 class DockerCollector(Collector):
     cmd_histogram = Histogram("cmd_docker_active_latency_seconds",
-            "Command call latency for checking docker daemon activeness (seconds)")
+            "Command call latency for checking docker daemon activeness (seconds)",
+            buckets=(1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0,
+                float("inf")))
 
     cmd_timeout = 1 # 99th latency is 0.01s
 
@@ -314,7 +332,9 @@ class DockerCollector(Collector):
 
 class GpuCollector(Collector):
     cmd_histogram = Histogram("cmd_nvidia_smi_latency_seconds",
-            "Command call latency for nvidia-smi (seconds)")
+            "Command call latency for nvidia-smi (seconds)",
+            buckets=(1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0,
+                float("inf")))
 
     cmd_timeout = 60 # 99th latency is 0.97s
 
@@ -427,6 +447,170 @@ class GpuCollector(Collector):
         if gpu_info is not None:
             return GpuCollector.convert_to_metrics(gpu_info, zombie_info,
                     GpuCollector.get_container_id, self.mem_leak_thrashold)
+        return None
+
+class NpuInfo(object):
+    
+    def __init__(self):
+        self.npu_util = 0
+        self.npu_mem_util = 0
+        return
+
+class NpuCollector(Collector):
+    cmd_histogram = Histogram("cmd_huawei_smi_latency_seconds",
+            "Command call latency for huawei-smi (seconds)",
+            buckets=(1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0,
+                float("inf")))
+
+    cmd_timeout = 60 # 99th latency is 0.97s
+
+    def __init__(self, name, sleep_time, atomic_ref, iteration_counter,
+            npu_info_ref, zombie_info_ref, mem_leak_thrashold):
+
+        Collector.__init__(self, name, sleep_time, atomic_ref, iteration_counter)
+
+        self.npu_info_ref = npu_info_ref
+        self.zombie_info_ref = zombie_info_ref
+        self.mem_leak_thrashold = mem_leak_thrashold
+
+        return
+
+    ## todo: 
+    ## this method is copied from GpuCollector
+    ## its function needs to be checked in the future
+    @staticmethod
+    def get_container_id(pid):
+        """ return two values, the first one is if we found the corresponding
+        container_id, the second one is the container_id if found """
+        path = "/proc/%d/cgroup" % (pid)
+        if not os.path.isfile(path):
+            return False, ""
+
+        with open(path) as f:
+            content = f.read()
+
+        for line in content.split("\n"):
+            line = line.strip()
+            if "pids" in line:
+                if "/docker/" in line:
+                    parts = line.split("/docker/")
+                    if len(parts) == 2 and re.match(u"[0-9a-f]+", parts[1]):
+                        return True, parts[1]
+                elif "/kubepods/" in line:
+                    parts = line.split("/kubepods/")
+                    if len(parts) == 2 and re.match(u"pod[0-9a-f-]+", parts[1]):
+                        return True, parts[1]
+                else:
+                    logger.info("unknown format in pid cgroup %s", line)
+
+        return False, ""
+
+    ## todo:
+    ## must be removed in the future
+    npu_collect_start_time = int(time.time())
+
+    @staticmethod
+    def huawei_npu_smi(cmd_histogram, cmd_timeout):
+
+        logger.debug("calling NpuCollector.huawei_npu_smi")
+
+        ## get info via npu_smi
+        #sp = subprocess.Popen(['npu-smi', 'info', '-t', "common", "-i", "255"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
+        #out_str = sp.communicate()        
+        
+        ## todo: 
+        ## huawei havn't gave us a fully tested npu-smi, until now
+        ## we are not able to fetch npu id via tool
+        ## this number must be replaced later
+        #npu_id = 255 ## 
+        #out_str = utils.exec_cmd("npu-smi info -t common -i {0} | grep 'NPU ID' -A10 ".format(npu_id), shell=True)
+        if not os.path.isdir("/usr/local/HiAI/driver"):
+            return None
+        else:
+            pass       
+
+        npu_log_file = "/usr/local/sbin/npu_smi.log"
+        if not os.path.isfile(npu_log_file):
+            return None
+        else:
+            pass      
+
+        f = open(npu_log_file, "r")
+        out_list = f.readlines()
+        npu_info = NpuInfo()
+
+        for item in out_list:
+            try:
+                kv = item.split(':')
+
+                if len(kv) < 2:
+                    continue
+                else:
+                    pass
+
+                key, val = kv[0], kv[1]
+                key, val = key.strip(), val.strip()
+
+                if "Aicore Usage Rate".lower() in key.lower():
+                    npu_info.npu_util = int(val)
+                
+                    # this should be replaced later
+                    # the huawei-npu-smi is not ready now 
+                    # npu_info.npu_util = round(random.uniform(0.5, 0.9), 2)
+                    # npu_info.npu_util = int(round(random.uniform(50, 60), 2))
+                    logger.warn("npu usage rate[%s]" % npu_info.npu_util)
+                    
+                elif "Memory Usage Rate".lower() in key.lower():
+                    npu_info.npu_mem_util = int(val)
+                    logger.warn("npu mem usage rate[%s]" % npu_info.npu_mem_util)
+
+                else:
+                    pass
+
+            except:
+                pass
+
+        return npu_info
+
+    @staticmethod
+    def convert_to_metrics(npu_info, zombie_info, pid_to_cid_fn, mem_leak_thrashold):
+
+        logger.debug("calling NpuCollector.convert_to_metrics")
+
+        """ This fn used to convert npu_info & zombie_info into metrics, used to make
+            it easier to do unit test """
+        gauge_npu_usage_rate = gen_npu_util_gauge()
+        gauge_npu_mem = gen_npu_mem_util_gauge()
+
+        npu_info = NpuCollector.huawei_npu_smi(NpuCollector.cmd_histogram, NpuCollector.cmd_timeout)
+
+        #gauge_npu_usage_rate.add_metric(["huawei_npu_util"], str(int(round(random.uniform(50, 90), 2))))
+        #gauge_npu_mem.add_metric(["huawei_npu_mem"], "40")
+
+        gauge_npu_usage_rate.add_metric(["huawei_npu_util"], str(npu_info.npu_util))
+        gauge_npu_mem.add_metric(["huawei_npu_mem"], str(npu_info.npu_mem_util))
+
+        logger.debug("NpuCollector.convert_to_metrics, return [%f, %d]" % (npu_info.npu_util, npu_info.npu_mem_util))
+        return [gauge_npu_usage_rate, gauge_npu_mem]
+
+
+    def collect_impl(self):
+
+        logger.debug("calling NpuCollector.collect_impl")
+
+        npu_info = NpuCollector.huawei_npu_smi(NpuCollector.cmd_histogram, NpuCollector.cmd_timeout)
+        logger.warning("get npu_info %s", npu_info)
+
+        now = datetime.datetime.now()
+        self.npu_info_ref.set(npu_info, now)
+        zombie_info = self.zombie_info_ref.get(now)
+
+        if npu_info is not None:
+            return NpuCollector.convert_to_metrics(npu_info, zombie_info,
+                    NpuCollector.get_container_id, self.mem_leak_thrashold)
+        else:
+            pass
+
         return None
 
 
@@ -615,6 +799,7 @@ class ContainerCollector(Collector):
                     nvidia_gpu_status = gpu_infos[id]
                     labels = copy.deepcopy(container_labels)
                     labels["minor_number"] = id
+                    labels["gpu_type"] = inspect_info.gpu_type or "unknown"
 
                     gauges.add_value("task_gpu_percent",
                             labels, nvidia_gpu_status.gpu_util)
@@ -659,7 +844,9 @@ class ContainerCollector(Collector):
 
 class ZombieCollector(Collector):
     logs_histogram = Histogram("cmd_docker_logs_latency_seconds",
-            "Command call latency for docker logs (seconds)")
+            "Command call latency for docker logs (seconds)",
+            buckets=(1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0, 256.0, 512.0, 1024.0,
+                float("inf")))
     logs_timeout = 1 # 99th latency is 0.04s
 
     zombie_container_count = Gauge("zombie_container_count",

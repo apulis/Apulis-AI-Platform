@@ -4,7 +4,8 @@ import ReactDOM from 'react-dom';
 import App from './App';
 
 window.bootstrap = (props) => ReactDOM.render(
-  React.createElement(App, props),
+  // React.createElement(App, props),
+  <App {...props} />,
   document.getElementById('root'));
 
 window.onerror = (message, source, line, col, error) => {

@@ -14,11 +14,16 @@ rules:
   - get
   - list
   - watch
+  - create
+  - update
+  - patch
+  - delete
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -31,7 +36,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: prometheus
-  namespace: default
+  namespace: kube-system
 ---
 # This is the Prometheus instance been managed by prometheus-operator.
 # You can see here this is indeed a CRD and operator will handle its lifecycle.
@@ -44,8 +49,8 @@ metadata:
     prometheus: metrics-prometheus
 spec:
   replicas: 1
-  baseImage: dlws/prometheus
-  version: v2.0.0-rc.0
+  baseImage: prom/prometheus
+  version: v2.14.0-rc.0
   serviceAccountName: prometheus
   serviceMonitorSelector:
     matchLabels:

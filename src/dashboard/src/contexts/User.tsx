@@ -1,11 +1,19 @@
 import React from "react";
 
 interface Context {
-  email?: string;
   uid?: string;
+  openId?: string;
+  group?: string;
+  userName?: string;
+  nickName?: string;
+  isAdmin?: boolean;
+  isAuthorized?: boolean;
+  email?: string;
   familyName?: string;
   givenName?: string;
-  token?: any;
+  authEnabled?: {
+    [propsName: string]: 1 | 0;
+  };
 }
 
 const Context = React.createContext<Context>({});
@@ -13,20 +21,22 @@ const Context = React.createContext<Context>({});
 export default Context;
 
 interface ProviderProps {
-  email?: string;
   uid?: string;
-  familyName?: string;
-  givenName?: string;
-  token?: any;
+  openId?: string;
+  group?: string;
+  nickName?: string;
+  userName?: string;
+  isAdmin?: boolean;
+  isAuthorized?: boolean;
+  authEnabled?: {
+    [propsName: string]: 0 | 1;
+  };
 }
 
-export const Provider: React.FC<ProviderProps> = ({ email, uid,familyName, givenName,token,children }) => {
-  if (token) {
-    token = new Buffer(token.data).toString('hex');
-  }
+export const Provider: React.FC<ProviderProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled }) => {
   return (
     <Context.Provider
-      value={{ email,uid,familyName,givenName,token }}
+      value={{ uid, openId, group, nickName, userName, isAdmin, isAuthorized, authEnabled }}
       children={children}
     />
   );

@@ -1,0 +1,47 @@
+cluster_name: skypulis1
+azure_cluster:
+  skypulis1:
+    azure_location: [ "chinanorth2" ]
+    cdn:
+      name: skypulis1
+      sku: Standard_LRS
+      cdnsku: Standard_Verizon
+      cors: GET
+      containers:
+        public:
+          public-access: blob
+        private:
+          public-access: "off"
+
+    storages: [ "cdn" ]
+network:
+  domain: sigsus.cn
+  container-network-iprange: 192.168.0.1/24
+etcd_node_num: 1
+machines:
+  apulis-china-infra01:
+    role: infrastructure
+    private-ip: 192.168.255.1
+  apulis-dev-infra02:
+    role: worker
+    private-ip: 192.168.0.154
+datasource: MySQL
+mysql_password: root
+useclusterfile : true
+UserGroups:
+  DLWSAdmins:
+    Allowed: [ "zenglong.chen@apulis.com","xianjie.han@apulis.com"]
+    uid : "aaaaa-bbbbb1"
+    gid : "ccccc1"
+  DLWSAllowed:
+    Allowed: ["zenglong.chen@apulis.com","xianjie.han@apulis.com"]
+    uid : "aaaaa-bbbbb2"
+    gid : "ccccc2"
+  DLWSRegister:
+    Allowed: [ "zenglong.chen@apulis.com","xianjie.han@apulis.com"]
+    uid : "aaaaa-bbbbb3"
+    gid : "ccccc3"
+database:
+  hostname: "apulis-china-infra01.sigsus.cn"
+  username: "root"
+  password: "root"

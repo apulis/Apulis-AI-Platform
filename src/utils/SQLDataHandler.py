@@ -327,7 +327,6 @@ class DataHandler(object):
             self.conn.commit()
             cursor.close()
 
-
             sql = """
             if not exists (select * from sysobjects where name='%s' and xtype='U')
                 CREATE TABLE [dbo].[%s]

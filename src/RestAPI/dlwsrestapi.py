@@ -1,34 +1,40 @@
 import sys
 import json
 import os
-
-from flask import Flask, Response
-from flask_restful import reqparse, abort, Api, Resource
-from flask import request, jsonify
+import signal
 import base64
 import yaml
 import uuid
-
+import requests
 import logging
 import timeit
-from logging.config import dictConfig
 import thread
-
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
-#from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
-import JobRestAPIUtils
-from authorization import ResourceType, Permission, AuthorizationManager
-from config import config
-from config import global_vars
-import authorization
-from DataHandler import DataHandler
-
 import time
 import sys
 import traceback
 import threading
-
+from logging.config import dictConfig
+from flask import Flask, Response,redirect,render_template
+from flask_restful import reqparse, abort,url_for
+from flask_restplus import Resource, Api, apidoc
+from flask import request, jsonify
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 import prometheus_client
+
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
+#from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
+from config import config
+import JobRestAPIUtils
+from authorization import ResourceType, Permission, AuthorizationManager, ACLManager
+import model
+import authorization
+from config import global_vars
+from DataHandler import DataHandler
+from mysql_conn_pool import MysqlConn
+from jwt_authorization import create_jwt_token_with_message
 
 CONTENT_TYPE_LATEST = str("text/plain; version=0.0.4; charset=utf-8")
 
@@ -39,21 +45,52 @@ with open(os.path.join(dir_path, 'logging.yaml'), 'r') as f:
 logger = logging.getLogger('restfulapi')
 
 app = Flask(__name__)
-api = Api(app)
+# jwt configure
+app.config['JWT_SECRET_KEY'] = config["jwt"]["secret_key"]
+app.config['PROPAGATE_EXCEPTIONS'] = True
+jwt = JWTManager(app)
+# swagger docs configure
+api = Api(app, version='1.0', title='restful API',
+    description='A simple API',doc="/apis/docs/",prefix="/apis"
+)
+custom_apidoc = apidoc.Apidoc('restplus_custom_doc', __name__,
+                              template_folder='templates',
+                              static_folder=os.path.dirname(apidoc.__file__) + '/static',
+                              static_url_path='/swaggerui')
+
+@custom_apidoc.add_app_template_global
+def swagger_static(filename):
+    return url_for('restplus_custom_doc.static',
+                   filename='{0}'.format(filename))
+
+app.register_blueprint(custom_apidoc, url_prefix='/apis/docs')
+@api.documentation
+def custom_ui():
+    return render_template("swagger-ui.html", title=api.title, specs_url="/apis/swagger.json")
+# end
+
 verbose = True
 logger.info( "------------------- Restful API started ------------------------------------- ")
 logger.info("%s", config)
+
 
 if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     logger.info("===========Init Admin Access===============")
     global_vars["initAdminAccess"] = True
     logger.info('setting admin access!')
-    AuthorizationManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, False)
+    ACLManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, 0)
+    if config.get("administrators") and config["administrators"]:
+        for one in config["administrators"]:
+            if len(one.split("@"))==2:
+                dataHandler = DataHandler()
+                dataHandler.UpdateAccountInfo(one,"Microsoft", one.split("@")[0], one.split("@")[0], "tryme2020", 1, 1)
+                ACLManager.UpdateAce(one.split("@")[0], AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster),
+                                     Permission.Admin, 0)
     logger.info('admin access given!')
-
 
 def _stacktraces():
    code = []
+
    for threadId, stack in sys._current_frames().items():
        code.append("\n# ThreadID: %s" % threadId)
        for filename, lineno, name, line in traceback.extract_stack(stack):
@@ -92,14 +129,44 @@ def tolist(value):
     else:
         return value
 
-def getAlias(username):
-    if "@" in username:
-        username = username.split("@")[0].strip()
-    if "/" in username:
-        username = username.split("/")[1].strip()
-    return username
+
+def remove_creds(job):
+    job_params = job.get("jobParams", None)
+    if job_params is None:
+        return
+
+    plugins = job_params.get("plugins", None)
+    if plugins is None or not isinstance(plugins, dict):
+        return
+
+    blobfuse = plugins.get("blobfuse", None)
+    if blobfuse is not None and isinstance(blobfuse, list):
+        for bf in blobfuse:
+            bf.pop("accountName", None)
+            bf.pop("accountKey", None)
+
+    image_pull = plugins.get("imagePull", None)
+    if image_pull is not None and isinstance(image_pull, list):
+        for i_p in image_pull:
+            i_p.pop("username", None)
+            i_p.pop("password", None)
+
+def generate_response(result):
+    resp = jsonify(result)
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["dataType"] = "json"
+    return resp
+
+def get_query_params(*args,**kwargs):
+    parser = reqparse.RequestParser()
+    for paramName in args:
+        parser.add_argument(paramName)
+    args = parser.parse_args()
+    return [args[name] for name in args]
 
 class SubmitJob(Resource):
+    @api.doc(params=model.SubmitJob.params)
+    @api.response(200, "succeed", api.model("SubmitJob", model.SubmitJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobName')
@@ -218,7 +285,7 @@ class SubmitJob(Resource):
             params["mountpoints"] = []
             addcmd = ""
             if "mounthomefolder" in config and istrue(config["mounthomefolder"]) and "storage-mount-path" in config:
-                alias = getAlias(params["userName"])
+                alias = JobRestAPIUtils.getAlias(params["userName"])
                 params["mountpoints"].append({"name":"homeholder","containerPath":os.path.join("/home", alias),"hostPath":os.path.join(config["storage-mount-path"], "work", alias)})
             if "mountpoints" in config and "storage-mount-path" in config:
                 # see link_fileshares in deploy.py
@@ -229,7 +296,7 @@ class SubmitJob(Resource):
                                 hostBase = os.path.join(config["storage-mount-path"], basename[1:]) if os.path.isabs(basename) else os.path.join(config["storage-mount-path"], basename)
                                 basealias = basename[1:] if os.path.isabs(basename) else basename
                                 containerBase = os.path.join("/", basename)
-                                alias = getAlias(params["userName"])
+                                alias = JobRestAPIUtils.getAlias(params["userName"])
                                 shares = [alias]
                                 if "publicshare" in v:
                                     if "all" in v["publicshare"]:
@@ -290,23 +357,24 @@ api.add_resource(SubmitJob, '/SubmitJob')
 
 
 class PostJob(Resource):
+    @api.expect(api.model("PostJobModel", model.PostJob(api).params))
+    @api.response(200, "succeed", api.model("PostJob", model.PostJob(api).model))
     def post(self):
         params = request.get_json(force=True)
-        monitor = yaml.safe_dump(params, default_flow_style=False)
         logger.info("Post Job")
-        logger.info(monitor)
-        ret = {}
-        if True:
-            output = JobRestAPIUtils.SubmitJob(json.dumps(params))
+        logger.info(params)
 
-            if "jobId" in output:
-                ret["jobId"] = output["jobId"]
+        ret = {}
+        output = JobRestAPIUtils.SubmitJob(json.dumps(params))
+
+        if "jobId" in output:
+            ret["jobId"] = output["jobId"]
+        else:
+            if "error" in output:
+                ret["error"] = "Cannot create job!" + output["error"]
             else:
-                if "error" in output:
-                    ret["error"] = "Cannot create job!" + output["error"]
-                else:
-                    ret["error"] = "Cannot create job!"
-            logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
+                ret["error"] = "Cannot create job!"
+        logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -320,6 +388,8 @@ api.add_resource(PostJob, '/PostJob')
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):
+    @api.doc(params=model.ListJobs.params)
+    @api.response(200, "succeed", api.model("ListJobs", model.ListJobs.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -359,6 +429,9 @@ class ListJobs(Resource):
                     job["jobStatusDetail"] = s
                     pass
 
+            # Remove credentials
+            remove_creds(job)
+
             if job["jobStatus"] == "running":
                 if job["jobType"] == "training":
                     runningJobs.append(job)
@@ -378,16 +451,78 @@ class ListJobs(Resource):
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
-
         return resp
 ##
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(ListJobs, '/ListJobs')
 
+# shows a list of all jobs, and lets you POST to add new tasks
+class ListJobsV2(Resource):
+    @api.doc(params=model.ListJobsV2.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        args = parser.parse_args()
+        num = None
+        if args["num"] is not None:
+            try:
+                num = int(args["num"])
+            except:
+                pass
 
+        jobs = JobRestAPIUtils.GetJobListV2(args["userName"], args["vcName"], args["jobOwner"], num)
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+
+        resp = generate_response(jobs)
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(ListJobsV2, '/ListJobsV2')
+
+class GetAllDevice(Resource):
+    @api.doc(params=model.GetAllDevice.params)
+    @api.response(200, "succeed", api.model("GetAllDevice", model.GetAllDevice.model))
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+        result = JobRestAPIUtils.GetAllDevice(userName)
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(GetAllDevice, '/GetAllDevice')
+
+class CountJobByStatus(Resource):
+    @api.doc(params=model.CountJobByStatus.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        parser.add_argument('targetStatus')
+        parser.add_argument('vcName')
+        args = parser.parse_args()
+        userName = args["userName"]
+        targetStatus = args["targetStatus"]
+        vcName = args["vcName"]
+        result = JobRestAPIUtils.CountJobByStatus(userName,vcName,targetStatus)
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(CountJobByStatus, '/CountJobByStatus')
 
 class KillJob(Resource):
+    @api.doc(params=model.KillJob.params)
+    @api.response(200, "succeed", api.model("KillJob", model.KillJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -417,6 +552,8 @@ api.add_resource(KillJob, '/KillJob')
 
 
 class PauseJob(Resource):
+    @api.doc(params=model.PauseJob.params)
+    @api.response(200, "succeed", api.model("PauseJob", model.PauseJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -444,6 +581,8 @@ api.add_resource(PauseJob, '/PauseJob')
 
 
 class ResumeJob(Resource):
+    @api.doc(params=model.ResumeJob.params)
+    @api.response(200, "succeed", api.model("ResumeJob", model.ResumeJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -471,6 +610,8 @@ api.add_resource(ResumeJob, '/ResumeJob')
 
 
 class CloneJob(Resource):
+    @api.doc(params=model.CloneJob.params)
+    @api.response(200, "succeed", api.model("CloneJob", model.CloneJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -498,6 +639,8 @@ api.add_resource(CloneJob, '/CloneJob')
 
 
 class ApproveJob(Resource):
+    @api.doc(params=model.ApproveJob.params)
+    @api.response(200, "succeed", api.model("ApproveJob", model.ApproveJob.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -525,6 +668,7 @@ api.add_resource(ApproveJob, '/ApproveJob')
 
 
 class GetCommands(Resource):
+    @api.doc(params=model.GetCommands.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -546,6 +690,8 @@ api.add_resource(GetCommands, '/GetCommands')
 
 
 class GetJobDetail(Resource):
+    @api.doc(params=model.GetJobDetail.params)
+    @api.response(200, "succeed", api.model("GetJobDetail", model.GetJobDetail.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -559,15 +705,18 @@ class GetJobDetail(Resource):
             job["endpoints"] = json.loads(job["endpoints"])
         if "jobStatusDetail" in job and job["jobStatusDetail"] is not None and len(job["jobStatusDetail"].strip()) > 0:
             try:
-                job["jobStatusDetail"] = Json.loads(base64.b64decode(job["jobStatusDetail"]))
+                job["jobStatusDetail"] = json.loads(base64.b64decode(job["jobStatusDetail"]))
             except Exception as e:
                 pass
         if "jobMeta" in job:
             job.pop("jobMeta",None)
+
+        # Remove credentials
+        remove_creds(job)
+
         resp = jsonify(job)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
-
         return resp
 ##
 ## Actually setup the Api resource routing here
@@ -575,7 +724,44 @@ class GetJobDetail(Resource):
 api.add_resource(GetJobDetail, '/GetJobDetail')
 
 
+class GetJobDetailV2(Resource):
+    @api.doc(params=model.GetJobDetailV2.params)
+    @api.response(200, "succeed", api.model("GetJobDetailV2", model.GetJobDetailV2.model))
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        userName = args["userName"]
+        job = JobRestAPIUtils.GetJobDetailV2(userName, jobId)
+        remove_creds(job)
+        resp = generate_response(job)
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetJobDetailV2, '/GetJobDetailV2')
+
+
+class GetJobLog(Resource):
+    @api.doc(params=model.GetJobLog.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId', required=True)
+        parser.add_argument('userName', required=True)
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        userName = args["userName"]
+        return JobRestAPIUtils.GetJobLog(userName, jobId)
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetJobLog, '/GetJobLog')
+
+
 class GetJobStatus(Resource):
+    @api.doc(params=model.GetJobStatus.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -594,6 +780,7 @@ api.add_resource(GetJobStatus, '/GetJobStatus')
 
 
 class GetClusterStatus(Resource):
+    @api.doc(params=model.GetClusterStatus.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -613,6 +800,8 @@ api.add_resource(GetClusterStatus, '/GetClusterStatus')
 
 
 class AddCommand(Resource):
+    @api.doc(params=model.AddCommand.params)
+    @api.response(200, "succeed", api.model("AddCommand", model.AddCommand.model))
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
@@ -642,9 +831,8 @@ class AddCommand(Resource):
 ##
 api.add_resource(AddCommand, '/AddCommand')
 
-
-
 class AddUser(Resource):
+    @api.doc(params=model.AddUser.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -681,8 +869,341 @@ class AddUser(Resource):
 ##
 api.add_resource(AddUser, '/AddUser')
 
+class ListUser(Resource):
+    def get(self):
+        ret = {}
+        ret = JobRestAPIUtils.ListUser()
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+api.add_resource(ListUser, '/ListUser')
+
+class UpdateUserPerm(Resource):
+    @api.doc(params=model.UpdateUserPerm.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('isAdmin')
+        parser.add_argument('isAuthorized')
+        parser.add_argument('identityName')
+        args = parser.parse_args()
+        identityName = args["identityName"]
+        isAdmin = args["isAdmin"]
+        isAuthorized = args["isAuthorized"]
+        ret = {}
+        ret["result"] = JobRestAPIUtils.updateUserPerm(identityName,isAdmin,isAuthorized)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+api.add_resource(UpdateUserPerm, '/UpdateUserPerm')
+
+class SignUp(Resource):
+    @api.doc(params=model.SignUp.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('openId')
+        parser.add_argument('group')
+        parser.add_argument('nickName')
+        parser.add_argument('userName')
+        parser.add_argument('password')
+        parser.add_argument('isAdmin')
+        parser.add_argument('isAuthorized')
+        
+        args = parser.parse_args()
+        openId = args["openId"]
+        group = args["group"]
+        nickName = args["nickName"]
+        userName = args["userName"]
+        password = args["password"]
+
+        ret = {}
+
+        if args["isAdmin"] is None or args["isAdmin"].strip() != 'true':
+            isAdmin = False
+        else:
+            isAdmin = True
+
+        if args["isAuthorized"] is None or args["isAuthorized"].strip() != 'true':
+            isAuthorized = False
+        else:
+            isAuthorized = True
+
+        output = JobRestAPIUtils.SignUp(openId, group, nickName, userName, password, isAdmin, isAuthorized)
+        if "error" in output:
+            ret["result"] = False
+            ret["error"] = output["error"]
+        else:
+            ret["result"] = True
+
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(SignUp, '/SignUp')
+
+
+class GetAccountByOpenId(Resource):
+    @api.doc(params=model.GetAccountByOpenId.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('openId')
+        parser.add_argument('group')
+        args = parser.parse_args()
+
+        openId = args["openId"]
+        group = args["group"]
+
+        ret = JobRestAPIUtils.GetAccountByOpenId(openId, group)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAccountByOpenId, '/getAccountInfo')
+
+class GetAccountByuserName(Resource):
+    @api.doc(params=model.GetAccountByuserName.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+
+        ret = JobRestAPIUtils.GetAccountByUserName(userName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAccountByuserName, '/getAccountInfoByUserName')
+
+class OpenSignInRedirect(Resource):
+    @api.doc(params=model.OpenSignIn.params)
+    def get(self,signinType):
+        if signinType == "wechat":
+            return redirect("https://open.weixin.qq.com/connect/qrconnect?appid={}&redirect_uri=https%3A%2F%2F{}%2Fapi/login/wechat&response_type=code&scope=snsapi_userinfo,snsapi_login&state=".format(config["Authentication"]["WeChat"]["AppId"],config["webportal_node"]))
+        elif signinType == "microsoft":
+            return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={}&scope=https%3A%2F%2Fgraph.microsoft.com%2Fuser.read&response_type=code&redirect_uri=https%3A%2F%2F{}%2Fapi%2Flogin%2Fmicrosoft&state=".format(config["Authentication"]["Microsoft"]["ClientId"],config["webportal_node"]))
+        else:
+            return redirect("/")
+api.add_resource(OpenSignInRedirect, '/openLogin/<signinType>')
+
+class OpenSignIn(Resource):
+    def get(self,signinType):
+        parser = reqparse.RequestParser()
+        parser.add_argument('remoteError')
+        parser.add_argument('code')
+        parser.add_argument('state')
+        args = parser.parse_args()
+        code = args["code"]
+        re = None
+        if signinType == "wechat":
+            re = requests.get(url="https://api.weixin.qq.com/sns/oauth2/access_token?appid="+config["Authentication"]["WeChat"]["AppId"]+"&secret="+
+                             config["Authentication"]["WeChat"]["AppSecret"]+"&code="+code+"&grant_type=authorization_code")
+
+        elif signinType=="microsoft":
+            re = requests.post(url="https://login.microsoftonline.com/common/oauth2/token",data={"client_id":config["Authentication"]["Microsoft"]["ClientId"],
+                                                                                            "client_secret":config["Authentication"]["Microsoft"]["ClientSecret"],
+                                                                                            "code":code,
+                                                                                            "grant_type":"authorization_code",
+                                                                                            "redirect_uri":"https://"+config["webportal_node"]+"/apis"
+                                                                                                           +url_for("opensignin",signinType="microsoft")})
+        if not re:
+            logging.error(re.content)
+            return redirect("/login?error=get-token-failed")
+        response = json.loads(re.content.decode("utf-8"))
+        access_token =response.get("access_token")
+        refresh_token =response.get("refresh_token")
+        openid =response.get("openid")
+        re = None
+        if signinType == "wechat":
+            re = requests.get("https://api.weixin.qq.com/sns/userinfo?access_token="+access_token+"&openid="+openid+"&lang=zh_CN")
+        elif signinType == "microsoft":
+            re = requests.get("https://graph.microsoft.com/v1.0/me",headers={"Authorization":"Bearer "+access_token})
+        if not re:
+            logging.error(re.content)
+            return redirect("/login?error=get-info-failed")
+        info_response = json.loads(re.content.decode("utf-8"))
+        if signinType == "microsoft":
+            nickName = info_response.get("displayName")
+            email = info_response.get("mail")
+            openId = info_response.get("id")
+            group = "Microsoft"
+            if not nickName:
+                nickName = email
+        elif signinType == "wechat":
+            nickName = info_response.get("nickname")
+            openId = info_response.get("unionid")
+            email = info_response.get("email")
+            group = "Wechat"
+        else:
+            return redirect("/login?error=get-detail-failed")
+        info = JobRestAPIUtils.GetAccountByOpenId(openId, group)
+        if not info:
+            return redirect("/signup?openId={}&group={}".format(openId,group))
+        token = create_jwt_token_with_message(info)
+        return redirect("/?token=" + token)
+api.add_resource(OpenSignIn, '/login/<signinType>')
+
+class SignIn(Resource):
+    @api.doc(params=model.SignIn.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('openId')
+        parser.add_argument('group')
+        parser.add_argument('password')
+        args = parser.parse_args()
+
+        openId = args["openId"]
+        group = args["group"]
+        password = args["password"]
+        token = None
+        if group=="Account":
+            ret = DataHandler().GetAccountByOpenIdAndPassword(openId, group, password)
+            if ret:
+                token = create_jwt_token_with_message(ret[0])
+                return token
+        resp = jsonify(token)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return "user account not exist!"
+
+
+api.add_resource(SignIn, '/signIn')
+
+
+class AddUserV2(Resource):
+    @api.expect(api.model("AddUserV2", model.AddUserV2.params))
+    def post(self):
+        # current_user = get_jwt_identity()
+        params = request.get_json(silent=True)
+        openId = params["openId"]
+        group = params["group"]
+        nickName = params["nickName"]
+        userName = params["userName"]
+        identityName = params["identityName"]
+        password = params["password"]
+        email = params.get("email","")
+        phoneNumber = params.get("phoneNumber","")
+        isAdmin = params["isAdmin"]
+        isAuthorized = params["isAuthorized"]
+
+        if group!="Account":
+            return "wrong group type",400
+        ret = {}
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        output = JobRestAPIUtils.SignUp(openId, group, nickName, identityName, password, isAdmin, isAuthorized)
+        if "error" in output:
+            ret["result"] = False
+            ret["error"] = output["error"]
+        else:
+            dataHander = DataHandler()
+            dataHander.UpdateEmailAndPhone(openId, group, email, phoneNumber)
+            ret["result"] = True
+
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+
+api.add_resource(AddUserV2, '/addUser2')
+
+class UpdateUserPermission(Resource):
+    @api.expect(api.model("UpdateUserPermission", model.UpdateUserPermission.params))
+    def patch(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        isAdmin = params["isAdmin"]
+        isAuthorized = params["isAuthorized"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        permission = Permission.Admin if isAdmin else (Permission.User if isAuthorized else Permission.Unauthorized)
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret = ACLManager.UpdateAce(identityName, resourceAclPath, permission, 0)
+        if ret:
+            DataHandler().UpdateAccountPermission(identityName,isAdmin,isAuthorized)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(UpdateUserPermission, '/UpdateUserPermission')
+
+class DeleteUser(Resource):
+    @api.expect(api.model("DeleteUser", model.DeleteUser.params))
+    def delete(self):
+        params = request.get_json(silent=True)
+        userName = params["userName"]
+        identityName = params["identityName"]
+        if not AuthorizationManager.HasAccess(userName, ResourceType.Cluster, "", Permission.Admin):
+            return 403
+        resourceAclPath = AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster)
+        ret =  ACLManager.DeleteAce(identityName, resourceAclPath)
+        if ret:
+            ret = DataHandler().DeleteUser(identityName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(DeleteUser, '/DeleteUser')
+
+class GetAllUsers(Resource):
+    def get(self):
+        data_handler = None
+        try:
+            data_handler = DataHandler()
+            ret = data_handler.GetUsers()
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+            return resp
+        except Exception as e:
+            return "Internal Server Error. " + str(e), 400
+        finally:
+            if data_handler is not None:
+                data_handler.Close()
+
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAllUsers, '/GetAllUsers')
+
+class GetAllAccountUser(Resource):
+    def get(self):
+        data_handler = None
+        try:
+            data_handler = DataHandler()
+            ret = data_handler.GetAllAccountUser()
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+            return resp
+        except Exception as e:
+            return "Internal Server Error. " + str(e), 400
+        finally:
+            if data_handler is not None:
+                data_handler.Close()
+
+api.add_resource(GetAllAccountUser, '/GetAllAccountUser')
 
 class UpdateAce(Resource):
+    @api.doc(params=model.UpdateAce.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -710,6 +1231,7 @@ api.add_resource(UpdateAce, '/UpdateAce')
 
 
 class DeleteAce(Resource):
+    @api.doc(params=model.DeleteAce.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -735,6 +1257,7 @@ api.add_resource(DeleteAce, '/DeleteAce')
 
 
 class IsClusterAdmin(Resource):
+    @api.doc(params=model.IsClusterAdmin.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -754,6 +1277,7 @@ api.add_resource(IsClusterAdmin, '/IsClusterAdmin')
 
 
 class GetACL(Resource):
+    @api.doc(params=model.GetACL.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -772,7 +1296,23 @@ class GetACL(Resource):
 api.add_resource(GetACL, '/GetACL')
 
 
+class GetAllACL(Resource):
+    def get(self):
+        ret = {}
+        ret["result"] = ACLManager.GetAllAcl()
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetAllACL, '/GetAllACL')
+
+
 class ListVCs(Resource):
+    @api.doc(params=model.ListVCs.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -780,7 +1320,6 @@ class ListVCs(Resource):
         userName = args["userName"]
         ret = {}
         ret["result"] = JobRestAPIUtils.ListVCs(userName)
-
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -794,6 +1333,7 @@ api.add_resource(ListVCs, '/ListVCs')
 
 
 class GetVC(Resource):
+    @api.doc(params=model.GetVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -816,6 +1356,7 @@ api.add_resource(GetVC, '/GetVC')
 
 
 class AddVC(Resource):
+    @api.doc(params=model.AddVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -829,7 +1370,6 @@ class AddVC(Resource):
         userName = args["userName"]
         ret = {}
         ret["result"] = JobRestAPIUtils.AddVC(userName, vcName, quota, metadata)
-
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -842,6 +1382,7 @@ api.add_resource(AddVC, '/AddVC')
 
 
 class DeleteVC(Resource):
+    @api.doc(params=model.DeleteVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -863,6 +1404,7 @@ api.add_resource(DeleteVC, '/DeleteVC')
 
 
 class UpdateVC(Resource):
+    @api.doc(params=model.UpdateVC.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -889,6 +1431,7 @@ api.add_resource(UpdateVC, '/UpdateVC')
 
 
 class ListStorages(Resource):
+    @api.doc(params=model.ListStorages.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -910,6 +1453,7 @@ api.add_resource(ListStorages, '/ListStorages')
 
 
 class AddStorage(Resource):
+    @api.doc(params=model.AddStorage.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -941,6 +1485,7 @@ api.add_resource(AddStorage, '/AddStorage')
 
 
 class DeleteStorage(Resource):
+    @api.doc(params=model.DeleteStorage.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -964,6 +1509,7 @@ api.add_resource(DeleteStorage, '/DeleteStorage')
 
 
 class UpdateStorage(Resource):
+    @api.doc(params=model.UpdateStorage.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName')
@@ -993,15 +1539,9 @@ class UpdateStorage(Resource):
 ##
 api.add_resource(UpdateStorage, '/UpdateStorage')
 
-def getAlias(username):
-    if "@" in username:
-        return username.split("@")[0].strip()
-    if "/" in username:
-        return username.split("/")[1].strip()
-    return username
-
 
 class Endpoint(Resource):
+    @api.doc(params=model.Endpoint.params)
     def get(self):
         '''return job["endpoints"]: curl -X GET /endpoints?jobId=...&userName=...'''
         parser = reqparse.RequestParser()
@@ -1010,46 +1550,16 @@ class Endpoint(Resource):
         args = parser.parse_args()
         jobId = args["jobId"]
         username = args["userName"]
-        job = JobRestAPIUtils.GetJobDetail(username, jobId)
 
-        rets = []
-
-        vc_admin = AuthorizationManager.HasAccess(username, ResourceType.VC, job["vcName"], Permission.Admin)
-        if job["userName"] == username or vc_admin:
-            try:
-                endpoints = json.loads(job["endpoints"])
-            except:
-                endpoints = {}
-
-            for [_, endpoint] in endpoints.items():
-                ret = {
-                    "id": endpoint["id"],
-                    "name": endpoint["name"],
-                    "username": endpoint["username"],
-                    "status": endpoint["status"],
-                    "hostNetwork": endpoint["hostNetwork"],
-                    "podName": endpoint["podName"],
-                    "domain": config["domain"],
-                }
-                if "podPort" in endpoint:
-                    ret["podPort"] = endpoint["podPort"]
-                if endpoint["status"] == "running":
-                    if endpoint["hostNetwork"]:
-                        port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["port"])
-                    else:
-                        port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
-                    ret["port"] = port
-                    if "nodeName" in endpoint:
-                        ret["nodeName"] = endpoint["nodeName"]
-                rets.append(ret)
+        ret = JobRestAPIUtils.GetEndpoints(username, jobId)
 
         # TODO: return 403 error code
         # Return empty list for now to keep backward compatibility with old portal.
-        resp = jsonify(rets)
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        resp.headers["dataType"] = "json"
+        resp = generate_response(ret)
         return resp
 
+    @api.doc(params=model.EndpointPost.params)
+    @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
         '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
         parser = reqparse.RequestParser()
@@ -1060,32 +1570,6 @@ class Endpoint(Resource):
         params = request.get_json(silent=True)
         job_id = params["jobId"]
         requested_endpoints = params["endpoints"]
-
-        # get the job
-        job = JobRestAPIUtils.get_job(job_id)
-        if job is None:
-            msg = "Job %s cannot be found in database" % job_id
-            logger.error(msg)
-            return msg, 404
-
-        vc_admin = AuthorizationManager.HasAccess(username, ResourceType.VC, job["vcName"], Permission.Admin)
-        if job["userName"] != username and (not vc_admin):
-            msg = "You are not authorized to enable endpoint for job %s" % job_id
-            logger.error(msg)
-            return msg, 403
-
-        job_params = json.loads(base64.b64decode(job["jobParams"]))
-        job_type = job_params["jobtrainingtype"]
-
-        # get pods
-        pod_names = []
-        if job_type == "RegularJob":
-            pod_names.append(job_id)
-        else:
-            nums = {"ps": int(job_params["numps"]), "worker": int(job_params["numpsworker"])}
-            for role in ["ps", "worker"]:
-                for i in range(nums[role]):
-                    pod_names.append(job_id + "-" + role + str(i))
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]
@@ -1099,137 +1583,11 @@ class Endpoint(Resource):
                 return ("Bad request, interactive port name length shoule be less than 16: %s" % requested_endpoints), 400
             interactive_ports.append(interactive_port)
 
-        # HostNetwork
-        if "hostNetwork" in job_params and job_params["hostNetwork"] == True:
-            host_network = True
-        else:
-            host_network = False
+        msg, statusCode = JobRestAPIUtils.UpdateEndpoints(username, job_id, requested_endpoints, interactive_ports)
+        if statusCode != 200:
+            return msg, statusCode
 
-        # username
-        username = getAlias(job["userName"])
-
-        endpoints = {}
-
-        def endpoint_exist(endpoint_id):
-            try:
-                curr_endpoints = json.loads(job["endpoints"])
-            except:
-                curr_endpoints = {}
-
-            if endpoint_id in curr_endpoints:
-                return True
-            return False
-
-        if "ssh" in requested_endpoints:
-            # setup ssh for each pod
-            for pod_name in pod_names:
-                endpoint_id = "e-" + pod_name + "-ssh"
-
-                if endpoint_exist(endpoint_id=endpoint_id):
-                    logger.info("Endpoint %s exists. Skip.", endpoint_id)
-                    continue
-                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
-
-                endpoint = {
-                    "id": endpoint_id,
-                    "jobId": job_id,
-                    "podName": pod_name,
-                    "username": username,
-                    "name": "ssh",
-                    "status": "pending",
-                    "hostNetwork": host_network
-                }
-                endpoints[endpoint_id] = endpoint
-
-        # Only open Jupyter on the master
-        if 'ipython' in requested_endpoints:
-            if job_type == "RegularJob":
-                pod_name = pod_names[0]
-            else:
-                # For a distributed job, we set up jupyter on first worker node.
-                # PS node does not have GPU access.
-                # TODO: Simplify code logic after removing PS
-                pod_name = pod_names[1]
-
-            endpoint_id = "e-" + job_id + "-ipython"
-
-            if not endpoint_exist(endpoint_id=endpoint_id):
-                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
-                endpoint = {
-                    "id": endpoint_id,
-                    "jobId": job_id,
-                    "podName": pod_name,
-                    "username": username,
-                    "name": "ipython",
-                    "status": "pending",
-                    "hostNetwork": host_network
-                }
-                endpoints[endpoint_id] = endpoint
-            else:
-                logger.info("Endpoint %s exists. Skip.", endpoint_id)
-
-        # Only open tensorboard on the master
-        if 'tensorboard' in requested_endpoints:
-            if job_type == "RegularJob":
-                pod_name = pod_names[0]
-            else:
-                # For a distributed job, we set up jupyter on first worker node.
-                # PS node does not have GPU access.
-                # TODO: Simplify code logic after removing PS
-                pod_name = pod_names[1]
-
-            endpoint_id = "e-" + job_id + "-tensorboard"
-
-            if not endpoint_exist(endpoint_id=endpoint_id):
-                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
-                endpoint = {
-                    "id": endpoint_id,
-                    "jobId": job_id,
-                    "podName": pod_name,
-                    "username": username,
-                    "name": "tensorboard",
-                    "status": "pending",
-                    "hostNetwork": host_network
-                }
-                endpoints[endpoint_id] = endpoint
-            else:
-                logger.info("Endpoint %s exists. Skip.", endpoint_id)
-
-        # interactive port
-        for interactive_port in interactive_ports:
-            if job_type == "RegularJob":
-                pod_name = pod_names[0]
-            else:
-                # For a distributed job, we set up jupyter on first worker node.
-                # PS node does not have GPU access.
-                # TODO: Simplify code logic after removing PS
-                pod_name = pod_names[1]
-
-            endpoint_id = "e-" + job_id + "-port-" + str(interactive_port["podPort"])
-            if not endpoint_exist(endpoint_id=endpoint_id):
-                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
-                endpoint = {
-                    "id": endpoint_id,
-                    "jobId": job_id,
-                    "podName": pod_name,
-                    "username": username,
-                    "name": interactive_port["name"],
-                    "podPort": interactive_port["podPort"],
-                    "status": "pending",
-                    "hostNetwork": host_network
-                }
-                endpoints[endpoint_id] = endpoint
-            else:
-                logger.info("Endpoint %s exists. Skip.", endpoint_id)
-
-        data_handler = DataHandler()
-        for [_, endpoint] in endpoints.items():
-            data_handler.UpdateEndpoint(endpoint)
-        data_handler.Close()
-
-        resp = jsonify(endpoints)
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        resp.headers["dataType"] = "json"
+        resp = generate_response(msg)
         return resp
 
 
@@ -1240,6 +1598,7 @@ api.add_resource(Endpoint, '/endpoints')
 
 
 class Templates(Resource):
+    @api.doc(params=model.Templates.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName', location="args")
@@ -1259,6 +1618,7 @@ class Templates(Resource):
 
         return resp
 
+    @api.doc(params=model.TemplatesPost.params)
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName', location="args")
@@ -1298,6 +1658,7 @@ class Templates(Resource):
 
         return resp
 
+    @api.doc(params=model.TemplatesDelete.params)
     def delete(self):
         parser = reqparse.RequestParser()
         parser.add_argument('vcName', location="args")
@@ -1344,6 +1705,7 @@ class JobPriority(Resource):
         resp.headers["dataType"] = "json"
         return resp
 
+    @api.doc(params=model.JobPriority.params)
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName', location="args")
@@ -1351,10 +1713,8 @@ class JobPriority(Resource):
         username = args["userName"]
 
         payload = request.get_json(silent=True)
-        success = JobRestAPIUtils.update_job_priorites(username, payload)
+        success, all_job_priorities = JobRestAPIUtils.update_job_priorites(username, payload)
         http_status = 200 if success else 400
-
-        all_job_priorities = JobRestAPIUtils.get_job_priorities()
 
         # Only return job_priorities affected in the POST request
         job_priorities = {}
@@ -1375,10 +1735,37 @@ class JobPriority(Resource):
 ##
 api.add_resource(JobPriority, '/jobs/priorities')
 
+def dumpstacks(signal, frame):
+    code = []
+    logging.info("received signum %d", signal)
+    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+    # logging.info("\nfeature_count:\n{}".format(feature_count))
+    for threadId, stack in sys._current_frames().items():
+        code.append("n# Thread: %d" % (threadId))
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
+            if line:
+                code.append(" %s" % (line.strip()))
+    logging.info("\n".join(code))
+
+def dumpstacks(signal, frame):
+    code = []
+    logging.info("received signum %d", signal)
+    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+    # logging.info("\nfeature_count:\n{}".format(feature_count))
+    for threadId, stack in sys._current_frames().items():
+        code.append("n# Thread: %d" % (threadId))
+        for filename, lineno, name, line in traceback.extract_stack(stack):
+            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
+            if line:
+                code.append(" %s" % (line.strip()))
+    logging.info("\n".join(code))
+
 @app.route("/metrics")
 def metrics():
     return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)
 

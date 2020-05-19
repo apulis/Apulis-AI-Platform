@@ -1,8 +1,23 @@
-#FROM ubuntu:16.04
-FROM uber/horovod:0.13.0-tf1.8.0-torch0.4.0-py3.5
+FROM horovod/horovod:0.18.1-tf1.14.0-torch1.2.0-mxnet1.5.0-py3.6
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
+# RUN rm -rf /var/lib/apt/lists/*
+# Add network tools for debug
 RUN umask 022
+
+## for apt to be noninteractive
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+
+## preesed tzdata, update package index, upgrade packages and install needed software
+RUN echo "tzdata tzdata/Areas select America" > /tmp/preseed.txt; \
+    echo "tzdata tzdata/Zones/America select Los_Angeles" >> /tmp/preseed.txt; \
+    debconf-set-selections /tmp/preseed.txt && \
+    # rm /etc/timezone && \
+    # rm /etc/localtime && \
+    apt-get update && \
+    apt-get install -y tzdata
+
 RUN apt-get -y update && \
     apt-get -y install \
       vim \
@@ -13,7 +28,25 @@ RUN apt-get -y update && \
       openssh-client \
       git \
       rsync \
-      sudo 
+      sudo \
+      zip \
+      unzip \
+      openssh-server \
+      sudo \
+      nodejs \
+      software-properties-common \
+      net-tools \
+      dnsutils \
+      openssh-server \
+      sudo \
+      inetutils-ping inetutils-traceroute
+
+RUN echo $'# Add by Dockerfile\n\
+AddressFamily inet\n\
+AllowTcpForwarding yes\n\
+X11UseLocalhost yes\n\
+X11DisplayOffset 10\n\
+' >> /etc/ssh/sshd_config
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
@@ -27,28 +60,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         screen \
         htop      
 
-# netcore 2.0
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-RUN mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
-RUN sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list'
-RUN apt-get update
-RUN apt-get install -y dotnet-sdk-2.0.0
-RUN apt-get install -y aspnetcore-store-2.0.0
-RUN apt-get update -y && \
-    apt-get -y install apache2 libapache2-mod-wsgi-py3
 
 RUN mkdir -p /var/www/html/
-RUN apt-get update -y && apt-get install -y python3-pycurl locales ssh-askpass  python3-tk screen
-RUN pip install --upgrade pip 
-RUN pip uninstall -y keras ; pip install keras
-RUN pip install setuptools 
-RUN pip install flask flask.restful 
-RUN pip install bs4 requests 
-RUN pip install -U flask-cors
-RUN pip install pandas jupyter matplotlib spacy sklearn scikit-image munch imgaug
-RUN python -m spacy download en
+RUN apt-get update -y && apt-get install -y python3-pycurl locales ssh-askpass  python3-tk screen python3-pip
+RUN pip3 install --upgrade pip 
+RUN pip3 install setuptools 
+RUN pip3 install flask flask.restful 
+RUN pip3 install bs4 requests 
+RUN pip3 install -U flask-cors
+# RUN pip3 uninstall -y numpy && pip install numpy==1.14.5
+RUN pip3 install pandas jupyter matplotlib spacy sklearn scikit-image munch imgaug
+RUN python3 -m spacy download en
 
-RUN apt-get update -y && apt-get install -y nodejs  
 # RUN sudo npm install bower -g 
 
 
@@ -62,6 +85,15 @@ ENV APACHE_LOG_DIR /var/log/apache2
 RUN chmod -R 755 /var/www/html/
 
 COPY wwwroot /var/www/html
+
+# netcore 2.2
+RUN add-apt-repository ppa:graphics-drivers/ppa
+RUN wget -q https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
+RUN sudo dpkg -i packages-microsoft-prod.deb
+RUN apt-get update -y && \
+      apt-get install -y dotnet-sdk-2.2 apache2 libapache2-mod-wsgi-py3 
+# RUN apt-get update -y && \
+#      apt-get install -y apache2 libapache2-mod-wsgi-py3 
 
 RUN rm /etc/apache2/mods-enabled/mpm_*
 COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
@@ -77,21 +109,23 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 ADD run.sh /run.sh
 RUN chmod +x /run.sh
 
-RUN apt-get update -y && apt-get install -y openssh-server sudo
 
 RUN mkdir -p /var/log/apache2
 RUN chmod 0777 /var/log/apache2
 RUN chmod -R 0777 /root
 
-# RUN apt-get update -y && apt-get install ssh-askpass rssh molly-guard ufw monkeysphere python3-ndg-httpsclient -y
+# # RUN apt-get update -y && apt-get install ssh-askpass rssh molly-guard ufw monkeysphere python3-ndg-httpsclient -y
 
-ENV LD_LIBRARY_PATH /usr/local/nvidia/lib64/
+# ENV LD_LIBRARY_PATH /usr/local/nvidia/lib64/
 
 EXPOSE 1380 180
 ADD RecogServer /RecogServer
 
-# Add Glove vectors 
-RUN apt-get update -y && apt-get install -y zip unzip  
+# Install jupyter lab, add jupyter2 kernel
+RUN pip3 install jupyterlab
+RUN python3 -m pip install ipykernel
+RUN python3 -m ipykernel install --user
+
 
 #Telemetry
 #--------------

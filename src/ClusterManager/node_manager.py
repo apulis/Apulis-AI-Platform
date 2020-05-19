@@ -91,6 +91,9 @@ def get_job_gpu_usage(jobId):
 def get_cluster_status():
     cluster_status={}
     gpuStr = "nvidia.com/gpu"
+    gpuStrList = {"npu.huawei.com/NPU","nvidia.com/gpu"}
+    gpuMapping = {}
+
     try:
         output = k8sUtils.kubectl_exec(" get nodes -o yaml")
         nodeInfo = yaml.load(output)
@@ -113,12 +116,17 @@ def get_cluster_status():
                         node_status["scheduled_service"].append(s)
                         node_status["gpuType"] = s
 
-                if (gpuStr in node["status"]["allocatable"]):
+                canUseGpuStrSet = set(node["status"]["allocatable"].keys()).intersection(gpuStrList)
+                gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else gpuStr
+                if node_status["gpuType"]:
+                    gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0}
+                if canUseGpuStrSet:
                     node_status["gpu_allocatable"] = ResourceInfo({node_status["gpuType"]: int(node["status"]["allocatable"][gpuStr])}).ToSerializable()
                 else:
                     node_status["gpu_allocatable"] = ResourceInfo().ToSerializable()
                 if (gpuStr in node["status"]["capacity"]):
                     node_status["gpu_capacity"] = ResourceInfo({node_status["gpuType"] : int(node["status"]["capacity"][gpuStr])}).ToSerializable()
+                    gpuMapping[node_status["gpuType"]]["capacity"] = int(node["status"]["capacity"][gpuStr])
                 else:
                     node_status["gpu_capacity"] = ResourceInfo().ToSerializable()
                 node_status["gpu_used"] = ResourceInfo().ToSerializable()
@@ -154,6 +162,11 @@ def get_cluster_status():
         podsInfo = yaml.load(output)
         if "items" in podsInfo:
             for pod in podsInfo["items"]:
+                labels = pod["metadata"].get("labels")
+                if labels is None:
+                    continue
+                gpuStrDict = gpuMapping.get(labels.get("gpuType"))
+                gpuStr = gpuStrDict.get("deviceStr") if gpuStrDict else "nvidia.com/gpu"
                 if "status" in pod and "phase" in pod["status"]:
                     phase = pod["status"]["phase"]
                     if phase == "Succeeded" or phase == "Failed":
@@ -190,6 +203,7 @@ def get_cluster_status():
                     if "containers" in pod["spec"] :
                         for container in pod["spec"]["containers"]:
                             containerGPUs = 0
+
                             if "resources" in container and "requests" in container["resources"] and gpuStr in container["resources"]["requests"]:
                                 containerGPUs = int(container["resources"]["requests"][gpuStr])
                             if container["name"] in pod_info_cont:
@@ -199,7 +213,7 @@ def get_cluster_status():
                                 preemptable_gpus += containerGPUs
                             else:
                                 gpus += containerGPUs
-                            pod_name += " (gpu #:" + str(containerGPUs) + ")"
+                            pod_name += " ({} #:".format(gpuStr.split("/")[1]) + str(containerGPUs) + ")"
 
                     if node_name in nodes_status:
                         # NOTE gpu_used may include those unallocatable gpus
@@ -266,7 +280,7 @@ def get_cluster_status():
         logger.exception("get cluster status")
 
     dataHandler = DataHandler()
-    cluster_status["AvaliableJobNum"] = dataHandler.GetActiveJobsCount()
+    cluster_status["AvaliableJobNum"] = dataHandler.GetGpuTypeActiveJobCount()
 
     if "cluster_status" in config and check_cluster_status_change(config["cluster_status"],cluster_status):
         logger.info("updating the cluster status...")
@@ -275,6 +289,15 @@ def get_cluster_status():
         logger.info("nothing changed in cluster, skipping the cluster status update...")
 
     config["cluster_status"] = copy.deepcopy(cluster_status)
+    # update newest device type info
+    currentDeviceMapping = dataHandler.GetAllDevice()
+    remveDeviceMapping = set(currentDeviceMapping.keys()).difference(set(gpuMapping.keys()))
+    if remveDeviceMapping:
+        for one_device_type in list(remveDeviceMapping):
+            dataHandler.DeleteDeviceType(one_device_type)
+    for gpuType,gpuStrDict in gpuMapping.items():
+        if gpuType:
+            dataHandler.AddDevice(gpuType,gpuStrDict["deviceStr"],gpuStrDict["capacity"])
     dataHandler.Close()
     return cluster_status
 
@@ -293,7 +316,7 @@ def Run():
                 get_cluster_status()
             except Exception as e:
                 logger.exception("get cluster status failed")
-        time.sleep(30)
+        time.sleep(5)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -1,7 +1,7 @@
 # These are the default configuration parameter
 default_config_parameters = {
     "supported_platform": ["azure_cluster", "onpremise"],
-    "allroles": {"infra", "infrastructure", "worker", "nfs", "sql", "dev"},
+    "allroles": {"infra", "infrastructure", "worker", "nfs", "sql", "dev", "etcd", "kubernetes_master", "mysqlserver"},
     # Kubernetes setting
     "service_cluster_ip_range": "10.3.0.0/16",
     "pod_ip_range": "10.2.0.0/16",
@@ -41,6 +41,7 @@ default_config_parameters = {
             "restful-url": "http://localhost:5000",
         }
     },
+    "repair-manager": { "prometheus-ip": "localhost", "prometheus-port": 9091},
 
     "mysql_port": "3306",
     "mysql_username": "root",
@@ -63,6 +64,8 @@ default_config_parameters = {
     "webuiport": "3080",
     "restfulapiport": "5000",
     "restfulapi": "restfulapi",
+    # StorageManager mapping
+    "storagemanager": "storagemanager",
     "repairmanager": "repairmanager",
     "ssh_cert": "./deploy/sshkey/id_rsa",
     "admin_username": "core",
@@ -91,6 +94,7 @@ default_config_parameters = {
 
     "render-exclude": {
         "GlusterFSUtils.pyc": True,
+        "nbconvert-extensions.tpl": True,
         "launch_glusterfs.pyc": True,
         "bootstrap_hdfs.pyc": True,
     },
@@ -214,22 +218,16 @@ default_config_parameters = {
     #   - label : all <tag to be applied to all nodes
     "kubelabels": {
         "infrastructure": "etcd_node",
-        "worker": "worker_node",
-        "all": "all",
-        "default": "all",
-        "glusterfs": "worker_node",
+
         # HDFS node selector
         "hdfs": "worker_node",
         "zookeeper": "etcd_node",
         "journalnode": "etcd_node",
         "namenode1": "etcd_node_1",
         "namenode2": "etcd_node_2",
+
         "datanode": "all",
-        "webportal": "etcd_node_1",
-        "restfulapi": "etcd_node_1",
-        "jobmanager": "etcd_node_1",
-        "repairmanager": "etcd_node_1",
-        "FragmentGPUJob": "all",
+
         "grafana": "etcd_node_1",
         "prometheus": "etcd_node_1",
         "alert-manager": "etcd_node_1",
@@ -237,7 +235,30 @@ default_config_parameters = {
         "elasticsearch": "etcd_node_1",
         "kibana": "etcd_node_1",
         "mysql": "etcd_node_1",
+        "mysql-server": "mysqlserver_node",
+        "storagemanager": "nfs_node",
+        "user-synchronizer": "etcd_node_1",
+
+        ## worker labels
+        "worker": "worker_node",
+        "glusterfs": "worker_node",
+        "FragmentGPUJob": "all",
+        "a910-device-plugin": "worker_node",
+
+        ## applications
         "nginx": "all",
+        "webportal": "etcd_node_1",
+        "restfulapi": "etcd_node_1",
+        "jobmanager": "etcd_node_1",
+        "repairmanager": "etcd_node_1",
+
+        "webui3": "etcd_node_1",
+        "restfulapi2": "etcd_node_1",
+        "jobmanager2": "etcd_node_1",
+
+        ## default labels
+        "all": "all",
+        "default": "all",
     },
 
     "kubemarks": ["rack", "sku"],
@@ -348,6 +369,9 @@ default_config_parameters = {
     "mounthomefolder": "yes",
     # Mount point to be deployed to container.
     "deploymounts": [],
+
+    # proxy used
+    "proxy": "",
 
 
     # folder where automatic share script will be located
@@ -494,7 +518,7 @@ default_config_parameters = {
             "GraphApiVersion": "1.6",  # API version,
             "Domains": ["microsoft.com"]
         },
-        "Live-Microsoft": {
+        "Live-Msft": {
             "DisplayName": "Microsoft Account (live.com)",
             "Tenant": "jinlmsfthotmail.onmicrosoft.com",
             "ClientId": "734cc6a7-e80c-4b89-a663-0b9512925b45",
@@ -524,7 +548,15 @@ default_config_parameters = {
             "Scope": "openid email",
             "Domains": ["gmail.com"]
         },
-
+        "Microsoft": {
+            # For use at zhejianglab.com
+            "ClientId": "db3c8fdf-2539-4f17-b8ac-cd1a3e38a933",
+            "ClientSecret": "tlvQBQQB91509@*dualUB){"
+        }, 
+        "WeChat": {
+            "AppId": "wx9a56d5d3147bbfc6",
+            "AppSecret": "e9e21e5b6bd11e822abcc5dd87c67a09"
+        },
     },
 
     "Dashboards": {
@@ -535,6 +567,7 @@ default_config_parameters = {
             # "servers": // Specify influxDBserver.
         },
         "grafana": {
+            "url" : "grafana", 
             "port": 3000,
         },
         "hdfs": {
@@ -544,6 +577,13 @@ default_config_parameters = {
             "port": 8088,
         },
     },
+
+    # This section will be used to govern the initial user used by the cluster
+    "inituser": {
+        "gid": 500,
+        "uid": 500, 
+        "group": "dlwsadmin", 
+    }, 
 
     # There are two docker registries, one for infrastructure (used for pre-deployment)
     # and one for worker docker (pontentially in cluser)
@@ -557,12 +597,12 @@ default_config_parameters = {
     # We will gradually migrate mroe and more docker in DLWorkspace to system
     # dockers
     "heketi-docker": "heketi/heketi:dev",
-    "dockerregistry": "mlcloudreg.westus.cloudapp.azure.com:5000/",
+    "dockerregistry": "apulistech/",
     "dockers": {
         # Hub is docker.io/
-        "hub": "dlws/",
+        "hub": "apulistech/",
         #"hub": "registry.docker-cn.com/dlws/",
-        "tag": "1.6", # migrate docker to 1.6
+        "tag": "1.8", # migrate docker to 1.8 for QianJiangYuan
         "system": {
             "nginx": {},
             "zookeeper": {},
@@ -581,12 +621,23 @@ default_config_parameters = {
             "tutorial-nlp": {},
             "tutorial-fastai": {},
             "tutorial-imagenet18": {},
+            "algorithm-bert": {},
+            "algorithm-segmentation": {}, 
             "gobld": {},
             "kubernetes": {},
+            "backendbase": {},
+        },
+        "customize": {
+            "webui": {},
+            "webui2": {}, 
+            "webui3": {}, 
+            "restfulapi": {},
+            "restfulapi2": {},
+            "gpu-reporter": {}
         },
         "external": {
             # These dockers are to be built by additional add ons.
-            "hyperkube": {"fullname":"gcr.io/google-containers/hyperkube:v1.15.2"},
+            "hyperkube": {"fullname":"gcr.azk8s.cn/google-containers/hyperkube:v1.15.2"},
             "freeflow": {"fullname":"dlws/freeflow:0.18"},
             "podinfra": {"fullname":"dlws/pause-amd64:3.0"},
             "nvidiadriver": {"fullname":"dlws/nvidia_driver:375.20"},
@@ -618,7 +669,8 @@ default_config_parameters = {
         "default_admin_username": "dlwsadmin",
         "tcp_port_for_pods": "30000-49999",
         "tcp_port_ranges": "80 443 30000-49999 25826 3000 22222 9091 9092",
-        "udp_port_ranges": "25826",
+        # There is no udp port requirement for now
+        #"udp_port_ranges": "25826",
         "inter_connect": {
             "tcp_port_ranges": "22 1443 2379 3306 5000 8086 10250",
             # Need to white list dev machines to connect
@@ -628,6 +680,9 @@ default_config_parameters = {
             "tcp_port_ranges": "22 1443 2379 3306 5000 8086 10250 10255 22222",
             # Need to white list dev machines to connect
             # "source_addresses_prefixes": [ "52.151.0.0/16"]
+        },
+        "nfs_allow_master": {
+            "tcp_port_ranges": "10250",
         },
     },
 
@@ -669,12 +724,41 @@ default_config_parameters = {
     },
     "infiniband_mounts": [],
     "custom_mounts": [],
+    "enable_blobfuse": False,
+
+    # To use CPU nodes,
+    # 1. CPU nodes must have node label cpuworker=active
+    # 2. enable_cpuworker is set to True
+    # 3. default_cpu_sku is set to a valid value that exists in sku_meta
     "enable_cpuworker": False,
-    "enable_blobfuse": False
+    "enable_blobfuse": False,
+    "enable_custom_registry_secrets": False,
+    "default_cpu_sku": "Standard_D2s_v3",
+
+    # SKU meta defines different types of resources for each SKU
+    # and their allowed usage ratio by user applications.
+    "sku_meta": {
+        "default": {
+            "cpu_ratio": 0.8,
+            "memory_ratio": 0.8
+        },
+        "Standard_D2s_v3": {
+            "cpu": 2,
+            "cpu_ratio": 0.9,
+            "memory": 8,
+            "memory_ratio": 0.9
+        }
+    }
 }
 
 # These are super scripts
 scriptblocks = {
+    "restart-main": [
+        "mount", 
+        "kubernetes labels",
+        "kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/v1.9/nvidia-device-plugin.yml", 
+        "kubernetes start mysql jobmanager restfulapi webui2 monitor nginx custommetrics", 
+    ],
     "azure": [
         "runscriptonroles infra worker ./scripts/prepare_vm_disk.sh",
         "nfs-server create",
@@ -693,6 +777,8 @@ scriptblocks = {
         "docker push restfulapi",
         "docker push webui",
         "mount",
+        "nginx config",
+        "nginx fqdn",
         "kubernetes start mysql",
         "kubernetes start jobmanager",
         "kubernetes start restfulapi",
@@ -708,7 +794,7 @@ scriptblocks = {
         "-y updateworker",
         "kubernetes uncordon",
         "-y kubernetes labels",
-        "kubernetes start nvidia-device-plugin",
+        # "kubernetes start nvidia-device-plugin",
         "webui",
         "docker push restfulapi",
         "docker push webui",

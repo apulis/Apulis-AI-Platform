@@ -114,13 +114,20 @@ const Chart: React.FC<{
 
 }> = ({ available, used, reserved ,isActive}) => {
   const theme = useTheme();
-  let data = [
-    { name: "Available", value: available, color: lightGreen[400] },
-    { name: "Used", value: used, color: theme.palette.grey[500] },
-    { name: "Unschedulable", value: reserved, color: deepOrange[400]},
-  ];
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  let data = [];
+  if (available === 0 && used === 0 && reserved === 0) {
+    data = [{ name: "NO Active Jobs", value: 100, color: "#e0e0e0" }];
+  } else {
+    data = [
+      { name: "Available", value: available, color: lightGreen[400] },
+      { name: "Used", value: used, color: theme.palette.grey[500] },
+      { name: "Unschedulable", value: reserved, color: deepOrange[400]},
+    ];
+  }
   if (reserved === 0) {
-    data = data.filter((item)=>item.name !== 'Reserved')
+    data = data.filter((item)=>item.name !== 'Reserved');
   }
   const styles = useStyles();
   const renderActiveShape = (props: any) => {
@@ -132,7 +139,7 @@ const Chart: React.FC<{
     const sx = cx + (outerRadius + 10) * cos;
     const sy = cy + (outerRadius + 10) * sin;
     const mx = cx + (outerRadius + 20) * cos;
-    const my = cy + (outerRadius + 20) * sin;
+    const my = cy + (outerRadius + 30) * sin;
     const ex = mx + (cos >= 0 ? 1 : -1) * 8;
     const ey = my;
     const textAnchor = cos >= 0 ? 'start' : 'end';
@@ -165,10 +172,10 @@ const Chart: React.FC<{
       </g>
     );
   };
-  const[activeIndex, setActiveIndex] = useState(0);
   const onPieEnter = (data: any, index: number) => {
-    setActiveIndex(index)
+    setActiveIndex(index);
   }
+
   return (
     <>
       <ResponsiveContainer aspect={8 / 8} width='100%' height='100%'>
@@ -263,16 +270,18 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   const [workStorage, setWorkStorage ] = useState('');
   const [dataStorage, setDataStorage] = useState('');
   const [activate,setActivate] = useState(false);
-  const { email } = React.useContext(UserContext);
+  const { userName } = React.useContext(UserContext);
   const {selectedTeam} = React.useContext(TeamsContext);
   const fetchDiretoryUrl = `api/clusters/${cluster}`;
   const request = useFetch(fetchDiretoryUrl);
   const fetchDirectories = async () => {
     const data = await request.get('');
-    const name = typeof email === 'string' ?  email.split('@', 1)[0] : email;
-    setDataStorage(data.dataStorage);
-    setWorkStorage(`${data.workStorage}/${name}`);
-    return data;
+    if (data) {
+      const name = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
+      setDataStorage(data.dataStorage);
+      setWorkStorage(`${data.workStorage}/${name}`);
+      return data;
+    }
   }
   const fetchClusterStatusUrl = `/api`;
   const requestClusterStatus = useFetch(fetchClusterStatusUrl);
@@ -285,10 +294,12 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   useEffect(()=>{
     fetchDirectories().then((res) => {
       let fetchStorage = [];
-      let availBytesSubPath = '/prometheus/api/v1/query?query=node_filesystem_avail_bytes%7Bfstype%3D%27nfs4%27%7D';
-      let sizeBytesSubPath = '/prometheus/api/v1/query?query=node_filesystem_size_bytes%7Bfstype%3D%27nfs4%27%7D';
-      fetchStorage.push(fetch(`${res['prometheus']}${availBytesSubPath}`));
-      fetchStorage.push(fetch(`${res['prometheus']}${sizeBytesSubPath}`));
+      let availBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_avail_bytes{fstype=~"nfs[0-9]?"}';
+      let sizeBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_size_bytes{fstype=~"nfs[0-9]?"}';
+      if (res && res.grafana) {
+        fetchStorage.push(fetch(`${res['grafana']}${availBytesSubPath}`));
+        fetchStorage.push(fetch(`${res['grafana']}${sizeBytesSubPath}`));
+      }
       let storageRes: any = [];
       let tmpStorage: any = [];
       Promise.all(fetchStorage).then((responses) => {
@@ -299,7 +310,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               let tmp = {} as any;
               if (item['metric']['__name__'] == "node_filesystem_size_bytes") {
                 let mountpointName = item['metric']['mountpoint']
-                let val = Math.floor(item['value'][1] / (Math.pow(10, 9)))
+                let val = Math.floor(item['value'][1] / (Math.pow(1024, 3)))
                 tmp['mountpointName'] = mountpointName;
                 tmp['total'] = val;
               }
@@ -307,7 +318,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               //node_filesystem_avail_bytes
               if (item['metric']['__name__'] == "node_filesystem_avail_bytes") {
                 let mountpointName = item['metric']['mountpoint']
-                let val = Math.floor(item['value'][1] / (Math.pow(10, 9)))
+                let val = Math.floor(item['value'][1] / (Math.pow(1024, 3)))
                 tmpAvail['mountpointName'] = mountpointName;
                 tmpAvail['Avail'] = val;
               }
@@ -339,25 +350,32 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               finalStorageRes.unshift(item);
             }
           });
-          console.log(finalStorageRes)
           finalStorageRes = finalStorageRes.filter((item: any) => {
-            return !(item["mountpointName"].indexOf("dlts") === -1 && item["mountpointName"].indexOf("dlws/nfs") === -1);
+            return !(item["mountpointName"].indexOf("dlts") === -1 && item["mountpointName"].indexOf("dlws/nfs") === -1 && item["mountpointName"].indexOf("dlws") === -1);
           })
           setNfsStorage(finalStorageRes.filter((store: any) => {
-            return store['mountpointName'].indexOf(selectedTeam) !== -1 || store['mountpointName'].indexOf("dlws/nfs") !== -1;
+            if (selectedTeam === 'MMBellevue' && store['mountpointName'].indexOf('/mntdlws/nfs') !== -1) {
+              return null;
+            }
+            return store['mountpointName'].indexOf(selectedTeam) !== -1 || store['mountpointName'].indexOf("dlws/nfs") !== -1||store['mountpointName'].indexOf("dlws") !== -1;
           }));
         });
       });
     });
     fetchClusterStatus().then((res) => {
-      const availableGpu = !checkObjIsEmpty(res['gpu_avaliable']) ? (Number)(sumValues(res['gpu_avaliable'])) : 0;
-      setAvailable(availableGpu);
-      const usedGpu = !checkObjIsEmpty(res['gpu_used']) ? (Number)(sumValues(res['gpu_used'])) : 0;
-      setUsed(usedGpu);
-      const reversedGpu = !checkObjIsEmpty(res['gpu_unschedulable']) ? (Number)(sumValues(res['gpu_unschedulable'])) : 0;
-      setReserved(reversedGpu);
-      setActiveJobs((Number)(sumValues(res['AvaliableJobNum'])));
-      setActivate(true);
+      if (res) {
+        const availableGpu = !checkObjIsEmpty(res['gpu_avaliable']) ? (Number)(sumValues(res['gpu_avaliable'])) : 0;
+        setAvailable(availableGpu);
+        const usedGpu = !checkObjIsEmpty(res['gpu_used']) ? (Number)(sumValues(res['gpu_used'])) : 0;
+        setUsed(usedGpu);
+        const reversedGpu = !checkObjIsEmpty(res['gpu_unschedulable']) ? (Number)(sumValues(res['gpu_unschedulable'])) : 0;
+        setReserved(reversedGpu);
+        setActiveJobs((Number)(sumValues(res['AvaliableJobNum'])));
+        setActivate(true);
+      }
+
+    }).catch(err => {
+      console.log('err', err)
     })
   },[selectedTeam]);
   const tableTheme = createMuiTheme({
@@ -462,12 +480,12 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
         >
           Submit Training Job
         </Button>
-        <Button component={Link}
+        {/* <Button component={Link}
           to={{pathname: "/submission/data", state: { cluster } }}
           size="small" color="secondary"
         >
           Submit Data Job
-        </Button>
+        </Button> */}
       </CardActions>
       <Divider/>
       <CardContent>

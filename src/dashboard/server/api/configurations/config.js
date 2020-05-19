@@ -12,6 +12,7 @@ module.exports = () => {
     const message = validate.errors.map(
       error => `${error.dataPath} ${error.message}`
     ).join('\n')
+    console.log('message', validate.errors)
     throw Error(message)
   }
 }

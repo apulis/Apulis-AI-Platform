@@ -329,7 +329,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         update_job_state_latency(redis_conn, job["jobId"], "running")
         if job["jobStatus"] != "running":
             started_at = k8sUtils.localize_time(datetime.datetime.now())
-            detail = [{"startedAt": started_at, "message": "started at: {}".format(started_at)}]
+            detail = [{"startedAt": started_at, "message": "started at {}".format(started_at)}]
 
             dataFields = {
                 "jobStatusDetail": base64.b64encode(json.dumps(detail)),

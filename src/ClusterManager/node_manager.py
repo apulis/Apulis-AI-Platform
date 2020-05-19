@@ -162,7 +162,10 @@ def get_cluster_status():
         podsInfo = yaml.load(output)
         if "items" in podsInfo:
             for pod in podsInfo["items"]:
-                gpuStrDict = gpuMapping.get(pod["metadata"]["labels"].get("gpuType"))
+                labels = pod["metadata"].get("labels")
+                if labels is None:
+                    continue
+                gpuStrDict = gpuMapping.get(labels.get("gpuType"))
                 gpuStr = gpuStrDict.get("deviceStr") if gpuStrDict else "nvidia.com/gpu"
                 if "status" in pod and "phase" in pod["status"]:
                     phase = pod["status"]["phase"]

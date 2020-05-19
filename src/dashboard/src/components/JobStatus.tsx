@@ -42,12 +42,17 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
     if (typeof firstDetail !== 'object') return null;
     const firstDetailMessage = firstDetail.message;
     if (typeof firstDetailMessage === 'string') {
-      const oldStr = firstDetailMessage.slice(firstDetailMessage.indexOf('20'), firstDetailMessage.indexOf('+'));
-      const time = new Date(oldStr).toLocaleString();
-      const temp1 = firstDetailMessage.split(oldStr);
-      const temp2 = firstDetailMessage.split(temp1[1]);
-      const msg = `${temp1[0]}${time}${temp2[1]}`;
-      return msg;
+      const idx1 = firstDetailMessage.indexOf('20');
+      const idx2 = firstDetailMessage.indexOf('+');
+      if (idx1 > -1 && idx2 > -1) {
+        const oldStr = firstDetailMessage.slice(idx1, idx2);
+        const time = new Date(oldStr).toLocaleString();
+        const temp1 = firstDetailMessage.split(oldStr);
+        const temp2 = firstDetailMessage.split(temp1[1]);
+        const msg = `${temp1[0]}${time}${temp2[1]}`;
+        return msg;
+      }
+      return firstDetailMessage;
     };
     if (typeof firstDetailMessage === 'object') return (
       <pre>{JSON.stringify(firstDetailMessage, null, 2)}</pre>

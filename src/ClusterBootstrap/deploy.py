@@ -30,7 +30,6 @@ from shutil import copyfile, copytree
 import urllib
 import socket
 sys.path.append("storage/glusterFS")
-from GlusterFSUtils import GlusterFSJson
 sys.path.append("../utils")
 
 import utils
@@ -39,9 +38,7 @@ import k8sUtils
 from config import config as k8sconfig
 
 sys.path.append("../docker-images/glusterfs")
-import launch_glusterfs
 import az_tools
-import acs_tools
 
 from params import default_config_parameters, scriptblocks
 from ConfigUtils import *
@@ -3580,7 +3577,8 @@ def run_kube_command_on_nodes( nargs ):
     if verb == "uncordon":
         for node in nodes:
             nodename = kubernetes_get_node_name(node)
-            run_kubectl( ["taint nodes %s node-role.kubernetes.io/master:NoSchedule-" % nodename])
+            run_kubectl(["taint nodes %s node-role.kubernetes.io/master:NoSchedule-" % nodename])
+            kubernetes_label_node("--overwrite", nodename, "worker=active")
     else:
         run_kube_command_node( verb, nodes)
 

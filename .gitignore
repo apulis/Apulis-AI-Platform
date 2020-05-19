@@ -76,6 +76,7 @@ src/ClusterBootstrap/services/monitor/grafana-config.yaml
 src/ClusterBootstrap/services/monitor/prometheus-alerting.yaml
 src/ClusterBootstrap/services/monitor/alert-templates.yaml
 src/ClusterBootstrap/services/jobmanager/dlws-scripts.yaml
+src/ClusterBootstrap/services/jobmanager2/dlws-scripts.yaml
 src/ClusterBootstrap/services/monitor/alerting/kill-idle.rules
 
 /src/dashboard/build/*

@@ -1,5 +1,5 @@
 
-export const pollInterval = 2000;
+export const pollInterval = 3000;
 
 export const NameReg = /^[A-Za-z0-9-_]+$/;
 
@@ -11,4 +11,4 @@ export const SameNameErrorText = 'Already has the same name!';
 
 export const NoChineseErrorText = 'Cannot contain Chinese characters!';
 
-export const InteractivePortsMsg = '40000 - 49999. Separated by comma.';
+export const InteractivePortsMsg = 'Must be a positive integer between 40000 and 49999！Multiple can be separated by comma.';

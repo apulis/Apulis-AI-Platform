@@ -34,6 +34,7 @@ import { useForm } from "react-hook-form";
 import { InteractivePortsMsg, pollInterval } from '../../const';
 import message from '../../utils/message';
 import axios from 'axios';
+import useInterval from '../../hooks/useInterval';
 
 interface RouteParams {
   clusterId: string;
@@ -65,6 +66,7 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
       </ListItem>
     );
   }
+
   return (
     <ListItem button component="a" href={url} target="_blank">
       <ListItemText primary={`Port ${endpoint['podPort']}`} secondary={url}/>
@@ -72,11 +74,12 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
   );
 }
 
-const EndpointsList: FunctionComponent<{
-  endpoints: any[];
-}> = ({ endpoints }) => {
+const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> = ({ endpoints, setPollTime }) => {
   const sortedEndpoints = useMemo(() => {
     const nameOrders = ['ssh', 'ipython', 'tensorboard'].reverse();
+    let flag = null;
+    endpoints.map(i => { if (i.status !== 'running') flag = pollInterval; });
+    setPollTime(flag);
     return endpoints.filter((endpoint) => {
       return endpoint.status === 'running';
     }).sort((endpointA, endpointB) => {
@@ -90,7 +93,7 @@ const EndpointsList: FunctionComponent<{
       }
       return endpointA['port'] - endpointB['port'];
     });
-  }, [endpoints]);
+  }, [endpoints]); 
   return (
     <List dense>
       {sortedEndpoints.map((endpoint) => {
@@ -100,7 +103,7 @@ const EndpointsList: FunctionComponent<{
   )
 };
 
-const EndpointsController: FunctionComponent<{ endpoints: any[], getData: any }> = ({ endpoints, getData }) => {
+const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: any }> = ({ endpoints, setPollTime }) => {
   const { job } = useContext(Context);
   const { jobStatus } = job;
   const disabled = jobStatus === 'error' || jobStatus === 'killed' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing';
@@ -130,7 +133,8 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], getData: any }>
       enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
-  const onSubmit = useCallback((data: any) => {
+  const onSubmit = (data: any) => {
+    console.log('errors',errors)
     const port = Number(data.interactivePorts);
     enqueueSnackbar(`Exposing port ${port}...`);
     post({
@@ -140,13 +144,14 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], getData: any }>
       }]
     }).then(() => {
       enqueueSnackbar(`Port ${port} exposed`, { variant: 'success' });
-      getData();
+      setValue('interactivePorts', '');
+      setPollTime(pollInterval);
     }, () => {
       enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
     });
-  }, [post, enqueueSnackbar]);
+  };
   const [iconInfoShow, setIconInfoShow] = useState(false);
-  const { handleSubmit, register, errors, setError } = useForm({ mode: "onBlur" });
+  const { handleSubmit, register, errors, setError, setValue } = useForm({ mode: "onBlur" });
   const validateInteractivePorts = (val: string) => {
     if (val) {
       let flag = true;
@@ -154,17 +159,15 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], getData: any }>
       if (arr.length > 1) {
         arr.forEach(n => {
           const _n = Number(n)
-          if (!_n || _n < 40000 || _n > 49999) flag = false;
+          if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
         });
       } else {
-        flag = Number(val) >= 40000 && Number(val) <= 49999;
+        flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       }
-      !flag && setError('interactivePorts', 'error', InteractivePortsMsg);
       return flag;
     }
     return true;
   }
-
   return (
     <Box px={2}>
       <FormGroup aria-label="position" row>
@@ -198,11 +201,11 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], getData: any }>
         <TextField
           fullWidth
           label="New Interactive Port"
-          placeholder={InteractivePortsMsg}
           disabled={disabled}
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
-          helperText={errors.interactivePorts ? errors.interactivePorts.message : ''}
+          defaultValue={''}
+          helperText={errors.interactivePorts ? InteractivePortsMsg : ''}
           inputRef={register({
             required: 'Interactive Port is required！',
             validate: val => validateInteractivePorts(val)
@@ -226,7 +229,8 @@ const Endpoints: FunctionComponent = () => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { job } = useContext(Context);
-  const [endpoints, setEndpoints] = useState<any[]>();
+  const [endpoints, setEndpoints] = useState<any[]>([]);
+  const [pollTime, setPollTime] = useState<any>(pollInterval);
 
   // const { error, data, get } =
   //   useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
@@ -254,16 +258,34 @@ const Endpoints: FunctionComponent = () => {
   //     }
   //   }
   // }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
-
   useEffect(() => {
     getData();
   }, [clusterId, jobId]);
+
+  useInterval(() => {
+    getData();
+  }, pollTime);
 
   const getData = () => {
     axios.get(`/clusters/${clusterId}/jobs/${jobId}/endpoints`)
         .then(res => {
           const { data } = res;
-          if (data) setEndpoints(data);
+          const eLen = endpoints.length;
+          const dLen = data ? data.length : 0;
+          if (eLen !== dLen) {
+            setEndpoints(data);
+          } else {
+            if (eLen && dLen) {
+              for (const m of data) {
+                for (const n of endpoints) {
+                  if (m.id === n.id && m.status !== n.status) {
+                    setEndpoints(data);
+                    return;
+                  }
+                }
+              }
+            }
+          }
         }, () => {
           message('error', `Failed to fetch job endpoints: ${clusterId}/${jobId}`);
         })
@@ -272,11 +294,10 @@ const Endpoints: FunctionComponent = () => {
   if (endpoints === undefined) {
     return <Loading/>;
   }
-
   return (
     <>
-      {job['jobStatus'] === 'running' && <EndpointsList endpoints={endpoints}/>}
-      <EndpointsController endpoints={endpoints} getData={getData} />
+      {job['jobStatus'] === 'running' && <EndpointsList endpoints={endpoints} setPollTime={setPollTime} />}
+      <EndpointsController endpoints={endpoints} setPollTime={setPollTime} />
     </>
   );
 };

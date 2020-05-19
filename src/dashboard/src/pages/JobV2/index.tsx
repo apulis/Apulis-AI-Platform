@@ -45,6 +45,7 @@ import Console from './Console';
 import axios from 'axios';
 import message from '../../utils/message';
 import useInterval from '../../hooks/useInterval';
+import { pollInterval } from '../../const';
 
 interface RouteParams {
   clusterId: string;
@@ -233,7 +234,7 @@ const JobContent: FunctionComponent = () => {
 
   useInterval(() => {
     getJob();
-  }, 3000);
+  }, pollInterval);
 
   const getJob = () => {
     axios.get(`/v2/clusters/${clusterId}/jobs/${jobId}`)
@@ -271,7 +272,6 @@ const JobContent: FunctionComponent = () => {
       </Container>
     </Context.Provider>
   );
-
 }
 
 const Job: FunctionComponent = () => {

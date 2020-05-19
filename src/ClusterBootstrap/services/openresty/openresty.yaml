@@ -22,7 +22,7 @@ spec:
         restfulapi: active
       containers:
       - name: openresty
-        image: {{cnf["dockers"]["container"]["nginx"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}
         imagePullPolicy: Always
         command: ["/start.sh"]
         readinessProbe:

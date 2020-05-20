@@ -1,6 +1,7 @@
 #!/usr/bin/python 
 import json
 import os
+import io
 import time
 import datetime
 import argparse
@@ -83,7 +84,7 @@ def render_template(template_file, target_file, config, verbose=False):
             target_dir = os.path.dirname(target_file)
             if target_dir != '':
                 os.system("mkdir -p {0}".format(target_dir))
-            with open(target_file, 'w') as f:
+            with io.open(target_file, 'w',encoding='utf_8') as f:
                 f.write(content)
             f.close()
         except Exception as e:

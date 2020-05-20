@@ -59,8 +59,10 @@ spec:
         - name: GF_SERVER_ROOT_URL
           # If you're only using the API Server proxy, set this value instead:
           #value: /api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/
-          value: /grafana/
+          value: /endpoints/grafana/
           # value: /
+        - name: GF_SECURITY_ALLOW_EMBEDDING
+          value: "true"
       volumes:
       - name: grafana-confg-volume
         configMap:

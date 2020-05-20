@@ -27,13 +27,13 @@ def get_node_address_info(node_info):
     return address_map
 
 
-def extract_ips_from_ecc_data(ecc_data, ecc_percent_threshold, interval):
+def extract_ips_from_ecc_data(ecc_data, ecc_percent_threshold, interval,step):
     metrics = ecc_data['data']['result']
     if metrics:
         ecc_node_ips = []
         for m in metrics:
             # percentage of data points with ecc error
-            percent_ecc = len(m['values']) / (interval+1) * 100
+            percent_ecc = len(m['values']) / (interval//step) * 100
             if percent_ecc >= ecc_percent_threshold:
                 offending_node_ip = m['metric']['instance'].split(':')[0]
                 ecc_node_ips.append(offending_node_ip)
@@ -96,7 +96,7 @@ class ECCRule(Rule):
                 if response:
                     ecc_data = response.json()
                     percent_threshold = metric['percent_threshold']
-                    ecc_node_ips = extract_ips_from_ecc_data(ecc_data, percent_threshold, interval)
+                    ecc_node_ips = extract_ips_from_ecc_data(ecc_data, percent_threshold, interval,step)
                     if ecc_node_ips:
                         self.node_info = k8s_util.list_node() # save node info to reduce API calls
                         address_map = get_node_address_info(self.node_info)

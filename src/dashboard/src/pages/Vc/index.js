@@ -74,27 +74,19 @@ export default class Vc extends React.Component {
 
   updateVc = (item) => {
     const { vcName, quota, metadata } = item;
-    const { selectedCluster, userName } = this.context;
-    const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
-    axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
-    .then((res) => {
-      if (res.data > 0) {
-        message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
-        return
-      } else {
-        const { modifyFlag } = this.state;
-        const qSelectData = JSON.parse(quota);
-        const _mSelectData = JSON.parse(metadata);
-        this.setState({
-          modifyFlag: true,
-          isEdit: 1,
-          vcName: vcName,
-          qSelectData,
-          mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
-          clickItem: item
-        })
-      }
-    })
+    this.checkCountJobByStatus(vcName, () => {
+      const { modifyFlag } = this.state;
+      const qSelectData = JSON.parse(quota);
+      const _mSelectData = JSON.parse(metadata);
+      this.setState({
+        modifyFlag: true,
+        isEdit: 1,
+        vcName: vcName,
+        qSelectData,
+        mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
+        clickItem: item
+      })
+    });
   }
 
   save = async () => {
@@ -177,7 +169,8 @@ export default class Vc extends React.Component {
   getSelectHtml = (type) => {
     const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem, quotaValidateObj } = this.state;
     return Object.keys(allDevice).map(m => {
-      let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
+      const totalNum = allDevice[m].capacity;
+      let val = null, options = {}, oldVal = {}, num = allDevice[m].capacity;
       if (type == 1) {
         val = qSelectData[m];
         oldVal = qSelectData;
@@ -192,9 +185,10 @@ export default class Vc extends React.Component {
       options[m] = Number(num);
       const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'quota' : 'metadata'])[m] : null;
       const temp = editData && editData.constructor  === Object ? editData.user_quota : editData;
-      const optionsData = temp && temp > options[m] ? temp : options[m]; 
+      const optionsData = temp ? editData + num : options[m];
       if (!isEdit && options[m] === 0) val = 0;
       const key = type === 1 ? 'qSelectData' : 'mSelectData';
+      console.log('optionsData',optionsData)
       return (
         <div className="select-item">
           <TextField
@@ -241,7 +235,7 @@ export default class Vc extends React.Component {
       });
     }
     this.setState({
-      [key]: { ...oldVal, [m]: type === 1 ? val : { user_quota: val }}
+      [key]: { ...oldVal, [m]: type === 1 ? _val : { user_quota: _val }}
     })
   }
   
@@ -254,15 +248,22 @@ export default class Vc extends React.Component {
   }
 
   onClickDel = item => {
-    const { selectedCluster, userName } = this.context;
     const { vcName } = item;
-    axios.get(`/${selectedCluster}/countJobByStatus?userName=${userName}&targetStatus=running,scheduling,killing,pausing&vcName=${vcName}`)
+    this.checkCountJobByStatus(vcName, () => {
+      this.setState({ deleteModifyFlag: true, delItem: item })
+    });
+  }
+
+  checkCountJobByStatus = (vcName, callback) => {
+    const { selectedCluster, userName } = this.context;
+    const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
+    axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
       if (res.data > 0) {
         message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
         return
       } else {
-        this.setState({ deleteModifyFlag: true, delItem: item });
+        callback();
       }
     })
   }
@@ -275,7 +276,9 @@ export default class Vc extends React.Component {
     this.setState({
       modifyFlag: false,
       vcNameValidateObj: empty,
-      quotaValidateObj: empty
+      quotaValidateObj: empty,
+      qSelectData: {},
+      mSelectData: {}
     })
   }
 

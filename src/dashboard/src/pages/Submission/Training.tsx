@@ -558,7 +558,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             }
           });
           if (sortededResult.length > 1) sortededResult = sortededResult.sort((a: any, b: any)=>a['metric']['device_available'] - b['metric']['device_available']);
-          setGpuFragmentation(sortededResult)
+          setGpuFragmentation(sortededResult);
+        } else {
+          if (result1.length > 1) result1 = result1.sort((a: any, b: any)=>a['metric']['device_available'] - b['metric']['device_available']);
+          setGpuFragmentation(result1);
         }
       })
     })

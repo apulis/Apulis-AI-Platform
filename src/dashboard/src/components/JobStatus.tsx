@@ -46,7 +46,7 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
       const idx2 = firstDetailMessage.indexOf('+');
       if (idx1 > -1 && idx2 > -1) {
         const oldStr = firstDetailMessage.slice(idx1, idx2);
-        const time = new Date(oldStr).toLocaleString();
+        const time = new Date(`${oldStr}+00:00`).toLocaleString();
         const temp1 = firstDetailMessage.split(oldStr);
         const temp2 = firstDetailMessage.split(temp1[1]);
         const msg = `${temp1[0]}${time}${temp2[1]}`;

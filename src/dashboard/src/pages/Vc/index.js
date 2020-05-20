@@ -25,6 +25,10 @@ export default class Vc extends React.Component {
         text: '',
         error: false
       },
+      quotaValidateObj: {
+        text: '',
+        error: false
+      },
       deleteModifyFlag: false,
       btnLoading: false,
       allDevice: {},
@@ -70,41 +74,34 @@ export default class Vc extends React.Component {
 
   updateVc = (item) => {
     const { vcName, quota, metadata } = item;
-    const { selectedCluster, userName } = this.context;
-    const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
-    axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
-    .then((res) => {
-      if (res.data > 0) {
-        message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
-        return
-      } else {
-        const { modifyFlag } = this.state;
-        const qSelectData = JSON.parse(quota);
-        const _mSelectData = JSON.parse(metadata);
-        this.setState({
-          modifyFlag: true,
-          isEdit: 1,
-          vcName: vcName,
-          qSelectData,
-          mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
-          clickItem: item
-        })
-      }
-    })
+    this.checkCountJobByStatus(vcName, () => {
+      const { modifyFlag } = this.state;
+      const qSelectData = JSON.parse(quota);
+      const _mSelectData = JSON.parse(metadata);
+      this.setState({
+        modifyFlag: true,
+        isEdit: 1,
+        vcName: vcName,
+        qSelectData,
+        mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
+        clickItem: item
+      })
+    });
   }
 
   save = async () => {
-    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice } = this.state;
+    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj } = this.state;
     const { selectedCluster } = this.context;
     if (!vcName || vcNameValidateObj.error) {
       this.setState({
         vcNameValidateObj: {
           error: true,
-          text: vcNameValidateObj.text || 'vcName is required！'
+          text: vcNameValidateObj.text ? vcNameValidateObj.text : 'vcName is required！'
         }
       })
       return;
-    };
+    }
+    if (quotaValidateObj.error) return;
     let url, quota = {}, metadata = {}, canSave = true;
     if (Object.keys(allDevice).length > 0) {
       quota = _.cloneDeep(qSelectData);
@@ -128,11 +125,6 @@ export default class Vc extends React.Component {
     metadata = JSON.stringify(metadata);
     this.setState({ btnLoading: true });
     url = `/${selectedCluster}/${isEdit ? 'updateVc' : 'addVc'}/${vcName}/${quota}/${metadata}`;
-    // if (isEdit) {
-    //   url = `/${selectedCluster}/updateVc/${vcName}/${quota}/${metadata}`;
-    // } else {
-    //   url = `/${selectedCluster}/addVc/${vcName}/${quota}/${metadata}`;
-    // }
     await axios.get(url)
       .then((res) => {
         message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
@@ -175,9 +167,10 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
-    const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem } = this.state;
+    const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem, quotaValidateObj } = this.state;
     return Object.keys(allDevice).map(m => {
-      let num = allDevice[m].capacity, val = null, options = {}, oldVal = {};
+      const totalNum = allDevice[m].capacity;
+      let val = null, options = {}, oldVal = {}, num = allDevice[m].capacity;
       if (type == 1) {
         val = qSelectData[m];
         oldVal = qSelectData;
@@ -191,10 +184,11 @@ export default class Vc extends React.Component {
       })
       options[m] = Number(num);
       const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'quota' : 'metadata'])[m] : null;
-      const temp = editData !== null && editData.constructor  === Object ? editData.user_quota : editData;
-      const optionsData = temp !== null && temp > options[m] ? temp : options[m]; 
+      const temp = editData && editData.constructor  === Object ? editData.user_quota : editData;
+      const optionsData = temp ? editData + num : options[m];
       if (!isEdit && options[m] === 0) val = 0;
       const key = type === 1 ? 'qSelectData' : 'mSelectData';
+      console.log('optionsData',optionsData)
       return (
         <div className="select-item">
           <TextField
@@ -203,19 +197,45 @@ export default class Vc extends React.Component {
             value={m}
             disabled
             className="select-key"
-          ></TextField>
+          />
           <TextField
-            select
+            type="number"
             label="Value"
             variant="outlined"
             className="select-value"
-            value={val}
-            onChange={e => this.setState({ [key]: { ...oldVal, [m]: type === 1 ? e.target.value : { user_quota: e.target.value }}})}
-          >
-            {this.getOptions(optionsData)}
-          </TextField>
+            defaultValue={val}
+            onChange={e => this.onNumValChange(key, oldVal, m, type, e.target.value, optionsData)}
+            inputProps={{min: "0", max: optionsData, step: "1"}}
+            error={quotaValidateObj.error}
+            helperText={quotaValidateObj.text}
+          />
+            {/* {this.getOptions(optionsData)}
+          </TextField> */}
         </div>
       )
+    })
+  }
+
+  onNumValChange = (key, oldVal, m, type, val, max) => {
+    const _val = Number(val);
+    if (!Number.isInteger(_val) || _val > max || _val < 0) {
+      this.setState({
+        quotaValidateObj: {
+          error: true,
+          text: `Must be a positive integer from 0 to ${max}`
+        }
+      });
+      return;
+    } else {
+      this.setState({
+        quotaValidateObj: {
+          error: false,
+          text: ''
+        }
+      });
+    }
+    this.setState({
+      [key]: { ...oldVal, [m]: type === 1 ? _val : { user_quota: _val }}
     })
   }
   
@@ -228,26 +248,37 @@ export default class Vc extends React.Component {
   }
 
   onClickDel = item => {
-    const { selectedCluster, userName } = this.context;
     const { vcName } = item;
-    axios.get(`/${selectedCluster}/countJobByStatus?userName=${userName}&targetStatus=running,scheduling,killing,pausing&vcName=${vcName}`)
+    this.checkCountJobByStatus(vcName, () => {
+      this.setState({ deleteModifyFlag: true, delItem: item })
+    });
+  }
+
+  checkCountJobByStatus = (vcName, callback) => {
+    const { selectedCluster, userName } = this.context;
+    const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
+    axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
       if (res.data > 0) {
         message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
         return
       } else {
-        this.setState({ deleteModifyFlag: true, delItem: item });
+        callback();
       }
     })
   }
 
   onCloseDialog = () => {
+    const empty = {
+      text: '',
+      error: false
+    }
     this.setState({
       modifyFlag: false,
-      vcNameValidateObj: {
-        text: '',
-        error: false
-      }
+      vcNameValidateObj: empty,
+      quotaValidateObj: empty,
+      qSelectData: {},
+      mSelectData: {}
     })
   }
 
@@ -312,22 +343,20 @@ export default class Vc extends React.Component {
             </DialogActions>
           </Dialog>}
           {deleteModifyFlag && 
-            <Dialog open={deleteModifyFlag} maxWidth='xs' fullWidth onClose={() => this.setState({ deleteModifyFlag: false })}>
-              <DialogTitle>Delete</DialogTitle>
-              <DialogContent>
-                <DialogContentText>Are you sure to delete this VC？</DialogContentText>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">Cancel</Button>
-                <Button onClick={this.delete} color="secondary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
-                  {btnLoading && <CircularProgress size={20}/>}Delete
-                </Button>
-              </DialogActions>
-            </Dialog>
-          }
+          <Dialog open={deleteModifyFlag} maxWidth='xs' fullWidth onClose={() => this.setState({ deleteModifyFlag: false })}>
+            <DialogTitle>Delete</DialogTitle>
+            <DialogContent>
+              <DialogContentText>Are you sure to delete this VC？</DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">Cancel</Button>
+              <Button onClick={this.delete} color="secondary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
+                {btnLoading && <CircularProgress size={20}/>}Delete
+              </Button>
+            </DialogActions>
+          </Dialog>}
         </div>
       </Container>
-      
     )
   }
 }

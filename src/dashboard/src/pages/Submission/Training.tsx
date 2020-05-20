@@ -591,7 +591,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     );
   };
   const styleSnack={backgroundColor: green[400]};
-console.log('gpuFragmentation',gpuFragmentation)
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
@@ -602,11 +601,12 @@ console.log('gpuFragmentation',gpuFragmentation)
           title={"View Cluster GPU Status Per Node"}
           titleStyle={{color:grey[400]}}
         >
-          <BarChart width={500} height={600} data={gpuFragmentation}  margin={{top: 20}}>
+          <BarChart width={500} height={600} data={gpuFragmentation}>
             <CartesianGrid strokeDasharray="10 10"/>
-            <XAxis dataKey={"metric['device_available']"} label={{value: 'Available gpu count', position:'insideBottomLeft'}}>
+            <XAxis dataKey={"metric['device_available']"} label={{value: 'Available gpu count', position: 'insideBottomLeft', offset: 0}}>
             </XAxis>
-            <YAxis dataKey={"value"} label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
+            <YAxis dataKey={"value[1]"} domain={[0, Math.max.apply(Math, gpuFragmentation.map(i => { return Number(i.value[1]) }))]}
+              label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
             <Bar dataKey="value[1]" fill="#8884d8" >
               <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
             </Bar>
@@ -685,8 +685,8 @@ console.log('gpuFragmentation',gpuFragmentation)
                     onChange={e => setType(e.target.value as string)}
                   >
                     <MenuItem value="RegularJob">Regular Job</MenuItem>
-                    {/* <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
-                    <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
+                    <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
+                    {/* <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
                   </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6}>

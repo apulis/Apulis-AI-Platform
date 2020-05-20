@@ -57,5 +57,22 @@ clusters:
     title: Grafana-endpoint-of-the-cluster
     workStorage: work
     dataStorage: data
-    grafana: "https://apulis-test.sigsus1.cn:51444/grafana/"
+    grafana: "https://apulis-test.sigsus1.cn:51444/grafana"
     prometheus: http://huawei-infra01.sigsus.cn/:9091
+
+# domain: "http://atlas01.sigsus.cn"
+# casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
+
+# administrators:
+#   - jinlmsft@hotmail.com
+#   - jinli.ccs@gmail.com
+#   - jin.li@apulis.com
+
+# clusters:
+#   apulis-dev:
+#     restfulapi: "http://atlas01.sigsus.cn/apis"
+#     title: Grafana-endpoint-of-the-cluster
+#     workStorage: work
+#     dataStorage: data
+#     grafana: "http://atlas01.sigsus.cn/endpoints/grafana"
+#     prometheus: http://atlas01.sigsus.cn

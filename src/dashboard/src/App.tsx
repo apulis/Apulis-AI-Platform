@@ -44,9 +44,6 @@ interface BootstrapProps {
   isAuthorized?: boolean;
   config: ConfigContext;
   user: UserContext;
-  authEnabled?: {
-    [props: string]: 1 | 0;
-  };
   administrators?: Array<[]>
 }
 
@@ -58,10 +55,10 @@ const Loading = (
 
 
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled, administrators }) => (
+const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators }) => (
   <BrowserRouter>
     <ConfigProvider>
-      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} authEnabled={authEnabled} administrators={administrators} >
+      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} >
           <ConfirmProvider>
             <TeamProvider>
               <ClustersProvider>
@@ -81,7 +78,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   React.useEffect(() => {
     if (openId === undefined || group === undefined) {
       history.replace('/sign-in');
-    } else if(userName === undefined){
+    } else if(userName === undefined) {
       history.replace('/sign-up');
     } else if(teams !== undefined && teams.length === 0) {
       history.replace('/empty-team');
@@ -117,8 +114,6 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
             <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
             <Route path="/cluster-status" component={ClusterStatus}/>
             <Route path="/vc" component={Vc} />
-            <Route path="/user" component={User} />
-            <Route path="/access" component={Access} />
             <Redirect to="/"/>
           </Switch>
         </React.Suspense>

@@ -59,40 +59,20 @@ const LinkListItem: React.FC<LinkProps> = ({ to, children }) => {
 
 const NavigationList: React.FC = () => {
   const styles = useStyles();
-  const { isAdmin } = React.useContext(UserContext);
-  const { wiki } = React.useContext(ConfigContext);
   return (
     <List component="nav" className={styles.drawerHeader}>
       <LinkListItem to="/submission/training">
         <ListItemText>Submit Training Job</ListItemText>
       </LinkListItem>
-      {/* <LinkListItem to="/submission/data">
-        <ListItemText>Submit Data Job</ListItemText>
-      </LinkListItem> */}
-      {/* <LinkListItem to="/jobs">
-        <ListItemText>View and Manage Jobs</ListItemText>
-      </LinkListItem> */}
       <LinkListItem to="/jobs-v2">
         <ListItemText>View and Manage Jobs</ListItemText>
       </LinkListItem>
       <LinkListItem to="/cluster-status">
         <ListItemText>Cluster Status</ListItemText>
       </LinkListItem>
-      {
-        isAdmin ?
-          <div style={{ width: '100%' }}>
-            <LinkListItem to="/vc">
-              <ListItemText>Vc</ListItemText>
-            </LinkListItem>
-            <LinkListItem to="/user">
-              <ListItemText>User</ListItemText>
-            </LinkListItem>
-            <LinkListItem to="/access">
-              <ListItemText>Access</ListItemText>
-            </LinkListItem>
-          </div>
-          : null
-      }
+      <LinkListItem to="/vc">  
+        <ListItemText>Vc</ListItemText>
+      </LinkListItem>
     </List>
   );
 };

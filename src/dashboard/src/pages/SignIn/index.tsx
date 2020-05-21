@@ -28,7 +28,7 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
     Microsoft,
     Wechat,
   }
-  const { openId, group, authEnabled = {} } = React.useContext(UserContext);
+  const { openId, group } = React.useContext(UserContext);
   const [signInStatus, setSignInStatus] = React.useState(SIGNIN_STATUS.Initial);
   const onButtonClick = React.useCallback((status) => {
     setSignInStatus(status);
@@ -58,32 +58,28 @@ const SignIn: React.FC<RouteComponentProps> = ({ history }) => {
               </Grid>
 
               <Grid container direction="column" alignItems="center" justify="space-between" style={{ height: 110 }}>
-                {
-                  (authEnabled.microsoft === 1) && <Grid item>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      href="/api/authenticate"
-                      disabled={signInStatus !== SIGNIN_STATUS.Initial}
-                      onClick={() => onButtonClick(SIGNIN_STATUS.Microsoft)}
-                    >
-                      {signInStatus === SIGNIN_STATUS.Microsoft ? <CircularProgress size={24} /> : 'Sign in with Microsoft'}
-                    </Button>
-                  </Grid>
-                }
-                {
-                  (authEnabled.wechat === 1)&& <Grid item>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      href="/api/authenticate/wechat"
-                      disabled={signInStatus !== SIGNIN_STATUS.Initial}
-                      onClick={() => onButtonClick(SIGNIN_STATUS.Wechat)}
-                    >
-                      {signInStatus === SIGNIN_STATUS.Wechat ? <CircularProgress size={24} /> : 'Sign in with Wechat'}
-                    </Button>
-                  </Grid>
-                }
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    href="/api/authenticate"
+                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                    onClick={() => onButtonClick(SIGNIN_STATUS.Microsoft)}
+                  >
+                    {signInStatus === SIGNIN_STATUS.Microsoft ? <CircularProgress size={24} /> : 'Sign in with Microsoft'}
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    href="/api/authenticate/wechat"
+                    disabled={signInStatus !== SIGNIN_STATUS.Initial}
+                    onClick={() => onButtonClick(SIGNIN_STATUS.Wechat)}
+                  >
+                    {signInStatus === SIGNIN_STATUS.Wechat ? <CircularProgress size={24} /> : 'Sign in with Wechat'}
+                  </Button>
+                </Grid>
               </Grid>
 
               <Grid item>

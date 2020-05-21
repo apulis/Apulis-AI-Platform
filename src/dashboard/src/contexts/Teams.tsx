@@ -19,6 +19,7 @@ interface Context {
   saveSelectedTeam(team: React.SetStateAction<string>): void;
   clusterId: string;
   saveClusterId(clusterId: React.SetStateAction<string>): void;
+  permissionList: string[];
 }
 
 const Context = React.createContext<Context>({
@@ -27,10 +28,12 @@ const Context = React.createContext<Context>({
   saveSelectedTeam: function(team: React.SetStateAction<string>) {},
   clusterId: '',
   saveClusterId: function(clusterId: React.SetStateAction<string>) {},
+  permissionList: []
 });
 
 export default Context;
-export const Provider: React.FC = ({ children }) => {
+export const Provider: React.FC<{permissionList?: string[]}> = ({ children, permissionList = [] }) => {
+  console.log('permissionList', permissionList)
   const fetchTeamsUrl = '/api/teams';
   const { addGroup } = useContext(ConfigContext);
   const [clusterId, setClusterId] = React.useState<string>('');
@@ -90,7 +93,7 @@ export const Provider: React.FC = ({ children }) => {
   // }
   return (
     <Context.Provider
-      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId }}
+      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId, permissionList }}
       children={children}
     />
   );

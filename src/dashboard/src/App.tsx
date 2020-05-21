@@ -10,6 +10,7 @@ import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
 import { Provider as ClustersProvider } from "./contexts/Clusters";
 import TeamsContext, { Provider as TeamProvider } from './contexts/Teams';
+import AuthContext, { AuthProvider } from './contexts/Auth';
 import { ConfirmProvider } from './hooks/useConfirm';
 import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
@@ -29,8 +30,6 @@ const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
 const Job = React.lazy(() => import('./pages/Job'));
 const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
-const User = React.lazy(() => import('./pages/User/index.js'));
-const Access = React.lazy(() => import('./pages/Access/index.js'));
 
 const theme = createMuiTheme();
 
@@ -44,7 +43,11 @@ interface BootstrapProps {
   isAuthorized?: boolean;
   config: ConfigContext;
   user: UserContext;
-  administrators?: Array<[]>
+  administrators?: Array<[]>;
+  permissionList?: string[];
+  currentRole?: string[];
+  userGroupPath?: string;
+  id?: number;
 }
 
 const Loading = (
@@ -55,19 +58,21 @@ const Loading = (
 
 
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators }) => (
+const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath }) => (
   <BrowserRouter>
     <ConfigProvider>
-      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} >
-          <ConfirmProvider>
-            <TeamProvider>
+      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
+        <ConfirmProvider>
+          <AuthProvider userName={userName} id={id}>
+            <TeamProvider permissionList={permissionList}>
               <ClustersProvider>
                 <ThemeProvider theme={theme}>
                   {children}
                 </ThemeProvider>
               </ClustersProvider>
             </TeamProvider>
-          </ConfirmProvider>
+          </AuthProvider>
+        </ConfirmProvider>
       </UserProvider>
     </ConfigProvider>
   </BrowserRouter>
@@ -77,7 +82,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   const { teams } = React.useContext(TeamsContext);
   React.useEffect(() => {
     if (openId === undefined || group === undefined) {
-      history.replace('/sign-in');
+      // history.replace('/sign-in');
     } else if(userName === undefined) {
       history.replace('/sign-up');
     } else if(teams !== undefined && teams.length === 0) {
@@ -91,7 +96,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
       variant: type,
     });
   }, history);
-  if (openId === undefined || group === undefined || userName === undefined || (teams !== undefined && teams.length === 0)) {
+  if (userName === undefined || (teams !== undefined && teams.length === 0)) {
     return null;
   }
 

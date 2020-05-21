@@ -11,7 +11,10 @@ interface Context {
   email?: string;
   familyName?: string;
   givenName?: string;
-  administrators?: Array<[]>
+  administrators?: Array<[]>;
+  permissionList?: string[];
+  currentRole?: string[];
+  userGroupPath?: string;
 }
 
 const Context = React.createContext<Context>({});
@@ -26,13 +29,16 @@ interface ProviderProps {
   userName?: string;
   isAdmin?: boolean;
   isAuthorized?: boolean;
-  administrators?: Array<[]>
+  administrators?: Array<[]>;
+  permissionList?: string[];
+  currentRole?: string[];
+  userGroupPath?: string;
 }
 
-export const Provider: React.FC<ProviderProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators }) => {
+export const Provider: React.FC<ProviderProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, currentRole, permissionList, userGroupPath }) => {
   return (
     <Context.Provider
-      value={{ uid, openId, group, nickName, userName, isAdmin, isAuthorized, administrators }}
+      value={{ uid, openId, group, nickName, userName, isAdmin, isAuthorized, administrators, currentRole, permissionList, userGroupPath }}
       children={children}
     />
   );

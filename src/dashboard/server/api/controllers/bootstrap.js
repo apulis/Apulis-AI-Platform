@@ -10,12 +10,5 @@ const authEnabled = config.get('authEnabled')
 module.exports = (context) => {
   let { user } = context.state
   context.type = 'js'
-  if (user) {
-    if (user.password) {
-      delete user.password
-    }
-    context.body = `bootstrap(${JSON.stringify({ ...user, authEnabled, administrators })})`
-  } else {
-    context.body = `bootstrap(${JSON.stringify({ authEnabled })})`
-  }
+  context.body = `bootstrap(${JSON.stringify({ ...user, administrators })})`
 }

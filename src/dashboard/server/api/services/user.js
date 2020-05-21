@@ -2,15 +2,16 @@ const { createHash } = require('crypto')
 
 const config = require('config')
 const jwt = require('jsonwebtoken')
-
+const fetch = require('node-fetch')
 const Service = require('./service')
 const Cluster = require('./cluster')
 
 const clusterIds = Object.keys(config.get('clusters'))
 
+const userGroup = config.get('userGroup')
+const domain = config.get('domain')
+
 const sign = config.get('sign')
-// const winbind = config.get('winbind')
-const winbind = config.has('winbind') ? config.get('winbind') : undefined
 const masterToken = config.get('masterToken')
 
 const TOKEN = Symbol('token')
@@ -135,24 +136,6 @@ class User extends Service {
       this._token = hash.digest()
     }
     return this._token
-  }
-
-  async fillIdFromWinbind () {
-    if (winbind == null) {
-      this.context.log.warn('No winbind server, user will have no uid / gid, and will not sync user info to any cluster.')
-      return null
-    }
-
-    const params = new URLSearchParams({ userName: this.email })
-    const url = `${winbind}/domaininfo/GetUserId?${params}`
-    this.context.log.info({ url }, 'Winbind request')
-    const response = await fetch(url)
-    const data = await response.json()
-    this.context.log.info({ data }, 'Winbind response')
-
-    this.uid = data['uid']
-    this.gid = data['gid']
-    return data
   }
 
   async addUserToCluster (data) {
@@ -297,6 +280,20 @@ class User extends Service {
       givenName: this.givenName
     }
   }
+
+  static async getCurrentUserFromUserDashboard(context, token) {
+    const getCurrentUserURL = domain + userGroup.path + '/auth/currentUser'
+    const response = await fetch(getCurrentUserURL, {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    const data = await response.json()
+    context.assert(data['success'] === true, 502)
+    delete data.success
+    return data
+  }
+
 }
 
 module.exports = User

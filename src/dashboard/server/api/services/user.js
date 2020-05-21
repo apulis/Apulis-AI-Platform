@@ -9,7 +9,6 @@ const Cluster = require('./cluster')
 const clusterIds = Object.keys(config.get('clusters'))
 
 const userGroup = config.get('userGroup')
-const domain = config.get('domain')
 
 const sign = config.get('sign')
 const masterToken = config.get('masterToken')
@@ -282,7 +281,7 @@ class User extends Service {
   }
 
   static async getCurrentUserFromUserDashboard(context, token) {
-    const getCurrentUserURL = domain + userGroup.path + '/auth/currentUser'
+    const getCurrentUserURL = userGroup.domain + userGroup.backEndPath + '/auth/currentUser'
     const response = await fetch(getCurrentUserURL, {
       headers: {
         'Authorization': 'Bearer ' + token

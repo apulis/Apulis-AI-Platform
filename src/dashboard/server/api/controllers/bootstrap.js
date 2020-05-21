@@ -1,6 +1,7 @@
 const config = require('config')
 const administrators = config.get('administrators')
-const authEnabled = config.get('authEnabled')
+const userGroup = config.get('userGroup')
+
 /**
  * @typedef {Object} State
  * @property {import('../services/user')} user
@@ -10,5 +11,5 @@ const authEnabled = config.get('authEnabled')
 module.exports = (context) => {
   let { user } = context.state
   context.type = 'js'
-  context.body = `bootstrap(${JSON.stringify({ ...user, administrators })})`
+  context.body = `bootstrap(${JSON.stringify({ ...user, administrators, userGroupPath: userGroup.frontEndPath })})`
 }

@@ -134,7 +134,10 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
     });
   }, [post, enqueueSnackbar]);
   const onSubmit = (data: any) => {
-    console.log('errors',errors)
+    if (!data.interactivePorts) {
+      setError('interactivePorts', 'validate', 'Interactive Port is required！');
+      return;
+    }
     const port = Number(data.interactivePorts);
     enqueueSnackbar(`Exposing port ${port}...`);
     post({
@@ -163,11 +166,13 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
         });
       } else {
         flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
-      }
+      } 
+      !flag && setError('interactivePorts', 'validate', InteractivePortsMsg);
       return flag;
     }
     return true;
   }
+
   return (
     <Box px={2}>
       <FormGroup aria-label="position" row>
@@ -205,9 +210,8 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
           defaultValue={''}
-          helperText={errors.interactivePorts ? InteractivePortsMsg : ''}
+          helperText={errors.interactivePorts ? errors.interactivePorts.message || InteractivePortsMsg : ''}
           inputRef={register({
-            required: 'Interactive Port is required！',
             validate: val => validateInteractivePorts(val)
           })}
           InputProps={{

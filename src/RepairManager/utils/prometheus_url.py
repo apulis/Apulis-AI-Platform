@@ -12,7 +12,7 @@ def format_prometheus_url(prometheus_url, query, since, until, step):
         "query": query,
         "start": str(since),
         "end": str(until),
-        "step": str(step),
+        "step": str(step) + "m",
         })
 
     return urllib.parse.urljoin(prometheus_url,

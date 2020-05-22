@@ -8,6 +8,11 @@ import traceback
 from config import config
 
 from decimal import Decimal
+from prometheus_client import Histogram
+db_connect_histogram = Histogram("db_connect_latency_seconds",
+                                 "latency for connecting to db (seconds)",
+                                 buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))
+
 def dict_decimal_to_float(d):
     if not isinstance(d, dict):
         raise TypeError("d must be dict")
@@ -139,8 +144,9 @@ class MysqlConn(object):
             finally:
                 MysqlConn._lock.release()
 
-        self._conn = MysqlConn._db_pools[db_type].connection()
-        self._cur = self._conn.cursor()
+        with db_connect_histogram.time():
+            self._conn = MysqlConn._db_pools[db_type].connection()
+            self._cur = self._conn.cursor()
 
 
     def select_one(self, sql, params=None):

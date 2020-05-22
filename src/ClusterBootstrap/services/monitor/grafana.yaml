@@ -61,6 +61,8 @@ spec:
           #value: /api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/
           value: /endpoints/grafana/
           # value: /
+        - name: GF_SECURITY_ALLOW_EMBEDDING
+          value: "true"
       volumes:
       - name: grafana-confg-volume
         configMap:

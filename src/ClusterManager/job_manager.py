@@ -590,6 +590,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         vc_name = sji["job"]["vcName"]
         if vc_name not in vc_resources:
             if sji["job"]["jobStatus"] in ["scheduling", "running"]:
+                logger.error("job: %s belong to a no-exist vc %s"%(sji["jobId"],vc_name))
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus","killing")
             else:
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")

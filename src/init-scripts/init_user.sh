@@ -34,12 +34,12 @@ compgen -e | while read line; do
 echo "export PATH=$PATH:\${PATH}" >> "${ENV_FILE}"
 echo "export LD_LIBRARY_PATH=/usr/local/nvidia/lib64/:\${LD_LIBRARY_PATH}" >> "${ENV_FILE}"
 # source the envs
+if [ -f /etc/bash.bashrc ]; then
+  chmod 644 /etc/bash.bashrc
+fi
 grep -qx "^\s*. ${ENV_FILE}" /home/${DLWS_USER_NAME}/.profile || cat << SCRIPT >> "/home/${DLWS_USER_NAME}/.profile"
 if [ -f ${ENV_FILE} ]; then
     . ${ENV_FILE}
-fi
-if [ -f /etc/bash.bashrc ]; then
-  chmod 644 /etc/bash.bashrc
 fi
 SCRIPT
 

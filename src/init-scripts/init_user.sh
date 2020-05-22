@@ -38,7 +38,12 @@ grep -qx "^\s*. ${ENV_FILE}" /home/${DLWS_USER_NAME}/.profile || cat << SCRIPT >
 if [ -f ${ENV_FILE} ]; then
     . ${ENV_FILE}
 fi
+if [ -f /etc/bash.bashrc ]; then
+  chmod 644 /etc/bash.bashrc
+fi
 SCRIPT
+
+
 
 # any command should run as ${DLWS_USER_NAME}
 #runuser -l ${DLWS_USER_NAME} -c your_commands

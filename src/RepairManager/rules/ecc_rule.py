@@ -33,7 +33,7 @@ def extract_ips_from_ecc_data(ecc_data, ecc_percent_threshold, interval,step):
         ecc_node_ips = []
         for m in metrics:
             # percentage of data points with ecc error
-            percent_ecc = len(m['values']) / (interval//step) * 100
+            percent_ecc = len(m['values']) / (interval//step+1) * 100
             if percent_ecc >= ecc_percent_threshold:
                 offending_node_ip = m['metric']['instance'].split(':')[0]
                 ecc_node_ips.append(offending_node_ip)

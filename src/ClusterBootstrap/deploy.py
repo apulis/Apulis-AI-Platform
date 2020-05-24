@@ -3587,20 +3587,20 @@ def render_docker_images():
         print "Rendering docker-images from template ..."
     utils.render_template_directory("../docker-images/","./deploy/docker-images",config, verbose)
 
-def build_docker_images(nargs, arch=None):
+def build_docker_images(nargs, archtype=None):
     render_docker_images()
     if verbose:
         print "Build docker ..."
-    build_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, arch=arch)
+    build_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, archtype=archtype)
 
-def push_docker_images(nargs, arch=None):
+def push_docker_images(nargs, archtype=None):
     render_docker_images()
 
     if verbose:
         print "Build & push docker images to docker register  ..."
         print "Nocache: {0}".format(nocache)
 
-    push_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, arch=arch)
+    push_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, archtype=archtype)
     return
 
 def check_buildable_images(nargs):
@@ -4509,11 +4509,11 @@ def run_command( args, command, nargs, parser ):
 
             if nargs[0] == "build":
                 check_buildable_images(nargs[1:])
-                build_docker_images(nargs[1:], arch=args.arch)
+                build_docker_images(nargs[1:], archtype=args.archtype)
 
             elif nargs[0] == "push":
                 check_buildable_images(nargs[1:])
-                push_docker_images(nargs[1:], arch=args.arch)
+                push_docker_images(nargs[1:], archtype=args.archtype)
 
             elif nargs[0] == "run":
                 if len(nargs)>=2:
@@ -4897,8 +4897,8 @@ Command:
         action="store",
         default=None
         )
-    parser.add_argument("--arch",
-        help = "Build docker arch [e.g., x86_64, aarch64]",
+    parser.add_argument("--archtype",
+        help = "Build docker with arch type [e.g., amd64, arm64, amd64-npu, arm64-gpu]",
         action="store",
         default=None
         )

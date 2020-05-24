@@ -12,16 +12,12 @@ import grp
 from os.path import expanduser
 from DirectoryUtils import cd
 
-def build_docker(dockername, dirname, verbose=False, nocache=False, arch=None):
+def build_docker(dockername, dirname, verbose=False, nocache=False, archtype=None):
     # docker name is designed to use lower case.
     dockername = dockername.lower()
 
-    dockerfile_default_name = "Dockerfile"
-    dockerfile_name = dockerfile_default_name
-    if isinstance(arch, str):
-        arch = arch.lower()
-        if arch == "aarch64" or arch == "arm64":
-            dockerfile_name = dockerfile_name + "_aarch64"
+    dockerfile_name = get_dockerfile(dirname, archtype)
+    print("Prepare to build docker with file: " + dockerfile_name)
 
     if verbose:
         print("Building docker ... " + dockername + " .. @" + dirname)
@@ -30,9 +26,6 @@ def build_docker(dockername, dirname, verbose=False, nocache=False, arch=None):
         if os.path.exists("prebuild.sh"):
             print("Execute prebuild.sh for docker %s" % dockername)
             os.system("bash prebuild.sh")
-        if not os.path.exists(dockerfile_name):
-            print("Dockerfile %s not exists, use default Dockerfile" % dockerfile_name)
-            dockerfile_name = dockerfile_default_name
         if nocache:
             cmd = "docker build --no-cache -f " + dockerfile_name + " -t "+ dockername + " ."
         else:
@@ -42,9 +35,21 @@ def build_docker(dockername, dirname, verbose=False, nocache=False, arch=None):
         os.system(cmd)
     return dockername
 
-def build_docker_with_config(dockername, config, verbose=False, nocache=False, arch=None):
+def get_dockerfile(dirname, archtype):
+    dockerfile_default = "Dockerfile"
+    dockerfile_full = dockerfile_default + "-" + archtype
+    dockerfile = dockerfile_default
+    length = len(dockerfile_default)
+    for filename in os.listdir(dirname):
+        if filename.startswith(dockerfile_default) and dockerfile_full.startswith(filename) and len(filename) > length:
+            length = len(filename)
+            dockerfile = filename
+    return dockerfile
+
+
+def build_docker_with_config(dockername, config, verbose=False, nocache=False, archtype=None):
     usedockername = dockername.lower()
-    build_docker(config["dockers"]["container"][dockername]["name"], config["dockers"]["container"][dockername]["dirname"], verbose, nocache, arch=arch)
+    build_docker(config["dockers"]["container"][dockername]["name"], config["dockers"]["container"][dockername]["dirname"], verbose, nocache, archtype=archtype)
 
 def push_docker( dockername, docker_register, verbose=False):
     # docker name is designed to use lower case.
@@ -324,32 +329,32 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
     return
 
 
-def build_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, arch=None):
-    configuration(config, verbose)
+def build_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, archtype=None):
+    configuration(config, verbose, archtype=archtype)
     docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
     # print rootdir
     for _, tupl in docker_list.iteritems():
         dockername, _ = tupl
-        build_docker_with_config(dockername, config, verbose, nocache=nocache, arch=arch)
+        build_docker_with_config(dockername, config, verbose, nocache=nocache, archtype=archtype)
 
-def build_one_docker(dirname, dockerprefix, dockertag, basename, config, verbose=False, nocache=False, arch=None):
-    configuration(config, verbose)
-    return build_docker_with_config(basename, config, verbose, nocache=nocache, arch=arch)
+def build_one_docker(dirname, dockerprefix, dockertag, basename, config, verbose=False, nocache=False, archtype=None):
+    configuration(config, verbose, archtype=archtype)
+    return build_docker_with_config(basename, config, verbose, nocache=nocache, archtype=archtype)
 
-def push_one_docker(dirname, dockerprefix, tag, basename, config, verbose=False, nocache=False, arch=None):
-    configuration(config, verbose)
-    build_docker_with_config(basename, config, verbose, nocache=nocache, arch=arch)
+def push_one_docker(dirname, dockerprefix, tag, basename, config, verbose=False, nocache=False, archtype=None):
+    configuration(config, verbose, archtype=archtype)
+    build_docker_with_config(basename, config, verbose, nocache=nocache, archtype=archtype)
     push_docker_with_config( basename, config, verbose, nocache = nocache )
 
-def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, arch=None):
+def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, archtype=None):
 
-    configuration(config, verbose)
+    configuration(config, verbose, archtype=archtype)
     docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
 
     for _, tupl in docker_list.iteritems():
         dockername, _ = tupl
-        build_docker_with_config(dockername, config, verbose, nocache=nocache, arch=arch)
-        push_docker_with_config( dockername, config, verbose, nocache = nocache )
+        build_docker_with_config(dockername, config, verbose, nocache=nocache, archtype=archtype)
+        push_docker_with_config(dockername, config, verbose, nocache=nocache, archtype=archtype)
 
     return
 

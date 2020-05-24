@@ -37,8 +37,12 @@ def build_docker(dockername, dirname, verbose=False, nocache=False, archtype=Non
 
 def get_dockerfile(dirname, archtype):
     dockerfile_default = "Dockerfile"
-    dockerfile_full = dockerfile_default + "-" + archtype
     dockerfile = dockerfile_default
+
+    if archtype is None or archtype == "amd64":
+        return dockerfile_default
+
+    dockerfile_full = dockerfile_default + "-" + archtype
     length = len(dockerfile_default)
     for filename in os.listdir(dirname):
         if filename.startswith(dockerfile_default) and dockerfile_full.startswith(filename) and len(filename) > length:
@@ -217,16 +221,20 @@ def config_dockers_use_tag( rootdir, config, verbose):
                 "name": usedockername,
                 }
 
-def configuration( config, verbose):
-    config_dockers("../docker-images", config["dockerprefix"], config["dockertag"], verbose, config )
+def configuration(config, verbose, archtype=None):
+    config_dockers("../docker-images", config["dockerprefix"], config["dockertag"], verbose, config, archtype=archtype)
 
-def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
+def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=None):
 
     global system_docker_registry
     global system_docker_tag
     global system_docker_dic
     global infra_docker_registry
     global worker_docker_registry
+
+    archtag = ""
+    if archtype != None or archtype == "amd64":
+        archtag = "-" + archtype
 
     if system_docker_registry is None:
 
@@ -263,6 +271,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
                     dockerregistry = worker_docker_registry
 
             usedockername = dockername.lower()
+            tag = tag + archtag
             if "container" not in config["dockers"]:
                 config["dockers"]["container"] = {}
             config["dockers"]["container"][dockername] = {
@@ -275,8 +284,8 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
         for dockername in config["dockers"]["infrastructure"]:
             config["dockers"]["container"][dockername] = {
                 "dirname": os.path.join("./deploy/docker-images", dockername ),
-                "fullname": infra_docker_registry + dockerprefix + dockername + ":" + dockertag,
-                "name": dockerprefix + dockername + ":" + dockertag,
+                "fullname": infra_docker_registry + dockerprefix + dockername + ":" + dockertag + archtag,
+                "name": dockerprefix + dockername + ":" + dockertag + archtag,
                 }
 
         # pxe-ubuntu and pxe-coreos is in template
@@ -298,7 +307,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
         if "job-exporter" in config["dockers"]["container"]:
 
             dockername = "job-exporter"
-            dockertag = "1.9"
+            dockertag = "1.9" + archtag
 
             config["dockers"]["container"][dockername] = {
                 "dirname": os.path.join("./deploy/docker-images", dockername ),
@@ -313,7 +322,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config):
         if "watchdog" in config["dockers"]["container"]:
 
             dockername = "watchdog"
-            dockertag = "1.9"
+            dockertag = "1.9" + archtag
 
             config["dockers"]["container"][dockername] = {
                 "dirname": os.path.join("./deploy/docker-images", dockername ),
@@ -358,8 +367,8 @@ def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False,
 
     return
 
-def get_reponame(rootdir, dockerprefix, dockertag, nargs, config, verbose = False):
-    configuration(config, verbose)
+def get_reponame(rootdir, dockerprefix, dockertag, nargs, config, verbose = False, archtype=None):
+    configuration(config, verbose, archtype=archtype)
     docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
 
     for _, tuple in docker_list.iteritems():

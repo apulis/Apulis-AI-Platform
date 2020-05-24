@@ -3521,9 +3521,9 @@ def stop_one_kube_service(fname):
     run_kubectl( ["delete", "-f", fname ] )
 
 
-def start_kube_service( servicename ):
+def start_kube_service(servicename):
 
-    fname = get_service_yaml( servicename )
+    fname = get_service_yaml(servicename)
     dirname = os.path.dirname(fname)
 
     if os.path.exists(os.path.join(dirname,"launch_order")) and "/" not in servicename:
@@ -3682,6 +3682,7 @@ def run_command( args, command, nargs, parser ):
 
     discoverserver = args.discoverserver
     homeinserver = args.homeinserver
+    archtype = args.archtype.strip().lower()
 
     if args.verbose:
         verbose = True
@@ -4509,11 +4510,11 @@ def run_command( args, command, nargs, parser ):
 
             if nargs[0] == "build":
                 check_buildable_images(nargs[1:])
-                build_docker_images(nargs[1:], archtype=args.archtype)
+                build_docker_images(nargs[1:], archtype=archtype)
 
             elif nargs[0] == "push":
                 check_buildable_images(nargs[1:])
-                push_docker_images(nargs[1:], archtype=args.archtype)
+                push_docker_images(nargs[1:], archtype=archtype)
 
             elif nargs[0] == "run":
                 if len(nargs)>=2:

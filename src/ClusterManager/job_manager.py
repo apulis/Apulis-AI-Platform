@@ -590,6 +590,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         vc_name = sji["job"]["vcName"]
         if vc_name not in vc_resources:
             if sji["job"]["jobStatus"] in ["scheduling", "running"]:
+                logger.error("job: %s belong to a no-exist vc %s"%(sji["jobId"],vc_name))
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus","killing")
             else:
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
@@ -604,7 +605,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     for sji in jobsInfo:
         if sji["preemptionAllowed"] and (sji["allowed"] is False):
-            if globalResInfo.CanSatisfy(sji["globalResInfo"]):
+            vc_name = sji["job"]["vcName"]
+            vc_resource = vc_resources[vc_name]
+            if vc_resource.CanSatisfy(sji["globalResInfo"]):
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
                 globalResInfo.Subtract(sji["globalResInfo"])

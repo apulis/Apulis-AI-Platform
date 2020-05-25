@@ -16,7 +16,7 @@ from config import global_vars
 from prometheus_client import Histogram
 import threading
 
-from mysql_conn_pool import MysqlConn
+from mysql_conn_pool import MysqlConn,db_connect_histogram
 MysqlConn.config_pool(risk_config={"max_connections":5})
 
 logger = logging.getLogger(__name__)
@@ -27,9 +27,9 @@ data_handler_fn_histogram = Histogram("datahandler_fn_latency_seconds",
                                                7.5, 10.0, 12.5, 15.0, 17.5, 20.0, float("inf")),
                                       labelnames=("fn_name",))
 
-db_connect_histogram = Histogram("db_connect_latency_seconds",
-                                 "latency for connecting to db (seconds)",
-                                 buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))
+# db_connect_histogram = Histogram("db_connect_latency_seconds",
+#                                  "latency for connecting to db (seconds)",
+#                                  buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))
 
 
 class SingletonDBPool(object):
@@ -681,7 +681,7 @@ class DataHandler(object):
             if (isinstance(groups, list)):
                 groups = json.dumps(groups)
             if len(self.GetIdentityInfo(identityName)) == 0:
-                sql = "insert into {0} (`identityName`, `uid`, `gid`, `groups`) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update `uid``='{2}', `gid`='{3}', `groups`='{4}'".format(
+                sql = "insert into {0} (`identityName`, `uid`, `gid`, `groups`) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update `uid`='{2}', `gid`='{3}', `groups`='{4}'".format(
                     self.identitytablename, identityName, uid, gid, groups)
                 with MysqlConn() as conn:
                     conn.insert_one(sql)

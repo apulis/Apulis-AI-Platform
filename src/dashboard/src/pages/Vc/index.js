@@ -1,7 +1,7 @@
 import React from "react"
 import {
   Table, TableHead, TableRow, TableCell, TableBody, 
-  Button, TextField, Grid, Container,
+  Button, TextField, Container,
   Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText,
   CircularProgress, MenuItem
 } from "@material-ui/core";
@@ -128,7 +128,7 @@ export default class Vc extends React.Component {
     await axios.get(url)
       .then((res) => {
         message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
-        this.setState({modifyFlag: false });
+        this.onCloseDialog();
         this.getVcList();
       }, (e) => {
         message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
@@ -188,7 +188,6 @@ export default class Vc extends React.Component {
       const optionsData = temp ? editData + num : options[m];
       if (!isEdit && options[m] === 0) val = 0;
       const key = type === 1 ? 'qSelectData' : 'mSelectData';
-      console.log('optionsData',optionsData)
       return (
         <div className="select-item">
           <TextField
@@ -273,12 +272,13 @@ export default class Vc extends React.Component {
       text: '',
       error: false
     }
+    let qSelectData = this.state.qSelectData;
+    Object.keys(qSelectData).forEach(i => qSelectData[i] = 0);
     this.setState({
       modifyFlag: false,
       vcNameValidateObj: empty,
       quotaValidateObj: empty,
-      qSelectData: {},
-      mSelectData: {}
+      qSelectData,
     })
   }
 

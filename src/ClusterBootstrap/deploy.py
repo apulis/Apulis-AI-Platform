@@ -3139,30 +3139,50 @@ def get_all_services():
 
     for service in os.listdir(rootdir):
         dirname = os.path.join(rootdir, service)
+        launch_file_prefix = "launch_order"
         if os.path.isdir(dirname):
-            launch_order_file = os.path.join( dirname, "launch_order")
-            if os.path.isfile( launch_order_file ):
-                servicedic[service] = launch_order_file
-                with open(launch_order_file,'r') as f:
-                    allservices = f.readlines()
-                    for filename in reversed(allservices):
-                        filename = filename.strip()
-                        filename = os.path.join(dirname, filename)
-                        if os.path.isfile(filename):
-                            servicedic[service+"/"+os.path.splitext(os.path.basename(filename))[0]] = filename
+            launch_files = []
+            # traverse all "launch_order" prefixed files
+            for filename in os.listdir(dirname):
+                if filename.startswith(launch_file_prefix):
+                    launch_files.append(filename)
+            for launch_file in launch_files:
+                launch_order_file = os.path.join(dirname, launch_file)
+                service_name = service
+                # if filename is not 'launch_order', build a new service name
+                if launch_file != launch_file_prefix:
+                    service_name = service + "-" + launch_file[len(launch_file_prefix)+1:]
+                if os.path.isfile(launch_order_file):
+                    servicedic[service_name] = launch_order_file
+                    with open(launch_order_file,'r') as f:
+                        allservices = f.readlines()
+                        for filename in reversed(allservices):
+                            filename = filename.strip()
+                            filename = os.path.join(dirname, filename)
+                            if os.path.isfile(filename):
+                                servicedic[service_name+"/"+os.path.splitext(os.path.basename(filename))[0]] = filename
 
-            else:
-                yamlname = os.path.join(dirname, service + ".yaml")
-                if not os.path.isfile(yamlname):
-                    yamls = glob.glob("*.yaml")
-                    yamlname = yamls[0]
-                with open( yamlname ) as f:
-                    content = f.read()
-                    f.close()
-                    if content.find( "Deployment" )>=0 or content.find( "DaemonSet" )>=0 or content.find("ReplicaSet")>=0 or content.find("CronJob")>=0:
-                        # Only add service if it is a daemonset.
-                        servicedic[service] = yamlname
+                else:
+                    yamlname = os.path.join(dirname, service + ".yaml")
+                    if not os.path.isfile(yamlname):
+                        yamls = glob.glob("*.yaml")
+                        yamlname = yamls[0]
+                    with open( yamlname ) as f:
+                        content = f.read()
+                        f.close()
+                        if content.find( "Deployment" )>=0 or content.find( "DaemonSet" )>=0 or content.find("ReplicaSet")>=0 or content.find("CronJob")>=0:
+                            # Only add service if it is a daemonset.
+                            servicedic[service_name] = yamlname
+    print servicedic
     return servicedic
+
+def get_archtypes():
+    machines = config["machines"]
+    archtypes = []
+    for key in machines.keys():
+        if machines[key].has_key("archtype"):
+            archtypes.append(machines[key]["archtype"])
+    return archtypes
 
 def get_service_name(service_config_file):
     f = open(service_config_file)
@@ -3521,43 +3541,71 @@ def stop_one_kube_service(fname):
     run_kubectl( ["delete", "-f", fname ] )
 
 
-def start_kube_service(servicename):
+def start_kube_service(servicename, archtype=None):
 
     fname = get_service_yaml(servicename)
     dirname = os.path.dirname(fname)
 
-    if os.path.exists(os.path.join(dirname,"launch_order")) and "/" not in servicename:
-
-        with open(os.path.join(dirname,"launch_order"),'r') as f:
-
-            allservices = f.readlines()
-            for filename in allservices:
-                # If this line is a sleep tag (e.g. SLEEP 10), sleep for given seconds to wait for the previous service to start.
-                if filename.startswith("SLEEP"):
-                    time.sleep(int(filename.split(" ")[1]))
-                else:
-                    filename = filename.strip('\n')
-                    start_one_kube_service(os.path.join(dirname,filename))
-
-    else:
+    if "/" in servicename:
         start_one_kube_service(fname)
+        return
 
+    default_launch_file = "launch_order"
+    if archtype is None:
+        for archtype in get_archtypes():
+            if archtype == "amd64":
+                start_kube_service_with_launch_order(dirname, default_launch_file)
+            else:
+                start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+    else if archtype == "amd64":
+        start_kube_service_with_launch_order(dirname, default_launch_file)
+    else:
+        start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
     return
 
-def stop_kube_service( servicename ):
+def start_kube_service_with_launch_order(dirname, launch_filename):
+    if not os.path.exists(os.path.join(dirname, launch_filename)):
+        return
+    with open(os.path.join(dirname, launch_filename), 'r') as f:
+        allservices = f.readlines()
+        for filename in allservices:
+            if filename.startswith("SLEEP"):
+                time.sleep(int(filename.split(" ")[1]))
+            else:
+                filename = filename.strip('\n')
+                start_one_kube_service(os.path.join(dirname, filename))
+    return
+
+def stop_kube_service(servicename, archtype=None):
     fname = get_service_yaml( servicename )
     dirname = os.path.dirname(fname)
-    if os.path.exists(os.path.join(dirname,"launch_order")) and "/" not in servicename:
-        with open(os.path.join(dirname,"launch_order"),'r') as f:
-            allservices = f.readlines()
-            for filename in reversed(allservices):
-                # If this line is a sleep tag, skip this line.
-                if not filename.startswith("SLEEP"):
-                    filename = filename.strip('\n')
-                    stop_one_kube_service(os.path.join(dirname,filename))
-    else:
+    if "/" in servicename:
         stop_one_kube_service(fname)
+        return
 
+    default_launch_file = "launch_order"
+    if archtype is None:
+        for archtype in get_archtypes():
+            if archtype == "amd64":
+                stop_kube_service_with_launch_order(dirname, default_launch_file)
+            else:
+                stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+    else if archtype == "amd64":
+        stop_kube_service_with_launch_order(dirname, default_launch_file)
+    else:
+        stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+    return
+
+def stop_kube_service_with_launch_order(dirname, launch_filename):
+    if not os.path.exists(os.path.join(dirname, launch_filename)):
+        return
+    with open(os.path.join(dirname, launch_filename), 'r') as f:
+        allservices = f.readlines()
+        for filename in reversed(allservices):
+            if not filename.startswith("SLEEP"):
+                filename = filename.strip('\n')
+                stop_one_kube_service(os.path.join(dirname, filename))
+    return
 
 def replace_kube_service( servicename ):
     fname = get_service_yaml( servicename )
@@ -3682,7 +3730,9 @@ def run_command( args, command, nargs, parser ):
 
     discoverserver = args.discoverserver
     homeinserver = args.homeinserver
-    archtype = args.archtype.strip().lower()
+    archtype = None
+    if archtype is not None:
+        archtype = archtype.strip().lower()
 
     if args.verbose:
         verbose = True
@@ -4380,12 +4430,12 @@ def run_command( args, command, nargs, parser ):
                         config["hdfsconfig"]["formatoptions"] = "--force "
                 # Start a kubelet service.
                 for servicename in servicenames:
-                    start_kube_service(servicename)
+                    start_kube_service(servicename, archtype=archtype)
 
             elif nargs[0] == "stop":
                 # stop a kubelet service.
                 for servicename in servicenames:
-                    stop_kube_service(servicename)
+                    stop_kube_service(servicename, archtype=archtype)
 
             elif nargs[0] == "restart":
                 # restart a kubelet service.

@@ -111,6 +111,20 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
     if output == "":
         raise Exception("Failed to start tensorboard in container. JobId: %s " % pod_name)
 
+def is_server_ready(endpoint):
+    pod_name = endpoint["podName"]
+    port_name = endpoint["name"]
+    cmd = None
+    if port_name == "ipython":
+        cmd = "ps -ef|grep jupyter-lab"
+    elif port_name == "tensorboard":
+        cmd = "ps -ef|grep tensorboard"
+    if cmd:
+        output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
+        if output == "":
+            return False
+    return True
+
 
 def start_endpoint(endpoint):
     # pending, running, stopped
@@ -177,7 +191,8 @@ def start_endpoints():
                         endpoint["endpointDescription"] = endpoint_description
                         endpoint["port"] = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
                         start_endpoint(endpoint)
-                        endpoint["status"] = "running"
+                        if is_server_ready(endpoint):
+                            endpoint["status"] = "running"
                         pod = k8sUtils.GetPod("podName=" + endpoint["podName"])
                         if "items" in pod and len(pod["items"]) > 0:
                             endpoint["nodeName"] = pod["items"][0]["spec"]["nodeName"]

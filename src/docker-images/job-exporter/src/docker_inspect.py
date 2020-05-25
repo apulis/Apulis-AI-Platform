@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class InspectResult(object):
     """ Represents a task meta data, parsed from docker inspect result """
     def __init__(self, username, job_name, role_name, task_index, pod_name,
-            gpu_ids, pid, email, vc_name,gpu_type):
+            gpu_ids, pid, email, vc_name,gpu_type,is_host_network):
         self.username = username
         self.job_name = job_name
         self.role_name = role_name
@@ -39,6 +39,7 @@ class InspectResult(object):
         self.email = email # None on no value
         self.vc_name = vc_name # None on no value
         self.gpu_type = gpu_type # None on no value
+        self.is_host_network = is_host_network  # boolean
 
     def __repr__(self):
         return "username %s, job_name %s, role_name %s, task_index %s, pod_name %s, gpu_ids %s, pid %s, email %s, vc %s" % \
@@ -100,7 +101,9 @@ def parse_docker_inspect(inspect_output):
             m.get("DLWS_USER_EMAIL"),
             m.get("DLWS_VC_NAME"),
             m.get("DLWS_GPU_TYPE"),
-            )
+            m.get("DLWS_HOST_NETWORK") == "enable"
+            or m.get("DLTS_HOST_NETWORK") == "enable",
+        )
 
 def inspect(container_id, histogram, timeout):
     try:

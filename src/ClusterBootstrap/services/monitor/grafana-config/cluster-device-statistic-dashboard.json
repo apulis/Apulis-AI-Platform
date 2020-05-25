@@ -529,7 +529,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "Cluster GPU statistic",
+    "title": "Cluster Device statistic",
     "version": 0
   }
 }

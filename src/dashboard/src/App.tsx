@@ -4,6 +4,7 @@ import 'typeface-roboto';
 import 'typeface-roboto-mono';
 import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
+import * as H from 'history';
 import { ThemeProvider } from "@material-ui/styles";
 import initAxios from './utils/init-axios'
 import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
@@ -63,7 +64,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
     <ConfigProvider>
       <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
         <ConfirmProvider>
-          <AuthProvider userName={userName} id={id}>
+          <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath}>
             <TeamProvider permissionList={permissionList}>
               <ClustersProvider>
                 <ThemeProvider theme={theme}>

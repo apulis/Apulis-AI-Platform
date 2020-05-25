@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
+import * as H from 'history';
 import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@material-ui/core";
+import { getPageQuery } from "../utils/getPageQuery";
+import { withRouter, RouteComponentProps } from "react-router-dom";
 
 interface IAuthContext {
   id?: string | number;
@@ -7,6 +10,7 @@ interface IAuthContext {
   userName?: string;
   currentRole?: string[];
   permissionList?: string[];
+  userGroupPath?: string;
 }
 
 const AuthContext = React.createContext<IAuthContext>({});
@@ -16,27 +20,37 @@ export default AuthContext;
 interface ProviderProps extends IAuthContext {
 }
 
-export const AuthProvider: React.FC<ProviderProps> = ({ children, id, openId, userName, currentRole, permissionList }) => {
+const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id, openId, userName, currentRole, permissionList, userGroupPath = '', history }) => {
   const isLogin = Boolean(id);
   const isRegister = Boolean(userName);
 
   let chidComponent: React.ReactNode;
   const onClick = (path: string) => {
-    console.log(path)
+    const redirect = window.location.href.split('?')[0];
+    window.location.href = userGroupPath + path + '?redirect  =' + redirect;
   }
+  useEffect(() => {
+    const { token } = getPageQuery();
+    if (token) {
+      localStorage.token = token;
+      const { location } = history;
+      history.push(location.pathname);
+    }
+
+  }, [])
   if (!isLogin) {
     chidComponent = (<Box display="flex">
       <Dialog open>
         <DialogTitle style={{ color: 'red' }}>
-          {"warning"}
+          Notice
         </DialogTitle>
-        <DialogContent>
+        <DialogContent style={{width: '350px'}}>
           <DialogContentText>
             Not login
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => onClick('login')} color="primary">
+          <Button onClick={() => onClick('/user/login')} color="primary">
             To Login
           </Button>
         </DialogActions>
@@ -53,15 +67,15 @@ export const AuthProvider: React.FC<ProviderProps> = ({ children, id, openId, us
     chidComponent = (<Box display="flex">
       <Dialog open>
         <DialogTitle style={{ color: 'red' }}>
-          {"warning"}
+          Notice
         </DialogTitle>
-        <DialogContent>
+        <DialogContent style={{width: '350px'}}>
           <DialogContentText>
             Not Register
         </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => onClick('login')} color="primary">
+          <Button onClick={() => onClick('/user/register')} color="primary">
             To Register
         </Button>
         </DialogActions>
@@ -82,3 +96,5 @@ export const AuthProvider: React.FC<ProviderProps> = ({ children, id, openId, us
   );
 
 };
+
+export const AuthProvider = withRouter(Provider);

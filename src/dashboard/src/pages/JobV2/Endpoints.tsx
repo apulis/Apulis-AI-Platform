@@ -31,7 +31,7 @@ import Loading from '../../components/Loading';
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import Context from './Context';
 import { useForm } from "react-hook-form";
-import { InteractivePortsMsg, pollInterval } from '../../const';
+import { OneInteractivePortsMsg, pollInterval } from '../../const';
 import message from '../../utils/message';
 import axios from 'axios';
 import useInterval from '../../hooks/useInterval';
@@ -43,6 +43,7 @@ interface RouteParams {
 
 const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) => {
   const { cluster, job } = useContext(Context);
+  const [ portInfoShow, setPortInfoShow ] = useState(true);
   if (endpoint.status !== "running") return null;
   if (endpoint.name === 'ssh') {
     const identify = `${cluster['workStorage'].replace(/^file:\/\//i, '//')}/${job['jobParams']['workPath']}/.ssh/id_rsa`
@@ -69,7 +70,8 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
 
   return (
     <ListItem button component="a" href={url} target="_blank">
-      <ListItemText primary={`Port ${endpoint['podPort']}`} secondary={url}/>
+      <ListItemText secondary={url}
+        primary={<p>Port {endpoint['podPort']} （<span>The server needs to use <code>/endpoints/{endpoint['podPort']}/</code> as the root path</span>）</p>} />
     </ListItem>
   );
 }
@@ -95,9 +97,9 @@ const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> =
     });
   }, [endpoints]); 
   return (
-    <List dense>
-      {sortedEndpoints.map((endpoint) => {
-        return <EndpointListItem key={endpoint.id} endpoint={endpoint}/>
+    <List dense style={{ paddingBottom: 20 }}>
+      {sortedEndpoints.map((endpoint, idx) => {
+        return <EndpointListItem key={endpoint.id} endpoint={endpoint} />
       })}
     </List>
   )
@@ -160,14 +162,11 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       let flag = true;
       const arr = val.split(',');
       if (arr.length > 1) {
-        arr.forEach(n => {
-          const _n = Number(n)
-          if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
-        });
+        flag = false;
       } else {
         flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       } 
-      !flag && setError('interactivePorts', 'validate', InteractivePortsMsg);
+      !flag && setError('interactivePorts', 'validate', OneInteractivePortsMsg);
       return flag;
     }
     return true;
@@ -210,7 +209,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
           defaultValue={''}
-          helperText={errors.interactivePorts ? errors.interactivePorts.message || InteractivePortsMsg : ''}
+          helperText={errors.interactivePorts ? errors.interactivePorts.message || OneInteractivePortsMsg : ''}
           inputRef={register({
             validate: val => validateInteractivePorts(val)
           })}

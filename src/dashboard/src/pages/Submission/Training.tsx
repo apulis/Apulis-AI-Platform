@@ -87,7 +87,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [cluster]);
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
   const [gpusPerNode, setGpusPerNode] = useState(0)
-  const [templates, setTemplates] = useState<{name: string, json: string}[]>([]);
+  const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(0);
@@ -145,14 +145,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         [{ name: "", value: "" }]));
   }, [environmentVariables]);
   const [database, setDatabase] = useState(false);
-  const [saveTemplateName, setSaveTemplateName] = useState("");
+  const [tplName, setTplName] = useState("");
   const [selectDelTPName, setSelectDelTPName] = useState('');
-  const [saveTemplateDatabase, setSaveTemplateDatabase] = useState("user");
+  const [tplDatabase, setTplDatabase] = useState("user");
   const [iconInfoShow, setIconInfoShow] = useState(false);
-  const { handleSubmit, register, errors, setValue, setError } = useForm({ mode: "onBlur" });
+  const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
-    if (!saveTemplateName) {
+    if (!tplName) {
       setError('templateName', 'required','Template Name is required！');
       return;
     }
@@ -196,7 +196,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         preemptible,
         interactivePorts
       };
-      const url = `/teams/${selectedTeam}/templates/${saveTemplateName}?database=${saveTemplateDatabase}`;
+      const url = `/teams/${selectedTeam}/templates/${tplName}?database=${tplDatabase}`;
       await axios.put(url, template);
       setSaveTemplate(true);
       getTemplates();
@@ -214,8 +214,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       return
     }
     try {
-      const temp = selectDelTPName.split('(');
-      const url = `/teams/${selectedTeam}/templates/${temp[0]}?database=${temp[1].split(')')[0]}`;
+      const temp = selectDelTPName.split('.');
+      const url = `/teams/${selectedTeam}/templates/${temp[0]}?database=${temp[1]}`;
       await axios.delete(url);
       setShowDeleteTemplate(true);
       setDeleteModal(false);
@@ -257,7 +257,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setPreemptible(false);
       setValue('interactivePorts', '');
     } else {
-      const _selectName = val.split('(')[0];
+      const _selectName = val.split('.')[0];
+      const _selectScope = val.split('.')[1];
       const {
         name,
         type,
@@ -279,30 +280,39 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         gpuType,
         preemptible,
         interactivePorts
-      } = JSON.parse(templates.find(i => i.name === _selectName)!.json);
+      } = JSON.parse(templates.find(i => i.name === _selectName && i.scope === _selectScope)!.json);
       if (name !== undefined) {
         setName(name);
-        setValue('jobName', name);
+        formValSet('jobName', name)
       }
       if (type !== undefined) setType(type);
       if (gpus !== undefined) {
         setGpus(gpus);
-        setValue('gpus', gpus);
+        formValSet('gpus', gpus);
       }
       if (workers !== undefined) setWorkers(workers);
       if (image !== undefined) {
         setImage(image);
-        setValue('image', image);
+        formValSet('image', image);
       }
       if (command !== undefined) {
         setCommand(command);
-        setValue('command', command);
+        formValSet('command', command);
       }
-      if (workPath !== undefined) setWorkPath(workPath);
+      if (workPath !== undefined) {
+        setWorkPath(workPath)
+        formValSet('workPath', workPath);
+      }
       if (enableWorkPath !== undefined) setEnableWorkPath(enableWorkPath);
-      if (dataPath !== undefined) setDataPath(dataPath);
+      if (dataPath !== undefined) {
+        setDataPath(dataPath);
+        formValSet('dataPath', dataPath);
+      }
       if (enableDataPath !== undefined) setEnableDataPath(enableDataPath);
-      if (jobPath !== undefined) setJobPath(jobPath);
+      if (jobPath !== undefined) {
+        setJobPath(jobPath);
+        formValSet('jobPath', jobPath);
+      }
       if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
       if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
       if (ssh !== undefined) setSsh(ssh);
@@ -312,7 +322,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       if (preemptible !== undefined) setPreemptible(preemptible);
       if (interactivePorts !== undefined) {
         setInteractivePorts(interactivePorts);
-        setValue('interactivePorts', interactivePorts);
+        formValSet('interactivePorts', interactivePorts);
       }
       if (plugins === undefined) {
         setAccountName("");
@@ -341,10 +351,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           setDockerPassword(imagePullObj['password'])
         }
       }
-      setJson(templates.find(i => i.name === _selectName)!.json);
+      setJson(templates.find(i => i.name === _selectName && i.scope === _selectScope)!.json);
     }
     setSelectTPName(val);
   }
+
+  const formValSet = (key: any, val: any) => {
+    setValue(key, val);
+    clearError(key);
+  }
+
   const {
     data: postJobData,
     loading: postJobLoading,
@@ -475,7 +491,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
         });
       } else {
-          flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
+        flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       }
       return flag;
     }
@@ -594,6 +610,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     );
   };
   const styleSnack={backgroundColor: green[400]};
+
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
@@ -601,12 +618,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           message={null}
           handleClose={() => setShowGPUFragmentation(false)}
           handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
-          title={"View Cluster GPU Status Per Node"}
+          title={`View Cluster ${gpuType} Status Per Node`}
           titleStyle={{color:grey[400]}}
         >
           <BarChart width={500} height={600} data={gpuFragmentation}>
             <CartesianGrid strokeDasharray="10 10"/>
-            <XAxis dataKey={"metric['device_available']"} label={{value: 'Available gpu count', position: 'insideBottomLeft', offset: 0}}>
+            <XAxis dataKey={"metric['device_available']"} label={{value: `Available ${gpuType} count`, position: 'insideBottomLeft', offset: 0}}>
             </XAxis>
             <YAxis dataKey={"value[1]"} domain={[0, Math.max.apply(Math, gpuFragmentation.map(i => { return Number(i.value[1]) }))]}
               label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
@@ -634,7 +651,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onClusterChange={saveSelectedCluster}
                     onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
                   />
-                  <Tooltip title="View Cluster GPU Status Per Node">
+                  <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
                     <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
                       <SvgIcon>
                         <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/><path fill="none" d="M0 0h24v24H0z"/>
@@ -674,7 +691,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   >
                     <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                     {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
-                      <MenuItem key={index} value={`${name}(${scope})`}>{`${name}(${scope})`}</MenuItem>
+                      <MenuItem key={index} value={`${name}.${scope}`}>{`${name}(${scope})`}</MenuItem>
                     ))}
                   </TextField>
                 </Grid>
@@ -1054,9 +1071,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       name="templateName"
                       fullWidth
                       variant="filled"
-                      defaultValue={saveTemplateName}
+                      defaultValue={tplName}
                       error={Boolean(errors.templateName)}
-                      onChange={e => setSaveTemplateName(e.target.value)}
+                      onChange={e => setTplName(e.target.value)}
                       helperText={errors.templateName ? errors.templateName.message : ''}
                       InputLabelProps={{ shrink: true }}
                       inputRef={register({
@@ -1073,8 +1090,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       select
                       fullWidth
                       variant="filled"
-                      value={saveTemplateDatabase}
-                      onChange={e => setSaveTemplateDatabase((e.target.value) as string)}
+                      value={tplDatabase}
+                      onChange={e => setTplDatabase((e.target.value) as string)}
                     >
                       <MenuItem value="user">user</MenuItem>
                       <MenuItem value="team">team</MenuItem>
@@ -1111,7 +1128,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               onChange={e => setSelectDelTPName(e.target.value)}
             >
               {Array.isArray(templates) && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
-                <MenuItem key={index} value={`${name}(${scope})`}>{`${name}(${scope})`}</MenuItem>
+                <MenuItem key={index} value={`${name}.${scope}`}>{`${name}(${scope})`}</MenuItem>
               ))}
             </TextField>
           </DialogContent>

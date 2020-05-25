@@ -5,7 +5,8 @@ import logging
 import functools
 import mysql.connector
 import timeit
-
+import time
+from itertools import chain
 from Queue import Queue
 import MySQLdb
 from DBUtils.PooledDB import PooledDB
@@ -15,7 +16,7 @@ from config import global_vars
 from prometheus_client import Histogram
 import threading
 
-from mysql_conn_pool import MysqlConn
+from mysql_conn_pool import MysqlConn,db_connect_histogram
 MysqlConn.config_pool(risk_config={"max_connections":5})
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,9 @@ data_handler_fn_histogram = Histogram("datahandler_fn_latency_seconds",
                                                7.5, 10.0, 12.5, 15.0, 17.5, 20.0, float("inf")),
                                       labelnames=("fn_name",))
 
-db_connect_histogram = Histogram("db_connect_latency_seconds",
-                                 "latency for connecting to db (seconds)",
-                                 buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))
+# db_connect_histogram = Histogram("db_connect_latency_seconds",
+#                                  "latency for connecting to db (seconds)",
+#                                  buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))
 
 
 class SingletonDBPool(object):
@@ -85,6 +86,10 @@ class DataHandler(object):
         self.commandtablename = "commands"
         self.templatetablename = "templates"
         self.jobprioritytablename = "job_priorities"
+        self.deviceStatusTableName = "devicestatus"
+        self.monitorConfigTableName = "monitorconfig"
+        self.monitormetricsTableName = "monitormetrics"
+        self.monitorchannelTableName = "monitorchannel"
         self.pool = SingletonDBPool.instance()
         elapsed = timeit.default_timer() - start_time
         logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
@@ -166,6 +171,7 @@ class DataHandler(object):
                     INDEX (`userName`),
                     INDEX (`jobTime`),
                     INDEX (`jobId`),
+                    INDEX (`vcName`),
                     INDEX (`jobStatus`)
                 );
                 """ % (self.jobtablename)
@@ -245,9 +251,9 @@ class DataHandler(object):
                     PRIMARY KEY (`id`),
                     CONSTRAINT `hierarchy` FOREIGN KEY (`parent`) REFERENCES `%s` (`vcName`)
                 )
-                AS SELECT \'%s\' AS vcName, NULL AS parent, '{\\\"%s\\\":%s}' AS quota, '{\\\"%s\\\":{\\\"num_gpu_per_node\\\":%s}}' AS metadata;
+                AS SELECT \'%s\' AS vcName, NULL AS parent, '{"%s":%s}' AS quota, '{}' AS metadata;
                 """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'], gpu_type,
-                       gpu_count_per_node * worker_node_num, gpu_type, gpu_count_per_node)
+                       gpu_count_per_node * worker_node_num)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)
@@ -322,6 +328,118 @@ class DataHandler(object):
                 conn.insert_one(sql)
                 conn.commit()
 
+            sql = """
+                    CREATE TABLE IF NOT EXISTS  `%s`
+                    (
+                        `id`            INT    NOT NULL AUTO_INCREMENT,
+                        `deviceType`    varchar(50)   NOT NULL,
+                        `deviceStr`     varchar(50)   NOT NULL,
+                        `capacity`      INT NOT NULL,
+                        `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                        PRIMARY KEY (`id`),
+                        UNIQUE KEY (`deviceType`)
+                    )
+                    """ % (self.deviceStatusTableName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                    CREATE TABLE IF NOT EXISTS  `%s`
+                    (
+                        `id`            INT    NOT NULL AUTO_INCREMENT,
+                        `configuration` LONGTEXT   NOT NULL,
+                        `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                    """ % (self.monitorConfigTableName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                    CREATE TABLE IF NOT EXISTS  `%s`
+                    (
+                        `id`            INT    NOT NULL AUTO_INCREMENT,
+                        `name`          varchar(50)   NOT NULL,
+                        `query`         varchar(255)   NOT NULL,
+                        `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                    """ % (self.monitormetricsTableName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                    CREATE TABLE IF NOT EXISTS  `%s`
+                    (
+                        `id`            INT    NOT NULL AUTO_INCREMENT,
+                        `name`          varchar(50)   NOT NULL,
+                        `fields`        LONGTEXT      NOT NULL,
+                        `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                        PRIMARY KEY (`id`)
+                    )
+                    """ % (self.monitorchannelTableName)
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+    @record
+    def AddDevice(self,deviceType, deviceStr, capacity):
+        ret = False
+        try:
+            sql = "INSERT INTO `" + self.deviceStatusTableName + "` (deviceType, deviceStr, capacity) VALUES (%s,%s,%s) " \
+                                                                 "ON DUPLICATE KEY UPDATE deviceStr=values(deviceStr),capacity=values(capacity) "
+            with MysqlConn() as conn:
+                conn.insert_one(sql, (deviceType, deviceStr, capacity))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('AddStorage Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetAllDevice(self):
+        ret = {}
+        try:
+            sql = """select deviceType, deviceStr, capacity from `%s`""" %(self.deviceStatusTableName)
+            with MysqlConn() as conn:
+                rets = conn.select_many(sql)
+            for one in rets:
+                ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"]}
+        except Exception as e:
+            logger.exception('AddStorage Exception: %s', str(e))
+        return ret
+
+    @record
+    def DeleteDeviceType(self,deviceType):
+        ret = True
+        try:
+            sql = "DELETE FROM `%s` where `deviceType`=%s" % (self.deviceStatusTableName,"%s")
+            with MysqlConn() as conn:
+                conn.insert_one(sql,[deviceType])
+                conn.commit()
+        except Exception as e:
+            logger.exception('AddStorage Exception: %s', str(e))
+            ret = False
+        return ret
+
+    @record
+    def CountJobByStatus(self,vcName,status=None):
+        sql  = """select count(1) from `%s` where vcName=%s""" % (self.jobtablename,"%s")
+        params = [vcName]
+        if status is not None:
+            if "," not in status:
+                sql += " and jobStatus = %s"
+                params.append(status)
+            else:
+                sql += " and jobStatus in %s"
+                params.append([s for s in status.split(",")])
+        with MysqlConn() as conn:
+            ret = conn.select_one_value(sql, params)
+        return ret
+
     @record
     def AddStorage(self, vcName, url, storageType, metadata, defaultMountPath):
         ret = False
@@ -339,9 +457,9 @@ class DataHandler(object):
     def DeleteStorage(self, vcName, url):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE url = '%s' and vcName = '%s'" % (self.storagetablename, url, vcName)
+            sql = "DELETE FROM `%s` WHERE url = %s and vcName = %s" % (self.storagetablename,"%s","%s")
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,[ url, vcName])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -352,10 +470,10 @@ class DataHandler(object):
     def ListStorages(self, vcName):
         ret = []
         try:
-            query = "SELECT `storageType`,`url`,`metadata`,`vcName`,`defaultMountPath` FROM `%s` WHERE vcName = '%s' " % (
-            self.storagetablename, vcName)
+            query = "SELECT `storageType`,`url`,`metadata`,`vcName`,`defaultMountPath` FROM `%s` WHERE vcName = %s " % (
+            self.storagetablename,"%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[vcName])
             for one in rets:
                 ret.append(one)
         except Exception as e:
@@ -366,10 +484,10 @@ class DataHandler(object):
     def UpdateStorage(self, vcName, url, storageType, metadata, defaultMountPath):
         ret = False
         try:
-            sql = """update `%s` set storageType = '%s', metadata = '%s', defaultMountPath = '%s' where vcName = '%s' and url = '%s' """ % (
-            self.storagetablename, storageType, metadata, defaultMountPath, vcName, url)
+            sql = """update `%s` set storageType = %s, metadata = %s, defaultMountPath = %s where vcName = %s and url = %s """ % (
+            self.storagetablename,"%s","%s","%s","%s","%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[storageType, metadata, defaultMountPath, vcName, url])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -406,9 +524,9 @@ class DataHandler(object):
     def DeleteVC(self, vcName):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE vcName = '%s'" % (self.vctablename, vcName)
+            sql = "DELETE FROM `%s` WHERE vcName = %s" % (self.vctablename, "%s")
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,[vcName])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -419,10 +537,10 @@ class DataHandler(object):
     def UpdateVC(self, vcName, quota, metadata):
         ret = False
         try:
-            sql = """update `%s` set quota = '%s', metadata = '%s' where vcName = '%s' """ % (
-            self.vctablename, quota, metadata, vcName)
+            sql = """update `%s` set quota = %s, metadata = %s where vcName = %s """ % (
+            self.vctablename,"%s","%s","%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[ quota, metadata, vcName])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -444,11 +562,11 @@ class DataHandler(object):
 
     @record
     def DeleteUser(self,userName):
-        query = "Delete FROM `%s` where `userName`='%s'" % (self.accounttablename,userName)
+        query = "Delete FROM `%s` where `userName`=%s" % (self.accounttablename,"%s")
         ret = False
         try:
             with MysqlConn() as conn:
-                conn.insert_one(query)
+                conn.insert_one(query,[userName])
                 conn.commit()
                 ret = True
         except Exception as e:
@@ -457,11 +575,11 @@ class DataHandler(object):
 
     @record
     def GetAccountByOpenId(self, openId, group):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s'" % (self.accounttablename, openId, group)
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = %s and `group` = %s" % (self.accounttablename,"%s","%s" )
         ret = []
         try:
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[openId, group])
             for one in rets:
                 ret.append(one)
 
@@ -471,11 +589,11 @@ class DataHandler(object):
 
     @record
     def GetAccountByOpenIdAndPassword(self, openId,group,password):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = '%s' and `group` = '%s' and `password`='%s'" % (self.accounttablename, openId, group,password)
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = %s and `group` = %s and `password`=%s" % (self.accounttablename,"%s","%s","%s")
         ret = []
         try:
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[openId, group,password])
             for one in rets:
                 ret.append(one)
 
@@ -485,11 +603,11 @@ class DataHandler(object):
 
     @record
     def GetAccountByUserName(self, userName):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `userName` = '%s'" % (self.accounttablename, userName)
+        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `userName` = %s" % (self.accounttablename,"%s")
         ret = []
         try:
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[userName])
             for one in rets:
                 ret.append(one)
         except Exception as e:
@@ -505,9 +623,9 @@ class DataHandler(object):
                     conn.insert_one(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
                     conn.commit()
             else:
-                sql = "update `%s` set `nickName` = '%s', `userName` = '%s', `password` = '%s', `isAdmin` = '%s', isAuthorized = '%s' where `openId` = '%s' and `group` = '%s'"
+                sql = "update `%s` set `nickName` = %s, `userName` = %s, `password` = %s, `isAdmin` = %s, isAuthorized = %s where `openId` = %s and `group` = %s"
                 with MysqlConn() as conn:
-                    conn.insert_one(sql % (self.accounttablename, nickName, userName, password, isAdmin, isAuthorized, openId, group))
+                    conn.insert_one(sql % (self.accounttablename,"%s","%s","%s","%s","%s","%s","%s"),[nickName, userName, password, isAdmin, isAuthorized, openId, group])
                     conn.commit()
             return True
         except Exception as e:
@@ -520,9 +638,9 @@ class DataHandler(object):
             if len(self.GetAccountByOpenId(openId, group)) == 0:
                 return False
             else:
-                sql = "update `%s` set `email` = '%s', `phoneNumber` = '%s' where `openId` = '%s' and `group` = '%s'" % (self.accounttablename,email,phone,openId, group)
+                sql = "update `%s` set `email` = %s, `phoneNumber` = %s where `openId` = %s and `group` = %s" % (self.accounttablename,"%s","%s","%s","%s")
                 with MysqlConn() as conn:
-                    conn.insert_one(sql)
+                    conn.insert_one(sql,[email,phone,openId, group])
                     conn.commit()
             return True
         except Exception as e:
@@ -532,9 +650,9 @@ class DataHandler(object):
     @record
     def UpdateAccountPermission(self,userName, isAdmin,isAuthorized):
         try:
-            sql = "update `%s` set `isAdmin` = '%s', `isAuthorized` = '%s' where `userName` = '%s'" % (self.accounttablename,int(isAdmin),int(isAuthorized),userName)
+            sql = "update `%s` set `isAdmin` = %s, `isAuthorized` = %s where `userName` = %s" % (self.accounttablename,"%s","%s","%s")
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,[int(isAdmin),int(isAuthorized),userName])
                 conn.commit()
             return True
         except Exception as e:
@@ -545,10 +663,10 @@ class DataHandler(object):
     def GetIdentityInfo(self, identityName):
         ret = []
         try:
-            query = "SELECT `identityName`,`uid`,`gid`,`groups` FROM `%s` where `identityName` = '%s'" % (
-            self.identitytablename, identityName)
+            query = "SELECT `identityName`,`uid`,`gid`,`groups` FROM `%s` where `identityName` = %s" % (
+            self.identitytablename, "%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[identityName])
             for one in rets:
                 one["groups"] = json.loads(one["groups"])
                 ret.append(one)
@@ -563,14 +681,17 @@ class DataHandler(object):
             if (isinstance(groups, list)):
                 groups = json.dumps(groups)
             if len(self.GetIdentityInfo(identityName)) == 0:
-                sql = "insert into {0} (identityName, uid, gid, groups) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update uid='{2}', gid='{3}', groups='{4}'".format(
+                sql = "insert into {0} (`identityName`, `uid`, `gid`, `groups`) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update `uid`='{2}', `gid`='{3}', `groups`='{4}'".format(
                     self.identitytablename, identityName, uid, gid, groups)
+                with MysqlConn() as conn:
+                    conn.insert_one(sql)
+                    conn.commit()
             else:
-                sql = """update `%s` set uid = '%s', gid = '%s', groups = '%s' where `identityName` = '%s' """ % (
-                self.identitytablename, uid, gid, groups, identityName)
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
-                conn.commit()
+                sql = """update `%s` set `uid` = %s, `gid` = %s, `groups` = %s where `identityName` = %s """ % (
+                self.identitytablename, "%s", "%s", "%s", "%s")
+                with MysqlConn() as conn:
+                    conn.insert_one(sql,[uid, gid, groups, identityName])
+                    conn.commit()
             ret = True
         except Exception as e:
             logger.exception('UpdateIdentityInfo Exception: %s', str(e))
@@ -579,9 +700,9 @@ class DataHandler(object):
     @record
     def UpdateIdentityInfoPerm(self, identityName, isAdmin, isAuthorized):
         try:
-            sql = """update `%s` set isAdmin = '%s', isAuthorized = '%s' where `userName` = '%s' """ % (self.accounttablename, isAdmin, isAuthorized, identityName)
+            sql = """update `%s` set isAdmin = %s, isAuthorized = %s where `userName` = %s """ % (self.accounttablename, "%s", "%s", "%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[isAdmin, isAuthorized, identityName])
                 conn.commit()
             return True
         except Exception as e:
@@ -591,9 +712,9 @@ class DataHandler(object):
 
     @record
     def GetAceCount(self, identityName, resource):
-        query = "SELECT count(ALL id) as c FROM `%s` where `identityName` = '%s' and `resource` = '%s'" % (self.acltablename,identityName, resource)
+        query = "SELECT count(ALL id) as c FROM `%s` where `identityName` = %s and `resource` = %s" % (self.acltablename,"%s", "%s")
         with MysqlConn() as conn:
-            rets = conn.select_many(query)
+            rets = conn.select_many(query,[identityName, resource])
         ret = 0
         for c in rets:
             ret = c["c"]
@@ -607,12 +728,15 @@ class DataHandler(object):
             if existingAceCount == 0:
                 sql = "insert into {0} (identityName, identityId, resource, permissions, isDeny) values ('{1}', '{2}', '{3}', '{4}', '{5}') on duplicate key update permissions='{4}'".format(
                     self.acltablename, identityName, identityId, resource, permissions, isDeny)
+                with MysqlConn() as conn:
+                    conn.insert_one(sql)
+                    conn.commit()
             else:
-                sql = """update `%s` set permissions = '%s' where `identityName` = '%s' and `resource` = '%s' """ % (
-                self.acltablename, permissions, identityName, resource)
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
-                conn.commit()
+                sql = """update `%s` set permissions = %s where `identityName` = %s and `resource` = %s """ % (
+                self.acltablename, "%s", "%s", "%s")
+                with MysqlConn() as conn:
+                    conn.insert_one(sql,[permissions, identityName, resource])
+                    conn.commit()
             ret = True
         except Exception as e:
             logger.exception('UpdateAce Exception: %s', str(e))
@@ -622,10 +746,10 @@ class DataHandler(object):
     def UpdateAclIdentityId(self, identityName, identityId):
         ret = False
         try:
-            sql = """update `%s` set identityId = '%s' where `identityName` = '%s' """ % (
-            self.acltablename, identityId, identityName)
+            sql = """update `%s` set identityId = %s where `identityName` = %s """ % (
+            self.acltablename, "%s", "%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[identityId, identityName])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -636,9 +760,9 @@ class DataHandler(object):
     def DeleteResourceAcl(self, resource):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE `resource` = '%s'" % (self.acltablename, resource)
+            sql = "DELETE FROM `%s` WHERE `resource` = %s" % (self.acltablename, "%s")
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,[resource])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -649,10 +773,10 @@ class DataHandler(object):
     def DeleteAce(self, identityName, resource):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE `identityName` = '%s' and `resource` = '%s'" % (
-            self.acltablename, identityName, resource)
+            sql = "DELETE FROM `%s` WHERE `identityName` = %s and `resource` = %s" % (
+            self.acltablename, "%s", "%s")
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,[identityName, resource])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -677,10 +801,10 @@ class DataHandler(object):
     def GetResourceAcl(self, resource):
         ret = []
         try:
-            query = "SELECT `identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s` where `resource` = '%s'" % (
-            self.acltablename, resource)
+            query = "SELECT `identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s` where `resource` = %s" % (
+            self.acltablename, "%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[resource])
             for one in rets:
                 ret.append(one)
         except Exception as e:
@@ -709,17 +833,21 @@ class DataHandler(object):
         try:
             query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1" % (
                 self.jobtablename)
+            params = []
             if userName != "all":
-                query += " and `userName` = '%s'" % userName
-
+                query += " and `userName` = %s"
+                params.append(userName)
             if vcName != "all":
-                query += " and `vcName` = '%s'" % vcName
-
+                query += " and `vcName` = %s"
+                params.append(vcName)
             if status is not None:
                 if "," not in status:
-                    query += " and `jobStatus` %s '%s'" % (op[0], status)
+                    query += " and `jobStatus` %s %s" % (op[0], "%s")
+                    params.append(status)
                 else:
-                    status_list = [" `jobStatus` %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_list = [" `jobStatus` %s %s " % (op[0], "%s") for _ in status.split(',')]
+                    for s in status.split(','):
+                        params.append(s)
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
@@ -728,7 +856,7 @@ class DataHandler(object):
             if num is not None:
                 query += " limit %s " % str(num)
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
             logger.info("(fetchall time: %f)", fetch_elapsed)
@@ -855,9 +983,9 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT `jobId`,`familyToken`,`isParent`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta`  FROM `%s` where `%s` = '%s' " % (
-            self.jobtablename, key, expected)
-            cursor.execute(query)
+            query = "SELECT `jobId`,`familyToken`,`isParent`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta`  FROM `%s` where `%s` = %s " % (
+            self.jobtablename, key, "%s")
+            cursor.execute(query,[expected])
             columns = [column[0] for column in cursor.description]
             ret = [dict(zip(columns, row)) for row in cursor.fetchall()]
             conn.commit()
@@ -878,9 +1006,9 @@ class DataHandler(object):
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()
-            query = "SELECT `jobId`, `jobName`, `userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobTime`, `jobParams`  FROM `%s` where `jobId` = '%s' " % (
-            self.jobtablename, jobId)
-            cursor.execute(query)
+            query = "SELECT `jobId`, `jobName`, `userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobTime`, `jobParams`  FROM `%s` where `jobId` = %s " % (
+            self.jobtablename, "%s")
+            cursor.execute(query,[jobId])
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
@@ -902,12 +1030,40 @@ class DataHandler(object):
         return ret
 
     @record
+    def DeleteJobByVc(self,vcname):
+        try:
+            sql = "DELETE FROM `%s` WHERE `vcName`= %s " %(self.jobtablename,"%s")
+            print sql
+            with MysqlConn() as conn:
+                conn.insert_one(sql, [vcname])
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('AddCommand Exception: %s', str(e))
+            ret = False
+        return ret
+
+    @record
+    def DeleteJobByVcExcludeKilling(self,vcname):
+        try:
+            sql = "DELETE FROM `%s` WHERE `vcName`= %s and jobStatus<>'killing'" %(self.jobtablename,"%s")
+            print sql
+            with MysqlConn() as conn:
+                conn.insert_one(sql, [vcname])
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('AddCommand Exception: %s', str(e))
+            ret = False
+        return ret
+
+    @record
     def AddCommand(self, jobId, command):
         ret = False
         try:
             sql = "INSERT INTO `" + self.commandtablename + "` (jobId, command) VALUES (%s,%s)"
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql, (jobId, command))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -933,9 +1089,9 @@ class DataHandler(object):
     def FinishCommand(self, commandId):
         ret = True
         try:
-            sql = """update `%s` set status = 'run' where `id` = '%s' """ % (self.commandtablename, commandId)
+            sql = """update `%s` set status = 'run' where `id` = %s """ % (self.commandtablename, "%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[commandId])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -946,10 +1102,10 @@ class DataHandler(object):
     def GetCommands(self, jobId):
         ret = []
         try:
-            query = "SELECT `time`, `command`, `status`, `output` FROM `%s` WHERE `jobId` = '%s' order by `time`" % (
-            self.commandtablename, jobId)
+            query = "SELECT `time`, `command`, `status`, `output` FROM `%s` WHERE `jobId` = %s order by `time`" % (
+            self.commandtablename, "%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret.append(one)
         except Exception as e:
@@ -970,7 +1126,7 @@ class DataHandler(object):
     def GetPendingEndpoints(self):
         ret = {}
         try:
-            query = "SELECT `endpoints` from `%s` where `jobStatus` = '%s' and `endpoints` is not null" % (
+            query = "SELECT `endpoints` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
             self.jobtablename, "running")
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -987,9 +1143,9 @@ class DataHandler(object):
     def GetJobEndpoints(self, job_id):
         ret = {}
         try:
-            query = "SELECT `endpoints` from `%s` where `jobId` = '%s'" % (self.jobtablename, job_id)
+            query = "SELECT `endpoints` from `%s` where `jobId` = %s" % (self.jobtablename, "%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[job_id])
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
             # {endpoint1: {}, endpoint2: {}, ... }
@@ -1050,10 +1206,10 @@ class DataHandler(object):
     def SetJobError(self, jobId, errorMsg):
         ret = False
         try:
-            sql = """update `%s` set jobStatus = 'error', `errorMsg` = '%s' where `jobId` = '%s' """ % (
-            self.jobtablename, errorMsg, jobId)
+            sql = """update `%s` set jobStatus = 'error', `errorMsg` = %s where `jobId` = %s """ % (
+            self.jobtablename, "%s", "%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[ errorMsg, jobId])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1064,9 +1220,9 @@ class DataHandler(object):
     def UpdateJobTextField(self, jobId, field, value):
         ret = False
         try:
-            sql = "update `%s` set `%s` = '%s' where `jobId` = '%s' " % (self.jobtablename, field, value, jobId)
+            sql = "update `%s` set `%s` = %s where `jobId` = %s " % (self.jobtablename, field, "%s", "%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[value, jobId])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1076,7 +1232,7 @@ class DataHandler(object):
 
     @record
     def GetJobTextField(self, jobId, field):
-        query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = '%s' " % (field, self.jobtablename, jobId)
+        query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = %s " % (field, self.jobtablename, jobId)
         ret = None
         try:
             with MysqlConn() as conn:
@@ -1090,14 +1246,14 @@ class DataHandler(object):
 
     @record
     def AddandGetJobRetries(self, jobId):
-        sql = """update `%s` set `retries` = `retries` + 1 where `jobId` = '%s' """ % (self.jobtablename, jobId)
+        sql = """update `%s` set `retries` = `retries` + 1 where `jobId` = %s """ % (self.jobtablename, "%s")
         with MysqlConn() as conn:
-            conn.update(sql)
+            conn.update(sql,[jobId])
             conn.commit()
 
-        query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = '%s' " % (self.jobtablename, jobId)
+        query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = %s " % (self.jobtablename, "%s")
         with MysqlConn() as conn:
-            rets = conn.select_many(query)
+            rets = conn.select_many(query,[jobId])
         ret = None
 
         for one in rets:
@@ -1112,11 +1268,13 @@ class DataHandler(object):
             return ret
 
         try:
+            dataFields_keys,dataFields_values = zip(*[[k,v] for k,v in dataFields.items()]) if len(dataFields)>0 else ([],[])
+            conditionFields_keys,conditionFields_values = zip(*[[k,v] for k,v in conditionFields.items()]) if len(conditionFields)>0 else ([],[])
             sql = "update `%s` set" % (self.jobtablename) + ",".join(
-                [" `%s` = '%s'" % (field, value) for field, value in dataFields.items()]) + " where" + "and".join(
-                [" `%s` = '%s'" % (field, value) for field, value in conditionFields.items()])
+                [" `%s` = %s" % (field, "%s") for field in dataFields_keys]) + " where" + "and".join(
+                [" `%s` = %s" % (field, "%s") for field in conditionFields_keys])
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,chain(dataFields_values,conditionFields_values))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1127,9 +1285,9 @@ class DataHandler(object):
     def GetJobTextField(self, jobId, field):
         ret = None
         try:
-            query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = '%s' " % (field, self.jobtablename, jobId)
+            query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = %s " % (field, self.jobtablename, "%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret = one[field]
         except Exception as e:
@@ -1145,7 +1303,7 @@ class DataHandler(object):
             return ret
 
         try:
-            sql = "select " + ",".join(fields) + " from " + self.jobtablename + " where jobId='%s'" % (jobId)
+            sql = "select " + ",".join(fields) + " from " + self.jobtablename + " where jobId=\"%s\"" % (jobId)
             conn = self.pool.get_connection()
             cursor = conn.cursor()
             cursor.execute(sql)
@@ -1167,14 +1325,14 @@ class DataHandler(object):
     def AddandGetJobRetries(self, jobId):
         ret = None
         try:
-            sql = """update `%s` set `retries` = `retries` + 1 where `jobId` = '%s' """ % (self.jobtablename, jobId)
+            sql = """update `%s` set `retries` = `retries` + 1 where `jobId` = %s """ % (self.jobtablename, "%s")
             with MysqlConn() as conn:
-                conn.update(sql)
+                conn.update(sql,[jobId])
                 conn.commit()
 
-            query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = '%s' " % (self.jobtablename, jobId)
+            query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = %s " % (self.jobtablename, "%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret = one["retries"]
         except Exception as e:
@@ -1185,9 +1343,9 @@ class DataHandler(object):
     def UpdateClusterStatus(self, clusterStatus):
         try:
             status = base64.b64encode(json.dumps(clusterStatus))
-            sql = "INSERT INTO `%s` (status) VALUES ('%s')" % (self.clusterstatustablename, status)
+            sql = "INSERT INTO `%s` (status) VALUES (%s)" % (self.clusterstatustablename, "%s")
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,[status])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1293,10 +1451,11 @@ class DataHandler(object):
     def GetTemplates(self, scope):
         ret = []
         try:
-            query = "SELECT `name`, `json` FROM `%s` WHERE `scope` = '%s'" % (self.templatetablename, scope)
+            query = "SELECT `name`, `json` FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
             with MysqlConn() as conn:
-                rets = conn.select_many(query)
+                rets = conn.select_many(query,[scope])
             for one in rets:
+                one["scope"] = "user" if scope.split(":")[0]=="user" else "team" if scope.split(":")[0]=="vc" else "master"
                 ret.append(one)
         except Exception as e:
             logger.exception('GetTemplates Exception: %s', str(e))
@@ -1322,6 +1481,19 @@ class DataHandler(object):
             query = "DELETE FROM `" + self.templatetablename + "` WHERE `name` = %s and `scope` = %s"
             with MysqlConn() as conn:
                 conn.insert_one(query, (name, scope))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('DeleteTemplate Exception: %s', str(e))
+        return ret
+
+    @record
+    def DeleteTemplateByVc(self, scope):
+        ret = False
+        try:
+            query = "DELETE FROM `" + self.templatetablename + "` WHERE `scope` = %s"
+            with MysqlConn() as conn:
+                conn.insert_one(query, (scope,))
                 conn.commit()
             ret = True
         except Exception as e:

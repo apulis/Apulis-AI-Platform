@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: watchdog
+  name: watchdog-arm64
   namespace: kube-system
 spec:
   replicas: 1
@@ -17,11 +17,11 @@ spec:
       labels:
         app: watchdog
         task: monitoring
-      name: watchdog
+      name: watchdog-arm64
     spec:
       nodeSelector:
         watchdog: active
-        archtype: amd64
+        archtype: arm64
       containers:
       - command:
         - python
@@ -49,7 +49,7 @@ spec:
         - mountPath: /root/.kube/config 
           name: kubeconfig
           readOnly: true    
-        image: {{cnf["dockers"]["container"]["watchdog"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["watchdog"]["fullname"]}}-arm64
         imagePullPolicy: Always
         name: watchdog
         readinessProbe:

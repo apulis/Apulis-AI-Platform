@@ -1,17 +1,17 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: nginx
+  name: nginx-arm64
   namespace: default
 spec:
   selector:
     matchLabels:
       app: nginx
   nodeSelector:
-    archtype: amd64
+    archtype: arm64
   template:
     metadata:
-      name: nginx
+      name: nginx-arm64
       labels:
         app: nginx
         nginx: active
@@ -24,7 +24,7 @@ spec:
       {% endif %}
       containers:
       - name: nginx
-        image: {{cnf["dockers"]["container"]["nginx"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["nginx"]["fullname"]}}-arm64
         imagePullPolicy: Always   
         command: ["/home/auto-reload-nginx.sh"]
         livenessProbe:

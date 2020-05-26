@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: job-exporter
+  name: job-exporter-arm64
   namespace: kube-system
 spec:
   nodeSelector:
-    archtype: amd64
+    archtype: arm64
   selector:
     matchLabels:
       app: job-exporter
@@ -18,10 +18,10 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/metrics"
         prometheus.io/port: "{{cnf['job-exporter']['port']}}"
-      name: job-exporter
+      name: job-exporter-arm64
     spec:
       containers:
-      - image: {{cnf["dockers"]["container"]["job-exporter"]["fullname"]}}
+      - image: {{cnf["dockers"]["container"]["job-exporter"]["fullname"]}}-arm64
         imagePullPolicy: Always
         livenessProbe: # in case job-exporter hangs
           httpGet:

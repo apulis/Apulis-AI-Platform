@@ -1,7 +1,7 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: restfulapi
+  name: restfulapi-arm64
   namespace: default
   labels:
      run: dlwsrestfulapi
@@ -11,7 +11,7 @@ spec:
       restfulapi-node: pod
   template:
     metadata:
-      name: restfulapi
+      name: restfulapi-arm64
       labels:
         restfulapi-node: pod
         app: restfulapi
@@ -25,11 +25,11 @@ spec:
       {% endif %}
       nodeSelector:
         restfulapi: active
-        archtype: amd64
+        archtype: arm64
       hostNetwork: true
       containers:
       - name: restfulapi
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}-arm64
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /usr/bin/kubectl

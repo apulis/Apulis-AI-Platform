@@ -1,7 +1,7 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: jobmanager
+  name: jobmanager-arm64
   namespace: default
 spec:
   selector:
@@ -9,7 +9,7 @@ spec:
       jobmanager-node: pod
   template:
     metadata:
-      name: jobmanager
+      name: jobmanager-arm64
       labels:
         jobmanager-node: pod
         app: jobmanager
@@ -23,15 +23,15 @@ spec:
       hostNetwork: true    
       nodeSelector:
         jobmanager: active
-        archtype: amd64
+        archtype: arm64
       containers:
       - name: jobmanager
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}-arm64
         command: ["/runScheduler.sh"]
         imagePullPolicy: Always
         env:
         - name: INIT_CONTAINER_IMAGE
-          value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}
+          value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}-arm64
         volumeMounts:
         - mountPath: /usr/bin/kubectl
           name: kubectl-binary

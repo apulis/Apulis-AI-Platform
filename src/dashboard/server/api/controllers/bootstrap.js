@@ -1,5 +1,5 @@
 const config = require('config')
-
+const administrators = config.get('administrators')
 const authEnabled = config.get('authEnabled')
 /**
  * @typedef {Object} State
@@ -14,7 +14,7 @@ module.exports = (context) => {
     if (user.password) {
       delete user.password
     }
-    context.body = `bootstrap(${JSON.stringify({ ...user, authEnabled })})`
+    context.body = `bootstrap(${JSON.stringify({ ...user, authEnabled, administrators })})`
   } else {
     context.body = `bootstrap(${JSON.stringify({ authEnabled })})`
   }

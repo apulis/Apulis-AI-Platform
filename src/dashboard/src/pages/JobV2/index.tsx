@@ -32,19 +32,19 @@ import {
 import SwipeableViews from 'react-swipeable-views';
 import { useSnackbar } from 'notistack';
 import useFetch from 'use-http-2';
-
 import UserContext from '../../contexts/User';
 import ClustersContext from '../../contexts/Clusters';
+import TeamContext from '../../contexts/Teams';
 import Loading from '../../components/Loading';
-
 import useActions from '../../hooks/useActions';
-
 import Context from './Context';
 import Brief from './Brief';
 import Endpoints from './Endpoints';
 import Metrics from './Metrics';
 import Console from './Console';
-import { pollInterval } from '../../const';
+import axios from 'axios';
+import message from '../../utils/message';
+import useInterval from '../../hooks/useInterval';
 
 interface RouteParams {
   clusterId: string;
@@ -81,7 +81,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) 
           edge="start"
           color="inherit"
           component={Link}
-          to={`/jobs-v2/apulis-dev/${window.location.search}`}
+          to={`/jobs-v2/${clusterId}/${window.location.search}`}
         >
           <ArrowBack />
         </IconButton>
@@ -167,6 +167,8 @@ const JobContent: FunctionComponent = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { email } = useContext(UserContext);
   const { clusters } = useContext(ClustersContext);
+  const { saveClusterId } = useContext(TeamContext);
+  saveClusterId(clusterId);
   const teamCluster = useMemo(() => {
     return clusters.filter((cluster) => cluster.id === clusterId)[0];
   }, [clusters, clusterId]);
@@ -176,30 +178,30 @@ const JobContent: FunctionComponent = () => {
   const admin = useMemo(() => {
     return accessible && Boolean(teamCluster.admin);
   }, [accessible, teamCluster]);
-  const { error: jobError, data: jobData, get: getJob, abort } =
-    useFetch(`/api/v2/clusters/${clusterId}/jobs/${jobId}`,
-      [clusterId, jobId]);
+  // const { error: jobError, data: jobData, get: getJob, abort } =
+  //   useFetch(`/api/v2/clusters/${clusterId}/jobs/${jobId}`,
+  //     [clusterId, jobId]);
+  const [job, setJob] = useState<any>();
   const { error: clusterError, data: cluster } =
     useFetch(`/api/clusters/${clusterId}`, [clusterId]);
   const manageable = useMemo(() => {
-    if (jobData === undefined) return false;
+    if (job === undefined) return false;
     if (admin === true) return true;
-    if (jobData['userName'] === email) return true;
+    if (job['userName'] === email) return true;
     return false;
-  }, [jobData, admin, email]);
-  const [job, setJob] = useState<any>();
+  }, [job, admin, email]);
   
-  useEffect(() => {
-    if (jobError !== undefined) {
-      const key = enqueueSnackbar(`Failed to fetch job: ${clusterId}/${jobId}`, {
-        variant: 'error',
-        persist: true
-      });
-      return () => {
-        if (key !== null) closeSnackbar(key);
-      }
-    }
-  }, [jobError, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
+  // useEffect(() => {
+  //   if (jobError !== undefined) {
+  //     const key = enqueueSnackbar(`Failed to fetch job: ${clusterId}/${jobId}`, {
+  //       variant: 'error',
+  //       persist: true
+  //     });
+  //     return () => {
+  //       if (key !== null) closeSnackbar(key);
+  //     }
+  //   }
+  // }, [jobError, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
 
   useEffect(() => {
     if (clusterError !== undefined) {
@@ -213,17 +215,37 @@ const JobContent: FunctionComponent = () => {
     }
   }, [clusterError, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
 
+  // useEffect(() => {
+  //   if (jobData !== undefined) {
+  //     setJob(jobData);
+  //     const timeout = setTimeout(() => {
+  //       getJob();
+  //     }, pollInterval);
+  //     return () => {
+  //       clearTimeout(timeout);
+  //     }
+  //   }
+  // }, [jobData, getJob]);
+
   useEffect(() => {
-    if (jobData !== undefined) {
-      setJob(jobData);
-      const timeout = setTimeout(() => {
-        getJob();
-      }, pollInterval);
-      return () => {
-        clearTimeout(timeout);
-      }
-    }
-  }, [jobData, getJob]);
+    getJob();
+  }, [clusterId, jobId]);
+
+  useInterval(() => {
+    getJob();
+  }, 3000);
+
+  const getJob = () => {
+    axios.get(`/v2/clusters/${clusterId}/jobs/${jobId}`)
+      .then(res => {
+        const { data } = res;
+        const temp1 = JSON.stringify(job ? job.jobStatus : '');
+        const temp2 = JSON.stringify(data ? data.jobStatus : '');
+        if (!(temp1 === temp2)) setJob(res.data);
+      }, () => {
+        message('error', `Failed to fetch job: ${clusterId}/${jobId}`);
+      })
+  }
 
   const status = useMemo(() => job && job['jobStatus'], [job]);
   const previousStatus = usePrevious(status);

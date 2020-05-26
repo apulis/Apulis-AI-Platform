@@ -58,8 +58,16 @@ from functools import wraps
 import types
 from prettytable import PrettyTable
 
+import os.path
+import sys
+
+sys.path.append("../")
+import deploy
+
+
 ## 全局变量
 check_result = {}   ## 检测结果
+check_reason = {}   ## 失败原因
 
 
 ## 询问检测是否通过
@@ -75,29 +83,69 @@ def query(func):
         print("========================================================================")
         print("========================================================================")
 
-        checked = func(*args, **kwargs)
+        checked, reasons = func(*args, **kwargs)
 
         print("========================================================================")
         print("========================================================================")
 
-        if not checked:
-            ret = raw_input('%s passed? type y/n: ' % (func.__name__))
-            if ret.lower() == "y" or ret.lower() == "yes":
-                print("passed")
-                check_result[func.__name__] = "yes"
+        check_result[func.__name__] = "yes" if checked is True else "no"
+        check_reason[func.__name__] = reasons
 
-            else:
-                print("failed")
-                check_result[func.__name__] = "no"
-        else:
-            check_result[func.__name__] = "yes" if checked is True else "no"
-            print('%s passed? %s' % (func.__name__, check_result[func.__name__]))
+        print('%s passed? %s' % (func.__name__, check_result[func.__name__]))
 
     return do_check
 
+## service信息
+class ServiceManager(object):
+
+    def __init__(self, cluster_config):
+
+        self.service_to_nodes = {}
+        self.service_to_labels = {}
+        self.cluster_config = cluster_config
+
+        self.init()
+        return
+
+    def get_nodes(self, service_name):
+        if service_name in self.service_to_nodes:
+            return self.service_to_nodes[service_name]
+        else:
+            pass
+
+        return [] 
+
+    def init(self):
+
+        servicelists = {}
+        servicedic = deploy.get_all_services()
+        labels = deploy.fetch_config(self.cluster_config, ["kubelabels"])
+
+        for service, serviceinfo in servicedic.iteritems():
+            servicename = deploy.get_service_name(servicedic[service])
+
+            if (not service in labels) and (not servicename in labels) and "default" in labels and (not servicename is None):
+                print "not in: {},{}\n".format(service, serviceinfo)
+                labels[servicename] = labels["default"]
+            else:
+                pass
+
+        servicelists = labels
+        #print(servicelists)
+
+        for service in servicelists:
+            self.service_to_labels[service] = service+"=active"
+            self.service_to_nodes[service] = deploy.get_node_lists_for_service(service)
+            print(service)
+
+        #print(self.service_to_labels)
+        #print(self.service_to_nodes)
+
+        return
+
 
 ##  执行部署检查
-class DeploymentChecker(object):
+class Checker(object):
 
     def __init__(self):
 
@@ -108,32 +156,15 @@ class DeploymentChecker(object):
         self.cluster_uername = ''
 
         self.set_config()
+        self.sm = ServiceManager(self.cluster_config)
         return
 
     ## 设置集群配置
     def set_config(self):
 
         #pdb.set_trace()
-        self.cluster_config = init_config(default_config_parameters)
+        self.cluster_config = deploy.get_config()
 
-        ## 读取集群配置
-        config_file = "../config.yaml"
-        if not os.path.exists(config_file):
-            parser.print_help()
-            print "ERROR: config.yaml does not exist!"
-            exit()
-
-        ## 合并集群配置
-        with open(config_file) as f:
-            merge_config(self.cluster_config, yaml.load(f, Loader=yaml.FullLoader))
-            f.close()
-
-        ## 读取集群ID
-        if os.path.exists("../deploy/clusterID.yml"):
-            with open("../deploy/clusterID.yml") as f:
-                tmp = yaml.load(f, Loader=yaml.FullLoader)
-                if "clusterId" in tmp:
-                    self.cluster_config["clusterId"] = tmp["clusterId"]
         
         ## 导入key信息
         self.load_sshkey()
@@ -203,6 +234,9 @@ class DeploymentChecker(object):
             # config["dockers"]["container"]["hyperkube"]["fullname"] = config["worker-dockerregistry"] + config["dockerprefix"] + "kubernetes:" + config["dockertag"]
 
         return
+
+    def get_nodes_by_service(self, name):
+        return self.sm.get_nodes(name)
 
     ## 执行所有check_xxx函数
     def start_check(self):
@@ -314,12 +348,14 @@ class DeploymentChecker(object):
         print("check result: ") 
 
         global check_result
+        global check_reason
 
-        t = PrettyTable(['item', 'status'])
+        t = PrettyTable(['item', 'status', 'reason'])
         t.align = "l"
 
         for key, value in sorted(check_result.items()):
-            t.add_row([key, value])
+            reason = "\n".join(check_reason[key])
+            t.add_row([key, value, reason])
 
         print(t)
         return
@@ -375,344 +411,11 @@ class DeploymentChecker(object):
         return check_func(output)
 
 
-    ####################################################
-    ## 以下区域开始定义用于执行实际检测步骤的各个函数
-    ## 所有函数必须按照如下格式命名，否则无法执行:
-    ## def check_xxxx
-    ## 
-    ####################################################
 
-    @query
-    def check_01_sudo(self):
-
-        cmd = 'sudo -l -U %s' % (self.cluster_config["admin_username"])
-        expect = "(ALL)NOPASSWD:ALL"
-        
-        def check_expect(output):
-            output = output.replace(" ", "")
-
-            if expect not in output:
-                return False
-            else:
-                pass  
-
-            return True
-
-        for host in self.get_all_nodes():
-            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)
-        
-            if not passed:
-                return False
-            else:
-                pass
-              
+## 工具函数
+def is_number(s):
+    try:
+        float(s)
         return True
-
-    @query
-    def check_02_hostname(self):
-
-        cmd = 'sudo hostname'
-        expect = ""
-                
-        def check_expect(output):
-            output = output.strip()
-
-            if expect != output:
-                return False
-            else:
-                pass  
-
-            return True
-
-        #pdb.set_trace()
-        for host in self.get_all_nodes_hostname():
-            expect = host
-            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-        
-            if not passed:
-                return False
-            else:
-                pass
-
-        return True
-    
-    @query
-    def check_03_dns(self):
-
-        cmd = 'sudo ping -c 3 '
-        expect = "time="
-                
-        def check_expect(output):
-            output = output.strip()
-
-            if expect not in output:
-                return False
-            else:
-                pass  
-
-            return True
-
-        #pdb.set_trace()
-        for host in self.get_all_nodes():
-            passed = self.cluster_ssh_cmd_and_check(host, cmd + host, check_expect)  
-        
-            if not passed:
-                return False
-            else:
-                pass
-            
-
-        return True
-
-    # @query
-    # def check_04_nvidia_driver(self):
-
-    #     expect1 = "NVIDIA-SMI"
-    #     expect2 = "Driver Version"
-
-    #     def check_expect(output):
-    #         output = output.strip()
-
-    #         if expect1 not in output:
-    #             return False
-    #         else:
-    #             pass  
-
-    #         if expect2 not in output:
-    #             return False
-    #         else:
-    #             pass  
-
-    #         return True
-
-    #     for host in self.get_worker_nodes():
-    #         cmd = 'sudo nvidia-docker run --rm dlws/cuda nvidia-smi'
-    #         passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-        
-    #         if not passed:
-    #             return False
-    #         else:
-    #             pass     
-
-    #         cmd = 'sudo docker run --rm -ti dlws/cuda nvidia-smi'
-    #         passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-        
-    #         if not passed:
-    #             return False
-    #         else:
-    #             pass    
-
-    #     return True
-    @query
-    def check_04_npu_driver(self):
-    
-        expect1 = "NPU ID"
-        expect2 = "Chip ID"
-
-        def check_expect(output):
-            output = output.strip()
-
-            if expect1 not in output:
-                return False
-            else:
-                pass  
-
-            if expect2 not in output:
-                return False
-            else:
-                pass  
-
-            return True
-
-        nodes_data = self.get_nodes_info("worker") 
-        #pdb.set_trace()
-
-        for host in nodes_data.keys():
-
-            host_info = nodes_data[host]
-            worker_type = host_info["type"]
-
-            if worker_type is None or worker_type.lower() != "npu":
-                continue
-            else:
-                pass
-
-            cmd = 'sudo /usr/local/sbin/npu-smi info -t common -i 255 | grep "NPU ID" -A10'
-            passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-        
-            if not passed:
-                return False
-            else:
-                pass     
-
-        return True
-    
-
-    @query
-    def check_05_nfs(self):
-
-        #pdb.set_trace()
-        share_name = fetch_dictionary(self.cluster_config, ["mountpoints", "nfsshare1", "filesharename"])
-        server_name = fetch_dictionary(self.cluster_config, ["mountpoints", "nfsshare1", "server"])
-
-        if share_name is None or server_name is None:
-            return False
-        else:
-            pass
-
-        cmd = 'sudo df -h | grep %s' % (share_name)
-        expect = share_name
-        
-        def check_expect(output):
-            if expect not in output:
-                return False
-            else:
-                pass  
-
-            return True
-
-        for host in self.get_worker_nodes():
-            if server_name not in host:
-                passed = self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-            
-                if not passed:
-                    return False
-                else:
-                    pass       
-            else:
-                pass
-
-        return True
-
-    @query
-    def check_06_k8s(self):
-
-        global check_result
-
-        func_name = "check_06_k8s"
-        cmd = 'export KUBECONFIG=/etc/kubernetes/admin.conf && kubectl get po --all-namespaces'
-        components_list = [
-
-            ## k8s组件
-            #"custom-metrics-apiserver",
-            "prometheus-operator",
-            #"device-plugin",
-            "a910-device-plugin",
-            "cloud-collectd-node-agent",
-            "coredns",
-            "etcd",
-            "grafana",
-            "job-exporter",
-            "kube-apiserver",
-            "kube-controller-manager",
-            "kube-proxy",
-            "mysql",
-            "node-exporter",
-            "prometheus-deployment",
-            "watchdog",
-            "weave-net",
-
-            ## 应用组件
-            "jobmanager",
-            "nginx",
-            "restfulapi",
-            "webui"
-        ]
-
-        expect_name   = ""
-        expect_status = "running"
-        expect_restart = 30
-        svc_states = []
-
-        def check_expect(output):
-
-            pod_state_mapping = {}
-            pod_list = output.split("\n")
-            #pdb.set_trace()
-
-            ## 服务名称
-            for svc_name in components_list:
-
-                ## 可能有多个
-                svc_pod_count = 0
-                check_item_name = ""
-
-                for pod_line in pod_list:
-
-                    if svc_name in pod_line:
-
-                        svc_pod_count += 1
-
-                        svc_states = pod_line.split()
-                        check_item_name = func_name + "_" + svc_name + "_" + str(svc_pod_count)
-
-                        if len(svc_states) < 6 or svc_states[3].lower() != expect_status:
-                            check_result[check_item_name] = "no"
-                            print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
-                            continue
-                        else:
-                            pass  
-
-                        if len(svc_states) < 6 or int(svc_states[4].lower()) > expect_restart:
-                            check_result[check_item_name] = "no"
-                            print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
-                            continue
-                        else:
-                            pass 
-
-                        check_result[check_item_name] = "yes"
-                        print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
-
-                    else:
-                        pass 
-
-                ## 搜索完毕，判断是否找到服务
-                if svc_pod_count == 0:
-                    ## 未找到服务
-                    check_item_name = func_name + "_" + svc_name
-                    check_result[check_item_name] = "no"
-                    print('%s passed? %s' % (check_item_name, check_result[check_item_name]))
-
-                else:
-                    ## 找到服务
-                    ## 服务状态在 已在for循环中处理过
-                    pass
-
-            return True
-
-
-        for host in self.get_master_nodes():
-            self.cluster_ssh_cmd_and_check(host, cmd, check_expect)  
-     
+    except ValueError:
         return False
-    
-
-def main():
-    # the program always run at the current directory.
-    dirpath = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
-    os.chdir(dirpath)
-
-    parser = argparse.ArgumentParser(prog='check.py',
-        formatter_class=argparse.RawDescriptionHelpFormatter
-        )
-
-    '''parser.add_argument("--skip-error",
-        help = "检测不通过继续执行后续检测步骤.",
-        action="store_true"
-        )'''
-
-    #args = parser.parse_args()
-    #command = args.command
-    #nargs = args.nargs
-
-    config = init_config(default_config_parameters)
-    print(config["ssh_cert"], config["admin_username"])
-
-    checker = DeploymentChecker()
-    checker.start_check()
-    checker.print_summary()
-
-    return
-
-if __name__ == '__main__': 
-    main()

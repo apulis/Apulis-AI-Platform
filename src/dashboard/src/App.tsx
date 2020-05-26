@@ -20,6 +20,8 @@ import { Provider as DrawerProvider } from "./layout/Drawer/Context";
 import { SnackbarProvider, useSnackbar, VariantType } from 'notistack';
 import './App.less';
 
+import AuthzRoute from './components/AuthzRoute';
+
 const Home = React.lazy(() => import('./pages/Home'));
 const SignIn = React.lazy(() => import('./pages/SignIn'));
 const SignUp = React.lazy(() => import('./pages/SignUp'));
@@ -33,6 +35,57 @@ const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
 
 const theme = createMuiTheme();
+
+const router = [
+  {
+    path: '/',
+    component: Home,
+    exact: true
+  },
+  {
+    path: '/submission',
+    component: Submission,
+  },
+  {
+    path: '/jobs/:cluster',
+    component: Jobs,
+  },
+  {
+    path: '/jobs/',
+    component: Jobs,
+  },
+  {
+    path: '/jobs-v2/:clusterId/:jobId',
+    component: JobV2,
+    strict: true,
+    exact: true,
+  },
+  {
+    path: '/jobs-v2/:clusterId/',
+    component: JobsV2,
+    strict: true,
+    exact: true,
+  },
+  {
+    path: '/jobs-v2/',
+    component: JobsV2,
+    strict: true,
+    exact: true,
+  },
+  {
+    path: '/job/:team/:clusterId/:jobId',
+    component: Job,
+  },
+  {
+    path: '/cluster-status',
+    component: ClusterStatus
+  },
+  {
+    path: '/vc',
+    component: Vc
+  }
+
+];
 
 interface BootstrapProps {
   uid?: string;
@@ -79,17 +132,6 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
   </BrowserRouter>
 );
 const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
-  const { openId, group, userName } = React.useContext(UserContext);
-  const { teams } = React.useContext(TeamsContext);
-  React.useEffect(() => {
-    if (openId === undefined || group === undefined) {
-      // history.replace('/sign-in');
-    } else if(userName === undefined) {
-      history.replace('/sign-up');
-    } else if(teams !== undefined && teams.length === 0) {
-      history.replace('/empty-team');
-    }
-  }, [openId, group, userName, teams, history]);
   const { enqueueSnackbar } = useSnackbar();
   initAxios((type: VariantType, msg: string) => {
     enqueueSnackbar(msg, {
@@ -97,10 +139,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
       variant: type,
     });
   }, history);
-  if (userName === undefined || (teams !== undefined && teams.length === 0)) {
-    return null;
-  }
-
+  
   return (
     <DrawerProvider>
       <Content>
@@ -108,19 +147,26 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
         <Drawer />
         <React.Suspense fallback={Loading}>
           <Switch location={location}>
-            <Route exact path="/" component={Home}/>
-            <Route path="/submission" component={Submission}/>
-            <Route path="/jobs/:cluster" component={Jobs}/>
-            <Route path="/jobs" component={Jobs}/>
-            <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/>
+            {/* <Route exact path="/" component={Home}/> */}
+            {/* <Route path="/submission" component={Submission}/> */}
+            {/* <Route path="/jobs/:cluster" component={Jobs}/> */}
+            {/* <Route path="/jobs" component={Jobs}/> */}
+            {/* <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/> */}
             <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
-            <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/>
+            {/* <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/> */}
             <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
-            <Route strict exact path="/jobs-v2/" component={JobsV2}/>
-            <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
-            <Route path="/cluster-status" component={ClusterStatus}/>
-            <Route path="/vc" component={Vc} />
+            {/* <Route strict exact path="/jobs-v2/" component={JobsV2}/> */}
+            {/* <Route path="/job/:team/:clusterId/:jobId" component={Job}/> */}
+            {/* <Route path="/cluster-status" component={ClusterStatus}/> */}
+            {/* <Route path="/vc" component={Vc} /> */}
             <Redirect to="/"/>
+            {
+              router.map(r => {
+                return (
+                  <AuthzRoute exact={r.exact} component={r.component} strict={r.strict} path={r.path} />
+                )
+              })
+            }
           </Switch>
         </React.Suspense>
       </Content>
@@ -140,9 +186,9 @@ const App: React.FC<BootstrapProps> = (props) => {
       <Box display="flex" minHeight="100vh" maxWidth="100vw">
         <React.Suspense fallback={Loading}>
           <Switch>
-            <Route exact path="/sign-in" component={SignIn}/>
-            <Route exact path="/sign-up" component={SignUp} />
-            <Route exact path="/empty-team" component={EmptyTeam} />
+            {/* <Route exact path="/sign-in" component={SignIn}/>
+            <Route exact path="/sign-up" component={SignUp} /> */}
+            {/* <Route exact path="/empty-team" component={EmptyTeam} /> */}
             <Route component={Layout}/>
           </Switch>
         </React.Suspense>

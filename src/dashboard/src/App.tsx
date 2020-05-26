@@ -40,51 +40,60 @@ const router = [
   {
     path: '/',
     component: Home,
-    exact: true
+    exact: true,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/submission',
     component: Submission,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/jobs/:cluster',
     component: Jobs,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/jobs/',
     component: Jobs,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/jobs-v2/:clusterId/:jobId',
     component: JobV2,
     strict: true,
     exact: true,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/jobs-v2/:clusterId/',
     component: JobsV2,
     strict: true,
     exact: true,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/jobs-v2/',
     component: JobsV2,
     strict: true,
     exact: true,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/job/:team/:clusterId/:jobId',
     component: Job,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/cluster-status',
-    component: ClusterStatus
+    component: ClusterStatus,
+    needRole: ['User', 'System Admin']
   },
   {
     path: '/vc',
-    component: Vc
+    component: Vc,
+    needRole: ['User', 'System Admin']
   }
-
 ];
 
 interface BootstrapProps {
@@ -117,7 +126,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
     <ConfigProvider>
       <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
         <ConfirmProvider>
-          <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath}>
+          <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
             <TeamProvider permissionList={permissionList}>
               <ClustersProvider>
                 <ThemeProvider theme={theme}>
@@ -150,7 +159,14 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
             {
               router.map(r => {
                 return (
-                  <AuthzRoute exact={r.exact} key={r.path} component={r.component} strict={r.strict} path={r.path} />
+                  <AuthzRoute
+                    exact={r.exact}
+                    key={r.path}
+                    component={r.component}
+                    strict={r.strict}
+                    path={r.path}
+                    needRole={r.needRole}
+                  />
                 )
               })
             }

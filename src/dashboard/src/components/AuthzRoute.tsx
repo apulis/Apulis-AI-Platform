@@ -6,15 +6,16 @@ interface IAuthzRouteProps {
   path: string;
   exact?: boolean;
   component:  React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;
-  needPermission?: string | string[];
+  needRole?: string | string[];
   strict?: boolean
 }
 
 
-const AuthzRoute: React.FC<IAuthzRouteProps> = ({ needPermission, path, exact, component, strict }) => {
-  const { permissionList = [] } = React.useContext(AuthContext);
+const AuthzRoute: React.FC<IAuthzRouteProps> = ({ needRole, path, exact, component, strict }) => {
+  const { currentRole = [] } = React.useContext(AuthContext);
+  console.log('current', currentRole)
   let includes = false;
-  if (!needPermission) {
+  if (!needRole) {
     return <Route
       path={path}
       exact={exact}
@@ -22,15 +23,16 @@ const AuthzRoute: React.FC<IAuthzRouteProps> = ({ needPermission, path, exact, c
       strict={strict}
     />
   }
-  if (Array.isArray(needPermission)) {
-    needPermission.forEach(p => {
-      if (permissionList?.includes(p)) {
+  if (Array.isArray(needRole)) {
+    needRole.forEach(p => {
+      if (currentRole?.includes(p)) {
         includes = true;
       }
     })
-  } else if (permissionList.includes(needPermission)) {
+  } else if (currentRole.includes(needRole)) {
     includes = true;
   }
+  console.log('includes', includes)
   if (includes) {
     return (
       <Route

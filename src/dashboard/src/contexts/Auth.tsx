@@ -11,6 +11,7 @@ interface IAuthContext {
   currentRole?: string[];
   permissionList?: string[];
   userGroupPath?: string;
+  team?: string[];
 }
 
 const AuthContext = React.createContext<IAuthContext>({});
@@ -20,7 +21,7 @@ export default AuthContext;
 interface ProviderProps extends IAuthContext {
 }
 
-const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id, openId, userName, currentRole, permissionList, userGroupPath = '', history }) => {
+const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id, openId, userName, currentRole, permissionList, userGroupPath = '', history, team }) => {
   const isLogin = Boolean(id);
   const isRegister = Boolean(userName);
 

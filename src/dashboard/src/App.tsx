@@ -147,6 +147,13 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
         <Drawer />
         <React.Suspense fallback={Loading}>
           <Switch location={location}>
+            {
+              router.map(r => {
+                return (
+                  <AuthzRoute exact={r.exact} key={r.path} component={r.component} strict={r.strict} path={r.path} />
+                )
+              })
+            }
             {/* <Route exact path="/" component={Home}/> */}
             {/* <Route path="/submission" component={Submission}/> */}
             {/* <Route path="/jobs/:cluster" component={Jobs}/> */}
@@ -160,13 +167,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
             {/* <Route path="/cluster-status" component={ClusterStatus}/> */}
             {/* <Route path="/vc" component={Vc} /> */}
             <Redirect to="/"/>
-            {
-              router.map(r => {
-                return (
-                  <AuthzRoute exact={r.exact} component={r.component} strict={r.strict} path={r.path} />
-                )
-              })
-            }
+            
           </Switch>
         </React.Suspense>
       </Content>

@@ -3138,42 +3138,30 @@ def get_all_services():
     servicedic = {}
 
     for service in os.listdir(rootdir):
-        dirname = os.path.join(rootdir, service)
-        launch_file_prefix = "launch_order"
-        if os.path.isdir(dirname):
-            launch_files = []
-            # traverse all "launch_order" prefixed files
-            for filename in os.listdir(dirname):
-                if filename.startswith(launch_file_prefix):
-                    launch_files.append(filename)
-            for launch_file in launch_files:
-                launch_order_file = os.path.join(dirname, launch_file)
-                service_name = service
-                # if filename is not 'launch_order', build a new service name
-                if launch_file != launch_file_prefix:
-                    service_name = service + "-" + launch_file[len(launch_file_prefix)+1:]
-                if os.path.isfile(launch_order_file):
-                    servicedic[service_name] = launch_order_file
-                    with open(launch_order_file,'r') as f:
-                        allservices = f.readlines()
-                        for filename in reversed(allservices):
-                            filename = filename.strip()
-                            filename = os.path.join(dirname, filename)
-                            if os.path.isfile(filename):
-                                servicedic[service_name+"/"+os.path.splitext(os.path.basename(filename))[0]] = filename
+    dirname = os.path.join(rootdir, service)
+    if os.path.isdir(dirname):
+        launch_order_file = os.path.join( dirname, "launch_order")
+        if os.path.isfile( launch_order_file ):
+            servicedic[service] = launch_order_file
+            with open(launch_order_file,'r') as f:
+                allservices = f.readlines()
+                for filename in reversed(allservices):
+                    filename = filename.strip()
+                    filename = os.path.join(dirname, filename)
+                    if os.path.isfile(filename):
+                        servicedic[service+"/"+os.path.splitext(os.path.basename(filename))[0]] = filename
 
-                else:
-                    yamlname = os.path.join(dirname, service + ".yaml")
-                    if not os.path.isfile(yamlname):
-                        yamls = glob.glob("*.yaml")
-                        yamlname = yamls[0]
-                    with open( yamlname ) as f:
-                        content = f.read()
-                        f.close()
-                        if content.find( "Deployment" )>=0 or content.find( "DaemonSet" )>=0 or content.find("ReplicaSet")>=0 or content.find("CronJob")>=0:
-                            # Only add service if it is a daemonset.
-                            servicedic[service_name] = yamlname
-    print servicedic
+        else:
+            yamlname = os.path.join(dirname, service + ".yaml")
+            if not os.path.isfile(yamlname):
+                yamls = glob.glob("*.yaml")
+                yamlname = yamls[0]
+            with open( yamlname ) as f:
+                content = f.read()
+                f.close()
+                if content.find( "Deployment" )>=0 or content.find( "DaemonSet" )>=0 or content.find("ReplicaSet")>=0 or content.find("CronJob")>=0:
+                    # Only add service if it is a daemonset.
+                    servicedic[service] = yamlname
     return servicedic
 
 def get_archtypes():
@@ -3406,14 +3394,20 @@ def kubernetes_label_GpuTypes():
             kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
 
 # Label kubernetes worker nodes
-def kubernetes_label_worker():
+def kubernetes_label_worker(uncordon=False):
 
     node_type = ["cpu", "npu", "gpu", "storage"]
     specific_processor_type = ["npu", "gpu"]
     set_active = "=active"
 
     for nodename,nodeInfo in config["machines"].items():
-        if nodeInfo["role"] == "worker":
+        # label archtype
+        archtype = "amd64"
+        if "archtype" in nodeInfo:
+            archtype = nodeInfo["archtype"]
+        kubernetes_label_node("--overwrite", nodename, "archType=" + archtype)
+        # label worker
+        if nodeInfo["role"] == "worker" or uncordon:
 
             # node type: cpu\gpu\npu\storage
             if nodeInfo["type"] in node_type:
@@ -3435,21 +3429,14 @@ def kubernetes_label_worker():
             # gpuType=nvidia/huawei for compatibility
             if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
                 if "series" in nodeInfo and nodeInfo["series"] is not "":
-                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"])
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"] + "_" + archtype)
                 else:
-                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"])
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + archtype)
             else:
                 pass
 
         else:
             pass
-
-        # label archtype
-        if "archtype" in nodeInfo:
-            kubernetes_label_node("--overwrite", nodename, "archType=" + nodeInfo["archtype"])
-        else:
-            kubernetes_label_node("--overwrite", nodename, "archType=amd64")
-
     return
 
 def kubernetes_label_cpuworker():
@@ -3547,7 +3534,7 @@ def stop_one_kube_service(fname):
     run_kubectl( ["delete", "-f", fname ] )
 
 
-def start_kube_service(servicename, archtype=None):
+def start_kube_service(servicename):
 
     fname = get_service_yaml(servicename)
     dirname = os.path.dirname(fname)
@@ -3557,16 +3544,11 @@ def start_kube_service(servicename, archtype=None):
         return
 
     default_launch_file = "launch_order"
-    if archtype is None:
-        for archtype in get_archtypes():
-            if archtype == "amd64":
-                start_kube_service_with_launch_order(dirname, default_launch_file)
-            else:
-                start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
-    else if archtype == "amd64":
-        start_kube_service_with_launch_order(dirname, default_launch_file)
-    else:
-        start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+    for archtype in get_archtypes():
+        if archtype == "amd64":
+            start_kube_service_with_launch_order(dirname, default_launch_file)
+        else:
+            start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
     return
 
 def start_kube_service_with_launch_order(dirname, launch_filename):
@@ -3582,7 +3564,7 @@ def start_kube_service_with_launch_order(dirname, launch_filename):
                 start_one_kube_service(os.path.join(dirname, filename))
     return
 
-def stop_kube_service(servicename, archtype=None):
+def stop_kube_service(servicename):
     fname = get_service_yaml( servicename )
     dirname = os.path.dirname(fname)
     if "/" in servicename:
@@ -3591,15 +3573,10 @@ def stop_kube_service(servicename, archtype=None):
 
     default_launch_file = "launch_order"
     if archtype is None:
-        for archtype in get_archtypes():
-            if archtype == "amd64":
-                stop_kube_service_with_launch_order(dirname, default_launch_file)
-            else:
-                stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
-    else if archtype == "amd64":
-        stop_kube_service_with_launch_order(dirname, default_launch_file)
-    else:
-        stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+        if archtype == "amd64":
+            stop_kube_service_with_launch_order(dirname, default_launch_file)
+        else:
+            stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
     return
 
 def stop_kube_service_with_launch_order(dirname, launch_filename):
@@ -3633,6 +3610,7 @@ def run_kube_command_on_nodes( nargs ):
             nodename = kubernetes_get_node_name(node)
             run_kubectl(["taint nodes %s node-role.kubernetes.io/master:NoSchedule-" % nodename])
             kubernetes_label_node("--overwrite", nodename, "worker=active")
+            kubernetes_label_worker(uncordon=True)
     else:
         run_kube_command_node( verb, nodes)
 
@@ -4436,12 +4414,12 @@ def run_command( args, command, nargs, parser ):
                         config["hdfsconfig"]["formatoptions"] = "--force "
                 # Start a kubelet service.
                 for servicename in servicenames:
-                    start_kube_service(servicename, archtype=archtype)
+                    start_kube_service(servicename)
 
             elif nargs[0] == "stop":
                 # stop a kubelet service.
                 for servicename in servicenames:
-                    stop_kube_service(servicename, archtype=archtype)
+                    stop_kube_service(servicename)
 
             elif nargs[0] == "restart":
                 # restart a kubelet service.

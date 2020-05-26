@@ -3444,6 +3444,12 @@ def kubernetes_label_worker():
         else:
             pass
 
+        # label archtype
+        if "archtype" in nodeInfo:
+            kubernetes_label_node("--overwrite", nodename, "archType=" + nodeInfo["archtype"])
+        else:
+            kubernetes_label_node("--overwrite", nodename, "archType=amd64")
+
     return
 
 def kubernetes_label_cpuworker():

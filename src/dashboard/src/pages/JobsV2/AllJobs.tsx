@@ -62,8 +62,8 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
     pageSize,
     padding: 'dense'
   }), [pageSize]);
-  const { support, approve, kill, pause, resume } = useActions(cluster.id);
-  const actions = [support, approve, pause, resume, kill];
+  const { supportEmail, approve, kill, pause, resume } = useActions(cluster.id);
+  const actions = [supportEmail, approve, pause, resume, kill];
 
   return (
     <MaterialTable

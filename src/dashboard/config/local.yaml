@@ -13,9 +13,11 @@ wechat:
   appId: "wx403e175ad2bf1d2d"
   appSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
 
-userGroupType: 
-  type: global
-  path: /global-user-dashboard
+userGroup:
+  type: custom
+  domain: https://apulis-test.sigsus1.cn:51444
+  backEndPath: /custom-user-dashboard-backend
+  frontEndPath: /custom-user-dashboard
 
 activeDirectory:
   tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"

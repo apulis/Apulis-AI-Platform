@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useContext, useState, useEffect, createContext, SetStateAction, FunctionComponent } from "react";
 import TeamContext from "./Teams";
 import UserContext from './User';
+import AuthContext from './Auth';
 import _ from 'lodash';
 
 export interface AvailbleGpuType {
@@ -11,19 +12,21 @@ export interface AvailbleGpuType {
 interface Context {
   clusters: any[];
   selectedCluster?: string;
-  saveSelectedCluster(team: React.SetStateAction<string>): void;
+  saveSelectedCluster(team: SetStateAction<string>): void;
   availbleGpu: AvailbleGpuType[];
   selectedTeam: string;
   userName?: string;
+  permissionList?: string[];
 }
 
-const Context = React.createContext<Context>({
+const Context = createContext<Context>({
   clusters: [],
   selectedCluster: '',
-  saveSelectedCluster: function(team: React.SetStateAction<string>) {},
+  saveSelectedCluster: function(team: SetStateAction<string>) {},
   availbleGpu: [],
   selectedTeam: '',
-  userName: ''
+  userName: '',
+  permissionList: []
 });
 
 export default Context;
@@ -39,15 +42,16 @@ export interface ClusterType {
   };
 }
 
-export const Provider: React.FC = ({ children }) => {
-  const { teams, selectedTeam } = React.useContext(TeamContext);
-  const { userName } = React.useContext(UserContext);
-  const [clusters, setClusters] = React.useState<ClusterType[]>([]);
-  const [selectedCluster, setSelectedCluster] = React.useState<string>('');
-  const saveSelectedCluster = (cluster: React.SetStateAction<string>) => {
+export const Provider: FunctionComponent = ({ children }) => {
+  const { teams, selectedTeam } = useContext(TeamContext);
+  const { userName } = useContext(UserContext);
+  const { permissionList = [] } = useContext(AuthContext);
+  const [clusters, setClusters] = useState<ClusterType[]>([]);
+  const [selectedCluster, setSelectedCluster] = useState<string>('');
+  const saveSelectedCluster = (cluster: SetStateAction<string>) => {
     setSelectedCluster(cluster);
   };
-  React.useEffect( ()=>{
+  useEffect( ()=>{
     if (teams && selectedTeam) {
       const filterClusters = teams.filter((team: any) => team.id === selectedTeam);
 
@@ -73,7 +77,7 @@ export const Provider: React.FC = ({ children }) => {
   }
   return (
     <Context.Provider
-      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu, selectedTeam, userName }}
+      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu, selectedTeam, userName, permissionList }}
       children={children}
     />
   );

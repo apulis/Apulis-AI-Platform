@@ -9,6 +9,7 @@ import React, {
 import MaterialTable, { Column, Options } from 'material-table';
 import axios from 'axios';
 import TeamsContext from '../../contexts/Teams';
+import AuthContext from '../../contexts/Auth';
 import Loading from '../../components/Loading';
 import useActions from '../../hooks/useActions';
 import ClusterContext from './ClusterContext';
@@ -31,6 +32,7 @@ interface JobsTableProps {
 
 const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
   const { cluster } = useContext(ClusterContext);
+  const { permissionList = [] } = useContext(AuthContext);
   const [pageSize, setPageSize] = useState(5);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
     setPageSize(pageSize);
@@ -71,7 +73,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
       columns={columns}
       data={jobs}
       options={options}
-      actions={actions}
+      actions={permissionList.includes('MANAGE_ALL_USERS_JOB') ? actions : undefined}
       onChangeRowsPerPage={onChangeRowsPerPage}
     />
   );

@@ -47,7 +47,7 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg } from '../../const';
+import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 
@@ -115,6 +115,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [showSaveTemplate, setSaveTemplate] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
+  const [allDevice, setAllDevice] = useState<{
+    [name: string]: { deviceStr: string }
+  }>({});
   const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const newEnvironmentVariables = environmentVariables.slice()
@@ -497,7 +500,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
     return true;
   }
-
+  
   const validateNumDevices = (val: string) => {
     if (val) {
       const _val = Number(val);
@@ -506,14 +509,32 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }
 
+  const validateNpuNum = (val: string) => {
+    if (val) {
+      const _val = Number(val);
+      if (allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
+        return (_val === 1 ||_val === 2 || _val === 4 || _val === 8);
+      }
+    }
+    return true;
+  }
+
   useEffect(() => {
     getTemplates();
+    getAllDevice();
   }, [selectedTeam]);
 
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
       .then(res => {
-        setTemplates(res.data)
+        setTemplates(res.data);
+      })
+  }
+
+  const getAllDevice = () => {
+    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
+      .then(res => {
+        setAllDevice(res.data);
       })
   }
 
@@ -761,7 +782,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       fullWidth
                       variant="filled"
                       value={workers}
+                      name="workers"
                       onChange={e => setWorkers(Number(e.target.value))}
+                      error={Boolean(errors.workers)}
+                      helperText={errors.workers ? NpuNumMsg : ''}
+                      inputRef={register({
+                        validate: val => validateNpuNum(val)
+                      })}
                     />
                   </Grid>
                 )}
@@ -771,7 +798,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       disabled
                       type="number"
                       label="Total Number of Device"
-                      value = {workers * gpusPerNode}
+                      // value = {workers * gpusPerNode}
+                      value = {workers * 8}
                       fullWidth
                       variant="filled"
                     />

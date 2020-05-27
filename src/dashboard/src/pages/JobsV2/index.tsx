@@ -21,6 +21,7 @@ import {
 } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
 import ClustersContext from '../../contexts/Clusters';
+import AuthContext from '../../contexts/Auth';
 import ClusterSelector from '../../components/ClusterSelector';
 import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
@@ -34,15 +35,17 @@ interface RouteParams {
 
 const TabView: FunctionComponent = () => {
   const [index, setIndex] = useState(Number(window.location.search.split('index=')[1]) || 0);
+  const { permissionList = [] } = useContext(AuthContext);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
   }, [setIndex]);
   const onChangeIndex = useCallback((index: number, prevIndex: number) => {
     setIndex(index);
   }, [setIndex]);
+  console.log("permissionList",permissionList)
   return (
     <div className="jobs-table-wrap">
-      <Tabs
+      {permissionList.includes('VIEW_ALL_USER_JOB') && <Tabs
         value={index}
         onChange={onChange}
         variant="fullWidth"
@@ -51,13 +54,13 @@ const TabView: FunctionComponent = () => {
       >
         <Tab label="My Jobs"/>
         <Tab label="All Jobs"/>
-      </Tabs>
+      </Tabs>}
       <SwipeableViews
         index={index}
         onChangeIndex={onChangeIndex}
       >
         {index === 0 ? <MyJobs/> : <div/>}
-        {index === 1 ? <AllJobs/> : <div/>}
+        {index === 1 && permissionList.includes('VIEW_ALL_USER_JOB') ? <AllJobs/> : <div/>}
       </SwipeableViews>
     </div>
   );

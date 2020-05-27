@@ -1,21 +1,19 @@
-import React from 'react';
+import React, { ComponentType, useContext, FunctionComponent  } from 'react';
 import { Route, RouteComponentProps } from 'react-router-dom';
 import AuthContext from '../contexts/Auth';
 
 interface IAuthzRouteProps {
   path: string;
   exact?: boolean;
-  component:  React.ComponentType<RouteComponentProps<any>> | React.ComponentType<any>;
-  needRole?: string | string[];
+  component:  ComponentType<RouteComponentProps<any>> | ComponentType<any>;
+  needPermission?: string | string[];
   strict?: boolean
 }
 
-
-const AuthzRoute: React.FC<IAuthzRouteProps> = ({ needRole, path, exact, component, strict }) => {
-  const { currentRole = [] } = React.useContext(AuthContext);
-  console.log('current', currentRole)
+const AuthzRoute: FunctionComponent<IAuthzRouteProps> = ({ needPermission, path, exact, component, strict }) => {
+  const { permissionList = [] } = useContext(AuthContext);
   let includes = false;
-  if (!needRole) {
+  if (!needPermission) {
     return <Route
       path={path}
       exact={exact}
@@ -23,16 +21,15 @@ const AuthzRoute: React.FC<IAuthzRouteProps> = ({ needRole, path, exact, compone
       strict={strict}
     />
   }
-  if (Array.isArray(needRole)) {
-    needRole.forEach(p => {
-      if (currentRole?.includes(p)) {
+  if (Array.isArray(needPermission)) {
+    needPermission.forEach(p => {
+      if (permissionList?.includes(p)) {
         includes = true;
       }
     })
-  } else if (currentRole.includes(needRole)) {
+  } else if (permissionList.includes(needPermission)) {
     includes = true;
   }
-  console.log('includes', includes)
   if (includes) {
     return (
       <Route

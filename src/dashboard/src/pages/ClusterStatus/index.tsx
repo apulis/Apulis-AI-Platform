@@ -63,7 +63,7 @@ const ClusterStatus: FC = () => {
 
     response['getIdleGPUPerUserUrl'] = getIdleGPUPerUser;
     response['ClusterName'] = cluster;
-    response['GranaUrl'] = `${grafana}dashboard/db/gpu-usage?refresh=30s&orgId=1&_=${Date.now()}`;
+    response['GranaUrl'] = `${grafana}dashboard/db/device-usage?refresh=30s&orgId=1&_=${Date.now()}`;
     response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-device-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}`;
     return response;
   }

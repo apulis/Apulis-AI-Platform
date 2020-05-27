@@ -74,6 +74,7 @@ router.get('/clusters/:clusterId/jobs/:jobId/commands',
 router.post('/clusters/:clusterId/jobs/:jobId/commands',
   require('./middlewares/user')(),
   require('./middlewares/body')('command'),
+  require('./middlewares/authorize')('SUBMIT_TRAINING_JOB'),
   require('./controllers/cluster/job/commands.post'))
 
 router.get('/clusters/:clusterId/jobs/:jobId/endpoints',
@@ -82,6 +83,7 @@ router.get('/clusters/:clusterId/jobs/:jobId/endpoints',
 router.post('/clusters/:clusterId/jobs/:jobId/endpoints',
   require('./middlewares/user')(),
   require('./middlewares/body')('endpoints'),
+  require('./middlewares/authorize')('SUBMIT_TRAINING_JOB'),
   require('./controllers/cluster/job/endpoints.post'))
 
 router.get('/user',
@@ -94,9 +96,11 @@ router.get('/teams/:teamId/templates',
 router.put('/teams/:teamId/templates/:templateName',
   require('./middlewares/user')(),
   require('./middlewares/body')('template'),
+  require('./middlewares/authorize')('SUBMIT_TRAINING_JOB'),
   require('./controllers/team/template.put'))
 router.delete('/teams/:teamId/templates/:templateName',
   require('./middlewares/user')(),
+  require('./middlewares/authorize')('SUBMIT_TRAINING_JOB'),
   require('./controllers/team/template.delete'))
 
 router.get('/:clusterId/addVc/:vcName/:quota/:metadata',

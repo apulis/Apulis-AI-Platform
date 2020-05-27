@@ -129,6 +129,14 @@ ${givenName} ${familyName}
     };
   }, [onSupport]);
 
+  const supportEmail = useCallback((job: any): Action<any> => {
+    return {
+      icon: 'help',
+      tooltip: 'Send email for support',
+      onClick: onSupport
+    };
+  }, [onSupport]);
+
   const approve = useCallback((job: any): Action<any> => {
     const hidden = APPROVABLE_STATUSES.indexOf(job['jobStatus']) === -1;
     return {
@@ -165,7 +173,7 @@ ${givenName} ${familyName}
       onClick: onKill
     }
   }, [onKill]);
-  return { support, approve, pause, resume, kill };
+  return { support, approve, pause, resume, kill, supportEmail };
 }
 
 export default useActions;

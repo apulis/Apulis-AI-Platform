@@ -55,13 +55,13 @@ interface RouteParams {
 const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) => {
   const { clusterId } = useParams<RouteParams>();
   const { accessible, admin, job } = useContext(Context);
-  const { support, approve, kill, pause, resume } = useActions(clusterId);
+  const { supportEmail, approve, kill, pause, resume } = useActions(clusterId);
   const availableActions = useMemo(() => {
-    const actions = [support];
+    const actions = [supportEmail];
     if (manageable && admin) actions.push(approve);
     if (manageable) actions.push(pause, resume, kill);
     return actions;
-  }, [manageable, admin, support, approve, kill, pause, resume]);
+  }, [manageable, admin, supportEmail, approve, kill, pause, resume]);
 
   const actionButtons = availableActions.map((action, index) => {
     const { hidden, icon, tooltip, onClick } = action(job);

@@ -19,6 +19,7 @@ interface Context {
   saveSelectedTeam(team: React.SetStateAction<string>): void;
   clusterId: string;
   saveClusterId(clusterId: React.SetStateAction<string>): void;
+  permissionList: string[];
 }
 
 const Context = React.createContext<Context>({
@@ -27,12 +28,12 @@ const Context = React.createContext<Context>({
   saveSelectedTeam: function(team: React.SetStateAction<string>) {},
   clusterId: '',
   saveClusterId: function(clusterId: React.SetStateAction<string>) {},
+  permissionList: []
 });
 
 export default Context;
-export const Provider: React.FC = ({ children }) => {
+export const Provider: React.FC<{permissionList?: string[]}> = ({ children, permissionList = [] }) => {
   const fetchTeamsUrl = '/api/teams';
-  const { addGroup } = useContext(ConfigContext);
   const [clusterId, setClusterId] = React.useState<string>('');
   const saveClusterId = (clusterId: React.SetStateAction<string>) => {
     setClusterId(clusterId);
@@ -55,42 +56,9 @@ export const Provider: React.FC = ({ children }) => {
       setSelectedTeam(_.map(teams, 'id')[0]);
     }
   },[teams])
-  const EmptyTeam: React.FC = () => {
-    const onClick = () => {
-      window.open(addGroup, "_blank");
-    }
-    return (
-      <Box display="flex">
-        <Dialog open>
-          <DialogTitle style={{ color: 'red' }}>
-            {"warning"}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {"You are not an authorized user for this cluster. Please request to join a security group by following the button below."}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={onClick} color="primary">
-              JOIN SG
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
-    )
-  };
-  // if (teams !== undefined && teams.length === 0) {
-  //   return (
-
-  //     <Context.Provider
-  //       value={{ teams, selectedTeam ,saveSelectedTeam,WikiLink }}
-  //       children={<EmptyTeam addGroupLink={addGroupLink} WikiLink={WikiLink}/>}
-  //     />
-  //   )
-  // }
   return (
     <Context.Provider
-      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId }}
+      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId, permissionList }}
       children={children}
     />
   );

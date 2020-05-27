@@ -28,6 +28,7 @@ import {
   ExitToApp,
   Group,
   MenuRounded,
+  Dashboard,
 } from '@material-ui/icons';
 import CloseIcon from '@material-ui/icons/Close';
 import { TransitionProps } from '@material-ui/core/transitions';
@@ -101,7 +102,7 @@ TeamMenu = () => {
     },
     [saveSelectedTeam]
   );
-  const styles = useStyles();
+  const styles = useStyles({});
   return (
     <>
       <Button
@@ -137,10 +138,8 @@ TeamMenu = () => {
 const UserButton: React.FC = () => {
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
-  const { nickName, userName, isAdmin, isAuthorized } = React.useContext(UserContext);
-  const styles = useStyles();
-  // const Username = typeof openId === 'string' ?  openId.split('@', 1)[0] : openId;
-  const accountType = isAdmin ? 'Admin' : (isAuthorized ? 'User' : 'Unauthorized')
+  const { nickName, userName, permissionList, currentRole, userGroupPath } = React.useContext(UserContext);
+  const styles = useStyles({});
   const handleClose = () => {
     setOpenUserProfile(false);
   }
@@ -155,12 +154,16 @@ const UserButton: React.FC = () => {
     copy(value);
     setOpenCopyWarn(true)
   },[])
-  const classes = useStyles()
+  const classes = useStyles({})
   return (
     <main>
+      <Button variant="outlined" color="inherit" style={{ marginRight: '10px' }} href={userGroupPath}>
+        <Dashboard className={styles.leftIcon}/>
+        User Dashboard
+      </Button>
       <Button variant="outlined" color="inherit" onClick={showUserProfile} className={classes.userLabel}>
         <AccountBox className={styles.leftIcon}/>
-        {nickName}
+        {nickName || userName}
       </Button>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>
         <AppBar>
@@ -176,7 +179,7 @@ const UserButton: React.FC = () => {
         <Box m={10}>
           <List>
             <ListItem button>
-              <ListItemText primary="NickName" secondary={nickName}  onClick={()=>handleCopy(nickName)}/>
+              <ListItemText primary="NickName" secondary={nickName || '-'}  onClick={()=>handleCopy(nickName)}/>
             </ListItem>
             <Divider />
             <ListItem button>
@@ -185,7 +188,7 @@ const UserButton: React.FC = () => {
             <Divider />
             <Divider />
             <ListItem button >
-              <ListItemText primary="AccountType" secondary={accountType}/>
+              <ListItemText primary="CurrentRole" secondary={currentRole?.join(', ')}/>
             </ListItem>
             <Divider />
           </List>
@@ -223,7 +226,7 @@ const SignOutButton: React.FC = () => {
 };
 
 const Title: React.FC = () => {
-  const styles = useStyles();
+  const styles = useStyles({});
   return (
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
@@ -236,7 +239,7 @@ const Title: React.FC = () => {
 };
 
 const DashboardAppBar: React.FC = () => {
-  const styles = useStyles();
+  const styles = useStyles({});
   //const { open } = React.useContext(DrawerContext);
   return (
     <AppBar

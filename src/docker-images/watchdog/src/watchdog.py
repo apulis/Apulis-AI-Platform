@@ -87,30 +87,30 @@ def gen_k8s_api_gauge():
 
 def gen_gauge_node_device_total():
     return GaugeMetricFamily("k8s_node_device_total", "device capacity on k8s node",
-            labels=["host_ip","deviceType","device_str"])
+            labels=["host_ip","device_type","device_str"])
 
 def gen_gauge_node_device_available():
     return GaugeMetricFamily("k8s_node_device_available", "device available on k8s node",
-            labels=["host_ip","deviceType","device_str"])
+            labels=["host_ip","device_type","device_str"])
 
 def gen_gauge_node_device_used():
     return GaugeMetricFamily("k8s_node_device_used", "device used on k8s node",
-            labels=["host_ip","deviceType","device_str"])
+            labels=["host_ip","device_type","device_str"])
 
 def gen_gauge_node_preemptable_device_available():
     return GaugeMetricFamily("k8s_node_preemptable_device_available",
             "device available on k8s node for preemptable job",
-            labels=["host_ip","deviceType","device_str"])
+            labels=["host_ip","device_type","device_str"])
 
 def gen_k8s_node_device_allocatable():
     return GaugeMetricFamily("k8s_node_device_allocatable",
             "gpu allocatable on k8s node, this include used allocatable",
-            labels=["host_ip","deviceType","device_str"])
+            labels=["host_ip","device_type","device_str"])
 
 def gen_gauge_node_device_reserved():
     return GaugeMetricFamily("k8s_node_device_reserved",
             "device reserved on k8s node",
-            labels=["host_ip","deviceType","device_str"])
+            labels=["host_ip","device_type","device_str"])
 
 service_response_histogram = Histogram("service_response_latency_seconds",
             "response latency of each service",

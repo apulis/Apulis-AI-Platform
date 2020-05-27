@@ -457,7 +457,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (ssh) endpoints.push('ssh');
     if (ipython) endpoints.push('ipython');
     if (tensorboard) endpoints.push('tensorboard');
-    
+
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
     } else {
@@ -538,7 +538,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (!grafanaUrl) return;
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params1 = new URLSearchParams({
-      query: `count_values("device_available",k8s_node_device_available{deviceType="${gpuType}"})`
+      query: `count_values("device_available",k8s_node_device_available{device_type="${gpuType}"})`
     });
     const params2 = new URLSearchParams({
       query: `sum(pai_node_count{deviceType!="${gpuType}"})`

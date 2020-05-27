@@ -13,7 +13,12 @@ module.exports = async context => {
   // const offset = Number(context.query.offset) || 0
   const limit = Number(context.query.limit) || 10
   const all = context.query.user === 'all'
-
+  const permissionList = context.state.user.permissionList || []
+  if (all) {
+    if (!permissionList.includes('MANAGE_ALL_USERS_JOB')) {
+      return context.assert(false, 403)
+    }
+  }
   const getClusterJobs = async id => {
     const cluster = new Cluster(context, id)
     const [jobs, jobPriorities] = await Promise.all([

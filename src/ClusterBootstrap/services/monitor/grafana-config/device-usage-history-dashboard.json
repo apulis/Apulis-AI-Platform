@@ -57,21 +57,21 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(k8s_node_device_available{device_type='nvidia.com/gpu'})",
+              "expr": "sum(k8s_node_device_available{device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Available",
               "refId": "A"
             },
             {
-              "expr": "sum(k8s_node_device_total{device_type='nvidia.com/gpu'})",
+              "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Total",
               "refId": "B"
             },
             {
-              "expr": "sum(k8s_node_device_reserved{device_type='nvidia.com/gpu'})",
+              "expr": "sum(k8s_node_device_reserved{device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Reserved",

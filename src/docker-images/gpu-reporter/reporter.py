@@ -85,7 +85,7 @@ def get_monthly_idleness(prometheus_url):
     now = int(datetime.datetime.timestamp(now))
 
     args = urllib.parse.urlencode({
-        "query": "task_gpu_percent",
+        "query": "task_device_percent{device_str='nvidia.com/gpu'}",
         "start": str(one_month_ago),
         "end": str(now),
         "step": str(STEP_MINUTE) + "m",

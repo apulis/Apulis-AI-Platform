@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import json
+import sys
 import threading
 import signal
 import faulthandler
@@ -162,7 +163,7 @@ def main(args):
             ("gpu_collector", interval, decay_time, collector.GpuCollector, gpu_info_ref, zombie_info_ref, args.threshold),
             ("npu_collector", interval, decay_time, collector.NpuCollector, npu_info_ref, zombie_info_ref, args.threshold),
             ("container_collector", max(0, interval - 18), decay_time, collector.ContainerCollector,
-                gpu_info_ref, stats_info_ref, args.interface),
+                gpu_info_ref, stats_info_ref, args.interface,npu_info_ref),
             ("zombie_collector", interval, decay_time, collector.ZombieCollector, stats_info_ref, zombie_info_ref),
             ("process_collector", interval, decay_time, collector.ProcessCollector),
             ]

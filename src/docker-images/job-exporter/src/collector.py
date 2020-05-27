@@ -34,6 +34,7 @@ import utils
 import docker_inspect
 import docker_stats
 import nvidia
+import npu
 import ps
 import random
 
@@ -111,6 +112,11 @@ def gen_npu_mem_util_gauge():
             "npu memory utilization of card",
             labels=["minor_number"])
 
+def gen_npu_temperature_gauge():
+    return GaugeMetricFamily("huaweismi_temperature",
+            "npu temperature of card",
+            labels=["minor_number"])
+
 class ResourceGauges(object):
     def __init__(self):
         self.task_labels = [
@@ -126,8 +132,8 @@ class ResourceGauges(object):
 
         self.task_labels_gpu = copy.deepcopy(self.task_labels)
         self.task_labels_gpu.append("minor_number")
-        self.task_labels_gpu_util = copy.deepcopy(self.task_labels_gpu)
-        self.task_labels_gpu_util.append("gpu_type")
+        self.task_labels_gpu.append("device_type")
+        self.task_labels_gpu.append("device_str")
 
         self.gauges = {}
 
@@ -148,10 +154,10 @@ class ResourceGauges(object):
         self.add_task_and_service_gauge("{0}_block_out_byte",
                 "how much block outbound this {0} used")
 
-        self.add_gauge("task_gpu_percent",
+        self.add_gauge("task_device_percent",
                 "how much percent of gpu core this task used",
-                self.task_labels_gpu_util)
-        self.add_gauge("task_gpu_mem_percent",
+                self.task_labels_gpu)
+        self.add_gauge("task_device_mem_percent",
                 "how much percent of gpu memory this task used",
                 self.task_labels_gpu)
 
@@ -449,13 +455,6 @@ class GpuCollector(Collector):
                     GpuCollector.get_container_id, self.mem_leak_thrashold)
         return None
 
-class NpuInfo(object):
-    
-    def __init__(self):
-        self.npu_util = 0
-        self.npu_mem_util = 0
-        return
-
 class NpuCollector(Collector):
     cmd_histogram = Histogram("cmd_huawei_smi_latency_seconds",
             "Command call latency for huawei-smi (seconds)",
@@ -475,141 +474,34 @@ class NpuCollector(Collector):
 
         return
 
-    ## todo: 
-    ## this method is copied from GpuCollector
-    ## its function needs to be checked in the future
     @staticmethod
-    def get_container_id(pid):
-        """ return two values, the first one is if we found the corresponding
-        container_id, the second one is the container_id if found """
-        path = "/proc/%d/cgroup" % (pid)
-        if not os.path.isfile(path):
-            return False, ""
+    def convert_to_metrics(npu_info):
+        npu_core_utils = gen_npu_util_gauge()
+        npu_mem_utils = gen_npu_mem_util_gauge()
+        npu_temperature_utils = gen_npu_temperature_gauge()
 
-        with open(path) as f:
-            content = f.read()
+        for minor, info in npu_info.items():
+            npu_core_utils.add_metric([minor], str(info.npu_util))
+            npu_mem_utils.add_metric([minor], str(info.npu_mem_util))
 
-        for line in content.split("\n"):
-            line = line.strip()
-            if "pids" in line:
-                if "/docker/" in line:
-                    parts = line.split("/docker/")
-                    if len(parts) == 2 and re.match(u"[0-9a-f]+", parts[1]):
-                        return True, parts[1]
-                elif "/kubepods/" in line:
-                    parts = line.split("/kubepods/")
-                    if len(parts) == 2 and re.match(u"pod[0-9a-f-]+", parts[1]):
-                        return True, parts[1]
-                else:
-                    logger.info("unknown format in pid cgroup %s", line)
-
-        return False, ""
-
-    ## todo:
-    ## must be removed in the future
-    npu_collect_start_time = int(time.time())
-
-    @staticmethod
-    def huawei_npu_smi(cmd_histogram, cmd_timeout):
-
-        logger.debug("calling NpuCollector.huawei_npu_smi")
-
-        ## get info via npu_smi
-        #sp = subprocess.Popen(['npu-smi', 'info', '-t', "common", "-i", "255"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
-        #out_str = sp.communicate()        
-        
-        ## todo: 
-        ## huawei havn't gave us a fully tested npu-smi, until now
-        ## we are not able to fetch npu id via tool
-        ## this number must be replaced later
-        #npu_id = 255 ## 
-        #out_str = utils.exec_cmd("npu-smi info -t common -i {0} | grep 'NPU ID' -A10 ".format(npu_id), shell=True)
-        if not os.path.isdir("/usr/local/HiAI/driver"):
-            return None
-        else:
-            pass       
-
-        npu_log_file = "/usr/local/sbin/npu_smi.log"
-        if not os.path.isfile(npu_log_file):
-            return None
-        else:
-            pass      
-
-        f = open(npu_log_file, "r")
-        out_list = f.readlines()
-        npu_info = NpuInfo()
-
-        for item in out_list:
-            try:
-                kv = item.split(':')
-
-                if len(kv) < 2:
-                    continue
-                else:
-                    pass
-
-                key, val = kv[0], kv[1]
-                key, val = key.strip(), val.strip()
-
-                if "Aicore Usage Rate".lower() in key.lower():
-                    npu_info.npu_util = int(val)
-                
-                    # this should be replaced later
-                    # the huawei-npu-smi is not ready now 
-                    # npu_info.npu_util = round(random.uniform(0.5, 0.9), 2)
-                    # npu_info.npu_util = int(round(random.uniform(50, 60), 2))
-                    logger.warn("npu usage rate[%s]" % npu_info.npu_util)
-                    
-                elif "Memory Usage Rate".lower() in key.lower():
-                    npu_info.npu_mem_util = int(val)
-                    logger.warn("npu mem usage rate[%s]" % npu_info.npu_mem_util)
-
-                else:
-                    pass
-
-            except:
-                pass
-
-        return npu_info
-
-    @staticmethod
-    def convert_to_metrics(npu_info, zombie_info, pid_to_cid_fn, mem_leak_thrashold):
-
-        logger.debug("calling NpuCollector.convert_to_metrics")
-
-        """ This fn used to convert npu_info & zombie_info into metrics, used to make
-            it easier to do unit test """
-        gauge_npu_usage_rate = gen_npu_util_gauge()
-        gauge_npu_mem = gen_npu_mem_util_gauge()
-
-        npu_info = NpuCollector.huawei_npu_smi(NpuCollector.cmd_histogram, NpuCollector.cmd_timeout)
-
-        #gauge_npu_usage_rate.add_metric(["huawei_npu_util"], str(int(round(random.uniform(50, 90), 2))))
-        #gauge_npu_mem.add_metric(["huawei_npu_mem"], "40")
-
-        gauge_npu_usage_rate.add_metric(["huawei_npu_util"], str(npu_info.npu_util))
-        gauge_npu_mem.add_metric(["huawei_npu_mem"], str(npu_info.npu_mem_util))
+            if info.temperature is not None:
+                npu_temperature_utils.add_metric([minor], info.temperature)
 
         logger.debug("NpuCollector.convert_to_metrics, return [%f, %d]" % (npu_info.npu_util, npu_info.npu_mem_util))
-        return [gauge_npu_usage_rate, gauge_npu_mem]
-
+        return [npu_core_utils, npu_mem_utils,npu_temperature_utils]
 
     def collect_impl(self):
 
         logger.debug("calling NpuCollector.collect_impl")
 
-        npu_info = NpuCollector.huawei_npu_smi(NpuCollector.cmd_histogram, NpuCollector.cmd_timeout)
+        npu_info = npu.huawei_npu_smi(NpuCollector.cmd_histogram, NpuCollector.cmd_timeout)
         logger.warning("get npu_info %s", npu_info)
 
         now = datetime.datetime.now()
         self.npu_info_ref.set(npu_info, now)
-        zombie_info = self.zombie_info_ref.get(now)
 
         if npu_info is not None:
-            return NpuCollector.convert_to_metrics(npu_info, zombie_info,
-                    NpuCollector.get_container_id, self.mem_leak_thrashold)
-        else:
-            pass
+            return NpuCollector.convert_to_metrics(npu_info)
 
         return None
 
@@ -667,9 +559,10 @@ class ContainerCollector(Collector):
         ]))
 
     def __init__(self, name, sleep_time, atomic_ref, iteration_counter, gpu_info_ref,
-            stats_info_ref, interface):
+            stats_info_ref, interface,npu_info_ref):
         Collector.__init__(self, name, sleep_time, atomic_ref, iteration_counter)
         self.gpu_info_ref = gpu_info_ref
+        self.npu_info_ref = npu_info_ref
         self.stats_info_ref = stats_info_ref
 
         self.network_interface = network.try_to_get_right_interface(interface)
@@ -691,17 +584,19 @@ class ContainerCollector(Collector):
 
         now = datetime.datetime.now()
         gpu_infos = self.gpu_info_ref.get(now)
+        npu_infos = self.npu_info_ref.get(now)
         self.stats_info_ref.set(stats_obj, now)
 
         logger.debug("all_conns is %s", all_conns)
         logger.debug("gpu_info is %s", gpu_infos)
         logger.debug("stats_obj is %s", stats_obj)
 
-        return self.collect_container_metrics(stats_obj, gpu_infos, all_conns)
+        return self.collect_container_metrics(stats_obj, gpu_infos, all_conns,npu_infos)
 
     @staticmethod
     def parse_from_labels(inspect_info, gpu_infos):
         gpu_ids = []
+        npu_ids = []
         result_labels = {}
 
         result_labels["username"] = inspect_info.username or "unknown"
@@ -735,8 +630,13 @@ class ContainerCollector(Collector):
                 else:
                     logger.warning("unknown gpu id %s, gpu_infos is %s",
                             id, gpu_infos)
+        if inspect_info.npu_ids:
+            ids = inspect_info.gpu_ids.replace("\"", "").split(",")
+            for id in ids:
+                if id.isdigit():
+                    npu_ids.append(id)
 
-        return gpu_ids, result_labels
+        return gpu_ids,npu_ids,result_labels
 
     @classmethod
     def infer_service_name(cls, container_name):
@@ -753,7 +653,7 @@ class ContainerCollector(Collector):
 
         return None
 
-    def process_one_container(self, container_id, stats, gpu_infos, all_conns, gauges):
+    def process_one_container(self, container_id, stats, gpu_infos, all_conns, gauges,npu_infos):
         container_name = utils.walk_json_field_safe(stats, "name")
         pai_service_name = ContainerCollector.infer_service_name(container_name)
 
@@ -789,7 +689,7 @@ class ContainerCollector(Collector):
                     pid, debug_info.strip(), lsof_result, net_in, net_out)
 
         if pai_service_name is None:
-            gpu_ids, container_labels = ContainerCollector.parse_from_labels(inspect_info, gpu_infos)
+            gpu_ids,npu_ids,container_labels = ContainerCollector.parse_from_labels(inspect_info, gpu_infos)
 
             if gpu_infos:
                 for id in gpu_ids:
@@ -799,12 +699,29 @@ class ContainerCollector(Collector):
                     nvidia_gpu_status = gpu_infos[id]
                     labels = copy.deepcopy(container_labels)
                     labels["minor_number"] = id
-                    labels["gpu_type"] = inspect_info.gpu_type or "unknown"
+                    labels["device_type"] = inspect_info.gpu_type or "unknown"
+                    labels["device_str"] = "nvidia.com/gpu"
 
-                    gauges.add_value("task_gpu_percent",
+                    gauges.add_value("task_device_percent",
                             labels, nvidia_gpu_status.gpu_util)
-                    gauges.add_value("task_gpu_mem_percent",
+                    gauges.add_value("task_device_mem_percent",
                             labels, nvidia_gpu_status.gpu_mem_util)
+
+            if npu_infos:
+                for id in npu_ids:
+                    if npu_infos.get(id) is None:
+                        continue
+
+                    npu_status = npu_infos[id]
+                    labels = copy.deepcopy(container_labels)
+                    labels["minor_number"] = id
+                    labels["device_type"] = inspect_info.gpu_type or "unknown"
+                    labels["device_str"] = "npu.huawei.com/NPU"
+
+                    gauges.add_value("task_device_percent",
+                            labels, npu_status.npu_util)
+                    gauges.add_value("task_device_mem_percent",
+                            labels, npu_status.npu_mem_util)
 
             gauges.add_value("task_cpu_percent", container_labels, stats["CPUPerc"])
             gauges.add_value("task_mem_usage_byte", container_labels, stats["MemUsage_Limit"]["usage"])
@@ -825,7 +742,7 @@ class ContainerCollector(Collector):
             gauges.add_value("service_block_in_byte", labels, stats["BlockIO"]["in"])
             gauges.add_value("service_block_out_byte", labels, stats["BlockIO"]["out"])
 
-    def collect_container_metrics(self, stats_obj, gpu_infos, all_conns):
+    def collect_container_metrics(self, stats_obj, gpu_infos, all_conns,npu_infos):
         if stats_obj is None:
             logger.warning("docker stats returns None")
             return None
@@ -834,7 +751,7 @@ class ContainerCollector(Collector):
 
         for container_id, stats in stats_obj.items():
             try:
-                self.process_one_container(container_id, stats, gpu_infos, all_conns, gauges)
+                self.process_one_container(container_id, stats, gpu_infos, all_conns, gauges,npu_infos)
             except Exception:
                 logger.exception("error when trying to process container %s with name %s",
                         container_id, utils.walk_json_field_safe(stats, "name"))

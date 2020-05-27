@@ -56,7 +56,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "count_values(\"gpu_available\", k8s_node_gpu_available)",
+              "expr": "count_values(\"gpu_available\", k8s_node_device_available{device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}} gpu_available {{'}}'}} available gpus",
@@ -67,6 +67,81 @@
           "timeFrom": null,
           "timeShift": null,
           "title": "Node count with certain number of available gpu",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "Node count",
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 0,
+          "id": 2,
+          "legend": {
+            "avg": false,
+            "current": true,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "count_values(\"npu_available\", k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "{{'{{'}} npu_available {{'}}'}} available gpus",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Node count with certain number of available npu",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -144,6 +219,6 @@
     ]
   },
   "timezone": "browser",
-  "title": "GPU fragmentation",
+  "title": "Device fragmentation",
   "version": 0
 }}

@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class InspectResult(object):
     """ Represents a task meta data, parsed from docker inspect result """
     def __init__(self, username, job_name, role_name, task_index, pod_name,
-            gpu_ids, pid, email, vc_name,gpu_type,is_host_network):
+            gpu_ids, pid, email, vc_name,gpu_type,is_host_network,npu_ids):
         self.username = username
         self.job_name = job_name
         self.role_name = role_name
@@ -40,6 +40,7 @@ class InspectResult(object):
         self.vc_name = vc_name # None on no value
         self.gpu_type = gpu_type # None on no value
         self.is_host_network = is_host_network  # boolean
+        self.npu_ids = npu_ids
 
     def __repr__(self):
         return "username %s, job_name %s, role_name %s, task_index %s, pod_name %s, gpu_ids %s, pid %s, email %s, vc %s" % \
@@ -87,6 +88,8 @@ def parse_docker_inspect(inspect_output):
                 m["PAI_TASK_INDEX"] = v
             elif k == "NVIDIA_VISIBLE_DEVICES" and v != "all" and v != "void":
                 m["GPU_ID"] = v
+            elif k == "VISIBLE_IDS" and v!="all" and v!="void":
+                m["NPU_ID"] = v
 
     pid = utils.walk_json_field_safe(obj, 0, "State", "Pid")
 
@@ -103,6 +106,7 @@ def parse_docker_inspect(inspect_output):
             m.get("DLWS_GPU_TYPE"),
             m.get("DLWS_HOST_NETWORK") == "enable"
             or m.get("DLTS_HOST_NETWORK") == "enable",
+            m.get("NPU_ID"),
         )
 
 def inspect(container_id, histogram, timeout):

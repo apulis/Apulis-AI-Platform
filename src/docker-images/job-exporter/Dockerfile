@@ -31,7 +31,11 @@ RUN curl -SL https://download.docker.com/linux/static/stable/x86_64/docker-17.06
     rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install prometheus_client twisted
-COPY npu/ /usr/local/sbin/
+
+RUN mkdir /lib64 && cp /lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1 && cp /usr/local/Ascend/driver/lib64/common/libslog.so /lib/ && \
+ cp /usr/local/Ascend/driver/lib64/common/libmmpa.so /lib/ && cp /usr/local/Ascend/driver/lib64/driver/libdrvhdc_host.so /lib/ && \
+ cp /usr/local/Ascend/driver/lib64/driver/libdrvdevdrv.so /lib/ && cp /usr/local/Ascend/driver/lib64/driver/libdrvdsmi_host.so /lib/ && \
+ cp /usr/local/sbin/npu-smi /usr/local/sbin/npu-smi
 
 COPY --from=0 infilter/infilter /usr/bin
 COPY src/*.py /job_exporter/

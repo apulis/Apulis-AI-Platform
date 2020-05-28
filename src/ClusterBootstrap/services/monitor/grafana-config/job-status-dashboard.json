@@ -57,11 +57,11 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_gpu_percent{job_name=\"$job_name\"}",
+              "expr": "task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -133,10 +133,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_gpu_mem_percent{job_name=\"$job_name\"}",
+              "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -224,7 +224,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -300,7 +300,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -387,7 +387,7 @@
               "expr": "task_cpu_percent{job_name=\"$job_name\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}}",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ],
@@ -462,7 +462,7 @@
               "expr": "task_mem_usage_byte{job_name=\"$job_name\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}}",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ],
@@ -550,14 +550,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
+              "legendFormat": "{{instance}} Inbound",
               "refId": "A"
             },
             {
               "expr": "sum(rate(task_net_out_byte{job_name=\"$job_name\"}[5m])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
+              "legendFormat": "{{instance}} Outbound",
               "refId": "B"
             }
           ],
@@ -633,14 +633,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
+              "legendFormat": "{{instance}} Read",
               "refId": "A"
             },
             {
               "expr": "irate(task_block_out_byte{job_name=\"$job_name\"}[300s])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
+              "legendFormat": "{{instance}} Write",
               "refId": "B"
             }
           ],
@@ -697,12 +697,8 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "PM",
-          "decimals": 3,
-          "editable": true,
-          "error": false,
-          "fill": 0,
-          "grid": {},
+          "datasource": null,
+          "fill": 1,
           "id": 7,
           "legend": {
             "avg": false,
@@ -716,8 +712,7 @@
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "minSpan": null,
-          "nullPointMode": "connected",
+          "nullPointMode": "null",
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -729,26 +724,22 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "huaweismi_utilization_npu{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
               "format": "time_series",
-              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
-              "interval": "",
+              "hide": false,
               "intervalFactor": 2,
-              "metric": "",
-              "refId": "A",
-              "step": 600,
-              "target": ""
+              "legendFormat": "NPU {{minor_number}} on {{instance}}",
+              "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Utilization",
+          "title": "NPU Usage",
           "tooltip": {
-            "msResolution": true,
             "shared": true,
             "sort": 0,
-            "value_type": "cumulative"
+            "value_type": "individual"
           },
           "type": "graph",
           "xaxis": {
@@ -761,17 +752,19 @@
           "yaxes": [
             {
               "format": "percent",
+              "label": null,
               "logBase": 1,
-              "max": 100,
-              "min": 0,
+              "max": "100",
+              "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
               "max": null,
               "min": null,
-              "show": false
+              "show": true
             }
           ]
         },
@@ -780,27 +773,22 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "PM",
-          "decimals": 3,
-          "editable": true,
-          "error": false,
-          "fill": 0,
-          "grid": {},
+          "datasource": null,
+          "fill": 1,
           "id": 8,
           "legend": {
-            "show": true,
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "minSpan": null,
-          "nullPointMode": "connected",
+          "nullPointMode": "null",
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -812,22 +800,21 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "huaweismi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
               "format": "time_series",
-              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "intervalFactor": 2,
+              "legendFormat": "NPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Memory",
+          "title": "NPU Memory Usage",
           "tooltip": {
-            "msResolution": true,
             "shared": true,
             "sort": 0,
-            "value_type": "cumulative"
+            "value_type": "individual"
           },
           "type": "graph",
           "xaxis": {
@@ -840,17 +827,19 @@
           "yaxes": [
             {
               "format": "percent",
+              "label": null,
               "logBase": 1,
-              "max": 100,
-              "min": 0,
+              "max": "100",
+              "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
               "max": null,
               "min": null,
-              "show": false
+              "show": true
             }
           ]
         }

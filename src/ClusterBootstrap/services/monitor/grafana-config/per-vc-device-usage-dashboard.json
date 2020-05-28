@@ -57,21 +57,21 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "sum(k8s_vc_gpu_total{vc_name=\"$vc_name\"})",
+                "expr": "sum(k8s_vc_device_total{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Total",
                 "refId": "A"
               },
               {
-                "expr": "sum(k8s_vc_gpu_available{vc_name=\"$vc_name\"})",
+                "expr": "sum(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Available",
                 "refId": "B"
               },
               {
-                "expr": "sum(k8s_vc_gpu_preemptive_availabe{vc_name=\"$vc_name\"})",
+                "expr": "sum(k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Preemptive available",
@@ -82,6 +82,95 @@
             "timeFrom": null,
             "timeShift": null,
             "title": "Per VC GPU Usage",
+            "tooltip": {
+              "shared": true,
+              "sort": 0,
+              "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+              "buckets": null,
+              "mode": "time",
+              "name": null,
+              "show": true,
+              "values": []
+            },
+            "yaxes": [
+              {
+                "format": "short",
+                "label": null,
+                "logBase": 1,
+                "max": null,
+                "min": "0",
+                "show": true
+              },
+              {
+                "format": "short",
+                "label": null,
+                "logBase": 1,
+                "max": null,
+                "min": null,
+                "show": false
+              }
+            ]
+          },
+          {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": null,
+            "fill": 0,
+            "id": 2,
+            "legend": {
+              "avg": false,
+              "current": true,
+              "max": false,
+              "min": false,
+              "show": true,
+              "total": false,
+              "values": true
+            },
+            "lines": true,
+            "linewidth": 1,
+            "links": [],
+            "nullPointMode": "null",
+            "percentage": false,
+            "pointradius": 5,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [],
+            "spaceLength": 10,
+            "span": 12,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+              {
+                "expr": "sum(k8s_vc_device_total{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
+                "format": "time_series",
+                "intervalFactor": 2,
+                "legendFormat": "Total",
+                "refId": "A"
+              },
+              {
+                "expr": "sum(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
+                "format": "time_series",
+                "intervalFactor": 2,
+                "legendFormat": "Available",
+                "refId": "B"
+              },
+              {
+                "expr": "sum(k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
+                "format": "time_series",
+                "intervalFactor": 2,
+                "legendFormat": "Preemptive available",
+                "refId": "C"
+              }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeShift": null,
+            "title": "Per VC NPU Usage",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -141,7 +230,7 @@
           "multi": false,
           "name": "vc_name",
           "options": [],
-          "query": "label_values(k8s_vc_gpu_total, vc_name)",
+          "query": "label_values(k8s_vc_device_total, vc_name)",
           "refresh": 1,
           "regex": "",
           "sort": 1,
@@ -183,7 +272,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "Per VC Gpu statistic",
+    "title": "Per VC Device Statistic",
     "version": 0,
     "uid": "per-vc-gpu-statistic"
   }

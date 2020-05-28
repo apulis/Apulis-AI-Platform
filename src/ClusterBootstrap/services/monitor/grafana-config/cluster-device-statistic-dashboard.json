@@ -56,11 +56,11 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "count (task_gpu_percent) by (username)",
+                "expr": "count (task_device_percent) by (username)",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} username {{ '}}' }}",
+                "legendFormat": "{{username}}",
                 "refId": "A"
               }
             ],
@@ -144,29 +144,29 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "count (task_gpu_percent) by (vc_name)",
+                "expr": "count (task_device_percent) by (vc_name)",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }} allocation",
+                "legendFormat": "{{vc_name}} allocation",
                 "refId": "A"
               },
               {
-                "expr": "count(task_gpu_percent)",
+                "expr": "count(task_device_percent)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide allocation",
                 "refId": "B"
               },
               {
-                "expr": "k8s_vc_gpu_total",
+                "expr": "k8s_vc_device_total",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }} quota",
+                "legendFormat": "{{vc_name}} quota",
                 "refId": "C"
               },
               {
-                "expr": "sum(k8s_vc_gpu_total)",
+                "expr": "sum(k8s_vc_device_total)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide quota",
@@ -253,14 +253,14 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "count (task_gpu_percent) by (vc_name) / sum (k8s_vc_gpu_total) by (vc_name)",
+                "expr": "count (task_device_percent) by (vc_name) / sum (k8s_vc_device_total) by (vc_name)",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }}",
+                "legendFormat": "{{vc_name}}",
                 "refId": "A"
               },
               {
-                "expr": "count (task_gpu_percent) / sum (k8s_vc_gpu_total)",
+                "expr": "count (task_device_percent) / sum (k8s_vc_device_total)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide",
@@ -347,17 +347,17 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "avg (task_gpu_percent) by (username)",
+                "expr": "avg (task_device_percent) by (username)",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} username {{ '}}' }}",
+                "legendFormat": "{{username}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per user GPU utils",
+            "title": "Per user device utils",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -434,14 +434,14 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "avg (task_gpu_percent) by (vc_name)",
+                "expr": "avg (task_device_percent) by (vc_name)",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }}",
+                "legendFormat": "{{vc_name}}",
                 "refId": "A"
               },
               {
-                "expr": "avg (task_gpu_percent)",
+                "expr": "avg (task_device_percent)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide",
@@ -451,7 +451,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per VC GPU utils",
+            "title": "Per VC device utils",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -529,7 +529,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "Cluster GPU statistic",
+    "title": "Cluster Device statistic",
     "version": 0,
     "uid": "cluster-gpu-statistic"
   }

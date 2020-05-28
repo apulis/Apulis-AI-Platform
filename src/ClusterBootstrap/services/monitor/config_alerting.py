@@ -13,12 +13,12 @@ groups:
 kill_template = """
     - alert: kill-idle-jobs-email-%s
       for: %dh
-      expr: avg(task_gpu_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
+      expr: avg(task_device_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
       labels:
         type: kill_idle_job_email
     - alert: kill-idle-jobs-%s
       for: %dh
-      expr: avg(task_gpu_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
+      expr: avg(task_device_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
       labels:
         type: reaper
 """

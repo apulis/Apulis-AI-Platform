@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import json
+import sys
 import threading
 import signal
 import faulthandler
@@ -80,8 +81,7 @@ def get_gpu_count(path):
         with open(path) as f:
             gpu_config = json.load(f)
 
-        if hostname is not None and gpu_config["nodes"].get(
-                hostname) is not None:
+        if hostname is not None and gpu_config["nodes"].get(hostname) is not None:
             return gpu_config["nodes"][hostname]["gpuCount"]
         elif ip is not None and gpu_config["nodes"].get(ip) is not None:
             return gpu_config["nodes"][ip]["gpuCount"]
@@ -101,12 +101,11 @@ def burninate_gc_collector():
         if callback.__qualname__.startswith("GCCollector."):
             gc.callbacks.remove(callback)
 
-    for name, collector in list(
-            prometheus_client.REGISTRY._names_to_collectors.items()):
+    for name, collector in list(prometheus_client.REGISTRY._names_to_collectors.items()):
         if name.startswith("python_gc_"):
             try:
                 prometheus_client.REGISTRY.unregister(collector)
-            except KeyError: # probably gone already
+            except KeyError:  # probably gone already
                 pass
 
 
@@ -146,19 +145,14 @@ def main(args):
     # scrape interval. The 99th latency of container_collector loop is around 20s, so it
     # should only sleep 10s to adapt to scrape interval
     collector_args = [
-            ("npu_collector", interval, decay_time, collector.NpuCollector, npu_info_ref, zombie_info_ref, args.threshold),
-        ("docker_daemon_collector", interval, decay_time,
-         collector.DockerCollector),
-        ("gpu_collector", interval, decay_time, collector.GpuCollector,
-         nvidia_info_ref, zombie_info_ref, args.threshold),
-        ("container_collector", max(0, interval - 18), decay_time,
-         collector.ContainerCollector, nvidia_info_ref, stats_info_ref,
-         args.interface, dcgm_info_ref),
-        ("zombie_collector", interval, decay_time, collector.ZombieCollector,
-         stats_info_ref, zombie_info_ref),
+        ("npu_collector", interval, decay_time, collector.NpuCollector, npu_info_ref, zombie_info_ref, args.threshold),
+        ("docker_daemon_collector", interval, decay_time,collector.DockerCollector),
+        ("gpu_collector", interval, decay_time, collector.GpuCollector,nvidia_info_ref, zombie_info_ref, args.threshold),
+        ("container_collector", max(0, interval - 18), decay_time,collector.ContainerCollector, nvidia_info_ref, stats_info_ref,
+         args.interface,npu_info_ref,dcgm_info_ref),
+        ("zombie_collector", interval, decay_time, collector.ZombieCollector,stats_info_ref, zombie_info_ref),
         ("process_collector", interval, decay_time, collector.ProcessCollector),
-        ("dcgm_collector", interval, decay_time, collector.DCGMCollector,
-         dcgm_info_ref),
+        ("dcgm_collector", interval, decay_time, collector.DCGMCollector,dcgm_info_ref),
     ]
 
     refs = list(map(lambda x: collector.make_collector(*x), collector_args))
@@ -175,36 +169,19 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--log",
-                        "-l",
-                        help="log dir to store log",
-                        default="/datastorage/prometheus")
-    parser.add_argument("--port",
-                        "-p",
-                        help="port to expose metrics",
-                        default="9102")
-    parser.add_argument("--interval",
-                        "-i",
-                        help="prometheus scrape interval second",
-                        type=int,
-                        default=30)
-    parser.add_argument("--interface",
-                        "-n",
-                        help="network interface for job-exporter to listen on",
-                        required=True)
-    parser.add_argument("--threshold",
-                        "-t",
-                        help="memory threshold to consider gpu memory leak",
-                        type=int,
-                        default=20 * 1024 * 1024)
+    parser.add_argument("--log", "-l", help="log dir to store log", default="/datastorage/prometheus")
+    parser.add_argument("--port", "-p", help="port to expose metrics", default="9102")
+    parser.add_argument("--interval", "-i", help="prometheus scrape interval second", type=int, default=30)
+    parser.add_argument("--interface", "-n", help="network interface for job-exporter to listen on", required=True)
+    parser.add_argument("--threshold", "-t", help="memory threshold to consider gpu memory leak", type=int, default=20 * 1024 * 1024)
     args = parser.parse_args()
 
     def get_logging_level():
         mapping = {
-            "DEBUG": logging.DEBUG,
-            "INFO": logging.INFO,
-            "WARNING": logging.WARNING
-        }
+                "DEBUG": logging.DEBUG,
+                "INFO": logging.INFO,
+                "WARNING": logging.WARNING
+                }
 
         result = logging.DEBUG
 
@@ -218,9 +195,7 @@ if __name__ == "__main__":
 
         return result
 
-    logging.basicConfig(
-        format=
-        "%(asctime)s - %(levelname)s - %(threadName)s - %(filename)s:%(lineno)s - %(message)s",
-        level=get_logging_level())
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(threadName)s - %(filename)s:%(lineno)s - %(message)s",
+            level=get_logging_level())
 
     main(args)

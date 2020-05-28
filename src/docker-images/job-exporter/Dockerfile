@@ -35,7 +35,9 @@ RUN curl -SL https://download.docker.com/linux/static/stable/$(uname -m)/docker-
 
 
 RUN pip3 install prometheus_client twisted
-COPY npu/ /usr/local/sbin/
+
+RUN mkdir /lib64 && cp lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1 && cp lib/ /lib/ && \
+ cp npu-smi /usr/local/sbin/npu-smi
 
 RUN wget https://developer.download.nvidia.com/compute/redist/dcgm/${DCGM_VERSION}/DEBS/datacenter-gpu-manager_${DCGM_VERSION}_amd64.deb && \
     dpkg -i datacenter-gpu-manager_*.deb && \

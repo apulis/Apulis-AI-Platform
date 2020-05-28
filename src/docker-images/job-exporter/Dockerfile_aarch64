@@ -27,6 +27,9 @@ RUN curl -SL https://download.docker.com/linux/static/stable/$(uname -m)/docker-
 
 
 RUN pip3 install prometheus_client twisted
-COPY npu/ /usr/local/sbin/
 
+RUN mkdir /lib64 && cp lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1
+
+COPY lib/ /lib/
+COPY npu-smi /usr/local/sbin/npu-smi
 COPY src/*.py /job_exporter/

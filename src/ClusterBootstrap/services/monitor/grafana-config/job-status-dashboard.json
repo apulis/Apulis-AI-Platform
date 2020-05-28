@@ -61,7 +61,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -136,7 +136,7 @@
               "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -224,7 +224,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -300,7 +300,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -728,7 +728,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "NPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -803,7 +803,7 @@
               "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "NPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],

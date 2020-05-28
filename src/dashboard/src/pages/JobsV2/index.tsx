@@ -42,7 +42,6 @@ const TabView: FunctionComponent = () => {
   const onChangeIndex = useCallback((index: number, prevIndex: number) => {
     setIndex(index);
   }, [setIndex]);
-  console.log("permissionList",permissionList)
   return (
     <div className="jobs-table-wrap">
       {permissionList.includes('VIEW_ALL_USER_JOB') && <Tabs

@@ -579,10 +579,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     });
     const params2 = new URLSearchParams({
       query: `sum(pai_node_count{deviceType!="${gpuType}"})`
-    })
+    });
     fetch(getNodeGpuAva+params1).then(async (res1: any) => {
       fetch(getNodeGpuAva+params2).then(async (res2: any) => {
-        let data1 = await res1.json();
+        let data1 = await res1.json(); 
         let data2 = await res2.json();
         let result1 = data1.data.result, result2 = data2.data.result;
         if (result2.length) {
@@ -603,7 +603,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       })
     })
   }, [grafanaUrl, gpuType])
-
+ 
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const showMessage = (open: boolean,showDeleteTemplate: boolean,showSaveTemplate: boolean) => {
     let message = '';

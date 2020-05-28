@@ -19,7 +19,7 @@ def parse_npu_number_smi_output(npu_number_smi_output):
     lines = npu_number_smi_output.split("\n\t")[1:]
     numbers = []
     for one_line in lines:
-        NPU_ID,Chip_ID,Chip_Logic_ID,Chip_Name =  filter(lambda x:x!="",one_line.split(" "))
+        NPU_ID,Chip_ID,Chip_Logic_ID,Chip_Name =  filter(lambda x:x!="" and x!="\n",one_line.split(" "))
         numbers.append(NPU_ID)
     return numbers
 
@@ -42,16 +42,11 @@ def parse_smi_xml_result(npu_smi_output):
     return result
 
 def huawei_npu_smi(histogram, timeout):
-    if not os.path.isdir("/usr/local/HiAI/driver"):
-        return None
-    else:
-        pass
     out = utils.exec_shell_cmd("command -v npu-smi")
     if "npu-smi" not in out.lower():
         return None
     else:
         pass
-
     try:
         npu_number_smi_output = utils.exec_cmd(["npu-smi", "info", "-m"],
                                     histogram=histogram, timeout=timeout)

@@ -512,7 +512,6 @@ class NpuCollector(Collector):
             if info.temperature is not None:
                 npu_temperature_utils.add_metric([minor], info.temperature)
 
-        logger.debug("NpuCollector.convert_to_metrics, return [%f, %d]" % (npu_info.npu_util, npu_info.npu_mem_util))
         return [npu_core_utils, npu_mem_utils,npu_temperature_utils]
 
     def collect_impl(self):
@@ -520,7 +519,7 @@ class NpuCollector(Collector):
         logger.debug("calling NpuCollector.collect_impl")
 
         npu_info = npu.huawei_npu_smi(NpuCollector.cmd_histogram, NpuCollector.cmd_timeout)
-        logger.warning("get npu_info %s", npu_info)
+        logger.info("get npu_info %s", npu_info)
 
         now = datetime.datetime.now()
         self.npu_info_ref.set(npu_info, now)
@@ -671,7 +670,7 @@ class ContainerCollector(Collector):
                     logger.warning("unknown gpu id %s, gpu_infos is %s",
                             id, gpu_infos)
         if inspect_info.npu_ids:
-            ids = inspect_info.gpu_ids.replace("\"", "").split(",")
+            ids = inspect_info.npu_ids.replace("\"", "").split(",")
             for id in ids:
                 if id.isdigit():
                     npu_ids.append(id)
@@ -754,6 +753,7 @@ class ContainerCollector(Collector):
                     labels["minor_number"] = id
                     labels["device_type"] = inspect_info.gpu_type or "unknown"
                     labels["device_str"] = "npu.huawei.com/NPU"
+                    labels["uuid"] = id
 
                     gauges.add_value("task_device_percent",
                             labels, npu_status.npu_util)

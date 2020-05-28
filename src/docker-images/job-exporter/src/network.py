@@ -315,8 +315,7 @@ def get_non_host_network_consumption(pid):
         seq = get_interface_sequence(output)
         if seq is None:
             logger.warning(
-                "failed to get interface seq paired to eth0 of %s, output %s",
-                pid, output)
+                "failed to get interface seq paired to eth0 of %s",pid)
             return 0, 0
 
         prefix = str(seq) + ":"
@@ -328,7 +327,7 @@ def get_non_host_network_consumption(pid):
             if line.startswith(prefix):
                 veth_name = line.split(":")[1].strip().split("@")[0]
                 return get_network_consumption(veth_name)
-        logger.warning(
+        logger.debug(
             "failed to get interface consumption with seq %s, ip addr output is %s",
             seq, output)
         return 0, 0

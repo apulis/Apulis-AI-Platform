@@ -109,7 +109,7 @@ def parse_docker_inspect(inspect_output):
                 m["NPU_ID"] = v
 
     pid = utils.walk_json_field_safe(obj, 0, "State", "Pid")
-    logger.info("m is %s", m)
+    logger.debug("m is %s", m)
 
     return InspectResult(
             m.get("PAI_USER_NAME") or m.get("DLWS_USER_NAME"),

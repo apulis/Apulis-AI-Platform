@@ -387,7 +387,7 @@
               "expr": "task_cpu_percent{job_name=\"$job_name\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}}",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ],
@@ -462,7 +462,7 @@
               "expr": "task_mem_usage_byte{job_name=\"$job_name\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}}",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ],
@@ -550,14 +550,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
+              "legendFormat": "{{instance}} Inbound",
               "refId": "A"
             },
             {
               "expr": "sum(rate(task_net_out_byte{job_name=\"$job_name\"}[5m])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
+              "legendFormat": "{{instance}} Outbound",
               "refId": "B"
             }
           ],
@@ -633,14 +633,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
+              "legendFormat": "{{instance}} Read",
               "refId": "A"
             },
             {
               "expr": "irate(task_block_out_byte{job_name=\"$job_name\"}[300s])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
+              "legendFormat": "{{instance}} Write",
               "refId": "B"
             }
           ],

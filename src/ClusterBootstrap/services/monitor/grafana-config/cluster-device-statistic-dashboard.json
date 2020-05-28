@@ -60,7 +60,7 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} username {{ '}}' }}",
+                "legendFormat": "{{username}}",
                 "refId": "A"
               }
             ],
@@ -148,7 +148,7 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }} allocation",
+                "legendFormat": "{{vc_name}} allocation",
                 "refId": "A"
               },
               {
@@ -162,7 +162,7 @@
                 "expr": "k8s_vc_device_total",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }} quota",
+                "legendFormat": "{{vc_name}} quota",
                 "refId": "C"
               },
               {
@@ -256,7 +256,7 @@
                 "expr": "count (task_device_percent) by (vc_name) / sum (k8s_vc_device_total) by (vc_name)",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }}",
+                "legendFormat": "{{vc_name}}",
                 "refId": "A"
               },
               {
@@ -350,7 +350,7 @@
                 "expr": "avg (task_device_percent) by (username)",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} username {{ '}}' }}",
+                "legendFormat": "{{username}}",
                 "refId": "A"
               }
             ],
@@ -437,7 +437,7 @@
                 "expr": "avg (task_device_percent) by (vc_name)",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{ '{{' }} vc_name {{ '}}' }}",
+                "legendFormat": "{{vc_name}}",
                 "refId": "A"
               },
               {

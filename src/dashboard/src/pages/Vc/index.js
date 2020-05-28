@@ -39,7 +39,7 @@ export default class Vc extends React.Component {
   }
 
   componentDidMount() {
-    const { selectedCluster, userName } = this.context;
+    const { selectedCluster, userName, permissionList } = this.context;
     this.getVcList();
     axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
       .then((res) => {
@@ -284,10 +284,12 @@ export default class Vc extends React.Component {
 
   render() {
     const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice, vcNameValidateObj } = this.state;
+    const { permissionList } = this.context;
+
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
-          <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button></div>
+          {permissionList.includes('MANAGE_VC') && <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button></div>}
           <Table style={{ width: '80%', marginTop: 20 }}>
             <TableHead>
               <TableRow style={{ backgroundColor: '#7583d1' }}>
@@ -295,7 +297,7 @@ export default class Vc extends React.Component {
                 <TableCell style={{ color: '#fff' }}>quota</TableCell>
                 {/* <TableCell style={{ color: '#fff' }}>metadata</TableCell> */}
                 <TableCell style={{ color: '#fff' }}>permissions</TableCell>
-                <TableCell style={{ color: '#fff' }}>actions</TableCell>
+                {permissionList.includes('MANAGE_VC') && <TableCell style={{ color: '#fff' }}>actions</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -305,11 +307,11 @@ export default class Vc extends React.Component {
                   <TableCell>{item.quota} </TableCell>
                   {/* <TableCell>{item.metadata} </TableCell> */}
                   <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
-                  <TableCell>
+                  {permissionList.includes('MANAGE_VC') && <TableCell>
                     <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
                     <Button color="secondary" disabled={item.vcName === this.context.selectedTeam} 
                       onClick={() => this.onClickDel(item)}>Delete</Button>
-                  </TableCell>
+                  </TableCell>}
                 </TableRow>
               ))}
             </TableBody>

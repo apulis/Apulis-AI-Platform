@@ -19,82 +19,10 @@ import Drawer from "./layout/Drawer";
 import { Provider as DrawerProvider } from "./layout/Drawer/Context";
 import { SnackbarProvider, useSnackbar, VariantType } from 'notistack';
 import './App.less';
-
 import AuthzRoute from './components/AuthzRoute';
-
-const Home = React.lazy(() => import('./pages/Home'));
-const SignIn = React.lazy(() => import('./pages/SignIn'));
-const SignUp = React.lazy(() => import('./pages/SignUp'));
-const EmptyTeam = React.lazy(() => import('./pages/EmptyTeam'));
-const Submission = React.lazy(() => import('./pages/Submission'));
-const Jobs = React.lazy(() => import('./pages/Jobs'));
-const JobV2 = React.lazy(() => import('./pages/JobV2'));
-const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
-const Job = React.lazy(() => import('./pages/Job'));
-const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
-const Vc = React.lazy(() => import('./pages/Vc/index.js'));
+import ROUTER from './router.config';
 
 const theme = createMuiTheme();
-
-const router = [
-  {
-    path: '/',
-    component: Home,
-    exact: true,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/submission',
-    component: Submission,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/jobs/:cluster',
-    component: Jobs,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/jobs/',
-    component: Jobs,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/jobs-v2/:clusterId/:jobId',
-    component: JobV2,
-    strict: true,
-    exact: true,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/jobs-v2/:clusterId/',
-    component: JobsV2,
-    strict: true,
-    exact: true,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/jobs-v2/',
-    component: JobsV2,
-    strict: true,
-    exact: true,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/job/:team/:clusterId/:jobId',
-    component: Job,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/cluster-status',
-    component: ClusterStatus,
-    needRole: ['User', 'System Admin']
-  },
-  {
-    path: '/vc',
-    component: Vc,
-    needRole: ['User', 'System Admin']
-  }
-];
 
 interface BootstrapProps {
   uid?: string;
@@ -118,8 +46,6 @@ const Loading = (
     <CircularProgress />
   </Box>
 );
-
-
 
 const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath }) => (
   <BrowserRouter>
@@ -156,20 +82,18 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
         <Drawer />
         <React.Suspense fallback={Loading}>
           <Switch location={location}>
-            {
-              router.map(r => {
-                return (
-                  <AuthzRoute
-                    exact={r.exact}
-                    key={r.path}
-                    component={r.component}
-                    strict={r.strict}
-                    path={r.path}
-                    needRole={r.needRole}
-                  />
-                )
-              })
-            }
+            {ROUTER.map(r => {
+              return (
+                <AuthzRoute
+                  exact={r.exact}
+                  key={r.path}
+                  component={r.component}
+                  strict={r.strict}
+                  path={r.path}
+                  needPermission={r.needPermission}
+                />
+              )
+            })}
             {/* <Route exact path="/" component={Home}/> */}
             {/* <Route path="/submission" component={Submission}/> */}
             {/* <Route path="/jobs/:cluster" component={Jobs}/> */}

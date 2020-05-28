@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState, useCallback, FC, useRef, useContext } from "react";
 import { Link } from "react-router-dom";
 import useFetch from "use-http";
 import Table from '@material-ui/core/Table';
@@ -29,10 +29,10 @@ import {
   lighten
 } from "@material-ui/core/styles";
 import { MoreVert, FileCopyRounded} from "@material-ui/icons";
-
 import {Cell, PieChart, Pie, ResponsiveContainer,Sector} from "recharts";
 import UserContext from "../../contexts/User";
 import TeamsContext from '../../contexts/Teams';
+import AuthContext from '../../contexts/Auth';
 import {
   green,
   lightGreen,
@@ -43,10 +43,10 @@ import {
 import copy from 'clipboard-copy'
 import {checkObjIsEmpty, sumValues} from "../../utlities/ObjUtlities";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-
 import _ from "lodash";
 import {type} from "os";
 import useCheckIsDesktop from "../../utlities/layoutUtlities";
+
 const useStyles = makeStyles((theme: Theme) => createStyles({
   avatar: {
     backgroundColor: theme.palette.secondary.main,
@@ -81,11 +81,11 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   }
 }));
 
-const ActionIconButton: React.FC<{cluster?: string}> = ({cluster}) => {
-  const [open, setOpen] = React.useState(false);
-  const iconButton = React.useRef<any>();
-  const onIconButtonClick = React.useCallback(() => setOpen(true), [setOpen]);
-  const onMenuClose = React.useCallback(() => setOpen(false), [setOpen]);
+const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
+  const [open, setOpen] = useState(false);
+  const iconButton = useRef<any>();
+  const onIconButtonClick = useCallback(() => setOpen(true), [setOpen]);
+  const onMenuClose = useCallback(() => setOpen(false), [setOpen]);
 
   return (
     <>
@@ -106,7 +106,7 @@ const ActionIconButton: React.FC<{cluster?: string}> = ({cluster}) => {
   )
 };
 
-const Chart: React.FC<{
+const Chart: FC<{
   available: number;
   used: number;
   reserved: number;
@@ -206,27 +206,27 @@ const Chart: React.FC<{
   )
 }
 
-export const DirectoryPathTextField: React.FC<{
+export const DirectoryPathTextField: FC<{
   label: string;
   value: string;
 }> = ({ label, value }) => {
-  const input = React.useRef<HTMLInputElement>(null);
-  const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const [openCopyWarn, setOpenCopyWarn] = useState(false);
   const handleWarnClose = () => {
     setOpenCopyWarn(false);
   }
-  const onMouseOver = React.useCallback(() => {
+  const onMouseOver = useCallback(() => {
     if (input.current) {
       input.current.select();
     }
   }, [input])
-  const onFocus = React.useCallback(() => {
+  const onFocus = useCallback(() => {
     if (input.current) {
       input.current.select();
     }
   },
   [input]);
-  const handleCopy = React.useCallback(() => {
+  const handleCopy = useCallback(() => {
     if (input.current) {
       copy(input.current.innerHTML).then(()=>{
         setOpenCopyWarn(true)
@@ -266,7 +266,7 @@ export const DirectoryPathTextField: React.FC<{
   );
 }
 
-const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
+const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
   const styles = useStyles();
   const [activeJobs, setActiveJobs] = useState(0);
   const [available, setAvailable] = useState(0);
@@ -275,8 +275,8 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   const [workStorage, setWorkStorage ] = useState('');
   const [dataStorage, setDataStorage] = useState('');
   const [activate,setActivate] = useState(false);
-  const { userName } = React.useContext(UserContext);
-  const {selectedTeam} = React.useContext(TeamsContext);
+  const { userName } = useContext(UserContext);
+  const {selectedTeam} = useContext(TeamsContext);
   const fetchDiretoryUrl = `api/clusters/${cluster}`;
   const request = useFetch(fetchDiretoryUrl);
   const fetchDirectories = async () => {
@@ -296,6 +296,8 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
     return data;
   }
   const [nfsStorage, setNfsStorage] = useState([]);
+  const { permissionList = [] } = useContext(AuthContext);
+
   useEffect(()=>{
     fetchDirectories().then((res) => {
       let fetchStorage = [];
@@ -478,7 +480,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
           </MuiThemeProvider>
         </Box>
       </CardContent>
-      <CardActions>
+      {permissionList.includes('SUBMIT_TRAINING_JOB') && <CardActions>
         <Button component={Link}
           to={{pathname: "/submission/training-cluster", state: { cluster } }}
           size="small" color="secondary"
@@ -491,8 +493,8 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
         >
           Submit Data Job
         </Button> */}
-      </CardActions>
-      <Divider/>
+        <Divider/>
+      </CardActions>}
       <CardContent>
         <DirectoryPathTextField
           label="Work Directory"

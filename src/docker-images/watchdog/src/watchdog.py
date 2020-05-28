@@ -164,23 +164,23 @@ service_response_histogram = Histogram("service_response_latency_seconds",
 service_response_counter = Counter("service_response_code",
         "total count of http return code", ["service_name", "service_ip", "code"])
 
-def gen_k8s_vc_gpu_total():
-    return GaugeMetricFamily("k8s_vc_gpu_total", "gpu total in vc",
-            labels=["vc_name", "gpu_type"])
+def gen_k8s_vc_device_total():
+    return GaugeMetricFamily("k8s_vc_device_total", "device total in vc",
+            labels=["vc_name", "device_type"])
 
-def gen_k8s_vc_gpu_unschedulable():
-    return GaugeMetricFamily("k8s_vc_gpu_unschedulable", "gpu unschedulable in vc",
-            labels=["vc_name", "gpu_type"])
+def gen_k8s_vc_device_unschedulable():
+    return GaugeMetricFamily("k8s_vc_device_unschedulable", "device unschedulable in vc",
+            labels=["vc_name", "device_type"])
 
-def gen_k8s_vc_gpu_available():
-    return GaugeMetricFamily("k8s_vc_gpu_available",
-            "gpu available for non preemptable job in vc",
-            labels=["vc_name", "gpu_type"])
+def gen_k8s_vc_device_available():
+    return GaugeMetricFamily("k8s_vc_device_available",
+            "device available for non preemptable job in vc",
+            labels=["vc_name", "device_type"])
 
-def gen_k8s_vc_gpu_preemptive_available():
-    return GaugeMetricFamily("k8s_vc_gpu_preemptive_availabe",
-            "gpu available for preemptable job in vc",
-            labels=["vc_name", "gpu_type"])
+def gen_k8s_vc_device_preemptive_available():
+    return GaugeMetricFamily("k8s_vc_device_preemptive_availabe",
+            "device available for preemptable job in vc",
+            labels=["vc_name", "device_type"])
 
 ##### watchdog will generate above metrics
 
@@ -514,7 +514,7 @@ def collect_k8s_component(api_server_scheme, api_server_ip, api_server_port, ca_
 ## we separate gpu and npu into different instances
 ## coz the cluster is heterogeneous, there are npus and gpus there
 ## and we need to monitor them respectively
-def parse_node_item(node, 
+def parse_node_item(node,
         pai_node_gauge,
         gauge_node_gpu_avail, 
         gauge_node_gpu_used,
@@ -840,30 +840,31 @@ class VcUsage(object):
 # * used gpu: Ui
 # * available gpu: Ai
 # * unschedulable gpu: Qi - Ui - Ai
-def process_vc_info(vc_quota_url, vc_usage, cluster_gpu_info):
+def process_vc_info(vc_quota_url, device_type_quota_url,vc_usage, cluster_gpu_info,cluster_npu_info):
     try:
         vc_info = query_vc_quota_info(vc_quota_url)
-        return gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info)
+        device_type_info = query_vc_quota_info(device_type_quota_url)
+        return gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info)
     except Exception as e:
         error_counter.labels(type="vc_quota_query").inc()
         logger.exception("failed to query vc info")
         return []
 
-def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info):
-    logger.info("vc_info %s, vc_usage %s, cluster_gpu_info %s",
-            vc_info, vc_usage, cluster_gpu_info)
+def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info):
+    logger.info("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s",
+            vc_info, vc_usage, cluster_gpu_info,cluster_npu_info)
 
-    vc_total_gauge = gen_k8s_vc_gpu_total()
-    vc_avail_gauge = gen_k8s_vc_gpu_available()
-    vc_unschedulable_gauge = gen_k8s_vc_gpu_unschedulable()
-    vc_preemptive_avail_gauge = gen_k8s_vc_gpu_preemptive_available()
+    vc_total_gauge = gen_k8s_vc_device_total()
+    vc_avail_gauge = gen_k8s_vc_device_available()
+    vc_unschedulable_gauge = gen_k8s_vc_device_unschedulable()
+    vc_preemptive_avail_gauge = gen_k8s_vc_device_preemptive_available()
 
     try:
         vc_quota_sum = 0
 
         for vc_name, gpu_info in vc_info.items():
             for gpu_type, total in gpu_info.items():
-                vc_total_gauge.add_metric([vc_name, gpu_type], total)
+                vc_total_gauge.add_metric([vc_name, device_type_info[gpu_type]["deviceStr"]], total)
                 vc_quota_sum += total
 
         gpu_unallocatable = cluster_gpu_info.capacity - cluster_gpu_info.allocatable
@@ -890,7 +891,7 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info):
         for vc_name, gpu_info in ratio.items():
             for gpu_type, cur_ratio in gpu_info.items():
                 if vc_name not in vc_usage.map or gpu_type not in vc_usage.map[vc_name]:
-                    labels = [vc_name, gpu_type]
+                    labels = [vc_name, device_type_info[gpu_type]["deviceStr"]]
                     # no job running in this vc or using this gpu type
                     if ratio_sum == 0:
                         available = 0
@@ -911,7 +912,7 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info):
                     logger.warning("ignore used gpu %s in %s, but vc quota do not have this gpu_type", gpu_type, vc_name)
                     continue
 
-                labels = [vc_name, gpu_type]
+                labels = [vc_name, device_type_info[gpu_type]["deviceStr"]]
 
                 cur_ratio = ratio[vc_name][gpu_type]
                 quota = vc_info[vc_name][gpu_type]
@@ -1146,6 +1147,7 @@ def loop(args, services_ref, result_ref):
     api_server_port = parse_result.port or 80
 
     vc_quota_url = args.vc_url
+    device_type_quota_url = args.device_type_url
     ca_path = args.ca
     bearer_path = args.bearer
 
@@ -1187,7 +1189,7 @@ def loop(args, services_ref, result_ref):
             cluster_npu_info = ClusterNPUInfo()
 
             result.extend(process_nodes(address, ca_path, headers, pods_info, cluster_gpu_info, cluster_npu_info))
-            result.extend(process_vc_info(vc_quota_url, vc_usage, cluster_gpu_info))
+            result.extend(process_vc_info(vc_quota_url,device_type_quota_url, vc_usage, cluster_gpu_info,cluster_npu_info))
             result.extend(collect_k8s_component(api_server_scheme, api_server_ip, api_server_port, ca_path, headers))
         
         except Exception as e:
@@ -1228,6 +1230,7 @@ if __name__ == "__main__":
     parser.add_argument("--ca", "-c", help="ca file path")
     parser.add_argument("--bearer", "-b", help="bearer token file path")
     parser.add_argument("--vc_url", "-u", required=False, help="url to list vc quota",default="http://localhost:5000/apis/ListVCs?userName=Administrator")
+    parser.add_argument("--device_type_url", "-dtu", required=False, help="url to list device type",default="http://localhost:5000/apis/getAllDevice??userName=Administrator")
     args = parser.parse_args()
 
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(filename)s:%(lineno)s - %(message)s",

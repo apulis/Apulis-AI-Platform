@@ -121,10 +121,10 @@ ${givenName} ${familyName}
     });
   }, [confirm, enqueueSnackbar, updateStatus]);
 
-  const support = useCallback((job: any): Action<any> => {
+  const supportEmail = useCallback((job: any): Action<any> => {
     return {
       icon: 'help',
-      tooltip: 'Support',
+      tooltip: 'Send email for support',
       onClick: onSupport
     };
   }, [onSupport]);
@@ -165,7 +165,7 @@ ${givenName} ${familyName}
       onClick: onKill
     }
   }, [onKill]);
-  return { support, approve, pause, resume, kill };
+  return { supportEmail, approve, pause, resume, kill };
 }
 
 export default useActions;

@@ -3138,30 +3138,30 @@ def get_all_services():
     servicedic = {}
 
     for service in os.listdir(rootdir):
-    dirname = os.path.join(rootdir, service)
-    if os.path.isdir(dirname):
-        launch_order_file = os.path.join( dirname, "launch_order")
-        if os.path.isfile( launch_order_file ):
-            servicedic[service] = launch_order_file
-            with open(launch_order_file,'r') as f:
-                allservices = f.readlines()
-                for filename in reversed(allservices):
-                    filename = filename.strip()
-                    filename = os.path.join(dirname, filename)
-                    if os.path.isfile(filename):
-                        servicedic[service+"/"+os.path.splitext(os.path.basename(filename))[0]] = filename
+        dirname = os.path.join(rootdir, service)
+        if os.path.isdir(dirname):
+            launch_order_file = os.path.join( dirname, "launch_order")
+            if os.path.isfile( launch_order_file ):
+                servicedic[service] = launch_order_file
+                with open(launch_order_file,'r') as f:
+                    allservices = f.readlines()
+                    for filename in reversed(allservices):
+                        filename = filename.strip()
+                        filename = os.path.join(dirname, filename)
+                        if os.path.isfile(filename):
+                            servicedic[service+"/"+os.path.splitext(os.path.basename(filename))[0]] = filename
 
-        else:
-            yamlname = os.path.join(dirname, service + ".yaml")
-            if not os.path.isfile(yamlname):
-                yamls = glob.glob("*.yaml")
-                yamlname = yamls[0]
-            with open( yamlname ) as f:
-                content = f.read()
-                f.close()
-                if content.find( "Deployment" )>=0 or content.find( "DaemonSet" )>=0 or content.find("ReplicaSet")>=0 or content.find("CronJob")>=0:
-                    # Only add service if it is a daemonset.
-                    servicedic[service] = yamlname
+            else:
+                yamlname = os.path.join(dirname, service + ".yaml")
+                if not os.path.isfile(yamlname):
+                    yamls = glob.glob("*.yaml")
+                    yamlname = yamls[0]
+                with open( yamlname ) as f:
+                    content = f.read()
+                    f.close()
+                    if content.find( "Deployment" )>=0 or content.find( "DaemonSet" )>=0 or content.find("ReplicaSet")>=0 or content.find("CronJob")>=0:
+                        # Only add service if it is a daemonset.
+                        servicedic[service] = yamlname
     return servicedic
 
 def get_archtypes():
@@ -3544,10 +3544,9 @@ def start_kube_service(servicename):
         return
 
     default_launch_file = "launch_order"
+    start_kube_service_with_launch_order(dirname, default_launch_file)
     for archtype in get_archtypes():
-        if archtype == "amd64":
-            start_kube_service_with_launch_order(dirname, default_launch_file)
-        else:
+        if archtype != "amd64":
             start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
     return
 
@@ -3572,10 +3571,9 @@ def stop_kube_service(servicename):
         return
 
     default_launch_file = "launch_order"
-    if archtype is None:
-        if archtype == "amd64":
-            stop_kube_service_with_launch_order(dirname, default_launch_file)
-        else:
+    stop_kube_service_with_launch_order(dirname, default_launch_file)
+    for archtype in get_archtypes():
+        if archtype != "amd64":
             stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
     return
 
@@ -3715,8 +3713,8 @@ def run_command( args, command, nargs, parser ):
     discoverserver = args.discoverserver
     homeinserver = args.homeinserver
     archtype = None
-    if archtype is not None:
-        archtype = archtype.strip().lower()
+    if args.archtype is not None:
+        archtype = args.archtype.strip().lower()
 
     if args.verbose:
         verbose = True

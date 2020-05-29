@@ -15,21 +15,24 @@ from DirectoryUtils import cd
 def build_docker(dockername, dirname, verbose=False, nocache=False, archtype=None):
     # docker name is designed to use lower case.
     dockername = dockername.lower()
+    dockertag = dockername
+    if archtype is not None and archtype != "amd64":
+        dockertag = dockername + "-" + archtype
 
     dockerfile_name = get_dockerfile(dirname, archtype)
     print("Prepare to build docker with file: " + dockerfile_name)
 
     if verbose:
-        print("Building docker ... " + dockername + " .. @" + dirname)
+        print("Building docker ... " + dockertag + " .. @" + dirname)
     with cd(dirname):
         # print "Test if prebuid.sh exists"
         if os.path.exists("prebuild.sh"):
             print("Execute prebuild.sh for docker %s" % dockername)
             os.system("bash prebuild.sh")
         if nocache:
-            cmd = "docker build --no-cache -f " + dockerfile_name + " -t "+ dockername + " ."
+            cmd = "docker build --no-cache -f " + dockerfile_name + " -t "+ dockertag + " ."
         else:
-            cmd = "docker build -f " + dockerfile_name + " -t "+ dockername + " ."
+            cmd = "docker build -f " + dockerfile_name + " -t "+ dockertag + " ."
         if verbose:
             print(cmd)
         os.system(cmd)
@@ -65,17 +68,22 @@ def push_docker( dockername, docker_register, verbose=False):
     os.system(cmd)
     return dockername
 
-def push_docker_with_config( dockername, config, verbose=False, nocache=False ):
+def push_docker_with_config(dockername, config, verbose=False, nocache=False, archtype=None):
     usedockername = dockername.lower()
+    build_dockertag = config["dockers"]["container"][dockername]["name"]
+    push_dockertag = config["dockers"]["container"][dockername]["fullname"]
+    if archtype is not None and archtype != "amd64":
+        build_dockertag = build_dockertag + "-" + archtype
+        push_dockertag = push_dockertag + "-" + archtype
     # build_docker( config["dockers"]["container"][dockername]["name"], config["dockers"]["container"][dockername]["dirname"], verbose, nocache )
     if verbose:
-        print("Pushing docker ... " + config["dockers"]["container"][dockername]["name"] + " to " + config["dockers"]["container"][dockername]["fullname"])
-    cmd = "docker tag "+ config["dockers"]["container"][dockername]["name"] + " " + config["dockers"]["container"][dockername]["fullname"]
-    cmd += "; docker push " + config["dockers"]["container"][dockername]["fullname"]
+        print("Pushing docker ... " + build_dockertag + " to " + push_dockertag)
+    cmd = "docker tag "+ build_dockertag + " " + push_dockertag
+    cmd += "; docker push " + push_dockertag
     os.system(cmd)
     return config["dockers"]["container"][dockername]["name"]
 
-def run_docker(dockername, prompt="", dockerConfig = None, sudo = False, options = "" ):
+def run_docker(dockername, prompt="", dockerConfig = None, sudo = False, options = "", devenv=False):
     if not (dockerConfig is None):
         if "su" in dockerConfig:
             sudo = True
@@ -137,10 +145,14 @@ def run_docker(dockername, prompt="", dockerConfig = None, sudo = False, options
         hostname = "Docker["+dockername+"]"
     else:
         hostname = prompt
+
+    docker_volume = " -v "
+    if devenv:
+        docker_volume = docker_volume + "/var/run/docker.sock:/var/run/docker.sock -v "
     if homedir in currentdir:
-        cmd = "docker run --privileged --hostname " + hostname + " " + options + " --rm -ti " + mapVolume + " -v "+dirname+ ":/tmp/runcommand -w "+homedir + " " + dockername + " /tmp/runcommand/run.sh"
+        cmd = "docker run --privileged --hostname " + hostname + " " + options + " --rm -ti " + mapVolume + docker_volume + dirname+ ":/tmp/runcommand -w "+homedir + " " + dockername + " /tmp/runcommand/run.sh"
     else:
-        cmd = "docker run --privileged --hostname " + hostname + " " + options + " --rm -ti " + mapVolume + " -v "+dirname+ ":/tmp/runcommand -w "+homedir + " " + dockername + " /tmp/runcommand/run.sh"
+        cmd = "docker run --privileged --hostname " + hostname + " " + options + " --rm -ti " + mapVolume + docker_volume + dirname+ ":/tmp/runcommand -w "+homedir + " " + dockername + " /tmp/runcommand/run.sh"
     print("Execute: " + cmd)
     os.system(cmd)
 
@@ -353,7 +365,7 @@ def build_one_docker(dirname, dockerprefix, dockertag, basename, config, verbose
 def push_one_docker(dirname, dockerprefix, tag, basename, config, verbose=False, nocache=False, archtype=None):
     configuration(config, verbose, archtype=archtype)
     build_docker_with_config(basename, config, verbose, nocache=nocache, archtype=archtype)
-    push_docker_with_config( basename, config, verbose, nocache = nocache )
+    push_docker_with_config(basename, config, verbose, nocache=nocache, archtype=archtype)
 
 def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, archtype=None):
 

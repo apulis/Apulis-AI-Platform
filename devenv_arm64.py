@@ -20,16 +20,16 @@ dirname = "devenv.arm64"
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description = "Run a docker for development of DL workspace")
-    parser.add_argument("-p", "--prefix", 
-        help="Prefix of the docker name, or [dev]", 
-        action="store", 
+    parser.add_argument("-p", "--prefix",
+        help="Prefix of the docker name, or [dev]",
+        action="store",
         default="dev" )
-    parser.add_argument("-t", "--tag", 
-        help="Tag of the docker build, or [current]", 
-        action = "store", 
+    parser.add_argument("-t", "--tag",
+        help="Tag of the docker build, or [current]",
+        action = "store",
         default = "latest" )
-    parser.add_argument("--nocache", 
-        help="Tag of the docker build, or [current]", 
+    parser.add_argument("--nocache",
+        help="Tag of the docker build, or [current]",
         action = "store_true")
     args = parser.parse_args()
     dockerprefix = args.prefix
@@ -37,4 +37,4 @@ if __name__ == '__main__':
     dockername = dockerprefix + ":" + dockertag
     #print args.nocache
     dockername = build_docker(dockername, dirname, nocache = args.nocache)
-    run_docker(dockername, "DevDocker")
+    run_docker(dockername, "DevDocker", devenv=True)

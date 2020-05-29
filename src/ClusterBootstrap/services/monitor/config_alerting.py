@@ -32,7 +32,7 @@ def extract_relevant_config(config_map):
 
 if __name__ == "__main__":
     with open(sys.argv[1]) as f:
-        config = yaml.load(f.read())
+        config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
     print(headers)
     config_kill_rule(extract_relevant_config(config))

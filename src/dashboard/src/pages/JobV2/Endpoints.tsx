@@ -124,6 +124,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
     useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
     [clusterId, jobId]);
   const portInput = useRef<HTMLInputElement>();
+
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
     enqueueSnackbar(`Enabling ${name}...`);
@@ -135,12 +136,20 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
+
   const onSubmit = (data: any) => {
     if (!data.interactivePorts) {
       setError('interactivePorts', 'validate', 'Interactive Port is required！');
       return;
     }
     const port = Number(data.interactivePorts);
+    for (const i of endpoints) {
+      const { status, podPort, name } = i;
+      if (status === 'running' && name !== 'ssh' && name !== 'ipython' && name !== 'tensorboard' && podPort === port) {
+        enqueueSnackbar(`Already has port ${port}！`, { variant: 'error' });
+        return;
+      }
+    }
     enqueueSnackbar(`Exposing port ${port}...`);
     post({
       endpoints: [{
@@ -235,32 +244,6 @@ const Endpoints: FunctionComponent = () => {
   const [endpoints, setEndpoints] = useState<any[]>([]);
   const [pollTime, setPollTime] = useState<any>(pollInterval);
 
-  // const { error, data, get } =
-  //   useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
-  //   [clusterId, jobId]);
-
-  // useEffect(() => {
-  //   console.log('data',data)
-  //   if (data !== undefined) {
-  //     setEndpoints(data);
-      
-  //     const timeout = setTimeout(get, 3000);
-  //     return () => {
-  //       clearTimeout(timeout);
-  //     }
-  //   }
-  // }, [data, get]);
-  // useEffect(() => {
-  //   if (error !== undefined) {
-  //     const key = enqueueSnackbar(`Failed to fetch job endpoints: ${clusterId}/${jobId}`, {
-  //       variant: 'error',
-  //       persist: true
-  //     });
-  //     return () => {
-  //       if (key !== null) closeSnackbar(key);
-  //     }
-  //   }
-  // }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
   useEffect(() => {
     getData();
   }, [clusterId, jobId]);
@@ -271,27 +254,27 @@ const Endpoints: FunctionComponent = () => {
 
   const getData = () => {
     axios.get(`/clusters/${clusterId}/jobs/${jobId}/endpoints`)
-        .then(res => {
-          const { data } = res;
-          const eLen = endpoints.length;
-          const dLen = data ? data.length : 0;
-          if (eLen !== dLen) {
-            setEndpoints(data);
-          } else {
-            if (eLen && dLen) {
-              for (const m of data) {
-                for (const n of endpoints) {
-                  if (m.id === n.id && m.status !== n.status) {
-                    setEndpoints(data);
-                    return;
-                  }
+      .then(res => {
+        const { data } = res;
+        const eLen = endpoints.length;
+        const dLen = data ? data.length : 0;
+        if (eLen !== dLen) {
+          setEndpoints(data);
+        } else {
+          if (eLen && dLen) {
+            for (const m of data) {
+              for (const n of endpoints) {
+                if (m.id === n.id && m.status !== n.status) {
+                  setEndpoints(data);
+                  return;
                 }
               }
             }
           }
-        }, () => {
-          message('error', `Failed to fetch job endpoints: ${clusterId}/${jobId}`);
-        })
+        }
+      }, () => {
+        message('error', `Failed to fetch job endpoints: ${clusterId}/${jobId}`);
+      })
   }
 
   if (endpoints === undefined) {

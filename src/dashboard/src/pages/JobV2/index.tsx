@@ -179,9 +179,6 @@ const JobContent: FunctionComponent = () => {
   const admin = useMemo(() => {
     return accessible && Boolean(teamCluster.admin);
   }, [accessible, teamCluster]);
-  // const { error: jobError, data: jobData, get: getJob, abort } =
-  //   useFetch(`/api/v2/clusters/${clusterId}/jobs/${jobId}`,
-  //     [clusterId, jobId]);
   const [job, setJob] = useState<any>();
   const { error: clusterError, data: cluster } =
     useFetch(`/api/clusters/${clusterId}`, [clusterId]);
@@ -191,18 +188,6 @@ const JobContent: FunctionComponent = () => {
     if (job['userName'] === email) return true;
     return false;
   }, [job, admin, email]);
-  
-  // useEffect(() => {
-  //   if (jobError !== undefined) {
-  //     const key = enqueueSnackbar(`Failed to fetch job: ${clusterId}/${jobId}`, {
-  //       variant: 'error',
-  //       persist: true
-  //     });
-  //     return () => {
-  //       if (key !== null) closeSnackbar(key);
-  //     }
-  //   }
-  // }, [jobError, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
 
   useEffect(() => {
     if (clusterError !== undefined) {
@@ -215,18 +200,6 @@ const JobContent: FunctionComponent = () => {
       }
     }
   }, [clusterError, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
-
-  // useEffect(() => {
-  //   if (jobData !== undefined) {
-  //     setJob(jobData);
-  //     const timeout = setTimeout(() => {
-  //       getJob();
-  //     }, pollInterval);
-  //     return () => {
-  //       clearTimeout(timeout);
-  //     }
-  //   }
-  // }, [jobData, getJob]);
 
   useEffect(() => {
     getJob();

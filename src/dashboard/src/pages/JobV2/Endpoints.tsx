@@ -238,7 +238,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   )
 };
 
-const Endpoints: FunctionComponent = () => {
+const Endpoints: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { job } = useContext(Context);
@@ -259,16 +259,15 @@ const Endpoints: FunctionComponent = () => {
         const { data } = res;
         const eLen = endpoints.length;
         const dLen = data ? data.length : 0;
+        if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
         if (eLen !== dLen) {
           setEndpoints(data);
-        } else {
-          if (eLen && dLen) {
-            for (const m of data) {
-              for (const n of endpoints) {
-                if (m.id === n.id && m.status !== n.status) {
-                  setEndpoints(data);
-                  return;
-                }
+        } else if (eLen && dLen) {
+          for (const m of data) {
+            for (const n of endpoints) {
+              if (m.id === n.id && m.status !== n.status) {
+                setEndpoints(data);
+                return;
               }
             }
           }

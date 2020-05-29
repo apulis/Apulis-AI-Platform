@@ -95,7 +95,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) 
   );
 }
 
-const ManagableJob: FunctionComponent = () => {
+const ManagableJob: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
   const [index, setIndex] = useState(0);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
@@ -122,7 +122,7 @@ const ManagableJob: FunctionComponent = () => {
         onChangeIndex={onChangeIndex}
       >
         {index === 0 ? <Brief/> : <div/>}
-        {index === 1 ? <Endpoints/> : <div/>}
+        {index === 1 ? <Endpoints jobStatus={jobStatus} /> : <div/>}
         {index === 2 ? <Metrics/> : <div/>}
         {index === 3 ? <Console/> : <div/>}
       </SwipeableViews>
@@ -169,6 +169,8 @@ const JobContent: FunctionComponent = () => {
   const { email } = useContext(UserContext);
   const { clusters } = useContext(ClustersContext);
   const { saveClusterId } = useContext(TeamContext);
+  const [pollTime, setPollTime] = useState<any>(pollInterval);
+
   saveClusterId(clusterId);
   const teamCluster = useMemo(() => {
     return clusters.filter((cluster) => cluster.id === clusterId)[0];
@@ -207,15 +209,17 @@ const JobContent: FunctionComponent = () => {
 
   useInterval(() => {
     getJob();
-  }, pollInterval);
+  }, pollTime);
 
   const getJob = () => {
     axios.get(`/v2/clusters/${clusterId}/jobs/${jobId}`)
       .then(res => {
         const { data } = res;
+        const { jobStatus } = data;
         const temp1 = JSON.stringify(job ? job.jobStatus : '');
-        const temp2 = JSON.stringify(data ? data.jobStatus : '');
-        if (!(temp1 === temp2)) setJob(res.data);
+        const temp2 = JSON.stringify(data ? jobStatus : '');
+        if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
+        if (!(temp1 === temp2)) setJob(data);
       }, () => {
         message('error', `Failed to fetch job: ${clusterId}/${jobId}`);
       })
@@ -238,7 +242,7 @@ const JobContent: FunctionComponent = () => {
         <JobToolbar manageable={manageable}/>
         <Paper elevation={2}>
           <>
-            <ManagableJob/>
+            <ManagableJob jobStatus={job['jobStatus']} />
             {/* {manageable || <UnmanagableJob/>} */}
           </>
         </Paper>

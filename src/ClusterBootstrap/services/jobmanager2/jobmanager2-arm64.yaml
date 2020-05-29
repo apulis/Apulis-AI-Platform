@@ -23,7 +23,7 @@ spec:
       hostNetwork: true    
       nodeSelector:
         jobmanager: active
-        archtype: arm64
+        archType: arm64
       containers:
       - name: jobmanager
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}-arm64

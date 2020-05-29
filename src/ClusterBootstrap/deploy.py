@@ -2182,10 +2182,12 @@ def config_fqdn():
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
-def config_webui(nargs):
+def config_webui(nargs, archtype=None):
 
     nodes = get_node_lists_for_service("restfulapi")
     reponame = get_reponame("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose)
+    if archtype is not None and archtype != "amd64":
+        reponame = reponame + "-" + archtype
 
     for node in nodes:
         # pull new image
@@ -4531,7 +4533,7 @@ def run_command( args, command, nargs, parser ):
 
 
             if nargs[0].startswith("webui"):
-                config_webui(nargs)
+                config_webui(nargs, archtype=archtype)
 
         else:
             pass

@@ -25,7 +25,7 @@ spec:
       {% endif %}
       nodeSelector:
         restfulapi: active
-        archtype: arm64
+        archType: arm64
       hostNetwork: true
       containers:
       - name: restfulapi

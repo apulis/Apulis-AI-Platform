@@ -21,7 +21,7 @@ spec:
     spec:
       nodeSelector:
         watchdog: active
-        archtype: arm64
+        archType: arm64
       containers:
       - command:
         - python

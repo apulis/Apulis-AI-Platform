@@ -4,8 +4,6 @@ metadata:
   name: job-exporter
   namespace: kube-system
 spec:
-  nodeSelector:
-    archtype: amd64
   selector:
     matchLabels:
       app: job-exporter
@@ -20,6 +18,8 @@ spec:
         prometheus.io/port: "{{cnf['job-exporter']['port']}}"
       name: job-exporter
     spec:
+      nodeSelector:
+        archType: amd64
       containers:
       - image: {{cnf["dockers"]["container"]["job-exporter"]["fullname"]}}
         imagePullPolicy: Always

@@ -89,6 +89,7 @@ spec:
     spec:
       nodeSelector:
         prometheus: active
+        archType: amd64
       hostNetwork: true
       initContainers:
       - name: init

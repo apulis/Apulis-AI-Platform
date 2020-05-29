@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: webui3
+  name: webui3-arm64
   namespace: default
 spec:
   ports:
@@ -14,7 +14,7 @@ spec:
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: webui3
+  name: webui3-arm64
   namespace: default
 spec:
   selector:
@@ -31,14 +31,14 @@ spec:
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
-        archType: amd64
+        archType: arm64
         webportal: active
       {% if true %}  
       hostNetwork: true
       {% endif %}
       containers:
       - name: webui3
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}webui3:{{cnf["dockertag"]}}
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}webui3:{{cnf["dockertag"]}}-arm64
         imagePullPolicy: Always
         {% if false %}
         ports:

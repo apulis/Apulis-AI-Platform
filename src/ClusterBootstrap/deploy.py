@@ -3430,10 +3430,7 @@ def kubernetes_label_worker(uncordon=False):
 
             # gpuType=nvidia/huawei for compatibility
             if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                if "series" in nodeInfo and nodeInfo["series"] is not "":
-                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"] + "_" + archtype)
-                else:
-                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + archtype)
+                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
             else:
                 pass
 

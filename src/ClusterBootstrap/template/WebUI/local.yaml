@@ -38,3 +38,8 @@ clusters:
       dataStorage: data
       grafana: "https://{{cnf["webportal_node"]}}/endpoints/grafana/"
       prometheus: http://{{cnf["restfulapi_node"]}}:9091
+userGroup:
+  type: custom
+  domain: "https://{{cnf["webportal_node"]}}"
+  backEndPath: /custom-user-dashboard-backend
+  frontEndPath: /custom-user-dashboard

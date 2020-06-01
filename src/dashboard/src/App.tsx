@@ -47,33 +47,36 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath }) => (
-  <BrowserRouter>
-    <ConfigProvider>
-      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
-        <ConfirmProvider>
-          <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
-            <TeamProvider permissionList={permissionList}>
-              <ClustersProvider>
-                <ThemeProvider theme={theme}>
-                  {children}
-                </ThemeProvider>
-              </ClustersProvider>
-            </TeamProvider>
-          </AuthProvider>
-        </ConfirmProvider>
-      </UserProvider>
-    </ConfigProvider>
-  </BrowserRouter>
-);
-const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
+const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath }) => {
   const { enqueueSnackbar } = useSnackbar();
   initAxios((type: VariantType, msg: string) => {
     enqueueSnackbar(msg, {
       autoHideDuration: 3000,
       variant: type,
     });
-  }, history);
+  }, userGroupPath || '');
+  
+  return(
+    <BrowserRouter>
+      <ConfigProvider>
+        <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
+          <ConfirmProvider>
+            <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
+              <TeamProvider permissionList={permissionList}>
+                <ClustersProvider>
+                  <ThemeProvider theme={theme}>
+                    {children}
+                  </ThemeProvider>
+                </ClustersProvider>
+              </TeamProvider>
+            </AuthProvider>
+          </ConfirmProvider>
+        </UserProvider>
+      </ConfigProvider>
+    </BrowserRouter>
+  )
+};
+const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   
   return (
     <DrawerProvider>

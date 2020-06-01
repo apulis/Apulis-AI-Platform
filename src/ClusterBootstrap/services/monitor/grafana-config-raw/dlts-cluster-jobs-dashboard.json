@@ -94,7 +94,7 @@
           "link": true,
           "linkTargetBlank": true,
           "linkTooltip": "Go to job Statistics for $__cell_1",
-          "linkUrl": "/dashboard/db/dlts-job-statistics?orgId=1&var-job_name=$__cell_1",
+          "linkUrl": "/endpoints/grafana/dashboard/db/dlts-job-statistics?orgId=1&var-job_name=$__cell_1",
           "pattern": "job_name",
           "sanitize": false,
           "thresholds": [],
@@ -114,7 +114,7 @@
           "link": true,
           "linkTargetBlank": true,
           "linkTooltip": "Go to User Statistics for $__cell_2 in VC $__cell_3",
-          "linkUrl": "/dashboard/db/dlts-user-statistics?orgId=1&var-username=$__cell_2&var-vc_name=$__cell_3",
+          "linkUrl": "/endpoints/grafana/dashboard/db/dlts-user-statistics?orgId=1&var-username=$__cell_2&var-vc_name=$__cell_3",
           "pattern": "username",
           "thresholds": [],
           "type": "string",
@@ -133,7 +133,7 @@
           "link": true,
           "linkTargetBlank": true,
           "linkTooltip": "Go to VC Statistics for VC $__cell_3",
-          "linkUrl": "/dashboard/db/dlts-vc-statistics?refresh=1m&orgId=1&var-vc_name=$__cell_3",
+          "linkUrl": "/endpoints/grafana/dashboard/db/dlts-vc-statistics?refresh=1m&orgId=1&var-vc_name=$__cell_3",
           "pattern": "vc_name",
           "thresholds": [],
           "type": "string",
@@ -176,6 +176,42 @@
           "unit": "percent"
         },
         {
+          "alias": "Current Assigned NPU Utilization",
+          "colorMode": "value",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "pattern": "Value #C",
+          "thresholds": [
+            "50",
+            "80"
+          ],
+          "type": "number",
+          "unit": "percent"
+        },
+        {
+          "alias": "Assigned NPU Utilization Over Interval",
+          "colorMode": "value",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "pattern": "Value #D",
+          "thresholds": [
+            "50",
+            "80"
+          ],
+          "type": "number",
+          "unit": "percent"
+        },
+        {
           "alias": "",
           "colorMode": "value",
           "colors": [
@@ -195,7 +231,7 @@
       ],
       "targets": [
         {
-          "expr": "avg(task_gpu_percent) by (job_name, username, vc_name)",
+          "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'}) by (job_name, username, vc_name)",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -204,14 +240,30 @@
           "refId": "A"
         },
         {
-          "expr": "avg(avg_over_time(task_gpu_percent[$interval])) by (job_name, username, vc_name)",
+          "expr": "avg(avg_over_time(task_device_percent{device_str='nvidia.com/gpu'}[$interval])) by (job_name, username, vc_name)",
           "format": "table",
           "instant": true,
           "intervalFactor": 2,
           "refId": "B"
+        },
+        {
+          "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'}) by (job_name, username, vc_name)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "intervalFactor": 2,
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "expr": "avg(avg_over_time(task_device_percent{device_str='npu.huawei.com/NPU'}[$interval])) by (job_name, username, vc_name)",
+          "format": "table",
+          "instant": true,
+          "intervalFactor": 2,
+          "refId": "D"
         }
       ],
-      "title": "GPU Utilization",
+      "title": "Device Utilization",
       "transform": "table",
       "transparent": false,
       "type": "table"

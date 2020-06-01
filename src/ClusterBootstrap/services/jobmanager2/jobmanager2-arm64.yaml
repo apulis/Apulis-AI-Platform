@@ -31,7 +31,7 @@ spec:
         imagePullPolicy: Always
         env:
         - name: INIT_CONTAINER_IMAGE
-          value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}-arm64
+          value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}
         volumeMounts:
         - mountPath: /usr/bin/kubectl
           name: kubectl-binary

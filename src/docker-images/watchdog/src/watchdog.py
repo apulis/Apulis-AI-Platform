@@ -34,7 +34,7 @@ import datetime
 import math
 import json
 import subprocess
-
+from operator import add
 import yaml
 import prometheus_client
 from prometheus_client import Counter, Summary, Histogram
@@ -572,7 +572,7 @@ def parse_node_item(node,
                 ## preemptable processor is considered as allocable resource?
                 ## so it doesn't be part of used processors?
                 if pod.preemptable:
-                    preemptable_processor += pod.preemptable
+                    preemptable_processor += pod.used_processor
                 else:
                     used_processor += pod.used_processor
 
@@ -747,14 +747,16 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
     vc_preemptive_avail_gauge = gen_k8s_vc_device_preemptive_available()
 
     try:
-        vc_quota_sum = 0
+        vc_quota_sum = collections.defaultdict(lambda : 0)
 
         for vc_name, gpu_info in vc_info.items():
             for gpu_type, total in gpu_info.items():
                 vc_total_gauge.add_metric([vc_name, device_type_info[gpu_type]["deviceStr"]], total)
-                vc_quota_sum += total
+                vc_quota_sum[device_type_info[gpu_type]["deviceStr"]] += total
 
-        gpu_unallocatable = cluster_gpu_info.capacity - cluster_gpu_info.allocatable
+        unallocatable={}
+        unallocatable["nvidia.com/gpu"] = cluster_gpu_info.capacity - cluster_gpu_info.allocatable
+        unallocatable["npu.huawei.com/NPU"] = cluster_npu_info.capacity - cluster_npu_info.allocatable
 
         # key is vc_name, value is a map with key to be gpu_type and value to be real
         # quota
@@ -762,19 +764,20 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
 
         for vc_name, gpu_info in vc_info.items():
             for gpu_type, quota in gpu_info.items():
-                if vc_quota_sum == 0:
+                if vc_quota_sum[device_type_info[gpu_type]["deviceStr"]] == 0:
                     vc_quota = 0
                 else:
-                    vc_quota = quota - int(math.ceil(gpu_unallocatable * quota / vc_quota_sum))
+                    vc_quota = quota - int(math.ceil(unallocatable[device_type_info[gpu_type]["deviceStr"]] * quota / vc_quota_sum[device_type_info[gpu_type]["deviceStr"]]))
                 used = vc_usage.map[vc_name][gpu_type][1]
+                preemptive_used = vc_usage.map[vc_name][gpu_type][0]
 
-                ratio[vc_name][gpu_type] = max(vc_quota - used, 0)
+                ratio[vc_name][gpu_type] = [max(vc_quota - preemptive_used, 0),max(vc_quota - used, 0)]
 
-        ratio_sum = collections.defaultdict(lambda : 0)
+        ratio_sum = collections.defaultdict(lambda : [0,0])
         for vc_name, gpu_info in ratio.items():
             for gpu_type, cur_ratio in gpu_info.items():
                 deviceStr = device_type_info[gpu_type]["deviceStr"]
-                ratio_sum[deviceStr] += cur_ratio
+                ratio_sum[deviceStr] = list(map(add,ratio_sum[deviceStr],cur_ratio))
 
         for vc_name, gpu_info in ratio.items():
             for gpu_type, cur_ratio in gpu_info.items():
@@ -782,16 +785,19 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                     deviceStr = device_type_info[gpu_type]["deviceStr"]
                     labels = [vc_name, deviceStr]
                     # no job running in this vc or using this gpu type
-                    if ratio_sum[deviceStr] == 0:
+                    if all(ratio_sum[deviceStr]) == 0:
                         available = 0
+                        preemptive_available=0
                     else:
                         if deviceStr == "npu.huawei.com/NPU":
-                            available = int(math.floor(cluster_npu_info.available * cur_ratio / ratio_sum[deviceStr]))
+                            available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                            preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                         else:
-                            available = int(math.floor(cluster_gpu_info.available * cur_ratio / ratio_sum[deviceStr]))
+                            available = int(math.floor(cluster_gpu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                            preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                     quota = vc_info[vc_name][gpu_type]
                     vc_avail_gauge.add_metric(labels, available)
-                    vc_preemptive_avail_gauge.add_metric(labels, available)
+                    vc_preemptive_avail_gauge.add_metric(labels, preemptive_available)
                     vc_unschedulable_gauge.add_metric(labels, max(0, quota - available))
 
         for vc_name, vc_usage_info in vc_usage.map.items():
@@ -808,17 +814,20 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
 
                 cur_ratio = ratio[vc_name][gpu_type]
                 quota = vc_info[vc_name][gpu_type]
-                if ratio_sum[deviceStr] == 0:
+                if all(ratio_sum[deviceStr]) == 0:
                     available = 0
+                    preemptive_available = 0
                 else:
                     if deviceStr == "npu.huawei.com/NPU":
-                        available = int(math.floor(cluster_npu_info.available * cur_ratio / ratio_sum[deviceStr]))
+                        available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                        preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                     else:
-                        available = int(math.floor(cluster_gpu_info.available * cur_ratio / ratio_sum[deviceStr]))
+                        available = int(math.floor(cluster_gpu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                        preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                 total_used, non_preemptable_used = vc_used
                 vc_avail_gauge.add_metric(labels, available)
-                vc_preemptive_avail_gauge.add_metric(labels, cluster_npu_info.available if deviceStr == "npu.huawei.com/NPU" else cluster_gpu_info.available)
-                vc_unschedulable_gauge.add_metric(labels, max(0, quota - non_preemptable_used - available))
+                vc_preemptive_avail_gauge.add_metric(labels, preemptive_available)
+                vc_unschedulable_gauge.add_metric(labels, max(0, quota - available))
     except Exception as e:
         error_counter.labels(type="vc_quota").inc()
         logger.exception("failed to process vc info")

@@ -131,7 +131,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(task_gpu_percent{username=\"$username\"}) OR on() vector(0)",
+          "expr": "count(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -212,7 +212,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(task_gpu_percent{username=\"$username\"}>0) OR on() vector(0)",
+          "expr": "count(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -294,7 +294,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(count(task_gpu_percent{username=\"$username\"}) OR on() vector(0)) - (count(task_gpu_percent{username=\"$username\"}>0) OR on() vector(0))",
+          "expr": "(count(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}) OR on() vector(0)) - (count(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}>0) OR on() vector(0))",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -314,6 +314,7 @@
       ],
       "valueName": "current"
     },
+
     {
       "collapsed": false,
       "gridPos": {
@@ -322,10 +323,270 @@
         "x": 0,
         "y": 5
       },
+      "id": 230,
+      "panels": [],
+      "repeat": null,
+      "title": "NPU",
+      "type": "row"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#6ed0e0"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Number of NPUs assigned to the user.",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
+      "id": 100,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "count(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "0,0",
+      "title": "Assigned NPUs",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "0",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Number of active GPUs (>0%) assigned to the user.",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 6
+      },
+      "id": 200,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "count(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "0,0",
+      "title": "Active NPUs",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "0",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Number of idle GPUs under  the user.",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 6
+      },
+      "id": 220,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "(count(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)) - (count(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "0,0",
+      "title": "Idle NPUs",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "0",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
       "id": 24,
       "panels": [],
       "repeat": null,
-      "title": "GPU Over Time",
+      "title": "Device Over Time",
       "type": "row"
     },
     {
@@ -339,7 +600,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 11
       },
       "id": 8,
       "legend": {
@@ -365,25 +626,46 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) OR on() vector(0)",
+          "expr": "count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assigned",
+          "legendFormat": "GPU Assigned",
           "refId": "A"
         },
         {
-          "expr": "count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0) OR on() vector(0)",
+          "expr": "count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active",
+          "legendFormat": "GPU Active",
           "refId": "B"
         },
         {
-          "expr": "(count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) OR on() vector(0)) - (count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0) OR on() vector(0))",
+          "expr": "(count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)) - (count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Idle",
+          "legendFormat": "GPU Idle",
           "refId": "C"
+        },
+        {
+          "expr": "count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "NPU Assigned",
+          "refId": "D"
+        },
+        {
+          "expr": "count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "NPU Active",
+          "refId": "E"
+        },
+        {
+          "expr": "(count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)) - (count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0))",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "NPU Idle",
+          "refId": "F"
         }
       ],
       "thresholds": [],
@@ -423,13 +705,14 @@
         }
       ]
     },
+
     {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 18
       },
       "id": 25,
       "panels": [],
@@ -460,7 +743,7 @@
         "h": 4,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 19
       },
       "id": 4,
       "interval": null,
@@ -499,7 +782,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_gpu_percent{username=\"$username\"}) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -542,7 +825,7 @@
         "h": 4,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 19
       },
       "id": 6,
       "interval": null,
@@ -581,7 +864,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_gpu_percent{username=\"$username\"})",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -601,6 +884,7 @@
       ],
       "valueName": "avg"
     },
+
     {
       "cacheTimeout": null,
       "colorBackground": false,
@@ -624,7 +908,7 @@
         "h": 4,
         "w": 12,
         "x": 0,
-        "y": 18
+        "y": 23
       },
       "id": 5,
       "interval": null,
@@ -663,7 +947,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_gpu_percent{username=\"$username\"}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -706,7 +990,7 @@
         "h": 4,
         "w": 12,
         "x": 12,
-        "y": 18
+        "y": 23
       },
       "id": 7,
       "interval": null,
@@ -745,7 +1029,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_gpu_percent{username=\"$username\"}>0)",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}>0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -765,18 +1049,363 @@
       ],
       "valueName": "avg"
     },
+
     {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 27
+      },
+      "id": 250,
+      "panels": [],
+      "repeat": null,
+      "title": "NPU Utilization",
+      "type": "row"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Average NPU utilization across all assigned GPUs to the user.",
+      "format": "percent",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": true,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "id": 411,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "50,90",
+      "title": "Assigned NPU Utilization",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "0",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Average NPU utilization across all assigned NPUs to the user over the selected time range.",
+      "format": "percent",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": true,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "id": 611,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'})",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "50,90",
+      "title": "Assigned NPU Utilization Over Time",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "0",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Average NPU utilization across all active NPUs (>0%) assigned to the user.",
+      "format": "percent",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": true,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 511,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "50,90",
+      "title": "Active NPU Utilization",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "0",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Average NPU utilization across all active NPUs (>0%) assigned to the user over the selected time range.",
+      "format": "percent",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": true,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 711,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}>0)",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "50,90",
+      "title": "Active NPU Utilization Over Time",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "0",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 36
       },
       "id": 26,
       "panels": [],
       "repeat": null,
-      "title": "GPU Utilization Over Time",
+      "title": "Device Utilization Over Time",
       "type": "row"
     },
     {
@@ -790,7 +1419,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 37
       },
       "id": 10,
       "legend": {
@@ -816,38 +1445,66 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assigned",
+          "legendFormat": "GPU Assigned",
           "refId": "A"
         },
         {
-          "expr": "avg(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active",
+          "legendFormat": "GPU Active",
           "refId": "B"
         },
         {
-          "expr": "avg(task_gpu_percent{vc_name=\"$vc_name\"}) OR on() vector(0)",
+          "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC Assigned",
+          "legendFormat": "GPU VC Assigned",
           "refId": "C"
         },
         {
-          "expr": "avg(task_gpu_percent{vc_name=\"$vc_name\"}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC Active",
+          "legendFormat": "GPU VC Active",
           "refId": "D"
+        },
+        {
+          "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "NPU Assigned",
+          "refId": "E"
+        },
+        {
+          "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "NPU Active",
+          "refId": "F"
+        },
+        {
+          "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "NPU VC Assigned",
+          "refId": "G"
+        },
+        {
+          "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "NPU VC Active",
+          "refId": "H"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "GPU Utilization",
+      "title": "Device Utilization",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -880,18 +1537,19 @@
         }
       ]
     },
+
     {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 44
       },
       "id": 27,
       "panels": [],
       "repeat": null,
-      "title": "Resource Per Active GPU",
+      "title": "Resource Per Active Device",
       "type": "row"
     },
     {
@@ -917,7 +1575,7 @@
         "h": 4,
         "w": 2,
         "x": 0,
-        "y": 31
+        "y": 45
       },
       "id": 11,
       "interval": null,
@@ -956,7 +1614,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum((task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"} > bool 0) * task_gpu_mem_percent{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum((task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'} > bool 0) * task_device_mem_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -964,6 +1622,87 @@
       ],
       "thresholds": "50,90",
       "title": "GPU Memory",
+      "type": "singlestat",
+      "valueFontSize": "50%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": true,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": "${DS_PM}",
+      "description": "Average NPU memory utilization across all active NPUs (>0%) assigned to the user.",
+      "format": "percent",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 2,
+        "x": 2,
+        "y": 45
+      },
+      "id": 1111,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": true
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "(sum((task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'} > bool 0) * task_device_mem_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "refId": "A"
+        }
+      ],
+      "thresholds": "50,90",
+      "title": "NPU Memory",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -997,8 +1736,8 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 2,
-        "y": 31
+        "x": 4,
+        "y": 45
       },
       "id": 12,
       "interval": null,
@@ -1037,7 +1776,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(task_cpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0) / 100) OR on() vector(0)",
+          "expr": "(sum(task_cpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) / 100) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1078,8 +1817,8 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 4,
-        "y": 31
+        "x": 6,
+        "y": 45
       },
       "id": 13,
       "interval": null,
@@ -1118,7 +1857,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(task_mem_usage_byte{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(task_mem_usage_byte{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1159,8 +1898,8 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 6,
-        "y": 31
+        "x": 8,
+        "y": 45
       },
       "id": 14,
       "interval": null,
@@ -1199,7 +1938,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_block_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_block_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1240,8 +1979,8 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 8,
-        "y": 31
+        "x": 10,
+        "y": 45
       },
       "id": 15,
       "interval": null,
@@ -1280,7 +2019,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_block_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_block_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1321,8 +2060,8 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 10,
-        "y": 31
+        "x": 12,
+        "y": 45
       },
       "id": 16,
       "interval": null,
@@ -1361,7 +2100,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_net_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1402,8 +2141,8 @@
       "gridPos": {
         "h": 4,
         "w": 2,
-        "x": 12,
-        "y": 31
+        "x": 14,
+        "y": 45
       },
       "id": 17,
       "interval": null,
@@ -1442,7 +2181,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_net_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1461,18 +2200,19 @@
       ],
       "valueName": "current"
     },
+
     {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 35
+        "y": 49
       },
       "id": 28,
       "panels": [],
       "repeat": null,
-      "title": "Resource Per Active GPU Over Time",
+      "title": "Resource Per Active Device Over Time",
       "type": "row"
     },
     {
@@ -1486,7 +2226,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 36
+        "y": 50
       },
       "id": 9,
       "legend": {
@@ -1512,24 +2252,38 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(sum((task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"} > bool 0) * task_gpu_mem_percent{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum((task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'} > bool 0) * task_device_mem_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "User",
+          "legendFormat": "User(GPU)",
           "refId": "A"
         },
         {
-          "expr": "(sum((task_gpu_percent{vc_name=\"$vc_name\"} > bool 0) * task_gpu_mem_percent{vc_name=\"$vc_name\"}) / count(task_gpu_percent{vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum((task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'} > bool 0) * task_device_mem_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) / count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC",
+          "legendFormat": "VC(GPU)",
           "refId": "B"
+        },
+        {
+          "expr": "(sum((task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'} > bool 0) * task_device_mem_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "User(NPU)",
+          "refId": "C"
+        },
+        {
+          "expr": "(sum((task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'} > bool 0) * task_device_mem_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) / count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "VC(NPU)",
+          "refId": "D"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "GPU Memory Per Active GPU",
+      "title": "Device Memory Per Active Device",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1573,7 +2327,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 36
+        "y": 50
       },
       "id": 18,
       "legend": {
@@ -1599,24 +2353,38 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(sum(task_cpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0) / 100) OR on() vector(0)",
+          "expr": "(sum(task_cpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) / 100) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "User",
+          "legendFormat": "User(GPU)",
           "refId": "A"
         },
         {
-          "expr": "(sum(task_cpu_percent{vc_name=\"$vc_name\"}) / count(task_gpu_percent{vc_name=\"$vc_name\"}>0) / 100) OR on() vector(0)",
+          "expr": "(sum(task_cpu_percent{vc_name=\"$vc_name\"}) / count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) / 100) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC",
+          "legendFormat": "VC(GPU)",
           "refId": "B"
+        },
+        {
+          "expr": "(sum(task_cpu_percent{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) / 100) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "User(NPU)",
+          "refId": "C"
+        },
+        {
+          "expr": "(sum(task_cpu_percent{vc_name=\"$vc_name\"}) / count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) / 100) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "VC(NPU)",
+          "refId": "D"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "CPU Per Active GPU",
+      "title": "CPU Per Active Device",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -1660,7 +2428,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 36
+        "y": 50
       },
       "id": 19,
       "legend": {
@@ -1686,24 +2454,38 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(sum(task_mem_usage_byte{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(task_mem_usage_byte{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "User",
+          "legendFormat": "User(GPU)",
           "refId": "A"
         },
         {
-          "expr": "(sum(task_mem_usage_byte{vc_name=\"$vc_name\"}) / count(task_gpu_percent{vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(task_mem_usage_byte{vc_name=\"$vc_name\"}) / count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC",
+          "legendFormat": "VC(GPU)",
           "refId": "B"
+        },
+        {
+          "expr": "(sum(task_mem_usage_byte{username=\"$username\",vc_name=\"$vc_name\"}) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "User(NPU)",
+          "refId": "C"
+        },
+        {
+          "expr": "(sum(task_mem_usage_byte{vc_name=\"$vc_name\"}) / count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "VC(NPU)",
+          "refId": "D"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Memory Per Active GPU",
+      "title": "Memory Per Active Device",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -1736,6 +2518,7 @@
         }
       ]
     },
+
     {
       "aliasColors": {},
       "bars": false,
@@ -1747,7 +2530,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 57
       },
       "id": 20,
       "legend": {
@@ -1778,38 +2561,66 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(sum(rate(task_block_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_block_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "User In",
+          "legendFormat": "User In(GPU)",
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(task_block_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_block_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "User Out",
+          "legendFormat": "User Out(GPU)",
           "refId": "B"
         },
         {
-          "expr": "(sum(rate(task_block_in_byte{vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_block_in_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC In",
+          "legendFormat": "VC In(GPU)",
           "refId": "C"
         },
         {
-          "expr": "(sum(rate(task_block_out_byte{vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_block_out_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC Out",
+          "legendFormat": "VC Out(GPU)",
           "refId": "D"
+        },
+        {
+          "expr": "(sum(rate(task_block_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "User In(NPU)",
+          "refId": "E"
+        },
+        {
+          "expr": "(sum(rate(task_block_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "User Out(NPU)",
+          "refId": "F"
+        },
+        {
+          "expr": "(sum(rate(task_block_in_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "VC In(NPU)",
+          "refId": "G"
+        },
+        {
+          "expr": "(sum(rate(task_block_out_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "VC Out(NPU)",
+          "refId": "H"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Disk I/O Per Active GPU",
+      "title": "Disk I/O Per Active Device",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -1853,7 +2664,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 43
+        "y": 57
       },
       "id": 21,
       "legend": {
@@ -1884,38 +2695,66 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "(sum(rate(task_net_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "User In",
+          "legendFormat": "User In(GPU)",
           "refId": "A"
         },
         {
-          "expr": "(sum(rate(task_net_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{username=\"$username\",vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "User Out",
+          "legendFormat": "User Out(GPU)",
           "refId": "B"
         },
         {
-          "expr": "(sum(rate(task_net_in_byte{vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_in_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC In",
+          "legendFormat": "VC In(GPU)",
           "refId": "C"
         },
         {
-          "expr": "(sum(rate(task_net_out_byte{vc_name=\"$vc_name\"}[5m])) / count(task_gpu_percent{vc_name=\"$vc_name\"}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_out_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC Out",
+          "legendFormat": "VC Out(GPU)",
           "refId": "D"
+        },
+        {
+          "expr": "(sum(rate(task_net_in_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "User In(NPU)",
+          "refId": "E"
+        },
+        {
+          "expr": "(sum(rate(task_net_out_byte{username=\"$username\",vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "User Out(NPU)",
+          "refId": "F"
+        },
+        {
+          "expr": "(sum(rate(task_net_in_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "VC In(NPU)",
+          "refId": "G"
+        },
+        {
+          "expr": "(sum(rate(task_net_out_byte{vc_name=\"$vc_name\"}[5m])) / count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "format": "time_series",
+          "intervalFactor": 2,
+          "legendFormat": "VC Out(NPU)",
+          "refId": "H"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Network I/O Per Active GPU",
+      "title": "Network I/O Per Active Device",
       "tooltip": {
         "shared": true,
         "sort": 2,

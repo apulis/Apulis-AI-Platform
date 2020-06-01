@@ -134,7 +134,7 @@
               "expr": "count_values(\"npu_available\", k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{npu_available}} available gpus",
+              "legendFormat": "{{npu_available}} available npus",
               "refId": "A"
             }
           ],

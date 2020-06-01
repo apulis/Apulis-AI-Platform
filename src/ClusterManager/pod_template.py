@@ -186,6 +186,8 @@ class PodTemplate():
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")
+                if pod["gpuType"].endswith("arm64"):
+                    pod["init-container"] += "-arm64"
 
             k8s_pod = self.generate_pod(pod, params["cmd"])
             k8s_pods.append(k8s_pod)

@@ -9,7 +9,6 @@ import React, {
 } from 'react';
 import { Button, TextField } from '@material-ui/core';
 import { useSnackbar } from 'notistack';
-
 import ClusterContext from './ClusterContext';
 
 interface Props {
@@ -35,14 +34,15 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
   const [priority, setPriority] = useState(Number(job['priority']) || 100);
   const onBlur = (event: KeyboardEvent<HTMLInputElement>) => {
     setEditing(false);
-    setPriority(priority < 1 ? 1 : priority > 1000 ? 1000 : priority);
-    if (priority === job['priority']) return;
+    const val = priority < 1 ? 1 : priority > 1000 ? 1000 : priority;
+    setPriority(val);
+    if (val === job['priority']) return;
     enqueueSnackbar('Priority is being set...');
     setTextFieldDisabled(true);
 
     fetch(`/api/clusters/${cluster.id}/jobs/${job['jobId']}/priority`, {
       method: 'PUT',
-      body: JSON.stringify({ priority }),
+      body: JSON.stringify({ priority: val }),
       headers: { 'Content-Type': 'application/json' }
     }).then((response) => {
       if (response.ok) {

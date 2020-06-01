@@ -21,6 +21,7 @@ spec:
     spec:
       nodeSelector:
         archType: amd64
+        gpuType: huawei_npu_arm64
       tolerations:
       # Allow this pod to be rescheduled while the node is in "critical add-ons only" mode.
       # This, along with the annotation above marks this pod as a critical add-on.

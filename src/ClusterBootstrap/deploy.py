@@ -1109,12 +1109,14 @@ def deploy_masters_by_kubeadm(force = False):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
-        #deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s --pod-network-cidr=%s""" % (kubernetes_master0, kubernetes_version, kubernetes_ip_range)
         deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s""" % (kubernetes_master0, kubernetes_version)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
 
         if i==0:
             utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
+            #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
+            kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
+            run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
         else:
             pass
 
@@ -1123,8 +1125,6 @@ def deploy_masters_by_kubeadm(force = False):
     else:
         pass
 
-    kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
-    run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
     return
 
 

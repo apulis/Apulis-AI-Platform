@@ -55,13 +55,13 @@ interface RouteParams {
 const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) => {
   const { clusterId } = useParams<RouteParams>();
   const { accessible, admin, job } = useContext(Context);
-  const { support, approve, kill, pause, resume } = useActions(clusterId);
+  const { supportEmail, approve, kill, pause, resume } = useActions(clusterId);
   const availableActions = useMemo(() => {
-    const actions = [support];
+    const actions = [supportEmail];
     if (manageable && admin) actions.push(approve);
     if (manageable) actions.push(pause, resume, kill);
     return actions;
-  }, [manageable, admin, support, approve, kill, pause, resume]);
+  }, [manageable, admin, supportEmail, approve, kill, pause, resume]);
 
   const actionButtons = availableActions.map((action, index) => {
     const { hidden, icon, tooltip, onClick } = action(job);
@@ -95,7 +95,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) 
   );
 }
 
-const ManagableJob: FunctionComponent = () => {
+const ManagableJob: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
   const [index, setIndex] = useState(0);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
@@ -122,7 +122,7 @@ const ManagableJob: FunctionComponent = () => {
         onChangeIndex={onChangeIndex}
       >
         {index === 0 ? <Brief/> : <div/>}
-        {index === 1 ? <Endpoints/> : <div/>}
+        {index === 1 ? <Endpoints jobStatus={jobStatus} /> : <div/>}
         {index === 2 ? <Metrics/> : <div/>}
         {index === 3 ? <Console/> : <div/>}
       </SwipeableViews>
@@ -169,6 +169,8 @@ const JobContent: FunctionComponent = () => {
   const { email } = useContext(UserContext);
   const { clusters } = useContext(ClustersContext);
   const { saveClusterId } = useContext(TeamContext);
+  const [pollTime, setPollTime] = useState<any>(pollInterval);
+
   saveClusterId(clusterId);
   const teamCluster = useMemo(() => {
     return clusters.filter((cluster) => cluster.id === clusterId)[0];
@@ -179,9 +181,6 @@ const JobContent: FunctionComponent = () => {
   const admin = useMemo(() => {
     return accessible && Boolean(teamCluster.admin);
   }, [accessible, teamCluster]);
-  // const { error: jobError, data: jobData, get: getJob, abort } =
-  //   useFetch(`/api/v2/clusters/${clusterId}/jobs/${jobId}`,
-  //     [clusterId, jobId]);
   const [job, setJob] = useState<any>();
   const { error: clusterError, data: cluster } =
     useFetch(`/api/clusters/${clusterId}`, [clusterId]);
@@ -191,18 +190,6 @@ const JobContent: FunctionComponent = () => {
     if (job['userName'] === email) return true;
     return false;
   }, [job, admin, email]);
-  
-  // useEffect(() => {
-  //   if (jobError !== undefined) {
-  //     const key = enqueueSnackbar(`Failed to fetch job: ${clusterId}/${jobId}`, {
-  //       variant: 'error',
-  //       persist: true
-  //     });
-  //     return () => {
-  //       if (key !== null) closeSnackbar(key);
-  //     }
-  //   }
-  // }, [jobError, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
 
   useEffect(() => {
     if (clusterError !== undefined) {
@@ -216,33 +203,23 @@ const JobContent: FunctionComponent = () => {
     }
   }, [clusterError, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
 
-  // useEffect(() => {
-  //   if (jobData !== undefined) {
-  //     setJob(jobData);
-  //     const timeout = setTimeout(() => {
-  //       getJob();
-  //     }, pollInterval);
-  //     return () => {
-  //       clearTimeout(timeout);
-  //     }
-  //   }
-  // }, [jobData, getJob]);
-
   useEffect(() => {
     getJob();
   }, [clusterId, jobId]);
 
   useInterval(() => {
     getJob();
-  }, pollInterval);
+  }, pollTime);
 
   const getJob = () => {
     axios.get(`/v2/clusters/${clusterId}/jobs/${jobId}`)
       .then(res => {
         const { data } = res;
+        const { jobStatus } = data;
         const temp1 = JSON.stringify(job ? job.jobStatus : '');
-        const temp2 = JSON.stringify(data ? data.jobStatus : '');
-        if (!(temp1 === temp2)) setJob(res.data);
+        const temp2 = JSON.stringify(data ? jobStatus : '');
+        if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
+        if (!(temp1 === temp2)) setJob(data);
       }, () => {
         message('error', `Failed to fetch job: ${clusterId}/${jobId}`);
       })
@@ -265,7 +242,7 @@ const JobContent: FunctionComponent = () => {
         <JobToolbar manageable={manageable}/>
         <Paper elevation={2}>
           <>
-            <ManagableJob/>
+            <ManagableJob jobStatus={job['jobStatus']} />
             {/* {manageable || <UnmanagableJob/>} */}
           </>
         </Paper>

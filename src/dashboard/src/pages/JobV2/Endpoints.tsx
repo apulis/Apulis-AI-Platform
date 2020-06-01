@@ -31,7 +31,7 @@ import Loading from '../../components/Loading';
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import Context from './Context';
 import { useForm } from "react-hook-form";
-import { InteractivePortsMsg, pollInterval } from '../../const';
+import { OneInteractivePortsMsg, pollInterval } from '../../const';
 import message from '../../utils/message';
 import axios from 'axios';
 import useInterval from '../../hooks/useInterval';
@@ -43,6 +43,7 @@ interface RouteParams {
 
 const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) => {
   const { cluster, job } = useContext(Context);
+  const [ portInfoShow, setPortInfoShow ] = useState(true);
   if (endpoint.status !== "running") return null;
   if (endpoint.name === 'ssh') {
     const identify = `${cluster['workStorage'].replace(/^file:\/\//i, '//')}/${job['jobParams']['workPath']}/.ssh/id_rsa`
@@ -69,7 +70,8 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
 
   return (
     <ListItem button component="a" href={url} target="_blank">
-      <ListItemText primary={`Port ${endpoint['podPort']}`} secondary={url}/>
+      <ListItemText secondary={url}
+        primary={<p>Port {endpoint['podPort']} （<span>The server needs to use <code>/endpoints/{endpoint['podPort']}/</code> as the root path</span>）</p>} />
     </ListItem>
   );
 }
@@ -95,9 +97,9 @@ const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> =
     });
   }, [endpoints]); 
   return (
-    <List dense>
-      {sortedEndpoints.map((endpoint) => {
-        return <EndpointListItem key={endpoint.id} endpoint={endpoint}/>
+    <List dense style={{ paddingBottom: 20 }}>
+      {sortedEndpoints.map((endpoint, idx) => {
+        return <EndpointListItem key={endpoint.id} endpoint={endpoint} />
       })}
     </List>
   )
@@ -122,6 +124,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
     useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
     [clusterId, jobId]);
   const portInput = useRef<HTMLInputElement>();
+
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
     enqueueSnackbar(`Enabling ${name}...`);
@@ -133,9 +136,20 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
+
   const onSubmit = (data: any) => {
-    console.log('errors',errors)
+    if (!data.interactivePorts) {
+      setError('interactivePorts', 'validate', 'Interactive Port is required！');
+      return;
+    }
     const port = Number(data.interactivePorts);
+    for (const i of endpoints) {
+      const { status, podPort, name } = i;
+      if (status === 'running' && name !== 'ssh' && name !== 'ipython' && name !== 'tensorboard' && podPort === port) {
+        enqueueSnackbar(`Already has port ${port}！`, { variant: 'error' });
+        return;
+      }
+    }
     enqueueSnackbar(`Exposing port ${port}...`);
     post({
       endpoints: [{
@@ -150,6 +164,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
     });
   };
+
   const [iconInfoShow, setIconInfoShow] = useState(false);
   const { handleSubmit, register, errors, setError, setValue } = useForm({ mode: "onBlur" });
   const validateInteractivePorts = (val: string) => {
@@ -157,17 +172,16 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       let flag = true;
       const arr = val.split(',');
       if (arr.length > 1) {
-        arr.forEach(n => {
-          const _n = Number(n)
-          if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
-        });
+        flag = false;
       } else {
         flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
-      }
+      } 
+      !flag && setError('interactivePorts', 'validate', OneInteractivePortsMsg);
       return flag;
     }
     return true;
   }
+
   return (
     <Box px={2}>
       <FormGroup aria-label="position" row>
@@ -205,9 +219,8 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
           defaultValue={''}
-          helperText={errors.interactivePorts ? InteractivePortsMsg : ''}
+          helperText={errors.interactivePorts ? errors.interactivePorts.message || OneInteractivePortsMsg : ''}
           inputRef={register({
-            required: 'Interactive Port is required！',
             validate: val => validateInteractivePorts(val)
           })}
           InputProps={{
@@ -225,39 +238,13 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   )
 };
 
-const Endpoints: FunctionComponent = () => {
+const Endpoints: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { job } = useContext(Context);
   const [endpoints, setEndpoints] = useState<any[]>([]);
   const [pollTime, setPollTime] = useState<any>(pollInterval);
 
-  // const { error, data, get } =
-  //   useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
-  //   [clusterId, jobId]);
-
-  // useEffect(() => {
-  //   console.log('data',data)
-  //   if (data !== undefined) {
-  //     setEndpoints(data);
-      
-  //     const timeout = setTimeout(get, 3000);
-  //     return () => {
-  //       clearTimeout(timeout);
-  //     }
-  //   }
-  // }, [data, get]);
-  // useEffect(() => {
-  //   if (error !== undefined) {
-  //     const key = enqueueSnackbar(`Failed to fetch job endpoints: ${clusterId}/${jobId}`, {
-  //       variant: 'error',
-  //       persist: true
-  //     });
-  //     return () => {
-  //       if (key !== null) closeSnackbar(key);
-  //     }
-  //   }
-  // }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
   useEffect(() => {
     getData();
   }, [clusterId, jobId]);
@@ -268,27 +255,26 @@ const Endpoints: FunctionComponent = () => {
 
   const getData = () => {
     axios.get(`/clusters/${clusterId}/jobs/${jobId}/endpoints`)
-        .then(res => {
-          const { data } = res;
-          const eLen = endpoints.length;
-          const dLen = data ? data.length : 0;
-          if (eLen !== dLen) {
-            setEndpoints(data);
-          } else {
-            if (eLen && dLen) {
-              for (const m of data) {
-                for (const n of endpoints) {
-                  if (m.id === n.id && m.status !== n.status) {
-                    setEndpoints(data);
-                    return;
-                  }
-                }
+      .then(res => {
+        const { data } = res;
+        const eLen = endpoints.length;
+        const dLen = data ? data.length : 0;
+        if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
+        if (eLen !== dLen) {
+          setEndpoints(data);
+        } else if (eLen && dLen) {
+          for (const m of data) {
+            for (const n of endpoints) {
+              if (m.id === n.id && m.status !== n.status) {
+                setEndpoints(data);
+                return;
               }
             }
           }
-        }, () => {
-          message('error', `Failed to fetch job endpoints: ${clusterId}/${jobId}`);
-        })
+        }
+      }, () => {
+        message('error', `Failed to fetch job endpoints: ${clusterId}/${jobId}`);
+      })
   }
 
   if (endpoints === undefined) {

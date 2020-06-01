@@ -27,9 +27,9 @@ def gen_grafana_config(data):
             legend_format = target.get("legendFormat")
             if legend_format is None:
                 continue
-            target["legendFormat"] = re.sub("{{([^}]*)}}",
-                                            "{{'{{'}}\\1{{'}}'}}",
-                                            legend_format)
+            # target["legendFormat"] = re.sub("{{([^}]*)}}",
+            #                                 "{{'{{'}}\\1{{'}}'}}",
+            #                                 legend_format)
 
     uid = data.get("uid")
     title = data.get("title")

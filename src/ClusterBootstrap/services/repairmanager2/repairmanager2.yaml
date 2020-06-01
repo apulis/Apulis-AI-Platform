@@ -23,6 +23,7 @@ spec:
       hostNetwork: true    
       nodeSelector:
         repairmanager: active
+        archtype: amd64
       containers:
       - name: repairmanager
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}{{cnf["repairmanager"]}}2:{{cnf["dockertag"]}}

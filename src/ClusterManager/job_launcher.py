@@ -435,6 +435,10 @@ class JobRole(object):
             if not self._is_role_ready():
                 return "Pending"
 
+        elif phase == "Failed":
+            if self.pod.status.reason == "UnexpectedAdmissionError":
+                return "Restart"
+
         return phase
 
     def pod_restricted_details(self):

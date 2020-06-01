@@ -59,7 +59,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{ '{{' }} device {{ '}}' }}",
+              "legendFormat": "{{ device }}",
               "refId": "A"
             }
           ],
@@ -145,5 +145,6 @@
   },
   "timezone": "browser",
   "title": "Storage usage",
-  "version": 0
+  "version": 0,
+  "uid": "storage-usage"
 }}

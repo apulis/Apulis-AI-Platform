@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import json
+import sys
 import threading
 import signal
 import faulthandler
@@ -23,9 +24,8 @@ import collector
 
 logger = logging.getLogger(__name__)
 
-
 configured_gpu_counter = Gauge("configured_gpu_count",
-        "total number of gpu configured for this node")
+                               "total number of gpu configured for this node")
 
 
 class CustomCollector(object):
@@ -67,18 +67,7 @@ def config_environ():
     os.environ["PATH"] = os.environ["PATH"] + ":" + driver_bin_path
 
     logger.debug("LD_LIBRARY_PATH is %s, PATH is %s",
-            os.environ["LD_LIBRARY_PATH"],
-            os.environ["PATH"])
-
-
-def try_remove_old_prom_file(path):
-    """ try to remove old prom file, since old prom file are exposed by node-exporter,
-    if we do not remove, node-exporter will still expose old metrics """
-    if os.path.isfile(path):
-        try:
-            os.unlink(path)
-        except Exception as e:
-            log.warning("can not remove old prom file %s", path)
+                 os.environ["LD_LIBRARY_PATH"], os.environ["PATH"])
 
 
 def get_gpu_count(path):
@@ -132,19 +121,14 @@ def main(args):
     burninate_gc_collector()
     config_environ()
 
-    try_remove_old_prom_file(args.log + "/gpu_exporter.prom")
-    try_remove_old_prom_file(args.log + "/job_exporter.prom")
-    try_remove_old_prom_file(args.log + "/docker.prom")
-    try_remove_old_prom_file(args.log + "/time.prom")
-    try_remove_old_prom_file(args.log + "/configured_gpu.prom")
-
-    configured_gpu_counter.set(get_gpu_count("/gpu-config/gpu-configuration.json"))
+    configured_gpu_counter.set(
+        get_gpu_count("/gpu-config/gpu-configuration.json"))
 
     decay_time = datetime.timedelta(seconds=args.interval * 2)
 
     # used to exchange gpu info between GpuCollector and ContainerCollector
-    gpu_info_ref = collector.AtomicRef(decay_time)
     npu_info_ref = collector.AtomicRef(decay_time)
+    nvidia_info_ref = collector.AtomicRef(decay_time)
 
     # used to exchange docker stats info between ContainerCollector and ZombieCollector
     stats_info_ref = collector.AtomicRef(decay_time)
@@ -152,20 +136,24 @@ def main(args):
     # used to exchange zombie info between GpuCollector and ZombieCollector
     zombie_info_ref = collector.AtomicRef(decay_time)
 
+    # used to exchange dcgm info between DCGMCollector and ContainerCollector
+    dcgm_info_ref = collector.AtomicRef(decay_time)
+
     interval = args.interval
     # Because all collector except container_collector will spent little time in calling
     # external command to get metrics, so they need to sleep 30s to align with prometheus
     # scrape interval. The 99th latency of container_collector loop is around 20s, so it
     # should only sleep 10s to adapt to scrape interval
     collector_args = [
-            ("docker_daemon_collector", interval, decay_time, collector.DockerCollector),
-            ("gpu_collector", interval, decay_time, collector.GpuCollector, gpu_info_ref, zombie_info_ref, args.threshold),
-            ("npu_collector", interval, decay_time, collector.NpuCollector, npu_info_ref, zombie_info_ref, args.threshold),
-            ("container_collector", max(0, interval - 18), decay_time, collector.ContainerCollector,
-                gpu_info_ref, stats_info_ref, args.interface),
-            ("zombie_collector", interval, decay_time, collector.ZombieCollector, stats_info_ref, zombie_info_ref),
-            ("process_collector", interval, decay_time, collector.ProcessCollector),
-            ]
+        ("npu_collector", interval, decay_time, collector.NpuCollector, npu_info_ref, zombie_info_ref, args.threshold),
+        ("docker_daemon_collector", interval, decay_time,collector.DockerCollector),
+        ("gpu_collector", interval, decay_time, collector.GpuCollector,nvidia_info_ref, zombie_info_ref, args.threshold),
+        ("container_collector", max(0, interval - 18), decay_time,collector.ContainerCollector, nvidia_info_ref, stats_info_ref,
+         args.interface,npu_info_ref,dcgm_info_ref),
+        ("zombie_collector", interval, decay_time, collector.ZombieCollector,stats_info_ref, zombie_info_ref),
+        ("process_collector", interval, decay_time, collector.ProcessCollector),
+        ("dcgm_collector", interval, decay_time, collector.DCGMCollector,dcgm_info_ref),
+    ]
 
     refs = list(map(lambda x: collector.make_collector(*x), collector_args))
 

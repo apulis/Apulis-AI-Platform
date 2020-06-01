@@ -93,7 +93,88 @@
             ],
             "targets": [
               {
-                "expr": "count by (username) (task_gpu_percent)",
+                "expr": "count by (username) (task_device_percent{device_str='nvidia.com/gpu'})",
+                "format": "table",
+                "hide": false,
+                "instant": true,
+                "interval": "",
+                "intervalFactor": 1,
+                "refId": "A"
+              }
+            ],
+            "title": "User Status",
+            "transform": "table",
+            "type": "table"
+          },
+          {
+            "columns": [],
+            "datasource": null,
+            "fontSize": "100%",
+            "id": 2,
+            "links": [],
+            "pageSize": null,
+            "scroll": true,
+            "showHeader": true,
+            "sort": {
+              "col": 0,
+              "desc": true
+            },
+            "span": 12,
+            "styles": [
+              {
+                "alias": "Time",
+                "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                "pattern": "Time",
+                "type": "hidden"
+              },
+              {
+                "alias": "",
+                "colorMode": null,
+                "colors": [
+                  "rgba(245, 54, 54, 0.9)",
+                  "rgba(237, 129, 40, 0.89)",
+                  "rgba(50, 172, 45, 0.97)"
+                ],
+                "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                "decimals": 2,
+                "pattern": "",
+                "thresholds": [],
+                "type": "number",
+                "unit": "short"
+              },
+              {
+                "alias": "used NPU",
+                "colorMode": null,
+                "colors": [
+                  "rgba(245, 54, 54, 0.9)",
+                  "rgba(237, 129, 40, 0.89)",
+                  "rgba(50, 172, 45, 0.97)"
+                ],
+                "dateFormat": "YYYY-MM-DD HH:mm:ss",
+                "decimals": null,
+                "pattern": "Value",
+                "thresholds": [],
+                "type": "number",
+                "unit": "none"
+              },
+              {
+                "alias": "",
+                "colorMode": null,
+                "colors": [
+                  "rgba(245, 54, 54, 0.9)",
+                  "rgba(237, 129, 40, 0.89)",
+                  "rgba(50, 172, 45, 0.97)"
+                ],
+                "decimals": 2,
+                "pattern": "/.*/",
+                "thresholds": [],
+                "type": "number",
+                "unit": "short"
+              }
+            ],
+            "targets": [
+              {
+                "expr": "count by (username) (task_device_percent{device_str='npu.huawei.com/NPU'})",
                 "format": "table",
                 "hide": false,
                 "instant": true,
@@ -152,6 +233,7 @@
     },
     "timezone": "browser",
     "title": "User Status",
-    "version": 1
+    "version": 1,
+    "uid": "user-status"
   }
 }

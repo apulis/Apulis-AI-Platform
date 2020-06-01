@@ -32,8 +32,6 @@ from shutil import copyfile, copytree
 import urllib
 import socket
 
-sys.path.append("../storage/glusterFS")
-from GlusterFSUtils import GlusterFSJson
 
 sys.path.append("../")
 import utils   # path: src/ClusterBootstrap/utils.py
@@ -43,10 +41,7 @@ from DockerUtils import push_one_docker, build_dockers, push_dockers, run_docker
 import k8sUtils
 from config import config as k8sconfig
 
-sys.path.append("../../docker-images/glusterfs")
-import launch_glusterfs
 import az_tools
-import acs_tools
 
 
 from params import default_config_parameters, scriptblocks

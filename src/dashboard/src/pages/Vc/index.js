@@ -328,6 +328,7 @@ export default class Vc extends React.Component {
                   fullWidth={true}
                   disabled={isEdit}
                   helperText={vcNameValidateObj.text}
+                  inputProps={{ maxLength: 20 }}
                 />
                 <h3>quota</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}

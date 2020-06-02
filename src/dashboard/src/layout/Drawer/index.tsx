@@ -43,7 +43,6 @@ export const ListLink = React.forwardRef<Link, LinkProps>(
 
 const LinkListItem: React.FC<LinkProps> = ({ to, children }) => {
   const location = useLocation();
-
   const locationPathname = location.pathname;
   const toPathname = typeof to === "string" ? to
     : typeof to === "object" ? to.pathname
@@ -83,7 +82,7 @@ const NavigationList: React.FC = () => {
         isAdmin ?
           <div style={{ width: '100%' }}>
             <LinkListItem to="/vc">
-              <ListItemText>Vc</ListItemText>
+              <ListItemText>Virtual Cluster</ListItemText>
             </LinkListItem>
             <LinkListItem to="/user">
               <ListItemText>User</ListItemText>

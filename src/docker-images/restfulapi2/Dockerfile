@@ -1,4 +1,4 @@
-FROM apulistech/backendbase:1.8
+FROM apulistech/backendbase:1.9
 MAINTAINER Jin Li <jin.li@apulis.com>
 
 # kubectl will be mapped by service

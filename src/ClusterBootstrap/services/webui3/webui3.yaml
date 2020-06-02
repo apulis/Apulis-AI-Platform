@@ -31,6 +31,7 @@ spec:
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
+        archType: amd64
         webportal: active
       {% if true %}  
       hostNetwork: true

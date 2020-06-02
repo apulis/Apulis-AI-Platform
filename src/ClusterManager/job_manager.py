@@ -199,6 +199,7 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
         update_job_state_latency(redis_conn, job_id, "created", event_time=job["jobTime"])
 
         jobParams = json.loads(base64.b64decode(job["jobParams"]))
+        deviceType = jobParams["gpuType"]
         job_total_gpus = GetJobTotalGpu(jobParams)
 
         if dataHandlerOri is None:
@@ -229,12 +230,13 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
                 break
         if vc is None:
             logger.warning("Vc not exising! job {}, vc {}".format(job_id, vcName))
+            dataHandler.UpdateJobTextField(job_id, "jobStatus","Killed")
             if dataHandlerOri is None:
                 dataHandler.Close()
             return False
         metadata = json.loads(vc["metadata"])
 
-        if "user_quota" in metadata:
+        if deviceType in metadata and "user_quota" in metadata[deviceType]:
             user_running_jobs = dataHandler.GetJobList(job["userName"], vcName, status="running,queued,scheduling", op=("=", "or"))
             running_gpus = 0
             for running_job in user_running_jobs:
@@ -245,10 +247,12 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
                 running_job_total_gpus = GetJobTotalGpu(running_jobParams)
                 running_gpus += running_job_total_gpus
 
-            logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata["user_quota"]))
-            if job_total_gpus > 0 and int(metadata["user_quota"]) < (running_gpus + job_total_gpus):
-                logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, metadata["user_quota"]))
-                detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, metadata["user_quota"])}]
+            logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata[deviceType]))
+
+            user_quota_num = metadata[deviceType]["user_quota"]
+            if job_total_gpus > 0 and int(user_quota_num) < (running_gpus + job_total_gpus):
+                logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, user_quota_num))
+                detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, user_quota_num)}]
                 dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
                 if dataHandlerOri is None:
                     dataHandler.Close()
@@ -325,7 +329,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         update_job_state_latency(redis_conn, job["jobId"], "running")
         if job["jobStatus"] != "running":
             started_at = k8sUtils.localize_time(datetime.datetime.now())
-            detail = [{"startedAt": started_at, "message": "started at: {}".format(started_at)}]
+            detail = [{"startedAt": started_at, "message": "started at {}".format(started_at)}]
 
             dataFields = {
                 "jobStatusDetail": base64.b64encode(json.dumps(detail)),
@@ -336,6 +340,18 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
             if notifier is not None:
                 notifier.notify(notify.new_job_state_change_message(
                     job["userName"], job["jobId"], result.strip()))
+    elif result == "Restart":
+        logger.warning("Job %s request resources failed, return to queued...", job["jobId"])
+        retries = dataHandler.AddandGetJobRetries(job["jobId"])
+        if retries >= 500:
+            dataFields = {
+                "jobStatus": "error",
+                "errorMsg": "can't allocate resources",
+            }
+            conditionFields = {"jobId": job["jobId"]}
+            dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+        else:
+           dataHandler.UpdateJobTextField(job["jobId"], "jobStatus", "queued")
 
     elif result == "Failed":
         logger.warning("Job %s fails, cleaning...", job["jobId"])
@@ -392,6 +408,26 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                     job["userName"], job["jobId"], result.strip()))
 
     elif result == "Pending":
+        jump = False
+        for one_pod in details:
+            if "status" in one_pod and "container_statuses" in one_pod["status"]:
+                for one_container_status in one_pod["status"]["container_statuses"]:
+                    if "state" in one_container_status and one_container_status["state"] and \
+                            "waiting" in one_container_status["state"] and one_container_status["state"]["waiting"] and "reason" in one_container_status["state"]["waiting"]\
+                        and one_container_status["state"]["waiting"]["reason"]=="ImagePullBackOff":
+                        dataFields = {
+                            "jobStatusDetail": base64.b64encode(json.dumps(get_scheduling_job_details(details))),
+                            "jobStatus": "error",
+                            "errorMsg": one_container_status["state"]["waiting"]["message"]
+                        }
+                        conditionFields = {"jobId": job["jobId"]}
+                        dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+                        job_deployer = JobDeployer()
+                        job_deployer.delete_job(job["jobId"], force=True)
+                        jump = True
+                        break
+                if jump:
+                    break
         detail = get_scheduling_job_details(details)
         dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
 
@@ -441,6 +477,8 @@ def check_job_status(job_id):
         job_status = "NotFound"
     elif "Pending" in statuses:
         job_status = "Pending"
+    elif "Restart" in statuses:
+        job_status = "Restart"
 
     return job_status, details
 
@@ -565,6 +603,13 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     for sji in jobsInfo:
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))
         vc_name = sji["job"]["vcName"]
+        if vc_name not in vc_resources:
+            logger.error("job: %s belong to a no-exist vc %s" % (sji["jobId"], vc_name))
+            if sji["job"]["jobStatus"] in ["scheduling", "running"]:
+                data_handler.UpdateJobTextField(sji["jobId"], "jobStatus","killing")
+            else:
+                data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
+            continue
         vc_resource = vc_resources[vc_name]
 
         if (not sji["preemptionAllowed"]) and (vc_resource.CanSatisfy(sji["globalResInfo"])):
@@ -575,10 +620,12 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     for sji in jobsInfo:
         if sji["preemptionAllowed"] and (sji["allowed"] is False):
-            if globalResInfo.CanSatisfy(sji["globalResInfo"]):
+            vc_name = sji["job"]["vcName"]
+            vc_resource = vc_resources[vc_name]
+            if vc_resource.CanSatisfy(sji["globalResInfo"]):
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
-                globalResInfo.Subtract(sji["globalResInfo"])
+                vc_resource.Subtract(sji["globalResInfo"])
                 sji["allowed"] = True
                 logger.info("TakeJobActions : global assignment : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
 

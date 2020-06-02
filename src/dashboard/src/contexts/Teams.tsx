@@ -1,5 +1,4 @@
-import React, { useContext, useEffect } from 'react';
-import useFetch from "use-http";
+import React, { useContext, useEffect, useState, SetStateAction, createContext, FC } from 'react';
 import {
   Box, Button,
   Dialog, DialogActions,
@@ -7,42 +6,67 @@ import {
   DialogContentText,
   DialogTitle
 } from "@material-ui/core";
-
 import _ from "lodash";
-
 import ConfigContext from './Config';
+import ClustersContext from '../contexts/Clusters';
+import axios from 'axios';
 
 interface Context {
   teams: any;
   selectedTeam: any;
-  saveSelectedTeam(team: React.SetStateAction<string>): void;
+  saveSelectedTeam(team: SetStateAction<string>): void;
+  clusterId: string;
+  saveClusterId(clusterId: SetStateAction<string>): void;
+  getTeams(): void;
 }
 
-const Context = React.createContext<Context>({
+const Context = createContext<Context>({
   teams: [],
   selectedTeam: '',
-  saveSelectedTeam: function(team: React.SetStateAction<string>) {},
+  saveSelectedTeam: function(team: SetStateAction<string>) {},
+  clusterId: '',
+  saveClusterId: function(clusterId: SetStateAction<string>) {},
+  getTeams: function() {},
 });
 
 export default Context;
-export const Provider: React.FC = ({ children }) => {
-  const fetchTeamsUrl = '/api/teams';
+export const Provider: FC = ({ children }) => {
   const { addGroup } = useContext(ConfigContext);
-  const { data: teams } = useFetch(fetchTeamsUrl, { onMount: true });
-  const [selectedTeam, setSelectedTeam] = React.useState<string>('');
-  const saveSelectedTeam = (team: React.SetStateAction<string>) => {
-    setSelectedTeam(team);
-    localStorage.setItem('team',team.toString())
-    window.location.reload()
+  const [clusterId, setClusterId] = useState<string>('');
+  const saveClusterId = (clusterId: SetStateAction<string>) => {
+    setClusterId(clusterId);
   };
+  const [teams, setTeams] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState<string>('');
+  const saveSelectedTeam = (team: SetStateAction<string>) => {
+    setSelectedTeam(team);
+    localStorage.setItem('team',team.toString());
+    if (clusterId && window.location.pathname.split(`${clusterId}/`)[1]) {
+      window.location.href = `/jobs-v2/${clusterId}/`;
+    } else {
+      window.location.reload();
+    }
+  }
+
+  const getTeams = () => {
+    axios.get('/teams').then(res => {
+      setTeams(res.data);
+    })
+  }
+
+  useEffect(() => {
+    getTeams();
+  }, [])
+
   useEffect(()=> {
     if (localStorage.getItem('team')) {
       setSelectedTeam((String)(localStorage.getItem('team')))
     } else {
       setSelectedTeam(_.map(teams, 'id')[0]);
     }
-  },[teams])
-  const EmptyTeam: React.FC = () => {
+  },[teams]);
+  
+  const EmptyTeam: FC = () => {
     const onClick = () => {
       window.open(addGroup, "_blank");
     }
@@ -77,7 +101,7 @@ export const Provider: React.FC = ({ children }) => {
   // }
   return (
     <Context.Provider
-      value={{ teams, selectedTeam, saveSelectedTeam }}
+      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId, getTeams }}
       children={children}
     />
   );

@@ -9,6 +9,7 @@ COPY package.json yarn.lock ./
 RUN yarn --frozen-lockfile
 
 COPY . .
+RUN npm i
 RUN npm run build
 
 #ENV HOST 0.0.0.0

@@ -91,7 +91,7 @@ spec:
       serviceAccountName: prometheus-operator
       containers:
        - name: prometheus-operator
-         image: bitnami/prometheus-operator:0.37.0
+         image: {{cnf["dockers"]["container"]["prometheus-operator"]["fullname"]}}
          resources:
            requests:
              cpu: 100m

@@ -1,28 +1,22 @@
 import React from 'react';
-
 import { BrowserRouter, Redirect, Route, RouteComponentProps, Switch } from "react-router-dom"
-
 import 'typeface-roboto';
 import 'typeface-roboto-mono';
-
-
 import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
 import { ThemeProvider } from "@material-ui/styles";
 import initAxios from './utils/init-axios'
-
 import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
 import { Provider as ClustersProvider } from "./contexts/Clusters";
 import TeamsContext, { Provider as TeamProvider } from './contexts/Teams';
-
 import { ConfirmProvider } from './hooks/useConfirm';
-
 import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
 import Drawer from "./layout/Drawer";
 import { Provider as DrawerProvider } from "./layout/Drawer/Context";
 import { SnackbarProvider, useSnackbar, VariantType } from 'notistack';
+import './App.less';
 
 const Home = React.lazy(() => import('./pages/Home'));
 const SignIn = React.lazy(() => import('./pages/SignIn'));
@@ -53,6 +47,7 @@ interface BootstrapProps {
   authEnabled?: {
     [props: string]: 1 | 0;
   };
+  administrators?: Array<[]>
 }
 
 const Loading = (
@@ -63,10 +58,10 @@ const Loading = (
 
 
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled }) => (
+const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled, administrators }) => (
   <BrowserRouter>
     <ConfigProvider>
-      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} authEnabled={authEnabled} >
+      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} authEnabled={authEnabled} administrators={administrators} >
           <ConfirmProvider>
             <TeamProvider>
               <ClustersProvider>

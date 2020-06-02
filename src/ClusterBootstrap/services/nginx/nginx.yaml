@@ -14,6 +14,8 @@ spec:
         app: nginx
         nginx: active
     spec:
+      nodeSelector:
+        archType: amd64
       {% if cnf["dnsPolicy"] %}    
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}

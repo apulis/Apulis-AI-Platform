@@ -675,6 +675,11 @@ def AddVC(userName, vcName, quota, metadata):
     ret = None
     dataHandler = DataHandler()
     if AuthorizationManager.IsClusterAdmin(userName):
+        jobs = dataHandler.GetJobList("all", "all", num=None, status="killing")
+        if len(jobs)>0:
+            return "still have killing job"
+        else:
+            ret = dataHandler.DeleteJobByVc(vcName)
         ret =  dataHandler.AddVC(vcName, quota, metadata)
         if ret:
             cacheItem = {
@@ -823,9 +828,13 @@ def GetJobTotalGpu(jobParams):
 
 
 def DeleteVC(userName, vcName):
-    ret = None
     dataHandler = DataHandler()
     if AuthorizationManager.IsClusterAdmin(userName):
+        jobs = dataHandler.GetJobList("all", "all", num=None,status="running,scheduling,pausing")
+        for job in jobs:
+            dataHandler.UpdateJobTextField(job["jobId"],"jobStatus","killing")
+        ret = dataHandler.DeleteJobByVcExcludeKilling(vcName)
+        ret = dataHandler.DeleteTemplateByVc("vc:"+vcName)
         ret =  dataHandler.DeleteVC(vcName)
         if ret:
             with vc_cache_lock:
@@ -852,6 +861,20 @@ def UpdateVC(userName, vcName, quota, metadata):
     else:
         ret = "Access Denied!"
     dataHandler.Close()
+    return ret
+
+def GetAllDevice(userName):
+    ret = {}
+    if AuthorizationManager.IsClusterAdmin(userName):
+        dataHandler = DataHandler()
+        ret = dataHandler.GetAllDevice()
+    return ret
+
+def CountJobByStatus(userName,vcName,targetStatus):
+    ret = -1
+    if AuthorizationManager.IsClusterAdmin(userName):
+        dataHandler = DataHandler()
+        ret = dataHandler.CountJobByStatus(vcName,targetStatus)
     return ret
 
 def GetEndpoints(userName, jobId):
@@ -883,7 +906,7 @@ def GetEndpoints(userName, jobId):
                             port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
                         epItem["port"] = port
                         if "nodeName" in endpoint:
-                            epItem["nodeName"] = endpoint["nodeName"]
+                            epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
                         if epItem["name"] == "ssh":
                             desc = yaml.full_load(base64.b64decode(job["jobDescription"]))
                             for i in desc["spec"]["containers"][0]["env"]:

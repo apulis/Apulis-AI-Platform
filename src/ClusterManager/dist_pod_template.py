@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../uti
 from config import config
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
-
+from DataHandler import DataHandler
 
 class DistPodTemplate():
     def __init__(self, template, enable_custom_scheduler=False, secret_templates=None):
@@ -94,6 +94,8 @@ class DistPodTemplate():
         job.add_mountpoints(job.infiniband_mountpoints())
         params["mountpoints"] = job.mountpoints
         params["init-container"] = os.environ["INIT_CONTAINER_IMAGE"]
+        if params["gpuType"].endswith("arm64"):
+            params["init-container"] += "-arm64"
 
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()
@@ -140,13 +142,13 @@ class DistPodTemplate():
             params["nccl_ib_disable"] = True
 
         pods = []
-        gpuMapping = {"Huawei_A910": "npu.huawei.com/NPU", "nvidia": "nvidia.com/gpu"}
+        gpuMapping = DataHandler().GetAllDevice()
         nums = {"ps": int(params["numps"]), "worker": int(params["numpsworker"])}
         for role in ["ps", "worker"]:
             for idx in range(nums[role]):
                 pod = copy.deepcopy(params)
                 if "gpuStr" not in pod:
-                    pod["gpuStr"] = gpuMapping[pod["gpuType"]]
+                    pod["gpuStr"] = gpuMapping[pod["gpuType"]]["deviceStr"]
                 pod["distRole"] = role
                 pod["distRoleIdx"] = idx
                 pod["distId"] = "%s%d" % (role, idx)

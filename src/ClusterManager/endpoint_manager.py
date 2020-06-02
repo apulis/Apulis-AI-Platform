@@ -86,19 +86,6 @@ spec:
     return endpoint_description
 
 
-def create_node_port(endpoint):
-    endpoint_description = generate_node_port_service(endpoint["jobId"], endpoint["podName"], endpoint["id"], endpoint["name"], endpoint["podPort"])
-    endpoint_description_path = os.path.join(config["storage-mount-path"], endpoint["endpointDescriptionPath"])
-    logger.info("endpointDescriptionPath: %s", endpoint_description_path)
-    with open(endpoint_description_path, 'w') as f:
-        f.write(endpoint_description)
-
-    result = k8sUtils.kubectl_create(endpoint_description_path)
-    if result == "":
-        raise Exception("Failed to create NodePort for ssh. JobId: %s " % endpoint["jobId"])
-
-    logger.info("Submitted endpoint %s to k8s, returned with status %s", endpoint["jobId"], result)
-
 
 def setup_ssh_server(user_name, pod_name, host_network=False):
     '''Setup ssh server on pod and return the port'''
@@ -111,47 +98,74 @@ def setup_ssh_server(user_name, pod_name, host_network=False):
     return ssh_port
 
 
-def setup_jupyter_server(user_name, pod_name):
-
-    jupyter_port = random.randint(40000, 49999)
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip install jupyterlab && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " &>/dev/null &\"'"
+def setup_jupyter_server(user_name, pod_name,jupyter_port,nodePort):
+    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
         raise Exception("Failed to start jupyter server in container. JobId: %s " % pod_name)
-    return jupyter_port
 
 
-def setup_tensorboard(user_name, pod_name):
-    tensorboard_port = random.randint(40000, 49999)
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip install tensorboard && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --host=0.0.0.0 --port=" + str(tensorboard_port) + " &>/dev/null &\"'"
+def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
+    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
         raise Exception("Failed to start tensorboard in container. JobId: %s " % pod_name)
-    return tensorboard_port
+
+def is_server_ready(endpoint):
+    pod_name = endpoint["podName"]
+    port_name = endpoint["name"]
+    cmd = None
+    if port_name == "ipython":
+        cmd = "ps -ef|grep jupyter-lab"
+    elif port_name == "tensorboard":
+        cmd = "ps -ef|grep tensorboard"
+    if cmd:
+        output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
+        if output == "":
+            return False
+    return True
 
 
 def start_endpoint(endpoint):
     # pending, running, stopped
     logger.info("Starting endpoint: %s", endpoint)
 
-    # podName
+    pod_name = endpoint["podName"]
+    podPort = endpoint["podPort"]
+    port = endpoint["port"]
+    user_name = endpoint["username"]
+
+    port_name = endpoint["name"]
+    if port_name == "ipython":
+        setup_jupyter_server(user_name, pod_name,podPort,port)
+    elif port_name == "tensorboard":
+        setup_tensorboard(user_name, pod_name,podPort,port)
+
+def create_node_port(endpoint):
+    port_name = endpoint["name"]
     pod_name = endpoint["podName"]
     user_name = endpoint["username"]
     host_network = endpoint["hostNetwork"]
-
-    port_name = endpoint["name"]
     if port_name == "ssh":
         endpoint["podPort"] = setup_ssh_server(user_name, pod_name, host_network)
     elif port_name == "ipython":
-        endpoint["podPort"] = setup_jupyter_server(user_name, pod_name)
+        endpoint["podPort"] = random.randint(40000, 49999)
     elif port_name == "tensorboard":
-        endpoint["podPort"] = setup_tensorboard(user_name, pod_name)
+        endpoint["podPort"] = random.randint(40000, 49999)
     else:
         endpoint["podPort"] = int(endpoint["podPort"])
 
-    # create NodePort
-    create_node_port(endpoint)
+    endpoint_description = generate_node_port_service(endpoint["jobId"], endpoint["podName"], endpoint["id"], endpoint["name"], endpoint["podPort"])
+    endpoint_description_path = os.path.join(config["storage-mount-path"], endpoint["endpointDescriptionPath"])
+    logger.info("endpointDescriptionPath: %s", endpoint_description_path)
+    with open(endpoint_description_path, 'w') as f:
+        f.write(endpoint_description)
 
+    result = k8sUtils.kubectl_create(endpoint_description_path)
+    if result == "":
+        raise Exception("Failed to create NodePort for ssh. JobId: %s " % endpoint["jobId"])
+
+    logger.info("Submitted endpoint %s to k8s, returned with status %s", endpoint["jobId"], result)
 
 def start_endpoints():
     try:
@@ -175,12 +189,16 @@ def start_endpoints():
                     if(output != ""):
                         endpoint_description = json.loads(output)
                         endpoint["endpointDescription"] = endpoint_description
-                        endpoint["status"] = "running"
+                        endpoint["port"] = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
+                        start_endpoint(endpoint)
+                        if is_server_ready(endpoint):
+                            endpoint["status"] = "running"
                         pod = k8sUtils.GetPod("podName=" + endpoint["podName"])
                         if "items" in pod and len(pod["items"]) > 0:
                             endpoint["nodeName"] = pod["items"][0]["spec"]["nodeName"]
                     else:
-                        start_endpoint(endpoint)
+                        # create NodePort
+                        create_node_port(endpoint)
 
                     endpoint["lastUpdated"] = datetime.datetime.now().isoformat()
                     data_handler.UpdateEndpoint(endpoint)

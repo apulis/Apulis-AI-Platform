@@ -10,7 +10,8 @@ import copy
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
-
+from config import config
+from DataHandler import DataHandler
 
 class PodTemplate():
     def __init__(self, template, deployment_template=None, enable_custom_scheduler=False, secret_templates=None):
@@ -161,7 +162,7 @@ class PodTemplate():
             pods.append(pod)
 
         k8s_pods = []
-        gpuMapping = {"Huawei_A910": "npu.huawei.com/NPU", "nvidia": "nvidia.com/gpu"}
+        gpuMapping = DataHandler().GetAllDevice()
 
         for idx,pod in enumerate(pods):
             pod["numps"] = 0
@@ -170,7 +171,11 @@ class PodTemplate():
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
             if "gpuStr" not in pod:
-                pod["gpuStr"] = gpuMapping[pod["gpuType"]]
+                deviceDict = gpuMapping.get(pod["gpuType"])
+                if deviceDict is None:
+                    return None,"wrong device type"
+                else:
+                    pod["gpuStr"] = deviceDict.get("deviceStr")
 
             if params["jobtrainingtype"] == "InferenceJob":
                 pod["gpuLimit"] = 0
@@ -181,6 +186,8 @@ class PodTemplate():
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")
+                if pod["gpuType"].endswith("arm64"):
+                    pod["init-container"] += "-arm64"
 
             k8s_pod = self.generate_pod(pod, params["cmd"])
             k8s_pods.append(k8s_pod)

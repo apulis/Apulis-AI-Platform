@@ -36,7 +36,7 @@ const sumDeviceTypes = (obj: any) => {
 export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
   const theme = useTheme();
   const {nodeStatus} = props;
-  console.log('nodeStatus', nodeStatus)
+  // console.log('nodeStatus', nodeStatus)
   return (
     <MuiThemeProvider theme={useCheckIsDesktop ? theme : tableTheme}>
       {
@@ -86,7 +86,7 @@ export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
               </>}
           ]}
           data={nodeStatus}
-          options={{filtering: false,paging: true, pageSizeOptions:[10],pageSize:nodeStatus.length < 10 ? nodeStatus.length : 10,sorting: true}}
+          options={{filtering: false,paging: true, pageSizeOptions:[10],pageSize:nodeStatus.length < 10 ? nodeStatus.length : 10,sorting: false}}
         /> :
           <CircularProgress/>
       }

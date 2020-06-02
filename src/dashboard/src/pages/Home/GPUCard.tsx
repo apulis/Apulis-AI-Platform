@@ -29,7 +29,6 @@ import {
   lighten
 } from "@material-ui/core/styles";
 import { MoreVert, FileCopyRounded} from "@material-ui/icons";
-
 import {Cell, PieChart, Pie, ResponsiveContainer,Sector} from "recharts";
 import UserContext from "../../contexts/User";
 import TeamsContext from '../../contexts/Teams';
@@ -43,10 +42,11 @@ import {
 import copy from 'clipboard-copy'
 import {checkObjIsEmpty, sumValues} from "../../utlities/ObjUtlities";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-
 import _ from "lodash";
 import {type} from "os";
 import useCheckIsDesktop from "../../utlities/layoutUtlities";
+import './index.less';
+
 const useStyles = makeStyles((theme: Theme) => createStyles({
   avatar: {
     backgroundColor: theme.palette.secondary.main,
@@ -100,7 +100,7 @@ const ActionIconButton: React.FC<{cluster?: string}> = ({cluster}) => {
         onClose={onMenuClose}
       >
         <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
-        <MenuItem component={Link} to={`/jobs/${cluster}`}>View Jobs</MenuItem>
+        <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
       </Menu>
     </>
   )
@@ -114,13 +114,20 @@ const Chart: React.FC<{
 
 }> = ({ available, used, reserved ,isActive}) => {
   const theme = useTheme();
-  let data = [
-    { name: "Available", value: available, color: lightGreen[400] },
-    { name: "Used", value: used, color: theme.palette.grey[500] },
-    { name: "Unschedulable", value: reserved, color: deepOrange[400]},
-  ];
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  let data = [];
+  if (available === 0 && used === 0 && reserved === 0) {
+    data = [{ name: "NO Active Jobs", value: 100, color: "#e0e0e0" }];
+  } else {
+    data = [
+      { name: "Available", value: available, color: lightGreen[400] },
+      { name: "Used", value: used, color: theme.palette.grey[500] },
+      { name: "Unschedulable", value: reserved, color: deepOrange[400]},
+    ];
+  }
   if (reserved === 0) {
-    data = data.filter((item)=>item.name !== 'Reserved')
+    data = data.filter((item)=>item.name !== 'Reserved');
   }
   const styles = useStyles();
   const renderActiveShape = (props: any) => {
@@ -132,7 +139,7 @@ const Chart: React.FC<{
     const sx = cx + (outerRadius + 10) * cos;
     const sy = cy + (outerRadius + 10) * sin;
     const mx = cx + (outerRadius + 20) * cos;
-    const my = cy + (outerRadius + 20) * sin;
+    const my = cy + (outerRadius + 30) * sin;
     const ex = mx + (cos >= 0 ? 1 : -1) * 8;
     const ey = my;
     const textAnchor = cos >= 0 ? 'start' : 'end';
@@ -158,17 +165,22 @@ const Chart: React.FC<{
           outerRadius={outerRadius + 10}
           fill={fill}
         />
-        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{`${value}`}</text>
-        <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
-          {`(${(Math.round(percent * 100))}%)`}
-        </text>
+        {
+          (!(available === 0 && used === 0 && reserved === 0)) && 
+          <>
+            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{value === 0 ? '' : `${value}`}</text>
+            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
+              {percent === 0 ? '' : `(${(Math.round(percent * 100))}%)`}
+            </text>
+          </>
+        }
       </g>
     );
   };
-  const [activeIndex, setActiveIndex] = useState(1);
   const onPieEnter = (data: any, index: number) => {
-    setActiveIndex(index)
+    setActiveIndex(index);
   }
+
   return (
     <>
       <ResponsiveContainer aspect={8 / 8} width='100%' height='100%'>
@@ -203,17 +215,6 @@ export const DirectoryPathTextField: React.FC<{
   const handleWarnClose = () => {
     setOpenCopyWarn(false);
   }
-  const onMouseOver = React.useCallback(() => {
-    if (input.current) {
-      input.current.select();
-    }
-  }, [input])
-  const onFocus = React.useCallback(() => {
-    if (input.current) {
-      input.current.select();
-    }
-  },
-  [input]);
   const handleCopy = React.useCallback(() => {
     if (input.current) {
       copy(input.current.innerHTML).then(()=>{
@@ -228,6 +229,7 @@ export const DirectoryPathTextField: React.FC<{
         inputRef={input}
         label={label}
         value={value}
+        className="cardText"
         multiline
         rows={2}
         fullWidth
@@ -239,15 +241,12 @@ export const DirectoryPathTextField: React.FC<{
             <InputAdornment position="end">
               <Tooltip title="Copy" placement="right">
                 <IconButton>
-                  <FileCopyRounded/>
+                  <FileCopyRounded onClick={handleCopy} />
                 </IconButton>
               </Tooltip>
             </InputAdornment>
           )
         }}
-        onMouseOver={onMouseOver}
-        onFocus={onFocus}
-        onClick={handleCopy}
       />
       <DLTSSnackbar message={"Successfully copied"} autoHideDuration={500} open={openCopyWarn} handleWarnClose={handleWarnClose} />
     </>
@@ -287,8 +286,8 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   useEffect(()=>{
     fetchDirectories().then((res) => {
       let fetchStorage = [];
-      let availBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_avail_bytes%7Bfstype%3D%27nfs4%27%7D';
-      let sizeBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_size_bytes%7Bfstype%3D%27nfs4%27%7D';
+      let availBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_avail_bytes{fstype=~"nfs[0-9]?"}';
+      let sizeBytesSubPath = '/api/datasources/proxy/1/api/v1/query?query=node_filesystem_size_bytes{fstype=~"nfs[0-9]?"}';
       if (res && res.grafana) {
         fetchStorage.push(fetch(`${res['grafana']}${availBytesSubPath}`));
         fetchStorage.push(fetch(`${res['grafana']}${sizeBytesSubPath}`));
@@ -303,7 +302,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               let tmp = {} as any;
               if (item['metric']['__name__'] == "node_filesystem_size_bytes") {
                 let mountpointName = item['metric']['mountpoint']
-                let val = Math.floor(item['value'][1] / (Math.pow(10, 9)))
+                let val = Math.floor(item['value'][1] / (Math.pow(1024, 3)))
                 tmp['mountpointName'] = mountpointName;
                 tmp['total'] = val;
               }
@@ -311,7 +310,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
               //node_filesystem_avail_bytes
               if (item['metric']['__name__'] == "node_filesystem_avail_bytes") {
                 let mountpointName = item['metric']['mountpoint']
-                let val = Math.floor(item['value'][1] / (Math.pow(10, 9)))
+                let val = Math.floor(item['value'][1] / (Math.pow(1024, 3)))
                 tmpAvail['mountpointName'] = mountpointName;
                 tmpAvail['Avail'] = val;
               }
@@ -438,29 +437,25 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
           <MuiThemeProvider theme={tableTheme}>
             <Table>
               <TableBody>
-                {
-                  nfsStorage.map((nfs: any, index: number) => {
-                    let nfsMountNames = nfs['mountpointName'].split("/");
-                    let mounName = "";
-                    if (nfs['mountpointName'].indexOf("dlws") !== -1) {
-                      mounName = "/data";
-                    } else {
-                      nfsMountNames.splice(0, nfsMountNames.length - 1);
-                      mounName = "/" + nfsMountNames.join('/');
-                    }
-                    let value = nfs['total'] == 0 ? 0 : (nfs['used'] / nfs['total']) * 100;
-                    return (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {
-                            value < 80 ? <BorderLinearProgress value={value} variant={"determinate"}/> : value >= 80 && value < 90 ? <GenernalLinerProgress value={value} variant={"determinate"}/> : <FullBorderLinearProgress value={value} variant={"determinate"}/>
-                          }
-                          <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(${nfs['used']}/${nfs['total']}) ${Math.floor(value)}% used`}</span></div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-                }
+                {nfsStorage.map((nfs: any, index: number) => {
+                  let nfsMountNames = nfs['mountpointName'].split("/");
+                  let mounName = "";
+                  if (nfs['mountpointName'].indexOf("dlws") !== -1) {
+                    mounName = "/data";
+                  } else {
+                    nfsMountNames.splice(0, nfsMountNames.length - 1);
+                    mounName = "/" + nfsMountNames.join('/');
+                  }
+                  let value = nfs['total'] == 0 ? 0 : (nfs['used'] / nfs['total']) * 100;
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>
+                        {value < 80 ? <BorderLinearProgress value={value} variant={"determinate"}/> : value >= 80 && value < 90 ? <GenernalLinerProgress value={value} variant={"determinate"}/> : <FullBorderLinearProgress value={value} variant={"determinate"}/>}
+                        <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(used: ${nfs['used']}, total: ${nfs['total']}) ${Math.floor(value)}% used`}</span></div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </MuiThemeProvider>

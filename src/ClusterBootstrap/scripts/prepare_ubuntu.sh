@@ -151,6 +151,7 @@ install_docker() {
         if  lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*" ;
         then 
             ## gpu驱动
+            sudo mkdir -p /etc/docker 
             sudo echo '
                 {
                     "registry-mirrors": [
@@ -166,6 +167,7 @@ install_docker() {
                 }
             ' > /etc/docker/daemon.json
         else
+            sudo mkdir -p /etc/docker 
             sudo echo '
                 {
                     "registry-mirrors": [
@@ -205,7 +207,7 @@ set_network() {
 install_gpu_utils() {
 
     ## Check if this node has gpu
-    if  lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*" ; 
+    if  lspci -vnnn | perl -lne 'print if /^\d+\:.+(\[\S+\:\S+\])/' | grep VGA | grep -i NVIDIA; 
     then
 
         ## install from the beginning

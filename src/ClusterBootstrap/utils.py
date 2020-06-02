@@ -1,6 +1,7 @@
-#!/usr/bin/python 
+#!/usr/bin/python
 import json
 import os
+import io
 import time
 import datetime
 import argparse
@@ -45,7 +46,7 @@ def render_template(template_file, target_file, config, verbose=False):
     filename, file_extension = os.path.splitext(template_file)
     basename = os.path.basename(template_file)
     if ("render-exclude" in config and basename in config["render-exclude"] ):
-        # Don't render/copy the file. 
+        # Don't render/copy the file.
         return
     if ("render-by-copy-ext" in config and file_extension in config["render-by-copy-ext"]) or ("render-by-copy" in config and basename in config["render-by-copy"]):
         copyfile(template_file, target_file)
@@ -84,13 +85,13 @@ def render_template(template_file, target_file, config, verbose=False):
             if target_dir != '':
                 os.system("mkdir -p {0}".format(target_dir))
             with open(target_file, 'w') as f:
-                f.write(content)
+                f.write(content.encode('utf-8'))
             f.close()
         except Exception as e:
             print("!!! Failure !!! in render template " + template_file)
             print(e)
             pass
-    
+
 def render_template_directory(template_dir, target_dir,config, verbose=False, exclude_dir=None):
     if target_dir in StaticVariable.rendered_target_directory:
         return
@@ -125,7 +126,7 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
                         continue
                 render_template(os.path.join(template_dir, filename), os.path.join(target_dir, filename),config, verbose)
             else:
-                srcdir = os.path.join(template_dir, filename) 
+                srcdir = os.path.join(template_dir, filename)
                 dstdir = os.path.join(target_dir, filename)
                 if ("render-by-copy" in config and filename in config["render-by-copy"]):
                     os.system( "rm -rf %s" % dstdir )
@@ -142,62 +143,73 @@ def SSH_exec_cmd(identity_file, user,host,cmd,showCmd=True):
 
     if len(cmd)==0:
         return;
-    
+
     if showCmd or verbose:
-        print ("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) ) 
+        print ("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
 
     os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
 
-    return 
+    return
 
 
 # SSH Connect to a remote host with identity file (private SSH key), user, host
-# Program usually exit here. 
+# Program usually exit here.
 def SSH_connect(identity_file, user,host):
     if verbose:
-        print("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" """ % (identity_file, user, host) ) 
+        print("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" """ % (identity_file, user, host) )
     os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" """ % (identity_file, user, host) )
 
-# Copy a local file or directory (source) to remote (target) with identity file (private SSH key), user, host 
+# Copy a local file or directory (source) to remote (target) with identity file (private SSH key), user, host
 def scp (identity_file, source, target, user, host, verbose = False):
     cmd = 'scp -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -r "%s" "%s@%s:%s"' % (identity_file, source, user, host, target)
     if verbose:
         print(cmd)
     os.system(cmd)
 
-# Copy a local file (source) or directory to remote (target) with identity file (private SSH key), user, host, and  
+# Copy a local file (source) or directory to remote (target) with identity file (private SSH key), user, host, and
 def sudo_scp (identity_file, source, target, user, host,changePermission=False, verbose = False ):
-    tmp = str(uuid.uuid4())    
+    tmp = str(uuid.uuid4())
     scp(identity_file, source,"~/%s" % tmp, user, host, verbose )
     targetPath = os.path.dirname(target)
+
+    print("targetPath: ")
+    print(source, targetPath)
+
     if ( os.path.isfile(source)):
         cmd = "sudo mkdir -p %s ; sudo mv ~/%s %s" % (targetPath, tmp, target)
     else:
         cmd = "sudo mkdir -p %s ; sudo rm -r %s/*; sudo mv ~/%s/* %s; sudo rm -rf ~/%s" % (target, target, tmp, target, tmp)
+
     if changePermission:
         cmd += " ; sudo chmod +x %s" % target
+    else:
+        pass
+
     # Force converting to dos format
     cmd += " ; sudo dos2unix %s" % target
     if verbose:
         print(cmd)
+    else:
+        pass
+
     SSH_exec_cmd(identity_file, user, host, cmd, verbose)
 
-# Copy a remote file (which require root access) to local (target) with identity file (private SSH key), user, host, and  
+# Copy a remote file (which require root access) to local (target) with identity file (private SSH key), user, host, and
 def sudo_scp_to_local (identity_file, source, target, user, host,changePermission=False, verbose = False ):
     tmp = str(uuid.uuid4())
     cmd = "sudo cp %s ~/%s; sudo chmod og+rx ~/%s" % (source, tmp, tmp)
     if verbose:
         print(cmd)
-    SSH_exec_cmd(identity_file, user, host, cmd, verbose) 
+    SSH_exec_cmd(identity_file, user, host, cmd, verbose)
     cmd = 'scp -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -r "%s@%s:%s" "%s"' % (identity_file, user, host, tmp, target)
     if verbose:
         print(cmd)
-    os.system(cmd)    
+    os.system(cmd)
     cmd = "sudo rm ~/%s" % (tmp)
     if verbose:
         print(cmd)
-    SSH_exec_cmd(identity_file, user, host, cmd, verbose)    
-    
+    SSH_exec_cmd(identity_file, user, host, cmd, verbose)
+
 
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 # Return the output of the remote command to local
@@ -215,7 +227,7 @@ def SSH_exec_cmd_with_output1(identity_file, user,host,cmd, supressWarning = Fal
         output = outputfile.read()
     os.remove(tmpname)
     return output
-    
+
 def SSH_exec_cmd_with_output(identity_file, user,host,cmd, supressWarning = False):
     if len(cmd)==0:
         return "";
@@ -266,7 +278,7 @@ def scan_nodes( identity_file, user, iprange ):
                 output = SSH_exec_cmd_batchmode_with_output( identity_file, user, host, "echo hello")
                 if output.find("hello")>=0:
                     print("\n" + host )
-    
+
 def json_load_byteified(file_handle):
     return _byteify(
         json.load(file_handle, object_hook=_byteify),
@@ -308,7 +320,7 @@ def exec_cmd_local(execmd, supressWarning = False):
         output = "Return code: " + str(e.returncode) + ", output: " + e.output.strip()
     # print output
     return output
-    
+
 def get_host_name( identity_file, user, host ):
     execmd = """ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "hostname" """ % (identity_file, user, host )
     try:
@@ -316,7 +328,7 @@ def get_host_name( identity_file, user, host ):
     except subprocess.CalledProcessError as e:
         return "Exception, with output: " + e.output.strip()
     return output.strip()
-    
+
 def get_mac_address( identity_file, user, host, show=True ):
     output = SSH_exec_cmd_with_output( identity_file, user, host, "ifconfig" )
     etherMatch = re.compile("ether [0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]")
@@ -330,13 +342,13 @@ def get_mac_address( identity_file, user, host, show=True ):
         macs.append(match.group()[6:])
     return macs
 
-# Execute a remote SSH cmd with identity file (private SSH key), user, host, 
-# Copy all directory of srcdir into a temporary folder, execute the command, 
-# and then remove the temporary folder. 
-# Command should assume that it starts srcdir, and execute a shell script in there. 
+# Execute a remote SSH cmd with identity file (private SSH key), user, host,
+# Copy all directory of srcdir into a temporary folder, execute the command,
+# and then remove the temporary folder.
+# Command should assume that it starts srcdir, and execute a shell script in there.
 # If dstdir is given, the remote command will be executed at dstdir, and its content won't be removed
 def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd, supressWarning = False, preRemove = True, removeAfterExecution = True, dstdir = None ):
-    if dstdir is None: 
+    if dstdir is None:
         tmpdir = os.path.join("/tmp", str(uuid.uuid4()))
         preRemove = False
     else:
@@ -358,9 +370,9 @@ def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd, supress
     SSH_exec_cmd( identity_file, user, host, dstcmd )
 
 
-# Execute a remote SSH cmd with identity file (private SSH key), user, host, 
-# Copy a bash script a temporary folder, execute the script, 
-# and then remove the temporary file. 
+# Execute a remote SSH cmd with identity file (private SSH key), user, host,
+# Copy a bash script a temporary folder, execute the script,
+# and then remove the temporary file.
 def SSH_exec_script( identity_file, user, host, script, supressWarning = False, removeAfterExecution = True):
     tmpfile = os.path.join("/tmp", str(uuid.uuid4())+".sh")
     scp( identity_file, script, tmpfile, user, host)
@@ -382,9 +394,9 @@ def get_ETCD_discovery_URL(size):
         try:
             output = urllib.urlopen("https://discovery.etcd.io/new?size=%d" % size ).read()
             if not "https://discovery.etcd.io" in output:
-                raise Exception("ERROR: we cannot get etcd discovery url from 'https://discovery.etcd.io/new?size=%d', got message %s" % (size,output)) 
+                raise Exception("ERROR: we cannot get etcd discovery url from 'https://discovery.etcd.io/new?size=%d', got message %s" % (size,output))
         except Exception as e:
-            raise Exception("ERROR: we cannot get etcd discovery url from 'https://discovery.etcd.io/new?size=%d'" % size) 
+            raise Exception("ERROR: we cannot get etcd discovery url from 'https://discovery.etcd.io/new?size=%d'" % size)
     return output
 
 
@@ -404,7 +416,7 @@ def gen_SSH_key(regenerate_key):
         print("generating ssh key...")
         if regenerate_key:
             os.system("rm -rf ./deploy/sshkey || true")
-        
+
         os.system("mkdir -p ./deploy/sshkey")
         if not os.path.exists("./deploy/sshkey/id_rsa"):
             os.system("ssh-keygen -t rsa -b 4096 -f ./deploy/sshkey/id_rsa -P ''")
@@ -435,7 +447,7 @@ def setup_backup_dir(pname):
 
 def execute_backup_and_encrypt(clusterName, fname, key):
     clusterID = get_cluster_ID_from_file()
-    backupdir = "./deploy_backup/backup" 
+    backupdir = "./deploy_backup/backup"
     os.system("mkdir -p %s/clusterID" % backupdir)
     os.system("cp -r ./*.yaml %s" % backupdir)
     os.system("cp -r ./deploy/sshkey %s/sshkey" % backupdir)
@@ -483,7 +495,7 @@ def execute_restore_and_decrypt(fname, key):
     os.system("mkdir -p ./deploy/ssl" )
     os.system("mkdir -p ./deploy/etc" )
     if os.path.exists("%s/etc" % backupdir):
-        os.system("cp -r %s/etc/* ./deploy/etc" % backupdir)    
+        os.system("cp -r %s/etc/* ./deploy/etc" % backupdir)
     os.system("cp -r %s/sshkey/* ./deploy/sshkey" % backupdir)
     if os.path.exists("%s/ssl/kubelet" %backupdir):
         os.system("cp -r %s/ssl/* ./deploy/ssl" % backupdir)
@@ -522,7 +534,7 @@ def backup_keys(clusterName, nargs=[] ):
             key = None
         else:
             key = nargs[1]
-        
+
     execute_backup_and_encrypt( clusterName, fname, key )
 
 

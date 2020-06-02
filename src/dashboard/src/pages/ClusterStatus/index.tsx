@@ -63,14 +63,14 @@ const ClusterStatus: FC = () => {
 
     response['getIdleGPUPerUserUrl'] = getIdleGPUPerUser;
     response['ClusterName'] = cluster;
-    response['GranaUrl'] = `${grafana}dashboard/db/gpu-usage?refresh=30s&orgId=1&_=${Date.now()}`;
-    response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-gpu-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}`;
+    response['GranaUrl'] = `${grafana}dashboard/db/device-usage?refresh=30s&orgId=1&_=${Date.now()}`;
+    response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-device-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}`;
     return response;
   }
   const fetchClusterStatus = (mount: boolean) => {
     if (clusters && mount) {
       const params = new URLSearchParams({
-        query:`count (task_gpu_percent{vc_name="${selectedTeam}"} == 0) by (username,gpu_type)`,
+        query:`count (task_device_percent{vc_name="${selectedTeam}"} == 0) by (username,device_type)`,
       });
       const filterclusters = convertToArrayByKey(clusters, 'id');
       setSelectedValue(filterclusters[0]);
@@ -238,11 +238,11 @@ const ClusterStatus: FC = () => {
         })
 
         setIframeUrl(userfetchs['GranaUrl'] );
-        console.log('GranaUrl', userfetchs['GranaUrl'])
+        // console.log('GranaUrl', userfetchs['GranaUrl'])
         setNodeStatus(userfetchs['node_status']);
         setIframeUrlForPerVC(userfetchs['GPUStatisticPerVC']);
-        console.log('GPUStatisticPerVC', userfetchs['GPUStatisticPerVC'])
-        setVcStatus(res);
+        // console.log('GPUStatisticPerVC', userfetchs['GPUStatisticPerVC'])
+        setVcStatus(res.filter(Boolean));
       })
     }
   }
@@ -269,12 +269,12 @@ const ClusterStatus: FC = () => {
     setSelectedValue(event.target.value);
     localStorage.setItem('selectedCluster', event.target.value);
     const filteredVCStatus: any = vcStatus.filter((vc)=>vc['ClusterName'] === event.target.value);
-    console.log(vcStatus)
     fetchClusterStatus(mount)
     setNodeStatus(filteredVCStatus[0]['node_status']);
     setIframeUrl((filteredVCStatus[0]['GranaUrl']));
   }
-  if (vcStatus){
+
+  // if (vcStatus){
     return (
       <>
         <DLTSTabs value={value} setShowIframe={setShowIframe} setValue={setValue} titles={ClusterStatusTitles} />
@@ -284,7 +284,7 @@ const ClusterStatus: FC = () => {
           onChangeIndex={(value) => handleChangeIndex(value, setValue)}
         >
           <DLTSTabPanel value={value} index={0} dir={theme.direction} title={ClusterStatusTitles[value]}>
-            <TeamVirtualClusterStatus vcStatus={vcStatus} selectedValue={selectedValue} handleChange={(event: React.ChangeEvent<HTMLInputElement>) => handleChange(event, true)}/>
+            <TeamVirtualClusterStatus vcStatus={vcStatus || []} selectedValue={selectedValue} handleChange={(event: React.ChangeEvent<HTMLInputElement>) => handleChange(event, true)}/>
           </DLTSTabPanel>
           <DLTSTabPanel value={value} index={1} dir={theme.direction} title={ClusterStatusTitles[value]}>
             <TeamVCUserStatus userStatus={userStatus} currentCluster={selectedValue} showCurrentUser={showCurrentUser} handleSwitch={handleSwitch}/>
@@ -302,14 +302,13 @@ const ClusterStatus: FC = () => {
         </SwipeableViews>
       </>
     )
-  } else {
-    return (
-      <Box display="flex" justifyContent="center">
-        <CircularProgress/>
-      </Box>
-    )
-  }
-
+  // } else {
+  //   return (
+  //     <Box display="flex" justifyContent="center">
+  //       <CircularProgress/>
+  //     </Box>
+  //   )
+  // }
 }
 
 export default ClusterStatus;

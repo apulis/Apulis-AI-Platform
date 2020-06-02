@@ -330,7 +330,7 @@ def get_pod_status(pod):
             if "startedAt" in containerStatus["state"]["terminated"] and containerStatus["state"]["terminated"]["startedAt"] is not None:
                 podstatus["startedAt"] = localize_time(containerStatus["state"]["terminated"]["startedAt"])
         elif "state" in containerStatus and "running" in containerStatus["state"] and "startedAt" in containerStatus["state"]["running"]:
-            podstatus["message"] = "started at: " + localize_time(containerStatus["state"]["running"]["startedAt"])
+            podstatus["message"] = "started at " + localize_time(containerStatus["state"]["running"]["startedAt"])
             if "startedAt" in containerStatus["state"]["running"]:
                 podstatus["startedAt"] = localize_time(containerStatus["state"]["running"]["startedAt"])
 
@@ -380,13 +380,12 @@ def GetJobStatus(jobId):
 
 
 def get_node_labels(key):
-    if config["deploy_method"]=="kubeadm":
-        responseStr = kubectl_exec(" get nodes -o yaml")
-        nodes = yaml.load(responseStr)
-    else:
-        url = "%s/api/v1/nodes" % (config["apiserver"])
-        responseStr = curl_get(url)
-        nodes = json.loads(responseStr)
+    # update method for get node labels on kubeadm deploy
+    responseStr = kubectl_exec(" get nodes -o yaml")
+    nodes = yaml.load(responseStr)
+    # url = "%s/api/v1/nodes" % (config["apiserver"])
+    # responseStr = curl_get(url)
+    # nodes = json.loads(responseStr)
     ret = []
 
     if "items" in nodes:

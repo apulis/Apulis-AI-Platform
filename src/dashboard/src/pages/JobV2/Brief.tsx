@@ -19,7 +19,6 @@ import Context from './Context';
 
 const Brief: FunctionComponent = () => {
   const { cluster, job } = useContext(Context);
-  console.log('job', job)
   return (
     <List dense>
       <ListItem>

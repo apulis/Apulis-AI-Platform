@@ -164,7 +164,6 @@ const Controller: React.FC<ControllerProps> = ({ endpoints, post, status }) => {
   }, [post, interactivePort]);
 
   useEffect(() => {
-    console.log(status)
     if (Array.isArray(endpoints)) {
       endpoints.forEach(({ name }) => {
         if (name === 'ssh') setSshEnabled(true);

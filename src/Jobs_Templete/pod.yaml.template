@@ -14,7 +14,7 @@ metadata:
     jobId: {{ job["jobId"] }}
     jobRole: {{ jobRole }}
     userName: {{ job["user"] }}
-    vcName: {{ job["vcName"] }}
+    vcName: "{{ job["vcName"] }}"
     type: job
     'gpu-request': '{{ job["gpuLimit"]|int }}'
 
@@ -261,13 +261,13 @@ spec:
     - name: DLWS_USER_EMAIL
       value: "{{ job["user_email"] }}"
     - name: DLWS_VC_NAME
-      value: {{ job["vcName"] }}
+      value: "{{ job["vcName"] }}"
     {% if job["hostNetwork"] %}
     - name: DLWS_HOST_NETWORK
       value: "enable"
     {% endif %}
     {% for env in job["envs"] %}
-    - name: {{env.name}}
+    - name: "{{env.name}}"
       value: "{{env.value}}"
     {% endfor %}
     {% if job["nccl_ib_disable"] %}

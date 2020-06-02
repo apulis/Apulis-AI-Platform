@@ -18,7 +18,8 @@ spec:
       name: node-exporter
     spec:
       containers:
-      - image: prom/node-exporter:v0.16.0
+          #- image: prom/node-exporter:v0.16.0
+      - image: {{cnf["dockers"]["container"]["node-exporter"]["fullname"]}}
         imagePullPolicy: Always
         readinessProbe:
           tcpSocket:

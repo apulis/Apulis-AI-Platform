@@ -138,9 +138,10 @@ class ResourceGauges(object):
 
         self.task_labels_gpu = copy.deepcopy(self.task_labels)
         self.task_labels_gpu.append("minor_number")
-        self.task_labels_gpu.append("device_type")
-        self.task_labels_gpu.append("device_str")
         self.task_labels_gpu.append("uuid")
+        self.task_labels_device = copy.deepcopy(self.task_labels_gpu)
+        self.task_labels_device.append("device_type")
+        self.task_labels_device.append("device_str")
 
         self.gauges = {}
 
@@ -163,10 +164,10 @@ class ResourceGauges(object):
 
         self.add_gauge("task_device_percent",
                 "how much percent of gpu core this task used",
-                self.task_labels_gpu)
+                self.task_labels_device)
         self.add_gauge("task_device_mem_percent",
                 "how much percent of gpu memory this task used",
-                self.task_labels_gpu)
+                self.task_labels_device)
 
     def add_task_and_service_gauge(self, name_tmpl, desc_tmpl):
         self.add_gauge(name_tmpl.format("task"), desc_tmpl.format("task"),

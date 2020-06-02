@@ -420,7 +420,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     let totalGpus = gpus;
     if (type === 'PSDistJob') {
       job.numps = 1;
-      job.resourcegpu = gpusPerNode;
+      job.resourcegpu = 8;
       job.numpsworker = workers;
       totalGpus = gpusPerNode * workers;
     } else {
@@ -500,7 +500,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
     return true;
   }
-  
+
   const validateNumDevices = (val: string) => {
     if (val) {
       const _val = Number(val);

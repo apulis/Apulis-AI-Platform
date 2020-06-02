@@ -15,6 +15,7 @@ interface Context {
   availbleGpu: AvailbleGpuType[];
   selectedTeam: string;
   userName?: string;
+  getTeams(): void;
 }
 
 const Context = React.createContext<Context>({
@@ -23,7 +24,8 @@ const Context = React.createContext<Context>({
   saveSelectedCluster: function(team: React.SetStateAction<string>) {},
   availbleGpu: [],
   selectedTeam: '',
-  userName: ''
+  userName: '',
+  getTeams: function() {}
 });
 
 export default Context;
@@ -40,7 +42,8 @@ export interface ClusterType {
 }
 
 export const Provider: React.FC = ({ children }) => {
-  const { teams, selectedTeam } = React.useContext(TeamContext);
+  const { teams, selectedTeam, getTeams } = React.useContext(TeamContext);
+  console.log('React.useContext(TeamContext)'),React.useContext(TeamContext)
   const { userName } = React.useContext(UserContext);
   const [clusters, setClusters] = React.useState<ClusterType[]>([]);
   const [selectedCluster, setSelectedCluster] = React.useState<string>('');
@@ -73,7 +76,7 @@ export const Provider: React.FC = ({ children }) => {
   }
   return (
     <Context.Provider
-      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu, selectedTeam, userName }}
+      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu, selectedTeam, userName, getTeams }}
       children={children}
     />
   );

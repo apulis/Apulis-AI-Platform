@@ -60,7 +60,7 @@
                 "expr": "histogram_quantile(0.9, sum(rate(datahandler_fn_latency_seconds_bucket{scraped_from=~\"jobmanager.*\"}[5m])) by (le, fn_name))",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{'{{'}} fn_name {{'}}'}}",
+                "legendFormat": "{{fn_name}}",
                 "refId": "A"
               }
             ],
@@ -135,7 +135,7 @@
                 "expr": "histogram_quantile(0.9, sum(rate(datahandler_fn_latency_seconds_bucket{scraped_from=~\"restfulapi.*\"}[5m])) by (le, fn_name))",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{'{{'}} fn_name {{'}}'}}",
+                "legendFormat": "{{fn_name}}",
                 "refId": "A"
               }
             ],
@@ -384,6 +384,7 @@
     },
     "timezone": "browser",
     "title": "Performance dashboard",
-    "version": 0
+    "version": 0,
+    "uid": "perf"
   }
 }

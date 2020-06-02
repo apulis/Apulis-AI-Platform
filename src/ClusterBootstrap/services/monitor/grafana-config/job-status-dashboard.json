@@ -21,6 +21,7 @@
   "links": [],
   "refresh": "30s",
   "rows": [
+
     {
       "collapse": false,
       "height": "250px",
@@ -32,8 +33,7 @@
           "dashes": false,
           "datasource": "PM",
           "fill": 0,
-          "height": "400px",
-          "id": 1,
+          "id": 3,
           "legend": {
             "avg": false,
             "current": false,
@@ -58,10 +58,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_cpu_percent{job_name=\"$job_name\"}",
+              "expr": "avg (task_cpu_percent{job_name=\"$job_name\"}) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}}",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ],
@@ -108,8 +108,7 @@
           "dashes": false,
           "datasource": "PM",
           "fill": 0,
-          "height": "400px",
-          "id": 2,
+          "id": 4,
           "legend": {
             "avg": false,
             "current": false,
@@ -134,10 +133,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_mem_usage_byte{job_name=\"$job_name\"}",
+              "expr": "avg (task_mem_usage_byte{job_name=\"$job_name\"}) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}}",
+              "legendFormat": "{{instance}}",
               "refId": "A"
             }
           ],
@@ -187,7 +186,7 @@
     },
     {
       "collapse": false,
-      "height": 250,
+      "height": "250px",
       "panels": [
         {
           "aliasColors": {},
@@ -196,8 +195,7 @@
           "dashes": false,
           "datasource": "PM",
           "fill": 0,
-          "height": "400px",
-          "id": 3,
+          "id": 5,
           "legend": {
             "avg": false,
             "current": false,
@@ -222,18 +220,18 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_net_in_byte{job_name=\"$job_name\"}",
+              "expr": "sum(rate(task_net_in_byte{job_name=\"$job_name\"}[5m])) by (instance)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
+              "legendFormat": "{{instance}} Inbound",
               "refId": "A"
             },
             {
-              "expr": "task_net_out_byte{job_name=\"$job_name\"}",
+              "expr": "sum(rate(task_net_out_byte{job_name=\"$job_name\"}[5m])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
+              "legendFormat": "{{instance}} Outbound",
               "refId": "B"
             }
           ],
@@ -280,8 +278,7 @@
           "dashes": false,
           "datasource": "PM",
           "fill": 0,
-          "height": "400px",
-          "id": 4,
+          "id": 6,
           "legend": {
             "avg": false,
             "current": false,
@@ -306,18 +303,18 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(task_block_in_byte{job_name=\"$job_name\"}[300s])",
+              "expr": "avg (irate(task_block_in_byte{job_name=\"$job_name\"}[300s])) by (instance)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
+              "legendFormat": "{{instance}} Read",
               "refId": "A"
             },
             {
-              "expr": "irate(task_block_out_byte{job_name=\"$job_name\"}[300s])",
+              "expr": "avg (irate(task_block_out_byte{job_name=\"$job_name\"}[300s])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
+              "legendFormat": "{{instance}} Write",
               "refId": "B"
             }
           ],
@@ -376,7 +373,7 @@
           "dashes": false,
           "datasource": null,
           "fill": 1,
-          "id": 5,
+          "id": 9,
           "legend": {
             "avg": false,
             "current": false,
@@ -401,11 +398,174 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_gpu_percent{job_name=\"$job_name\"}",
+              "expr": "task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "NPU {{minor_number}} on {{instance}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "NPU Usage",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": "100",
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "id": 10,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "NPU {{minor_number}} on {{instance}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "NPU Memory Usage",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": "100",
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Dashboard Row",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "id": 1,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
+              "format": "time_series",
+              "hide": false,
+              "intervalFactor": 2,
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -452,7 +612,7 @@
           "dashes": false,
           "datasource": null,
           "fill": 1,
-          "id": 6,
+          "id": 2,
           "legend": {
             "avg": false,
             "current": false,
@@ -477,10 +637,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_gpu_mem_percent{job_name=\"$job_name\"}",
+              "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
@@ -530,19 +690,15 @@
     },
     {
       "collapse": false,
-      "height": 250,
+      "height": "250px",
       "panels": [
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "PM",
-          "decimals": 3,
-          "editable": true,
-          "error": false,
-          "fill": 0,
-          "grid": {},
+          "datasource": null,
+          "fill": 1,
           "id": 7,
           "legend": {
             "avg": false,
@@ -556,8 +712,7 @@
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "minSpan": null,
-          "nullPointMode": "connected",
+          "nullPointMode": "null",
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -569,26 +724,22 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "huaweismi_utilization_npu{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "task_dcgm_gpu_util{job_name=\"$job_name\"}",
               "format": "time_series",
-              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
-              "interval": "",
+              "hide": false,
               "intervalFactor": 2,
-              "metric": "",
-              "refId": "A",
-              "step": 600,
-              "target": ""
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
+              "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Utilization",
+          "title": "GPU DCGM Util",
           "tooltip": {
-            "msResolution": true,
             "shared": true,
             "sort": 0,
-            "value_type": "cumulative"
+            "value_type": "individual"
           },
           "type": "graph",
           "xaxis": {
@@ -601,17 +752,19 @@
           "yaxes": [
             {
               "format": "percent",
+              "label": null,
               "logBase": 1,
-              "max": 100,
-              "min": 0,
+              "max": "100",
+              "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
               "max": null,
               "min": null,
-              "show": false
+              "show": true
             }
           ]
         },
@@ -620,27 +773,22 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "PM",
-          "decimals": 3,
-          "editable": true,
-          "error": false,
-          "fill": 0,
-          "grid": {},
+          "datasource": null,
+          "fill": 1,
           "id": 8,
           "legend": {
-            "show": true,
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
+            "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "minSpan": null,
-          "nullPointMode": "connected",
+          "nullPointMode": "null",
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -652,22 +800,22 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "huaweismi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "task_dcgm_mem_copy_util{job_name=\"$job_name\"}",
               "format": "time_series",
-              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
+              "hide": false,
               "intervalFactor": 2,
+              "legendFormat": "GPU {{minor_number}} on {{instance}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Memory",
+          "title": "GPU DCGM Mem Copy Util",
           "tooltip": {
-            "msResolution": true,
             "shared": true,
             "sort": 0,
-            "value_type": "cumulative"
+            "value_type": "individual"
           },
           "type": "graph",
           "xaxis": {
@@ -680,17 +828,19 @@
           "yaxes": [
             {
               "format": "percent",
+              "label": null,
               "logBase": 1,
-              "max": 100,
-              "min": 0,
+              "max": "100",
+              "min": "0",
               "show": true
             },
             {
               "format": "short",
+              "label": null,
               "logBase": 1,
               "max": null,
               "min": null,
-              "show": false
+              "show": true
             }
           ]
         }
@@ -762,5 +912,6 @@
   },
   "timezone": "browser",
   "title": "Job Status",
-  "version": 1
+  "version": 1,
+  "uid": "job-status"
 }}

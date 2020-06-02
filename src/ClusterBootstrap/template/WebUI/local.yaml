@@ -36,5 +36,5 @@ clusters:
       title: Grafana-endpoint-of-the-cluster
       workStorage: work
       dataStorage: data
-      grafana: "http://{{cnf["webportal_node"]}}/endpoints/grafana/"
+      grafana: "https://{{cnf["webportal_node"]}}/endpoints/grafana/"
       prometheus: http://{{cnf["restfulapi_node"]}}:9091

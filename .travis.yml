@@ -1,9 +1,5 @@
 matrix:
   include:
-  - language: ruby
-    rvm: 
-    - 2.1
-    script: "cd docs && bundle install && bundle exec jekyll build"
   - language: node_js
     node_js: lts/*
     before_install: cd src/dashboard
@@ -36,6 +32,25 @@ matrix:
       - pip install pyyaml requests tabulate cachetools kubernetes
     script:
       - python -m unittest discover .
+  - language: python
+    python: 3.6
+    before_install:
+      - cd src/utils
+    script:
+      - python -m unittest discover .
+  - language: python
+    python: 3.6
+    before_install:
+      - pip -V
+      - python -V
+      - cd src/ClusterManager
+    install:
+      - pip install -r requirements.txt
+    script:
+      - python -m unittest test_cluster_status.py
+      - python -m unittest test_virtual_cluster_status.py
+      - python -m unittest test_mountpoint.py
+      - python -m unittest test_job_manager.py
   - language: python
     python: 3.6
     before_install:

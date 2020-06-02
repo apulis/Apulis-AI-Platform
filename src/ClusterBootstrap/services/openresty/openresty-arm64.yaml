@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         restfulapi: active
-        archType: amd64
+        archType: arm64
       containers:
       - name: openresty
         image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}

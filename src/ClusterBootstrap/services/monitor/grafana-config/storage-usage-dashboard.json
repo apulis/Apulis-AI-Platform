@@ -59,7 +59,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{ device }}",
+              "legendFormat": "{{'{{'}} device {{'}}'}}",
               "refId": "A"
             }
           ],

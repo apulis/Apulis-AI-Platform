@@ -3785,14 +3785,14 @@
           "expr": "count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(GPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
           "expr": "count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(NPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -3872,14 +3872,14 @@
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(GPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(NPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -3959,14 +3959,14 @@
           "expr": "count(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(GPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
           "expr": "count(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(NPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4046,14 +4046,14 @@
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(GPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) by (username)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "{{username}}(NPU)",
+          "legendFormat": "{{'{{'}}username{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],

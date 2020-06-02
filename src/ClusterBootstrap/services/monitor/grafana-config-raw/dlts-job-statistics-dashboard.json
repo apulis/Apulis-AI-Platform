@@ -2098,14 +2098,14 @@
           "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU {{minor_number}} on {{instance}}",
+          "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
           "refId": "A"
         },
         {
           "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU {{minor_number}} on {{instance}}",
+          "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
           "refId": "B"
         }
       ],
@@ -2186,14 +2186,14 @@
           "expr": "avg(task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU {{minor_number}} on {{instance}}",
+          "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
           "refId": "A"
         },
         {
           "expr": "avg(task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU {{minor_number}} on {{instance}}",
+          "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
           "refId": "B"
         }
       ],
@@ -2274,7 +2274,7 @@
           "expr": "avg(task_cpu_percent{job_name=\"$job_name\"}) by (instance) / 100",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": " {{instance}}",
+          "legendFormat": " {{'{{'}}instance{{'}}'}}",
           "refId": "A"
         }
       ],
@@ -2355,7 +2355,7 @@
           "expr": "avg(task_mem_usage_byte{job_name=\"$job_name\"}) by (instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": " {{instance}}",
+          "legendFormat": " {{'{{'}}instance{{'}}'}}",
           "refId": "A"
         }
       ],
@@ -2441,14 +2441,14 @@
           "expr": "sum(rate(task_block_in_byte{job_name=\"$job_name\"}[5m])) by (instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": " {{instance}} In",
+          "legendFormat": " {{'{{'}}instance{{'}}'}} In",
           "refId": "A"
         },
         {
           "expr": "sum(rate(task_block_out_byte{job_name=\"$job_name\"}[5m])) by (instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": " {{instance}} Out",
+          "legendFormat": " {{'{{'}}instance{{'}}'}} Out",
           "refId": "B"
         }
       ],
@@ -2539,7 +2539,7 @@
           "expr": "sum(rate(task_net_in_byte{job_name=\"$job_name\"}[5m])) by (instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": " {{instance}} In",
+          "legendFormat": " {{'{{'}}instance{{'}}'}} In",
           "refId": "A"
         },
         {
@@ -2547,7 +2547,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": " {{instance}} Out",
+          "legendFormat": " {{'{{'}}instance{{'}}'}} Out",
           "refId": "B"
         }
       ],

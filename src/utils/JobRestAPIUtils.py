@@ -909,11 +909,11 @@ def GetEndpoints(userName, jobId):
                             epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
                         if epItem["name"] == "ssh":
                             try:
-                                desc = yaml.full_load_all(base64.b64decode(job["jobDescription"]))
+                                desc = list(yaml.full_load_all(base64.b64decode(job["jobDescription"])))
                                 if epItem["id"].find("worker")!=-1:
-                                    desc = desc[int(re.match("worker(\d+)","worker1").groups()[0])]
+                                    desc = desc[int(re.match(".*worker(\d+)-ssh",epItem["id"]).groups()[0])+1]
                                 elif epItem["id"].find("ps0")!=-1:
-                                    desc = desc[int(re.match(".*worker(\d+)-ssh",epItem["id"]).groups()[0])]
+                                    desc = desc[0]
                                 else:
                                     desc = desc[0]
                                 for i in desc["spec"]["containers"][0]["env"]:

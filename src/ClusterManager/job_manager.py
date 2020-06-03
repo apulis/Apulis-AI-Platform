@@ -604,8 +604,8 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))
         vc_name = sji["job"]["vcName"]
         if vc_name not in vc_resources:
+            logger.error("job: %s belong to a no-exist vc %s" % (sji["jobId"], vc_name))
             if sji["job"]["jobStatus"] in ["scheduling", "running"]:
-                logger.error("job: %s belong to a no-exist vc %s"%(sji["jobId"],vc_name))
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus","killing")
             else:
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")

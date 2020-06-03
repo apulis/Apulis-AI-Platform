@@ -58,7 +58,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_cpu_percent{job_name=\"$job_name\"}",
+              "expr": "avg (task_cpu_percent{job_name=\"$job_name\"}) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}}",
@@ -133,7 +133,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_mem_usage_byte{job_name=\"$job_name\"}",
+              "expr": "avg (task_mem_usage_byte{job_name=\"$job_name\"}) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}}",
@@ -303,7 +303,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(task_block_in_byte{job_name=\"$job_name\"}[300s])",
+              "expr": "avg (irate(task_block_in_byte{job_name=\"$job_name\"}[300s])) by (instance)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -311,7 +311,7 @@
               "refId": "A"
             },
             {
-              "expr": "irate(task_block_out_byte{job_name=\"$job_name\"}[300s])",
+              "expr": "avg (irate(task_block_out_byte{job_name=\"$job_name\"}[300s])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{instance}} Write",

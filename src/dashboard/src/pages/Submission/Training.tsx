@@ -691,6 +691,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={e => setName(e.target.value)}
                     helperText={errors.jobName ? errors.jobName.message : ''}
                     InputLabelProps={{ shrink: true }}
+                    inputProps={{ maxLength: 20 }}
                     inputRef={register({
                       required: 'Job Name is required！',
                       pattern: {

@@ -1,7 +1,7 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: openresty
+  name: openresty-arm64
   namespace: default
 spec:
   selector:
@@ -20,7 +20,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         restfulapi: active
-        archType: amd64
+        archType: arm64
       containers:
       - name: openresty
         image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}

@@ -29,7 +29,6 @@ import {
   lighten
 } from "@material-ui/core/styles";
 import { MoreVert, FileCopyRounded} from "@material-ui/icons";
-
 import {Cell, PieChart, Pie, ResponsiveContainer,Sector} from "recharts";
 import UserContext from "../../contexts/User";
 import TeamsContext from '../../contexts/Teams';
@@ -43,10 +42,11 @@ import {
 import copy from 'clipboard-copy'
 import {checkObjIsEmpty, sumValues} from "../../utlities/ObjUtlities";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
-
 import _ from "lodash";
 import {type} from "os";
 import useCheckIsDesktop from "../../utlities/layoutUtlities";
+import './index.less';
+
 const useStyles = makeStyles((theme: Theme) => createStyles({
   avatar: {
     backgroundColor: theme.palette.secondary.main,
@@ -168,9 +168,9 @@ const Chart: React.FC<{
         {
           (!(available === 0 && used === 0 && reserved === 0)) && 
           <>
-            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{`${value}`}</text>
+            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{value === 0 ? '' : `${value}`}</text>
             <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
-              {`(${(Math.round(percent * 100))}%)`}
+              {percent === 0 ? '' : `(${(Math.round(percent * 100))}%)`}
             </text>
           </>
         }
@@ -215,17 +215,6 @@ export const DirectoryPathTextField: React.FC<{
   const handleWarnClose = () => {
     setOpenCopyWarn(false);
   }
-  const onMouseOver = React.useCallback(() => {
-    if (input.current) {
-      input.current.select();
-    }
-  }, [input])
-  const onFocus = React.useCallback(() => {
-    if (input.current) {
-      input.current.select();
-    }
-  },
-  [input]);
   const handleCopy = React.useCallback(() => {
     if (input.current) {
       copy(input.current.innerHTML).then(()=>{
@@ -240,6 +229,7 @@ export const DirectoryPathTextField: React.FC<{
         inputRef={input}
         label={label}
         value={value}
+        className="cardText"
         multiline
         rows={2}
         fullWidth
@@ -251,15 +241,12 @@ export const DirectoryPathTextField: React.FC<{
             <InputAdornment position="end">
               <Tooltip title="Copy" placement="right">
                 <IconButton>
-                  <FileCopyRounded/>
+                  <FileCopyRounded onClick={handleCopy} />
                 </IconButton>
               </Tooltip>
             </InputAdornment>
           )
         }}
-        onMouseOver={onMouseOver}
-        onFocus={onFocus}
-        onClick={handleCopy}
       />
       <DLTSSnackbar message={"Successfully copied"} autoHideDuration={500} open={openCopyWarn} handleWarnClose={handleWarnClose} />
     </>
@@ -450,29 +437,25 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
           <MuiThemeProvider theme={tableTheme}>
             <Table>
               <TableBody>
-                {
-                  nfsStorage.map((nfs: any, index: number) => {
-                    let nfsMountNames = nfs['mountpointName'].split("/");
-                    let mounName = "";
-                    if (nfs['mountpointName'].indexOf("dlws") !== -1) {
-                      mounName = "/data";
-                    } else {
-                      nfsMountNames.splice(0, nfsMountNames.length - 1);
-                      mounName = "/" + nfsMountNames.join('/');
-                    }
-                    let value = nfs['total'] == 0 ? 0 : (nfs['used'] / nfs['total']) * 100;
-                    return (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {
-                            value < 80 ? <BorderLinearProgress value={value} variant={"determinate"}/> : value >= 80 && value < 90 ? <GenernalLinerProgress value={value} variant={"determinate"}/> : <FullBorderLinearProgress value={value} variant={"determinate"}/>
-                          }
-                          <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(${nfs['used']}/${nfs['total']}) ${Math.floor(value)}% used`}</span></div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-                }
+                {nfsStorage.map((nfs: any, index: number) => {
+                  let nfsMountNames = nfs['mountpointName'].split("/");
+                  let mounName = "";
+                  if (nfs['mountpointName'].indexOf("dlws") !== -1) {
+                    mounName = "/data";
+                  } else {
+                    nfsMountNames.splice(0, nfsMountNames.length - 1);
+                    mounName = "/" + nfsMountNames.join('/');
+                  }
+                  let value = nfs['total'] == 0 ? 0 : (nfs['used'] / nfs['total']) * 100;
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>
+                        {value < 80 ? <BorderLinearProgress value={value} variant={"determinate"}/> : value >= 80 && value < 90 ? <GenernalLinerProgress value={value} variant={"determinate"}/> : <FullBorderLinearProgress value={value} variant={"determinate"}/>}
+                        <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(used: ${nfs['used']}, total: ${nfs['total']}) ${Math.floor(value)}% used`}</span></div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </MuiThemeProvider>

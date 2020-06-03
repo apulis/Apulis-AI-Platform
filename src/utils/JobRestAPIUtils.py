@@ -908,10 +908,19 @@ def GetEndpoints(userName, jobId):
                         if "nodeName" in endpoint:
                             epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
                         if epItem["name"] == "ssh":
-                            desc = yaml.full_load(base64.b64decode(job["jobDescription"]))
-                            for i in desc["spec"]["containers"][0]["env"]:
-                                if i["name"] == "DLTS_JOB_TOKEN":
-                                    epItem["password"] = i["value"]
+                            try:
+                                desc = yaml.full_load_all(base64.b64decode(job["jobDescription"]))
+                                if epItem["id"].find("worker")!=-1:
+                                    desc = desc[int(re.match("worker(\d+)","worker1").groups()[0])]
+                                elif epItem["id"].find("ps0")!=-1:
+                                    desc = desc[int(re.match(".*worker(\d+)-ssh",epItem["id"]).groups()[0])]
+                                else:
+                                    desc = desc[0]
+                                for i in desc["spec"]["containers"][0]["env"]:
+                                    if i["name"] == "DLTS_JOB_TOKEN":
+                                        epItem["password"] = i["value"]
+                            except Exception as e:
+                                logger.error(e)
                     ret.append(epItem)
     except Exception as e:
         logger.error("Get endpoint exception, ex: %s", str(e))

@@ -1,7 +1,6 @@
 sudo rm -rf lib
 sudo mkdir lib
 sudo rm npu-smi
-sudo cp /lib/ld-linux-aarch64.so.1 lib/
 sudo cp /usr/local/Ascend/driver/lib64/common/libslog.so lib/
 sudo cp /usr/local/Ascend/driver/lib64/common/libc_sec.so lib/
 sudo cp /usr/local/Ascend/driver/lib64/common/libmmpa.so lib/

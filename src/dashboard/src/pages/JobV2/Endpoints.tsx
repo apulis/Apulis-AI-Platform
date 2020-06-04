@@ -52,7 +52,7 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     const command = `ssh -i ${identify} -p ${endpoint['port']} ${endpoint['username']}@${host}` + ` [Password: ${endpoint['password'] ? endpoint['password'] : ''}]`
     return <CopyableTextListItem primary={`SSH${task ? ` to ${task}` : ''}`} secondary={command}/>;
   }
-  const url = `http://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
+  const url = `http://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/endpoints/${endpoint['port']}/`
   if (endpoint.name === 'ipython') {
     return (
       <ListItem button component="a" href={url} target="_blank">
@@ -95,7 +95,7 @@ const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> =
       }
       return endpointA['port'] - endpointB['port'];
     });
-  }, [endpoints]); 
+  }, [endpoints]);
   return (
     <List dense style={{ paddingBottom: 20 }}>
       {sortedEndpoints.map((endpoint, idx) => {
@@ -175,7 +175,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
         flag = false;
       } else {
         flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
-      } 
+      }
       !flag && setError('interactivePorts', 'validate', OneInteractivePortsMsg);
       return flag;
     }

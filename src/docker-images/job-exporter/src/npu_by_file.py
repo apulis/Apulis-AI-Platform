@@ -70,7 +70,7 @@ def huawei_npu_smi(histogram, timeout):
                 device_info_output = f.read()
                 f.close()
 
-            npu_smi_output.append(device_info_output)
+            npu_smi_output.append((one_npu_id,device_info_output))
 
         return parse_smi_xml_result(npu_smi_output)
 

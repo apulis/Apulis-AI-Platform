@@ -99,14 +99,14 @@ def setup_ssh_server(user_name, pod_name, host_network=False):
 
 
 def setup_jupyter_server(user_name, pod_name,jupyter_port,nodePort):
-    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
+    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; if [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
         raise Exception("Failed to start jupyter server in container. JobId: %s " % pod_name)
 
 
 def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
+    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if [ -x \"$(command -v tensorboard)\" ];then apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard;fi && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output == "":
         raise Exception("Failed to start tensorboard in container. JobId: %s " % pod_name)

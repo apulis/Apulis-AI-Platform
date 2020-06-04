@@ -57,6 +57,8 @@ spec:
           value: all
         - name: LD_LIBRARY_PATH
           value: $LD_LIBRARY_PATH:/usr/local/HiAI/add-ons:/usr/local/HiAI/driver/lib64:/usr/local/HiAI/runtime/lib64:/usr/local/HiAI/toolchain/lib64  
+        - name: npu_info
+          value: /var/log/npu/npu_smi
         volumeMounts:
         - mountPath: /var/run/docker.sock
           name: docker-socket
@@ -68,6 +70,8 @@ spec:
           mountPath: /usr/local/HiAI
         - name: npu-smi
           mountPath: /usr/local/sbin/
+        - name: npu_info 
+          mountPath: /var/log/npu/npu_smi
         name: job-exporter
         ports:
         - containerPort: {{cnf['job-exporter']['port']}}

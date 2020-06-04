@@ -196,7 +196,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           checked={ipython || undefined}
           disabled={ipython || disabled}
           control={<Switch/>}
-          label="iPython"
+          label="jupyter"
           onChange={onChange('iPython')}
         />
         <FormControlLabel

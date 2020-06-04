@@ -54,7 +54,7 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
   }
   let url;
   if (endpoint.name == "ipython" || endpoint.name === 'tensorboard'){
-    url = `http://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
+    url = `http://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/endpoints/${endpoint['port']}/`
   }
   else{
     url = `http://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/`

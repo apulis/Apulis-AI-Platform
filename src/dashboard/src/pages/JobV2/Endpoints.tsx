@@ -77,7 +77,8 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
   return (
     <ListItem button component="a" href={url} target="_blank">
       <ListItemText secondary={url}
-        primary={<p>Port {endpoint['podPort']} （<span>The server needs to use <code>/endpoints/{endpoint['podPort']}/</code> as the root path</span>）</p>} />
+        // primary={<p>Port {endpoint['podPort']} （<span>The server needs to use <code>/endpoints/{endpoint['podPort']}/</code> as the root path</span>）</p>} />
+        primary={<p>Port {endpoint['podPort']}</p>} />
     </ListItem>
   );
 }

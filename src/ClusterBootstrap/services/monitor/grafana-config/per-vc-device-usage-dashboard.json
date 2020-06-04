@@ -160,7 +160,7 @@
                 "refId": "B"
               },
               {
-                "expr": "avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}）by (scraped_from)",
+                "expr": "avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})by (scraped_from)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Preemptive available",

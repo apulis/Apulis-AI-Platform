@@ -87,7 +87,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [cluster]);
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
   const [gpusPerNode, setGpusPerNode] = useState(0);
-  const [gpuAvailable, setGpuAvailable] = useState(0)
+  const [gpuAvailable, setGpuAvailable] = useState(0);
   const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
@@ -873,7 +873,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={4} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
-                    label="iPython"
+                    label="jupyter"
                     checked={ipython}
                     onChange={(e, checked) => setIpython(checked)}
                   />

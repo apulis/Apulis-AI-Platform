@@ -56,7 +56,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "count_values(\"gpu_available\", k8s_node_device_available{device_str='nvidia.com/gpu'})",
+              "expr": "count_values(\"gpu_available\", avg(k8s_node_device_available{device_str='nvidia.com/gpu'})  by (scraped_from) )",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}gpu_available{{'}}'}} available gpus",
@@ -131,7 +131,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "count_values(\"npu_available\", k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
+              "expr": "count_values(\"npu_available\", avg (k8s_node_device_available{device_str='npu.huawei.com/NPU'}) by (scraped_from) )",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}npu_available{{'}}'}} available npus",

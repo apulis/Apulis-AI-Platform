@@ -55,7 +55,7 @@ def huawei_npu_smi(histogram, timeout):
         npu_number_smi_output = ""
 
         with open(device_list_file, "r") as f:
-            npu_number_smi_output = f.readlines()
+            npu_number_smi_output = f.read()
             f.close()
 
         npu_number = parse_npu_number_smi_output(npu_number_smi_output)
@@ -67,7 +67,7 @@ def huawei_npu_smi(histogram, timeout):
             device_info_output = ""
 
             with open(device_file, "r") as f:
-                device_info_output = f.readlines()
+                device_info_output = f.read()
                 f.close()
 
             npu_smi_output.append(device_info_output)

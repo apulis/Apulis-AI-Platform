@@ -2446,14 +2446,14 @@
           "expr": "count_values(\"gpu_available\", k8s_node_device_available{device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU:{{gpu_available}}",
+          "legendFormat": "GPU:{{'{{'}}gpu_available{{'}}'}}",
           "refId": "A"
         },
         {
           "expr": "count_values(\"npu_available\", k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU:{{npu_available}}",
+          "legendFormat": "NPU:{{'{{'}}npu_available{{'}}'}}",
           "refId": "B"
         }
       ],
@@ -4095,7 +4095,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4103,7 +4103,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4185,7 +4185,7 @@
           "hide": false,
           "instant": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4194,7 +4194,7 @@
           "hide": false,
           "instant": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4275,7 +4275,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4283,7 +4283,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4364,7 +4364,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4372,7 +4372,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4453,7 +4453,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4461,7 +4461,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4542,7 +4542,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4550,7 +4550,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4631,7 +4631,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4639,7 +4639,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4720,7 +4720,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(GPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(GPU)",
           "refId": "A"
         },
         {
@@ -4728,7 +4728,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}(NPU)",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}(NPU)",
           "refId": "B"
         }
       ],
@@ -4809,7 +4809,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
-          "legendFormat": "{{vc_name}}",
+          "legendFormat": "{{'{{'}}vc_name{{'}}'}}",
           "refId": "A"
         }
       ],

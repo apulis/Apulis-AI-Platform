@@ -42,27 +42,41 @@ def parse_smi_xml_result(npu_smi_output):
         result[str(one_npu_id)] = NpuInfo(npu_util,npu_mem_util,temperature)
     return result
 
+
 def huawei_npu_smi(histogram, timeout):
     out = utils.exec_shell_cmd("command -v npu-smi")
-    
     if "npu-smi" not in out.lower():
         return None
     else:
         pass
 
     try:
-        npu_number_smi_output = utils.exec_cmd(["npu-smi", "info", "-m"],
-                                    histogram=histogram, timeout=timeout)
+        device_list_file = "/var/log/npu/npu_smi/device_list"
+        npu_number_smi_output = ""
+
+        with open(device_list_file, "r") as f:
+            npu_number_smi_output = f.readlines()
+            f.close()
+
         npu_number = parse_npu_number_smi_output(npu_number_smi_output)
         npu_smi_output = []
+
         for one_npu_id in npu_number:
-            npu_smi_output.append((one_npu_id,utils.exec_cmd(["npu-smi", "info", "-t","common","-i",str(one_npu_id)],
-                                    histogram=histogram, timeout=timeout)))
+
+            device_file = "/var/log/npu/npu_smi/device" + str(one_npu_id)
+            device_info_output = ""
+
+            with open(device_file, "r") as f:
+                device_info_output = f.readlines()
+                f.close()
+
+            npu_smi_output.append(device_info_output)
+
         return parse_smi_xml_result(npu_smi_output)
 
     except subprocess.CalledProcessError as e:
-        logger.exception("command '%s' return with error (code %d): %s",
-                         e.cmd, e.returncode, e.output)
+        logger.exception("command '%s' return with error (code %d): %s", e.cmd, e.returncode, e.output)
+        
     except subprocess.TimeoutExpired:
         logger.warning("nvidia-smi timeout")
 

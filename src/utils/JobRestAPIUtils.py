@@ -906,7 +906,7 @@ def GetEndpoints(userName, jobId):
                             port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
                         epItem["port"] = port
                         if "nodeName" in endpoint:
-                            epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"].split(":")[0] if ":" in epItem["domain"] else epItem["domain"])[0]
+                            epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
                         if epItem["name"] == "ssh":
                             desc = yaml.full_load(base64.b64decode(job["jobDescription"]))
                             for i in desc["spec"]["containers"][0]["env"]:

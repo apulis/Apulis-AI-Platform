@@ -61,7 +61,7 @@ def huawei_npu_smi(histogram, timeout):
         logger.exception("command '%s' return with error (code %d): %s",
                          e.cmd, e.returncode, e.output)
     except subprocess.TimeoutExpired:
-        logger.warning("nvidia-smi timeout")
+        logger.warning("npu-smi timeout")
 
     except Exception:
-        logger.exception("exec nvidia-smi error")
+        logger.exception("exec npu-smi error")

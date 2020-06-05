@@ -82,7 +82,7 @@ const NavigationList: React.FC = () => {
         isAdmin ?
           <div style={{ width: '100%' }}>
             <LinkListItem to="/vc">
-              <ListItemText>Vc</ListItemText>
+              <ListItemText>Virtual Cluster</ListItemText>
             </LinkListItem>
             <LinkListItem to="/user">
               <ListItemText>User</ListItemText>

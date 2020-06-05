@@ -4541,7 +4541,7 @@ def run_command( args, command, nargs, parser ):
 
 
             if nargs[0].startswith("webui"):
-                if not check_archtype_valid:
+                if not check_archtype_valid(archtype):
                     print "Archtype not valid for current machine, please check."
                     exit()
                 config_webui(nargs, archtype=archtype)

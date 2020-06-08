@@ -10,6 +10,7 @@ import json
 import time
 import random
 from pathlib import Path
+import subprocess
 import re
 
 from kubernetes import client as k8s_client
@@ -57,6 +58,17 @@ def get_job_name():
 def get_pod_ip():
     return os.environ.get("POD_IP")
 
+def get_pod_ib_ip():
+    try:
+        if os.system("command -v ifconfig"):
+            addr = subprocess.check_output(["ifconfig"]).decode().split("\n")
+            for i in range(len(addr)-1):
+                if "ib" in addr[i] and "inet" in addr[i+1]:
+                    ip =".".join(re.match(".*:(\d+)\.(\d+)\.(\d+)\.(\d+)\s.*",addr[i+1].split("Mask")[0]).groups()[:4])
+                    return ip
+    except Exception as e:
+        logger.exception(e)
+
 
 def get_ps_number():
     return int(os.environ.get("DLWS_NUM_PS", 0))
@@ -64,7 +76,6 @@ def get_ps_number():
 
 def get_worker_number():
     return int(os.environ.get("DLWS_NUM_WORKER", 0))
-
 
 def get_framework_attempt_id():
     return os.environ.get("FC_FRAMEWORK_ATTEMPT_ID", "0")
@@ -75,7 +86,7 @@ def get_task_attempt_id():
 
 
 def create_own_config(k8s_core_api, job_name, pod_name, ip, ssh_port,
-                      framework_attempt, task_attempt):
+                      framework_attempt, task_attempt,ib_ip):
     # pod_name="546d155b-7371-4903-ac44-3e4108c02731";job_name="546d155b-7371-4903-ac44-3e4108c02731";ip="10.36.0.0";ssh_port=22;job_namespace = "default";
     config_name = "c-" + pod_name
 
@@ -91,7 +102,7 @@ def create_own_config(k8s_core_api, job_name, pod_name, ip, ssh_port,
         labels=labels,
     )
 
-    data = json.dumps({"ip": ip, "ssh_port": ssh_port})
+    data = json.dumps({"ip": ip, "ssh_port": ssh_port,"ib_ip":ib_ip})
 
     body = k8s_client.V1ConfigMap(data={"pod.json": data}, metadata=metadata)
 
@@ -144,11 +155,20 @@ def get_role_idx():
                      os.environ)
         return "0"
 
+def clean_ib_config():
+    os.system("if [ -f /home/user/ib_config ];then rm /home/user/ib_config;fi")
 
 def main(args):
     pod_name = get_pod_name()
     job_name = get_job_name()
     ip = get_pod_ip()
+    ib_ip = get_pod_ib_ip()
+    clean_ib_config()
+    role = None
+    if pod_name.find("worker")!=-1:
+        role = "worker"
+
+
     self_role_idx = get_role_idx()
 
     if os.environ.get("DLWS_HOST_NETWORK") == "enable":
@@ -163,7 +183,7 @@ def main(args):
     framework_attempt = get_framework_attempt_id()
     task_attempt = get_task_attempt_id()
 
-    logger.debug(
+    logger.info(
         "pod_name %s, job_name %s, ip %s, port %d, ps_num %d, worker_num %d, framework_attempt %s, task_attempt %s",
         pod_name, job_name, ip, ssh_port, ps_num, worker_num, framework_attempt,
         task_attempt)
@@ -181,7 +201,7 @@ def main(args):
     # k8s_apps_api = k8s_client.AppsV1Api()
 
     config_name = create_own_config(k8s_core_api, job_name, pod_name, ip,
-                                    ssh_port, framework_attempt, task_attempt)
+                                    ssh_port, framework_attempt, task_attempt,ib_ip)
 
     labels = "run=%s,framework_attempt_id=%s,task_attempt_id=%s" % (
         job_name, framework_attempt, task_attempt)
@@ -215,20 +235,37 @@ def main(args):
         "DLWS_SD_SELF_SSH_PORT": ssh_port,
         "DLWS_ROLE_IDX": self_role_idx,
         "DLTS_ROLE_IDX": self_role_idx,
+        "DLWS_SD_SELF_IB_IP": ib_ip,
     }
+
+    # for distriuted job,use same port for ssh
+    PSD_port = None
+    for configmap in items:
+        c_name = configmap.metadata.name
+        role_idx = c_name.split("-")[-1]
+        if role_idx=="worker0":
+            PSD_port = json.loads(configmap.data["pod.json"])["ssh_port"]
+
+    if PSD_port and role == "worker":
+
+        envs["DLWS_SD_SELF_SSH_PORT"] = PSD_port
 
     for configmap in items:
         c_name = configmap.metadata.name
         role_idx = c_name.split("-")[-1]
+        role_name = role_idx
         if role_idx.isnumeric():
             # created by launcher, have name "xxx-yyy-zzz-role-idx"
             role_idx = c_name.split("-")[-2] + role_idx
 
         sd_info = json.loads(configmap.data["pod.json"])
         ip = sd_info["ip"]
+        ib_ip = sd_info["ib_ip"]
         ssh_port = sd_info["ssh_port"]
         envs["DLWS_SD_%s_IP" % role_idx] = ip
-        envs["DLWS_SD_%s_SSH_PORT" % role_idx] = ssh_port
+        envs["DLWS_SD_%s_SSH_PORT" % role_idx] = PSD_port if PSD_port and role_name.find("worker")!=-1 else ssh_port
+        envs["DLWS_SD_%s_IB_IP" % role_idx] = ib_ip
+
 
     path = Path(os.path.dirname(args.environment))
     path.mkdir(parents=True, exist_ok=True)

@@ -47,7 +47,6 @@ class AuthorizationManager:
     # Check if user has requested access (based on effective ACL) on the specified resource.
     @staticmethod
     def _HasAccess(identity_name, resource_acl_path, permissions):
-        return True
         start_time = time.time()
         requested_access = "%s;%s;%s" % (str(identity_name), resource_acl_path, str(permissions))
         try:

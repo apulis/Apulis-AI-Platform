@@ -112,6 +112,8 @@ spec:
     volumeMounts:
     - mountPath: /dlts-runtime
       name: dlts-runtime
+    - mountPath: /home/user
+      name: home
     command:
     - sh
     - /dlts-init/init.sh

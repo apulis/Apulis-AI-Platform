@@ -806,15 +806,6 @@ def GetVC(userName, vcName):
                 user_name = user_name.split("@")[0].strip()
                 vc["user_status_preemptable"].append({"userName": user_name, "userGPU": user_gpu.ToSerializable()})
 
-            try:
-                gpu_idle_url = config["gpu_reporter"] + '/gpu_idle'
-                gpu_idle_params = {"vc": vcName}
-                gpu_idle_response = requests.get(gpu_idle_url, params=gpu_idle_params)
-                gpu_idle_json = gpu_idle_response.json()
-                vc["gpu_idle"] = gpu_idle_json
-            except Exception:
-                logger.exception("Failed to fetch gpu_idle from gpu-exporter")
-
             ret = vc
             break
     return ret
@@ -900,18 +891,24 @@ def GetEndpoints(userName, jobId):
                     if "podPort" in endpoint:
                         epItem["podPort"] = endpoint["podPort"]
                     if endpoint["status"] == "running":
-                        if endpoint["hostNetwork"]:
-                            port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["port"])
-                        else:
-                            port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
+                        port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
                         epItem["port"] = port
                         if "nodeName" in endpoint:
                             epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
                         if epItem["name"] == "ssh":
-                            desc = yaml.full_load(base64.b64decode(job["jobDescription"]))
-                            for i in desc["spec"]["containers"][0]["env"]:
-                                if i["name"] == "DLTS_JOB_TOKEN":
-                                    epItem["password"] = i["value"]
+                            try:
+                                desc = list(yaml.full_load_all(base64.b64decode(job["jobDescription"])))
+                                if epItem["id"].find("worker")!=-1:
+                                    desc = desc[int(re.match(".*worker(\d+)-ssh",epItem["id"]).groups()[0])+1]
+                                elif epItem["id"].find("ps0")!=-1:
+                                    desc = desc[0]
+                                else:
+                                    desc = desc[0]
+                                for i in desc["spec"]["containers"][0]["env"]:
+                                    if i["name"] == "DLTS_JOB_TOKEN":
+                                        epItem["password"] = i["value"]
+                            except Exception as e:
+                                logger.error(e)
                     ret.append(epItem)
     except Exception as e:
         logger.error("Get endpoint exception, ex: %s", str(e))

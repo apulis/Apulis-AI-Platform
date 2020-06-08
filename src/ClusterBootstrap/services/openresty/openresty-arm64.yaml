@@ -23,7 +23,7 @@ spec:
         archType: arm64
       containers:
       - name: openresty
-        image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}-arm64
         imagePullPolicy: Always
         command: ["/start.sh"]
         readinessProbe:

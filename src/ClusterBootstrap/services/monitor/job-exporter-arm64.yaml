@@ -68,6 +68,8 @@ spec:
           mountPath: /usr/local/HiAI
         - name: npu-smi
           mountPath: /usr/local/sbin/
+        - name: npu-info 
+          mountPath: /var/log/npu/npu_smi
         name: job-exporter
         ports:
         - containerPort: {{cnf['job-exporter']['port']}}
@@ -93,6 +95,9 @@ spec:
         - name: npu-smi
           hostPath:
             path: /usr/local/sbin/
+        - name: npu-info
+          hostPath:
+            path: /var/log/npu/npu_smi
       hostNetwork: true
       hostPID: true # This is required since job-exporter should get list of pid in container
       tolerations:

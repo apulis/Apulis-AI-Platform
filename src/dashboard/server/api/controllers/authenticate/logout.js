@@ -9,10 +9,11 @@ const casClient = require('../../casClient')
 /** @type {import('koa').Middleware} */
 module.exports = async context => {
   context.cookies.set('token')
+  console.log(1111111)
   // return context.redirect(OAUTH2_URL + '/logout')
   
-  if (context.session[casClient.session_name]) {
-    return casClient.logout(context)
-  }
+  // if (context.session[casClient.session_name]) {
+  //   return casClient.logout(context)
+  // }
   return context.redirect('/')
 }

@@ -39,6 +39,7 @@ import { Link } from 'react-router-dom';
 import _ from 'lodash';
 import copy from 'clipboard-copy'
 import {green,purple} from "@material-ui/core/colors";
+import AuthzHOC from '../components/AuthzHOC';
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -217,7 +218,7 @@ const clearLocalStorage = () => {
 }
 const SignOutButton: React.FC = () => {
   return (
-    <Tooltip title="Sign Out">
+    <Tooltip title="Sign Out" onClick={() => {delete localStorage.token}}>
       <IconButton edge="end" color="inherit" onClick={clearLocalStorage} href="/api/authenticate/logout">
         <ExitToApp />
       </IconButton>
@@ -268,10 +269,10 @@ const DashboardAppBar: React.FC = () => {
           <Grid item style={{ marginLeft:'10px' }}>
             <UserButton />
           </Grid>
-          {/* <Grid item>
+          <Grid item>
             {' '}
             <SignOutButton />
-          </Grid> */}
+          </Grid>
         </Grid>
       </Toolbar>
     </AppBar>

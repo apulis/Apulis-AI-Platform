@@ -156,7 +156,8 @@ class DistPodTemplate():
                 # mount /pod
                 local_pod_path = job.get_hostpath(job.job_path, "%s-%d" % (role, idx))
                 pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": local_pod_path, "enabled": True})
-
+                if role == "ps":
+                    pod["hostNetwork"] = False
                 pods.append(pod)
 
         k8s_pods = []

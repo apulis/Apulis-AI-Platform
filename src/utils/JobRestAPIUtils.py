@@ -806,15 +806,6 @@ def GetVC(userName, vcName):
                 user_name = user_name.split("@")[0].strip()
                 vc["user_status_preemptable"].append({"userName": user_name, "userGPU": user_gpu.ToSerializable()})
 
-            try:
-                gpu_idle_url = config["gpu_reporter"] + '/gpu_idle'
-                gpu_idle_params = {"vc": vcName}
-                gpu_idle_response = requests.get(gpu_idle_url, params=gpu_idle_params)
-                gpu_idle_json = gpu_idle_response.json()
-                vc["gpu_idle"] = gpu_idle_json
-            except Exception:
-                logger.exception("Failed to fetch gpu_idle from gpu-exporter")
-
             ret = vc
             break
     return ret
@@ -900,10 +891,7 @@ def GetEndpoints(userName, jobId):
                     if "podPort" in endpoint:
                         epItem["podPort"] = endpoint["podPort"]
                     if endpoint["status"] == "running":
-                        if endpoint["hostNetwork"]:
-                            port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["port"])
-                        else:
-                            port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
+                        port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
                         epItem["port"] = port
                         if "nodeName" in endpoint:
                             epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]

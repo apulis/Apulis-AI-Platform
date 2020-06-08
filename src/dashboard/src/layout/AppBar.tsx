@@ -268,10 +268,10 @@ const DashboardAppBar: React.FC = () => {
           <Grid item style={{ marginLeft:'10px' }}>
             <UserButton />
           </Grid>
-          <Grid item>
+          {/* <Grid item>
             {' '}
             <SignOutButton />
-          </Grid>
+          </Grid> */}
         </Grid>
       </Toolbar>
     </AppBar>

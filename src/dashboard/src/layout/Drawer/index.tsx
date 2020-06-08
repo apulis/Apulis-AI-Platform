@@ -17,6 +17,8 @@ import Context from "./Context";
 import UserContext from '../../contexts/User';
 import ConfigContext from "../../contexts/Config";
 import AuthContext from '../../contexts/Auth';
+import AuthzHOC from '../../components/AuthzHOC'
+
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
@@ -58,24 +60,29 @@ const LinkListItem: FC<LinkProps> = ({ to, children }) => {
 
 const NavigationList: FC = () => {
   const styles = useStyles();
-  const { permissionList = [] } = useContext(AuthContext);
   return (
     <List component="nav" className={styles.drawerHeader}>
-      {permissionList.includes('SUBMIT_TRAINING_JOB') && 
-      <LinkListItem to="/submission/training">
-        <ListItemText>Submit Training Job</ListItemText>
-      </LinkListItem>}
-      <LinkListItem to="/jobs-v2">
-        <ListItemText>View and Manage Jobs</ListItemText>
-      </LinkListItem>
-      {permissionList.includes('VIEW_CLUSTER_STATUS') && 
-      <LinkListItem to="/cluster-status">
-        <ListItemText>Cluster Status</ListItemText>
-      </LinkListItem>}
-      {permissionList.includes('VIEW_VC') && 
-      <LinkListItem to="/vc">  
-        <ListItemText>Vc</ListItemText>
-      </LinkListItem>}
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <LinkListItem to="/submission/training">
+          <ListItemText>Submit Training Job</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB']}>
+        <LinkListItem to="/jobs-v2">
+          <ListItemText>View and Manage Jobs</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      
+      <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
+        <LinkListItem to="/cluster-status">
+          <ListItemText>Cluster Status</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      <AuthzHOC needPermission={['VIEW_VC', 'MANAGE_VC']}>
+        <LinkListItem to="/vc">  
+          <ListItemText>Vc</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
     </List>
   );
 };

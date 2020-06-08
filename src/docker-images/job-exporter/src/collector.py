@@ -34,8 +34,7 @@ import utils
 import docker_inspect
 import docker_stats
 import nvidia
-#import npu
-import npu_by_file as npu
+import npu
 import ps
 import random
 import dcgm

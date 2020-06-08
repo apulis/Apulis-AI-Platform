@@ -18,8 +18,8 @@ router.get('/bootstrap.js',
 //     require('./controllers/authenticate/wechat'))
 // }
 
-// router.get('/authenticate/logout',
-//   require('./controllers/authenticate/logout'))
+router.get('/authenticate/logout',
+  require('./controllers/authenticate/logout'))
 // router.get('/authenticate/dingtalk',
 //   require('./controllers/authenticate/dingtalk'))
 // router.get('/authenticate/zjlab',

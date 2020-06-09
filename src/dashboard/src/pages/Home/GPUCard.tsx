@@ -32,7 +32,6 @@ import { MoreVert, FileCopyRounded} from "@material-ui/icons";
 import {Cell, PieChart, Pie, ResponsiveContainer,Sector} from "recharts";
 import UserContext from "../../contexts/User";
 import TeamsContext from '../../contexts/Teams';
-import AuthContext from '../../contexts/Auth';
 import {
   green,
   lightGreen,
@@ -46,6 +45,7 @@ import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import _ from "lodash";
 import {type} from "os";
 import useCheckIsDesktop from "../../utlities/layoutUtlities";
+import AuthzHOC from '../../components/AuthzHOC';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   avatar: {
@@ -99,7 +99,9 @@ const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
         open={open}
         onClose={onMenuClose}
       >
-        <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
+        <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
+          <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
+        </AuthzHOC>
         <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
       </Menu>
     </>
@@ -296,7 +298,6 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
     return data;
   }
   const [nfsStorage, setNfsStorage] = useState([]);
-  const { permissionList = [] } = useContext(AuthContext);
 
   useEffect(()=>{
     fetchDirectories().then((res) => {
@@ -480,21 +481,23 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
           </MuiThemeProvider>
         </Box>
       </CardContent>
-      {permissionList.includes('SUBMIT_TRAINING_JOB') && <CardActions>
-        <Button component={Link}
-          to={{pathname: "/submission/training-cluster", state: { cluster } }}
-          size="small" color="secondary"
-        >
-          Submit Training Job
-        </Button>
-        {/* <Button component={Link}
-          to={{pathname: "/submission/data", state: { cluster } }}
-          size="small" color="secondary"
-        >
-          Submit Data Job
-        </Button> */}
-        <Divider/>
-      </CardActions>}
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <CardActions>
+          <Button component={Link}
+            to={{pathname: "/submission/training-cluster", state: { cluster } }}
+            size="small" color="secondary"
+          >
+            Submit Training Job
+          </Button>
+          {/* <Button component={Link}
+            to={{pathname: "/submission/data", state: { cluster } }}
+            size="small" color="secondary"
+          >
+            Submit Data Job
+          </Button> */}
+          <Divider/>
+        </CardActions>
+      </AuthzHOC>
       <CardContent>
         <DirectoryPathTextField
           label="Work Directory"

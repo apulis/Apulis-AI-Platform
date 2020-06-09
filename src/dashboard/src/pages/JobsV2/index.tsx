@@ -21,13 +21,13 @@ import {
 } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
 import ClustersContext from '../../contexts/Clusters';
-import AuthContext from '../../contexts/Auth';
 import ClusterSelector from '../../components/ClusterSelector';
 import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
 import MyJobs from './MyJobs';
 import AllJobs from './AllJobs';
 import './index.less';
+import AuthzHOC from '../../components/AuthzHOC';
 
 interface RouteParams {
   clusterId: string;
@@ -35,7 +35,6 @@ interface RouteParams {
 
 const TabView: FunctionComponent = () => {
   const [index, setIndex] = useState(Number(window.location.search.split('index=')[1]) || 0);
-  const { permissionList = [] } = useContext(AuthContext);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
   }, [setIndex]);
@@ -44,22 +43,24 @@ const TabView: FunctionComponent = () => {
   }, [setIndex]);
   return (
     <div className="jobs-table-wrap">
-      {permissionList.includes('VIEW_ALL_USER_JOB') && <Tabs
-        value={index}
-        onChange={onChange}
-        variant="fullWidth"
-        textColor="primary"
-        indicatorColor="primary"
-      >
-        <Tab label="My Jobs"/>
-        <Tab label="All Jobs"/>
-      </Tabs>}
+      <AuthzHOC needPermission={['VIEW_ALL_USER_JOB', 'MANAGE_ALL_USERS_JOB']}>
+        <Tabs
+          value={index}
+          onChange={onChange}
+          variant="fullWidth"
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="My Jobs"/>
+          <Tab label="All Jobs"/>
+        </Tabs>
+      </AuthzHOC>
       <SwipeableViews
         index={index}
         onChangeIndex={onChangeIndex}
       >
         {index === 0 ? <MyJobs/> : <div/>}
-        {index === 1 && permissionList.includes('VIEW_ALL_USER_JOB') ? <AllJobs/> : <div/>}
+        {index === 1 && <AuthzHOC needPermission={'MANAGE_ALL_USERS_JOB'}><AllJobs/></AuthzHOC>}
       </SwipeableViews>
     </div>
   );

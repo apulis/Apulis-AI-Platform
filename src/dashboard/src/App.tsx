@@ -55,7 +55,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
       variant: type,
     });
   }, userGroupPath || '');
-  
+  console.log('permissionList',permissionList)
   return(
     <BrowserRouter>
       <ConfigProvider>

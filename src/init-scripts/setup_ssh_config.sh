@@ -170,6 +170,6 @@ then
 fi
 
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
-  mv /etc/hosts /etc/hosts.backup
-  cp /home/${DLWS_USER_NAME}/.hosts /etc/hosts
+  cp /etc/hosts /etc/hosts.backup
+  cat /home/${DLWS_USER_NAME}/.hosts > /etc/hosts
 fi

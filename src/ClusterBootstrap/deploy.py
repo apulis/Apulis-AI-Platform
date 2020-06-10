@@ -3700,7 +3700,7 @@ def check_archtype_valid(archtype):
     if archtype == None or "amd64" in archtype:
         if machine_arch != "x86_64":
             return False
-    if "arm64" in archtype:
+    if archtype != None and "arm64" in archtype:
         if machine_arch != "aarch64":
             return False
     return True

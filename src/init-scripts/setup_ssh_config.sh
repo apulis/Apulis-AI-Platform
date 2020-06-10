@@ -82,7 +82,7 @@ fi
     echo -e "${ip}\t${host}" >> /etc/hosts
 done
 
-# generate npu related info
+# generate npu info for distributed npu jobs
 if [ ! -z npu_ip_list ] && [ "$role" = "worker"]; then
     cat >> ${NPU_CONFIG_FILE} << EOF
 $(npu_ip_list) slots=${DLWS_NUM_GPU_PER_WORKER}

@@ -119,7 +119,8 @@ def get_cluster_status():
                 canUseGpuStrSet = set(node["status"]["allocatable"].keys()).intersection(gpuStrList)
                 gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else gpuStr
                 if node_status["gpuType"]:
-                    gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0}
+                    if node_status["gpuType"] not in gpuMapping:
+                        gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0}
                 if canUseGpuStrSet:
                     node_status["gpu_allocatable"] = ResourceInfo({node_status["gpuType"]: int(node["status"]["allocatable"][gpuStr])}).ToSerializable()
                 else:

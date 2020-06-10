@@ -60,7 +60,7 @@ const TabView: FunctionComponent = () => {
         onChangeIndex={onChangeIndex}
       >
         {index === 0 ? <MyJobs/> : <div/>}
-        {index === 1 && <AuthzHOC needPermission={'MANAGE_ALL_USERS_JOB'}><AllJobs/></AuthzHOC>}
+        {index === 1 && <AuthzHOC needPermission={['VIEW_ALL_USER_JOB', 'MANAGE_ALL_USERS_JOB']}><AllJobs/></AuthzHOC>}
       </SwipeableViews>
     </div>
   );

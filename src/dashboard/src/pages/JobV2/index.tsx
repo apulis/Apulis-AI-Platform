@@ -46,20 +46,23 @@ import axios from 'axios';
 import message from '../../utils/message';
 import useInterval from '../../hooks/useInterval';
 import { pollInterval } from '../../const';
+import AuthContext from '../../contexts/Auth';
 
 interface RouteParams {
   clusterId: string;
   jobId: string;
 }
 
-const JobToolbar: FunctionComponent<{ manageable: boolean }> = ({ manageable }) => {
+const JobToolbar: FunctionComponent<{ manageable: boolean; isMyJob: boolean }> = ({ manageable, isMyJob }) => {
   const { clusterId } = useParams<RouteParams>();
   const { accessible, admin, job } = useContext(Context);
+  const { permissionList = [] } = useContext(AuthContext);
   const { supportEmail, approve, kill, pause, resume } = useActions(clusterId);
+  const canAction = (!isMyJob && permissionList.includes('MANAGE_ALL_USERS_JOB')) || isMyJob;
   const availableActions = useMemo(() => {
     const actions = [supportEmail];
-    if (manageable && admin) actions.push(approve);
-    if (manageable) actions.push(pause, resume, kill);
+    if (manageable && admin && canAction) actions.push(approve);
+    if (manageable && canAction) actions.push(pause, resume, kill);
     return actions;
   }, [manageable, admin, supportEmail, approve, kill, pause, resume]);
 
@@ -166,7 +169,7 @@ const UnmanagableJob: FunctionComponent = () => {
 const JobContent: FunctionComponent = () => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { email } = useContext(UserContext);
+  const { email, userName } = useContext(UserContext);
   const { clusters } = useContext(ClustersContext);
   const { saveClusterId } = useContext(TeamContext);
   const [pollTime, setPollTime] = useState<any>(pollInterval);
@@ -239,7 +242,7 @@ const JobContent: FunctionComponent = () => {
     <Context.Provider value={{ cluster, accessible, admin, job }}>
       <Helmet title={`(${capitalize(job['jobStatus'])}) ${job['jobName']}`}/>
       <Container fixed maxWidth="lg">
-        <JobToolbar manageable={manageable}/>
+        <JobToolbar manageable={manageable} isMyJob={job.userName === userName} />
         <Paper elevation={2}>
           <>
             <ManagableJob jobStatus={job['jobStatus']} />

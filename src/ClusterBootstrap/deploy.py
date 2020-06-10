@@ -18,6 +18,7 @@ import glob
 import copy
 import numbers
 import requests
+import platform
 
 from os.path import expanduser
 
@@ -1796,7 +1797,7 @@ def install_ssh_key(key_files):
     if rootuser != config["admin_username"]:
          for node in all_nodes:
             os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile,rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile,rootuser, node,config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile,rootuser, node,config["admin_username"])) # TODO centos command different
             os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile,rootuser, node, config["admin_username"]))
 
 
@@ -3694,6 +3695,16 @@ def gen_pass_secret_script():
 def gen_warm_up_cluster_script():
     utils.render_template("./template/warmup/pre_download_images.sh.template", "scripts/pre_download_images.sh", config)
 
+def check_archtype_valid(archtype):
+    machine_arch = platform.machine()
+    if archtype == None or "amd64" in archtype:
+        if machine_arch != "x86_64":
+            return False
+    if "arm64" in archtype:
+        if machine_arch != "aarch64":
+            return False
+    return True
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -4530,12 +4541,18 @@ def run_command( args, command, nargs, parser ):
 
 
             if nargs[0].startswith("webui"):
+                if not check_archtype_valid(archtype):
+                    print "Archtype not valid for current machine, please check."
+                    exit()
                 config_webui(nargs, archtype=archtype)
 
         else:
             pass
 
     elif command == "docker":
+        if not check_archtype_valid(archtype):
+            print "Archtype not valid for current machine, please check"
+            exit()
         if len(nargs)>=1:
             configuration( config, verbose )
 

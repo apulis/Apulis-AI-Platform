@@ -170,6 +170,7 @@ then
 fi
 
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
+  if [ ! -f /home/${DLWS_USER_NAME}/.hosts ];then touch /home/${DLWS_USER_NAME}/.hosts;fi
   cp /etc/hosts /etc/hosts.backup
   cat /home/${DLWS_USER_NAME}/.hosts > /etc/hosts
 fi

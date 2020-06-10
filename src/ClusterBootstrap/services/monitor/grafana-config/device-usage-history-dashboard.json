@@ -154,14 +154,14 @@
               "refId": "A"
             },
             {
-              "expr": "sum(avg (k8s_node_device_total{device_str='npu.huawei.com/NPU'}))by (host_ip))",
+              "expr": "sum(avg (k8s_node_device_total{device_str='npu.huawei.com/NPU'})by (host_ip))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Total",
               "refId": "B"
             },
             {
-              "expr": "sum(avg (k8s_node_device_reserved{device_str='npu.huawei.com/NPU'}))by (host_ip))",
+              "expr": "sum(avg (k8s_node_device_reserved{device_str='npu.huawei.com/NPU'})by (host_ip))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "Reserved",

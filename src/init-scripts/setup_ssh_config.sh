@@ -58,9 +58,9 @@ Host ${host}
   UserKnownHostsFile /dev/null
 
 EOF
-if [ ! -z ib_ip ] && [ "$role" = "worker"]; then
+if [ ! -z ib_ip ] && [ "$role" = "worker" ]; then
     cat >> ${IB_CONFIG_FILE} << EOF
-$(ib_ip) slots=${DLWS_NUM_GPU_PER_WORKER}
+${ib_ip} slots=${DLWS_NUM_GPU_PER_WORKER}
 EOF
 fi
     # also add entry to /etc/hosts

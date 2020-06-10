@@ -57,21 +57,21 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
+                "expr": "sum( avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Total",
                 "refId": "A"
               },
               {
-                "expr": "avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
+                "expr": "sum( avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Available",
                 "refId": "B"
               },
               {
-                "expr": "avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
+                "expr": "sum( avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Preemptive available",
@@ -146,21 +146,21 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) ",
+                "expr": "sum( avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})  by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Total",
                 "refId": "A"
               },
               {
-                "expr": "avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
+                "expr": "sum( avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Available",
                 "refId": "B"
               },
               {
-                "expr": "avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
+                "expr": "sum( avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Preemptive available",

@@ -72,9 +72,9 @@ Host ${host}
 EOF
 
 # generate ib related info
-if [ ! -z ib_ip ] && [ "$role" = "worker"]; then
+if [ ! -z ib_ip ] && [ "$role" = "worker" ]; then
     cat >> ${IB_CONFIG_FILE} << EOF
-$(ib_ip) slots=${DLWS_NUM_GPU_PER_WORKER}
+${ib_ip} slots=${DLWS_NUM_GPU_PER_WORKER}
 EOF
 
 fi
@@ -192,6 +192,7 @@ then
 fi
 
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
-  mv /etc/hosts /etc/hosts.backup
-  cp /home/${DLWS_USER_NAME}/.hosts /etc/hosts
+  if [ ! -f /home/${DLWS_USER_NAME}/.hosts ];then touch /home/${DLWS_USER_NAME}/.hosts;fi
+  cp /etc/hosts /etc/hosts.backup
+  cat /home/${DLWS_USER_NAME}/.hosts > /etc/hosts
 fi

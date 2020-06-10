@@ -28,7 +28,7 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
   let chidComponent: React.ReactNode;
   const onClick = (path: string) => {
     const redirect = window.location.href.split('?')[0];
-    window.location.href = userGroupPath + path + '?redirect  =' + redirect;
+    window.location.href = userGroupPath + path + '?redirect  =' + encodeURIComponent(redirect);
   }
   useEffect(() => {
     const { token } = getPageQuery();

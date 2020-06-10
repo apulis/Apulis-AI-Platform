@@ -48,7 +48,7 @@ axios.interceptors.response.use((response: AxiosResponse) => {
     } else  if (status === 401) {
       message('error', codeMessage[status]);
       const redirect = window.location.href.split('?')[0];
-      window.location.href = userGroupPathCopy + '/user/login' + '?redirect  =' + redirect;
+      window.location.href = userGroupPathCopy + '/user/login' + '?redirect  =' + encodeURIComponent(redirect);
     } else if (status === 403) {
       message('error', codeMessage[status]);
     } else if (status === 500) {

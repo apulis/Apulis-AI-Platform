@@ -782,7 +782,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -796,7 +796,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -878,7 +878,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -947,7 +947,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='nvidia.com/gpu'}>0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -961,7 +961,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1043,7 +1043,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1126,7 +1126,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -1140,7 +1140,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1222,7 +1222,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1291,7 +1291,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{username=\"$username\",device_str='npu.huawei.com/NPU'}>0)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
@@ -1305,7 +1305,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1387,7 +1387,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1573,7 +1573,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
+        "w": 3,
         "x": 0,
         "y": 45
       },
@@ -1654,8 +1654,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 2,
+        "w": 3,
+        "x": 3,
         "y": 45
       },
       "id": 1111,
@@ -1735,8 +1735,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 4,
+        "w": 3,
+        "x": 6,
         "y": 45
       },
       "id": 12,
@@ -1816,8 +1816,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 6,
+        "w": 3,
+        "x": 9,
         "y": 45
       },
       "id": 13,
@@ -1897,8 +1897,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 8,
+        "w": 3,
+        "x": 12,
         "y": 45
       },
       "id": 14,
@@ -1978,8 +1978,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 10,
+        "w": 3,
+        "x": 15,
         "y": 45
       },
       "id": 15,
@@ -2059,8 +2059,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 12,
+        "w": 3,
+        "x": 18,
         "y": 45
       },
       "id": 16,
@@ -2140,8 +2140,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 14,
+        "w": 3,
+        "x": 21,
         "y": 45
       },
       "id": 17,

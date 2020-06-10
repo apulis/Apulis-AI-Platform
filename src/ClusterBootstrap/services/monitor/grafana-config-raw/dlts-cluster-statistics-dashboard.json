@@ -130,7 +130,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'})",
+          "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'})  OR on() vector(0)",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -214,7 +214,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(k8s_node_device_available{device_str='nvidia.com/gpu'})",
+          "expr": "sum(k8s_node_device_available{device_str='nvidia.com/gpu'})  OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "",
@@ -296,7 +296,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'}) - sum(k8s_node_device_allocatable{device_str='nvidia.com/gpu'})",
+          "expr": "(sum(k8s_node_device_total{device_str='nvidia.com/gpu'})  OR on() vector(0)) - (sum(k8s_node_device_allocatable{device_str='nvidia.com/gpu'}) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "",
@@ -638,7 +638,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'})",
+          "expr": "sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -722,7 +722,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
+          "expr": "sum(k8s_node_device_available{device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "",
@@ -804,7 +804,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'}) - sum(k8s_node_device_allocatable{device_str='npu.huawei.com/NPU'})",
+          "expr": "(sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'}) OR on() vector(0)) - (sum(k8s_node_device_allocatable{device_str='npu.huawei.com/NPU'}) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "",
@@ -1319,7 +1319,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(task_device_percent{device_str='nvidia.com/gpu'}) / sum(k8s_node_device_total{device_str='nvidia.com/gpu'})) OR on() vector(0)",
+          "expr": "(sum(task_device_percent{device_str='nvidia.com/gpu'}) / sum(k8s_node_device_total{device_str='nvidia.com/gpu'}))",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1481,7 +1481,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'}) OR on() vector(0)",
+          "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1647,7 +1647,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'}>0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1828,7 +1828,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(task_device_percent{device_str='npu.huawei.com/NPU'}) / sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
+          "expr": "(sum(task_device_percent{device_str='npu.huawei.com/NPU'}) / sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'}))",
           "format": "time_series",
           "intervalFactor": 2,
           "refId": "A"
@@ -1990,7 +1990,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -2156,7 +2156,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'}>0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -2893,7 +2893,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
+        "w": 3,
         "x": 0,
         "y": 74
       },
@@ -2977,8 +2977,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 2,
+        "w": 3,
+        "x": 3,
         "y": 74
       },
       "height": "",
@@ -3061,8 +3061,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 4,
+        "w": 3,
+        "x": 6,
         "y": 74
       },
       "height": "",
@@ -3145,8 +3145,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 6,
+        "w": 3,
+        "x": 9,
         "y": 74
       },
       "height": "",
@@ -3229,8 +3229,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 8,
+        "w": 3,
+        "x": 12,
         "y": 74
       },
       "height": "",
@@ -3313,8 +3313,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 10,
+        "w": 3,
+        "x": 15,
         "y": 74
       },
       "height": "",
@@ -3397,8 +3397,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 12,
+        "w": 3,
+        "x": 18,
         "y": 74
       },
       "height": "",
@@ -3481,8 +3481,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 14,
+        "w": 3,
+        "x": 21,
         "y": 74
       },
       "height": "",

@@ -81,7 +81,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_used{device_str='nvidia.com/gpu'})",
+                "expr": "sum(k8s_node_device_used{device_str='nvidia.com/gpu'}) OR on() vector(0)",
                 "format": "time_series",
                 "instant": true,
                 "intervalFactor": 2,
@@ -157,7 +157,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_available{device_str='nvidia.com/gpu'})",
+                "expr": "sum(k8s_node_device_available{device_str='nvidia.com/gpu'}) OR on() vector(0)",
                 "format": "time_series",
                 "instant": true,
                 "intervalFactor": 2,
@@ -233,7 +233,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_reserved{device_str='nvidia.com/gpu'})",
+                "expr": "sum(k8s_node_device_reserved{device_str='nvidia.com/gpu'}) OR on() vector(0)",
                 "format": "time_series",
                 "instant": true,
                 "intervalFactor": 2,
@@ -309,7 +309,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'})",
+                "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'}) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,
@@ -399,7 +399,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_used{device_str='npu.huawei.com/NPU'})",
+                "expr": "sum(k8s_node_device_used{device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
                 "format": "time_series",
                 "instant": true,
                 "intervalFactor": 2,
@@ -475,7 +475,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
+                "expr": "sum(k8s_node_device_available{device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
                 "format": "time_series",
                 "instant": true,
                 "intervalFactor": 2,
@@ -551,7 +551,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_reserved{device_str='npu.huawei.com/NPU'})",
+                "expr": "sum(k8s_node_device_reserved{device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
                 "format": "time_series",
                 "instant": true,
                 "intervalFactor": 2,
@@ -627,7 +627,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'})",
+                "expr": "sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,
@@ -717,7 +717,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "count(task_cpu_percent)",
+                "expr": "count(task_cpu_percent) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,
@@ -794,7 +794,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "count(pai_node_count{ready=\"true\", unschedulable=\"false\"})",
+                "expr": "count(pai_node_count{ready=\"true\", unschedulable=\"false\"}) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,
@@ -871,7 +871,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "count(pai_node_count)",
+                "expr": "count(pai_node_count) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,

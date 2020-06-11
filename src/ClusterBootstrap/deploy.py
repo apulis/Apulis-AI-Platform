@@ -3705,6 +3705,11 @@ def check_archtype_valid(archtype):
             return False
     return True
 
+def upload_dns_config():
+    with open("/etc/hosts","r") as f:
+        local_config = f.readlines()
+
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.

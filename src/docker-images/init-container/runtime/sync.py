@@ -197,6 +197,7 @@ def get_role_idx():
 
 def clean_ib_config():
     os.system("if [ -f /home/user/ib_config ];then rm /home/user/ib_config;fi")
+    os.system("if [ -f /home/user/.hosts ];then rm /home/user/.hosts;fi")
 
 def main(args):
 

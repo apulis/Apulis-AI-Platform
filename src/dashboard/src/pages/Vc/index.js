@@ -12,6 +12,11 @@ import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 import './index.less';
 import _ from 'lodash';
 
+const empty = {
+  text: '',
+  error: false
+}
+
 export default class Vc extends React.Component {
   static contextType = ClustersContext
   constructor() {
@@ -21,14 +26,8 @@ export default class Vc extends React.Component {
       modifyFlag: false,
       isEdit: 0, 
       vcName: '',
-      vcNameValidateObj: {
-        text: '',
-        error: false
-      },
-      quotaValidateObj: {
-        text: '',
-        error: false
-      },
+      vcNameValidateObj: empty,
+      quotaValidateObj: {},
       deleteModifyFlag: false,
       btnLoading: false,
       allDevice: {},
@@ -44,10 +43,11 @@ export default class Vc extends React.Component {
     axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
       .then((res) => {
         const allDevice = res.data;
-        let qSelectData = {}, mSelectData = {};
+        let qSelectData = {}, mSelectData = {}, quotaValidateObj = {};
         Object.keys(allDevice).forEach(i => {
           qSelectData[i] = null;
           mSelectData[i] = null;
+          quotaValidateObj[i] = empty;
         });
         this.setState({ allDevice, qSelectData, mSelectData });
       })
@@ -92,6 +92,7 @@ export default class Vc extends React.Component {
   save = async () => {
     const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj } = this.state;
     const { selectedCluster, getTeams } = this.context;
+    let flag = true;
     if (!vcName || vcNameValidateObj.error) {
       this.setState({
         vcNameValidateObj: {
@@ -101,7 +102,10 @@ export default class Vc extends React.Component {
       })
       return;
     }
-    if (quotaValidateObj.error) return;
+    Object.keys(quotaValidateObj).forEach(i => {
+      if (quotaValidateObj[i].error) flag = false;
+    })
+    if (!flag) return;
     let url, quota = {}, metadata = {}, canSave = true;
     if (Object.keys(allDevice).length > 0) {
       quota = _.cloneDeep(qSelectData);
@@ -207,8 +211,8 @@ export default class Vc extends React.Component {
             defaultValue={val}
             onChange={e => this.onNumValChange(key, oldVal, m, type, e.target.value, optionsData)}
             inputProps={{min: "0", max: optionsData, step: "1"}}
-            error={quotaValidateObj.error}
-            helperText={quotaValidateObj.text}
+            error={quotaValidateObj[m] ? quotaValidateObj[m].error : false}
+            helperText={quotaValidateObj[m] ? quotaValidateObj[m].text : ''}
           />
             {/* {this.getOptions(optionsData)}
           </TextField> */}
@@ -222,16 +226,17 @@ export default class Vc extends React.Component {
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       this.setState({
         quotaValidateObj: {
-          error: true,
-          text: `Must be a positive integer from 0 to ${max}`
+          [m]: {
+            error: true,
+            text: `Must be a positive integer from 0 to ${max}`
+          }
         }
       });
       return;
     } else {
       this.setState({
         quotaValidateObj: {
-          error: false,
-          text: ''
+          [m]: empty
         }
       });
     }
@@ -270,16 +275,12 @@ export default class Vc extends React.Component {
   }
 
   onCloseDialog = () => {
-    const empty = {
-      text: '',
-      error: false
-    }
     let qSelectData = this.state.qSelectData;
     Object.keys(qSelectData).forEach(i => qSelectData[i] = 0);
     this.setState({
       modifyFlag: false,
       vcNameValidateObj: empty,
-      quotaValidateObj: empty,
+      quotaValidateObj: {},
       qSelectData,
     })
   }

@@ -78,6 +78,9 @@ const NavigationList: React.FC = () => {
       <LinkListItem to="/cluster-status">
         <ListItemText>Cluster Status</ListItemText>
       </LinkListItem>
+      <LinkListItem to="/model">
+        <ListItemText>Model</ListItemText>
+      </LinkListItem>
       {
         isAdmin ?
           <div style={{ width: '100%' }}>

@@ -31,6 +31,7 @@ const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
 const User = React.lazy(() => import('./pages/User/index.js'));
 const Access = React.lazy(() => import('./pages/Access/index.js'));
+const Model = React.lazy(() => import('./pages/Model'));
 
 const theme = createMuiTheme();
 
@@ -117,6 +118,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
             <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
             <Route path="/cluster-status" component={ClusterStatus}/>
             <Route path="/vc" component={Vc} />
+            <Route path="/model" component={Model} />
             <Route path="/user" component={User} />
             <Route path="/access" component={Access} />
             <Redirect to="/"/>

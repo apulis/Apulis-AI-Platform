@@ -26,7 +26,6 @@ import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
 import MyJobs from './MyJobs';
 import AllJobs from './AllJobs';
-import './index.less';
 
 interface RouteParams {
   clusterId: string;

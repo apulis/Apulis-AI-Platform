@@ -149,6 +149,10 @@ class DistPodTemplate():
                 pod = copy.deepcopy(params)
                 if "gpuStr" not in pod:
                     pod["gpuStr"] = gpuMapping[pod["gpuType"]]["deviceStr"]
+                if pod["gpuStr"] == "npu.huawei.com/NPU":
+                    pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"true"})
+                else:
+                    pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"false"})
                 pod["distRole"] = role
                 pod["distRoleIdx"] = idx
                 pod["distId"] = "%s%d" % (role, idx)

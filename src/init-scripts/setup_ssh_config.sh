@@ -83,11 +83,12 @@ fi
 done
 
 # generate npu info for distributed npu jobs
-if [ ! -z npu_ip_list ] && [ "$role" = "worker"]; then
+if [ ! -z npu_ip_list ] && [ "$role" = "worker" ]; then
     cat >> ${NPU_CONFIG_FILE} << EOF
-$(npu_ip_list) slots=${DLWS_NUM_GPU_PER_WORKER}
-$(host_ip) slots=${DLWS_NUM_GPU_PER_WORKER}
+${npu_ip_list} slots=${DLWS_NUM_GPU_PER_WORKER}
+${host_ip} slots=${DLWS_NUM_GPU_PER_WORKER}
 EOF
+fi
 
 envs=(
 LD_LIBRARY_PATH
@@ -193,6 +194,5 @@ fi
 
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
   if [ ! -f /home/${DLWS_USER_NAME}/.hosts ];then touch /home/${DLWS_USER_NAME}/.hosts;fi
-  cp /etc/hosts /etc/hosts.backup
-  cat /home/${DLWS_USER_NAME}/.hosts > /etc/hosts
+  cat /home/${DLWS_USER_NAME}/.hosts >> /etc/hosts
 fi

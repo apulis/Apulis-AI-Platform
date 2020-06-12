@@ -29,7 +29,7 @@ export const renderStatus = (job: any) => <JobStatus job={job}/>;
 export const renderDate = (getter: (job: any) => Date) => (job: any) => {
   const date = getter(job);
   if (isNaN(date.valueOf())) return null;
-  return <>{date.toLocaleString()}</>;
+  return <>{date.toLocaleString('en')}</>;
 };
 
 export const sortDate = (getter: (job: any) => Date) => (jobA: any, jobB: any) => {

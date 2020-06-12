@@ -62,7 +62,7 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
   if (endpoint.name === 'ipython') {
     return (
       <ListItem button component="a" href={url} target="_blank">
-        <ListItemText primary="iPython" secondary={url}/>
+        <ListItemText primary="jupyter" secondary={url}/>
       </ListItem>
     );
   }

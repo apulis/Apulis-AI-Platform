@@ -12,7 +12,7 @@ const Vc = React.lazy(() => import('./pages/Vc/index.js'));
 
 export default [
   {
-    path: '/',
+    path: '/home',
     component: Home,
     exact: true
   },

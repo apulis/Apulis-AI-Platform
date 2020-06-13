@@ -69,6 +69,21 @@ class Cluster extends Service {
   }
 
   /**
+     * @param {string} jobId
+     * @return {Promise}
+     */
+    async getJobOwner (jobId) {
+      const params = new URLSearchParams({
+        jobId,
+      })
+      const response = await this.fetch('/GetJobDetail?' + params)
+      this.context.assert(response.ok, 502)
+      const job = await response.json()
+      this.context.log.debug('Got job %s', job['jobName'])
+      return job.jobParams ? job.jobParams.userName : ''
+    }
+
+  /**
      * @param {object} job
      * @return {Promise<string>}
      */

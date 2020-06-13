@@ -58,10 +58,12 @@ router.get('/clusters/:clusterId/jobs/:jobId/status',
   require('./controllers/cluster/job/status'))
 router.put('/clusters/:clusterId/jobs/:jobId/status',
   require('./middlewares/user')(),
+  require('./middlewares/manager-job')('VIEW_AND_MANAGE_ALL_USERS_JOB'),
   require('./middlewares/body')('status'),
   require('./controllers/cluster/job/status.put'))
 router.put('/clusters/:clusterId/jobs/:jobId/priority',
   require('./middlewares/user')(),
+  require('./middlewares/manager-job')('VIEW_AND_MANAGE_ALL_USERS_JOB'),
   require('./middlewares/body')('priority'),
   require('./controllers/cluster/job/priority.put'))
 router.get('/clusters/:clusterId/jobs/:jobId/log',
@@ -74,7 +76,7 @@ router.get('/clusters/:clusterId/jobs/:jobId/commands',
 router.post('/clusters/:clusterId/jobs/:jobId/commands',
   require('./middlewares/user')(),
   require('./middlewares/body')('command'),
-  require('./middlewares/authorize')('SUBMIT_TRAINING_JOB'),
+  require('./middlewares/manager-job')('VIEW_AND_MANAGE_ALL_USERS_JOB'),
   require('./controllers/cluster/job/commands.post'))
 
 router.get('/clusters/:clusterId/jobs/:jobId/endpoints',

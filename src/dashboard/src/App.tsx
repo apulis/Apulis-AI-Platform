@@ -97,19 +97,9 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
                 />
               )
             })}
-            {/* <Route exact path="/" component={Home}/> */}
-            {/* <Route path="/submission" component={Submission}/> */}
-            {/* <Route path="/jobs/:cluster" component={Jobs}/> */}
-            {/* <Route path="/jobs" component={Jobs}/> */}
-            {/* <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/> */}
             <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
-            {/* <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/> */}
             <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
-            {/* <Route strict exact path="/jobs-v2/" component={JobsV2}/> */}
-            {/* <Route path="/job/:team/:clusterId/:jobId" component={Job}/> */}
-            {/* <Route path="/cluster-status" component={ClusterStatus}/> */}
-            {/* <Route path="/vc" component={Vc} /> */}
-            <Redirect to="/"/>
+            <Redirect to="/home"/>
             
           </Switch>
         </React.Suspense>

@@ -52,6 +52,7 @@ const LinkListItem: FC<LinkProps> = ({ to, children }) => {
   const selected = typeof toPathname === "string"
     ? matchPath(locationPathname, toPathname) !== null
     : true;
+  console.log('sele', toPathname, selected)
   return (
     <ListItem button selected={selected} component={ListLink} to={to}>
       {children}
@@ -63,7 +64,7 @@ const NavigationList: FC = () => {
   const styles = useStyles();
   return (
     <List component="nav" className={styles.drawerHeader}>
-      <LinkListItem to="/">
+      <LinkListItem to="/home">
         <ListItemText>Home</ListItemText>
       </LinkListItem>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>

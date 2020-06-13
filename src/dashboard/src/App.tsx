@@ -85,7 +85,8 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
     } else if(userName === undefined){
       history.replace('/sign-up');
     } else if(teams !== undefined && teams.length === 0) {
-      history.replace('/empty-team');
+      const redict = history.location.pathname;
+      history.replace(`/empty-team?redict=${redict}`);
     }
   }, [openId, group, userName, teams, history]);
   const { enqueueSnackbar } = useSnackbar();

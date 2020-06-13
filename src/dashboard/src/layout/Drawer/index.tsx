@@ -17,8 +17,7 @@ import Context from "./Context";
 import UserContext from '../../contexts/User';
 import ConfigContext from "../../contexts/Config";
 import AuthContext from '../../contexts/Auth';
-import AuthzHOC from '../../components/AuthzHOC'
-
+import AuthzHOC from '../../components/AuthzHOC';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
@@ -35,6 +34,8 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     padding: '0 8px',
     ...theme.mixins.toolbar,
     justifyContent: 'flex-end',
+    minWidth: 200,
+    textAlign: 'center'
   },
 }));
 
@@ -62,17 +63,19 @@ const NavigationList: FC = () => {
   const styles = useStyles();
   return (
     <List component="nav" className={styles.drawerHeader}>
+      <LinkListItem to="/">
+        <ListItemText>Home</ListItemText>
+      </LinkListItem>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/submission/training">
           <ListItemText>Submit Training Job</ListItemText>
         </LinkListItem>
       </AuthzHOC>
-      <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB']}>
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/jobs-v2">
           <ListItemText>View and Manage Jobs</ListItemText>
         </LinkListItem>
       </AuthzHOC>
-      
       <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
         <LinkListItem to="/cluster-status">
           <ListItemText>Cluster Status</ListItemText>

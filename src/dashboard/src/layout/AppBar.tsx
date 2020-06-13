@@ -64,7 +64,8 @@ const useStyles = makeStyles((theme: Theme) =>
       zIndex: theme.zIndex.drawer + 1
     },
     userLabel: {
-      whiteSpace:'nowrap'
+      whiteSpace:'nowrap',
+      cursor: 'default'
     }
 
   })
@@ -148,7 +149,7 @@ const UserButton: React.FC = () => {
     setOpenCopyWarn(false);
   }
   const showUserProfile = () => {
-    setOpenUserProfile(true);
+    // setOpenUserProfile(true);
   }
 
   const handleCopy = useCallback((value) => {

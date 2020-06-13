@@ -1,4 +1,4 @@
-sign: "Sign key for JWT"
+sign: {{cnf["jwt"]["secret_key"]}}
 winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
 masterToken: "Access token of all users"
 

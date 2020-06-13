@@ -5,7 +5,6 @@ import _ from 'lodash';
 import MaterialTable, { Column, Options } from 'material-table';
 import { renderDate, sortDate } from '../JobsV2/tableUtils';
 import './index.less';
-import Treeview from 'react-treeview-component';
 // import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 // import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 // import TreeView from '@material-ui/lab/TreeView';
@@ -104,9 +103,6 @@ const Model: React.FC = () => {
               </RadioGroup>
               <FormHelperText>{typeHelperText}</FormHelperText>
             </FormControl>
-            <Treeview dataSource={dataSource}
-              onTreenodeClick={handleTreenodeClick}>
-            </Treeview>
           </form>
         </DialogContent>
         <DialogActions>

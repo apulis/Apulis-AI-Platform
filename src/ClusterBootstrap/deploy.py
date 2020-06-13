@@ -904,7 +904,7 @@ def gen_configs():
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")
     cmd = """jwt_header=$(echo -n '{"alg":"HS256","typ":"JWT"}' | base64 | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
-    cmd += """payload=$(echo -n '{"email":"jordan@example.com"}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
+    cmd += """payload=$(echo -n '{"uid":30000}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
     cmd += """secret=\""""+config["jwt"]["secret_key"] + "\";"
     cmd += """hexsecret=$(echo -n "$secret" | xxd -p | paste -sd "");"""
     cmd += """hmac_signature=$(echo -n "${jwt_header}.${payload}" |  openssl dgst -sha256 -mac HMAC -macopt hexkey:$hexsecret -binary | base64  | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
@@ -912,7 +912,7 @@ def gen_usermanagerapitoken(config):
     cmd += """echo $jwt"""
     config["usermanagerapitoken"] = utils.exec_cmd_local(cmd)
     print("==========generate jwt token for restfulapi done!!!==============")
-
+    print("token is: ",config["usermanagerapitoken"] )
 def get_ssh_config():
     if "ssh_cert" not in config and os.path.isfile("./deploy/sshkey/id_rsa"):
         config["ssh_cert"] = "./deploy/sshkey/id_rsa"

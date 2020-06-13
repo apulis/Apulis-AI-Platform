@@ -67,7 +67,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
         // inputRef={input}
         type="number"
         value={priority}
-        disabled={textFieldDisabled || !permissionList.includes('MANAGE_ALL_USERS_JOB')}
+        disabled={textFieldDisabled || !permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')}
         fullWidth
         onBlur={onBlur}
         onChange={e => setPriority(Number(e.target.value))}
@@ -79,7 +79,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
         fullWidth
         variant={buttonEnabled ? 'outlined' : 'text'}
         onClick={buttonEnabled ? () => setEditing(true) : undefined}
-        disabled={!permissionList.includes('MANAGE_ALL_USERS_JOB')}
+        disabled={!permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')}
       >
         {priority}
       </Button>

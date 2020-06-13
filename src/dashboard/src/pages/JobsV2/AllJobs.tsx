@@ -69,7 +69,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
       columns={columns}
       data={jobs}
       options={options}
-      actions={permissionList.includes('MANAGE_ALL_USERS_JOB') ? actions : undefined}
+      actions={permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB') ? actions : undefined}
       onChangeRowsPerPage={onChangeRowsPerPage}
     />
   );

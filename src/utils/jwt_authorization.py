@@ -4,14 +4,8 @@ from config import config
 
 def create_jwt_token_with_message(ret):
     return create_jwt_token_for_claims({"userId":ret["uid"],"userName":ret["userName"]},**{
-        "openId":ret["openId"],
-        "group":ret["group"],
         "uid":ret["uid"],
-        "nickName":ret["nickName"],
         "userName":ret["userName"],
-        "password":ret["password"],
-        "isAdmin":ret["isAdmin"],
-        "isAuthorized":ret["isAuthorized"],
         "gid":ret["uid"],
         "familyName":"",
         "givenName":"",
@@ -40,3 +34,7 @@ def create_jwt_token(payload,secret,algorithm=config["jwt"]["algorithm"],headers
                            headers=headers
                            ).decode('utf-8')
     return jwt_token
+
+if __name__ == '__main__':
+    token = create_jwt_token_with_message({"uid":30000,"userName":"administrator","openId":1})
+    print token

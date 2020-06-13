@@ -12,6 +12,7 @@ import MySQLdb
 from DBUtils.PooledDB import PooledDB
 from config import config
 from config import global_vars
+import requests
 
 from prometheus_client import Histogram
 import threading
@@ -663,13 +664,16 @@ class DataHandler(object):
     def GetIdentityInfo(self, identityName):
         ret = []
         try:
-            query = "SELECT `identityName`,`uid`,`gid`,`groups` FROM `%s` where `identityName` = %s" % (
-            self.identitytablename, "%s")
-            with MysqlConn() as conn:
-                rets = conn.select_many(query,[identityName])
-            for one in rets:
-                one["groups"] = json.loads(one["groups"])
-                ret.append(one)
+            # query = "SELECT `identityName`,`uid`,`gid`,`groups` FROM `%s` where `identityName` = %s" % (
+            # self.identitytablename, "%s")
+            # with MysqlConn() as conn:
+            #     rets = conn.select_many(query,[identityName])
+            # for one in rets:
+            #     one["groups"] = json.loads(one["groups"])
+            #     ret.append(one)
+            res = requests.get(url=config["usermanagerapi"] + "/open/getUserIdByUserName/"+identityName,headers={"Authorization":"Bearer "+config["usermanagerapitoken"]})
+            if res.status_code==200:
+                ret.append({"identityName":identityName,"uid":json.loads(res.content.decode("utf-8"))["uid"],"gid":30001,"groups":[30001]})
         except Exception as e:
             logger.exception('GetIdentityInfo Exception: %s', str(e))
         return ret
@@ -1470,6 +1474,19 @@ class DataHandler(object):
                 conn.insert_one(query, (name, scope, json, json))
                 conn.commit()
             ret = True
+        except Exception as e:
+            logger.exception('UpdateTemplate Exception: %s', str(e))
+        return ret
+
+    @record
+    def HasCurrentActiveJob(self,name):
+        ret = False
+        try:
+            query = """SELECT count(1) FROM """ + self.jobtablename + """WHERE jobStatus in (\"queued\", \"scheduling\", \"running\", \"unapproved\", \"pausing\", \"paused\") and userName = %s"""
+            with MysqlConn() as conn:
+                cnt = conn.select_one_value(query,(name,))
+                if cnt>0:
+                    ret = True
         except Exception as e:
             logger.exception('UpdateTemplate Exception: %s', str(e))
         return ret

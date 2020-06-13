@@ -604,7 +604,7 @@ class PythonLauncher(Launcher):
                 job_object.params["envs"] =[]
             job_object.params["envs"].append({"name": "DLTS_JOB_TOKEN", "value": job_object.params["job_token"]})              
             job_object.params["envs"].append({"name": "IDENTITY_TOKEN", "value": jwt_authorization.create_jwt_token_with_message(
-                                              dataHandler.GetAccountByUserName(job_object.params["userName"])[0]
+                                              {"userName":job_object.params["userName"],"uid":user_info["uid"]}
             )})
 
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()

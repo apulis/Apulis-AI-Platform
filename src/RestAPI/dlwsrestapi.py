@@ -880,6 +880,20 @@ class ListUser(Resource):
         return resp
 api.add_resource(ListUser, '/ListUser')
 
+class HasCurrentActiveJob(Resource):
+    @api.doc(params=model.HasCurrentActiveJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        userName = args["userName"]
+        ret = DataHandler().HasCurrentActiveJob(userName)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(HasCurrentActiveJob, '/HasCurrentActiveJob')
+
 class UpdateUserPerm(Resource):
     @api.doc(params=model.UpdateUserPerm.params)
     def get(self):
@@ -1735,18 +1749,7 @@ class JobPriority(Resource):
 ##
 api.add_resource(JobPriority, '/jobs/priorities')
 
-def dumpstacks(signal, frame):
-    code = []
-    logging.info("received signum %d", signal)
-    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
-    # logging.info("\nfeature_count:\n{}".format(feature_count))
-    for threadId, stack in sys._current_frames().items():
-        code.append("n# Thread: %d" % (threadId))
-        for filename, lineno, name, line in traceback.extract_stack(stack):
-            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
-            if line:
-                code.append(" %s" % (line.strip()))
-    logging.info("\n".join(code))
+
 
 def dumpstacks(signal, frame):
     code = []
@@ -1760,6 +1763,7 @@ def dumpstacks(signal, frame):
             if line:
                 code.append(" %s" % (line.strip()))
     logging.info("\n".join(code))
+
 
 @app.route("/metrics")
 def metrics():

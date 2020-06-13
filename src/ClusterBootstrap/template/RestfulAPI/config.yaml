@@ -91,3 +91,6 @@ administrators:
 {% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
   - {{admin}}
 {% endfor %}
+
+usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend
+usermanagerapitoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyTmFtZSI6ImFkbWluaXN0cmF0b3IiLCJvcGVuSWQiOjEsImF1ZCAiOiJzYW5kYm94Mi1tYXN0ZXIuc2lnc3VzLmNuIiwiaXNzIjoic2FuZGJveDItbWFzdGVyLnNpZ3N1cy5jbiIsImZhbWlseU5hbWUiOiIiLCJnaWQiOjMwMDAwLCJleHAiOjE1OTIxMjA4ODQuNDg1ODczLCJjbGFpbXMiOnsidXNlck5hbWUiOiJhZG1pbmlzdHJhdG9yIiwidXNlcklkIjozMDAwMH0sImlhdCI6MTU5MjAzNDQ4NC40ODU4NzIsImdpdmVuTmFtZSI6IiIsIm5iZiI6MTU5MjAzNDQ4My40ODU4NzQsImlkZW50aXR5Ijp7InVzZXJOYW1lIjoiYWRtaW5pc3RyYXRvciIsInVzZXJJZCI6MzAwMDB9LCJ1aWQiOjMwMDAwfQ.-M1PmTh_GGXJ4EZNlTHXxV-Si2QIV1z_CtUGHSS9C4A

@@ -1482,10 +1482,10 @@ class DataHandler(object):
     def HasCurrentActiveJob(self,name):
         ret = False
         try:
-            query = """SELECT count(1) FROM """ + self.jobtablename + """WHERE jobStatus in (\"queued\", \"scheduling\", \"running\", \"unapproved\", \"pausing\", \"paused\") and userName = %s"""
+            query = """SELECT count(1) FROM """ + self.jobtablename + """ WHERE jobStatus in ('queued', 'scheduling', 'running', 'unapproved', 'pausing', 'paused') and userName = %s"""
             with MysqlConn() as conn:
                 cnt = conn.select_one_value(query,(name,))
-                if cnt>0:
+                if int(cnt)>0:
                     ret = True
         except Exception as e:
             logger.exception('UpdateTemplate Exception: %s', str(e))

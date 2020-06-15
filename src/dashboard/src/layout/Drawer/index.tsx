@@ -83,7 +83,7 @@ const NavigationList: FC = () => {
       </AuthzHOC>
       <AuthzHOC needPermission={['VIEW_VC', 'MANAGE_VC']}>
         <LinkListItem to="/vc">  
-          <ListItemText>Vc</ListItemText>
+          <ListItemText>Virtual Cluster</ListItemText>
         </LinkListItem>
       </AuthzHOC>
     </List>

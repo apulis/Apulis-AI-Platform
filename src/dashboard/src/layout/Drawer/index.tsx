@@ -52,7 +52,6 @@ const LinkListItem: FC<LinkProps> = ({ to, children }) => {
   const selected = typeof toPathname === "string"
     ? matchPath(locationPathname, toPathname) !== null
     : true;
-  console.log('sele', toPathname, selected)
   return (
     <ListItem button selected={selected} component={ListLink} to={to}>
       {children}

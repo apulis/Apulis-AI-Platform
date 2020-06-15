@@ -17,7 +17,7 @@ echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 
 # https://stackoverflow.com/a/26759734/845762
 if ! [ -x "$(command -v sudo)" ] ; then
-    time apt-get update && time apt-get install -y sudo
+    time apt-get update && time apt-get install -y sudo net-tools
 fi
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
@@ -62,7 +62,7 @@ echo bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log
 
 set +e
 # Execute user's command for the job
-if [ "$DLWS_ROLE_NAME" = "worker" ];
+if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
 then
     runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
 else

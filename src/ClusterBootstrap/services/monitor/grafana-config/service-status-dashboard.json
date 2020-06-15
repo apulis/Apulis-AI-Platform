@@ -61,7 +61,7 @@
               "expr": "service_cpu_percent{name=\"$service_name\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{instance}}",
+              "legendFormat": "{{'{{'}}instance{{'}}'}}",
               "refId": "A"
             }
           ],
@@ -137,7 +137,7 @@
               "expr": "service_mem_usage_byte{name=\"$service_name\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{instance}}",
+              "legendFormat": "{{'{{'}}instance{{'}}'}}",
               "refId": "A"
             }
           ],
@@ -226,14 +226,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{instance}} Inbound",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
               "refId": "A"
             },
             {
               "expr": "service_net_out_byte{name=\"$service_name\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{instance}} Outbound",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
               "refId": "B"
             }
           ],
@@ -310,14 +310,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{instance}} Read",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
               "refId": "A"
             },
             {
               "expr": "irate(service_block_out_byte{name=\"$service_name\"}[300s])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{instance}} Write",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
               "refId": "B"
             }
           ],

@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana
+  name: grafana-arm64
   namespace: kube-system
 spec:
   replicas: 1
@@ -16,13 +16,13 @@ spec:
     spec:
       nodeSelector:
         grafana: active
-        archType: amd64
+        archType: arm64
       hostNetwork: true
       hostPID: false
       dnsPolicy: ClusterFirstWithHostNet
       containers:
       - name: grafana
-        image: {{cnf["dockers"]["container"]["grafana"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["grafana"]["fullname"]}}-arm64
         imagePullPolicy: Always
         ports:
         - containerPort: {{cnf["grafana"]["port"]}}

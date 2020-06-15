@@ -86,7 +86,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
-  const [gpusPerNode, setGpusPerNode] = useState(0)
+  const [gpusPerNode, setGpusPerNode] = useState(0);
+  const [gpuAvailable, setGpuAvailable] = useState(0);
   const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
@@ -420,21 +421,22 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     let totalGpus = gpus;
     if (type === 'PSDistJob') {
       job.numps = 1;
-      job.resourcegpu = gpusPerNode;
+      job.resourcegpu = 8;  //gpusPerNode
       job.numpsworker = workers;
-      totalGpus = gpusPerNode * workers;
+      totalGpus = 8 * workers;  //gpusPerNode
     } else {
       job.resourcegpu = gpus;
     }
     if (type === 'PSDistJob') {
-      let workersNeeded = workers;
-      for (const { metric, value } of gpuFragmentation) {
-        if (Number(metric['gpu_available']) >= gpusPerNode) {
-          workersNeeded -= (Number(value[1]) || 0);
-        }
-        if (workersNeeded <= 0) break;
-      }
-      if (workersNeeded > 0) {
+      // let workersNeeded = workers;
+      // for (const { metric, value } of gpuFragmentation) {
+      //   if (Number(metric['gpu_available']) >= gpusPerNode) {
+      //     workersNeeded -= (Number(value[1]) || 0);
+      //   }
+      //   if (workersNeeded <= 0) break;
+      // }
+      let workersNeeded = workers * 8;
+      if (workersNeeded > gpuAvailable) {
         if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
           return;
         }
@@ -500,7 +502,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
     return true;
   }
-  
+
   const validateNumDevices = (val: string) => {
     if (val) {
       const _val = Number(val);
@@ -670,7 +672,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     cluster={selectedCluster}
                     gpuType={gpuType}
                     onClusterChange={saveSelectedCluster}
-                    onAvailbleGpuNumChange={(value) => {setGpusPerNode(value)}}
+                    onAvailbleGpuNumChange={(val1, val2) => { setGpusPerNode(val1); setGpuAvailable(val2) }}
                   />
                   <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
                     <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
@@ -691,6 +693,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={e => setName(e.target.value)}
                     helperText={errors.jobName ? errors.jobName.message : ''}
                     InputLabelProps={{ shrink: true }}
+                    inputProps={{ maxLength: 20 }}
                     inputRef={register({
                       required: 'Job Name is required！',
                       pattern: {
@@ -870,7 +873,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={4} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
-                    label="iPython"
+                    label="jupyter"
                     checked={ipython}
                     onChange={(e, checked) => setIpython(checked)}
                   />

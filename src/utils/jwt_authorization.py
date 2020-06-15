@@ -4,6 +4,7 @@ from config import config
 
 def create_jwt_token_with_message(ret):
     return create_jwt_token_for_claims({"userId":ret["uid"],"userName":ret["userName"]},**{
+        "openId":ret["openId"],
         "uid":ret["uid"],
         "userName":ret["userName"],
         "gid":ret["uid"],

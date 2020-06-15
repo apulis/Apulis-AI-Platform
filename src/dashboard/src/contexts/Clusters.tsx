@@ -17,6 +17,7 @@ interface Context {
   selectedTeam: string;
   userName?: string;
   permissionList?: string[];
+  getTeams(): void;
 }
 
 const Context = createContext<Context>({
@@ -26,7 +27,8 @@ const Context = createContext<Context>({
   availbleGpu: [],
   selectedTeam: '',
   userName: '',
-  permissionList: []
+  permissionList: [],
+  getTeams: function() {}
 });
 
 export default Context;
@@ -43,7 +45,7 @@ export interface ClusterType {
 }
 
 export const Provider: FunctionComponent = ({ children }) => {
-  const { teams, selectedTeam } = useContext(TeamContext);
+  const { teams, selectedTeam, getTeams } = useContext(TeamContext);
   const { userName } = useContext(UserContext);
   const { permissionList = [] } = useContext(AuthContext);
   const [clusters, setClusters] = useState<ClusterType[]>([]);
@@ -77,7 +79,7 @@ export const Provider: FunctionComponent = ({ children }) => {
   }
   return (
     <Context.Provider
-      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu, selectedTeam, userName, permissionList }}
+      value={{ clusters, selectedCluster, saveSelectedCluster, availbleGpu, selectedTeam, userName, getTeams, permissionList }}
       children={children}
     />
   );

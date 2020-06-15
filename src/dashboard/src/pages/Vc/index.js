@@ -92,7 +92,7 @@ export default class Vc extends React.Component {
 
   save = async () => {
     const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj } = this.state;
-    const { selectedCluster } = this.context;
+    const { selectedCluster, getTeams } = this.context;
     if (!vcName || vcNameValidateObj.error) {
       this.setState({
         vcNameValidateObj: {
@@ -130,6 +130,7 @@ export default class Vc extends React.Component {
       .then((res) => {
         message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
         this.onCloseDialog();
+        getTeams();
         this.getVcList();
       }, (e) => {
         message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
@@ -138,13 +139,14 @@ export default class Vc extends React.Component {
   }
 
   delete = () => {
-    const { selectedCluster } = this.context;
+    const { selectedCluster, getTeams } = this.context;
     const { vcName } = this.state.delItem;
     this.setState({ btnLoading: true });
     axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
       .then((res) => {
         message('success', 'Delete successfully！');
         this.setState({ deleteModifyFlag: false, btnLoading: false });
+        getTeams();
         this.getVcList();
       }, () => { 
         message('error', 'Delete failed！');
@@ -333,6 +335,7 @@ export default class Vc extends React.Component {
                   fullWidth={true}
                   disabled={isEdit}
                   helperText={vcNameValidateObj.text}
+                  inputProps={{ maxLength: 20 }}
                 />
                 <h3>quota</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}

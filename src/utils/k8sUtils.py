@@ -73,8 +73,8 @@ def kubectl_create(jobfile, EXEC=True):
         try:
             output = subprocess32.check_output(["bash", "-c", config["kubelet-path"] + " create -f " + jobfile])
         except Exception as e:
-            logger.exception("kubectl create")
-            output = ""
+            logger.exception(e)
+            output = e
     else:
         output = "Job " + jobfile + " is not submitted to kubernetes cluster"
     return output

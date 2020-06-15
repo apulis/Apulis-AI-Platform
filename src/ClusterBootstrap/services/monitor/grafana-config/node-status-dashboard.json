@@ -470,7 +470,7 @@
             {
               "expr": "nvidiasmi_utilization_gpu{instance=~\"$node(:[0-9]*)?$\"}",
               "format": "time_series",
-              "legendFormat": "{{minor_number}}",
+              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "interval": "",
               "intervalFactor": 2,
               "metric": "",
@@ -553,7 +553,7 @@
             {
               "expr": "nvidiasmi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
               "format": "time_series",
-              "legendFormat": "{{minor_number}}",
+              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "intervalFactor": 2,
               "refId": "A"
             }
@@ -644,7 +644,7 @@
             {
               "expr": "huaweismi_utilization_npu{instance=~\"$node(:[0-9]*)?$\"}",
               "format": "time_series",
-              "legendFormat": "{{minor_number}}",
+              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "interval": "",
               "intervalFactor": 2,
               "metric": "",
@@ -727,7 +727,7 @@
             {
               "expr": "huaweismi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
               "format": "time_series",
-              "legendFormat": "{{minor_number}}",
+              "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "intervalFactor": 2,
               "refId": "A"
             }
@@ -815,7 +815,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{device}}",
+              "legendFormat": "{{'{{'}}device{{'}}'}}",
               "refId": "A"
             }
           ],
@@ -890,7 +890,7 @@
               "expr": "avg by (device) (node_filesystem_files_free{instance=~\"$node(:[0-9]*)?$\", device=~\"/dev/.*\"} / node_filesystem_files) * 100",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{device}}",
+              "legendFormat": "{{'{{'}}device{{'}}'}}",
               "refId": "A"
             }
           ],

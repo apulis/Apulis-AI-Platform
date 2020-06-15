@@ -25,7 +25,13 @@ host_list="${ps_host_list} ${worker_host_list}"
 
 # generate ~/.ssh/config
 SSH_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/config
+IB_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/ib_config
+NPU_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/npu_config
+
 >${SSH_CONFIG_FILE}
+>${IB_CONFIG_FILE}
+>${NPU_CONFIG_FILE}
+
 chown ${DLWS_USER_NAME} ${SSH_CONFIG_FILE}
 chmod 600 ${SSH_CONFIG_FILE}
 
@@ -35,14 +41,24 @@ do
     then
         ip=$DLWS_SD_SELF_IP
         port=$DLWS_SD_SELF_SSH_PORT
+        host_ip=$DLWS_SD_SELF_HOST_IP
     else
         role=${host%%-*}
         idx=${host##*-}
 
         ip_key=DLWS_SD_${role}${idx}_IP
+        ib_ip_key=DLWS_SD_${role}${idx}_IB_IP
         port_key=DLWS_SD_${role}${idx}_SSH_PORT
+
+        npu_ip_list_key=DLWS_SD_${role}${idx}_SSH_PORT
+        host_ip_key=DLWS_SD_${idx}_HOST_IP
+
         ip=$(printenv $ip_key)
+        ib_ip=$(printenv $ib_ip_key)
         port=$(printenv $port_key)
+
+        npu_ip_list=$(printenv $npu_ip_list_key)
+        host_ip=$(printenv $host_ip_key)
     fi
     cat >>${SSH_CONFIG_FILE} <<EOF
 
@@ -54,9 +70,25 @@ Host ${host}
   UserKnownHostsFile /dev/null
 
 EOF
+
+# generate ib related info
+if [ ! -z ib_ip ] && [ "$role" = "worker" ]; then
+    cat >> ${IB_CONFIG_FILE} << EOF
+${ib_ip} slots=${DLWS_NUM_GPU_PER_WORKER}
+EOF
+
+fi
     # also add entry to /etc/hosts
     echo -e "${ip}\t${host}" >> /etc/hosts
 done
+
+# generate npu info for distributed npu jobs
+if [ ! -z npu_ip_list ] && [ "$role" = "worker" ]; then
+    cat >> ${NPU_CONFIG_FILE} << EOF
+${npu_ip_list} slots=${DLWS_NUM_GPU_PER_WORKER}
+${host_ip} slots=${DLWS_NUM_GPU_PER_WORKER}
+EOF
+fi
 
 envs=(
 LD_LIBRARY_PATH
@@ -135,4 +167,32 @@ then
             exit 1
         fi
     done
+fi
+
+# find ib ip
+if [ "$DLWS_ROLE_NAME" = "worker" ] && command -v ifconfig ;
+then
+  ib_ip=`ifconfig |grep ib -A 1|grep inet |awk '{print $2}'`
+  if ifconfig |grep ib -A 1|grep inet ;
+  then
+    if [ ! -f /home/${DLWS_USER_NAME}/ib_config ];then touch /home/${DLWS_USER_NAME}/ib_config;fi
+    if [ ! -f /home/${DLWS_USER_NAME}/.hosts ];then touch /home/${DLWS_USER_NAME}/.hosts;fi
+    if ! cat /home/${DLWS_USER_NAME}/ib_config |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} ;
+    then
+      echo "ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}" >> /home/${DLWS_USER_NAME}/ib_config
+    else
+      sed "s/#ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}.*/'ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}'/g" -i /home/${DLWS_USER_NAME}/ib_config
+    fi
+    if ! cat /home/${DLWS_USER_NAME}/.hosts |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} ;
+    then
+      echo -e "${ib_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}" >> /home/${DLWS_USER_NAME}/.hosts
+    else
+      sed "s/.*ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/${ib_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/" -i /home/${DLWS_USER_NAME}/.hosts
+    fi
+  fi
+fi
+
+if [ "$DLWS_ROLE_NAME" = "ps" ];then
+  if [ ! -f /home/${DLWS_USER_NAME}/.hosts ];then touch /home/${DLWS_USER_NAME}/.hosts;fi
+  cat /home/${DLWS_USER_NAME}/.hosts >> /etc/hosts
 fi

@@ -149,6 +149,10 @@ class DistPodTemplate():
                 pod = copy.deepcopy(params)
                 if "gpuStr" not in pod:
                     pod["gpuStr"] = gpuMapping[pod["gpuType"]]["deviceStr"]
+                if pod["gpuStr"] == "npu.huawei.com/NPU":
+                    pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"true"})
+                else:
+                    pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"false"})
                 pod["distRole"] = role
                 pod["distRoleIdx"] = idx
                 pod["distId"] = "%s%d" % (role, idx)
@@ -156,7 +160,8 @@ class DistPodTemplate():
                 # mount /pod
                 local_pod_path = job.get_hostpath(job.job_path, "%s-%d" % (role, idx))
                 pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": local_pod_path, "enabled": True})
-
+                if role == "ps":
+                    pod["hostNetwork"] = False
                 pods.append(pod)
 
         k8s_pods = []

@@ -56,10 +56,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "count_values(\"gpu_available\", k8s_node_device_available{device_str='nvidia.com/gpu'})",
+              "expr": "count_values(\"gpu_available\", avg by (host_ip)(k8s_node_device_available{device_str='nvidia.com/gpu'}))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{gpu_available}} available gpus",
+              "legendFormat": "{{'{{'}}gpu_available{{'}}'}} available gpus",
               "refId": "A"
             }
           ],
@@ -131,10 +131,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "count_values(\"npu_available\", k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
+              "expr": "count_values(\"npu_available\", avg by (host_ip) (k8s_node_device_available{device_str='npu.huawei.com/NPU'}))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{npu_available}} available npus",
+              "legendFormat": "{{'{{'}}npu_available{{'}}'}} available npus",
               "refId": "A"
             }
           ],

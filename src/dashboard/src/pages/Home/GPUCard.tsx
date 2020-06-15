@@ -46,6 +46,7 @@ import _ from "lodash";
 import {type} from "os";
 import useCheckIsDesktop from "../../utlities/layoutUtlities";
 import AuthzHOC from '../../components/AuthzHOC';
+import './index.less';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   avatar: {
@@ -170,9 +171,9 @@ const Chart: FC<{
         {
           (!(available === 0 && used === 0 && reserved === 0)) && 
           <>
-            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{`${value}`}</text>
+            <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} textAnchor={textAnchor} fill="#333">{value === 0 ? '' : `${value}`}</text>
             <text x={ex + (cos >= 0 ? 1 : -1) * 12} y={ey} dy={18} textAnchor={textAnchor} fill="#999">
-              {`(${(Math.round(percent * 100))}%)`}
+              {percent === 0 ? '' : `(${(Math.round(percent * 100))}%)`}
             </text>
           </>
         }
@@ -217,18 +218,7 @@ export const DirectoryPathTextField: FC<{
   const handleWarnClose = () => {
     setOpenCopyWarn(false);
   }
-  const onMouseOver = useCallback(() => {
-    if (input.current) {
-      input.current.select();
-    }
-  }, [input])
-  const onFocus = useCallback(() => {
-    if (input.current) {
-      input.current.select();
-    }
-  },
-  [input]);
-  const handleCopy = useCallback(() => {
+  const handleCopy = React.useCallback(() => {
     if (input.current) {
       copy(input.current.innerHTML).then(()=>{
         setOpenCopyWarn(true)
@@ -242,6 +232,7 @@ export const DirectoryPathTextField: FC<{
         inputRef={input}
         label={label}
         value={value}
+        className="cardText"
         multiline
         rows={2}
         fullWidth
@@ -253,15 +244,12 @@ export const DirectoryPathTextField: FC<{
             <InputAdornment position="end">
               <Tooltip title="Copy" placement="right">
                 <IconButton>
-                  <FileCopyRounded/>
+                  <FileCopyRounded onClick={handleCopy} />
                 </IconButton>
               </Tooltip>
             </InputAdornment>
           )
         }}
-        onMouseOver={onMouseOver}
-        onFocus={onFocus}
-        onClick={handleCopy}
       />
       <DLTSSnackbar message={"Successfully copied"} autoHideDuration={500} open={openCopyWarn} handleWarnClose={handleWarnClose} />
     </>
@@ -453,29 +441,25 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
           <MuiThemeProvider theme={tableTheme}>
             <Table>
               <TableBody>
-                {
-                  nfsStorage.map((nfs: any, index: number) => {
-                    let nfsMountNames = nfs['mountpointName'].split("/");
-                    let mounName = "";
-                    if (nfs['mountpointName'].indexOf("dlws") !== -1) {
-                      mounName = "/data";
-                    } else {
-                      nfsMountNames.splice(0, nfsMountNames.length - 1);
-                      mounName = "/" + nfsMountNames.join('/');
-                    }
-                    let value = nfs['total'] == 0 ? 0 : (nfs['used'] / nfs['total']) * 100;
-                    return (
-                      <TableRow key={index}>
-                        <TableCell>
-                          {
-                            value < 80 ? <BorderLinearProgress value={value} variant={"determinate"}/> : value >= 80 && value < 90 ? <GenernalLinerProgress value={value} variant={"determinate"}/> : <FullBorderLinearProgress value={value} variant={"determinate"}/>
-                          }
-                          <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(${nfs['used']}/${nfs['total']}) ${Math.floor(value)}% used`}</span></div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-                }
+                {nfsStorage.map((nfs: any, index: number) => {
+                  let nfsMountNames = nfs['mountpointName'].split("/");
+                  let mounName = "";
+                  if (nfs['mountpointName'].indexOf("dlws") !== -1) {
+                    mounName = "/data";
+                  } else {
+                    nfsMountNames.splice(0, nfsMountNames.length - 1);
+                    mounName = "/" + nfsMountNames.join('/');
+                  }
+                  let value = nfs['total'] == 0 ? 0 : (nfs['used'] / nfs['total']) * 100;
+                  return (
+                    <TableRow key={index}>
+                      <TableCell>
+                        {value < 80 ? <BorderLinearProgress value={value} variant={"determinate"}/> : value >= 80 && value < 90 ? <GenernalLinerProgress value={value} variant={"determinate"}/> : <FullBorderLinearProgress value={value} variant={"determinate"}/>}
+                        <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(used: ${nfs['used']}, total: ${nfs['total']}) ${Math.floor(value)}% used`}</span></div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
               </TableBody>
             </Table>
           </MuiThemeProvider>

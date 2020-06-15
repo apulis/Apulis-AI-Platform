@@ -55,7 +55,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "min ((node_filesystem_size_bytes - node_filesystem_avail_bytes{fstype=\"nfs4\"}) / node_filesystem_size_bytes) by (device) * 100",
+              "expr": "min ((node_filesystem_size_bytes - node_filesystem_avail_bytes{fstype=~\"nfs[0-9]?\"}) / node_filesystem_size_bytes) by (device) * 100",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,

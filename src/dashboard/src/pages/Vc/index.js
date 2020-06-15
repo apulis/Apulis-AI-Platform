@@ -294,7 +294,7 @@ export default class Vc extends React.Component {
           <Table style={{ width: '80%', marginTop: 20 }}>
             <TableHead>
               <TableRow style={{ backgroundColor: '#7583d1' }}>
-                <TableCell style={{ color: '#fff' }}>vcName</TableCell>
+                <TableCell style={{ color: '#fff' }}>VcName</TableCell>
                 <TableCell style={{ color: '#fff' }}>quota</TableCell>
                 {/* <TableCell style={{ color: '#fff' }}>metadata</TableCell> */}
                 <TableCell style={{ color: '#fff' }}>permissions</TableCell>

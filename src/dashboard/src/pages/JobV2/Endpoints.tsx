@@ -134,13 +134,14 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
 
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
-    enqueueSnackbar(`Enabling ${name}...`);
+    const _name = name === 'ipython' ? 'jupyter' : name;
+    enqueueSnackbar(`Enabling ${_name}...`);
     post({
       endpoints: [name.toLowerCase()]
     }).then(() => {
-      enqueueSnackbar(`${name} enabled`, { variant: 'success' })
+      enqueueSnackbar(`${_name} enabled`, { variant: 'success' })
     }, () => {
-      enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
+      enqueueSnackbar(`Failed to enable ${_name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
 

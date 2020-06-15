@@ -7,7 +7,12 @@ import TreeView from '@material-ui/lab/TreeView';
 import TreeItem from '@material-ui/lab/TreeItem';
 import FolderIcon from '@material-ui/icons/Folder';
 
-const SelectTree: React.FC = () => {
+interface SelectTreeProps {
+  label?: string;
+}
+
+const SelectTree = (props: SelectTreeProps) => {
+  const { label } = props; 
   // const [expandedNodeIds, setExpandedNodeIds] = useState<string[]>([]);
 
   const onNodeToggle = (e: any, nodeIds: any) => {
@@ -27,7 +32,7 @@ const SelectTree: React.FC = () => {
   return (
     <TextField
       select
-      label="Input Path"
+      label={label || ''}
       fullWidth
       variant="filled"
     >

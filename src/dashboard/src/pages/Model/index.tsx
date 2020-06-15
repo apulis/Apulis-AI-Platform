@@ -99,7 +99,8 @@ const Model: React.FC = () => {
               </RadioGroup>
               <FormHelperText>{typeHelperText}</FormHelperText>
             </FormControl>
-            <SelectTree />
+            <SelectTree label="Input Path" />
+            <SelectTree label="Output Path" />
           </form>
         </DialogContent>
         <DialogActions>

@@ -678,7 +678,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -761,7 +761,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -830,7 +830,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -844,7 +844,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -927,7 +927,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1025,7 +1025,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1102,13 +1102,13 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned GPU Utilization Over Time",
+      "title": "Assigned NPU Utilization Over Time",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1177,7 +1177,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1191,7 +1191,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1274,7 +1274,7 @@
       "valueMaps": [
         {
           "op": "=",
-          "text": "0",
+          "text": "N/A",
           "value": "null"
         }
       ],
@@ -1316,7 +1316,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
+        "w": 3,
         "x": 0,
         "y": 29
       },
@@ -1400,8 +1400,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 2,
+        "w": 3,
+        "x": 3,
         "y": 29
       },
       "height": "",
@@ -1484,8 +1484,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 4,
+        "w": 3,
+        "x": 6,
         "y": 29
       },
       "height": "",
@@ -1568,8 +1568,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 6,
+        "w": 3,
+        "x": 9,
         "y": 29
       },
       "height": "",
@@ -1651,8 +1651,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 8,
+        "w": 3,
+        "x": 12,
         "y": 29
       },
       "height": "",
@@ -1734,8 +1734,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 10,
+        "w": 3,
+        "x": 15,
         "y": 29
       },
       "height": "",
@@ -1817,8 +1817,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 12,
+        "w": 3,
+        "x": 18,
         "y": 29
       },
       "height": "",
@@ -1900,8 +1900,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 2,
-        "x": 14,
+        "w": 3,
+        "x": 21,
         "y": 29
       },
       "height": "",
@@ -1961,86 +1961,6 @@
         }
       ],
       "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "${DS_PM}",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 16,
-        "y": 29
-      },
-      "id": 39,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false
-      },
-      "tableColumn": "",
-      "targets": [
-        {
-          "expr": "",
-          "format": "time_series",
-          "intervalFactor": 2,
-          "refId": "A"
-        }
-      ],
-      "thresholds": "",
-      "title": "",
-      "type": "singlestat",
-      "valueFontSize": "80%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "",
-          "value": "null"
-        }
-      ],
-      "valueName": "avg"
     },
 
     {

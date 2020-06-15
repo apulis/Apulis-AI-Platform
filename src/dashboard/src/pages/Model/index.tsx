@@ -5,11 +5,13 @@ import _ from 'lodash';
 import MaterialTable, { Column, Options } from 'material-table';
 import { renderDate, sortDate } from '../JobsV2/tableUtils';
 import './index.less';
-// import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-// import ChevronRightIcon from '@material-ui/icons/ChevronRight';
-// import TreeView from '@material-ui/lab/TreeView';
-// import TreeItem from '@material-ui/lab/TreeItem';
-// import AddIcon from '@material-ui/icons/Add';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import TreeView from '@material-ui/lab/TreeView';
+import TreeItem from '@material-ui/lab/TreeItem';
+import AddIcon from '@material-ui/icons/Add';
+import FolderIcon from '@material-ui/icons/Folder';
+import CreateNewFolderIcon from '@material-ui/icons/CreateNewFolder';
 
 const Model: React.FC = () => {
   const getDate = (item: any) => new Date(item.time);
@@ -18,6 +20,8 @@ const Model: React.FC = () => {
   const [typeHelperText, setTypeHelperText] = useState('');
   const [modalFlag1, setModalFlag1] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
+  const [expandedNodeIds, setExpandedNodeIds] = useState<string[]>([]);
+
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'ID', type: 'string', field: 'ID', sorting: false },
     { title: 'Type', type: 'string', field: 'Type', sorting: false },
@@ -67,6 +71,15 @@ const Model: React.FC = () => {
     "children": []	// Array of children nodes	
   }]
 
+  const test111 = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    e.preventDefault();
+    console.log('11111')
+  }
+
+  const onNodeToggle = (e: object, nodeIds: any) => {
+    setExpandedNodeIds(nodeIds);
+    console.log('nodeIdnodeId',nodeIds)
+  }
   return (
     <div className="modelList">
       <MaterialTable
@@ -103,6 +116,26 @@ const Model: React.FC = () => {
               </RadioGroup>
               <FormHelperText>{typeHelperText}</FormHelperText>
             </FormControl>
+            <TreeView 
+              defaultCollapseIcon={<><ExpandMoreIcon /><FolderIcon /></>}
+              defaultExpandIcon={<><ChevronRightIcon /><FolderIcon /></>}
+              onNodeToggle={onNodeToggle}
+            >
+              <TreeItem nodeId="1" label="aaaaa">
+                <TreeItem nodeId="2" label="Calendar" />
+                <TreeItem nodeId="3" label="Chrome" />
+                <TreeItem nodeId="4" label="Webstorm" />
+              </TreeItem>
+              <TreeItem nodeId="5" label="Documents">
+                <TreeItem nodeId="10" label="OSS" />
+                <TreeItem nodeId="6" label="Material-UI">
+                  <TreeItem nodeId="7" label="src">
+                    <TreeItem nodeId="8" label="index.js" />
+                    <TreeItem nodeId="9" label="tree-view.js" />
+                  </TreeItem>
+                </TreeItem>
+              </TreeItem>
+            </TreeView>
           </form>
         </DialogContent>
         <DialogActions>

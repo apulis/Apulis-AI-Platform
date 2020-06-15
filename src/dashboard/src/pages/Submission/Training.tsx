@@ -234,7 +234,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
   const [json, setJson] = useState('');
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
-  const onTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
     if (val === 'None (Apply a Template)') {
       setName("");

@@ -38,6 +38,7 @@ import { Link } from 'react-router-dom';
 import _ from 'lodash';
 import copy from 'clipboard-copy'
 import {green,purple} from "@material-ui/core/colors";
+import { SlideProps } from '@material-ui/core/Slide';
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -62,13 +63,14 @@ const useStyles = makeStyles((theme: Theme) =>
       zIndex: theme.zIndex.drawer + 1
     },
     userLabel: {
-      whiteSpace:'nowrap'
+      whiteSpace:'nowrap',
+      cursor: 'default'
     }
 
   })
 );
 const Transition = React.forwardRef<unknown, TransitionProps>(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
+  return <Slide direction="up" ref={ref} {...props as SlideProps} />;
 });
 const OpenDrawerButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
@@ -148,7 +150,7 @@ const UserButton: React.FC = () => {
     setOpenCopyWarn(false);
   }
   const showUserProfile = () => {
-    setOpenUserProfile(true);
+    // setOpenUserProfile(true);
   }
 
   const handleCopy = useCallback((value) => {

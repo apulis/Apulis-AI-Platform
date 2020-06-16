@@ -410,7 +410,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
     elif result == "Pending":
         jump = False
         for one_pod in details:
-            if "status" in one_pod and "container_statuses" in one_pod["status"]:
+            if "status" in one_pod and "container_statuses" in one_pod["status"] and one_pod["status"]["container_statuses"]:
                 for one_container_status in one_pod["status"]["container_statuses"]:
                     if "state" in one_container_status and one_container_status["state"] and \
                             "waiting" in one_container_status["state"] and one_container_status["state"]["waiting"] and "reason" in one_container_status["state"]["waiting"]\

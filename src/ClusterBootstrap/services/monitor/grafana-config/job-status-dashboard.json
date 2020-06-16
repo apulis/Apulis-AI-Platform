@@ -866,7 +866,7 @@
         "includeAll": false,
         "label": null,
         "multi": false,
-        "name": "job_name",
+        "name": "job_id",
         "options": [],
         "query": "label_values(task_cpu_percent, job_name)",
         "refresh": 1,

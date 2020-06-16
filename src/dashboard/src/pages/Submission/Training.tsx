@@ -47,7 +47,8 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg } from '../../const';
+import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg, 
+  NoNumberReg, NoNumberText } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 
@@ -318,7 +319,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         formValSet('jobPath', jobPath);
       }
       if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
-      if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
+      if (environmentVariables !== undefined) {
+        setEnvironmentVariables(environmentVariables);
+        formValSet('environmentVariables', environmentVariables);
+      }
       if (ssh !== undefined) setSsh(ssh);
       if (ipython !== undefined) setIpython(ipython);
       if (tensorboard !== undefined) setTensorboard(tensorboard);
@@ -1062,7 +1066,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             margin="dense"
                             variant="filled"
                             value={name}
+                            name="environmentVariables"
                             onChange={onEnvironmentVariableNameChange(index)}
+                            error={Boolean(errors.environmentVariables)}
+                            helperText={errors.environmentVariables ? errors.environmentVariables.message : ''}
+                            InputLabelProps={{ shrink: true }}
+                            inputRef={register({
+                              pattern: {
+                                value: NoNumberReg,
+                                message: NoNumberText
+                              }
+                            })}
                           />
                         </TableCell>
                         <TableCell>

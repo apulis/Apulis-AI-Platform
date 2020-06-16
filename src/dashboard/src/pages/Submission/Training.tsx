@@ -47,7 +47,8 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg } from '../../const';
+import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg, 
+  NoNumberReg, NoNumberText } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 
@@ -318,7 +319,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         formValSet('jobPath', jobPath);
       }
       if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
-      if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
+      if (environmentVariables !== undefined) {
+        setEnvironmentVariables(environmentVariables);
+        formValSet('environmentVariables', environmentVariables);
+      }
       if (ssh !== undefined) setSsh(ssh);
       if (ipython !== undefined) setIpython(ipython);
       if (tensorboard !== undefined) setTensorboard(tensorboard);
@@ -503,13 +507,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }
 
-  const validateNumDevices = (val: string) => {
-    if (val) {
-      const _val = Number(val);
-      return (!(_val < 0) && Number.isInteger(_val) && !(_val > gpusPerNode));
-    }
-    return true;
-  }
+  // const validateNumDevices = (val: string) => {
+  //   if (val) {
+  //     const _val = Number(val);
+  //     return (!(_val < 0) && Number.isInteger(_val) && !(_val > gpusPerNode));
+  //   }
+  //   return true;
+  // }
 
   const validateNpuNum = (val: string) => {
     if (val) {
@@ -637,7 +641,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
-        <DLTSDialog open={showGPUFragmentation}
+        {/* <DLTSDialog open={showGPUFragmentation}
           message={null}
           handleClose={() => setShowGPUFragmentation(false)}
           handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
@@ -654,7 +658,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
             </Bar>
           </BarChart>
-        </DLTSDialog>
+        </DLTSDialog> */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card>
             <CardHeader title="Submit Training Job"/>
@@ -674,13 +678,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onClusterChange={saveSelectedCluster}
                     onAvailbleGpuNumChange={(val1, val2) => { setGpusPerNode(val1); setGpuAvailable(val2) }}
                   />
-                  <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
+                  {/* <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
                     <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
                       <SvgIcon>
                         <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/><path fill="none" d="M0 0h24v24H0z"/>
                       </SvgIcon>
                     </IconButton>
-                  </Tooltip>
+                  </Tooltip> */}
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -770,9 +774,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       defaultValue={gpus}
                       error={Boolean(errors.gpus)}
                       onChange={e => setGpus(Number(e.target.value))}
-                      helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
+                      // helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
+                      // inputRef={register({
+                      //   validate: val => validateNumDevices(val)
+                      // })}
+                      helperText={errors.gpus ? NpuNumMsg : ''}
                       inputRef={register({
-                        validate: val => validateNumDevices(val)
+                        validate: val => validateNpuNum(val)
                       })}
                     />
                   </Grid>
@@ -787,11 +795,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       value={workers}
                       name="workers"
                       onChange={e => setWorkers(Number(e.target.value))}
-                      error={Boolean(errors.workers)}
-                      helperText={errors.workers ? NpuNumMsg : ''}
-                      inputRef={register({
-                        validate: val => validateNpuNum(val)
-                      })}
+                      // error={Boolean(errors.workers)}
+                      // helperText={errors.workers ? NpuNumMsg : ''}
+                      // inputRef={register({
+                      //   validate: val => validateNpuNum(val)
+                      // })}
                     />
                   </Grid>
                 )}
@@ -1058,7 +1066,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             margin="dense"
                             variant="filled"
                             value={name}
+                            name="environmentVariables"
                             onChange={onEnvironmentVariableNameChange(index)}
+                            error={Boolean(errors.environmentVariables)}
+                            helperText={errors.environmentVariables ? errors.environmentVariables.message : ''}
+                            InputLabelProps={{ shrink: true }}
+                            inputRef={register({
+                              pattern: {
+                                value: NoNumberReg,
+                                message: NoNumberText
+                              }
+                            })}
                           />
                         </TableCell>
                         <TableCell>

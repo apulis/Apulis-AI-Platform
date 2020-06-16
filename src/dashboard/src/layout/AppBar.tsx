@@ -40,6 +40,7 @@ import _ from 'lodash';
 import copy from 'clipboard-copy'
 import {green,purple} from "@material-ui/core/colors";
 import AuthzHOC from '../components/AuthzHOC';
+import axios from 'axios';
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -214,13 +215,16 @@ const UserButton: React.FC = () => {
     </main>
   );
 };
-const clearLocalStorage = () => {
-  localStorage.clear()
+const clearAuthInfo = async (userGroupPath: string) => {
+  delete localStorage.token
+  await axios.get('/authenticate/logout');
+  window.location.href = userGroupPath;
 }
 const SignOutButton: React.FC = () => {
+  const { userGroupPath } = React.useContext(UserContext);
   return (
     <Tooltip title="Sign Out" onClick={() => {delete localStorage.token}}>
-      <IconButton edge="end" color="inherit" onClick={clearLocalStorage} href="/api/authenticate/logout">
+      <IconButton edge="end" color="inherit" onClick={() => clearAuthInfo(userGroupPath || '')}>
         <ExitToApp />
       </IconButton>
     </Tooltip>

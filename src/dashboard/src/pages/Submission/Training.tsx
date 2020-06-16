@@ -503,13 +503,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }
 
-  const validateNumDevices = (val: string) => {
-    if (val) {
-      const _val = Number(val);
-      return (!(_val < 0) && Number.isInteger(_val) && !(_val > gpusPerNode));
-    }
-    return true;
-  }
+  // const validateNumDevices = (val: string) => {
+  //   if (val) {
+  //     const _val = Number(val);
+  //     return (!(_val < 0) && Number.isInteger(_val) && !(_val > gpusPerNode));
+  //   }
+  //   return true;
+  // }
 
   const validateNpuNum = (val: string) => {
     if (val) {
@@ -770,9 +770,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       defaultValue={gpus}
                       error={Boolean(errors.gpus)}
                       onChange={e => setGpus(Number(e.target.value))}
-                      helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
+                      // helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
+                      // inputRef={register({
+                      //   validate: val => validateNumDevices(val)
+                      // })}
+                      helperText={errors.gpus ? NpuNumMsg : ''}
                       inputRef={register({
-                        validate: val => validateNumDevices(val)
+                        validate: val => validateNpuNum(val)
                       })}
                     />
                   </Grid>
@@ -787,11 +791,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       value={workers}
                       name="workers"
                       onChange={e => setWorkers(Number(e.target.value))}
-                      error={Boolean(errors.workers)}
-                      helperText={errors.workers ? NpuNumMsg : ''}
-                      inputRef={register({
-                        validate: val => validateNpuNum(val)
-                      })}
+                      // error={Boolean(errors.workers)}
+                      // helperText={errors.workers ? NpuNumMsg : ''}
+                      // inputRef={register({
+                      //   validate: val => validateNpuNum(val)
+                      // })}
                     />
                   </Grid>
                 )}

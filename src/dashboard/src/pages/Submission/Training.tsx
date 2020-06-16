@@ -822,10 +822,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     name="image"
                     onChange={e => setImage(e.target.value)}
                     error={Boolean(errors.image)}
-                      helperText={errors.image ? errors.image.message : ''}
-                      inputRef={register({
-                        required: 'Docker Image is required！'
-                      })}
+                    helperText={errors.image ? errors.image.message : ''}
+                    inputRef={register({
+                      required: 'Docker Image is required！'
+                    })}
                   />
                 </Grid>
                 <Grid item xs={12}>

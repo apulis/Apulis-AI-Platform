@@ -103,7 +103,9 @@ const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
         <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
           <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
         </AuthzHOC>
-        <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
+        <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']}>
+          <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
+        </AuthzHOC>
       </Menu>
     </>
   )

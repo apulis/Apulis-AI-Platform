@@ -3830,8 +3830,8 @@ def get_admin_usr_password():
 # install ssh key remotely
 def install_ssh_key_by_nodes(all_nodes):
 
-    user, passwd, rootpasswdfile = get_admin_usr_password()
-    if user is None or passwd is None or rootpasswdfile is None:
+    rootuser, passwd, rootpasswdfile = get_admin_usr_password()
+    if rootuser is None or passwd is None or rootpasswdfile is None:
         return 
     else:
         pass
@@ -3842,7 +3842,7 @@ def install_ssh_key_by_nodes(all_nodes):
         os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub %s@%s""" %(rootpasswdfile, rootuser, node))
 
     ## dlwsadmin is not root 
-    if user != config["admin_username"]:
+    if rootuser != config["admin_username"]:
         for node in all_nodes:
             # create new user on target machine
             os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile,rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))

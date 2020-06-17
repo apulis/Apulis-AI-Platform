@@ -121,7 +121,7 @@ const Chart: FC<{
 
   let data = [];
   if (available === 0 && used === 0 && reserved === 0) {
-    data = [{ name: "NO Active Jobs", value: 100, color: "#e0e0e0" }];
+    data = [{ name: "NO Resources", value: 100, color: "#e0e0e0" }];
   } else {
     data = [
       { name: "Available", value: available, color: lightGreen[400] },

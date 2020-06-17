@@ -93,20 +93,22 @@ const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
       <IconButton ref={iconButton} onClick={onIconButtonClick}>
         <MoreVert/>
       </IconButton>
-      <Menu
-        anchorEl={iconButton.current}
-        anchorOrigin={{ horizontal: "right", vertical: "top" }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        open={open}
-        onClose={onMenuClose}
-      >
-        <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
-          <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
-        </AuthzHOC>
-        <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']}>
-          <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
-        </AuthzHOC>
-      </Menu>
+      <AuthzHOC needPermission={['VIEW_CLUSTER_STATUS', 'SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB' ]}>
+        <Menu
+          anchorEl={iconButton.current}
+          anchorOrigin={{ horizontal: "right", vertical: "top" }}
+          transformOrigin={{ horizontal: "right", vertical: "top" }}
+          open={open}
+          onClose={onMenuClose}
+        >
+          <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
+            <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
+          </AuthzHOC>
+          <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']}>
+            <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
+          </AuthzHOC>
+        </Menu>
+      </AuthzHOC>
     </>
   )
 };

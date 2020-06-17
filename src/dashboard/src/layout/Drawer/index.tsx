@@ -71,7 +71,7 @@ const NavigationList: FC = () => {
           <ListItemText>Submit Training Job</ListItemText>
         </LinkListItem>
       </AuthzHOC>
-      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+      <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']}>
         <LinkListItem to="/jobs-v2">
           <ListItemText>View and Manage Jobs</ListItemText>
         </LinkListItem>

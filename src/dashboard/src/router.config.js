@@ -26,21 +26,21 @@ export default [
     component: JobV2,
     strict: true,
     exact: true,
-    needPermission: ['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']
+    needPermission: ['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']
   },
   {
     path: '/jobs-v2/:clusterId/',
     component: JobsV2,
     strict: true,
     exact: true,
-    needPermission: ['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']
+    needPermission: ['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']
   },
   {
     path: '/jobs-v2/',
     component: JobsV2,
     strict: true, 
     exact: true,
-    needPermission: ['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']
+    needPermission: ['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']
   },
   {
     path: '/cluster-status',

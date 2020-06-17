@@ -58,7 +58,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean; isMyJob: boolean }> =
   const { accessible, admin, job } = useContext(Context);
   const { permissionList = [] } = useContext(AuthContext);
   const { supportEmail, approve, kill, pause, resume } = useActions(clusterId);
-  const canAction = (!isMyJob && permissionList.includes('MANAGE_ALL_USERS_JOB')) || isMyJob;
+  const canAction = (!isMyJob && permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')) || isMyJob;
   const availableActions = useMemo(() => {
     const actions = [supportEmail];
     if (manageable && admin && canAction) actions.push(approve);

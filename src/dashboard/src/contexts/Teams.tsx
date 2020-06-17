@@ -10,6 +10,7 @@ import _ from "lodash";
 import ConfigContext from './Config';
 import ClustersContext from '../contexts/Clusters';
 import axios from 'axios';
+import Loading from '../components/Loading';
 
 interface Context {
   teams: any;
@@ -89,15 +90,15 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   //     </Box>
   //   )
   // };
-  // if (teams !== undefined && teams.length === 0) {
-  //   return (
+  if (teams !== undefined && teams.length === 0) {
+    return (
 
-  //     <Context.Provider
-  //       value={{ teams, selectedTeam ,saveSelectedTeam,WikiLink }}
-  //       children={<EmptyTeam addGroupLink={addGroupLink} WikiLink={WikiLink}/>}
-  //     />
-  //   )
-  // }
+      <Context.Provider
+        value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
+        children={<Loading />}
+      />
+    )
+  }
   return (
     <Context.Provider
       value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList }}

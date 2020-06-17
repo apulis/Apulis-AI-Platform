@@ -27,7 +27,7 @@ spec:
         imagePullPolicy: Always
         volumeMounts:
         - mountPath: /UserDashboard
-          name: UserDashboardConfig
+          name: userdashboardconfig
         ports:
           - containerPort: 5001
             hostPort: 5001
@@ -42,7 +42,7 @@ spec:
             port: 5001
           timeoutSeconds: 10
       volumes:
-      - name: UserDashboardConfig
+      - name: userdashboardconfig
         hostPath:
           path: /etc/UserDashboard
 

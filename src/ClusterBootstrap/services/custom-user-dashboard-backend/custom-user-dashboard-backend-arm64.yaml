@@ -11,7 +11,7 @@ spec:
     metadata:
       name: custom-user-dashboard-backend
       labels:
-        custom_user_dashboard_backend: pod
+        custom-user-dashboard-backend: pod
         app: custom-user-dashboard-backend
     spec:
       {% if cnf["dnsPolicy"] %}

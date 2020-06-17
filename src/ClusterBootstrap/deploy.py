@@ -1052,6 +1052,7 @@ def deploy_masters(force = False):
         print( "Restapi information == %s " % config["restapi"])
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+    utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     render_service_templates()
 
     get_kubectl_binary(force)
@@ -1115,6 +1116,7 @@ def deploy_masters_by_kubeadm(force = False):
 
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+    utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     render_service_templates()
     utils.exec_cmd_local("./scripts/install_kubeadm.sh")
 
@@ -1769,7 +1771,9 @@ def deploy_webUI_on_node(ipAddress):
 
 
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+    utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/config.yaml","/etc/RestfulAPI/config.yaml", sshUser, webUIIP )
+    utils.sudo_scp(config["ssh_cert"],"./deploy/UserDashboard/production.env","/etc/UserDashboard/production.env", sshUser, webUIIP )
 
     utils.render_template_directory("./template/dashboard", "./deploy/dashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/dashboard/production.yaml","/etc/dashboard/production.yaml", sshUser, webUIIP )

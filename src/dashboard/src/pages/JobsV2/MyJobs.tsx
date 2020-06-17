@@ -51,7 +51,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
 
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'Id', type: 'string', field: 'jobId',
-      render: _renderId, disableClick: true, sorting: false },
+      render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Name', type: 'string', field: 'jobName', sorting: false },
     { title: 'Status', type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
     { title: 'Number of Device', type: 'numeric',

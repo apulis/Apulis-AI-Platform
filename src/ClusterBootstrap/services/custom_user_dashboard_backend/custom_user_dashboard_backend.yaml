@@ -1,0 +1,53 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: custom_user_dashboard_backend
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: custom_user_dashboard_backend
+      labels:
+        custom_user_dashboard_backend: pod
+        app: custom_user_dashboard_backend
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      hostNetwork: true
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      containers:
+      - name: custom_user_dashboard_backend
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}custom_user_dashboard_backend:{{cnf["dockertag"]}}
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /RestfulAPI
+          name: restfulapiconfig
+        ports:
+          - containerPort: 5001
+            hostPort: 5001
+            name: cm-backend-port
+            protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 5001
+          timeoutSeconds: 10
+      volumes:
+      - name: restfulapiconfig
+        hostPath:
+          path: /etc/RestfulAPI
+
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

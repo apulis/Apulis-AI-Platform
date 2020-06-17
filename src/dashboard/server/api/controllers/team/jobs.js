@@ -15,7 +15,7 @@ module.exports = async context => {
   const all = context.query.user === 'all'
   const permissionList = context.state.user.permissionList || []
   if (all) {
-    if (!permissionList.includes('MANAGE_ALL_USERS_JOB')) {
+    if (!permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')) {
       return context.assert(false, 403)
     }
   }

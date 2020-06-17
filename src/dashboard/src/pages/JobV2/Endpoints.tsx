@@ -119,7 +119,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   const { userName } = useContext(UserContext);
   const { permissionList = [] } = useContext(AuthContext);
   const { jobStatus } = job;
-  const canAction = (job.userName === userName || (job.userName !== userName && permissionList.includes('MANAGE_ALL_USERS_JOB')));
+  const canAction = (job.userName === userName || (job.userName !== userName && permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')));
   const disabled = jobStatus === 'error' || jobStatus === 'killed' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || !canAction;
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar } = useSnackbar();

@@ -237,7 +237,7 @@ const Title: React.FC = () => {
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
         <Typography component="h1" variant="h6" align="left">
-          YTung
+          Apulis AI Platform
         </Typography>
       </Link>
     </Box>

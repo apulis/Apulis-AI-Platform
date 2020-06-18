@@ -1,8 +1,12 @@
 #! /bin/bash
 set -ex
 
-. /dlts-runtime/env/init.env
-sh -x /dlts-runtime/install.sh
+RUN_TIME_DIR=/dlts-runtime
+SCRIPT_DIR=/dlts-runtime
+LOG_DIR=/dlts-runtime
+
+. ${RUN_TIME_DIR}/env/init.env
+sh -x ${RUN_TIME_DIR}/install.sh
 
 # set apt mirrors for foreign sources
 #sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub

@@ -1528,6 +1528,34 @@ def update_worker_nodes_by_kubeadm( nargs ):
 
     return
 
+def update_worker_nodes_by_kubeadm_2(workerNodes):
+
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+
+    workerNodes = limit_nodes(workerNodes)
+    worker_ssh_user = config["admin_username"]
+    k8sAPIport = config["k8sAPIport"]
+
+    tokencmd = "sudo kubeadm token create"
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    token = tokenresult.split("\n")[0]
+    hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+
+    print("Token === %s, hash == %s" % (token, hash) )
+    for node in workerNodes:
+       workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+       if verbose:
+           print(workercmd)
+       else:
+           pass
+
+       utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
+
+    return
+
 def reset_worker_nodes_by_kubeadm( nargs ):
     write_nodelist_yaml()
     kubernetes_masters = config["kubernetes_master_node"]
@@ -1599,9 +1627,11 @@ def reset_worker_nodes():
 def gen_inituser_script():
     password = get_root_passwd()
     config["inituser"]["password"] = password
+
     with open("./deploy/sshkey/id_rsa.pub", "r") as f:
         publicKey = f.read()
         f.close()
+
     config["inituser"]["publickey"] = publicKey
     utils.render_template("./scripts/inituser.sh.template", "./deploy/etc/inituser.sh",config)
 
@@ -3439,6 +3469,53 @@ def kubernetes_label_worker(uncordon=False):
             pass
     return
 
+# Label kubernetes worker nodes
+def kubernetes_label_worker_2(nodename, nodeInfo):
+
+    node_type = ["cpu", "npu", "gpu", "storage"]
+    specific_processor_type = ["npu", "gpu"]
+    set_active = "=active"
+
+    # label archtype
+    archtype = "amd64"
+    if "archtype" in nodeInfo:
+        archtype = nodeInfo["archtype"]
+    else:
+        pass
+
+    kubernetes_label_node("--overwrite", nodename, "archType=" + archtype)
+
+    # label worker
+    if nodeInfo["role"] == "worker":
+
+        # node type: cpu\gpu\npu\storage
+        if nodeInfo["type"] in node_type:
+            kubernetes_label_node("--overwrite", nodename, nodeInfo["type"] + "=active")
+        else:
+            pass
+
+        if nodeInfo["type"] in specific_processor_type:
+            kubernetes_label_node("--overwrite", nodename, nodeInfo["vendor"] + "=active")
+
+            if "series" in nodeInfo:
+                kubernetes_label_node("--overwrite", nodename, nodeInfo["series"] + "=active")
+            else:
+                pass
+
+        else:
+            pass
+
+        # gpuType=nvidia/huawei for compatibility
+        if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+            kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+        else:
+            pass
+
+    else:
+        pass
+
+    return
+
 def kubernetes_label_cpuworker():
     """Label kubernetes nodes with cpuworker=active."""
     label = "cpuworker=active"
@@ -3708,6 +3785,164 @@ def check_archtype_valid(archtype):
 def upload_dns_config():
     with open("/etc/hosts","r") as f:
         local_config = f.readlines()
+
+# get scale info
+def get_scale_nodes(config, scale_type):
+    domain = get_domain()
+    Nodes = []
+
+    for nodename in config[scale_type]:
+        nodeInfo = config[scale_type][nodename]
+
+        if len(nodename.split("."))<3:
+            Nodes.append(nodename + domain)
+        else:
+            Nodes.append(nodename)
+
+    return sorted(Nodes)
+
+# get password for root users
+def get_admin_usr_password():
+
+    rootpasswd = ""
+    rootpasswdfile = "./deploy/sshkey/rootpasswd"
+    rootuserfile = "./deploy/sshkey/rootuser"
+
+    with open(rootpasswdfile, "r") as f:
+        rootpasswd = f.read().strip()
+        f.close()
+
+    rootuser = config["admin_username"]
+    if os.path.isfile(rootuserfile):
+        with open(rootuserfile, "r") as f:
+            rootuser = f.read().strip()
+            f.close()
+    else:
+        print("Error: no rootuserfile found!")
+        return (None, None)
+
+    return (rootuser, rootpasswd, rootpasswdfile)
+
+# install ssh key remotely
+def install_ssh_key_by_nodes(all_nodes):
+
+    rootuser, rootpasswd, rootpasswdfile = get_admin_usr_password()
+    if rootuser is None or rootpasswd is None or rootpasswdfile is None:
+        return
+    else:
+        pass
+
+    ## install sshkeys using defalt key file (./deploy/sshkey/xxx)
+    for node in all_nodes:
+        print("Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node))
+        os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub %s@%s""" %(rootpasswdfile, rootuser, node))
+
+    ## dlwsadmin is not root
+    if rootuser != config["admin_username"]:
+        for node in all_nodes:
+            # create new user on target machine
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile,rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile,rootuser, node,config["admin_username"])) # TODO centos command different
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile,rootuser, node, config["admin_username"]))
+
+            print("Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node))
+            with open("./deploy/sshkey/id_rsa.pub", "r") as f:
+                publicKey = f.read().strip()
+                f.close()
+
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
+
+            ## set no password
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,config["admin_username"]))
+            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"]))
+    else:
+        pass
+
+    return
+
+def scale_up(config):
+
+    pdb.set_trace()
+
+    if "scale_up" not in config:
+        print("Error: not scale_up config\n")
+        return
+    else:
+        pass
+
+    ## install sshkey
+    all_nodes = get_scale_nodes(config, "scale_up")
+    install_ssh_key_by_nodes(all_nodes)
+    domain = get_domain()
+
+    ## scaling up
+    for node_name in config["scale_up"]:
+
+        node_info = config["scale_up"][node_name]
+        node = node_name + domain
+
+        os = node_info["os"].lower()
+        role = node_info["role"].lower()
+        device_type = node_info["type"].lower()
+        vendor = node_info["vendor"].lower()
+        archtype = node_info["archtype"].lower()
+
+        if os != "ubuntu":
+            print("os %s not supported" % (os))
+        else:
+            pass
+
+        print(node_info)
+
+        ## install necessary software
+        run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
+        time.sleep(60)
+        run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
+        run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
+
+        ## turn off swap
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)
+        print(output)
+
+        cmd = "sudo sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+        print(output)
+
+        ## join worker
+        update_worker_nodes_by_kubeadm_2([node])
+
+        ## label service
+        kubernetes_label_nodes("active", [], False)
+
+        ## label worker
+        kubernetes_label_worker_2(node_name, node_info)
+
+
+    return
+
+def scale_down(config):
+
+    if "scale_down" not in config:
+        print("Error: not scale_down config\n")
+        return
+    else:
+        pass
+
+    for node_name in config["scale_down"]:
+        node_info = config["scale_down"][node_name]
+        print(node_info)
+
+        ## drain
+        cmd = "drain %s --ignore-daemonsets" % (node_name)
+        run_kubectl([cmd])
+
+        ## delete node
+        cmd = "delete node %s" % (node_name)
+        run_kubectl([cmd])
+
+
+    return
 
 
 def run_command( args, command, nargs, parser ):
@@ -4342,35 +4577,46 @@ def run_command( args, command, nargs, parser ):
             if nargs[0]=="deploy":
                 acs_tools.acs_deploy() # Core K8s cluster deployment
                 config = init_config(default_config_parameters) # reset for next round
+
             elif nargs[0]=="getconfig":
                 acs_tools.acs_get_config()
+
             elif nargs[0]=="getip":
                 ip = acs_tools.acs_get_ip_info_nodes(False)
                 print ip
+
             elif nargs[0]=="getallip":
                 ip = acs_tools.acs_get_ip_info_nodes(True)
                 print ip
+
             elif nargs[0]=="createip":
                 ip = acs_tools.acs_create_node_ips()
                 print ip
+
             elif nargs[0]=="label":
                 get_nodes(config["clusterId"])
                 acs_label_webui()
+
             elif nargs[0]=="openports":
                 acs_tools.acs_add_nsg_rules({"HTTPAllow" : 80, "RestfulAPIAllow" : 5000, "AllowKubernetesServicePorts" : "30000-32767"})
+
             elif nargs[0]=="getserviceaddr":
                 print "Address: =" + json.dumps(k8sUtils.GetServiceAddress(nargs[1]))
+
             elif nargs[0]=="storagemount":
                 acs_tools.acs_create_storage()
                 fileshare_install()
                 allmountpoints = mount_fileshares_by_service(True)
                 del_fileshare_links()
                 link_fileshares(allmountpoints, args.force)
+
             elif nargs[0]=="prepare":
                 acs_prepare_machines()
+
             elif nargs[0]=="addons":
                 # deploy addons / config changes (i.e. weave.yaml)
                 acs_deploy_addons()
+
             elif nargs[0]=="freeflow":
                 if ("freeflow" in config) and (config["freeflow"]):
                     kube_deploy_configchanges() # starte weave.yaml
@@ -4592,25 +4838,44 @@ def run_command( args, command, nargs, parser ):
         if len(nargs) != 2:
             parser.print_help()
             exit()
+        else:
+            pass
+
         configuration( config, verbose )
         template_file = nargs[0]
         target_file = nargs[1]
         utils.render_template(template_file, target_file,config)
+
     elif command == "upgrade_masters":
         gen_configs()
         upgrade_masters()
+
     elif command == "upgrade_workers":
         gen_configs()
         upgrade_workers(nargs)
+
     elif command == "upgrade":
         gen_configs()
         upgrade_masters()
         upgrade_workers(nargs)
+
     elif command == "sync_uid":
         assert len(nargs)==4
         sync_uid_and_gid(nargs[0],nargs[1],nargs[2],nargs[3])
+
     elif command in scriptblocks:
         run_script_blocks(args.verbose, scriptblocks[command])
+
+    elif command == "scale":
+        if nargs[0] == "up":
+            scale_up(config)
+
+        elif nargs[0] == "down":
+            scale_down(config)
+
+        else:
+            pass
+
     else:
         parser.print_help()
         print "Error: Unknown command " + command
@@ -4618,6 +4883,10 @@ def run_command( args, command, nargs, parser ):
     if os.path.exists(sshtempfile):
         print "Removing temp SSH file {0}".format(sshtempfile)
         os.remove(sshtempfile)
+    else:
+        pass
+
+    return
 
 def run_script_blocks( verbose, script_collection ):
     if verbose:

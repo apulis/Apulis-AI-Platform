@@ -30,7 +30,6 @@ from shutil import copyfile, copytree
 import urllib
 import socket
 sys.path.append("storage/glusterFS")
-from GlusterFSUtils import GlusterFSJson
 sys.path.append("../utils")
 
 import utils
@@ -39,9 +38,7 @@ import k8sUtils
 from config import config as k8sconfig
 
 sys.path.append("../docker-images/glusterfs")
-import launch_glusterfs
 import az_tools
-import acs_tools
 
 from params import default_config_parameters, scriptblocks
 from ConfigUtils import *
@@ -425,7 +422,7 @@ def init_deployment():
 
     gen_new_key = True
     regenerate_key = False
-    
+
     if (os.path.exists("./deploy/clusterID.yml")):
         clusterID = utils.get_cluster_ID_from_file()
         response = raw_input_with_default("There is a cluster (ID:%s) deployment in './deploy', do you want to keep the existing ssh key and CA certificates (y/n)?" % clusterID)
@@ -437,7 +434,7 @@ def init_deployment():
             gen_new_key = False
     else:
         create_cluster_id()
-    
+
     if gen_new_key:
         os.system("mkdir -p ./deploy/cloud-config")
         os.system("rm -r ./deploy/cloud-config")
@@ -493,7 +490,7 @@ def init_deployment():
 
     with open("./deploy/ssl/kubelet/apiserver.pem", 'r') as f:
         content = f.read()
-    
+
     config["apiserver.pem"] = base64.b64encode(content.encode('utf-8')).decode('utf-8')
     config["worker.pem"] = base64.b64encode(content.encode('utf-8')).decode('utf-8')
 
@@ -789,6 +786,19 @@ def load_az_params_as_default():
 def on_premise_params():
     print("Warning: remember to set parameters:\ngpu_count_per_node, gpu_type, worker_node_num\n when using on premise machine!")
 
+def load_pplatformlatform_type():
+
+    platform_type = []
+    if "supported_platform" in config.keys():
+        platform_type = config["supported_platform"]
+    else:
+        pass
+
+    assert len(platform_type) == 1 and "platform type should be specified explicitly and unique!"
+
+    platform_type = platform_type[0]
+    config["platform_type"] = platform_type
+
 def load_platform_type():
 
     platform_type = []
@@ -806,8 +816,8 @@ def gen_platform_wise_config():
 
     load_platform_type()
 
-    azdefault = { 'network_domain':"config['network']['domain']", 
-                'worker_node_num':"config['azure_cluster']['worker_node_num']", 
+    azdefault = { 'network_domain':"config['network']['domain']",
+                'worker_node_num':"config['azure_cluster']['worker_node_num']",
                 'gpu_count_per_node':'config["sku_mapping"].get(config["azure_cluster"]["worker_vm_size"],config["sku_mapping"]["default"])["gpu-count"]',
                 'gpu_type':'config["sku_mapping"].get(config["azure_cluster"]["worker_vm_size"],config["sku_mapping"]["default"])["gpu-type"]' }
 
@@ -818,7 +828,7 @@ def gen_platform_wise_config():
                 }
 
     platform_dict = { 'azure_cluster': azdefault, 'onpremise': on_premise_default }
-    platform_func = { 'azure_cluster': load_az_params_as_default, 'onpremise': on_premise_params } 
+    platform_func = { 'azure_cluster': load_az_params_as_default, 'onpremise': on_premise_params }
 
     default_dict, default_func = platform_dict[config["platform_type"]], platform_func[config["platform_type"]]
     default_func()
@@ -1003,7 +1013,7 @@ def get_hyperkube_docker(force = False) :
     if config['kube_custom_cri']:
         if force or not os.path.exists("./deploy/bin/crishim"):
             copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/crishim", "./deploy/bin/crishim")
-        
+
         if force or not os.path.exists("./deploy/bin/nvidiagpuplugin.so"):
             copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/nvidiagpuplugin.so", "./deploy/bin/nvidiagpuplugin.so")
 
@@ -1084,7 +1094,7 @@ def deploy_masters_by_kubeadm(force = False):
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     #temporary hard-coding, will be fixed after refactoring of config/render logic
     config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
-    
+
     if verbose:
         print( "Restapi information == %s " % config["restapi"])
     else:
@@ -1099,12 +1109,14 @@ def deploy_masters_by_kubeadm(force = False):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
-        #deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s --pod-network-cidr=%s""" % (kubernetes_master0, kubernetes_version, kubernetes_ip_range)
         deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s""" % (kubernetes_master0, kubernetes_version)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
-        
+
         if i==0:
             utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
+            #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
+            kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
+            run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
         else:
             pass
 
@@ -1113,8 +1125,6 @@ def deploy_masters_by_kubeadm(force = False):
     else:
         pass
 
-    kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
-    run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
     return
 
 
@@ -1329,7 +1339,7 @@ def update_worker_node(nodeIP):
 
     worker_ssh_user = config["admin_username"]
     utils.SSH_exec_script(config["ssh_cert"],worker_ssh_user, nodeIP, "./deploy/kubelet/%s" % config["preworkerdeploymentscript"])
-    
+
     print config['machines']
     print nodeIP
     # if "type" not in config["machines"][nodeIP] or config["machines"][nodeIP]["type"] != "cpu":
@@ -1510,7 +1520,7 @@ def update_worker_nodes_by_kubeadm( nargs ):
                 print(workercmd)
             else:
                 pass
-            
+
             utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
         else:
             pass
@@ -1536,10 +1546,10 @@ def reset_worker_nodes_by_kubeadm( nargs ):
         if in_list(node, nargs):
 
             nodename = kubernetes_get_node_name(node)
-            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename]) 
+            run_kubectl( ['drain %s --delete-local-data --force --ignore-daemonsets' % nodename])
             run_kubectl( ['delete node %s' % nodename])
 
-            workercmd = "sudo kubeadm reset -f" 
+            workercmd = "sudo kubeadm reset -f"
             if verbose:
                 print(workercmd)
             else:
@@ -2172,23 +2182,25 @@ def config_fqdn():
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
-def config_webui(nargs):
+def config_webui(nargs, archtype=None):
 
     nodes = get_node_lists_for_service("restfulapi")
     reponame = get_reponame("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose)
+    if archtype is not None and archtype != "amd64":
+        reponame = reponame + "-" + archtype
 
     for node in nodes:
         # pull new image
-        remotecmd = "sudo docker pull %s" % reponame 
+        remotecmd = "sudo docker pull %s" % reponame
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
-        # todo: 
+        # todo:
         # should judge if dashboard folder exists
         remotecmd = "sudo rm -rf /www/static/dashboard; sudo mkdir -p /www/static/"
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
-       
+
         # copy the static assets from webui image to the host
-        remotecmd = "sudo docker cp $(docker create %s):/usr/src/app/build/ /www/static/dashboard" % reponame
+        remotecmd = "sudo docker cp $(sudo docker create %s):/usr/src/app/build/ /www/static/dashboard" % reponame
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
     return
@@ -2199,7 +2211,7 @@ def add_service_config():
         os.system("cp deploy/etc/nginx/* deploy/services/nginx/")
 
 def config_nginx():
-    
+
     all_nodes = get_nodes(config["clusterId"])
     template_dir = "services/nginx/"
     target_dir = "deploy/services/nginx/"
@@ -3018,7 +3030,7 @@ def deploy_ETCD_master(force = False):
 
         if "etcd_node" in config and len(config["etcd_node"]) >= int(config["etcd_node_num"]) and "kubernetes_master_node" in config and len(config["kubernetes_master_node"]) >= 1:
             print "Ready to deploy kubernetes master on %s, etcd cluster on %s.  " % (",".join(config["kubernetes_master_node"]), ",".join(config["etcd_node"]))
-            
+
             gen_configs()
             response = raw_input_with_default("Clean Up master, and deploy ETCD Nodes (y/n)?")
             if first_char(response) == "y":
@@ -3043,7 +3055,7 @@ def deploy_ETCD_master_by_kubeadm(force = False):
 
         if "etcd_node" in config and len(config["etcd_node"]) >= int(config["etcd_node_num"]) and "kubernetes_master_node" in config and len(config["kubernetes_master_node"]) >= 1:
             print ("Ready to deploy kubernetes master/etcd on %s.  " % (",".join(config["kubernetes_master_node"])))
-            
+
             gen_configs()
             deploy_masters_by_kubeadm(force)
 
@@ -3087,25 +3099,25 @@ def run_kubectl( commands ):
 
 # node can be either of fqdn or private-ip
 def kubernetes_get_node_name(node):
-    
+
     kube_node_name = ""
     domain = get_domain()
 
     if len(domain) < 2:
         kube_node_name = node
-    
+
     elif domain in node:
         kube_node_name = node[:-(len(domain))]
-    
+
     else:
         kube_node_name = node
-    
+
     if config["isacs"]:
         acs_tools.acs_set_node_from_dns(kube_node_name)
         kube_node_name = config["acs_node_from_dns"][kube_node_name]
     else:
         pass
-    
+
     return kube_node_name
 
 def set_zookeeper_cluster():
@@ -3126,7 +3138,7 @@ def get_all_services():
     render_service_templates()
     rootdir = "./deploy/services"
     servicedic = {}
-    
+
     for service in os.listdir(rootdir):
         dirname = os.path.join(rootdir, service)
         if os.path.isdir(dirname):
@@ -3153,6 +3165,14 @@ def get_all_services():
                         # Only add service if it is a daemonset.
                         servicedic[service] = yamlname
     return servicedic
+
+def get_archtypes():
+    machines = config["machines"]
+    archtypes = []
+    for key in machines.keys():
+        if machines[key].has_key("archtype"):
+            archtypes.append(machines[key]["archtype"])
+    return archtypes
 
 def get_service_name(service_config_file):
     f = open(service_config_file)
@@ -3187,7 +3207,7 @@ def get_service_yaml( use_service ):
     return fname
 
 def kubernetes_label_node(cmdoptions, nodename, label):
-    
+
     #pdb.set_trace()
     print(nodename, label)
     run_kubectl(["label nodes %s %s %s" % (cmdoptions, nodename, label)])
@@ -3203,35 +3223,35 @@ def get_node_lists_for_service(service):
 
         labels = fetch_config(config, ["kubelabels"])
         nodetype = labels[service] if service in labels else labels["default"]
-         
+
         if nodetype == "worker_node":
             nodes = config["worker_node"]
-        
+
         elif nodetype == "mysqlserver_node":
             nodes = config["mysqlserver_node"]
-        
+
         elif nodetype == "nfs_node":
             nodes = config["nfs_node"]
-        
+
         elif nodetype == "etcd_node":
             nodes = config["etcd_node"]
-        
+
         elif nodetype.find( "etcd_node_" )>=0:
-            
+
             nodenumber = int(nodetype[nodetype.find( "etcd_node_" )+len("etcd_node_"):])
-            
+
             if len(config["etcd_node"])>=nodenumber:
                 nodes = [ config["etcd_node"][nodenumber-1] ]
             else:
                 nodes = []
-        
+
         elif nodetype == "all":
             nodes = config["worker_node"] + config["etcd_node"]
-        
+
         elif nodetype.startswith("node:"):
             nodename = nodetype[5:]
             return [nodename]
-        
+
         else:
             machines = fetch_config(config, ["machines"])
             if machines is None:
@@ -3245,7 +3265,7 @@ def get_node_lists_for_service(service):
 
             for node in allnodes:
                 nodename = kubernetes_get_node_name(node)
-                
+
                 if nodename in machines and nodetype in machines[nodename]:
                     nodes.append(node)
                 else:
@@ -3264,15 +3284,15 @@ def get_node_lists_for_service(service):
 def kubernetes_label_nodes( verb, servicelists, force ):
     servicedic = get_all_services()
 
-    if verbose: 
+    if verbose:
         print ( "servicedic == %s" % servicedic )
-        
+
     get_nodes(config["clusterId"])
     labels = fetch_config(config, ["kubelabels"])
-    
-    if verbose: 
+
+    if verbose:
         print ( "labels == %s " % labels )
-        
+
     for service, serviceinfo in servicedic.iteritems():
         if verbose:
             print("Examine service %s" % service)
@@ -3291,12 +3311,12 @@ def kubernetes_label_nodes( verb, servicelists, force ):
 
     for label in servicelists:
         nodes = get_node_lists_for_service(label)
-        
+
         if verbose:
             print "kubernetes: apply action %s to label %s to nodes: %s" %(verb, label, nodes)
         else:
             pass
-        
+
         if force:
             cmdoptions = "--overwrite"
         else:
@@ -3304,7 +3324,7 @@ def kubernetes_label_nodes( verb, servicelists, force ):
 
         for node in nodes:
             nodename = kubernetes_get_node_name(node)
-            
+
             if verb == "active":
                 kubernetes_label_node(cmdoptions, nodename, label+"=active")
             elif verb == "inactive":
@@ -3376,14 +3396,20 @@ def kubernetes_label_GpuTypes():
             kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
 
 # Label kubernetes worker nodes
-def kubernetes_label_worker():
+def kubernetes_label_worker(uncordon=False):
 
     node_type = ["cpu", "npu", "gpu", "storage"]
     specific_processor_type = ["npu", "gpu"]
     set_active = "=active"
 
     for nodename,nodeInfo in config["machines"].items():
-        if nodeInfo["role"] == "worker":
+        # label archtype
+        archtype = "amd64"
+        if "archtype" in nodeInfo:
+            archtype = nodeInfo["archtype"]
+        kubernetes_label_node("--overwrite", nodename, "archType=" + archtype)
+        # label worker
+        if nodeInfo["role"] == "worker" or uncordon:
 
             # node type: cpu\gpu\npu\storage
             if nodeInfo["type"] in node_type:
@@ -3398,22 +3424,18 @@ def kubernetes_label_worker():
                     kubernetes_label_node("--overwrite", nodename, nodeInfo["series"] + "=active")
                 else:
                     pass
-                
+
             else:
                 pass
 
             # gpuType=nvidia/huawei for compatibility
-            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo: 
-                if "series" in nodeInfo and nodeInfo["series"] is not "":
-                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["series"])
-                else:
-                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"])
+            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
             else:
                 pass
 
         else:
             pass
-
     return
 
 def kubernetes_label_cpuworker():
@@ -3511,43 +3533,59 @@ def stop_one_kube_service(fname):
     run_kubectl( ["delete", "-f", fname ] )
 
 
-def start_kube_service( servicename ):
+def start_kube_service(servicename):
 
-    fname = get_service_yaml( servicename )
+    fname = get_service_yaml(servicename)
     dirname = os.path.dirname(fname)
 
-    if os.path.exists(os.path.join(dirname,"launch_order")) and "/" not in servicename:
-
-        with open(os.path.join(dirname,"launch_order"),'r') as f:
-
-            allservices = f.readlines()
-            for filename in allservices:
-                # If this line is a sleep tag (e.g. SLEEP 10), sleep for given seconds to wait for the previous service to start.
-                if filename.startswith("SLEEP"):
-                    time.sleep(int(filename.split(" ")[1]))
-                else:
-                    filename = filename.strip('\n')
-                    start_one_kube_service(os.path.join(dirname,filename))
-
-    else:
+    if "/" in servicename:
         start_one_kube_service(fname)
+        return
 
+    default_launch_file = "launch_order"
+    start_kube_service_with_launch_order(dirname, default_launch_file)
+    for archtype in get_archtypes():
+        if archtype != "amd64":
+            start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
     return
 
-def stop_kube_service( servicename ):
+def start_kube_service_with_launch_order(dirname, launch_filename):
+    if not os.path.exists(os.path.join(dirname, launch_filename)):
+        return
+    with open(os.path.join(dirname, launch_filename), 'r') as f:
+        allservices = f.readlines()
+        for filename in allservices:
+            if filename.startswith("SLEEP"):
+                time.sleep(int(filename.split(" ")[1]))
+            else:
+                filename = filename.strip('\n')
+                start_one_kube_service(os.path.join(dirname, filename))
+    return
+
+def stop_kube_service(servicename):
     fname = get_service_yaml( servicename )
     dirname = os.path.dirname(fname)
-    if os.path.exists(os.path.join(dirname,"launch_order")) and "/" not in servicename:
-        with open(os.path.join(dirname,"launch_order"),'r') as f:
-            allservices = f.readlines()
-            for filename in reversed(allservices):
-                # If this line is a sleep tag, skip this line.
-                if not filename.startswith("SLEEP"):
-                    filename = filename.strip('\n')
-                    stop_one_kube_service(os.path.join(dirname,filename))
-    else:
+    if "/" in servicename:
         stop_one_kube_service(fname)
+        return
 
+    default_launch_file = "launch_order"
+    stop_kube_service_with_launch_order(dirname, default_launch_file)
+    for archtype in get_archtypes():
+        if archtype != "amd64":
+            stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+    return
+
+def stop_kube_service_with_launch_order(dirname, launch_filename):
+    if not os.path.exists(os.path.join(dirname, launch_filename)):
+        return
+    with open(os.path.join(dirname, launch_filename), 'r') as f:
+        allservices = f.readlines()
+        for filename in reversed(allservices):
+            if not filename.startswith("SLEEP"):
+                filename = filename.strip('\n')
+                stop_one_kube_service(os.path.join(dirname, filename))
+    return
 
 def replace_kube_service( servicename ):
     fname = get_service_yaml( servicename )
@@ -3567,7 +3605,9 @@ def run_kube_command_on_nodes( nargs ):
     if verb == "uncordon":
         for node in nodes:
             nodename = kubernetes_get_node_name(node)
-            run_kubectl( ["taint nodes %s node-role.kubernetes.io/master:NoSchedule-" % nodename])
+            run_kubectl(["taint nodes %s node-role.kubernetes.io/master:NoSchedule-" % nodename])
+            kubernetes_label_node("--overwrite", nodename, "worker=active")
+            kubernetes_label_worker(uncordon=True)
     else:
         run_kube_command_node( verb, nodes)
 
@@ -3576,20 +3616,20 @@ def render_docker_images():
         print "Rendering docker-images from template ..."
     utils.render_template_directory("../docker-images/","./deploy/docker-images",config, verbose)
 
-def build_docker_images(nargs):
+def build_docker_images(nargs, archtype=None):
     render_docker_images()
     if verbose:
         print "Build docker ..."
-    build_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache = nocache )
+    build_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, archtype=archtype)
 
-def push_docker_images(nargs):
+def push_docker_images(nargs, archtype=None):
     render_docker_images()
 
     if verbose:
         print "Build & push docker images to docker register  ..."
         print "Nocache: {0}".format(nocache)
 
-    push_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache = nocache )
+    push_dockers("./deploy/docker-images/", config["dockerprefix"], config["dockertag"], nargs, config, verbose, nocache=nocache, archtype=archtype)
     return
 
 def check_buildable_images(nargs):
@@ -3671,6 +3711,9 @@ def run_command( args, command, nargs, parser ):
 
     discoverserver = args.discoverserver
     homeinserver = args.homeinserver
+    archtype = None
+    if args.archtype is not None:
+        archtype = args.archtype.strip().lower()
 
     if args.verbose:
         verbose = True
@@ -3710,7 +3753,7 @@ def run_command( args, command, nargs, parser ):
             tmp = yaml.load(f, Loader=yaml.FullLoader)
             if "clusterId" in tmp:
                 config["clusterId"] = tmp["clusterId"]
-                
+
     if "copy_sshtemp" in config and config["copy_sshtemp"]:
 
         if "ssh_origfile" not in config:
@@ -4388,7 +4431,7 @@ def run_command( args, command, nargs, parser ):
                 else:
                     parser.print_help()
                     print "Error: kubernetes labels expect a verb which is either active, inactive or remove, but get: %s" % nargs[1]
-            
+
             elif nargs[0] == "patchprovider":
                 # TODO(harry): read a tag to decide which tools we are using, so we don't need nargs[1]
                 if len(nargs)>=2 and ( nargs[1] == "aztools" or nargs[1] == "gstools" or nargs[1] == "awstools" ):
@@ -4398,16 +4441,16 @@ def run_command( args, command, nargs, parser ):
                         kubernetes_patch_nodes_provider(nargs[1], False)
                 else:
                     print "Error: kubernetes patchprovider expect a verb which is either aztools, gstools or awstools."
-            
+
             elif nargs[0] == "mark":
                 kubernetes_mark_nodes( nargs[1:], True)
-            
+
             elif nargs[0] == "unmark":
                 kubernetes_mark_nodes( nargs[1:], False)
-            
+
             elif nargs[0] == "cordon" or nargs[0] == "uncordon":
                 run_kube_command_on_nodes(nargs)
-            
+
             elif nargs[0] == "labelvc":
                 kubernetes_label_vc(True)
             else:
@@ -4481,13 +4524,13 @@ def run_command( args, command, nargs, parser ):
 
             if nargs[0] == "config":
                 config_nginx()
-                
+
             if nargs[0] == "fqdn":
                 config_fqdn()
 
-            
+
             if nargs[0].startswith("webui"):
-                config_webui(nargs)
+                config_webui(nargs, archtype=archtype)
 
         else:
             pass
@@ -4498,11 +4541,11 @@ def run_command( args, command, nargs, parser ):
 
             if nargs[0] == "build":
                 check_buildable_images(nargs[1:])
-                build_docker_images(nargs[1:])
+                build_docker_images(nargs[1:], archtype=archtype)
 
             elif nargs[0] == "push":
                 check_buildable_images(nargs[1:])
-                push_docker_images(nargs[1:])
+                push_docker_images(nargs[1:], archtype=archtype)
 
             elif nargs[0] == "run":
                 if len(nargs)>=2:
@@ -4678,6 +4721,66 @@ def upgrade_masters(hypekube_url="gcr.azk8s.cn/google-containers/hyperkube:v1.15
     """
     utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_masters[0], deploy_cmd , False)
 
+# this function is used for other modules in the scenario that it
+# needs to reuse the code of current file
+def get_config():
+    dirpath = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
+    os.chdir(dirpath)
+
+    global config
+    config = init_config(default_config_parameters)
+
+   # Cluster Config
+    config_cluster = os.path.join(dirpath,"cluster.yaml")
+    if os.path.exists(config_cluster):
+        merge_config(config, yaml.load(open(config_cluster), Loader=yaml.FullLoader))
+    else:
+        pass
+
+    config_file = os.path.join(dirpath,"config.yaml")
+
+    if not os.path.exists(config_file):
+        parser.print_help()
+        print "ERROR: config.yaml does not exist!"
+        exit()
+    else:
+        pass
+
+    with open(config_file) as f:
+        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+        f.close()
+
+    if os.path.exists("./deploy/clusterID.yml"):
+
+        with open("./deploy/clusterID.yml") as f:
+            tmp = yaml.load(f, Loader=yaml.FullLoader)
+            if "clusterId" in tmp:
+                config["clusterId"] = tmp["clusterId"]
+            else:
+                pass
+    else:
+        pass
+
+    if verbose and config["isacs"]:
+        print "Using Azure Container Services"
+    else:
+        pass
+
+    if os.path.exists("./deploy/clusterID.yml"):
+        update_config()
+    else:
+        apply_config_mapping(config, default_config_mapping)
+        update_docker_image_config()
+
+    # additional glusterfs launch parameter.
+    # config["launch-glusterfs-opt"] = args.glusterfs;
+
+    get_ssh_config()
+    configuration( config, False)
+
+    return config
+
+
 if __name__ == '__main__':
     # the program always run at the current directory.
     dirpath = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
@@ -4826,6 +4929,11 @@ Command:
         action="store",
         default=None
         )
+    parser.add_argument("--archtype",
+        help = "Build docker with arch type [e.g., amd64, arm64, amd64-npu, arm64-gpu]",
+        action="store",
+        default=None
+        )
 
     parser.add_argument("command",
         help = "See above for the list of valid command" )
@@ -4852,4 +4960,4 @@ Command:
             parser.print_help()
             print "Error: Unknown scriptblocks " + nargs[0]
     else:
-        run_command( args, command, nargs, parser)
+        run_command(args, command, nargs, parser)

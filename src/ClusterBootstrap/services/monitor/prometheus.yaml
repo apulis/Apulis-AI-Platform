@@ -89,18 +89,23 @@ spec:
     spec:
       nodeSelector:
         prometheus: active
+        archType: amd64
       hostNetwork: true
       initContainers:
       - name: init
-        image: bash:4
+        image: {{cnf["dockers"]["container"]["bash"]["fullname"]}}
         volumeMounts:
         - name: prometheus-data
           mountPath: /prometheus-data
         command: ["chmod", "777", "/prometheus-data"] # newly create dir have permission 755, which makes prometheus container unable to write
       serviceAccountName: prometheus
+      {% if cnf["private_docker_registry_username"] %}
+      imagePullSecrets:
+      - name: svccred
+      {% endif %}
       containers:
       - name: prometheus
-        image: prom/prometheus:v2.1.0
+        image: {{cnf["dockers"]["container"]["prometheus"]["fullname"]}}
         resources:
           limits:
             memory: "10Gi"
@@ -112,7 +117,7 @@ spec:
           - '--web.external-url=http://localhost:{{cnf["prometheus"]["port"]}}/prometheus/'
           - '--web.route-prefix=prometheus'
           - '--storage.tsdb.path=/prometheus-data'
-          - '--storage.tsdb.retention=31d'
+          - '--storage.tsdb.retention=365d'
         ports:
         - name: web
           containerPort: {{cnf["prometheus"]["port"]}}

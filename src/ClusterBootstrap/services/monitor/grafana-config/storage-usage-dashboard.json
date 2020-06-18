@@ -55,11 +55,11 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "min ((node_filesystem_size_bytes - node_filesystem_free_bytes{fstype=\"nfs4\"}) / node_filesystem_size_bytes) by (device) * 100",
+              "expr": "min ((node_filesystem_size_bytes - node_filesystem_avail_bytes{fstype=\"nfs4\"}) / node_filesystem_size_bytes) by (device) * 100",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{ '{{' }} device {{ '}}' }}",
+              "legendFormat": "{{ device }}",
               "refId": "A"
             }
           ],
@@ -145,5 +145,6 @@
   },
   "timezone": "browser",
   "title": "Storage usage",
-  "version": 0
+  "version": 0,
+  "uid": "storage-usage"
 }}

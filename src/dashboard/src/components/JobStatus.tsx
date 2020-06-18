@@ -12,6 +12,7 @@ import {
   RemoveCircleOutline,
   Help
 } from '@material-ui/icons';
+import message from '../utils/message';
 
 interface Props {
   job: any;
@@ -33,20 +34,33 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
     : <Help/>
   , [status]);
   const label = useMemo(() => capitalize(status), [status]);
-
   const detail = useMemo<Array<any>>(() => job['jobStatusDetail'], [job]);
-  const title = () => {
-    if (!Array.isArray(detail)) return '';
-    if (detail.length === 0) return '';
+  const title = useMemo(() => {
+    if (!Array.isArray(detail)) return null;
+    if (detail.length === 0) return null;
     const firstDetail = detail[0];
-    if (typeof firstDetail !== 'object') return '';
+    if (typeof firstDetail !== 'object') return null;
     const firstDetailMessage = firstDetail.message;
-    if (typeof firstDetailMessage === 'string') return firstDetailMessage;
-    if (typeof firstDetailMessage === 'object') return `${JSON.stringify(firstDetailMessage, null, 2)}`;
-    return `${JSON.stringify(firstDetail, null, 2)}`;
-  };
+    if (typeof firstDetailMessage === 'string') {
+      const idx1 = firstDetailMessage.indexOf('20');
+      const idx2 = firstDetailMessage.indexOf('+');
+      if (idx1 > -1 && idx2 > -1) {
+        const oldStr = firstDetailMessage.slice(idx1, idx2);
+        const time = new Date(`${oldStr}+00:00`).toLocaleString();
+        const temp1 = firstDetailMessage.split(oldStr);
+        const temp2 = firstDetailMessage.split(temp1[1]);
+        const msg = `${temp1[0]}${time}${temp2[1]}`;
+        return msg;
+      }
+      return firstDetailMessage;
+    };
+    if (typeof firstDetailMessage === 'object') return (
+      <pre>{JSON.stringify(firstDetailMessage, null, 2)}</pre>
+    );
+    return <pre>{JSON.stringify(firstDetail, null, 2)}</pre>;
+  }, [detail]);
   return (
-    <Tooltip title={title} placement="right" interactive>
+    <Tooltip title={title as React.ReactNode} placement="right" interactive>
       <Chip icon={icon} label={label}/>
     </Tooltip>
   );

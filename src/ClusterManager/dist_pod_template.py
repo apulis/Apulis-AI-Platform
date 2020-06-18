@@ -94,6 +94,8 @@ class DistPodTemplate():
         job.add_mountpoints(job.infiniband_mountpoints())
         params["mountpoints"] = job.mountpoints
         params["init-container"] = os.environ["INIT_CONTAINER_IMAGE"]
+        if params["gpuType"].endswith("arm64"):
+            params["init-container"] += "-arm64"
 
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()

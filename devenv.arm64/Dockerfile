@@ -29,7 +29,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         bison \
         libcurl4-openssl-dev libssl-dev \
         dirmngr \
-        gnupg-agent
+        gnupg-agent \
+        python3-pip
 
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 
@@ -41,10 +42,13 @@ RUN add-apt-repository \
 RUN apt-key fingerprint 0EBFCD88
 
 # Install docker
-RUN apt-get update && apt-get install -y --no-install-recommends docker-ce
+#RUN apt-get update && apt-get install -y --no-install-recommends docker-ce
+## if docker daemon version old
+RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli=5:18.09.0~3-0~ubuntu-bionic
 
 # PIP installation
 RUN pip install --upgrade pip && pip install setuptools && pip install pyyaml jinja2 flask flask.restful tzlocal pycurl requests subprocess32
+RUN pip3 install pyyaml jinja2 flask flask.restful tzlocal pycurl requests subprocess32
 
 RUN chmod og+rx  -R /usr/local/lib
 
@@ -57,6 +61,7 @@ RUN chmod og+rx  -R /usr/local/lib
 
 # RUN apt-get update && apt-get install azure-cli
 
-
-
-
+RUN apt-get update && apt-get install -y apt-transport-https gnupg2
+RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
+RUN apt-get update && apt-get install -y kubectl

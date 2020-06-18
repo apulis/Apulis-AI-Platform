@@ -31,6 +31,10 @@ import Loading from '../../components/Loading';
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import Context from './Context';
 import { useForm } from "react-hook-form";
+import { OneInteractivePortsMsg, pollInterval } from '../../const';
+import message from '../../utils/message';
+import axios from 'axios';
+import useInterval from '../../hooks/useInterval';
 
 interface RouteParams {
   clusterId: string;
@@ -39,8 +43,7 @@ interface RouteParams {
 
 const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) => {
   const { cluster, job } = useContext(Context);
-  console.log('jobbbb',job)
-
+  const [ portInfoShow, setPortInfoShow ] = useState(true);
   if (endpoint.status !== "running") return null;
   if (endpoint.name === 'ssh') {
     const identify = `${cluster['workStorage'].replace(/^file:\/\//i, '//')}/${job['jobParams']['workPath']}/.ssh/id_rsa`
@@ -64,18 +67,21 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
       </ListItem>
     );
   }
+
   return (
     <ListItem button component="a" href={url} target="_blank">
-      <ListItemText primary={`Port ${endpoint['podPort']}`} secondary={url}/>
+      <ListItemText secondary={url}
+        primary={<p>Port {endpoint['podPort']} （<span>The server needs to use <code>/endpoints/{endpoint['podPort']}/</code> as the root path</span>）</p>} />
     </ListItem>
   );
 }
 
-const EndpointsList: FunctionComponent<{
-  endpoints: any[];
-}> = ({ endpoints }) => {
+const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> = ({ endpoints, setPollTime }) => {
   const sortedEndpoints = useMemo(() => {
     const nameOrders = ['ssh', 'ipython', 'tensorboard'].reverse();
+    let flag = null;
+    endpoints.map(i => { if (i.status !== 'running') flag = pollInterval; });
+    setPollTime(flag);
     return endpoints.filter((endpoint) => {
       return endpoint.status === 'running';
     }).sort((endpointA, endpointB) => {
@@ -89,17 +95,17 @@ const EndpointsList: FunctionComponent<{
       }
       return endpointA['port'] - endpointB['port'];
     });
-  }, [endpoints]);
+  }, [endpoints]); 
   return (
-    <List dense>
-      {sortedEndpoints.map((endpoint) => {
-        return <EndpointListItem key={endpoint.id} endpoint={endpoint}/>
+    <List dense style={{ paddingBottom: 20 }}>
+      {sortedEndpoints.map((endpoint, idx) => {
+        return <EndpointListItem key={endpoint.id} endpoint={endpoint} />
       })}
     </List>
   )
 };
 
-const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoints }) => {
+const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: any }> = ({ endpoints, setPollTime }) => {
   const { job } = useContext(Context);
   const { jobStatus } = job;
   const disabled = jobStatus === 'error' || jobStatus === 'killed' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing';
@@ -118,6 +124,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
     useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
     [clusterId, jobId]);
   const portInput = useRef<HTMLInputElement>();
+
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
     enqueueSnackbar(`Enabling ${name}...`);
@@ -129,8 +136,20 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
       enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
-  const onSubmit = useCallback((data: any) => {
+
+  const onSubmit = (data: any) => {
+    if (!data.interactivePorts) {
+      setError('interactivePorts', 'validate', 'Interactive Port is required！');
+      return;
+    }
     const port = Number(data.interactivePorts);
+    for (const i of endpoints) {
+      const { status, podPort, name } = i;
+      if (status === 'running' && name !== 'ssh' && name !== 'ipython' && name !== 'tensorboard' && podPort === port) {
+        enqueueSnackbar(`Already has port ${port}！`, { variant: 'error' });
+        return;
+      }
+    }
     enqueueSnackbar(`Exposing port ${port}...`);
     post({
       endpoints: [{
@@ -139,22 +158,25 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
       }]
     }).then(() => {
       enqueueSnackbar(`Port ${port} exposed`, { variant: 'success' });
+      setValue('interactivePorts', '');
+      setPollTime(pollInterval);
     }, () => {
       enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
     });
-  }, [post, enqueueSnackbar]);
+  };
+
   const [iconInfoShow, setIconInfoShow] = useState(false);
-  const { handleSubmit, register, errors } = useForm({ mode: "onBlur" });
+  const { handleSubmit, register, errors, setError, setValue } = useForm({ mode: "onBlur" });
   const validateInteractivePorts = (val: string) => {
     if (val) {
       let flag = true;
-      if (val.split(',').length) {
-        val.split(',').forEach(n => {
-          if (Number(n) < 40000 || Number(n) > 49999) flag = false;
-        });
+      const arr = val.split(',');
+      if (arr.length > 1) {
+        flag = false;
       } else {
-        flag = Number(val) >= 40000 && Number(val) <= 49999;
-      }
+        flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
+      } 
+      !flag && setError('interactivePorts', 'validate', OneInteractivePortsMsg);
       return flag;
     }
     return true;
@@ -191,14 +213,13 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
       />}
       <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>
         <TextField
-          type="number"
           fullWidth
           label="New Interactive Port"
-          placeholder="40000 - 49999. Separated by comma."
           disabled={disabled}
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
-          helperText={errors.interactivePorts ? '40000 - 49999. Separated by comma.' : ''}
+          defaultValue={''}
+          helperText={errors.interactivePorts ? errors.interactivePorts.message || OneInteractivePortsMsg : ''}
           inputRef={register({
             validate: val => validateInteractivePorts(val)
           })}
@@ -217,45 +238,52 @@ const EndpointsController: FunctionComponent<{ endpoints: any[] }> = ({ endpoint
   )
 };
 
-const Endpoints: FunctionComponent = () => {
+const Endpoints: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { job } = useContext(Context);
-  const { error, data, get } =
-    useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
-    [clusterId, jobId]);
-  const [endpoints, setEndpoints] = useState<any[]>();
+  const [endpoints, setEndpoints] = useState<any[]>([]);
+  const [pollTime, setPollTime] = useState<any>(pollInterval);
 
   useEffect(() => {
-    if (data !== undefined) {
-      setEndpoints(data);
+    getData();
+  }, [clusterId, jobId]);
 
-      const timeout = setTimeout(get, 3000);
-      return () => {
-        clearTimeout(timeout);
-      }
-    }
-  }, [data, get]);
-  useEffect(() => {
-    if (error !== undefined) {
-      const key = enqueueSnackbar(`Failed to fetch job endpoints: ${clusterId}/${jobId}`, {
-        variant: 'error',
-        persist: true
-      });
-      return () => {
-        if (key !== null) closeSnackbar(key);
-      }
-    }
-  }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
+  useInterval(() => {
+    getData();
+  }, pollTime);
+
+  const getData = () => {
+    axios.get(`/clusters/${clusterId}/jobs/${jobId}/endpoints`)
+      .then(res => {
+        const { data } = res;
+        const eLen = endpoints.length;
+        const dLen = data ? data.length : 0;
+        if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
+        if (eLen !== dLen) {
+          setEndpoints(data);
+        } else if (eLen && dLen) {
+          for (const m of data) {
+            for (const n of endpoints) {
+              if (m.id === n.id && m.status !== n.status) {
+                setEndpoints(data);
+                return;
+              }
+            }
+          }
+        }
+      }, () => {
+        message('error', `Failed to fetch job endpoints: ${clusterId}/${jobId}`);
+      })
+  }
 
   if (endpoints === undefined) {
     return <Loading/>;
   }
-
   return (
     <>
-      {job['jobStatus'] === 'running' && <EndpointsList endpoints={endpoints}/>}
-      <EndpointsController endpoints={endpoints}/>
+      {job['jobStatus'] === 'running' && <EndpointsList endpoints={endpoints} setPollTime={setPollTime} />}
+      <EndpointsController endpoints={endpoints} setPollTime={setPollTime} />
     </>
   );
 };

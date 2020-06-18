@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -13,12 +13,12 @@ groups:
 kill_template = """
     - alert: kill-idle-jobs-email-%s
       for: %dh
-      expr: avg(task_gpu_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
+      expr: avg(task_device_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
       labels:
         type: kill_idle_job_email
     - alert: kill-idle-jobs-%s
       for: %dh
-      expr: avg(task_gpu_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
+      expr: avg(task_device_percent{vc_name="%s"}) by (user_email, job_name, vc_name) == 0
       labels:
         type: reaper
 """
@@ -32,7 +32,7 @@ def extract_relevant_config(config_map):
 
 if __name__ == "__main__":
     with open(sys.argv[1]) as f:
-        config = yaml.load(f.read())
+        config = yaml.load(f.read(), Loader=yaml.FullLoader)
 
     print(headers)
     config_kill_rule(extract_relevant_config(config))

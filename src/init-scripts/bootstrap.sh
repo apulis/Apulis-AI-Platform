@@ -38,7 +38,7 @@ then
 fi
 
 # Setup container
-bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/init_user.sh # &>> ${LOG_DIR}/bootstrap.log
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
@@ -46,11 +46,11 @@ then
 fi
 
 # Setup roles
-bash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/setup_sshd.sh # &>> ${LOG_DIR}/bootstrap.log
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
-    bash ${SCRIPT_DIR}/setup_ssh_config.sh &>> ${LOG_DIR}/bootstrap.log
+    bash ${SCRIPT_DIR}/setup_ssh_config.sh # &>> ${LOG_DIR}/bootstrap.log
 	touch ${PROC_DIR}/ROLE_READY
 
 	# Setup job

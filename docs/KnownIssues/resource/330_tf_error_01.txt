@@ -1,0 +1,750 @@
+YTung
+npu_test_16npu
+=========================================================
+=========================================================
+=========================================================
+        logs from pod: eb0a5a6f-0a89-458a-96fa-12f317ce636f-ps0
+=========================================================
+=========================================================
+=========================================================
++ . /dlts-runtime/env/init.env
+++ export DLWS_SD_SELF_IP=10.32.0.3
+++ DLWS_SD_SELF_IP=10.32.0.3
+++ export DLWS_SD_SELF_SSH_PORT=22
+++ DLWS_SD_SELF_SSH_PORT=22
+++ export DLWS_ROLE_IDX=0
+++ DLWS_ROLE_IDX=0
+++ export DLTS_ROLE_IDX=0
+++ DLTS_ROLE_IDX=0
+++ export DLWS_SD_SELF_IB_IP=None
+++ DLWS_SD_SELF_IB_IP=None
+++ export DLWS_SD_SELF_HOST_IP=
+++ DLWS_SD_SELF_HOST_IP=
+++ export DLWS_SD_ps0_IP=10.32.0.3
+++ DLWS_SD_ps0_IP=10.32.0.3
+++ export DLWS_SD_ps0_SSH_PORT=22
+++ DLWS_SD_ps0_SSH_PORT=22
+++ export DLWS_SD_ps0_IB_IP=None
+++ DLWS_SD_ps0_IB_IP=None
+++ export DLWS_SD_ps0_NPU_IP_LIST=
+++ DLWS_SD_ps0_NPU_IP_LIST=
+++ export DLWS_SD_ps0_HOST_IP=
+++ DLWS_SD_ps0_HOST_IP=
+++ export DLWS_SD_worker0_IP=192.168.3.2
+++ DLWS_SD_worker0_IP=192.168.3.2
+++ export DLWS_SD_worker0_SSH_PORT=45516
+++ DLWS_SD_worker0_SSH_PORT=45516
+++ export DLWS_SD_worker0_IB_IP=None
+++ DLWS_SD_worker0_IB_IP=None
+++ export DLWS_SD_worker0_NPU_IP_LIST=
+++ DLWS_SD_worker0_NPU_IP_LIST=
+++ export DLWS_SD_worker0_HOST_IP=
+++ DLWS_SD_worker0_HOST_IP=
+++ export DLWS_SD_worker1_IP=192.168.3.6
+++ DLWS_SD_worker1_IP=192.168.3.6
+++ export DLWS_SD_worker1_SSH_PORT=45516
+++ DLWS_SD_worker1_SSH_PORT=45516
+++ export DLWS_SD_worker1_IB_IP=None
+++ DLWS_SD_worker1_IB_IP=None
+++ export DLWS_SD_worker1_NPU_IP_LIST=
+++ DLWS_SD_worker1_NPU_IP_LIST=
+++ export DLWS_SD_worker1_HOST_IP=
+++ DLWS_SD_worker1_HOST_IP=
++ sh -x /dlts-runtime/install.sh
++ dirname /dlts-runtime/install.sh
++ cwd=/dlts-runtime
++ ssh_root=/dlts-runtime/ssh_build/usr
++ mkdir -p /usr/etc
++ cp /dlts-runtime/ssh_build/usr/etc/moduli /dlts-runtime/ssh_build/usr/etc/ssh_config /dlts-runtime/ssh_build/usr/etc/sshd_config /usr/etc
++ cp /dlts-runtime/ssh_config/sshd/sshd_config /usr/etc/sshd_config
++ cp /dlts-runtime/ssh_config/init.d/DO_NOT_WRITE /dlts-runtime/ssh_config/init.d/ssh /etc/init.d
++ cp /dlts-runtime/ssh_config/default/DO_NOT_WRITE /dlts-runtime/ssh_config/default/ssh /etc/default
++ chmod +x /etc/init.d/ssh
++ cp -r /dlts-runtime/ssh_build/usr/bin /dlts-runtime/ssh_build/usr/sbin /dlts-runtime/ssh_build/usr/lib /dlts-runtime/ssh_build/usr/libexec /usr/
++ ssh-keygen -t dsa -f /usr/etc/ssh_host_dsa_key -N 
++ ssh-keygen -t rsa -f /usr/etc/ssh_host_rsa_key -N 
++ ssh-keygen -t ecdsa -f /usr/etc/ssh_host_ecdsa_key -N 
++ cp /dlts-runtime/gpu_topo /usr/bin
++ sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list
++ rm -rf /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/cuda.list.save /etc/apt/sources.list.d/graphics-drivers-ubuntu-ppa-bionic.list /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/nvidia-ml.list.save
++ SCRIPT_DIR=/pod/scripts
+++ date
++ echo bootstrap starts at Fri Jun 12 10:04:02 UTC 2020
+++ command -v sudo
++ '[' -x '' ']'
++ apt-get update
+Get:1 http://mirrors.aliyun.com/ubuntu-ports bionic InRelease [242 kB]
+Get:2 http://mirrors.aliyun.com/ubuntu-ports bionic-updates InRelease [88.7 kB]
+Get:3 http://mirrors.aliyun.com/ubuntu-ports bionic-backports InRelease [74.6 kB]
+Get:4 http://mirrors.aliyun.com/ubuntu-ports bionic-security InRelease [88.7 kB]
+Get:5 http://mirrors.aliyun.com/ubuntu-ports bionic/universe arm64 Packages [11.0 MB]
+Get:6 http://mirrors.aliyun.com/ubuntu-ports bionic/main arm64 Packages [1285 kB]
+Get:7 http://mirrors.aliyun.com/ubuntu-ports bionic/restricted arm64 Packages [572 B]
+Get:8 http://mirrors.aliyun.com/ubuntu-ports bionic/multiverse arm64 Packages [153 kB]
+Get:9 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/main arm64 Packages [869 kB]
+Get:10 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/restricted arm64 Packages [1192 B]
+Get:11 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/multiverse arm64 Packages [3737 B]
+Get:12 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/universe arm64 Packages [1231 kB]
+Get:13 http://mirrors.aliyun.com/ubuntu-ports bionic-backports/main arm64 Packages [8260 B]
+Get:14 http://mirrors.aliyun.com/ubuntu-ports bionic-backports/universe arm64 Packages [7827 B]
+Get:15 http://mirrors.aliyun.com/ubuntu-ports bionic-security/main arm64 Packages [594 kB]
+Get:16 http://mirrors.aliyun.com/ubuntu-ports bionic-security/restricted arm64 Packages [581 B]
+Get:17 http://mirrors.aliyun.com/ubuntu-ports bionic-security/multiverse arm64 Packages [1843 B]
+Get:18 http://mirrors.aliyun.com/ubuntu-ports bionic-security/universe arm64 Packages [754 kB]
+Fetched 16.4 MB in 7s (2511 kB/s)
+Reading package lists...
+
+real	0m7.591s
+user	0m2.634s
+sys	0m0.855s
++ apt-get install -y sudo net-tools
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following NEW packages will be installed:
+  net-tools sudo
+0 upgraded, 2 newly installed, 0 to remove and 91 not upgraded.
+Need to get 553 kB of archives.
+After this operation, 2433 kB of additional disk space will be used.
+Get:1 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/main arm64 sudo arm64 1.8.21p2-3ubuntu1.2 [382 kB]
+Get:2 http://mirrors.aliyun.com/ubuntu-ports bionic/main arm64 net-tools arm64 1.60+git20161116.90da8a0-1ubuntu1 [171 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 553 kB in 3s (208 kB/s)
+Selecting previously unselected package sudo.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 17197 files and directories currently installed.)
+Preparing to unpack .../sudo_1.8.21p2-3ubuntu1.2_arm64.deb ...
+Unpacking sudo (1.8.21p2-3ubuntu1.2) ...
+Selecting previously unselected package net-tools.
+Preparing to unpack .../net-tools_1.60+git20161116.90da8a0-1ubuntu1_arm64.deb ...
+Unpacking net-tools (1.60+git20161116.90da8a0-1ubuntu1) ...
+Setting up sudo (1.8.21p2-3ubuntu1.2) ...
+Setting up net-tools (1.60+git20161116.90da8a0-1ubuntu1) ...
+
+real	0m4.499s
+user	0m1.563s
+sys	0m0.322s
++ '[' ps '!=' inferenceworker ']'
++ export PROC_DIR=/pod/running
++ PROC_DIR=/pod/running
++ rm -rf /pod/running
++ mkdir -p /pod/running
++ export LOG_DIR=/pod/logs
++ LOG_DIR=/pod/logs
++ mkdir -p /pod/logs
++ PID_FILE=/pod/running/pid
++ echo 1
++ bash /pod/scripts/init_user.sh
++ '[' ps '!=' inferenceworker ']'
++ touch /pod/running/CONTAINER_READY
++ bash /pod/scripts/setup_sshd.sh
++ '[' ps '!=' inferenceworker ']'
++ bash /pod/scripts/setup_ssh_config.sh
++ touch /pod/running/ROLE_READY
++ touch /pod/running/JOB_READY
+++ date
++ echo bootstrap ends at Fri Jun 12 10:05:28 UTC 2020
++ set +e
++ '[' ps = worker ']'
++ '[' ps = ps ']'
++ '[' true = true ']'
++ runuser -l bifeng.peng -c 'sleep infinity'
+
+
+
+=========================================================
+        end of logs from pod: eb0a5a6f-0a89-458a-96fa-12f317ce636f-ps0
+=========================================================
+
+
+
+=========================================================
+=========================================================
+=========================================================
+        logs from pod: eb0a5a6f-0a89-458a-96fa-12f317ce636f-worker0
+=========================================================
+=========================================================
+=========================================================
++ . /dlts-runtime/env/init.env
+++ export DLWS_SD_SELF_IP=192.168.3.2
+++ DLWS_SD_SELF_IP=192.168.3.2
+++ export DLWS_SD_SELF_SSH_PORT=45516
+++ DLWS_SD_SELF_SSH_PORT=45516
+++ export DLWS_ROLE_IDX=0
+++ DLWS_ROLE_IDX=0
+++ export DLTS_ROLE_IDX=0
+++ DLTS_ROLE_IDX=0
+++ export DLWS_SD_SELF_IB_IP=None
+++ DLWS_SD_SELF_IB_IP=None
+++ export DLWS_SD_SELF_HOST_IP=
+++ DLWS_SD_SELF_HOST_IP=
+++ export DLWS_SD_ps0_IP=10.32.0.3
+++ DLWS_SD_ps0_IP=10.32.0.3
+++ export DLWS_SD_ps0_SSH_PORT=22
+++ DLWS_SD_ps0_SSH_PORT=22
+++ export DLWS_SD_ps0_IB_IP=None
+++ DLWS_SD_ps0_IB_IP=None
+++ export DLWS_SD_ps0_NPU_IP_LIST=
+++ DLWS_SD_ps0_NPU_IP_LIST=
+++ export DLWS_SD_ps0_HOST_IP=
+++ DLWS_SD_ps0_HOST_IP=
+++ export DLWS_SD_worker0_IP=192.168.3.2
+++ DLWS_SD_worker0_IP=192.168.3.2
+++ export DLWS_SD_worker0_SSH_PORT=45516
+++ DLWS_SD_worker0_SSH_PORT=45516
+++ export DLWS_SD_worker0_IB_IP=None
+++ DLWS_SD_worker0_IB_IP=None
+++ export DLWS_SD_worker0_NPU_IP_LIST=
+++ DLWS_SD_worker0_NPU_IP_LIST=
+++ export DLWS_SD_worker0_HOST_IP=
+++ DLWS_SD_worker0_HOST_IP=
+++ export DLWS_SD_worker1_IP=192.168.3.6
+++ DLWS_SD_worker1_IP=192.168.3.6
+++ export DLWS_SD_worker1_SSH_PORT=45516
+++ DLWS_SD_worker1_SSH_PORT=45516
+++ export DLWS_SD_worker1_IB_IP=None
+++ DLWS_SD_worker1_IB_IP=None
+++ export DLWS_SD_worker1_NPU_IP_LIST=
+++ DLWS_SD_worker1_NPU_IP_LIST=
+++ export DLWS_SD_worker1_HOST_IP=
+++ DLWS_SD_worker1_HOST_IP=
++ sh -x /dlts-runtime/install.sh
++ dirname /dlts-runtime/install.sh
++ cwd=/dlts-runtime
++ ssh_root=/dlts-runtime/ssh_build/usr
++ mkdir -p /usr/etc
++ cp /dlts-runtime/ssh_build/usr/etc/moduli /dlts-runtime/ssh_build/usr/etc/ssh_config /dlts-runtime/ssh_build/usr/etc/sshd_config /usr/etc
++ cp /dlts-runtime/ssh_config/sshd/sshd_config /usr/etc/sshd_config
++ cp /dlts-runtime/ssh_config/init.d/DO_NOT_WRITE /dlts-runtime/ssh_config/init.d/ssh /etc/init.d
++ cp /dlts-runtime/ssh_config/default/DO_NOT_WRITE /dlts-runtime/ssh_config/default/ssh /etc/default
++ chmod +x /etc/init.d/ssh
++ cp -r /dlts-runtime/ssh_build/usr/bin /dlts-runtime/ssh_build/usr/sbin /dlts-runtime/ssh_build/usr/lib /dlts-runtime/ssh_build/usr/libexec /usr/
++ ssh-keygen -t dsa -f /usr/etc/ssh_host_dsa_key -N 
++ ssh-keygen -t rsa -f /usr/etc/ssh_host_rsa_key -N 
++ ssh-keygen -t ecdsa -f /usr/etc/ssh_host_ecdsa_key -N 
++ cp /dlts-runtime/gpu_topo /usr/bin
++ sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list
++ rm -rf /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/cuda.list.save /etc/apt/sources.list.d/graphics-drivers-ubuntu-ppa-bionic.list /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/nvidia-ml.list.save
++ SCRIPT_DIR=/pod/scripts
+++ date
++ echo bootstrap starts at Fri Jun 12 10:02:42 UTC 2020
+++ command -v sudo
++ '[' -x '' ']'
++ apt-get update
+Get:1 http://mirrors.aliyun.com/ubuntu-ports bionic InRelease [242 kB]
+Get:2 http://mirrors.aliyun.com/ubuntu-ports bionic-updates InRelease [88.7 kB]
+Get:3 http://mirrors.aliyun.com/ubuntu-ports bionic-backports InRelease [74.6 kB]
+Get:4 http://mirrors.aliyun.com/ubuntu-ports bionic-security InRelease [88.7 kB]
+Get:5 http://mirrors.aliyun.com/ubuntu-ports bionic/multiverse arm64 Packages [153 kB]
+Get:6 http://mirrors.aliyun.com/ubuntu-ports bionic/main arm64 Packages [1285 kB]
+Get:7 http://mirrors.aliyun.com/ubuntu-ports bionic/restricted arm64 Packages [572 B]
+Get:8 http://mirrors.aliyun.com/ubuntu-ports bionic/universe arm64 Packages [11.0 MB]
+Get:9 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/restricted arm64 Packages [1192 B]
+Get:10 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/main arm64 Packages [869 kB]
+Get:11 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/universe arm64 Packages [1231 kB]
+Get:12 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/multiverse arm64 Packages [3737 B]
+Get:13 http://mirrors.aliyun.com/ubuntu-ports bionic-backports/main arm64 Packages [8260 B]
+Get:14 http://mirrors.aliyun.com/ubuntu-ports bionic-backports/universe arm64 Packages [7827 B]
+Get:15 http://mirrors.aliyun.com/ubuntu-ports bionic-security/restricted arm64 Packages [581 B]
+Get:16 http://mirrors.aliyun.com/ubuntu-ports bionic-security/multiverse arm64 Packages [1843 B]
+Get:17 http://mirrors.aliyun.com/ubuntu-ports bionic-security/main arm64 Packages [594 kB]
+Get:18 http://mirrors.aliyun.com/ubuntu-ports bionic-security/universe arm64 Packages [754 kB]
+Fetched 16.4 MB in 13s (1268 kB/s)
+Reading package lists...
+
+real	0m13.970s
+user	0m2.583s
+sys	0m0.722s
++ apt-get install -y sudo net-tools
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following NEW packages will be installed:
+  net-tools sudo
+0 upgraded, 2 newly installed, 0 to remove and 91 not upgraded.
+Need to get 553 kB of archives.
+After this operation, 2433 kB of additional disk space will be used.
+Get:1 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/main arm64 sudo arm64 1.8.21p2-3ubuntu1.2 [382 kB]
+Get:2 http://mirrors.aliyun.com/ubuntu-ports bionic/main arm64 net-tools arm64 1.60+git20161116.90da8a0-1ubuntu1 [171 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 553 kB in 6s (98.4 kB/s)
+Selecting previously unselected package sudo.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 17197 files and directories currently installed.)
+Preparing to unpack .../sudo_1.8.21p2-3ubuntu1.2_arm64.deb ...
+Unpacking sudo (1.8.21p2-3ubuntu1.2) ...
+Selecting previously unselected package net-tools.
+Preparing to unpack .../net-tools_1.60+git20161116.90da8a0-1ubuntu1_arm64.deb ...
+Unpacking net-tools (1.60+git20161116.90da8a0-1ubuntu1) ...
+Setting up sudo (1.8.21p2-3ubuntu1.2) ...
+Setting up net-tools (1.60+git20161116.90da8a0-1ubuntu1) ...
+
+real	0m7.436s
+user	0m1.554s
+sys	0m0.287s
++ '[' worker '!=' inferenceworker ']'
++ export PROC_DIR=/pod/running
++ PROC_DIR=/pod/running
++ rm -rf /pod/running
++ mkdir -p /pod/running
++ export LOG_DIR=/pod/logs
++ LOG_DIR=/pod/logs
++ mkdir -p /pod/logs
++ PID_FILE=/pod/running/pid
++ echo 1
++ bash /pod/scripts/init_user.sh
++ '[' worker '!=' inferenceworker ']'
++ touch /pod/running/CONTAINER_READY
++ bash /pod/scripts/setup_sshd.sh
++ '[' worker '!=' inferenceworker ']'
++ bash /pod/scripts/setup_ssh_config.sh
++ touch /pod/running/ROLE_READY
++ touch /pod/running/JOB_READY
+++ date
++ echo bootstrap ends at Fri Jun 12 10:03:09 UTC 2020
++ set +e
++ '[' worker = worker ']'
++ '[' true = false ']'
++ '[' worker = ps ']'
++ printenv DLWS_LAUNCH_CMD
++ chmod ugo+rx /pod/job_command.sh
++ chmod ugo+rx /pod.env
++ runuser -l bifeng.peng -c /pod/job_command.sh
+192.168.3.2
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2020-06-12 10:03:12.445641: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.455376: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaabe1d0d40 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.455417: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff8f40e090>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:03:12.465525: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.475041: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaab087134e0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.475088: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffffaed4d0d0>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:03:12.477775: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.480981: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.489108: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaac9eafd40 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.489158: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff786b3050>>) includes params argument, but params are not passed to Estimator.
+2020-06-12 10:03:12.491361: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaaec4e84e0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.491397: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+WARNING:tensorflow:Warning:job config file does not exist
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff9873c090>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:03:12.496501: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.501879: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.506506: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaafddf14e0 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.506551: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff6b542050>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:03:12.512206: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaae68b5780 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.512242: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff997a0050>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2020-06-12 10:03:12.619574: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.629392: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaab052ad780 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.629430: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff741c2f90>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:03:12.635704: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:03:12.644955: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaaed033780 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:03:12.644995: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff8ff9f150>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+
+
+
+=========================================================
+        end of logs from pod: eb0a5a6f-0a89-458a-96fa-12f317ce636f-worker0
+=========================================================
+
+
+
+=========================================================
+=========================================================
+=========================================================
+        logs from pod: eb0a5a6f-0a89-458a-96fa-12f317ce636f-worker1
+=========================================================
+=========================================================
+=========================================================
++ . /dlts-runtime/env/init.env
+++ export DLWS_SD_SELF_IP=192.168.3.6
+++ DLWS_SD_SELF_IP=192.168.3.6
+++ export DLWS_SD_SELF_SSH_PORT=45516
+++ DLWS_SD_SELF_SSH_PORT=45516
+++ export DLWS_ROLE_IDX=1
+++ DLWS_ROLE_IDX=1
+++ export DLTS_ROLE_IDX=1
+++ DLTS_ROLE_IDX=1
+++ export DLWS_SD_SELF_IB_IP=None
+++ DLWS_SD_SELF_IB_IP=None
+++ export DLWS_SD_SELF_HOST_IP=
+++ DLWS_SD_SELF_HOST_IP=
+++ export DLWS_SD_ps0_IP=10.32.0.3
+++ DLWS_SD_ps0_IP=10.32.0.3
+++ export DLWS_SD_ps0_SSH_PORT=22
+++ DLWS_SD_ps0_SSH_PORT=22
+++ export DLWS_SD_ps0_IB_IP=None
+++ DLWS_SD_ps0_IB_IP=None
+++ export DLWS_SD_ps0_NPU_IP_LIST=
+++ DLWS_SD_ps0_NPU_IP_LIST=
+++ export DLWS_SD_ps0_HOST_IP=
+++ DLWS_SD_ps0_HOST_IP=
+++ export DLWS_SD_worker0_IP=192.168.3.2
+++ DLWS_SD_worker0_IP=192.168.3.2
+++ export DLWS_SD_worker0_SSH_PORT=45516
+++ DLWS_SD_worker0_SSH_PORT=45516
+++ export DLWS_SD_worker0_IB_IP=None
+++ DLWS_SD_worker0_IB_IP=None
+++ export DLWS_SD_worker0_NPU_IP_LIST=
+++ DLWS_SD_worker0_NPU_IP_LIST=
+++ export DLWS_SD_worker0_HOST_IP=
+++ DLWS_SD_worker0_HOST_IP=
+++ export DLWS_SD_worker1_IP=192.168.3.6
+++ DLWS_SD_worker1_IP=192.168.3.6
+++ export DLWS_SD_worker1_SSH_PORT=45516
+++ DLWS_SD_worker1_SSH_PORT=45516
+++ export DLWS_SD_worker1_IB_IP=None
+++ DLWS_SD_worker1_IB_IP=None
+++ export DLWS_SD_worker1_NPU_IP_LIST=
+++ DLWS_SD_worker1_NPU_IP_LIST=
+++ export DLWS_SD_worker1_HOST_IP=
+++ DLWS_SD_worker1_HOST_IP=
++ sh -x /dlts-runtime/install.sh
++ dirname /dlts-runtime/install.sh
++ cwd=/dlts-runtime
++ ssh_root=/dlts-runtime/ssh_build/usr
++ mkdir -p /usr/etc
++ cp /dlts-runtime/ssh_build/usr/etc/moduli /dlts-runtime/ssh_build/usr/etc/ssh_config /dlts-runtime/ssh_build/usr/etc/sshd_config /usr/etc
++ cp /dlts-runtime/ssh_config/sshd/sshd_config /usr/etc/sshd_config
++ cp /dlts-runtime/ssh_config/init.d/DO_NOT_WRITE /dlts-runtime/ssh_config/init.d/ssh /etc/init.d
++ cp /dlts-runtime/ssh_config/default/DO_NOT_WRITE /dlts-runtime/ssh_config/default/ssh /etc/default
++ chmod +x /etc/init.d/ssh
++ cp -r /dlts-runtime/ssh_build/usr/bin /dlts-runtime/ssh_build/usr/sbin /dlts-runtime/ssh_build/usr/lib /dlts-runtime/ssh_build/usr/libexec /usr/
++ ssh-keygen -t dsa -f /usr/etc/ssh_host_dsa_key -N 
++ ssh-keygen -t rsa -f /usr/etc/ssh_host_rsa_key -N 
++ ssh-keygen -t ecdsa -f /usr/etc/ssh_host_ecdsa_key -N 
++ cp /dlts-runtime/gpu_topo /usr/bin
++ sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list
++ rm -rf /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/cuda.list.save /etc/apt/sources.list.d/graphics-drivers-ubuntu-ppa-bionic.list /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/nvidia-ml.list.save
++ SCRIPT_DIR=/pod/scripts
+++ date
++ echo bootstrap starts at Fri Jun 12 10:04:04 UTC 2020
+++ command -v sudo
++ '[' -x '' ']'
++ apt-get update
+Get:1 http://mirrors.aliyun.com/ubuntu-ports bionic InRelease [242 kB]
+Get:2 http://mirrors.aliyun.com/ubuntu-ports bionic-updates InRelease [88.7 kB]
+Get:3 http://mirrors.aliyun.com/ubuntu-ports bionic-backports InRelease [74.6 kB]
+Get:4 http://mirrors.aliyun.com/ubuntu-ports bionic-security InRelease [88.7 kB]
+Get:5 http://mirrors.aliyun.com/ubuntu-ports bionic/main arm64 Packages [1285 kB]
+Get:6 http://mirrors.aliyun.com/ubuntu-ports bionic/multiverse arm64 Packages [153 kB]
+Get:7 http://mirrors.aliyun.com/ubuntu-ports bionic/restricted arm64 Packages [572 B]
+Get:8 http://mirrors.aliyun.com/ubuntu-ports bionic/universe arm64 Packages [11.0 MB]
+Get:9 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/main arm64 Packages [869 kB]
+Get:10 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/multiverse arm64 Packages [3737 B]
+Get:11 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/restricted arm64 Packages [1192 B]
+Get:12 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/universe arm64 Packages [1231 kB]
+Get:13 http://mirrors.aliyun.com/ubuntu-ports bionic-backports/universe arm64 Packages [7827 B]
+Get:14 http://mirrors.aliyun.com/ubuntu-ports bionic-backports/main arm64 Packages [8260 B]
+Get:15 http://mirrors.aliyun.com/ubuntu-ports bionic-security/universe arm64 Packages [754 kB]
+Get:16 http://mirrors.aliyun.com/ubuntu-ports bionic-security/main arm64 Packages [594 kB]
+Get:17 http://mirrors.aliyun.com/ubuntu-ports bionic-security/multiverse arm64 Packages [1843 B]
+Get:18 http://mirrors.aliyun.com/ubuntu-ports bionic-security/restricted arm64 Packages [581 B]
+Fetched 16.4 MB in 44s (375 kB/s)
+Reading package lists...
+
+real	0m44.863s
+user	0m2.590s
+sys	0m0.886s
++ apt-get install -y sudo net-tools
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following NEW packages will be installed:
+  net-tools sudo
+0 upgraded, 2 newly installed, 0 to remove and 91 not upgraded.
+Need to get 553 kB of archives.
+After this operation, 2433 kB of additional disk space will be used.
+Get:1 http://mirrors.aliyun.com/ubuntu-ports bionic-updates/main arm64 sudo arm64 1.8.21p2-3ubuntu1.2 [382 kB]
+Get:2 http://mirrors.aliyun.com/ubuntu-ports bionic/main arm64 net-tools arm64 1.60+git20161116.90da8a0-1ubuntu1 [171 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 553 kB in 31s (17.9 kB/s)
+Selecting previously unselected package sudo.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 17197 files and directories currently installed.)
+Preparing to unpack .../sudo_1.8.21p2-3ubuntu1.2_arm64.deb ...
+Unpacking sudo (1.8.21p2-3ubuntu1.2) ...
+Selecting previously unselected package net-tools.
+Preparing to unpack .../net-tools_1.60+git20161116.90da8a0-1ubuntu1_arm64.deb ...
+Unpacking net-tools (1.60+git20161116.90da8a0-1ubuntu1) ...
+Setting up sudo (1.8.21p2-3ubuntu1.2) ...
+Setting up net-tools (1.60+git20161116.90da8a0-1ubuntu1) ...
+
+real	0m32.816s
+user	0m1.565s
+sys	0m0.313s
++ '[' worker '!=' inferenceworker ']'
++ export PROC_DIR=/pod/running
++ PROC_DIR=/pod/running
++ rm -rf /pod/running
++ mkdir -p /pod/running
++ export LOG_DIR=/pod/logs
++ LOG_DIR=/pod/logs
++ mkdir -p /pod/logs
++ PID_FILE=/pod/running/pid
++ echo 1
++ bash /pod/scripts/init_user.sh
++ '[' worker '!=' inferenceworker ']'
++ touch /pod/running/CONTAINER_READY
++ bash /pod/scripts/setup_sshd.sh
++ '[' worker '!=' inferenceworker ']'
++ bash /pod/scripts/setup_ssh_config.sh
++ touch /pod/running/ROLE_READY
++ touch /pod/running/JOB_READY
+++ date
++ echo bootstrap ends at Fri Jun 12 10:05:27 UTC 2020
++ set +e
++ '[' worker = worker ']'
++ '[' true = false ']'
++ '[' worker = ps ']'
++ printenv DLWS_LAUNCH_CMD
++ chmod ugo+rx /pod/job_command.sh
++ chmod ugo+rx /pod.env
++ runuser -l bifeng.peng -c /pod/job_command.sh
+192.168.3.6
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/logger.py:8: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2020-06-12 10:05:30.538121: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:05:30.549059: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaae0588140 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.549126: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff6cea50d0>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2020-06-12 10:05:30.686009: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.7/site-packages/npu_bridge/estimator/npu/npu_optimizer.py:64: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+2020-06-12 10:05:30.694449: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaab4152140 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.694505: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff958faf90>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:05:30.703038: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+WARNING:tensorflow:From /data/Resnet50_HC/code/resnet50_train/mains/../utils/create_session.py:12: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+2020-06-12 10:05:30.716517: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaab12fa6140 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.716571: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff79f2c050>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:05:30.748635: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:05:30.756418: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:05:30.759521: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaacf925140 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.759585: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff8b708050>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:05:30.767090: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaac1586050 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.767136: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-06-12 10:05:30.770157: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+2020-06-12 10:05:30.770339: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+2020-06-12 10:05:30.773578: W tensorflow/core/platform/profile_utils/cpu_utils.cc:98] Failed to find bogomips in /proc/cpuinfo; cannot determine CPU frequency
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff9acc90d0>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:05:30.781551: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaacbe10140 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.781608: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-06-12 10:05:30.783406: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaabdfc3140 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.783478: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffffa1a4d190>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+2020-06-12 10:05:30.788315: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0xaaaaf1401140 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-06-12 10:05:30.788388: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff7a61d150>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+PY3.7.5 (default, Feb  7 2020, 11:43:10) 
+[GCC 7.4.0]TF1.15.0
+WARNING:tensorflow:Estimator's model_fn (<bound method Model.get_estimator_model_func of <models.resnet50.res50_model.Model object at 0xffff9b03a090>>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:Warning:job config file does not exist
+
+
+
+=========================================================
+        end of logs from pod: eb0a5a6f-0a89-458a-96fa-12f317ce636f-worker1
+=========================================================
+

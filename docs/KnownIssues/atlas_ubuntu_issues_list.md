@@ -18,7 +18,7 @@ Known Issues List
             2. 训练任务结束后，暂停job，再恢复job 
         - [结果]
             1. 脚本运行报错，提示“job config file does not exist”；<br>
-                报错日志见[附件01](resource/330_tf_error_01.log),[附件02](resource/330_tf_error_02.log), [附件03](resource/330_tf_error_file-read-253.png)       
+                报错日志见[附件01](resource/330_tf_error_01.txt),[附件02](resource/330_tf_error_02.txt), [附件03](resource/330_tf_error_file-read-253.png)       
     + Bug状态: 激活
     + 由谁创建: 褚云霞
     + 创建日期: 2020-06-12
@@ -40,7 +40,7 @@ Known Issues List
             2. 停止该job
             3. 短时间内（小于1分半）重新提交tf-分布式job
         - [结果]
-            1. 新提交的job，高概率出现运行时报错；请查看[附图](resource/317_tf_error.png)，日志文件见[附件](resource/317_tf_error.log)
+            1. 新提交的job，高概率出现运行时报错；请查看[附图](resource/317_tf_error.png)，日志文件见[附件](resource/317_tf_error.txt)
             2. gpu job相隔时间较短提交job，无该问题     
     + Bug状态: 激活
     + 由谁创建: 褚云霞

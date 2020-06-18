@@ -1546,17 +1546,13 @@ def update_worker_nodes_by_kubeadm_2(workerNodes):
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
+       workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+       if verbose:
+           print(workercmd)
+       else:
+           pass
 
-        if in_list(node, nargs):
-            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
-            if verbose:
-                print(workercmd)
-            else:
-                pass
-
-            utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
-        else:
-            pass
+       utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
 
     return
 
@@ -3475,7 +3471,7 @@ def kubernetes_label_worker(uncordon=False):
 
 # Label kubernetes worker nodes
 def kubernetes_label_worker_2(nodename, nodeInfo):
-    
+
     node_type = ["cpu", "npu", "gpu", "storage"]
     specific_processor_type = ["npu", "gpu"]
     set_active = "=active"
@@ -3830,9 +3826,9 @@ def get_admin_usr_password():
 # install ssh key remotely
 def install_ssh_key_by_nodes(all_nodes):
 
-    rootuser, passwd, rootpasswdfile = get_admin_usr_password()
-    if rootuser is None or passwd is None or rootpasswdfile is None:
-        return 
+    rootuser, rootpasswd, rootpasswdfile = get_admin_usr_password()
+    if rootuser is None or rootpasswd is None or rootpasswdfile is None:
+        return
     else:
         pass
 
@@ -3841,7 +3837,7 @@ def install_ssh_key_by_nodes(all_nodes):
         print("Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node))
         os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub %s@%s""" %(rootpasswdfile, rootuser, node))
 
-    ## dlwsadmin is not root 
+    ## dlwsadmin is not root
     if rootuser != config["admin_username"]:
         for node in all_nodes:
             # create new user on target machine
@@ -3856,31 +3852,36 @@ def install_ssh_key_by_nodes(all_nodes):
 
             os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
 
-            ## set no password 
+            ## set no password
             os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
             os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,config["admin_username"]))
             os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"]))
     else:
         pass
 
-    return 
+    return
 
 def scale_up(config):
 
+    pdb.set_trace()
+
     if "scale_up" not in config:
         print("Error: not scale_up config\n")
-        return 
+        return
     else:
         pass
 
     ## install sshkey
     all_nodes = get_scale_nodes(config, "scale_up")
     install_ssh_key_by_nodes(all_nodes)
+    domain = get_domain()
 
     ## scaling up
     for node_name in config["scale_up"]:
+
         node_info = config["scale_up"][node_name]
-        
+        node = node_name + domain
+
         os = node_info["os"].lower()
         role = node_info["role"].lower()
         device_type = node_info["type"].lower()
@@ -3895,11 +3896,10 @@ def scale_up(config):
         print(node_info)
 
         ## install necessary software
-        run_script([node_name], "./scripts/prepare_ubuntu.sh", sudo = True)
-        time.sleep(10)
-        run_script([node_name], "./scripts/prepare_ubuntu.sh continue", sudo = True)
-        run_script([node_name], "./scripts/install_kubeadm.sh", sudo = True)
-        run_script([node_name], "./scripts/install_kubeadm.sh", sudo = True)
+        run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
+        time.sleep(60)
+        run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
+        run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
 
         ## turn off swap
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)
@@ -3909,8 +3909,8 @@ def scale_up(config):
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
         print(output)
 
-        ## join worker 
-        update_worker_nodes_by_kubeadm_2([node_info])
+        ## join worker
+        update_worker_nodes_by_kubeadm_2([node])
 
         ## label service
         kubernetes_label_nodes("active", [], False)
@@ -3925,7 +3925,7 @@ def scale_down(config):
 
     if "scale_down" not in config:
         print("Error: not scale_down config\n")
-        return 
+        return
     else:
         pass
 
@@ -4596,13 +4596,13 @@ def run_command( args, command, nargs, parser ):
             elif nargs[0]=="label":
                 get_nodes(config["clusterId"])
                 acs_label_webui()
-            
+
             elif nargs[0]=="openports":
                 acs_tools.acs_add_nsg_rules({"HTTPAllow" : 80, "RestfulAPIAllow" : 5000, "AllowKubernetesServicePorts" : "30000-32767"})
-            
+
             elif nargs[0]=="getserviceaddr":
                 print "Address: =" + json.dumps(k8sUtils.GetServiceAddress(nargs[1]))
-            
+
             elif nargs[0]=="storagemount":
                 acs_tools.acs_create_storage()
                 fileshare_install()
@@ -4839,7 +4839,7 @@ def run_command( args, command, nargs, parser ):
             parser.print_help()
             exit()
         else:
-            pass 
+            pass
 
         configuration( config, verbose )
         template_file = nargs[0]

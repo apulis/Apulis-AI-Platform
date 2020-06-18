@@ -1,13 +1,13 @@
 Known Issues List
 ============================================================================
 
-* [217](#jump)【arm】tf：直接启动docker容器和通过平台提交job运行，都会概率性出现“hdc device id error”
-* [317](#jump)【atlas01】【高频偶现】停止运行中的npu分布式job后，再新提交分布式job，容易出现unavailable internal errors
-* [330](#jump)【atlas01】提交分布式的tf训练任务，训练结束后暂停job再恢复job，提示“job config file does not exist”
+* [217](#jump217)【arm】tf：直接启动docker容器和通过平台提交job运行，都会概率性出现“hdc device id error”
+* [317](#jump317)【atlas01】【高频偶现】停止运行中的npu分布式job后，再新提交分布式job，容易出现unavailable internal errors
+* [330](#jump330)【atlas01】提交分布式的tf训练任务，训练结束后暂停job再恢复job，提示“job config file does not exist”
 
 
 ---
-* Bug编号: <span id="jump">330 </span>
+* Bug编号: <span id="jump330">330 </span>
 
     + 所属模块: Submit Traing Job
     + Bug标题: 【atlas01】提交分布式的tf训练任务，训练结束后暂停job再恢复job，提示“job config file does not exist”
@@ -29,7 +29,7 @@ Known Issues List
     + 修改日期: 2020-06-15
 
 
-* Bug编号: <span id="jump">317</span>
+* Bug编号: <span id="jump317">317</span>
 
     + 所属模块: Submit Traing Job
     + Bug标题: 【atlas01】【高频偶现】停止运行中的npu分布式job后，再新提交分布式job，容易出现unavailable internal errors
@@ -52,7 +52,7 @@ Known Issues List
     + 修改日期: 2020-06-12
 
 
-* Bug编号: <span id="jump">217</span>
+* Bug编号: <span id="jump217">217</span>
 
     + 所属模块: Submit Traing Job
     + Bug标题: 【arm】tf：直接启动docker容器和通过平台提交job运行，都会概率性出现“hdc device id error”

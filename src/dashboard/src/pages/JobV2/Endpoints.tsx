@@ -139,7 +139,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
 
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
-    const _name = name === 'ipython' ? 'jupyter' : name;
+    const _name = name === 'iPython' ? 'jupyter' : name;
     enqueueSnackbar(`Enabling ${_name}...`);
     post({
       endpoints: [name.toLowerCase()]

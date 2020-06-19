@@ -1,3 +1,4 @@
 job-exporter-arm64.yaml
 watchdog-arm64.yaml
 prometheus-arm64.yaml
+grafana-arm64.yaml

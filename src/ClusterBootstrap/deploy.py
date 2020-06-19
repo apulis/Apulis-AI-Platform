@@ -895,13 +895,25 @@ def gen_configs():
 
     check_config(config)
     gen_platform_wise_config()
-
+    gen_usermanagerapitoken(config)
     utils.render_template_directory("./template/etcd", "./deploy/etcd",config)
     utils.render_template_directory("./template/master", "./deploy/master",config)
     utils.render_template_directory("./template/web-docker", "./deploy/web-docker",config)
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
 
+def gen_usermanagerapitoken(config):
+    print("==========start to generate jwt token for restfulapi==============")
+    cmd = """jwt_header=$(echo -n '{"alg":"HS256","typ":"JWT"}' | base64 | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
+    cmd += """payload=$(echo -n '{"uid":30000}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
+    cmd += """secret=\""""+config["jwt"]["secret_key"] + "\";"
+    cmd += """hexsecret=$(echo -n "$secret" | xxd -p | paste -sd "");"""
+    cmd += """hmac_signature=$(echo -n "${jwt_header}.${payload}" |  openssl dgst -sha256 -mac HMAC -macopt hexkey:$hexsecret -binary | base64  | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
+    cmd += """jwt=\"${jwt_header}.${payload}.${hmac_signature}\";"""
+    cmd += """echo $jwt"""
+    config["usermanagerapitoken"] = utils.exec_cmd_local(cmd)
+    print("==========generate jwt token for restfulapi done!!!==============")
+    print("token is: ",config["usermanagerapitoken"] )
 def get_ssh_config():
     if "ssh_cert" not in config and os.path.isfile("./deploy/sshkey/id_rsa"):
         config["ssh_cert"] = "./deploy/sshkey/id_rsa"
@@ -1040,6 +1052,7 @@ def deploy_masters(force = False):
         print( "Restapi information == %s " % config["restapi"])
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+    utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     render_service_templates()
 
     get_kubectl_binary(force)
@@ -1103,6 +1116,7 @@ def deploy_masters_by_kubeadm(force = False):
 
     utils.render_template_directory("./template/WebUI", "./deploy/WebUI",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+    utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     render_service_templates()
     utils.exec_cmd_local("./scripts/install_kubeadm.sh")
 
@@ -1787,7 +1801,9 @@ def deploy_webUI_on_node(ipAddress):
 
 
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+    utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/config.yaml","/etc/RestfulAPI/config.yaml", sshUser, webUIIP )
+    utils.sudo_scp(config["ssh_cert"],"./deploy/UserDashboard/local.config","/etc/UserDashboard/local.config", sshUser, webUIIP )
 
     utils.render_template_directory("./template/dashboard", "./deploy/dashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/dashboard/production.yaml","/etc/dashboard/production.yaml", sshUser, webUIIP )
@@ -3777,7 +3793,7 @@ def check_archtype_valid(archtype):
     if archtype == None or "amd64" in archtype:
         if machine_arch != "x86_64":
             return False
-    if "arm64" in archtype:
+    if archtype != None and "arm64" in archtype:
         if machine_arch != "aarch64":
             return False
     return True

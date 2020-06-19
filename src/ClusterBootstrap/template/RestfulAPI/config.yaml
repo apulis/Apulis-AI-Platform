@@ -91,3 +91,6 @@ administrators:
 {% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
   - {{admin}}
 {% endfor %}
+
+usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend
+usermanagerapitoken: {{cnf["usermanagerapitoken"]}}

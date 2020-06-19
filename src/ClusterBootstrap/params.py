@@ -663,7 +663,9 @@ default_config_parameters = {
     "infrastructure-dockers": {"pxe": True, "pxe-ubuntu": True, },
     "dockerprefix": "",
     "dockertag": "latest",
-
+    "jwt":{
+        "secret_key":"Sign key for JWT"
+    },
     # System dockers.
     # These dockers are agnostic of cluster, and can be built once and reused upon multiple clusters.
     # We will gradually migrate mroe and more docker in DLWorkspace to system

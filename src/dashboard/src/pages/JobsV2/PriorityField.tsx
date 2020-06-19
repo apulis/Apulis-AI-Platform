@@ -10,6 +10,8 @@ import React, {
 import { Button, TextField } from '@material-ui/core';
 import { useSnackbar } from 'notistack';
 import ClusterContext from './ClusterContext';
+import AuthContext from '../../contexts/Auth';
+
 
 interface Props {
   job: any;
@@ -18,6 +20,7 @@ interface Props {
 const PriorityField: FunctionComponent<Props> = ({ job }) => {
   const { enqueueSnackbar } = useSnackbar();
   const { cluster } = useContext(ClusterContext);
+  const { permissionList = [] } = useContext(AuthContext);
   const [editing, setEditing] = useState(false);
   const [textFieldDisabled, setTextFieldDisabled] = useState(false);
   // const input = useRef<HTMLInputElement>();
@@ -64,7 +67,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
         // inputRef={input}
         type="number"
         value={priority}
-        disabled={textFieldDisabled}
+        disabled={textFieldDisabled || !permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')}
         fullWidth
         onBlur={onBlur}
         onChange={e => setPriority(Number(e.target.value))}
@@ -76,6 +79,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
         fullWidth
         variant={buttonEnabled ? 'outlined' : 'text'}
         onClick={buttonEnabled ? () => setEditing(true) : undefined}
+        disabled={!permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')}
       >
         {priority}
       </Button>

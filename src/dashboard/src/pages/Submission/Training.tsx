@@ -47,7 +47,8 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg } from '../../const';
+import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg, 
+  NoNumberReg, NoNumberText } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 
@@ -318,7 +319,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         formValSet('jobPath', jobPath);
       }
       if (enableJobPath !== undefined) setEnableJobPath(enableJobPath);
-      if (environmentVariables !== undefined) setEnvironmentVariables(environmentVariables);
+      if (environmentVariables !== undefined) {
+        setEnvironmentVariables(environmentVariables);
+        formValSet('environmentVariables', environmentVariables);
+      }
       if (ssh !== undefined) setSsh(ssh);
       if (ipython !== undefined) setIpython(ipython);
       if (tensorboard !== undefined) setTensorboard(tensorboard);
@@ -581,10 +585,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     });
     const params2 = new URLSearchParams({
       query: `sum(pai_node_count{deviceType!="${gpuType}"})`
-    })
+    });
     fetch(getNodeGpuAva+params1).then(async (res1: any) => {
       fetch(getNodeGpuAva+params2).then(async (res2: any) => {
-        let data1 = await res1.json();
+        let data1 = await res1.json(); 
         let data2 = await res2.json();
         let result1 = data1.data.result, result2 = data2.data.result;
         if (result2.length) {
@@ -605,7 +609,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       })
     })
   }, [grafanaUrl, gpuType])
-
+ 
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const showMessage = (open: boolean,showDeleteTemplate: boolean,showSaveTemplate: boolean) => {
     let message = '';
@@ -637,7 +641,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
-        <DLTSDialog open={showGPUFragmentation}
+        {/* <DLTSDialog open={showGPUFragmentation}
           message={null}
           handleClose={() => setShowGPUFragmentation(false)}
           handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
@@ -654,7 +658,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
             </Bar>
           </BarChart>
-        </DLTSDialog>
+        </DLTSDialog> */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card>
             <CardHeader title="Submit Training Job"/>
@@ -674,13 +678,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onClusterChange={saveSelectedCluster}
                     onAvailbleGpuNumChange={(val1, val2) => { setGpusPerNode(val1); setGpuAvailable(val2) }}
                   />
-                  <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
+                  {/* <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
                     <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
                       <SvgIcon>
                         <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/><path fill="none" d="M0 0h24v24H0z"/>
                       </SvgIcon>
                     </IconButton>
-                  </Tooltip>
+                  </Tooltip> */}
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -729,7 +733,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={e => setType(e.target.value as string)}
                   >
                     <MenuItem value="RegularJob">Regular Job</MenuItem>
-                    <MenuItem value="PSDistJob">Distirbuted Job</MenuItem>
+                    <MenuItem value="PSDistJob">Distributed Job</MenuItem>
                     {/* <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
                   </TextField>
                 </Grid>
@@ -1062,7 +1066,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             margin="dense"
                             variant="filled"
                             value={name}
+                            name="environmentVariables"
                             onChange={onEnvironmentVariableNameChange(index)}
+                            error={Boolean(errors.environmentVariables)}
+                            helperText={errors.environmentVariables ? errors.environmentVariables.message : ''}
+                            InputLabelProps={{ shrink: true }}
+                            inputRef={register({
+                              pattern: {
+                                value: NoNumberReg,
+                                message: NoNumberText
+                              }
+                            })}
                           />
                         </TableCell>
                         <TableCell>

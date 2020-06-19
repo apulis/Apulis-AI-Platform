@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState, useCallback, FC, useRef, useContext } from "react";
 import { Link } from "react-router-dom";
 import useFetch from "use-http";
 import Table from '@material-ui/core/Table';
@@ -45,6 +45,7 @@ import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import _ from "lodash";
 import {type} from "os";
 import useCheckIsDesktop from "../../utlities/layoutUtlities";
+import AuthzHOC from '../../components/AuthzHOC';
 import './index.less';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
@@ -81,32 +82,38 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
   }
 }));
 
-const ActionIconButton: React.FC<{cluster?: string}> = ({cluster}) => {
-  const [open, setOpen] = React.useState(false);
-  const iconButton = React.useRef<any>();
-  const onIconButtonClick = React.useCallback(() => setOpen(true), [setOpen]);
-  const onMenuClose = React.useCallback(() => setOpen(false), [setOpen]);
+const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
+  const [open, setOpen] = useState(false);
+  const iconButton = useRef<any>();
+  const onIconButtonClick = useCallback(() => setOpen(true), [setOpen]);
+  const onMenuClose = useCallback(() => setOpen(false), [setOpen]);
 
   return (
     <>
       <IconButton ref={iconButton} onClick={onIconButtonClick}>
         <MoreVert/>
       </IconButton>
-      <Menu
-        anchorEl={iconButton.current}
-        anchorOrigin={{ horizontal: "right", vertical: "top" }}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        open={open}
-        onClose={onMenuClose}
-      >
-        <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
-        <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
-      </Menu>
+      <AuthzHOC needPermission={['VIEW_CLUSTER_STATUS', 'SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB' ]}>
+        <Menu
+          anchorEl={iconButton.current}
+          anchorOrigin={{ horizontal: "right", vertical: "top" }}
+          transformOrigin={{ horizontal: "right", vertical: "top" }}
+          open={open}
+          onClose={onMenuClose}
+        >
+          <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
+            <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
+          </AuthzHOC>
+          <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']}>
+            <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
+          </AuthzHOC>
+        </Menu>
+      </AuthzHOC>
     </>
   )
 };
 
-const Chart: React.FC<{
+const Chart: FC<{
   available: number;
   used: number;
   reserved: number;
@@ -118,7 +125,7 @@ const Chart: React.FC<{
 
   let data = [];
   if (available === 0 && used === 0 && reserved === 0) {
-    data = [{ name: "NO Active Jobs", value: 100, color: "#e0e0e0" }];
+    data = [{ name: "NO Resources", value: 100, color: "#e0e0e0" }];
   } else {
     data = [
       { name: "Available", value: available, color: lightGreen[400] },
@@ -206,12 +213,12 @@ const Chart: React.FC<{
   )
 }
 
-export const DirectoryPathTextField: React.FC<{
+export const DirectoryPathTextField: FC<{
   label: string;
   value: string;
 }> = ({ label, value }) => {
-  const input = React.useRef<HTMLInputElement>(null);
-  const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const [openCopyWarn, setOpenCopyWarn] = useState(false);
   const handleWarnClose = () => {
     setOpenCopyWarn(false);
   }
@@ -253,7 +260,7 @@ export const DirectoryPathTextField: React.FC<{
   );
 }
 
-const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
+const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
   const styles = useStyles();
   const [activeJobs, setActiveJobs] = useState(0);
   const [available, setAvailable] = useState(0);
@@ -262,8 +269,8 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
   const [workStorage, setWorkStorage ] = useState('');
   const [dataStorage, setDataStorage] = useState('');
   const [activate,setActivate] = useState(false);
-  const { userName } = React.useContext(UserContext);
-  const {selectedTeam} = React.useContext(TeamsContext);
+  const { userName } = useContext(UserContext);
+  const {selectedTeam} = useContext(TeamsContext);
   const fetchDiretoryUrl = `api/clusters/${cluster}`;
   const request = useFetch(fetchDiretoryUrl);
   const fetchDirectories = async () => {
@@ -283,6 +290,7 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
     return data;
   }
   const [nfsStorage, setNfsStorage] = useState([]);
+
   useEffect(()=>{
     fetchDirectories().then((res) => {
       let fetchStorage = [];
@@ -461,21 +469,23 @@ const GPUCard: React.FC<{ cluster: string }> = ({ cluster }) => {
           </MuiThemeProvider>
         </Box>
       </CardContent>
-      <CardActions>
-        <Button component={Link}
-          to={{pathname: "/submission/training-cluster", state: { cluster } }}
-          size="small" color="secondary"
-        >
-          Submit Training Job
-        </Button>
-        {/* <Button component={Link}
-          to={{pathname: "/submission/data", state: { cluster } }}
-          size="small" color="secondary"
-        >
-          Submit Data Job
-        </Button> */}
-      </CardActions>
-      <Divider/>
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <CardActions>
+          <Button component={Link}
+            to={{pathname: "/submission/training-cluster", state: { cluster } }}
+            size="small" color="secondary"
+          >
+            Submit Training Job
+          </Button>
+          {/* <Button component={Link}
+            to={{pathname: "/submission/data", state: { cluster } }}
+            size="small" color="secondary"
+          >
+            Submit Data Job
+          </Button> */}
+          <Divider/>
+        </CardActions>
+      </AuthzHOC>
       <CardContent>
         <DirectoryPathTextField
           label="Work Directory"

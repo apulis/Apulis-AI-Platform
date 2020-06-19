@@ -1,6 +1,5 @@
 import axios, {AxiosError, AxiosResponse, AxiosRequestConfig} from 'axios';
 import { VariantType } from 'notistack';
-import { History } from 'history';
 
 import { initMessage } from './message'
 export interface Message {
@@ -11,7 +10,7 @@ let message: Message = (type: VariantType, msg: string) => {
   //
 }
 
-let history: History;
+let userGroupPathCopy: string;
 
 axios.defaults.baseURL = '/api';
 
@@ -48,7 +47,8 @@ axios.interceptors.response.use((response: AxiosResponse) => {
       message('error', error.response.data.message || '');
     } else  if (status === 401) {
       message('error', codeMessage[status]);
-      history.push('/sign-in');
+      const redirect = window.location.href.split('?')[0];
+      window.location.href = userGroupPathCopy + '/user/login' + '?redirect=' + encodeURIComponent(redirect);
     } else if (status === 403) {
       message('error', codeMessage[status]);
     } else if (status === 500) {
@@ -66,9 +66,10 @@ axios.interceptors.response.use((response: AxiosResponse) => {
 });
 
 
-const initAxios = (msg: Message, h: History<any>) => {
+const initAxios = (msg: Message, userGroupPath: string) => {
+  console.log(111)
   message = msg;
-  history = h;
+  userGroupPathCopy = userGroupPath;
   initMessage(msg);
 }
 

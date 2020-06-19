@@ -9,6 +9,7 @@ import React, {
 import MaterialTable, { Column, Options } from 'material-table';
 import axios from 'axios';
 import TeamsContext from '../../contexts/Teams';
+import AuthContext from '../../contexts/Auth';
 import Loading from '../../components/Loading';
 import useActions from '../../hooks/useActions';
 import ClusterContext from './ClusterContext';
@@ -31,13 +32,14 @@ interface JobsTableProps {
 
 const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
   const { cluster } = useContext(ClusterContext);
+  const { permissionList = [] } = useContext(AuthContext);
   const [pageSize, setPageSize] = useState(5);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
     setPageSize(pageSize);
   }, [setPageSize]);
   const columns: Column<any>[]  = [
     { title: 'Id', type: 'string', field: 'jobId',
-      render: _renderId, disableClick: true, sorting: false },
+      render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Name', type: 'string', field: 'jobName', sorting: false },
     { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
     { title: 'Number of Device', type: 'numeric',
@@ -67,7 +69,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
       columns={columns}
       data={jobs}
       options={options}
-      actions={actions}
+      actions={permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB') ? actions : undefined}
       onChangeRowsPerPage={onChangeRowsPerPage}
     />
   );

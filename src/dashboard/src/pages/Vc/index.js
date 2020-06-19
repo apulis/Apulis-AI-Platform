@@ -11,6 +11,7 @@ import message from '../../utils/message';
 import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 import './index.less';
 import _ from 'lodash';
+import AuthzHOC from '../../components/AuthzHOC';
 
 const empty = {
   text: '',
@@ -290,15 +291,17 @@ export default class Vc extends React.Component {
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
-          <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button></div>
+          <AuthzHOC needPermission={'MANAGE_VC'}>
+            <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button></div>
+          </AuthzHOC>
           <Table style={{ width: '80%', marginTop: 20 }}>
-            <TableHead>
+            <TableHead> 
               <TableRow style={{ backgroundColor: '#7583d1' }}>
                 <TableCell style={{ color: '#fff' }}>VcName</TableCell>
                 <TableCell style={{ color: '#fff' }}>quota</TableCell>
                 {/* <TableCell style={{ color: '#fff' }}>metadata</TableCell> */}
                 <TableCell style={{ color: '#fff' }}>permissions</TableCell>
-                <TableCell style={{ color: '#fff' }}>actions</TableCell>
+                <AuthzHOC needPermission={'MANAGE_VC'}><TableCell style={{ color: '#fff' }}>actions</TableCell></AuthzHOC>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -308,11 +311,13 @@ export default class Vc extends React.Component {
                   <TableCell>{item.quota} </TableCell>
                   {/* <TableCell>{item.metadata} </TableCell> */}
                   <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
-                  <TableCell>
-                    <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
-                    <Button color="secondary" disabled={item.vcName === this.context.selectedTeam} 
-                      onClick={() => this.onClickDel(item)}>Delete</Button>
-                  </TableCell>
+                  <AuthzHOC needPermission={'MANAGE_VC'}>
+                    <TableCell>
+                      <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
+                      <Button color="secondary" disabled={item.vcName === this.context.selectedTeam} 
+                        onClick={() => this.onClickDel(item)}>Delete</Button>
+                    </TableCell>
+                  </AuthzHOC>
                 </TableRow>
               ))}
             </TableBody>

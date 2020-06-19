@@ -21,7 +21,7 @@ const Model: React.FC = () => {
   const formObj = { register, errors, setValue, clearError };
 
   const columns = useMemo<Array<Column<any>>>(() => [
-    { title: 'ID', type: 'string', field: 'ID', sorting: false },
+    { title: 'ID', type: 'string', field: 'ID', sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Type', type: 'string', field: 'Type', sorting: false },
     { title: 'Time', type: 'datetime', field: 'time', 
       render: renderDate(getDate), customSort: sortDate(getDate) },
@@ -67,7 +67,6 @@ const Model: React.FC = () => {
       <MaterialTable
         title={
         <>
-          <p>Model List</p>
           <Button variant="contained" color="primary" onClick={() => setModalFlag1(true)}>
             New Transform
           </Button>

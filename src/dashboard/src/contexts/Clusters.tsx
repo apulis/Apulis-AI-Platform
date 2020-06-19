@@ -11,7 +11,7 @@ export interface AvailbleGpuType {
 }
 interface Context {
   clusters: any[];
-  selectedCluster?: string;
+  selectedCluster: string;
   saveSelectedCluster(team: SetStateAction<string>): void;
   availbleGpu: AvailbleGpuType[];
   selectedTeam: string;

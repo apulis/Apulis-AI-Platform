@@ -91,6 +91,11 @@ const NavigationList: FC = () => {
           <ListItemText>Model</ListItemText>
         </LinkListItem>
       </AuthzHOC>
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <LinkListItem to="/centralReasoning">
+          <ListItemText>Central Reasoning</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
     </List>
   );
 };

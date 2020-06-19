@@ -10,6 +10,8 @@ const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
 const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
 const Model = React.lazy(() => import('./pages/Model/index'));
+const CentralReasoning = React.lazy(() => import('./pages/CentralReasoning/index'));
+
 
 export default [
   {
@@ -57,5 +59,12 @@ export default [
     path: '/model',
     component: Model,
     needPermission: ['SUBMIT_TRAINING_JOB']
+  },
+  {
+    path: '/centralReasoning',
+    component: CentralReasoning,
+    needPermission: ['SUBMIT_TRAINING_JOB']
   }
 ];
+
+

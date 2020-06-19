@@ -604,7 +604,7 @@ class PythonLauncher(Launcher):
                 job_object.params["envs"] =[]
             job_object.params["envs"].append({"name": "DLTS_JOB_TOKEN", "value": job_object.params["job_token"]})              
             job_object.params["envs"].append({"name": "IDENTITY_TOKEN", "value": jwt_authorization.create_jwt_token_with_message(
-                                              dataHandler.GetAccountByUserName(job_object.params["userName"])[0]
+                                              {"userName":job_object.params["userName"],"uid":user_info["uid"]}
             )})
 
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()
@@ -715,6 +715,12 @@ class PythonLauncher(Launcher):
 
         # TODO: Use JobDeployer?
         result, detail = k8sUtils.GetJobStatus(job_id)
+        # sync start time
+        runningDetail = dataHandler.GetJobTextField(job_id, "jobStatusDetail")
+        runningDetail = json.loads(base64.b64decode(runningDetail))
+        if len(runningDetail)>0 and "startedAt" in runningDetail[0]:
+            if len(detail)>0:
+                detail[0]["startedAt"] = runningDetail[0]["startedAt"]
         detail = job_status_detail_with_finished_time(detail, desired_state)
         dataHandler.UpdateJobTextField(job_id, "jobStatusDetail", base64.b64encode(json.dumps(detail)))
         logger.info("Killing job %s, with status %s, %s" % (job_id, result, detail))

@@ -465,3 +465,8 @@ class CountJobByStatus:
         "vcName": {"description": 'vcName', "_in": 'query', "type": "string", "required": True},
         "targetStatus": {"description": 'targetStatus,Multiple constants are separated by commas', "_in": 'query', "type": "string", "required": True},
     }
+
+class HasCurrentActiveJob:
+    params = {
+        "userName": {"description": 'userName', "_in": 'query', "type": "string", "required": True},
+    }

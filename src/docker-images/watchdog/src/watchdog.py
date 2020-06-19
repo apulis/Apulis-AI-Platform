@@ -785,7 +785,7 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                     deviceStr = device_type_info[gpu_type]["deviceStr"]
                     labels = [vc_name, deviceStr]
                     # no job running in this vc or using this gpu type
-                    if all(ratio_sum[deviceStr]) == 0:
+                    if all((x== 0 for x in ratio_sum[deviceStr])):
                         available = 0
                         preemptive_available=0
                     else:
@@ -814,7 +814,7 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
 
                 cur_ratio = ratio[vc_name][gpu_type]
                 quota = vc_info[vc_name][gpu_type]
-                if all(ratio_sum[deviceStr]) == 0:
+                if all((x== 0 for x in ratio_sum[deviceStr])):
                     available = 0
                     preemptive_available = 0
                 else:

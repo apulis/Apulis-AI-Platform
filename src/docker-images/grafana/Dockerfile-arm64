@@ -29,7 +29,7 @@ ENV \
 RUN \
   apt-get update && \
   apt-get -y --force-yes --no-install-recommends install libfontconfig curl ca-certificates && \
-  curl https://dl.grafana.com/oss/release/grafana_${GRAFANA_VERSION}_amd64.deb > /tmp/grafana.deb && \
+  curl https://dl.grafana.com/oss/release/grafana_${GRAFANA_VERSION}_arm64.deb > /tmp/grafana.deb && \
   dpkg -i /tmp/grafana.deb && \
   rm -f /tmp/grafana.deb && \
   ### branding && \

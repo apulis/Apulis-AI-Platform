@@ -70,7 +70,7 @@ administrators:
 
 clusters:
   apulis-dev:
-    restfulapi: "http://china-gpu02.sigsus.cn/apis"
+    restfulapi: "http://atlas01.sigsus.cn/apis"
     title: Grafana-endpoint-of-the-cluster
     workStorage: work
     dataStorage: data

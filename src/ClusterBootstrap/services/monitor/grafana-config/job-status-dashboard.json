@@ -398,7 +398,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
+              "expr": "avg by (instance) (task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -474,7 +474,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
+              "expr": "avg by (instance) (task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
@@ -561,7 +561,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
+              "expr": "avg by (instance) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -637,7 +637,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
+              "expr": "avg by (instance) (task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
@@ -724,7 +724,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_dcgm_gpu_util{job_name=\"$job_name\"}",
+              "expr": "avg by (instance) (task_dcgm_gpu_util{job_name=\"$job_name\"})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -800,7 +800,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "task_dcgm_mem_copy_util{job_name=\"$job_name\"}",
+              "expr": "avg by (instance) (task_dcgm_mem_copy_util{job_name=\"$job_name\"})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -866,7 +866,7 @@
         "includeAll": false,
         "label": null,
         "multi": false,
-        "name": "job_name",
+        "name": "job_id",
         "options": [],
         "query": "label_values(task_cpu_percent, job_name)",
         "refresh": 1,

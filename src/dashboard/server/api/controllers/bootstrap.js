@@ -18,4 +18,4 @@ module.exports = (context) => {
   } else {
     context.body = `bootstrap(${JSON.stringify({ authEnabled })})`
   }
-}
+};

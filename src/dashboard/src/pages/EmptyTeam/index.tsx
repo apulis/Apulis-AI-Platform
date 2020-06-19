@@ -18,7 +18,8 @@ const EmptyTeam: React.FC<RouteComponentProps> = ({ history }) => {
     if(teams === undefined) {
       history.replace('/');
     } else if (teams.length > 0) {
-      history.replace('/');
+      const redict = window.location.search.split('redict=')[1] || '/';
+      history.replace(redict);
     }
   }, [teams, history])
 

@@ -16,6 +16,7 @@ spec:
     spec:
       nodeSelector:
         grafana: active
+        archType: amd64
       hostNetwork: true
       hostPID: false
       dnsPolicy: ClusterFirstWithHostNet

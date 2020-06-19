@@ -16,10 +16,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-FROM debian:jessie
+FROM ubuntu:18.04
 
 ENV \
-  GRAFANA_VERSION=5.0.4 \
+  GRAFANA_VERSION=6.7.3 \
   GF_PLUGIN_DIR=/grafana-plugins \
   GF_PATHS_LOGS=/var/log/grafana \
   GF_PATHS_DATA=/var/lib/grafana \

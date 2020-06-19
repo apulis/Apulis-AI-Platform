@@ -4,12 +4,14 @@ import 'typeface-roboto';
 import 'typeface-roboto-mono';
 import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
+import * as H from 'history';
 import { ThemeProvider } from "@material-ui/styles";
 import initAxios from './utils/init-axios'
 import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
 import { Provider as ClustersProvider } from "./contexts/Clusters";
 import TeamsContext, { Provider as TeamProvider } from './contexts/Teams';
+import AuthContext, { AuthProvider } from './contexts/Auth';
 import { ConfirmProvider } from './hooks/useConfirm';
 import AppBar from "./layout/AppBar";
 import Content from "./layout/Content";
@@ -17,21 +19,8 @@ import Drawer from "./layout/Drawer";
 import { Provider as DrawerProvider } from "./layout/Drawer/Context";
 import { SnackbarProvider, useSnackbar, VariantType } from 'notistack';
 import './App.less';
-
-const Home = React.lazy(() => import('./pages/Home'));
-const SignIn = React.lazy(() => import('./pages/SignIn'));
-const SignUp = React.lazy(() => import('./pages/SignUp'));
-const EmptyTeam = React.lazy(() => import('./pages/EmptyTeam'));
-const Submission = React.lazy(() => import('./pages/Submission'));
-const Jobs = React.lazy(() => import('./pages/Jobs'));
-const JobV2 = React.lazy(() => import('./pages/JobV2'));
-const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
-const Job = React.lazy(() => import('./pages/Job'));
-const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
-const Vc = React.lazy(() => import('./pages/Vc/index.js'));
-const User = React.lazy(() => import('./pages/User/index.js'));
-const Access = React.lazy(() => import('./pages/Access/index.js'));
-const Model = React.lazy(() => import('./pages/Model'));
+import AuthzRoute from './components/AuthzRoute';
+import ROUTER from './router.config';
 
 const theme = createMuiTheme();
 
@@ -45,10 +34,11 @@ interface BootstrapProps {
   isAuthorized?: boolean;
   config: ConfigContext;
   user: UserContext;
-  authEnabled?: {
-    [props: string]: 1 | 0;
-  };
-  administrators?: Array<[]>
+  administrators?: Array<[]>;
+  permissionList?: string[];
+  currentRole?: string[];
+  userGroupPath?: string;
+  id?: number;
 }
 
 const Loading = (
@@ -57,49 +47,37 @@ const Loading = (
   </Box>
 );
 
-
-
-const Contexts: React.FC<BootstrapProps> = ({ uid, openId, group, nickName, userName, isAdmin, isAuthorized, children, authEnabled, administrators }) => (
-  <BrowserRouter>
-    <ConfigProvider>
-      <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} authEnabled={authEnabled} administrators={administrators} >
-          <ConfirmProvider>
-            <TeamProvider>
-              <ClustersProvider>
-                <ThemeProvider theme={theme}>
-                  {children}
-                </ThemeProvider>
-              </ClustersProvider>
-            </TeamProvider>
-          </ConfirmProvider>
-      </UserProvider>
-    </ConfigProvider>
-  </BrowserRouter>
-);
-const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
-  const { openId, group, userName } = React.useContext(UserContext);
-  const { teams } = React.useContext(TeamsContext);
-  React.useEffect(() => {
-    if (openId === undefined || group === undefined) {
-      history.replace('/sign-in');
-    } else if(userName === undefined){
-      history.replace('/sign-up');
-    } else if(teams !== undefined && teams.length === 0) {
-      const redict = history.location.pathname;
-      history.replace(`/empty-team?redict=${redict}`);
-    }
-  }, [openId, group, userName, teams, history]);
+const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath }) => {
   const { enqueueSnackbar } = useSnackbar();
   initAxios((type: VariantType, msg: string) => {
     enqueueSnackbar(msg, {
       autoHideDuration: 3000,
       variant: type,
     });
-  }, history);
-  if (openId === undefined || group === undefined || userName === undefined || (teams !== undefined && teams.length === 0)) {
-    return null;
-  }
-
+  }, userGroupPath || '');
+  console.log('permissionList',permissionList)
+  return(
+    <BrowserRouter>
+      <ConfigProvider>
+        <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
+          <ConfirmProvider>
+            <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
+              <TeamProvider permissionList={permissionList}>
+                <ClustersProvider>
+                  <ThemeProvider theme={theme}>
+                    {children}
+                  </ThemeProvider>
+                </ClustersProvider>
+              </TeamProvider>
+            </AuthProvider>
+          </ConfirmProvider>
+        </UserProvider>
+      </ConfigProvider>
+    </BrowserRouter>
+  )
+};
+const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
+  
   return (
     <DrawerProvider>
       <Content>
@@ -107,22 +85,21 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
         <Drawer />
         <React.Suspense fallback={Loading}>
           <Switch location={location}>
-            <Route exact path="/" component={Home}/>
-            <Route path="/submission" component={Submission}/>
-            <Route path="/jobs/:cluster" component={Jobs}/>
-            <Route path="/jobs" component={Jobs}/>
-            <Route strict exact path="/jobs-v2/:clusterId/:jobId" component={JobV2}/>
+            {ROUTER.map(r => {
+              return (
+                <AuthzRoute
+                  exact={r.exact}
+                  key={r.path}
+                  component={r.component}
+                  strict={r.strict}
+                  path={r.path}
+                  needPermission={r.needPermission}
+                />
+              )
+            })}
             <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
-            <Route strict exact path="/jobs-v2/:clusterId/" component={JobsV2}/>
             <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
-            <Route strict exact path="/jobs-v2/" component={JobsV2}/>
-            <Route path="/job/:team/:clusterId/:jobId" component={Job}/>
-            <Route path="/cluster-status" component={ClusterStatus}/>
-            <Route path="/vc" component={Vc} />
-            <Route path="/model" component={Model} />
-            <Route path="/user" component={User} />
-            <Route path="/access" component={Access} />
-            <Redirect to="/"/>
+            <Redirect to="/home"/>
           </Switch>
         </React.Suspense>
       </Content>
@@ -135,16 +112,16 @@ const App: React.FC<BootstrapProps> = (props) => {
     <SnackbarProvider>
       <Contexts {...props} >
       <Helmet
-        titleTemplate="%s - Deep Learning Training Service"
-        defaultTitle="Deep Learning Training Service"
+        titleTemplate="Apulis Deep Learning Platform"
+        defaultTitle="Apulis Deep Learning Platform"
       />
       <CssBaseline/>
       <Box display="flex" minHeight="100vh" maxWidth="100vw">
         <React.Suspense fallback={Loading}>
           <Switch>
-            <Route exact path="/sign-in" component={SignIn}/>
-            <Route exact path="/sign-up" component={SignUp} />
-            <Route exact path="/empty-team" component={EmptyTeam} />
+            {/* <Route exact path="/sign-in" component={SignIn}/>
+            <Route exact path="/sign-up" component={SignUp} /> */}
+            {/* <Route exact path="/empty-team" component={EmptyTeam} /> */}
             <Route component={Layout}/>
           </Switch>
         </React.Suspense>

@@ -1,8 +1,12 @@
 #! /bin/bash
 set -ex
 
-. /dlts-runtime/env/init.env
-sh -x /dlts-runtime/install.sh
+RUN_TIME_DIR=/dlts-runtime
+SCRIPT_DIR=/dlts-runtime
+LOG_DIR=/dlts-runtime
+
+. ${RUN_TIME_DIR}/env/init.env
+sh -x ${RUN_TIME_DIR}/install.sh
 
 # set apt mirrors for foreign sources
 #sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
@@ -38,7 +42,7 @@ then
 fi
 
 # Setup container
-bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/init_user.sh # &>> ${LOG_DIR}/bootstrap.log
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
@@ -66,10 +70,11 @@ if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ 
 then
     runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
 else
-    printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
-    chmod ugo+rx /pod/job_command.sh
+    mkdir -p /pod/${DLWS_JOB_ID}
+    printenv DLWS_LAUNCH_CMD > /pod/${DLWS_JOB_ID}/job_command.sh
+    chmod ugo+rx /pod/${DLWS_JOB_ID}/job_command.sh
     chmod ugo+rx /pod.env
-    runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh
+    runuser -l ${DLWS_USER_NAME} -c /pod/${DLWS_JOB_ID}/job_command.sh
     # Save exit code
     EXIT_CODE=$?
     echo  `date` ": ${EXIT_CODE}"  > ${PROC_DIR}/EXIT_CODE

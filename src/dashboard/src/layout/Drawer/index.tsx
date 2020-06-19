@@ -1,6 +1,5 @@
-import React from "react";
+import React, { forwardRef, useContext, FC, useCallback, useEffect } from "react";
 import { Link, LinkProps, matchPath, useLocation } from "react-router-dom";
-
 import {
   Drawer,
   Theme,
@@ -16,8 +15,9 @@ import {
 import { makeStyles, createStyles } from "@material-ui/core/styles";
 import Context from "./Context";
 import UserContext from '../../contexts/User';
-
 import ConfigContext from "../../contexts/Config";
+import AuthContext from '../../contexts/Auth';
+import AuthzHOC from '../../components/AuthzHOC';
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
@@ -34,14 +34,16 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
     padding: '0 8px',
     ...theme.mixins.toolbar,
     justifyContent: 'flex-end',
+    minWidth: 200,
+    textAlign: 'center'
   },
 }));
 
-export const ListLink = React.forwardRef<Link, LinkProps>(
+export const ListLink = forwardRef<Link, LinkProps>(
   ({ to, ...props }, ref) => <Link ref={ref} to={to} {...props} />
 );
 
-const LinkListItem: React.FC<LinkProps> = ({ to, children }) => {
+const LinkListItem: FC<LinkProps> = ({ to, children }) => {
   const location = useLocation();
   const locationPathname = location.pathname;
   const toPathname = typeof to === "string" ? to
@@ -57,57 +59,50 @@ const LinkListItem: React.FC<LinkProps> = ({ to, children }) => {
   );
 };
 
-const NavigationList: React.FC = () => {
+const NavigationList: FC = () => {
   const styles = useStyles();
-  const { isAdmin } = React.useContext(UserContext);
-  const { wiki } = React.useContext(ConfigContext);
   return (
     <List component="nav" className={styles.drawerHeader}>
-      <LinkListItem to="/submission/training">
-        <ListItemText>Submit Training Job</ListItemText>
+      <LinkListItem to="/home">
+        <ListItemText>Home</ListItemText>
       </LinkListItem>
-      {/* <LinkListItem to="/submission/data">
-        <ListItemText>Submit Data Job</ListItemText>
-      </LinkListItem> */}
-      {/* <LinkListItem to="/jobs">
-        <ListItemText>View and Manage Jobs</ListItemText>
-      </LinkListItem> */}
-      <LinkListItem to="/jobs-v2">
-        <ListItemText>View and Manage Jobs</ListItemText>
-      </LinkListItem>
-      <LinkListItem to="/cluster-status">
-        <ListItemText>Cluster Status</ListItemText>
-      </LinkListItem>
-      <LinkListItem to="/model">
-        <ListItemText>Model</ListItemText>
-      </LinkListItem>
-      {
-        isAdmin ?
-          <div style={{ width: '100%' }}>
-            <LinkListItem to="/vc">
-              <ListItemText>Virtual Cluster</ListItemText>
-            </LinkListItem>
-            <LinkListItem to="/user">
-              <ListItemText>User</ListItemText>
-            </LinkListItem>
-            <LinkListItem to="/access">
-              <ListItemText>Access</ListItemText>
-            </LinkListItem>
-          </div>
-          : null
-      }
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <LinkListItem to="/submission/training">
+          <ListItemText>Submit Training Job</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']}>
+        <LinkListItem to="/jobs-v2">
+          <ListItemText>View and Manage Jobs</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
+        <LinkListItem to="/cluster-status">
+          <ListItemText>Cluster Status</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      <AuthzHOC needPermission={['VIEW_VC', 'MANAGE_VC']}>
+        <LinkListItem to="/vc">  
+          <ListItemText>Virtual Cluster</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <LinkListItem to="/model">
+          <ListItemText>Model</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
     </List>
   );
 };
 
-const DashboardDrawer: React.FC = () => {
-  const { open, setOpen } = React.useContext(Context);
-  const onClose = React.useCallback(() => setOpen(false), [setOpen]);
+const DashboardDrawer: FC = () => {
+  const { open, setOpen } = useContext(Context);
+  const onClose = useCallback(() => setOpen(false), [setOpen]);
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const variant = isDesktop ? "persistent" : "temporary";
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isDesktop) { setOpen(true); }
   }, [isDesktop, setOpen]);
   return (

@@ -35,6 +35,8 @@ import { OneInteractivePortsMsg, pollInterval } from '../../const';
 import message from '../../utils/message';
 import axios from 'axios';
 import useInterval from '../../hooks/useInterval';
+import UserContext from '../../contexts/User';
+import AuthContext from '../../contexts/Auth';
 
 interface RouteParams {
   clusterId: string;
@@ -114,8 +116,11 @@ const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> =
 
 const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: any }> = ({ endpoints, setPollTime }) => {
   const { job } = useContext(Context);
+  const { userName } = useContext(UserContext);
+  const { permissionList = [] } = useContext(AuthContext);
   const { jobStatus } = job;
-  const disabled = jobStatus === 'error' || jobStatus === 'killed' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing';
+  const canAction = (job.userName === userName || (job.userName !== userName && permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')));
+  const disabled = jobStatus === 'error' || jobStatus === 'killed' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || !canAction;
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar } = useSnackbar();
   const ssh = useMemo(() => {
@@ -134,13 +139,14 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
 
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
-    enqueueSnackbar(`Enabling ${name}...`);
+    const _name = name === 'ipython' ? 'jupyter' : name;
+    enqueueSnackbar(`Enabling ${_name}...`);
     post({
       endpoints: [name.toLowerCase()]
     }).then(() => {
-      enqueueSnackbar(`${name} enabled`, { variant: 'success' })
+      enqueueSnackbar(`${_name} enabled`, { variant: 'success' })
     }, () => {
-      enqueueSnackbar(`Failed to enable ${name}`, { variant: 'error' })
+      enqueueSnackbar(`Failed to enable ${_name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
 
@@ -218,6 +224,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       {iconInfoShow && <Chip icon={<Info/>}
         label={<p>Tensorboard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
       />}
+      {/* <AuthzHOC needPermission={'"MANAGE_ALL_USERS_JOB"'}></AuthzHOC> */}
       <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>
         <TextField
           fullWidth

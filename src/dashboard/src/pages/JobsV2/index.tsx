@@ -26,6 +26,7 @@ import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
 import MyJobs from './MyJobs';
 import AllJobs from './AllJobs';
+import AuthzHOC from '../../components/AuthzHOC';
 
 interface RouteParams {
   clusterId: string;
@@ -41,22 +42,24 @@ const TabView: FunctionComponent = () => {
   }, [setIndex]);
   return (
     <div className="jobs-table-wrap">
-      <Tabs
-        value={index}
-        onChange={onChange}
-        variant="fullWidth"
-        textColor="primary"
-        indicatorColor="primary"
-      >
-        <Tab label="My Jobs"/>
-        <Tab label="All Jobs"/>
-      </Tabs>
+      <AuthzHOC needPermission={['VIEW_ALL_USER_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB']}>
+        <Tabs
+          value={index}
+          onChange={onChange}
+          variant="fullWidth"
+          textColor="primary"
+          indicatorColor="primary"
+        >
+          <Tab label="My Jobs"/>
+          <Tab label="All Jobs"/>
+        </Tabs>
+      </AuthzHOC>
       <SwipeableViews
         index={index}
         onChangeIndex={onChangeIndex}
       >
         {index === 0 ? <MyJobs/> : <div/>}
-        {index === 1 ? <AllJobs/> : <div/>}
+        {index === 1 && <AuthzHOC needPermission={['VIEW_ALL_USER_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB']}><AllJobs/></AuthzHOC>}
       </SwipeableViews>
     </div>
   );

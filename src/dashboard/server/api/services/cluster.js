@@ -550,6 +550,47 @@ class Cluster extends Service {
     console.log(data)
     return data
   }
+
+  async postInferenceJob (job) {
+    const response = await this.fetch('/PostInferenceJob', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(job)
+    });
+    const text = await response.text();
+    this.context.log.debug({ text }, 'Submit job response text');
+    this.context.assert(response.ok, response.status, response.statusText);
+    return text;
+  }
+
+  async getInferenceJobs (teamId, all, limit) {
+    const { user } = this.context.state
+    const params = new URLSearchParams({
+      userName: user.userName,
+      vcName: teamId,
+      jobOwner: all ? 'all' : user.userName,
+      num: limit
+    })
+    const response = await this.fetch('/ListInferenceJob?' + params)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    const jobs = [].concat(
+      data['finishedJobs'],
+      data['queuedJobs'],
+      data['runningJobs'],
+      data['visualizationJobs']
+    )
+    return jobs
+  }
+
+  async getAllSupportInference () {
+    const response = await this.fetch(`/GetAllSupportInference`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
 }
 
 module.exports = Cluster

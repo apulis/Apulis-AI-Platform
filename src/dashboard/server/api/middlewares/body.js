@@ -16,6 +16,8 @@ module.exports = schema => {
         }
       }
 
+      if (schema === 'postInferenceJob') valid = true;
+
       if (!valid) {
         const message = validator.errors.map(
           error => `${error.dataPath} ${error.message}`

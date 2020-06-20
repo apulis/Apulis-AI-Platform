@@ -127,6 +127,17 @@ router.get('/:clusterId/getAllDevice',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/getAllDevice'))
 
+router.get('/clusters/:clusterId/teams/:teamId/inferenceJobs',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/centralReasoning/getInferenceJobs'))
+router.get('/:clusterId/getAllSupportInference',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/centralReasoning/getAllSupportInference'))
+router.post('/clusters/:clusterId/teams/:teamId/postInferenceJob',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('postInferenceJob'),
+  require('./controllers/cluster/centralReasoning/postInferenceJob'))
+
 // router.get('/:clusterId/listUser',
 //   require('./middlewares/user')(),
 //   require('./controllers/cluster/user/listUser'))

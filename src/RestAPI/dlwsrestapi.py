@@ -502,6 +502,32 @@ class GetAllDevice(Resource):
         return resp
 api.add_resource(GetAllDevice, '/GetAllDevice')
 
+class GetAllSupportInference(Resource):
+    def get(self):
+        result = JobRestAPIUtils.GetAllSupportInference()
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(GetAllSupportInference, '/GetAllSupportInference')
+
+class ListInferenceJob(Resource):
+    @api.doc(params=model.ListInferenceJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],args["num"])
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+        resp = generate_response(jobs)
+        return resp
+api.add_resource(ListInferenceJob, '/ListInferenceJob')
+
 class CountJobByStatus(Resource):
     @api.doc(params=model.CountJobByStatus.params)
     def get(self):
@@ -1735,18 +1761,7 @@ class JobPriority(Resource):
 ##
 api.add_resource(JobPriority, '/jobs/priorities')
 
-def dumpstacks(signal, frame):
-    code = []
-    logging.info("received signum %d", signal)
-    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
-    # logging.info("\nfeature_count:\n{}".format(feature_count))
-    for threadId, stack in sys._current_frames().items():
-        code.append("n# Thread: %d" % (threadId))
-        for filename, lineno, name, line in traceback.extract_stack(stack):
-            code.append('File:"%s", line %d, in %s' % (filename, lineno, name))
-            if line:
-                code.append(" %s" % (line.strip()))
-    logging.info("\n".join(code))
+
 
 def dumpstacks(signal, frame):
     code = []

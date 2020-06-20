@@ -622,7 +622,7 @@ class PythonLauncher(Launcher):
                 pod_template = DistPodTemplate(job_object.get_template(),
                                                secret_templates=secret_templates)
             elif job_object.params["jobtrainingtype"] == "InferenceJob":
-                pod_template = PodTemplate(job_object.get_template(),
+                pod_template = PodTemplate(job_object.get_inference_pod_template(),
                                            deployment_template=job_object.get_deployment_template(),
                                            enable_custom_scheduler=False,
                                            secret_templates=secret_templates)
@@ -664,7 +664,8 @@ class PythonLauncher(Launcher):
             jobMeta["jobPath"] = job_object.job_path
             jobMeta["workPath"] = job_object.work_path
             # the command of the first container
-            jobMeta["LaunchCMD"] = pods[0].spec.containers[0].command
+            if pods[0].kind == "Pod":
+                jobMeta["LaunchCMD"] = pods[0].spec.containers[0].command
 
             jobMetaStr = base64.b64encode(json.dumps(jobMeta))
 
@@ -677,6 +678,23 @@ class PythonLauncher(Launcher):
             }
             conditionFields = {"jobId": job_object.job_id}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+
+            if job_object.params["jobtrainingtype"] == "InferenceJob":
+                endpoint_id = "e-" + job_object.job_id + "-port-"+ pods[0].metadata.labels["inference_port"]
+                endpoint = {
+                    "id": endpoint_id,
+                    "jobId": job_object.job_id,
+                    "podName": pods[0].metadata.labels["podName"],
+                    "username": pods[0].metadata.labels["userName"],
+                    "modelname": pods[0].metadata.labels["modelname"],
+                    "name": "inference-url",
+                    "podPort": pods[0].metadata.labels["inference_port"],
+                    "status": "pending",
+                    "hostNetwork": False
+                }
+                endpoints[endpoint_id] = endpoint
+                dataHandler.UpdateJobTextField(job_object.job_id, "endpoints", json.dumps(endpoints))
+
         except Exception as e:
             logger.error("Submit job failed: %s" % job, exc_info=True)
             ret["error"] = str(e)

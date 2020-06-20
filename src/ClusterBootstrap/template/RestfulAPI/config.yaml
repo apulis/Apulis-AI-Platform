@@ -91,3 +91,11 @@ administrators:
 {% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
   - {{admin}}
 {% endfor %}
+
+inference:
+  {% for framework,items in cnf["inference"].items() %}{% for one in items %}{{framework}}:
+    - version: {{one["version"]}}
+      image: {{one["image"]}}
+      device: {{one["device"]}}
+    {% endfor %}
+  {% endfor %}

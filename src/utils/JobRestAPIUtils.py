@@ -258,12 +258,25 @@ def SubmitJob(jobParamsJsonStr):
 
                 job_priorities = {jobParams["jobId"]: priority}
                 dataHandler.update_job_priority(job_priorities)
+
+            if "jobtrainingtype" in jobParams and jobParams["jobtrainingtype"] == "InferenceJob":
+                dataHandler.AddInferenceJob(jobParams)
         else:
             ret["error"] = "Cannot schedule job. Cannot add job into database."
 
     dataHandler.Close()
     return ret
 
+def GetAllSupportInference():
+    ret = []
+    try:
+        if "inference" in config:
+            for framework, items in config["inference"].items():
+                for one in items:
+                    ret.append({"framework":framework+"-"+one["version"],"image":one["image"],"device":one["device"]})
+    except Exception as e:
+        logger.error('Exception: %s', str(e))
+    return ret
 
 def GetJobList(userName, vcName, jobOwner, num=None):
     try:
@@ -306,6 +319,22 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             jobs = dataHandler.GetJobListV2(userName, vcName, num)
     except Exception as e:
         logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+    return jobs
+
+def ListInferenceJob(jobOwner,vcName,num):
+    jobs = {}
+    dataHandler = None
+    try:
+        dataHandler = DataHandler()
+        if jobOwner == "all":
+            jobs = dataHandler.ListInferenceJob("all", vcName, num, pendingStatus, ("=", "or"))
+        else:
+            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num)
+    except Exception as e:
+        logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:
         if dataHandler is not None:
             dataHandler.Close()
@@ -909,6 +938,9 @@ def GetEndpoints(userName, jobId):
                                         epItem["password"] = i["value"]
                             except Exception as e:
                                 logger.error(e)
+                        elif epItem["name"] == "inference-url":
+                            epItem["modelname"] = endpoint["modelname"]
+
                     ret.append(epItem)
     except Exception as e:
         logger.error("Get endpoint exception, ex: %s", str(e))

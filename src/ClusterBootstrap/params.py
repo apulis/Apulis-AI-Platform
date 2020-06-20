@@ -664,6 +664,11 @@ default_config_parameters = {
     "dockerprefix": "",
     "dockertag": "latest",
 
+    # inferenceJob config
+    "inference":{
+      "tensorflow":[{"version":"1.15","image":"emacski/tensorflow-serving:1.15.0","device":"CPU"}]
+    },
+
     # System dockers.
     # These dockers are agnostic of cluster, and can be built once and reused upon multiple clusters.
     # We will gradually migrate mroe and more docker in DLWorkspace to system

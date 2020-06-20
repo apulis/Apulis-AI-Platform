@@ -86,6 +86,7 @@ class PostJob:
             "enablejobpath":fields.Boolean,
             "team":fields.String,
             "gpuType":fields.String,
+            "model_base_path": fields.String
         }
         self.model = {
             'jobId': fields.String
@@ -455,6 +456,15 @@ class GetAllDeviceModel(fields.Raw):
 class GetAllDevice:
     params = {
         "userName": {"description": 'userName', "_in": 'query', "type": "string", "required": True},
+    }
+    model = {
+        "device type":GetAllDeviceModel}
+
+class ListInferenceJob:
+    params = {
+        "jobOwner": {"description": 'jobOwner', "_in": 'query', "type": "string", "required": True},
+        "vcName": {"description": 'vcName', "_in": 'query', "type": "string", "required": True},
+        "num": {"description": 'num', "_in": 'query', "type": "string", "required": False},
     }
     model = {
         "device type":GetAllDeviceModel}

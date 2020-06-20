@@ -384,7 +384,32 @@ class PostJob(Resource):
 ##
 api.add_resource(PostJob, '/PostJob')
 
+class PostInferenceJob(Resource):
+    @api.expect(api.model("PostInferenceJob", model.PostInferenceJob(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Post PostInferenceJob Job")
+        logger.info(params)
 
+        ret = {}
+        output = JobRestAPIUtils.PostInferenceJob(json.dumps(params))
+
+        if "jobId" in output:
+            ret["jobId"] = output["jobId"]
+        else:
+            if "error" in output:
+                ret["error"] = "Cannot create job!" + output["error"]
+            else:
+                ret["error"] = "Cannot create job!"
+        logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(PostInferenceJob, '/PostInferenceJob')
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):

@@ -92,6 +92,17 @@ class PostJob:
             'jobId': fields.String
         }
 
+class PostInferenceJob:
+    def __init__(self,api):
+        self.params = {
+            "image":fields.String,
+            "vcName":fields.String,
+            "userId": fields.Integer(example="12345678"),
+            "userName":fields.String,
+            "jobName":fields.String,
+            "model_base_path": fields.String
+        }
+
 class ListJobResponse(fields.Raw):
     __schema_type__ = "List"
     __schema_example__ = """[{"jobId":xxx,"jobStatus":"xxx"},....]"""

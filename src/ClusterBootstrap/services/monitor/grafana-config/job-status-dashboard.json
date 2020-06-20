@@ -58,7 +58,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg (task_cpu_percent{job_name=\"$job_name\"}) by (instance)",
+              "expr": "avg (task_cpu_percent{job_name=\"$job_id\"}) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}}",
@@ -133,7 +133,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg (task_mem_usage_byte{job_name=\"$job_name\"}) by (instance)",
+              "expr": "avg (task_mem_usage_byte{job_name=\"$job_id\"}) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}}",
@@ -220,7 +220,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(task_net_in_byte{job_name=\"$job_name\"}[5m])) by (instance)",
+              "expr": "sum(rate(task_net_in_byte{job_name=\"$job_id\"}[5m])) by (instance)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -228,7 +228,7 @@
               "refId": "A"
             },
             {
-              "expr": "sum(rate(task_net_out_byte{job_name=\"$job_name\"}[5m])) by (instance)",
+              "expr": "sum(rate(task_net_out_byte{job_name=\"$job_id\"}[5m])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
@@ -303,7 +303,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg (irate(task_block_in_byte{job_name=\"$job_name\"}[300s])) by (instance)",
+              "expr": "avg (irate(task_block_in_byte{job_name=\"$job_id\"}[300s])) by (instance)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -311,7 +311,7 @@
               "refId": "A"
             },
             {
-              "expr": "avg (irate(task_block_out_byte{job_name=\"$job_name\"}[300s])) by (instance)",
+              "expr": "avg (irate(task_block_out_byte{job_name=\"$job_id\"}[300s])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
@@ -398,7 +398,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg by (instance) (task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'})",
+              "expr": "avg by (instance) (task_device_percent{job_name=\"$job_id\",device_str='npu.huawei.com/NPU'})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -474,7 +474,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg by (instance) (task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'})",
+              "expr": "avg by (instance) (task_device_mem_percent{job_name=\"$job_id\",device_str='npu.huawei.com/NPU'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
@@ -561,7 +561,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg by (instance) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'})",
+              "expr": "avg by (instance) (task_device_percent{job_name=\"$job_id\",device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -637,7 +637,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg by (instance) (task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'})",
+              "expr": "avg by (instance) (task_device_mem_percent{job_name=\"$job_id\",device_str='nvidia.com/gpu'})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
@@ -724,7 +724,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg by (instance) (task_dcgm_gpu_util{job_name=\"$job_name\"})",
+              "expr": "avg by (instance) (task_dcgm_gpu_util{job_name=\"$job_id\"})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -800,7 +800,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg by (instance) (task_dcgm_mem_copy_util{job_name=\"$job_name\"})",
+              "expr": "avg by (instance) (task_dcgm_mem_copy_util{job_name=\"$job_id\"})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,

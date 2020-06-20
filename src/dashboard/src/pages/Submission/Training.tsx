@@ -519,7 +519,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (val) {
       const _val = Number(val);
       if (allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
-        return (_val === 1 ||_val === 2 || _val === 4 || _val === 8);
+        return (_val === 0 || _val === 1 ||_val === 2 || _val === 4 || _val === 8);
       }
     }
     return true;

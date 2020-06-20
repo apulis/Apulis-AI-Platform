@@ -113,7 +113,7 @@ class PodTemplate():
 
         if "nodeSelector" not in params:
             params["nodeSelector"] = {}
-        if "gpuType" in params:
+        if "gpuType" in params and params["gpuType"]:
             params["nodeSelector"]["gpuType"] = params["gpuType"]
 
         # Set up VC dedicated node usage
@@ -170,7 +170,7 @@ class PodTemplate():
             pod["fragmentGpuJob"] = True
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
-            if "gpuStr" not in pod and "gpuType" in pod:
+            if "gpuStr" not in pod and "gpuType" in pod and pod["gpuType"]:
                 deviceDict = gpuMapping.get(pod["gpuType"])
                 if deviceDict is None:
                     return None,"wrong device type"
@@ -179,8 +179,8 @@ class PodTemplate():
 
             if params["jobtrainingtype"] == "InferenceJob":
                 pod["gpuLimit"] = 0
-                if "rest_api_port" not in pod:
-                    pod["rest_api_port"] = 8080
+                if "inference_port" not in pod:
+                    pod["inference_port"] = 8080
                 pod["model_name"] = pod["jobName"]
                 pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/data/flowers"
 
@@ -191,7 +191,7 @@ class PodTemplate():
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")
-                if "gpuType" in pod and pod["gpuType"].endswith("arm64"):
+                if "gpuType" in pod and pod["gpuType"] and pod["gpuType"].endswith("arm64"):
                     pod["init-container"] += "-arm64"
 
             k8s_pod = self.generate_pod(pod, params["cmd"])

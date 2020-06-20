@@ -288,6 +288,13 @@ def PostInferenceJob(jobParamsJsonStr):
 
     # default value
     jobParams["jobtrainingtype"] = "InferenceJob"
+    jobParams["jobType"] = "training"
+    jobParams["preemptionAllowed"] = False
+    jobParams["containerUserId"] = 0
+    jobParams["isPrivileged"] = False
+    jobParams["hostNetwork"] = False
+    jobParams["gpuType"] = None
+
 
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
@@ -401,7 +408,7 @@ def GetAllSupportInference():
         if "inference" in config:
             for framework, items in config["inference"].items():
                 for one in items:
-                    ret.append({"framework":framework+"-"+one["version"],"image":one["image"],"device":one["device"]})
+                    ret.append({"framework":framework+"-"+str(one["version"]),"image":one["image"],"device":one["device"]})
     except Exception as e:
         logger.error('Exception: %s', str(e))
     return ret

@@ -192,6 +192,10 @@ class DataHandler(object):
                 )
                 """ % (self.inferencejobtablename)
 
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
             sql = """
                 CREATE TABLE IF NOT EXISTS `%s`
                 (
@@ -975,7 +979,7 @@ class DataHandler(object):
             cursor = conn.cursor()
 
             query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
-                self.jobtablename,self.inferencejobtablename,self.inferencejobtablename,self.jobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
+                self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
@@ -1006,9 +1010,10 @@ class DataHandler(object):
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
-                endpoints = json.loads(record["endpoints"])
-                endpoint = endpoints[0]
-                record["inference-url"] = "http://"+config["webportal_node"].split("."+config["domain"])[0]+":"+endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"]+"/v1/models/"+endpoint["modelname"]+":predict"
+                endpoints = json.loads(record["endpoints"]).values()
+                if len(endpoints)==1:
+                    endpoint = endpoints[0]
+                    record["inference-url"] = "http://"+config["webportal_node"].split(config["domain"])[0]+config["domain"]+":"+ str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])+"/v1/models/"+endpoint["modelname"]+":predict"
 
                 if record["jobStatus"] == "running":
                     if record["jobType"] == "training":

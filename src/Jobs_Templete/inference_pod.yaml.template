@@ -25,7 +25,7 @@ metadata:
   {% endfor %}
 
   {% if "gpuType" in job %}
-    {% if job["gpuType"]|length > 0 %}
+    {% if job["gpuType"] and job["gpuType"]|length > 0 %}
     gpuType: {{ job["gpuType"] }}
     {% endif %}
   {% endif %}
@@ -116,10 +116,10 @@ spec:
       periodSeconds: 30
       successThreshold: 1
       tcpSocket:
-        port: {{ job["rest_api_port"] }}
+        port: {{ job["inference_port"] }}
       timeoutSeconds: 10
     args:
-    - --rest_api_port={{ job["rest_api_port"] }}
+    - --rest_api_port={{ job["inference_port"] }}
     - --model_name={{ job["model_name"] }}
     - --model_base_path={{ job["model_base_path"] }}
     imagePullPolicy: Always

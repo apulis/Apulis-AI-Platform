@@ -735,7 +735,10 @@ class PythonLauncher(Launcher):
         result, detail = k8sUtils.GetJobStatus(job_id)
         # sync start time
         runningDetail = dataHandler.GetJobTextField(job_id, "jobStatusDetail")
-        runningDetail = json.loads(base64.b64decode(runningDetail))
+        if runningDetail is None:
+            runningDetail = {}
+        else:
+            runningDetail = json.loads(base64.b64decode(runningDetail))
         if len(runningDetail)>0 and "startedAt" in runningDetail[0]:
             if len(detail)>0:
                 detail[0]["startedAt"] = runningDetail[0]["startedAt"]

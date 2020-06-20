@@ -23,7 +23,7 @@ metadata:
   {% endfor %}
 
   {% if "gpuType" in job %}
-    {% if job["gpuType"]|length > 0 %}
+    {% if job['gpuType'] and job["gpuType"]|length > 0 %}
     gpuType: {{ job["gpuType"] }}
     {% endif %}
   {% endif %}

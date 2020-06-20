@@ -379,9 +379,7 @@ class PostJob(Resource):
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
         return resp
-##
-## Actually setup the Api resource routing here
-##
+
 api.add_resource(PostJob, '/PostJob')
 
 class PostInferenceJob(Resource):
@@ -406,9 +404,7 @@ class PostInferenceJob(Resource):
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
         return resp
-##
-## Actually setup the Api resource routing here
-##
+
 api.add_resource(PostInferenceJob, '/PostInferenceJob')
 
 # shows a list of all todos, and lets you POST to add new tasks

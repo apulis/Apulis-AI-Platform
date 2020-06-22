@@ -1,6 +1,6 @@
 import React, { useState, FC, useEffect, useMemo, useContext } from "react";
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, TextField, 
-  MenuItem } from "@material-ui/core";
+  MenuItem, Tabs, Tab } from "@material-ui/core";
 import MaterialTable, { Column, Options } from 'material-table';
 import { renderDate, sortDate, renderId, renderStatus } from '../JobsV2/tableUtils';
 import SelectTree from '../CommonComponents/SelectTree';
@@ -8,20 +8,27 @@ import { useForm } from "react-hook-form";
 import ClusterContext from '../../contexts/Clusters';
 import TeamsContext from '../../contexts/Teams';
 import useActions from "../../hooks/useActions";
-import { NameReg, NameErrorText } from '../../const';
+import { NameReg, NameErrorText, pollInterval } from '../../const';
 import axios from 'axios';
 import message from '../../utils/message';
+import SwipeableViews from 'react-swipeable-views';
+import AuthContext from '../../contexts/Auth';
+import useInterval from '../../hooks/useInterval';
 
 const CentralReasoning: React.FC = () => {
   const { selectedCluster, availbleGpu } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);
-  const [jobs, setJobs] = useState([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [allJobs, setAllJobs] = useState<any[]>([]);
   const [allSupportInference, setAllSupportInference] = useState<any[]>([]);
   const [framework, setFramework] = useState('');
   const [deviceType, setDeviceType] = useState('');
   const [modalFlag, setModalFlag] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
+  const [index, setIndex] = useState(0);
+  const { currentRole = [], userName } = useContext(AuthContext);
+  const isAdmin = currentRole.includes('System Admin');
   const { handleSubmit, register, getValues, errors, setValue, clearError, setError } = useForm({ mode: "onBlur" });
   const { kill } = useActions(selectedCluster);
   const actions = [kill];
@@ -33,8 +40,8 @@ const CentralReasoning: React.FC = () => {
     { title: 'Jobname', type: 'string', field: 'jobName', sorting: false},
     { title: 'Username', type: 'string', field: 'userName'},
     { title: 'Path', type: 'string', field: 'jobParams.model_base_path', sorting: false },
-    { title: 'Framework', type: 'string', field: 'Framework', sorting: false },
-    { title: 'DeviceType', type: 'string', field: 'DeviceType', sorting: false },
+    { title: 'Framework', type: 'string', field: 'jobParams.framework', sorting: false },
+    { title: 'DeviceType', type: 'string', field: 'jobParams.device', sorting: false },
     { title: 'Status', type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
     { title: 'URL', type: 'string', field: 'inference-url', sorting: false, render: _renderURL}
   ], []);
@@ -46,17 +53,27 @@ const CentralReasoning: React.FC = () => {
 
   useEffect(() => {
     getData();
-  }, [selectedCluster, selectedTeam]);
+  }, [selectedCluster, selectedTeam, index]);
 
   const getData = () => {
-    axios.get(`/clusters/${selectedCluster}/teams/${selectedTeam}/inferenceJobs?limit=999`)
+    const jobOwner = index === 1 && isAdmin ? 'all' : userName;
+    axios.get(`/clusters/${selectedCluster}/teams/${selectedTeam}/inferenceJobs?jobOwner=${jobOwner}&limit=999`)
       .then(res => {
         const { data } = res;
-        setJobs(data);
+        const _data = index ? allJobs : jobs
+        const temp1 = JSON.stringify(_data.map(i => i.jobStatus));
+        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
+        if (!(temp1 === temp2)) {
+          index ? setAllJobs(data) : setJobs(data);
+        }
       }, () => {
         message('error', `Failed to fetch jobs from cluster: ${selectedCluster}`);
       })
   }
+
+  useInterval(() => {
+    getData();
+  }, pollInterval);
  
   const onSubmit = async (val: any) => {
     setBtnLoading(true);
@@ -68,7 +85,7 @@ const CentralReasoning: React.FC = () => {
     }).then((res) => {
       message('success', `Reasoning successfully！`);
       setModalFlag(false);
-      getData();
+      index ? setIndex(0) : getData();
     },  () => {
       message('error', `Reasoning failed！`);
     })
@@ -105,18 +122,35 @@ const CentralReasoning: React.FC = () => {
 
   return (
     <div className="modelList">
-      <MaterialTable
-        title={
-          <Button variant="contained" color="primary" onClick={openModal}>
-            New Reasoning
-          </Button>
-        }
-        columns={columns}
-        data={jobs}
-        options={options}
-        actions={actions}
-        onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
-      />
+      <Button variant="contained" color="primary" onClick={openModal}>
+        New Reasoning
+      </Button>
+      <Tabs
+        value={index}
+        onChange={(e, val) => setIndex(Number(val))}
+        variant="fullWidth"
+        textColor="primary"
+        indicatorColor="primary"
+      >
+        <Tab label="My Jobs"/>
+        <Tab label="All Jobs"/>
+      </Tabs>
+      <SwipeableViews index={index}>
+        {index === 0 && <MaterialTable
+          columns={columns}
+          data={jobs}
+          options={options}
+          actions={actions}
+          onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
+        />}
+        {index === 1 && isAdmin && <MaterialTable
+          columns={columns}
+          data={allJobs}
+          options={options}
+          actions={actions}
+          onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
+        />}
+      </SwipeableViews>
       {modalFlag && 
       <Dialog open={modalFlag} disableBackdropClick fullWidth>
         <DialogTitle>New Reasoning</DialogTitle>

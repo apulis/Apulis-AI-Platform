@@ -565,24 +565,23 @@ class Cluster extends Service {
     return text;
   }
 
-  async getInferenceJobs (teamId, all, limit) {
+  async getInferenceJobs (teamId, jobOwner, limit) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.userName,
       vcName: teamId,
-      jobOwner: all ? 'all' : user.userName,
+      jobOwner: jobOwner,
       num: limit
     })
     const response = await this.fetch('/ListInferenceJob?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    const jobs = [].concat(
+    return [].concat(
       data['finishedJobs'],
       data['queuedJobs'],
       data['runningJobs'],
       data['visualizationJobs']
     )
-    return jobs
   }
 
   async getAllSupportInference () {

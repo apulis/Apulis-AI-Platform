@@ -9,9 +9,8 @@
 module.exports = async context => {
   const { cluster, user } = context.state
   const { teamId } = context.params;
-  const limit = Number(context.query.limit) || 10;
-  const all = user.currentRole.includes('System Admin');
-  const jobs = await cluster.getInferenceJobs(teamId, all, limit);
+  const { limit, jobOwner } = context.query;
+  const jobs = await cluster.getInferenceJobs(teamId, jobOwner, Number(limit));
   jobs.sort((jobA, jobB) => {
     const jobATime = jobA['jobTime'];
     const jobBTime = jobB['jobTime'];

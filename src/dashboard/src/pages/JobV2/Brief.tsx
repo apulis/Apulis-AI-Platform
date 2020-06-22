@@ -113,7 +113,7 @@ const Brief: FunctionComponent = () => {
       <ListItem>
         <ListItemText
           primary="Job Submission Time"
-          secondary={new Date(job['jobTime']).toLocaleString()}
+          secondary={new Date(job['jobTime']).toLocaleString('en')}
         />
       </ListItem>
     </List>

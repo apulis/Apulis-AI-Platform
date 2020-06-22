@@ -544,7 +544,7 @@ class ContainerCollector(Collector):
 
     inspect_histogram = Histogram("cmd_docker_inspect_latency_seconds",
             "Command call latency for docker inspect (seconds)")
-    inspect_timeout = 1 # 99th latency is 0.042s
+    inspect_timeout = 2 # 99th latency is 0.042s
 
     iftop_histogram = Histogram("cmd_iftop_latency_seconds",
             "Command call latency for iftop (seconds)")
@@ -700,6 +700,9 @@ class ContainerCollector(Collector):
         inspect_info = docker_inspect.inspect(container_id,
                 ContainerCollector.inspect_histogram,
                 ContainerCollector.inspect_timeout)
+
+        if inspect_info is None:
+            return
 
         pid = inspect_info.pid
         job_name = inspect_info.job_name

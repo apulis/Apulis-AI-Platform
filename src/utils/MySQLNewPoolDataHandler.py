@@ -186,9 +186,29 @@ class DataHandler(object):
                 (
                     `id`             INT     NOT NULL AUTO_INCREMENT,
                     `jobId`   varchar(50)   NOT NULL,
-                    `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    `jobName`         varchar(1024) NOT NULL,
+                    `userName`         varchar(255) NOT NULL,
+                    `vcName`         varchar(255) NOT NULL,
+                    `jobStatus`         varchar(255) NOT NULL DEFAULT 'unapproved',
+                    `jobStatusDetail` LONGTEXT  NULL,
+                    `jobType`         varchar(255) NOT NULL,
+                    `jobDescriptionPath`  TEXT NULL,
+                    `jobDescription`  LONGTEXT  NULL,
+                    `jobTime` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    `endpoints` LONGTEXT  NULL,
+                    `errorMsg` LONGTEXT  NULL,
+                    `jobParams` LONGTEXT  NOT NULL,
+                    `jobMeta` LONGTEXT  NULL,
+                    `jobLog` LONGTEXT  NULL,
+                    `retries`             int    NULL DEFAULT 0,
+                    `lastUpdated` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
                     PRIMARY KEY (`id`),
-                    CONSTRAINT identityName_jobId UNIQUE(`jobId`)
+                    UNIQUE(`jobId`),
+                    INDEX (`userName`),
+                    INDEX (`jobTime`),
+                    INDEX (`jobId`),
+                    INDEX (`vcName`),
+                    INDEX (`jobStatus`)
                 )
                 """ % (self.inferencejobtablename)
 
@@ -845,11 +865,11 @@ class DataHandler(object):
     def AddInferenceJob(self, jobParams):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.inferencejobtablename + "` (jobId) VALUES (%s)"
+            sql = "INSERT INTO `" + self.jobtablename + "` (jobId, jobName, userName, vcName, jobType,jobParams ) VALUES (%s,%s,%s,%s,%s,%s)"
             jobParam = base64.b64encode(json.dumps(jobParams))
             with MysqlConn() as conn:
                 conn.insert_one(sql, (
-                    jobParams["jobId"],))
+                    jobParams["jobId"], jobParams["jobName"],jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -886,6 +906,45 @@ class DataHandler(object):
                 query += " limit %s " % str(num)
             with MysqlConn() as conn:
                 rets = conn.select_many(query,params)
+            fetch_start_time = timeit.default_timer()
+            fetch_elapsed = timeit.default_timer() - fetch_start_time
+            logger.info("(fetchall time: %f)", fetch_elapsed)
+            for one in rets:
+                ret.append(one)
+        except Exception as e:
+            logger.exception('GetJobList Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetInferenceJobList(self, userName, vcName, num=None, status=None, op=("=", "or")):
+        ret = []
+        try:
+            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1" % (
+                self.inferencejobtablename)
+            params = []
+            if userName != "all":
+                query += " and `userName` = %s"
+                params.append(userName)
+            if vcName != "all":
+                query += " and `vcName` = %s"
+                params.append(vcName)
+            if status is not None:
+                if "," not in status:
+                    query += " and `jobStatus` %s %s" % (op[0], "%s")
+                    params.append(status)
+                else:
+                    status_list = [" `jobStatus` %s %s " % (op[0], "%s") for _ in status.split(',')]
+                    for s in status.split(','):
+                        params.append(s)
+                    status_statement = (" " + op[1] + " ").join(status_list)
+                    query += " and ( %s ) " % status_statement
+
+            query += " order by `jobTime` Desc"
+
+            if num is not None:
+                query += " limit %s " % str(num)
+            with MysqlConn() as conn:
+                rets = conn.select_many(query, params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
             logger.info("(fetchall time: %f)", fetch_elapsed)
@@ -978,8 +1037,8 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
-                self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId where 1".format(
+                self.inferencejobtablename,self.inferencejobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName

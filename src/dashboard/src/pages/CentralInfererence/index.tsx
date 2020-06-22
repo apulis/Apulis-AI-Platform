@@ -14,7 +14,7 @@ import SwipeableViews from 'react-swipeable-views';
 import AuthContext from '../../contexts/Auth';
 import useInterval from '../../hooks/useInterval';
 
-const CentralReasoning: React.FC = () => {
+const CentralInfererence: React.FC = () => {
   const { selectedCluster, availbleGpu } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);
@@ -31,15 +31,15 @@ const CentralReasoning: React.FC = () => {
   const { handleSubmit, register, getValues, errors, setValue, clearError, setError } = useForm({ mode: "onBlur" });
   const { kill } = useActions(selectedCluster);
   const actions = [kill];
-  const _renderId = (job: any) => renderId(job, 0);
-  const _renderURL = (job: any) => <p title={job['inference-url'] || '--'} style={{maxWidth: 300}}>{job['inference-url'] || '--'}</p>;
-  const _renderPath = (job: any) => <p title={job.jobParams.model_base_path || '--'} style={{maxWidth: 250}}>{job.jobParams.model_base_path || '--'}</p>;
+  // const _renderId = (job: any) => renderId(job, 0);
+  const _renderURL = (job: any) => <p title={job['inference-url'] || '--'}>{job['inference-url'] || '--'}</p>;
+  const _renderPath = (job: any) => <p title={job.jobParams.model_base_path || '--'} style={{maxWidth: 300}}>{job.jobParams.model_base_path || '--'}</p>;
   const columns = useMemo<Array<Column<any>>>(() => [
-    { title: 'Id', type: 'string', field: 'jobId',
-    render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Jobname', type: 'string', field: 'jobName', sorting: false},
+    // { title: 'Id', type: 'string', field: 'jobId',
+    // render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
+    { title: 'Infererence Name', type: 'string', field: 'jobName', sorting: false},
     { title: 'Username', type: 'string', field: 'userName'},
-    { title: 'Path', type: 'string', field: 'jobParams.model_base_path', sorting: false, render: _renderPath },
+    { title: 'Path', type: 'string', field: 'jobParams.model_base_path', sorting: false, render: _renderPath, cellStyle: {maxWidth: 300} },
     { title: 'Framework', type: 'string', field: 'jobParams.framework', sorting: false },
     { title: 'DeviceType', type: 'string', field: 'jobParams.device', sorting: false },
     { title: 'Status', type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
@@ -83,11 +83,11 @@ const CentralReasoning: React.FC = () => {
       device: deviceType,
       image: allSupportInference.find((i: { framework: any; }) => i.framework === framework).image
     }).then((res: any) => {
-      message('success', `Reasoning successfully！`);
+      message('success', `Infererence successfully！`);
       setModalFlag(false);
       index ? setIndex(0) : getData();
     },  () => {
-      message('error', `Reasoning failed！`);
+      message('error', `Infererence failed！`);
     })
     setBtnLoading(false);
   }
@@ -123,7 +123,7 @@ const CentralReasoning: React.FC = () => {
   return (
     <div className="centralWrap">
       <Button variant="contained" color="primary" onClick={openModal}>
-        New Reasoning
+        New Infererence
       </Button>
       <Tabs
         value={index}
@@ -132,12 +132,12 @@ const CentralReasoning: React.FC = () => {
         textColor="primary"
         indicatorColor="primary"
       >
-        <Tab label="My Reasoning Jobs"/>
-        <Tab label="All Reasoning Jobs"/>
+        <Tab label="My Infererence"/>
+        <Tab label="All Infererence"/>
       </Tabs>
       <SwipeableViews index={index}>
         {index === 0 && <MaterialTable
-          title="My Reasoning Jobs"
+          title="My Infererence"
           columns={columns}
           data={jobs}
           options={options}
@@ -145,7 +145,7 @@ const CentralReasoning: React.FC = () => {
           onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
         />}
         {index === 1 && isAdmin && <MaterialTable
-          title="All Reasoning Jobs"
+          title="All Infererence"
           columns={columns}
           data={allJobs}
           options={options}
@@ -155,11 +155,11 @@ const CentralReasoning: React.FC = () => {
       </SwipeableViews>
       {modalFlag && 
       <Dialog open={modalFlag} disableBackdropClick fullWidth>
-        <DialogTitle>New Reasoning</DialogTitle>
+        <DialogTitle>New Infererence</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent dividers>
             <TextField
-              label="Job Name"
+              label="Infererence Name"
               name="jobName"
               fullWidth
               variant="filled"
@@ -169,7 +169,7 @@ const CentralReasoning: React.FC = () => {
               inputProps={{ maxLength: 20 }}
               style={{ margin: '10px 0' }}
               inputRef={register({
-                required: 'Job Name is required！',
+                required: 'Infererence Name is required！',
                 pattern: {
                   value: NameReg,
                   message: NameErrorText
@@ -194,7 +194,7 @@ const CentralReasoning: React.FC = () => {
               label="Framework"
               name="framework"
               fullWidth
-              onChange={e => setFramework(e.target.value)}
+              onChange={(e: { target: { value: any; }; }) => setFramework(e.target.value)}
               variant="filled"
               style={{ margin: '10px 0' }}
               value={framework}
@@ -207,7 +207,7 @@ const CentralReasoning: React.FC = () => {
               label="Device Type"
               name="device"
               fullWidth
-              onChange={e => setDeviceType(e.target.value)}
+              onChange={(e: { target: { value: any; }; }) => setDeviceType(e.target.value)}
               variant="filled"
               value={deviceType}
               style={{ margin: '10px 0' }}
@@ -227,4 +227,4 @@ const CentralReasoning: React.FC = () => {
   ); 
 };
 
-export default CentralReasoning;
+export default CentralInfererence;

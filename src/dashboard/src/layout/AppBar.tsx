@@ -219,7 +219,7 @@ const UserButton: React.FC = () => {
 const clearAuthInfo = async (userGroupPath: string) => {
   delete localStorage.token
   await axios.get('/authenticate/logout');
-  window.location.href = userGroupPath;
+  window.location.href = userGroupPath + '/user/login?' + encodeURIComponent(window.location.href);
 }
 const SignOutButton: React.FC = () => {
   const { userGroupPath } = React.useContext(UserContext);

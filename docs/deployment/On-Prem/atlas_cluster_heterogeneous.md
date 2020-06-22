@@ -648,6 +648,8 @@ clusters:
     ```
     ./deploy.py --verbose docker push restfulapi2
     ./deploy.py --verbose docker push webui3
+    ./deploy.py --nocache docker push custom-user-dashboard-frontend
+    ./deploy.py --nocache docker push custom-user-dashboard-backend
     ```
 
 - ##### 编译GPU Reporter
@@ -676,6 +678,7 @@ clusters:
     ```
     ./deploy.py --verbose nginx webui3
     ./deploy.py --verbose kubernetes start webui3
+    ./deploy.py kubernetes start custom-user-dashboard
     ```
 
 

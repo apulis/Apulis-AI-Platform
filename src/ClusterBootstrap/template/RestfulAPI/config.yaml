@@ -92,5 +92,13 @@ administrators:
   - {{admin}}
 {% endfor %}
 
+inference:
+  {% for framework,items in cnf["inference"].items() %}{% for one in items %}{{framework}}:
+    - version: {{one["version"]}}
+      image: {{one["image"]}}
+      device: {{one["device"]}}
+    {% endfor %}
+  {% endfor %}
+
 usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend
 usermanagerapitoken: {{cnf["usermanagerapitoken"]}}

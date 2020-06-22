@@ -127,16 +127,17 @@ const CentralReasoning: React.FC = () => {
       </Button>
       <Tabs
         value={index}
-        onChange={(e, val) => setIndex(Number(val))}
+        onChange={(e: any, val: any) => setIndex(Number(val))}
         variant="fullWidth"
         textColor="primary"
         indicatorColor="primary"
       >
-        <Tab label="My Jobs"/>
-        <Tab label="All Jobs"/>
+        <Tab label="My Reasoning Jobs"/>
+        <Tab label="All Reasoning Jobs"/>
       </Tabs>
       <SwipeableViews index={index}>
         {index === 0 && <MaterialTable
+          title="My Reasoning Jobs"
           columns={columns}
           data={jobs}
           options={options}
@@ -144,6 +145,7 @@ const CentralReasoning: React.FC = () => {
           onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
         />}
         {index === 1 && isAdmin && <MaterialTable
+          title="All Reasoning Jobs"
           columns={columns}
           data={allJobs}
           options={options}

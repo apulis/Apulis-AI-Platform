@@ -33,17 +33,18 @@ const CentralReasoning: React.FC = () => {
   const { kill } = useActions(selectedCluster);
   const actions = [kill];
   const _renderId = (job: any) => renderId(job, 0);
-  const _renderURL = (job: any) => <p title={job['inference-url']} style={{maxWidth: '300px'}}>{job['inference-url']}</p>;
+  const _renderURL = (job: any) => <p title={job['inference-url']} style={{maxWidth: 300}}>{job['inference-url']}</p>;
+  const _renderPath = (job: any) => <p title={job.jobParams.model_base_path} style={{maxWidth: 250}}>{job.jobParams.model_base_path}</p>;
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'Id', type: 'string', field: 'jobId',
-    render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console', width: '360px'}},
+    render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Jobname', type: 'string', field: 'jobName', sorting: false},
     { title: 'Username', type: 'string', field: 'userName'},
-    { title: 'Path', type: 'string', field: 'jobParams.model_base_path', sorting: false },
+    { title: 'Path', type: 'string', field: 'jobParams.model_base_path', sorting: false, render: _renderPath },
     { title: 'Framework', type: 'string', field: 'jobParams.framework', sorting: false },
     { title: 'DeviceType', type: 'string', field: 'jobParams.device', sorting: false },
     { title: 'Status', type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
-    { title: 'URL', type: 'string', field: 'inference-url', sorting: false, render: _renderURL}
+    { title: 'URL', type: 'string', field: 'inference-url', sorting: false, render: _renderURL }
   ], []);
   const options = useMemo<Options>(() => ({
     padding: 'dense',
@@ -58,7 +59,7 @@ const CentralReasoning: React.FC = () => {
   const getData = () => {
     const jobOwner = index === 1 && isAdmin ? 'all' : userName;
     axios.get(`/clusters/${selectedCluster}/teams/${selectedTeam}/inferenceJobs?jobOwner=${jobOwner}&limit=999`)
-      .then(res => {
+      .then((res: { data: any; }) => {
         const { data } = res;
         const _data = index ? allJobs : jobs
         const temp1 = JSON.stringify(_data.map(i => i.jobStatus));
@@ -95,7 +96,7 @@ const CentralReasoning: React.FC = () => {
   const openModal = () => {
     setModalFlag(true);
     axios.get(`/${selectedCluster}/getAllSupportInference`)
-    .then(res => {
+    .then((res: { data: any; }) => {
       const { data } = res;
       setAllSupportInference(data);
       setFramework(data[0].framework);
@@ -105,7 +106,7 @@ const CentralReasoning: React.FC = () => {
 
   const getFrameworkOptions = () => {
     if (allSupportInference) {
-      return allSupportInference.map(i => <MenuItem value={i.framework}>{i.framework}</MenuItem>)
+      return allSupportInference.map((i: { framework: any; }) => <MenuItem value={i.framework}>{i.framework}</MenuItem>)
     } else {
       return null;
     }
@@ -121,7 +122,7 @@ const CentralReasoning: React.FC = () => {
   }
 
   return (
-    <div className="modelList">
+    <div className="centralWrap">
       <Button variant="contained" color="primary" onClick={openModal}>
         New Reasoning
       </Button>

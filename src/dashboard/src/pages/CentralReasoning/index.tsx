@@ -3,7 +3,6 @@ import { Button, Dialog, DialogTitle, DialogContent, DialogActions, CircularProg
   MenuItem, Tabs, Tab } from "@material-ui/core";
 import MaterialTable, { Column, Options } from 'material-table';
 import { renderDate, sortDate, renderId, renderStatus } from '../JobsV2/tableUtils';
-import SelectTree from '../CommonComponents/SelectTree';
 import { useForm } from "react-hook-form";
 import ClusterContext from '../../contexts/Clusters';
 import TeamsContext from '../../contexts/Teams';
@@ -62,7 +61,7 @@ const CentralReasoning: React.FC = () => {
       .then((res: { data: any; }) => {
         const { data } = res;
         const _data = index ? allJobs : jobs
-        const temp1 = JSON.stringify(_data.map(i => i.jobStatus));
+        const temp1 = JSON.stringify(_data.map((i: { jobStatus: any; }) => i.jobStatus));
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
         if (!(temp1 === temp2)) {
           index ? setAllJobs(data) : setJobs(data);
@@ -82,8 +81,8 @@ const CentralReasoning: React.FC = () => {
       ...val,
       framework: framework,
       device: deviceType,
-      image: allSupportInference.find(i => i.framework === framework).image
-    }).then((res) => {
+      image: allSupportInference.find((i: { framework: any; }) => i.framework === framework).image
+    }).then((res: any) => {
       message('success', `Reasoning successfully！`);
       setModalFlag(false);
       index ? setIndex(0) : getData();
@@ -114,7 +113,7 @@ const CentralReasoning: React.FC = () => {
 
   const getDeviceTypeOptions = () => {
     if (framework) {
-      const arr = allSupportInference.find(i => i.framework === framework).device;
+      const arr = allSupportInference.find((i: { framework: any; }) => i.framework === framework).device;
       return arr.map((i: any) => <MenuItem value={i}>{i}</MenuItem>)
     } else {
       return null;

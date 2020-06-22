@@ -682,10 +682,10 @@ def Run(redis_port, target_status):
                 dataHandler = DataHandler()
 
                 if target_status == "queued":
-                    jobs = dataHandler.GetJobList("all", "all", num=None,status="queued,scheduling,running") + dataHandler.GetInferenceJobList("all", "all", num=None,status="queued,scheduling,running")
+                    jobs = dataHandler.GetJobList("all", "all", num=None,status="queued,scheduling,running")
                     TakeJobActions(dataHandler, redis_conn, launcher, jobs)
                 else:
-                    jobs = dataHandler.GetJobList("all", "all", num=None,status=target_status) + dataHandler.GetInferenceJobList("all", "all", num=None,status=target_status)
+                    jobs = dataHandler.GetJobList("all", "all", num=None,status=target_status)
                     logger.info("Updating status for %d %s jobs",
                             len(jobs), target_status)
 

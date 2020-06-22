@@ -376,7 +376,7 @@ def PostInferenceJob(jobParamsJsonStr):
     dataHandler = DataHandler()
 
     if "error" not in ret:
-        if dataHandler.AddInferenceJob(jobParams):
+        if dataHandler.AddJob(jobParams):
             ret["jobId"] = jobParams["jobId"]
             if "jobPriority" in jobParams:
                 priority = DEFAULT_JOB_PRIORITY
@@ -393,7 +393,8 @@ def PostInferenceJob(jobParamsJsonStr):
 
                 job_priorities = {jobParams["jobId"]: priority}
                 dataHandler.update_job_priority(job_priorities)
-
+            if "jobtrainingtype" in jobParams and jobParams["jobtrainingtype"] == "InferenceJob":
+                dataHandler.AddInferenceJob(jobParams)
         else:
             ret["error"] = "Cannot schedule job. Cannot add job into database."
 

@@ -33,8 +33,8 @@ const CentralReasoning: React.FC = () => {
   const { kill } = useActions(selectedCluster);
   const actions = [kill];
   const _renderId = (job: any) => renderId(job, 0);
-  const _renderURL = (job: any) => <p title={job['inference-url']} style={{maxWidth: 300}}>{job['inference-url']}</p>;
-  const _renderPath = (job: any) => <p title={job.jobParams.model_base_path} style={{maxWidth: 250}}>{job.jobParams.model_base_path}</p>;
+  const _renderURL = (job: any) => <p title={job['inference-url'] || '--'} style={{maxWidth: 300}}>{job['inference-url'] || '--'}</p>;
+  const _renderPath = (job: any) => <p title={job.jobParams.model_base_path || '--'} style={{maxWidth: 250}}>{job.jobParams.model_base_path || '--'}</p>;
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'Id', type: 'string', field: 'jobId',
     render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},

@@ -408,7 +408,7 @@ def GetAllSupportInference():
         if "inference" in config:
             for framework, items in config["inference"].items():
                 for one in items:
-                    ret.append({"framework":framework+"-"+str(one["version"]),"image":one["image"],"device":one["device"]})
+                    ret.append({"framework":framework+"-"+str(one["version"]),"image":one["image"],"device":[one["device"]] if "," not in one["device"] else one["device"].split(",")})
     except Exception as e:
         logger.error('Exception: %s', str(e))
     return ret
@@ -1075,6 +1075,9 @@ def GetEndpoints(userName, jobId):
                                 logger.error(e)
                         elif epItem["name"] == "inference-url":
                             epItem["modelname"] = endpoint["modelname"]
+                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
+                        elif epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
+                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
 
                     ret.append(epItem)
     except Exception as e:

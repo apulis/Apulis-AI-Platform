@@ -100,7 +100,9 @@ class PostInferenceJob:
             "userId": fields.Integer(example="12345678"),
             "userName":fields.String,
             "jobName":fields.String,
-            "model_base_path": fields.String
+            "model_base_path": fields.String,
+            "framework": fields.String,
+            "device": fields.String,
         }
 
 class ListJobResponse(fields.Raw):

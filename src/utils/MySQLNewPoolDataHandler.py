@@ -1010,10 +1010,14 @@ class DataHandler(object):
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
-                endpoints = json.loads(record["endpoints"]).values()
-                if len(endpoints)==1:
-                    endpoint = endpoints[0]
-                    record["inference-url"] = "http://"+config["webportal_node"].split(config["domain"])[0]+config["domain"]+":"+ str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])+"/v1/models/"+endpoint["modelname"]+":predict"
+                endpoints = record["endpoints"]
+                if endpoints:
+                    endpoints = json.loads(record["endpoints"]).values()
+                    if len(endpoints)==1:
+                        endpoint = endpoints[0]
+                        if endpoint["status"]=="running":
+                            record["inference-url"] = "http://"+config["webportal_node"].split(config["domain"])[0]+config["domain"]+"/endpoints/v2/"+ \
+                                                      base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
 
                 if record["jobStatus"] == "running":
                     if record["jobType"] == "training":

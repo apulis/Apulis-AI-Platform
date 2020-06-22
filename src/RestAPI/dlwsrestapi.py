@@ -379,12 +379,33 @@ class PostJob(Resource):
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
         return resp
-##
-## Actually setup the Api resource routing here
-##
+
 api.add_resource(PostJob, '/PostJob')
 
+class PostInferenceJob(Resource):
+    @api.expect(api.model("PostInferenceJob", model.PostInferenceJob(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Post PostInferenceJob Job")
+        logger.info(params)
 
+        ret = {}
+        output = JobRestAPIUtils.PostInferenceJob(json.dumps(params))
+
+        if "jobId" in output:
+            ret["jobId"] = output["jobId"]
+        else:
+            if "error" in output:
+                ret["error"] = "Cannot create job!" + output["error"]
+            else:
+                ret["error"] = "Cannot create job!"
+        logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(PostInferenceJob, '/PostInferenceJob')
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):
@@ -501,6 +522,32 @@ class GetAllDevice(Resource):
         resp.headers["dataType"] = "json"
         return resp
 api.add_resource(GetAllDevice, '/GetAllDevice')
+
+class GetAllSupportInference(Resource):
+    def get(self):
+        result = JobRestAPIUtils.GetAllSupportInference()
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(GetAllSupportInference, '/GetAllSupportInference')
+
+class ListInferenceJob(Resource):
+    @api.doc(params=model.ListInferenceJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],args["num"])
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+        resp = generate_response(jobs)
+        return resp
+api.add_resource(ListInferenceJob, '/ListInferenceJob')
 
 class CountJobByStatus(Resource):
     @api.doc(params=model.CountJobByStatus.params)

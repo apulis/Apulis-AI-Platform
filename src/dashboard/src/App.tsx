@@ -6,6 +6,9 @@ import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
 import * as H from 'history';
 import { ThemeProvider } from "@material-ui/styles";
+
+import i18n from "i18next";
+import { useTranslation, initReactI18next } from "react-i18next";
 import initAxios from './utils/init-axios'
 import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
@@ -21,6 +24,9 @@ import { SnackbarProvider, useSnackbar, VariantType } from 'notistack';
 import './App.less';
 import AuthzRoute from './components/AuthzRoute';
 import ROUTER from './router.config';
+
+import en from './locale/en-US';
+import cn from './locale/zh-CN';
 
 const theme = createMuiTheme();
 
@@ -40,6 +46,31 @@ interface BootstrapProps {
   userGroupPath?: string;
   id?: number;
 }
+
+const lng = localStorage.language || navigator.language;
+
+i18n
+  .use(initReactI18next) // passes i18n down to react-i18next
+  .init({
+    resources: {
+      "en-US": {
+        translation: {
+          en
+        }
+      },
+      "zh-CN": {
+        translation: {
+          cn
+        }
+      }
+    },
+    lng: lng,
+    fallbackLng: lng,
+
+    interpolation: {
+      escapeValue: false
+    }
+  });
 
 const Loading = (
   <Box flex={1} display="flex" alignItems="center" justifyContent="center">

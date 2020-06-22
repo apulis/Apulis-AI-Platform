@@ -252,7 +252,9 @@ class DataHandler(object):
                     PRIMARY KEY (`id`),
                     CONSTRAINT `hierarchy` FOREIGN KEY (`parent`) REFERENCES `%s` (`vcName`)
                 )
-                """ % (self.vctablename, self.vctablename)
+                AS SELECT \'%s\' AS vcName, NULL AS parent, '{"%s":%s}' AS quota, '{}' AS metadata;
+                """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'], gpu_type,
+                       gpu_count_per_node * worker_node_num)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)

@@ -310,7 +310,7 @@ jwt:
 
 # for github private project 
 dockers:
-  users:
+  user:
   password: 
 ```
 

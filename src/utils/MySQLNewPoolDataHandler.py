@@ -1403,11 +1403,16 @@ class DataHandler(object):
     def GetUsers(self):
         ret = []
         try:
-            query = "SELECT `identityName`,`uid` FROM `%s`" % (self.identitytablename)
-            with MysqlConn() as conn:
-                rets = conn.select_many(query)
-            for one in rets:
-                ret.append((one["identityName"],one["uid"]))
+            # query = "SELECT `identityName`,`uid` FROM `%s`" % (self.identitytablename)
+            # with MysqlConn() as conn:
+            #     rets = conn.select_many(query)
+            # for one in rets:
+            #     ret.append((one["identityName"],one["uid"]))
+            res = requests.get(url=config["usermanagerapi"] + "/open/allUsers",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+            if res.status_code == 200:
+                response = json.loads(res.content.decode("utf-8"))["list"]
+                for one in response:
+                    ret.append((one["userName"],one["uid"]))
         except Exception as e:
             logger.exception('GetUsers Exception: %s', str(e))
         return ret

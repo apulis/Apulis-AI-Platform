@@ -81,7 +81,12 @@ const Jobs: FunctionComponent = () => {
   const history = useHistory();
   const { clusterId } = useParams<RouteParams>();
   const cluster = useMemo(() => {
-    return clusters.filter(cluster => cluster.id === clusterId)[0]
+    const currentCluster = clusters.find(cluster => cluster.id === clusterId);
+    if (currentCluster) {
+      return currentCluster;
+    } else {
+      return clusters[0];
+    }
   }, [clusters, clusterId]);
   const onClusterChange = useCallback((cluster: any) => {
     history.replace(`/jobs-v2/${cluster.id}`)

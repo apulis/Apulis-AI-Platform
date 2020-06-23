@@ -71,6 +71,7 @@ def set_user_directory():
         if not os.path.exists(sshkeypath):
             logger.info("Creating sshkey for user %s" % (username))
             os.system("mkdir -p "+os.path.dirname(sshkeypath))
+            os.system("chmod 755 "+os.path.dirname(sshkeypath))
             os.system("ssh-keygen -t rsa -b 4096 -f %s -P ''" % sshkeypath)
             os.system("chown -R "+str(userid)+":"+"500000513 "+userpath)
             os.system("chmod 700 -R "+os.path.dirname(sshkeypath))

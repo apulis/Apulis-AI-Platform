@@ -477,6 +477,7 @@ def parse_node_item(node,
         gauge_node_device_used,
         gauge_node_device_reserved,
         gauge_node_device_total,
+        gauge_node_device_allocatable,
 
         pods_info, 
         cluster_gpu_info,
@@ -580,7 +581,7 @@ def parse_node_item(node,
         else:
             pass
 
-        logger.debug("used_processor[%d], preemptable_processor[%d]" % (used_processor, preemptable_processor))
+        logger.info("used_processor[%d], preemptable_processor[%d]" % (used_processor, preemptable_processor))
 
         if walk_json_field_safe(node, "spec", "unschedulable") != True and ready == "true":
 
@@ -592,6 +593,7 @@ def parse_node_item(node,
             gauge_node_device_avail.add_metric([ip,deviceType,processor_resource_mark], available)
             gauge_node_device_used.add_metric([ip,deviceType,processor_resource_mark], total_used_processor)
             gauge_node_device_reserved.add_metric([ip,deviceType,processor_resource_mark], reserved)
+            gauge_node_device_allocatable.add_metric([ip,deviceType,processor_resource_mark], device_allocatable)
 
             # dispatch gpu/npu info to prometheus by node ip
             if ResourceMark.is_gpu_resource(processor_resource_mark):
@@ -619,6 +621,7 @@ def parse_node_item(node,
             gauge_node_device_avail.add_metric([ip, deviceType,processor_resource_mark], 0)
             gauge_node_device_used.add_metric([ip, deviceType,processor_resource_mark], 0)
             gauge_node_device_reserved.add_metric([ip, deviceType,processor_resource_mark], 0)
+            gauge_node_device_allocatable.add_metric([ip, deviceType, processor_resource_mark], 0)
 
             logger.debug("node is unschedulable. ip[%s]" % (ip))
 
@@ -648,6 +651,7 @@ def process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_
     gauge_node_device_used = gen_gauge_node_device_used()
     gauge_node_device_reserved = gen_gauge_node_device_reserved()
     gauge_node_device_total = gen_gauge_node_device_total()
+    gauge_node_device_allocatable = gen_k8s_node_device_allocatable()
 
     def _map_fn(item):
         return catch_exception(parse_node_item,
@@ -660,6 +664,7 @@ def process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_
                 gauge_node_device_used,
                 gauge_node_device_reserved,
                 gauge_node_device_total,
+                gauge_node_device_allocatable,
 
                 pods_info,
                 cluster_gpu_info,
@@ -667,7 +672,7 @@ def process_nodes_status(nodes_object, pods_info, cluster_gpu_info, cluster_npu_
 
     list(map(_map_fn, nodes_object["items"]))
 
-    return [pai_node_gauge,gauge_node_device_avail,gauge_node_device_used,gauge_node_device_reserved,gauge_node_device_total]
+    return [pai_node_gauge,gauge_node_device_avail,gauge_node_device_used,gauge_node_device_reserved,gauge_node_device_total,gauge_node_device_allocatable]
 
 
 def process_vc_quota(vc_object):
@@ -820,10 +825,10 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                 else:
                     if deviceStr == "npu.huawei.com/NPU":
                         available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
-                        preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
+                        preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0])) if ratio_sum[deviceStr][0]!=0 else 0
                     else:
                         available = int(math.floor(cluster_gpu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
-                        preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
+                        preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0])) if ratio_sum[deviceStr][0]!=0 else 0
                 total_used, non_preemptable_used = vc_used
                 vc_avail_gauge.add_metric(labels, available)
                 vc_preemptive_avail_gauge.add_metric(labels, preemptive_available)

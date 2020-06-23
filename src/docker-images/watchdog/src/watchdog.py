@@ -562,6 +562,7 @@ def parse_node_item(node,
         # compute npu/gpu resouces used by all pods
         # used_processor = sum(pod_info.used_processor)
         # available = total - used_processor
+        logger.info(pods_info)
         if pods_info.get(ip) is not None:
             for pod in pods_info[ip]:
 
@@ -577,7 +578,8 @@ def parse_node_item(node,
                 else:
                     used_processor += pod.used_processor
 
-                total_used_processor += used_processor
+            total_used_processor += used_processor
+
         else:
             pass
 
@@ -926,7 +928,12 @@ def get_nodes_info(histogram):
 
 def request_with_histogram(url, histogram, ca_path, headers):
     with histogram.time():
-        return requests.get(url, headers = headers, verify = ca_path).json()
+        try:
+            res = requests.get(url, headers=headers, verify=ca_path)
+            return res.json()
+        except Exception as e:
+            logger.error(res.content)
+            raise
 
 def try_remove_old_prom_file(path):
     """ try to remove old prom file, since old prom file are exposed by node-exporter,

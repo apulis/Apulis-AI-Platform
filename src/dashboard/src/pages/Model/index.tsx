@@ -48,8 +48,6 @@ const Model: React.FC = () => {
     type === 1 ? setModalFlag1(false) : setModalFlag2(false);
   }
 
- 
-
   const onTypeChange = (event: React.ChangeEvent<{}>, value: string) => {
     setType(value);
   };
@@ -64,17 +62,16 @@ const Model: React.FC = () => {
 
   return (
     <div className="modelList">
+      <div style={{ marginBottom: 20 }}>
+        <Button variant="contained" color="primary" onClick={() => setModalFlag1(true)}>
+          New Transform
+        </Button>
+        <Button variant="contained" style={{ margin: '0 20px' }} color="primary" onClick={() => setModalFlag2(true)}>
+          Settings
+        </Button>
+      </div>
       <MaterialTable
-        title={
-        <>
-          <Button variant="contained" color="primary" onClick={() => setModalFlag1(true)}>
-            New Transform
-          </Button>
-          <Button variant="contained" style={{ margin: '0 20px' }} color="primary" onClick={() => setModalFlag2(true)}>
-            Settings
-          </Button>
-        </>
-        }
+        title=""
         columns={columns}
         data={test}
         options={options}
@@ -155,7 +152,7 @@ const Model: React.FC = () => {
           <DialogActions>
             <Button onClick={() => onCloseDialog(2)} color="primary" variant="outlined">Cancel</Button>
             <Button type="submit" color="primary" disabled={btnLoading} variant="contained" style={{ marginLeft: 8 }}>
-              {btnLoading && <CircularProgress size={20}/>}Submit
+              {btnLoading && <CircularProgress size={20}/>}Svae
             </Button>
           </DialogActions>
         </form>

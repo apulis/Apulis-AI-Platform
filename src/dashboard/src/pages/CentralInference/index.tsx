@@ -29,8 +29,7 @@ const CentralInference: React.FC = () => {
   const { currentRole = [], userName } = useContext(AuthContext);
   const isAdmin = currentRole.includes('System Admin');
   const { handleSubmit, register, getValues, errors, setValue, clearError, setError } = useForm({ mode: "onBlur" });
-  const { kill } = useActions(selectedCluster);
-  const actions = [kill];
+  const { kill } = useActions(selectedCluster, true);
   // const _renderId = (job: any) => renderId(job, 0);
   const _renderURL = (job: any) => <p title={job['inference-url'] || '--'}>{job['inference-url'] || '--'}</p>;
   const _renderPath = (job: any) => <p title={job.jobParams.model_base_path || '--'} style={{maxWidth: 300}}>{job.jobParams.model_base_path || '--'}</p>;
@@ -63,11 +62,13 @@ const CentralInference: React.FC = () => {
         const _data = index ? allJobs : jobs
         const temp1 = JSON.stringify(_data.map((i: { jobStatus: any; }) => i.jobStatus));
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
-        if (!(temp1 === temp2)) {
+        const temp3 = JSON.stringify(_data.map(i => i['inference-url']));
+        const temp4 = JSON.stringify(data?.map((i: { [x: string]: any; }) => i['inference-url']));
+        if (!(temp1 === temp2) || !(temp3 === temp4)) {
           index ? setAllJobs(data) : setJobs(data);
         }
       }, () => {
-        message('error', `Failed to fetch jobs from cluster: ${selectedCluster}`);
+        message('error', `Failed to fetch inferences from cluster: ${selectedCluster}`);
       })
   }
 
@@ -141,7 +142,7 @@ const CentralInference: React.FC = () => {
           columns={columns}
           data={jobs}
           options={options}
-          actions={actions}
+          actions={[kill]}
           onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
         />}
         {index === 1 && isAdmin && <MaterialTable
@@ -149,7 +150,7 @@ const CentralInference: React.FC = () => {
           columns={columns}
           data={allJobs}
           options={options}
-          actions={actions}
+          actions={[kill]}
           onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
         />}
       </SwipeableViews>

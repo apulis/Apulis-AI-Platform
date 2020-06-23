@@ -55,12 +55,12 @@ i18n
     resources: {
       "en-US": {
         translation: {
-          en
+          ...en
         }
       },
       "zh-CN": {
         translation: {
-          cn
+          ...cn
         }
       }
     },

@@ -7757,8 +7757,8 @@ hyphenate-style-name@^1.0.2, hyphenate-style-name@^1.0.3:
 
 i18next@^19.5.1:
   version "19.5.1"
-  resolved "https://registry.yarnpkg.com/i18next/-/i18next-19.5.1.tgz#d5fdc7b2dafd1a183f2188d65dfdb78ef9f35264"
-  integrity sha512-e6lGMiTyb51F9PPInUTTDg8YbwcWXZYX18svaX2NUUWEphJKP7oG5HMlbZ+K84AXqw4AeBnwRrOlS9ickqcCBg==
+  resolved "https://registry.npm.taobao.org/i18next/download/i18next-19.5.1.tgz#d5fdc7b2dafd1a183f2188d65dfdb78ef9f35264"
+  integrity sha1-1f3Hstr9Ghg/IYjWXf23jvnzUmQ=
   dependencies:
     "@babel/runtime" "^7.10.1"
 
@@ -13183,8 +13183,8 @@ react-hook-form@^5.6.0:
 
 react-i18next@^11.7.0:
   version "11.7.0"
-  resolved "https://registry.yarnpkg.com/react-i18next/-/react-i18next-11.7.0.tgz#f27c4c237a274e007a48ac1210db83e33719908b"
-  integrity sha512-8tvVkpuxQlubcszZON+jmoCgiA9gCZ74OAYli9KChPhETtq8pJsANBTe9KRLRLmX3ubumgvidURWr0VvKz1tww==
+  resolved "https://registry.npm.taobao.org/react-i18next/download/react-i18next-11.7.0.tgz#f27c4c237a274e007a48ac1210db83e33719908b"
+  integrity sha1-8nxMI3onTgB6SKwSENuD4zcZkIs=
   dependencies:
     "@babel/runtime" "^7.3.1"
     html-parse-stringify2 "2.0.1"

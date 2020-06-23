@@ -92,8 +92,8 @@ const NavigationList: FC = () => {
         </LinkListItem>
       </AuthzHOC> */}
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
-        <LinkListItem to="/centralInfererence">
-          <ListItemText>Central Infererence</ListItemText>
+        <LinkListItem to="/centralInference">
+          <ListItemText>Central Inference</ListItemText>
         </LinkListItem>
       </AuthzHOC>
     </List>

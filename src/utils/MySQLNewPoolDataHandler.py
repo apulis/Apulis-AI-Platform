@@ -1410,7 +1410,7 @@ class DataHandler(object):
             #     ret.append((one["identityName"],one["uid"]))
             res = requests.get(url=config["usermanagerapi"] + "/open/allUsers",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
             if res.status_code == 200:
-                response = json.loads(res.content.decode("utf-8"))
+                response = json.loads(res.content.decode("utf-8"))["list"]
                 for one in response:
                     ret.append((one["userName"],one["uid"]))
         except Exception as e:

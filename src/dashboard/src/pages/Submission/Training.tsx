@@ -889,7 +889,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={4} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
-                    label="jupyter"
+                    label="Jupyter"
                     checked={ipython}
                     onChange={(e, checked) => setIpython(checked)}
                   />
@@ -897,7 +897,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={4} container justify="center" className="icon-grid">
                   <FormControlLabel
                     control={<Checkbox />}
-                    label="Tensorboard"
+                    label="TensorBoard"
                     checked={tensorboard}
                     onChange={(e, checked) => setTensorboard(checked)}
                   />
@@ -906,7 +906,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 {iconInfoShow && <Grid item xs={12} container justify="flex-end">
                   <Chip
                     icon={<Info/>}
-                    label="Tensorboard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
+                    label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
                   />
                 </Grid>}
               </Grid>

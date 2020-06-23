@@ -14,7 +14,7 @@ import SwipeableViews from 'react-swipeable-views';
 import AuthContext from '../../contexts/Auth';
 import useInterval from '../../hooks/useInterval';
 
-const CentralInfererence: React.FC = () => {
+const CentralInference: React.FC = () => {
   const { selectedCluster, availbleGpu } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);
@@ -37,7 +37,7 @@ const CentralInfererence: React.FC = () => {
   const columns = useMemo<Array<Column<any>>>(() => [
     // { title: 'Id', type: 'string', field: 'jobId',
     // render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Infererence Name', type: 'string', field: 'jobName', sorting: false},
+    { title: 'Inference Name', type: 'string', field: 'jobName', sorting: false},
     { title: 'Username', type: 'string', field: 'userName'},
     { title: 'Path', type: 'string', field: 'jobParams.model_base_path', sorting: false, render: _renderPath, cellStyle: {maxWidth: 300} },
     { title: 'Framework', type: 'string', field: 'jobParams.framework', sorting: false },
@@ -83,11 +83,11 @@ const CentralInfererence: React.FC = () => {
       device: deviceType,
       image: allSupportInference.find((i: { framework: any; }) => i.framework === framework).image
     }).then((res: any) => {
-      message('success', `Infererence successfully！`);
+      message('success', `Inference successfully！`);
       setModalFlag(false);
       index ? setIndex(0) : getData();
     },  () => {
-      message('error', `Infererence failed！`);
+      message('error', `Inference failed！`);
     })
     setBtnLoading(false);
   }
@@ -123,7 +123,7 @@ const CentralInfererence: React.FC = () => {
   return (
     <div className="centralWrap">
       <Button variant="contained" color="primary" onClick={openModal}>
-        New Infererence
+        New Inference
       </Button>
       <Tabs
         value={index}
@@ -132,12 +132,12 @@ const CentralInfererence: React.FC = () => {
         textColor="primary"
         indicatorColor="primary"
       >
-        <Tab label="My Infererence"/>
-        <Tab label="All Infererence"/>
+        <Tab label="My Inference"/>
+        <Tab label="All Inference"/>
       </Tabs>
       <SwipeableViews index={index}>
         {index === 0 && <MaterialTable
-          title="My Infererence"
+          title="My Inference"
           columns={columns}
           data={jobs}
           options={options}
@@ -145,7 +145,7 @@ const CentralInfererence: React.FC = () => {
           onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
         />}
         {index === 1 && isAdmin && <MaterialTable
-          title="All Infererence"
+          title="All Inference"
           columns={columns}
           data={allJobs}
           options={options}
@@ -155,11 +155,11 @@ const CentralInfererence: React.FC = () => {
       </SwipeableViews>
       {modalFlag && 
       <Dialog open={modalFlag} disableBackdropClick fullWidth>
-        <DialogTitle>New Infererence</DialogTitle>
+        <DialogTitle>New Inference</DialogTitle>
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogContent dividers>
             <TextField
-              label="Infererence Name"
+              label="Inference Name"
               name="jobName"
               fullWidth
               variant="filled"
@@ -169,7 +169,7 @@ const CentralInfererence: React.FC = () => {
               inputProps={{ maxLength: 20 }}
               style={{ margin: '10px 0' }}
               inputRef={register({
-                required: 'Infererence Name is required！',
+                required: 'Inference Name is required！',
                 pattern: {
                   value: NameReg,
                   message: NameErrorText
@@ -227,4 +227,4 @@ const CentralInfererence: React.FC = () => {
   ); 
 };
 
-export default CentralInfererence;
+export default CentralInference;

@@ -803,6 +803,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       value={workers}
                       name="workers"
                       onChange={e => setWorkers(Number(e.target.value))}
+                      InputProps={{ inputProps: { min: 0 } }}
                       // error={Boolean(errors.workers)}
                       // helperText={errors.workers ? NpuNumMsg : ''}
                       // inputRef={register({

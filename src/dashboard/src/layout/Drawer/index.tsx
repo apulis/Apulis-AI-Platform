@@ -86,11 +86,11 @@ const NavigationList: FC = () => {
           <ListItemText>Virtual Cluster</ListItemText>
         </LinkListItem>
       </AuthzHOC>
-      {/* <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/model">
           <ListItemText>Model</ListItemText>
         </LinkListItem>
-      </AuthzHOC> */}
+      </AuthzHOC>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/centralReasoning">
           <ListItemText>Central Reasoning</ListItemText>

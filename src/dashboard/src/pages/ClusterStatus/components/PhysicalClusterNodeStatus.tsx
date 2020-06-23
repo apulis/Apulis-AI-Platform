@@ -35,6 +35,7 @@ const sumDeviceTypes = (obj: any) => {
 }
 
 export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const {nodeStatus} = props;
   // console.log('nodeStatus', nodeStatus)
@@ -44,14 +45,14 @@ export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
         nodeStatus ?  <MaterialTable
           title=""
           columns={[
-          {title: 'Node Name', field: 'name'},
-            {title: 'Node IP', field: 'InternalIP'},
-            {title: 'Device Type', field: '', render: (rowData: any) => <span>{sumDeviceTypes(rowData['gpu_capacity'] || '-')}</span>},
-            {title: 'Number of Device', field: 'gpu_capacity', render: (rowData: any) => <span>{checkObjIsEmpty(rowData['gpu_capacity']) ? 0 :  (Number)(sumValues(rowData['gpu_capacity']))}</span>, customSort: (a: any, b: any) => { return sumValues(a['gpu_capacity']) - sumValues(b['gpu_capacity'])}  },
-            {title: 'Used', field: '', render: (rowData: any) => <span>{checkObjIsEmpty(rowData['gpu_used']) ? 0 :  (Number)(sumValues(rowData['gpu_used']))}</span>, customSort: (a: any, b: any) => { return sumValues(a['gpu_used']) - sumValues(b['gpu_used'])}},
-            {title: 'Preemptible Used', field: '', render: (rowData: any) => <span>{checkObjIsEmpty(rowData['gpu_preemptable_used']) ? 0 :  (Number)(sumValues(rowData['gpu_preemptable_used']))}</span>, customSort: (a: any, b: any) => { return sumValues(a['gpu_preemptable_used']) - sumValues(b['gpu_preemptable_used'])}},
-            {title: 'Available', field: '', render: (rowData: any) => <span>{(Number)(sumValues(rowData['gpu_allocatable'])) - (Number)(sumValues(rowData['gpu_used']))}</span>, customSort: (a: any, b: any) => { return ((Number)(sumValues(a['gpu_allocatable'])) - (Number)(sumValues(a['gpu_used']))) - (sumValues(b['gpu_allocatable']) - (Number)(sumValues(b['gpu_used'])) )} },
-            {title: 'Status', field: '', render: (rowData: any) => <>
+          {title: t('NodeName'), field: 'name'},
+            {title: t('NodeIP'), field: 'InternalIP'},
+            {title: t('DeviceType'), field: '', render: (rowData: any) => <span>{sumDeviceTypes(rowData['gpu_capacity'] || '-')}</span>},
+            {title: t('NumberofDevice'), field: 'gpu_capacity', render: (rowData: any) => <span>{checkObjIsEmpty(rowData['gpu_capacity']) ? 0 :  (Number)(sumValues(rowData['gpu_capacity']))}</span>, customSort: (a: any, b: any) => { return sumValues(a['gpu_capacity']) - sumValues(b['gpu_capacity'])}  },
+            {title: t('Used'), field: '', render: (rowData: any) => <span>{checkObjIsEmpty(rowData['gpu_used']) ? 0 :  (Number)(sumValues(rowData['gpu_used']))}</span>, customSort: (a: any, b: any) => { return sumValues(a['gpu_used']) - sumValues(b['gpu_used'])}},
+            {title: t('PreemptibleUsed'), field: '', render: (rowData: any) => <span>{checkObjIsEmpty(rowData['gpu_preemptable_used']) ? 0 :  (Number)(sumValues(rowData['gpu_preemptable_used']))}</span>, customSort: (a: any, b: any) => { return sumValues(a['gpu_preemptable_used']) - sumValues(b['gpu_preemptable_used'])}},
+            {title: t('Available'), field: '', render: (rowData: any) => <span>{(Number)(sumValues(rowData['gpu_allocatable'])) - (Number)(sumValues(rowData['gpu_used']))}</span>, customSort: (a: any, b: any) => { return ((Number)(sumValues(a['gpu_allocatable'])) - (Number)(sumValues(a['gpu_used']))) - (sumValues(b['gpu_allocatable']) - (Number)(sumValues(b['gpu_used'])) )} },
+            {title: t('Status'), field: '', render: (rowData: any) => <>
                  <Tooltip title={rowData['unschedulable'] ? "unschedulable" : "ok"}>
                    <IconButton color={!rowData['unschedulable'] ? "primary" : "secondary"} size="small">
                      <SvgIcon>

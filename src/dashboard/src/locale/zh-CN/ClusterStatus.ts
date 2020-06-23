@@ -29,5 +29,6 @@ export default {
     'PhysicalClusterNodeStatus': '物理集群节点状态',
     'NodeName': '节点名称',
     'NodeIP': '节点IP',
-    'Pods': 'Pods'    
+    'Pods': 'Pods',
+    'Status': '状态' 
   }

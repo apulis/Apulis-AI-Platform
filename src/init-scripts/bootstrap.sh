@@ -45,7 +45,7 @@ fi
 echo "=========================================================
             begin to create user and setup env
 ========================================================="
-bash ${SCRIPT_DIR}/init_user.sh # &>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
 echo "=========================================================
             create user done!
 ========================================================="

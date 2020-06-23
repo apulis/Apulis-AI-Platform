@@ -82,6 +82,19 @@ def set_user_directory():
             os.system("chown -R "+str(userid)+":"+"500000513 "+authorized_keyspath)
             os.system("chmod 644 "+authorized_keyspath)
 
+        # jobmanager will mount path as diractory
+        if os.path.isdir(sshkeypath):
+            logger.error("sshkey for user %s is dir" % (username))
+            os.system("rm -rf "+sshkeypath)
+            os.system("rm -rf "+pubkeypath)
+            os.system("rm -rf "+authorized_keyspath)
+
+        if userid!=os.stat(sshkeypath).st_uid:
+            logger.error("wrong uid for user %s" % (username))
+            os.system("rm -rf " + sshkeypath)
+            os.system("rm -rf " + pubkeypath)
+            os.system("rm -rf " + authorized_keyspath)
+
 def Run():
     register_stack_trace_dump()
     create_log()

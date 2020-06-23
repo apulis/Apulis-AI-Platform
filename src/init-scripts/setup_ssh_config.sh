@@ -25,7 +25,6 @@ host_list="${ps_host_list} ${worker_host_list}"
 
 # generate ~/.ssh/config
 SSH_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/config
-IB_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/ib_config
 NPU_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/npu_config
 
 >${SSH_CONFIG_FILE}
@@ -71,13 +70,6 @@ Host ${host}
 
 EOF
 
-# generate ib related info
-if [ ! -z ib_ip ] && [ "$role" = "worker" ]; then
-    cat >> ${IB_CONFIG_FILE} << EOF
-${ib_ip} slots=${DLWS_NUM_GPU_PER_WORKER}
-EOF
-
-fi
     # also add entry to /etc/hosts
     echo -e "${ip}\t${host}" >> /etc/hosts
 done
@@ -175,24 +167,26 @@ then
   ib_ip=`ifconfig |grep ib -A 1|grep inet |awk '{print $2}'`
   if ifconfig |grep ib -A 1|grep inet ;
   then
-    if [ ! -f /home/${DLWS_USER_NAME}/ib_config ];then touch /home/${DLWS_USER_NAME}/ib_config;fi
-    if [ ! -f /home/${DLWS_USER_NAME}/.hosts ];then touch /home/${DLWS_USER_NAME}/.hosts;fi
-    if ! cat /home/${DLWS_USER_NAME}/ib_config |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} ;
+    HOST_CONFIG_FILE=/job/.hosts
+    IB_CONFIG_FILE=/job/ib_config
+    if [ ! -f $IB_CONFIG_FILE ];then touch $IB_CONFIG_FILE;fi
+    if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
+    if ! cat $IB_CONFIG_FILE |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX};
     then
-      echo "ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}" >> /home/${DLWS_USER_NAME}/ib_config
+      echo "ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}" >> $IB_CONFIG_FILE
     else
-      sed "s/#ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}.*/'ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}'/g" -i /home/${DLWS_USER_NAME}/ib_config
+      sed "s/#ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}.*/'ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}'/g" -i $IB_CONFIG_FILE
     fi
-    if ! cat /home/${DLWS_USER_NAME}/.hosts |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} ;
+    if ! cat $HOST_CONFIG_FILE |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} ;
     then
-      echo -e "${ib_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}" >> /home/${DLWS_USER_NAME}/.hosts
+      echo -e "${ib_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}" >> $HOST_CONFIG_FILE
     else
-      sed "s/.*ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/${ib_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/" -i /home/${DLWS_USER_NAME}/.hosts
+      sed "s/.*ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/${ib_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/" -i $HOST_CONFIG_FILE
     fi
   fi
 fi
 
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
-  if [ ! -f /home/${DLWS_USER_NAME}/.hosts ];then touch /home/${DLWS_USER_NAME}/.hosts;fi
-  cat /home/${DLWS_USER_NAME}/.hosts >> /etc/hosts
+  if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
+  cat $HOST_CONFIG_FILE >> /etc/hosts
 fi

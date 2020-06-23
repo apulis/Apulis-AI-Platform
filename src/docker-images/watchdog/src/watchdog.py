@@ -581,7 +581,7 @@ def parse_node_item(node,
         else:
             pass
 
-        logger.debug("used_processor[%d], preemptable_processor[%d]" % (used_processor, preemptable_processor))
+        logger.info("used_processor[%d], preemptable_processor[%d]" % (used_processor, preemptable_processor))
 
         if walk_json_field_safe(node, "spec", "unschedulable") != True and ready == "true":
 

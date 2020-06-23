@@ -66,26 +66,26 @@ const NavigationList: FC = () => {
   return (
     <List component="nav" className={styles.drawerHeader}>
       <LinkListItem to="/home">
-        <ListItemText>{t("Home")}</ListItemText>
+        <ListItemText>{t("layout.Home")}</ListItemText>
       </LinkListItem>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/submission/training">
-          <ListItemText>{t("SubmitTrainingJob")}</ListItemText>
+          <ListItemText>{t("layout.SubmitTrainingJob")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']}>
         <LinkListItem to="/jobs-v2">
-          <ListItemText>{t("ViewandManageJobs")}</ListItemText>
+          <ListItemText>{t("layout.ViewandManageJobs")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
         <LinkListItem to="/cluster-status">
-          <ListItemText>{t("ClusterStatus")}</ListItemText>
+          <ListItemText>{t("layout.ClusterStatus")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={['VIEW_VC', 'MANAGE_VC']}>
         <LinkListItem to="/vc">  
-          <ListItemText>{t("VirtualCluster")}</ListItemText>
+          <ListItemText>{t("layout.VirtualCluster")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
     </List>

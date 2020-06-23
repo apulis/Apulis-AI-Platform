@@ -138,8 +138,10 @@ def start_endpoint(endpoint):
 
     port_name = endpoint["name"]
     if port_name == "ipython":
+        port = base64.b64encode(str(port).encode("utf-8"))
         setup_jupyter_server(user_name, pod_name,podPort,port)
     elif port_name == "tensorboard":
+        port = base64.b64encode(str(port).encode("utf-8"))
         setup_tensorboard(user_name, pod_name,podPort,port)
 
 def create_node_port(endpoint):

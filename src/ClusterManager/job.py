@@ -190,6 +190,10 @@ class Job:
         """Returns pod template."""
         return self._get_template("pod.yaml.template")
 
+    def get_inference_pod_template(self):
+        """Returns pod template."""
+        return self._get_template("inference_pod.yaml.template")
+
     def get_deployment_template(self):
         """Returns deployment template."""
         return self._get_template("deployment.yaml.template")

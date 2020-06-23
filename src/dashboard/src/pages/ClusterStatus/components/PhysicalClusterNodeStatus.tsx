@@ -10,6 +10,7 @@ import {red} from "@material-ui/core/colors";
 import Tooltip from "@material-ui/core/Tooltip";
 import IconButton from "@material-ui/core/IconButton";
 import MaterialTable, {MTableToolbar} from "material-table";
+import { useTranslation } from "react-i18next";
 
 interface PhClusterNSType {
   nodeStatus: any;

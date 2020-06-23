@@ -5,6 +5,7 @@ import {
 } from "@material-ui/core";
 
 import Iframe from "react-iframe";
+import { useTranslation } from "react-i18next";
 
 interface ClusterUsageType {
   showIframe: boolean;

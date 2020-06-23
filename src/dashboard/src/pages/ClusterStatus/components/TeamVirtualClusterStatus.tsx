@@ -17,6 +17,7 @@ import MaterialTable from "material-table";
 import Tooltip from "@material-ui/core/Tooltip";
 import IconButton from "@material-ui/core/IconButton";
 import {red} from "@material-ui/core/colors";
+import { useTranslation } from "react-i18next";
 
 interface TeamVC {
   children?: React.ReactNode;
@@ -49,6 +50,7 @@ const renderData = (data: any) => {
   )
 }
 export const TeamVirtualClusterStatus = (props: TeamVC) => {
+  const { t } = useTranslation();
   const {vcStatus,selectedValue,handleChange, children} = props;
   const hasLen = vcStatus.length > 0 && vcStatus[0];
   const theme = useTheme();
@@ -77,14 +79,14 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
         <MaterialTable
           title=""
           columns={[
-            {title: 'Name', field: 'clusterName', render: (rowData: any)=><div>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
-            {title: 'Device Type', field: 'type'},
-            {title: 'Number of Device', field: 'total'},
-            {title: 'Unschedulable', field: 'unschedulable'},
-            {title: 'Used', field: 'used'},
-            {title: 'Preemptible Used', field: 'preemptibleUsed'},
-            {title: 'Available', field: 'avaliable'},
-            {title: 'Active Jobs', field: 'avaliableJobNum'}
+            {title: t("Name"), field: 'clusterName', render: (rowData: any)=><div>{rowData['clusterName']}</div>, customSort:(a, b) => a['clusterName'].localeCompare(b['clusterName'])},
+            {title: t('DeviceType'), field: 'type'},
+            {title: t('NumberofDevice'), field: 'total'},
+            {title: t('Unschedulable'), field: 'unschedulable'},
+            {title: t('Used'), field: 'used'},
+            {title: t('PreemptibleUsed'), field: 'preemptibleUsed'},
+            {title: t('Available'), field: 'avaliable'},
+            {title: t('ActiveJobs'), field: 'avaliableJobNum'}
           ]}
           data={gpuStatusList || []}
           options={{filtering: false, paging: true, pageSize: gpuStatusList.length < 10 ? gpuStatusList.length : 10, pageSizeOptions: [10], sorting: false}}

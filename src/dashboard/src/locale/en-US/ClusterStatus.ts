@@ -29,5 +29,6 @@ export default {
     'PhysicalClusterNodeStatus': 'Physical Cluster Node Status',
     'NodeName': 'Node Name',
     'NodeIP': 'Node IP',
-    'Pods': 'Pods'
+    'Pods': 'Pods',
+    'Status': 'Status'
   }

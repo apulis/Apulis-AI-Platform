@@ -377,9 +377,9 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         # Retain the old code for reference
         # if jobDescriptionPath is not None and os.path.isfile(jobDescriptionPath):
         #     k8sUtils.kubectl_delete(jobDescriptionPath)
-
-        job_deployer = JobDeployer()
-        job_deployer.delete_job(job["jobId"], force=True)
+        if "enable_jobmanager_debug_mode" not in config or not config["enable_jobmanager_debug_mode"]:
+            job_deployer = JobDeployer()
+            job_deployer.delete_job(job["jobId"], force=True)
 
     elif result == "Unknown" or result == "NotFound":
         if job["jobId"] not in UnusualJobs:
@@ -422,8 +422,9 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                         }
                         conditionFields = {"jobId": job["jobId"]}
                         dataHandler.UpdateJobTextFields(conditionFields, dataFields)
-                        job_deployer = JobDeployer()
-                        job_deployer.delete_job(job["jobId"], force=True)
+                        if "enable_jobmanager_debug_mode" not in config or not config["enable_jobmanager_debug_mode"]:
+                            job_deployer = JobDeployer()
+                            job_deployer.delete_job(job["jobId"], force=True)
                         jump = True
                         break
                 if jump:

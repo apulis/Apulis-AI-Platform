@@ -26,7 +26,7 @@ const KILLABLE_STATUSES = [
 ];
 
 const useActions = (clusterId: string) => {
-  const { familyName, givenName, administrators } = useContext(UserContext);
+  const { userName, administrators } = useContext(UserContext);
   const supportMail = administrators![0];
   const confirm = useConfirm();
   const { enqueueSnackbar } = useSnackbar();
@@ -51,11 +51,11 @@ There is some issue in my job ${window.location.origin}/jobs-v2/${encodeURICompo
 <Issue description by user>
 
 Thanks,
-${givenName} ${familyName}
+ ${userName}
     `.trim();
     const link = `mailto:${supportMail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(link);
-  }, [clusterId, supportMail, familyName, givenName]);
+  }, [clusterId, supportMail]);
 
   const onApprove = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;

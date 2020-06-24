@@ -1,5 +1,5 @@
 import ClusterStatus from './zh-CN/ClusterStatus';
-import VirtualCluster from './en-US/VirtualCluster';
+import VirtualCluster from './zh-CN/VirtualCluster';
 
 export default {
     'Home': '首页',

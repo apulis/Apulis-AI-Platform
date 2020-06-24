@@ -12,7 +12,7 @@ import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 import './index.less';
 import _ from 'lodash';
 import AuthzHOC from '../../components/AuthzHOC';
-import { useTranslation } from "react-i18next";
+import i18next from 'i18next';
 
 const empty = {
   text: '',
@@ -99,7 +99,7 @@ export default class Vc extends React.Component {
       this.setState({
         vcNameValidateObj: {
           error: true,
-          text: vcNameValidateObj.text ? vcNameValidateObj.text : 'vcName is required！'
+          text: vcNameValidateObj.text ? vcNameValidateObj.text : i18next.t('vcName is required！')
         }
       })
       return;
@@ -133,12 +133,16 @@ export default class Vc extends React.Component {
     url = `/${selectedCluster}/${isEdit ? 'updateVc' : 'addVc'}/${vcName}/${quota}/${metadata}`;
     await axios.get(url)
       .then((res) => {
-        message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
+        let msg = `${isEdit ? 'Modified' : 'Added'} successfully！`
+        // message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
+        message('success', i18next.t(msg));
         this.onCloseDialog();
         getTeams();
         this.getVcList();
       }, (e) => {
-        message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
+        let msg = `${isEdit ? 'Modified' : 'Added'} failed！`;
+        // message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
+        message('error', i18next.t(msg));
       })
     this.setState({ btnLoading: false });
   }
@@ -149,12 +153,12 @@ export default class Vc extends React.Component {
     this.setState({ btnLoading: true });
     axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
       .then((res) => {
-        message('success', 'Delete successfully！');
+        message('success', i18next.t('Delete successfully！'));
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();
         this.getVcList();
       }, () => { 
-        message('error', 'Delete failed！');
+        message('error', i18next.t('Delete failed！'));
         this.setState({ btnLoading: false });
       })
   }
@@ -164,7 +168,7 @@ export default class Vc extends React.Component {
     const val = e.target.value;
     const hasNames = vcList.map(i => i.vcName);
     const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
-    const text = !val ? 'vcName is required！' : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
+    const text = !val ? i18next.t('vcName is required！') : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
     this.setState({ 
       vcName: val,
       vcNameValidateObj: {
@@ -199,7 +203,7 @@ export default class Vc extends React.Component {
       return (
         <div className="select-item">
           <TextField
-            label="Type"
+            label={i18next.t("Type")}
             variant="outlined"
             value={m}
             disabled
@@ -207,7 +211,7 @@ export default class Vc extends React.Component {
           />
           <TextField
             type="number"
-            label="Value"
+            label={i18next.t("Value")}
             variant="outlined"
             className="select-value"
             defaultValue={val}
@@ -230,7 +234,8 @@ export default class Vc extends React.Component {
         quotaValidateObj: {
           [m]: {
             error: true,
-            text: `Must be a positive integer from 0 to ${max}`
+            // text: `Must be a positive integer from 0 to ${max}`
+            text: i18next.t('Must be a positive integer from 0 to ${max}').replace('${max}', `${max}`)
           }
         }
       });
@@ -268,7 +273,7 @@ export default class Vc extends React.Component {
     axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
       if (res.data > 0) {
-        message('warning','A VC contains active jobs cannot be modified.');
+        message('warning',i18next.t('A VC contains active jobs cannot be modified'));
         return
       } else {
         callback();
@@ -293,16 +298,16 @@ export default class Vc extends React.Component {
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
           <AuthzHOC needPermission={'MANAGE_VC'}>
-            <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button></div>
+            <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>{i18next.t('ADD')}</Button></div>
           </AuthzHOC>
           <Table style={{ width: '80%', marginTop: 20 }}>
             <TableHead> 
               <TableRow style={{ backgroundColor: '#7583d1' }}>
-                <TableCell style={{ color: '#fff' }}>VcName</TableCell>
-                <TableCell style={{ color: '#fff' }}>quota</TableCell>
+                <TableCell style={{ color: '#fff' }}>{i18next.t('VcName')}</TableCell>
+                <TableCell style={{ color: '#fff' }}>{i18next.t('quota')}</TableCell>
                 {/* <TableCell style={{ color: '#fff' }}>metadata</TableCell> */}
-                <TableCell style={{ color: '#fff' }}>permissions</TableCell>
-                <AuthzHOC needPermission={'MANAGE_VC'}><TableCell style={{ color: '#fff' }}>actions</TableCell></AuthzHOC>
+                <TableCell style={{ color: '#fff' }}>{i18next.t('permissions')}</TableCell>
+                <AuthzHOC needPermission={'MANAGE_VC'}><TableCell style={{ color: '#fff' }}>{i18next.t('actions')}</TableCell></AuthzHOC>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -314,9 +319,9 @@ export default class Vc extends React.Component {
                   <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
                   <AuthzHOC needPermission={'MANAGE_VC'}>
                     <TableCell>
-                      <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
+                      <Button color="primary" onClick={() => this.updateVc(item)}>{i18next.t('Modify')}</Button>
                       <Button color="secondary" disabled={item.vcName === this.context.selectedTeam} 
-                        onClick={() => this.onClickDel(item)}>Delete</Button>
+                        onClick={() => this.onClickDel(item)}>{i18next.t('Delete')}</Button>
                     </TableCell>
                   </AuthzHOC>
                 </TableRow>
@@ -325,11 +330,11 @@ export default class Vc extends React.Component {
           </Table>
           {modifyFlag && 
           <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth>
-            <DialogTitle>{isEdit ? 'Modify' : 'ADD'}</DialogTitle>
+            <DialogTitle>{isEdit ? i18next.t('Modify') : i18next.t('ADD')}</DialogTitle>
             <DialogContent dividers>
               <form>
                 <TextField
-                  label="vcName *"
+                  label={i18next.t("vcName *")}
                   value={vcName}
                   onChange={this.vcNameChange}
                   margin="normal"
@@ -339,29 +344,29 @@ export default class Vc extends React.Component {
                   helperText={vcNameValidateObj.text}
                   inputProps={{ maxLength: 20 }}
                 />
-                <h3>quota</h3>
+                <h3>{i18next.t('quota')}</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}
                 {/* <h3>metadata/user_quota</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)} */}
               </form>
             </DialogContent>
             <DialogActions>
-              <Button onClick={this.onCloseDialog} color="primary" variant="outlined">Cancel</Button>
+              <Button onClick={this.onCloseDialog} color="primary" variant="outlined">{i18next.t('Cancel')}</Button>
               <Button onClick={this.save} color="primary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
-                {btnLoading && <CircularProgress size={20}/>}Save
+                {btnLoading && <CircularProgress size={20}/>}{i18next.t('Save')}
               </Button>
             </DialogActions>
           </Dialog>}
           {deleteModifyFlag && 
           <Dialog open={deleteModifyFlag} maxWidth='xs' fullWidth onClose={() => this.setState({ deleteModifyFlag: false })}>
-            <DialogTitle>Delete</DialogTitle>
+            <DialogTitle>{i18next.t('Delete')}</DialogTitle>
             <DialogContent>
-              <DialogContentText>Are you sure to delete this VC？</DialogContentText>
+              <DialogContentText>{i18next.t('Are you sure to delete this VC?')}</DialogContentText>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">Cancel</Button>
+              <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">{i18next.t('Cancel')}</Button>
               <Button onClick={this.delete} color="secondary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
-                {btnLoading && <CircularProgress size={20}/>}Delete
+                {btnLoading && <CircularProgress size={20}/>}{i18next.t('Delete')}
               </Button>
             </DialogActions>
           </Dialog>}

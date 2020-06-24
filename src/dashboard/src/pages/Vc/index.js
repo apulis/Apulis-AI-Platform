@@ -12,6 +12,7 @@ import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 import './index.less';
 import _ from 'lodash';
 import AuthzHOC from '../../components/AuthzHOC';
+import { useTranslation } from "react-i18next";
 
 const empty = {
   text: '',
@@ -267,7 +268,7 @@ export default class Vc extends React.Component {
     axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
       if (res.data > 0) {
-        message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
+        message('warning','A VC contains active jobs cannot be modified.');
         return
       } else {
         callback();

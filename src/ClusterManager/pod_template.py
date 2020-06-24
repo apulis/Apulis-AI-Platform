@@ -205,6 +205,13 @@ class PodTemplate():
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
 
+            if "gpuStr" not in pod and "gpuType" in pod and pod["gpuType"]:
+                deviceDict = gpuMapping.get(pod["gpuType"])
+                if deviceDict is None:
+                    return None,"wrong device type"
+                else:
+                    pod["gpuStr"] = deviceDict.get("deviceStr")
+
             pod["envs"].append({"name": "DLWS_ROLE_NAME", "value": "inferenceworker"})
             pod["envs"].append({"name": "DLWS_NUM_GPU_PER_WORKER", "value": 0})
 
@@ -212,8 +219,9 @@ class PodTemplate():
             pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
 
             pod["podName"] = job.job_id
-            pod["deployment_replicas"] = params["resourcegpu"]
-            pod["device_per_pod"] = 0
+            # for now,deployment_replicas is o
+            pod["deployment_replicas"] = pod["resourcegpu"]
+            pod["device_per_pod"] = 1
             if "inference_port" not in pod:
                 pod["inference_port"] = 8080
             pod["model_name"] = pod["jobName"]

@@ -20,6 +20,7 @@ const CentralInference: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [jobs, setJobs] = useState<any[]>([]);
   const [allJobs, setAllJobs] = useState<any[]>([]);
+  const [gpuDevice, setGpuDevice] = useState<any[]>([]);
   const [allSupportInference, setAllSupportInference] = useState<any[]>([]);
   const [framework, setFramework] = useState('');
   const [deviceType, setDeviceType] = useState('');
@@ -31,17 +32,22 @@ const CentralInference: React.FC = () => {
     image: [],
     device: []
   });
-  const [allDevice, setAllDevice] = useState({});
+  const [allDevice, setAllDevice] = useState<{
+    [props: string]: {
+      capacity: number,
+      deviceStr: string
+    }
+  }>({});
   const { currentRole = [], userName } = useContext(AuthContext);
   const isAdmin = currentRole.includes('System Admin');
   const { handleSubmit, register, getValues, errors, setValue, clearError, setError } = useForm({ mode: "onBlur" });
   const { kill } = useActions(selectedCluster, true);
-  // const _renderId = (job: any) => renderId(job, 0);
+  const _renderId = (job: any) => renderId(job, 0);
   const _renderURL = (job: any) => <p title={job['inference-url'] || '--'}>{job['inference-url'] || '--'}</p>;
   const _renderPath = (job: any) => <p title={job.jobParams.model_base_path || '--'} style={{maxWidth: 300}}>{job.jobParams.model_base_path || '--'}</p>;
   const columns = useMemo<Array<Column<any>>>(() => [
-    // { title: 'Id', type: 'string', field: 'jobId',
-    // render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
+    { title: 'Id', type: 'string', field: 'jobId',
+    render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Inference Name', type: 'string', field: 'jobName', sorting: false},
     { title: 'Username', type: 'string', field: 'userName'},
     { title: 'Path', type: 'string', field: 'jobParams.model_base_path', sorting: false, render: _renderPath, cellStyle: {maxWidth: 300} },
@@ -96,7 +102,7 @@ const CentralInference: React.FC = () => {
       device: deviceType,
       image: image,
       resourcegpu: 1,
-
+      gpuType: gpuType
     }).then((res: any) => {
       message('success', `Inference successfully！`);
       setModalFlag(false);
@@ -109,14 +115,15 @@ const CentralInference: React.FC = () => {
 
   const openModal = () => {
     setModalFlag(true);
-    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`).then((res: { data: any; }) => {
-      setAllDevice(res.data)
-    });
     axios.get(`/${selectedCluster}/getAllSupportInference`).then((res: { data: any; }) => {
       const { data } = res;
       setAllSupportInference(data);
       setFramework(data[0].framework);
       setDeviceType(data[0].device[0]);
+    });
+    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`).then((res: { data: any; }) => {
+      setAllDevice(res.data);
+      getGpuDevice(res.data);
     });
   }
 
@@ -128,7 +135,7 @@ const CentralInference: React.FC = () => {
   }
 
   const getDeviceTypeOptions = () => {
-    if (framework) {
+    if (framework && selectInference) {
       const arr = selectInference.device;
       return arr.map((i: any) => <MenuItem value={i}>{i}</MenuItem>)
     }
@@ -136,13 +143,25 @@ const CentralInference: React.FC = () => {
   }
 
   const getGpuTypeOptions = () => {
-    if (allDevice && gpuType === 'GPU') {
-      // Object.keys(allDevice).map(i => {
-      //   if (allDevice[i].deviceStr === 'nvidia.com/gpu') return i;
-      // })
-      // return arr.map((i: any) => <MenuItem value={i}>{i}</MenuItem>)
+    if (allDevice && deviceType === 'GPU') {
+      if (gpuDevice.length) {
+        return gpuDevice.map((i: any) => <MenuItem value={i}>{i}</MenuItem>);
+      } else {
+        message('error', `No GPU nodes available！`);
+        setDeviceType('');
+        return null;
+      }
     }
     return null;
+  }
+
+  const getGpuDevice = (data: any) => {
+    let arr: string[] = [];
+    const _data = data ? data : allDevice;
+    Object.keys(_data).forEach(i => {
+      if (_data[i].deviceStr === 'nvidia.com/gpu') arr.push(i);
+    });
+    setGpuDevice(arr);
   }
 
   return (

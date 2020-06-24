@@ -13,13 +13,14 @@ import './index.less';
 import _ from 'lodash';
 import AuthzHOC from '../../components/AuthzHOC';
 import i18next from 'i18next';
+import { withTranslation } from 'react-i18next';
 
 const empty = {
   text: '',
   error: false
 }
 
-export default class Vc extends React.Component {
+class Vc extends React.Component {
   static contextType = ClustersContext
   constructor() {
     super()
@@ -92,6 +93,8 @@ export default class Vc extends React.Component {
   }
 
   save = async () => {
+    const {t} = this.props;
+    const tTip = t('vcName is required！')
     const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj } = this.state;
     const { selectedCluster, getTeams } = this.context;
     let flag = true;
@@ -99,7 +102,7 @@ export default class Vc extends React.Component {
       this.setState({
         vcNameValidateObj: {
           error: true,
-          text: vcNameValidateObj.text ? vcNameValidateObj.text : t('vcName is required！')
+          text: vcNameValidateObj.text ? vcNameValidateObj.text : tTip
         }
       })
       return;
@@ -134,41 +137,43 @@ export default class Vc extends React.Component {
     await axios.get(url)
       .then((res) => {
         let msg = `${isEdit ? 'Modified' : 'Added'} successfully！`
-        // message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
         message('success', t(msg));
         this.onCloseDialog();
         getTeams();
         this.getVcList();
       }, (e) => {
         let msg = `${isEdit ? 'Modified' : 'Added'} failed！`;
-        // message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
         message('error', t(msg));
       })
     this.setState({ btnLoading: false });
   }
 
   delete = () => {
+    const { t } = this.props;
+    const [ tSuccess, tFailed ] = [t('Delete successfully！'), t('Delete failed！')]
     const { selectedCluster, getTeams } = this.context;
     const { vcName } = this.state.delItem;
     this.setState({ btnLoading: true });
     axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
       .then((res) => {
-        message('success', t('Delete successfully！'));
+        message('success', tSuccess);
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();
         this.getVcList();
       }, () => { 
-        message('error', t('Delete failed！'));
+        message('error', tFailed);
         this.setState({ btnLoading: false });
       })
   }
 
   vcNameChange = e => {
+    const { t } = this.props;
+    const tRequired = t('vcName is required！');
     const { vcList } = this.state;
     const val = e.target.value;
     const hasNames = vcList.map(i => i.vcName);
     const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
-    const text = !val ? t('vcName is required！') : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
+    const text = !val ? tRequired : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
     this.setState({ 
       vcName: val,
       vcNameValidateObj: {
@@ -179,6 +184,8 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
+    const { t } = this.props;
+    const tType = t('Type')
     const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem, quotaValidateObj } = this.state;
     return Object.keys(allDevice).map(m => {
       const totalNum = allDevice[m].capacity;
@@ -203,7 +210,7 @@ export default class Vc extends React.Component {
       return (
         <div className="select-item">
           <TextField
-            label={t("Type")}
+            label={tType}
             variant="outlined"
             value={m}
             disabled
@@ -228,14 +235,15 @@ export default class Vc extends React.Component {
   }
 
   onNumValChange = (key, oldVal, m, type, val, max) => {
+    const {t} = this.props;
+    const tTip = t('Must be a positive integer from 0 to ${max}').replace('${max}', `${max}`)
     const _val = Number(val);
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       this.setState({
         quotaValidateObj: {
           [m]: {
             error: true,
-            // text: `Must be a positive integer from 0 to ${max}`
-            text: t('Must be a positive integer from 0 to ${max}').replace('${max}', `${max}`)
+            text: tTip
           }
         }
       });
@@ -269,7 +277,7 @@ export default class Vc extends React.Component {
 
   checkCountJobByStatus = (vcName, callback) => {
     const { selectedCluster, userName } = this.context;
-    const { t, i18n } = this.props;
+    const { t } = this.props;
     const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
     axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
@@ -295,6 +303,7 @@ export default class Vc extends React.Component {
 
   render() {
     const { t } = this.props;
+    const tQuota = t('quota');
     const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice, vcNameValidateObj } = this.state;
     return (
       <Container fixed maxWidth="xl">
@@ -346,7 +355,7 @@ export default class Vc extends React.Component {
                   helperText={vcNameValidateObj.text}
                   inputProps={{ maxLength: 20 }}
                 />
-                <h3>{t('quota')}</h3>
+                <h3>{tQuota}</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}
                 {/* <h3>metadata/user_quota</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)} */}
@@ -377,3 +386,5 @@ export default class Vc extends React.Component {
     )
   }
 }
+
+export default  withTranslation()(Vc);

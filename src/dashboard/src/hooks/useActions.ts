@@ -25,7 +25,7 @@ const KILLABLE_STATUSES = [
   'paused'
 ];
 
-const useActions = (clusterId: string) => {
+const useActions = (clusterId: string, isInference?: boolean) => {
   const { userName, administrators } = useContext(UserContext);
   const supportMail = administrators![0];
   const confirm = useConfirm();

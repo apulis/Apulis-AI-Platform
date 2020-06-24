@@ -21,7 +21,10 @@ echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 
 # https://stackoverflow.com/a/26759734/845762
 if ! [ -x "$(command -v sudo)" ] ; then
-    time apt-get update && time apt-get install -y sudo net-tools
+    time apt-get update && time apt-get install -y sudo
+fi
+if ! [ -x "$(`command -v ifconfig`)"];then
+   time apt-get update && time apt-get install -y net-tools
 fi
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];

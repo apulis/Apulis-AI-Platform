@@ -8,7 +8,7 @@ import * as H from 'history';
 import { ThemeProvider } from "@material-ui/styles";
 
 import i18n from "i18next";
-import { useTranslation, initReactI18next } from "react-i18next";
+import { initReactI18next } from "react-i18next";
 import initAxios from './utils/init-axios'
 import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";

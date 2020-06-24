@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { withTranslation } from 'react-i18next';
 const Home = React.lazy(() => import('./pages/Home'));
 const SignIn = React.lazy(() => import('./pages/SignIn'));
 const SignUp = React.lazy(() => import('./pages/SignUp'));
@@ -49,7 +49,7 @@ export default [
   },
   {
     path: '/vc',
-    component: Vc,
+    component: withTranslation()(Vc),
     needPermission: ['VIEW_VC', 'MANAGE_VC']
   }
 ];

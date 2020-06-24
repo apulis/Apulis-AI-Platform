@@ -18,17 +18,15 @@ import _ from "lodash";
 import { mergeTwoObjsByKey, convertToArrayByKey, mergePropertyByKey, mergePropertyByUserNameAndGPUType, sumObjectValues } from '../../utlities/ObjUtlities';
 import {handleChangeIndex} from "../../utlities/interactionUtlties";
 import {DLTSTabs} from "../CommonComponents/DLTSTabs";
-import {
-  ClusterStatusTitles,
-  ClusterUsagesTitles
-} from "../../Constants/TabsContants";
 import {TeamVirtualClusterStatus} from "./components/TeamVirtualClusterStatus";
 import {TeamVCUserStatus} from "./components/TeamVCUserStatus";
 import {ClusterUsage} from "./components/ClusterUsage";
 import {PhysicalClusterNodeStatus} from "./components/PhysicalClusterNodeStatus";
 import { MarkunreadSharp } from "@material-ui/icons";
+import { useTranslation } from "react-i18next";
 
 const ClusterStatus: FC = () => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const [value, setValue] = React.useState(0);
   const {clusters} = React.useContext(ClusterContext);
@@ -274,6 +272,8 @@ const ClusterStatus: FC = () => {
     setIframeUrl((filteredVCStatus[0]['GranaUrl']));
   }
 
+  const ClusterStatusTitles: string[] = [t("TeamVirtualClusterStatus"),t("TeamVCUserStatus"),t("ClusterUsage"),t("PhysicalClusterNodeStatus")];
+  const ClusterUsagesTitles: string[] = [t("VCDeviceUsage"), t("ClusterUsage")];
   // if (vcStatus){
     return (
       <>

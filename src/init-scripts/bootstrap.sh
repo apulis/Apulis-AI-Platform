@@ -23,8 +23,11 @@ rm -rf /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/cuda.list.save 
 echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 
 # https://stackoverflow.com/a/26759734/845762
-if ! [ -x "$(command -v ifconfig)" ] ; then
-    time apt-get update && time apt-get install -y sudo net-tools
+if ! [ -x "$(command -v sudo)" ] ; then
+    time apt-get update && time apt-get install -y sudo
+fi
+if ! [ -x "$(`command -v ifconfig`)"];then
+   time apt-get update && time apt-get install -y net-tools
 fi
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
@@ -45,7 +48,13 @@ then
 fi
 
 # Setup container
-bash ${SCRIPT_DIR}/init_user.sh # &>> ${LOG_DIR}/bootstrap.log
+echo "=========================================================
+            begin to create user and setup env
+========================================================="
+bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
+echo "=========================================================
+            create user done!
+========================================================="
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
@@ -53,12 +62,24 @@ then
 fi
 
 # Setup roles
+echo "=========================================================
+            begin to start ssh
+========================================================="
 bash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log
+echo "=========================================================
+            start ssh done!
+========================================================="
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
+  echo "=========================================================
+            begin to setup ssh!
+========================================================="
     bash ${SCRIPT_DIR}/setup_ssh_config.sh &>> ${LOG_DIR}/bootstrap.log
 	touch ${PROC_DIR}/ROLE_READY
+	echo "=========================================================
+            setup ssh done!
+========================================================="
 
 	# Setup job
 	# TODO
@@ -90,11 +111,13 @@ if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ 
 then
     runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
 else
-    mkdir -p /pod/${DLWS_JOB_ID}
-    printenv DLWS_LAUNCH_CMD > /pod/${DLWS_JOB_ID}/job_command.sh
-    chmod ugo+rx /pod/${DLWS_JOB_ID}/job_command.sh
+    printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
+    chmod ugo+rx /pod/job_command.sh
     chmod ugo+rx /pod.env
-    runuser -l ${DLWS_USER_NAME} -c /pod/${DLWS_JOB_ID}/job_command.sh
+    	echo "=========================================================
+                begin to exec command!
+========================================================="
+    runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh
     # Save exit code
     EXIT_CODE=$?
     echo  `date` ": ${EXIT_CODE}"  > ${PROC_DIR}/EXIT_CODE

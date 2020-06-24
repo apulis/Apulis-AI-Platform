@@ -23,9 +23,15 @@ const CentralInference: React.FC = () => {
   const [allSupportInference, setAllSupportInference] = useState<any[]>([]);
   const [framework, setFramework] = useState('');
   const [deviceType, setDeviceType] = useState('');
+  const [gpuType, setGpuType] = useState('');
   const [modalFlag, setModalFlag] = useState(false);
   const [btnLoading, setBtnLoading] = useState(false);
   const [index, setIndex] = useState(0);
+  const [selectInference, setSelectInference] = useState({
+    image: [],
+    device: []
+  });
+  const [allDevice, setAllDevice] = useState({});
   const { currentRole = [], userName } = useContext(AuthContext);
   const isAdmin = currentRole.includes('System Admin');
   const { handleSubmit, register, getValues, errors, setValue, clearError, setError } = useForm({ mode: "onBlur" });
@@ -54,6 +60,10 @@ const CentralInference: React.FC = () => {
     getData();
   }, [selectedCluster, selectedTeam, index]);
 
+  useEffect(() => {
+    setSelectInference(allSupportInference.find((i: { framework: any; }) => i.framework === framework));
+  }, [framework]);
+
   const getData = () => {
     const jobOwner = index === 1 && isAdmin ? 'all' : userName;
     axios.get(`/clusters/${selectedCluster}/teams/${selectedTeam}/inferenceJobs?jobOwner=${jobOwner}&limit=999`)
@@ -78,11 +88,15 @@ const CentralInference: React.FC = () => {
  
   const onSubmit = async (val: any) => {
     setBtnLoading(true);
+    const imageArr = selectInference.image;
+    const image = imageArr[selectInference.device.findIndex(i => i === deviceType)];
     await axios.post(`/clusters/${selectedCluster}/teams/${selectedTeam}/postInferenceJob`, {
       ...val,
       framework: framework,
       device: deviceType,
-      image: allSupportInference.find((i: { framework: any; }) => i.framework === framework).image
+      image: image,
+      resourcegpu: 1,
+
     }).then((res: any) => {
       message('success', `Inference successfully！`);
       setModalFlag(false);
@@ -95,30 +109,40 @@ const CentralInference: React.FC = () => {
 
   const openModal = () => {
     setModalFlag(true);
-    axios.get(`/${selectedCluster}/getAllSupportInference`)
-    .then((res: { data: any; }) => {
+    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`).then((res: { data: any; }) => {
+      setAllDevice(res.data)
+    });
+    axios.get(`/${selectedCluster}/getAllSupportInference`).then((res: { data: any; }) => {
       const { data } = res;
       setAllSupportInference(data);
       setFramework(data[0].framework);
       setDeviceType(data[0].device[0]);
-    })
+    });
   }
 
   const getFrameworkOptions = () => {
     if (allSupportInference) {
       return allSupportInference.map((i: { framework: any; }) => <MenuItem value={i.framework}>{i.framework}</MenuItem>)
-    } else {
-      return null;
     }
+    return null;
   }
 
   const getDeviceTypeOptions = () => {
     if (framework) {
-      const arr = allSupportInference.find((i: { framework: any; }) => i.framework === framework).device;
+      const arr = selectInference.device;
       return arr.map((i: any) => <MenuItem value={i}>{i}</MenuItem>)
-    } else {
-      return null;
     }
+    return null;
+  }
+
+  const getGpuTypeOptions = () => {
+    if (allDevice && gpuType === 'GPU') {
+      // Object.keys(allDevice).map(i => {
+      //   if (allDevice[i].deviceStr === 'nvidia.com/gpu') return i;
+      // })
+      // return arr.map((i: any) => <MenuItem value={i}>{i}</MenuItem>)
+    }
+    return null;
   }
 
   return (
@@ -214,6 +238,18 @@ const CentralInference: React.FC = () => {
               style={{ margin: '10px 0' }}
             >
               {getDeviceTypeOptions()}
+            </TextField>}
+            {deviceType === 'GPU' && <TextField
+              select
+              label="GPU Type"
+              name="gpuType"
+              fullWidth
+              onChange={(e: { target: { value: any; }; }) => setGpuType(e.target.value)}
+              variant="filled"
+              value={gpuType}
+              style={{ margin: '10px 0' }}
+            >
+              {getGpuTypeOptions()}
             </TextField>}
           </DialogContent>
           <DialogActions>

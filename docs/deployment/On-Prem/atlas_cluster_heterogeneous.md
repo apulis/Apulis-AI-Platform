@@ -307,6 +307,11 @@ jwt:
   secret_key: "Sign key for JWT"
   algorithm: HS256
   token_ttl: 86400
+
+# for github private project 
+dockers:
+  user:
+  password: 
 ```
 
 

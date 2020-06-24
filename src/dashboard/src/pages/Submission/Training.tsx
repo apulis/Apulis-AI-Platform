@@ -47,7 +47,7 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, NpuNumMsg, 
+import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, 
   NoNumberReg, NoNumberText } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
@@ -89,6 +89,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
   const [gpusPerNode, setGpusPerNode] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
+  const [npuNumMsg, setNpuNumMsg] = useState(''); 
   const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
@@ -518,8 +519,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const validateNpuNum = (val: string) => {
     if (val) {
       const _val = Number(val);
+      if (_val < 0 || !Number.isInteger(_val) || _val > gpusPerNode) {
+        setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode}`);
+        return false;
+      }
       if (allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
-        return (_val === 1 ||_val === 2 || _val === 4 || _val === 8);
+        if (_val !== 0 && _val !== 1 &&_val !== 2 && _val !== 4 && _val !== 8) {
+          setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode}，and can only be one of 0, 1, 2, 4, 8`);
+          return false;
+        }
       }
     }
     return true;
@@ -778,7 +786,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       // inputRef={register({
                       //   validate: val => validateNumDevices(val)
                       // })}
-                      helperText={errors.gpus ? NpuNumMsg : ''}
+                      helperText={errors.gpus ? npuNumMsg : ''}
                       inputRef={register({
                         validate: val => validateNpuNum(val)
                       })}
@@ -795,6 +803,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       value={workers}
                       name="workers"
                       onChange={e => setWorkers(Number(e.target.value))}
+                      InputProps={{ inputProps: { min: 0 } }}
                       // error={Boolean(errors.workers)}
                       // helperText={errors.workers ? NpuNumMsg : ''}
                       // inputRef={register({
@@ -881,7 +890,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={4} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
-                    label="jupyter"
+                    label="Jupyter"
                     checked={ipython}
                     onChange={(e, checked) => setIpython(checked)}
                   />
@@ -889,7 +898,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={4} container justify="center" className="icon-grid">
                   <FormControlLabel
                     control={<Checkbox />}
-                    label="Tensorboard"
+                    label="TensorBoard"
                     checked={tensorboard}
                     onChange={(e, checked) => setTensorboard(checked)}
                   />
@@ -898,7 +907,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 {iconInfoShow && <Grid item xs={12} container justify="flex-end">
                   <Chip
                     icon={<Info/>}
-                    label="Tensorboard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
+                    label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
                   />
                 </Grid>}
               </Grid>

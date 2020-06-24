@@ -90,7 +90,7 @@ const MyJobs: FunctionComponent = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
-  const [limit, setLimit] = useState(999);
+  const [limit, setLimit] = useState(9999);
   const [jobs, setJobs] = useState<any[]>();
   const onExpectMoreJobs = useCallback((count: number) => {
     setLimit((limit: number) => limit + count);

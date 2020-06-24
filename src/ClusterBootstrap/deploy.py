@@ -3879,7 +3879,7 @@ def install_ssh_key_by_nodes(all_nodes):
 
 def scale_up(config):
 
-    pdb.set_trace()
+    #pdb.set_trace()
 
     if "scale_up" not in config:
         print("Error: not scale_up config\n")
@@ -3923,10 +3923,15 @@ def scale_up(config):
 
         cmd = "sudo sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab"
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+
+        cmd = "sudo swapoff -a"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
         print(output)
 
         ## join worker
         update_worker_nodes_by_kubeadm_2([node])
+        ## for test only
+        time.sleep(100)
 
         ## label service
         kubernetes_label_nodes("active", [], False)

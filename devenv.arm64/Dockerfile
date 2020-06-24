@@ -48,6 +48,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends docker-ce-cli=5
 
 # PIP installation
 RUN pip install --upgrade pip && pip install setuptools && pip install pyyaml jinja2 flask flask.restful tzlocal pycurl requests subprocess32
+RUN pip install setuptools
+RUN pip3 install setuptools
+RUN sudo apt-get install gcc libpq-dev -y
+RUN sudo apt-get install python-dev  python-pip -y
+RUN sudo apt-get install python3-dev python3-pip python3-venv python3-wheel -y
+RUN pip3 install wheel
 RUN pip3 install pyyaml jinja2 flask flask.restful tzlocal pycurl requests subprocess32
 
 RUN chmod og+rx  -R /usr/local/lib
@@ -62,6 +68,12 @@ RUN chmod og+rx  -R /usr/local/lib
 # RUN apt-get update && apt-get install azure-cli
 
 RUN apt-get update && apt-get install -y apt-transport-https gnupg2
-RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
+#RUN curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+#RUN echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list
+
+
+RUN sudo apt-get update && sudo apt-get install -y apt-transport-https curl
+RUN sudo curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -
+RUN echo 'deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main' >> /etc/apt/sources.list.d/kubernetes.list 
+
 RUN apt-get update && apt-get install -y kubectl

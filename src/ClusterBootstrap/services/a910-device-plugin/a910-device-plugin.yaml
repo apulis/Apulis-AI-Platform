@@ -30,7 +30,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: {{cnf["worker-dockerregistry"]}}a910-device-plugin:devel2
+          image: {{cnf["worker-dockerregistry"]}}a910-device-plugin:devel3
           imagePullPolicy: IfNotPresent
           securityContext:
             # readOnlyRootFilesystem: true
@@ -45,6 +45,8 @@ spec:
               readOnly: true
             - name: kubeletsockets
               mountPath: /var/lib/kubelet/device-plugins
+            - name: hccn
+              mountPath: /etc/hccn.conf
       volumes:
         - name: devfs
           hostPath:
@@ -55,3 +57,6 @@ spec:
         - name: kubeletsockets
           hostPath:
             path: /var/lib/kubelet/device-plugins
+        - name: hccn
+          hostPath:
+            path: /etc/hccn.conf

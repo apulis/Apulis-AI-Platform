@@ -161,7 +161,11 @@ def SubmitJob(jobParamsJsonStr):
             return ret
 
         if not jobParams["jobPath"].startswith(userName):
-            jobParams["jobPath"] = os.path.join(userName,jobParams["jobPath"])
+            if jobParams["jobPath"] == "./":
+                jobParams["jobPath"] = os.path.join(userName,"jobs/"+time.strftime("%y%m%d")+"/"+jobParams["jobId"], jobParams["jobPath"])
+            else:
+                jobParams["jobPath"] = os.path.join(userName,jobParams["jobPath"])
+
 
     else:
         jobPath = userName+"/"+ "jobs/"+time.strftime("%y%m%d")+"/"+jobParams["jobId"]

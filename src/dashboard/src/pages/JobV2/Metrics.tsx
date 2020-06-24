@@ -13,7 +13,7 @@ import Context from './Context';
 const Metrics: FunctionComponent = () => {
   const { cluster, job } = useContext(Context);
   const url = useMemo(() => {
-    return `${cluster['grafana']}/dashboard/db/job-status?var-job_name=${encodeURIComponent(job['jobId'])}`;
+    return `${cluster['grafana']}/dashboard/db/job-status?var-job_id=${encodeURIComponent(job['jobId'])}`;
   }, [cluster, job]);
 
   return (

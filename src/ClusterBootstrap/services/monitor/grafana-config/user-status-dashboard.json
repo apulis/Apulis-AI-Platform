@@ -102,7 +102,7 @@
                 "refId": "A"
               }
             ],
-            "title": "User Status",
+            "title": "User GPU Status",
             "transform": "table",
             "type": "table"
           },
@@ -183,7 +183,7 @@
                 "refId": "A"
               }
             ],
-            "title": "User Status",
+            "title": "User NPU Status",
             "transform": "table",
             "type": "table"
           }

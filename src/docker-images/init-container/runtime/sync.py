@@ -195,10 +195,6 @@ def get_role_idx():
                      os.environ)
         return "0"
 
-def clean_ib_config():
-    os.system("if [ -f /home/user/ib_config ];then rm /home/user/ib_config;fi")
-    os.system("if [ -f /home/user/.hosts ];then rm /home/user/.hosts;fi")
-
 def main(args):
 
     pod_name = get_pod_name()
@@ -206,7 +202,6 @@ def main(args):
 
     ip = get_pod_ip()
     ib_ip = get_pod_ib_ip()
-    clean_ib_config()
 
     npu_ip_list = get_pod_npu_ip()
     host_ip = get_host_ip()

@@ -64,14 +64,14 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
   if (endpoint.name === 'ipython') {
     return (
       <ListItem button component="a" href={url} target="_blank">
-        <ListItemText primary="jupyter" secondary={url}/>
+        <ListItemText primary="Jupyter" secondary={url}/>
       </ListItem>
     );
   }
   if (endpoint.name === 'tensorboard') {
     return (
       <ListItem button component="a" href={url} target="_blank">
-        <ListItemText primary="Tensorboard" secondary={url}/>
+        <ListItemText primary="TensorBoard" secondary={url}/>
       </ListItem>
     );
   }
@@ -139,7 +139,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
 
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
-    const _name = name === 'iPython' ? 'jupyter' : name;
+    const _name = name === 'iPython' ? 'Jupyter' : name;
     enqueueSnackbar(`Enabling ${_name}...`);
     post({
       endpoints: [name.toLowerCase()]
@@ -209,20 +209,20 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           checked={ipython || undefined}
           disabled={ipython || disabled}
           control={<Switch/>}
-          label="jupyter"
+          label="Jupyter"
           onChange={onChange('iPython')}
         />
         <FormControlLabel
           checked={tensorboard || undefined}
           disabled={tensorboard || disabled}
           control={<Switch/>}
-          label="Tensorboard"
+          label="TensorBoard"
           onChange={onChange('Tensorboard')}
         />
         <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
       </FormGroup>
       {iconInfoShow && <Chip icon={<Info/>}
-        label={<p>Tensorboard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
+        label={<p>TensorBoard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
       />}
       {/* <AuthzHOC needPermission={'"MANAGE_ALL_USERS_JOB"'}></AuthzHOC> */}
       <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>

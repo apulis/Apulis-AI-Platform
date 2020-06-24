@@ -102,3 +102,5 @@ inference:
 
 usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend
 usermanagerapitoken: {{cnf["usermanagerapitoken"]}}
+
+enable_jobmanager_debug_mode: {{cnf["enable_jobmanager_debug_mode"]}}

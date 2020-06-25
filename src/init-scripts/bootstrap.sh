@@ -26,7 +26,7 @@ echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 if ! [ -x "$(command -v sudo)" ] ; then
     time apt-get update && time apt-get install -y sudo
 fi
-if ! [ -x "$(`command -v ifconfig`)"];then
+if ! [ -x "$(command -v ifconfig)" ];then
    time apt-get update && time apt-get install -y net-tools
 fi
 

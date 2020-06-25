@@ -659,6 +659,10 @@ clusters:
 
 - ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
     ```
+    ./deploy.py --verbose --arch arm64 docker push init-container
+    ```
+  如果集群有x86机器，在x86架构上执行
+    ```shell script
     ./deploy.py --verbose docker push init-container
     ```
   

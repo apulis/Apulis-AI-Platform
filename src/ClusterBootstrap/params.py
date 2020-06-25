@@ -71,6 +71,8 @@ default_config_parameters = {
     "mysql_username": "root",
     "mysql_data_path": "/var/lib/mysql",
 
+    "extranet_protocol":"https",
+
     "datasource": "MySQL",
     "defalt_virtual_cluster_name": "platform",
     # Discover server is used to find IP address of the host, it need to be a well-known IP address

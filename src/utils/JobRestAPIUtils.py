@@ -892,6 +892,9 @@ def GetEndpoints(userName, jobId):
                         "podName": endpoint["podName"],
                         "domain": config["domain"],
                     }
+                    if epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
+                        if config["extranet_port"]:
+                            epItem["domain"] = epItem["domain"] + ":"+config["extranet_port"]
                     if "podPort" in endpoint:
                         epItem["podPort"] = endpoint["podPort"]
                     if endpoint["status"] == "running":

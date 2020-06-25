@@ -1064,7 +1064,7 @@ class DataHandler(object):
                                                       base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "training":
+                    if record["jobType"] == "InferenceJob":
                         ret["runningJobs"].append(record)
                     elif record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)

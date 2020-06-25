@@ -36,4 +36,5 @@ COPY --from=builder /gpu_topo_build/gpu_topo /dlts-init/gpu_topo
 
 COPY install.sh init.sh /dlts-init/
 COPY ssh_config /dlts-init/ssh_config
+COPY npu /dlts-init/npu
 COPY runtime /dlts-init/runtime

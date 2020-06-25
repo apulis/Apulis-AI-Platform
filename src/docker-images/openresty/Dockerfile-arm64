@@ -5,5 +5,5 @@ RUN wget https://openresty.org/download/openresty-1.15.8.3.tar.gz && tar zxf ope
 ADD config/nginx/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 ADD lib/resty /usr/local/openresty/nginx/jwt-lua/resty
 ADD start.sh /
-RUN chmod +x start.sh
+RUN chmod +x /start.sh
 

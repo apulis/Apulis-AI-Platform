@@ -651,21 +651,31 @@ clusters:
 
 - ##### 编译restfulapi和webui3服务
     ```
-    ./deploy.py --verbose docker push restfulapi2
-    ./deploy.py --verbose docker push webui3
-    ./deploy.py --nocache docker push custom-user-dashboard-frontend
-    ./deploy.py --nocache docker push custom-user-dashboard-backend
-    ```
-
-- ##### 编译GPU Reporter
-    ```
-    ./deploy.py --verbose docker push gpu-reporter
+    ./deploy.py --verbose --arch arm64 docker push restfulapi2
+    ./deploy.py --verbose --arch arm64 docker push webui3
+    ./deploy.py --nocache --arch arm64 docker push custom-user-dashboard-frontend
+    ./deploy.py --nocache --arch arm64 docker push custom-user-dashboard-backend
     ```
 
 - ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
     ```
     ./deploy.py --verbose docker push init-container
     ```
+  
+- ##### 编译监控相关的镜像
+    在arm架构的机器上
+    ```shell script
+    ./deploy.py --arch arm64 docker push watchdog
+    ./deploy.py --arch arm64 docker push gpu-reporter
+    ./deploy.py --arch arm64 docker push job-exporter
+    ```
+    如果集群有x86机器，在x86架构上执行
+    ```shell script
+    ./deploy.py docker push watchdog
+    ./deploy.py docker push gpu-reporter
+    ./deploy.py docker push job-exporter
+    ```
+
 
 - ##### 配置Nginx
     ```

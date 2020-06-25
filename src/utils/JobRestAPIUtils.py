@@ -942,6 +942,8 @@ def GetVC(userName, vcName):
                 if job["vcName"] == vcName and job["jobStatus"] == "running":
                     username = job["userName"]
                     jobParam = json.loads(base64.b64decode(job["jobParams"]))
+                    if not jobParam["gpuType"]:
+                        continue
                     num_active_jobs.setdefault(jobParam["gpuType"],0)
                     num_active_jobs[jobParam["gpuType"]] += 1
                     if "gpuType" in jobParam:

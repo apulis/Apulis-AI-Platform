@@ -289,6 +289,8 @@ def PostInferenceJob(jobParamsJsonStr):
 
     if "resourcegpu" not in jobParams:
         jobParams["resourcegpu"] = 0
+    if "device" in jobParams and jobParams["device"] == "CPU":
+        jobParams["resourcegpu"] = 0
 
     # default value
     jobParams["jobtrainingtype"] = "InferenceJob"

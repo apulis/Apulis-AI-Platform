@@ -292,7 +292,7 @@ def PostInferenceJob(jobParamsJsonStr):
 
     # default value
     jobParams["jobtrainingtype"] = "InferenceJob"
-    jobParams["jobType"] = "training"
+    jobParams["jobType"] = "InferenceJob"
     jobParams["preemptionAllowed"] = False
     jobParams["containerUserId"] = 0
     jobParams["isPrivileged"] = False

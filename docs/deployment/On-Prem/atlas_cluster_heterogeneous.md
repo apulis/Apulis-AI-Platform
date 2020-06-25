@@ -661,7 +661,7 @@ clusters:
     ```
     ./deploy.py --verbose --arch arm64 docker push init-container
     ```
-  如果集群有x86机器，在x86架构上执行
+  如果集群有x86架构的机器，在x86机器上执行
     ```shell script
     ./deploy.py --verbose docker push init-container
     ```
@@ -673,7 +673,7 @@ clusters:
     ./deploy.py --arch arm64 docker push gpu-reporter
     ./deploy.py --arch arm64 docker push job-exporter
     ```
-    如果集群有x86机器，在x86架构上执行
+    如果集群有x86架构的机器，在x86机器上执行
     ```shell script
     ./deploy.py docker push watchdog
     ./deploy.py docker push gpu-reporter

@@ -34,7 +34,7 @@ class SubmitJob:
 
 class RandomNumber(fields.Raw):
     __schema_type__ = "dict"
-    __schema_example__ = """{"blobfuse": [{"accountKey": "", "containerName": "", "mountPath": "", "mountOptions": "", "accountName": ""}], 
+    __schema_example__ = """{"blobfuse": [{"accountKey": "", "containerName": "", "mountPath": "", "mountOptions": "", "accountName": ""}],
 "imagePull": [{"username": "", "password": "", "registry": ""}]}"""
     def format(self, value):
         return 111
@@ -102,6 +102,20 @@ class PostInferenceJob:
             "jobName":fields.String,
             "model_base_path": fields.String,
             "framework": fields.String,
+            "device": fields.String,
+        }
+
+class PostModelConversionJob:
+    def __init__(self,api):
+        self.params = {
+            "image":fields.String,
+            "vcName":fields.String,
+            "userId": fields.Integer(example="12345678"),
+            "userName":fields.String,
+            "jobName":fields.String,
+            "inputPath": fields.String,
+            "outputPath": fields.String,
+            "conversionType": fields.String(example="tensorflow-A310"),
             "device": fields.String,
         }
 
@@ -474,6 +488,15 @@ class GetAllDevice:
         "device type":GetAllDeviceModel}
 
 class ListInferenceJob:
+    params = {
+        "jobOwner": {"description": 'jobOwner', "_in": 'query', "type": "string", "required": True},
+        "vcName": {"description": 'vcName', "_in": 'query', "type": "string", "required": True},
+        "num": {"description": 'num', "_in": 'query', "type": "string", "required": False},
+    }
+    model = {
+        "device type":GetAllDeviceModel}
+
+class ListModelConversionJob:
     params = {
         "jobOwner": {"description": 'jobOwner', "_in": 'query', "type": "string", "required": True},
         "vcName": {"description": 'vcName', "_in": 'query', "type": "string", "required": True},

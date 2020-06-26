@@ -80,6 +80,8 @@ class DataHandler(object):
         self.accounttablename = "account"
         self.jobtablename = "jobs"
         self.inferencejobtablename = "inferencejobs"
+        self.modelconversionjobtablename = "modelconversionjobs"
+        self.fdserverinfotablename = "fdserverinfo"
         self.identitytablename = "identity"
         self.acltablename = "acl"
         self.vctablename = "vc"
@@ -174,7 +176,8 @@ class DataHandler(object):
                     INDEX (`jobTime`),
                     INDEX (`jobId`),
                     INDEX (`vcName`),
-                    INDEX (`jobStatus`)
+                    INDEX (`jobStatus`),
+                    INDEX (`jobType`)
                 );
                 """ % (self.jobtablename)
 
@@ -192,6 +195,43 @@ class DataHandler(object):
                     CONSTRAINT identityName_jobId UNIQUE(`jobId`)
                 )
                 """ % (self.inferencejobtablename)
+
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                CREATE TABLE IF NOT EXISTS  `%s`
+                (
+                    `id`         INT     NOT NULL AUTO_INCREMENT,
+                    `jobId`      varchar(50)   NOT NULL,
+                    `inputPath`  TEXT NOT NULL,
+                    `outputPath` TEXT NOT NULL,
+                    `type`       varchar(255) NOT NULL,
+                    `status`     varchar(255) NOT NULL,
+                    PRIMARY KEY (`id`),
+                    INDEX (`jobId`),
+                    INDEX (`type`),
+                    INDEX (`status`),
+                    CONSTRAINT identityName_jobId UNIQUE(`jobId`)
+                )
+                """ % (self.modelconversionjobtablename)
+
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
+
+            sql = """
+                CREATE TABLE IF NOT EXISTS  `%s`
+                (
+                    `id`         INT     NOT NULL AUTO_INCREMENT,
+                    `name`       varchar(50)   NOT NULL,
+                    `username`   varchar(50)   NOT NULL,
+                    `password`   varchar(50)   NOT NULL,
+                    `url`        varchar(255) NOT NULL,
+                    PRIMARY KEY (`id`)
+                )
+                """ % (self.fdserverinfotablename)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)
@@ -863,6 +903,21 @@ class DataHandler(object):
         return ret
 
     @record
+    def AddModelConversionJob(self, jobParams):
+        ret = False
+        try:
+            sql = "INSERT INTO `" + self.modelconvertionjobtablename + "` (jobId, inputPath, outputPath, type, status) VALUES (%s, %s, %s, %s, %s)"
+            jobParam = base64.b64encode(json.dumps(jobParams))
+            with MysqlConn() as conn:
+                conn.insert_one(sql, (
+                    jobParams["jobId"], jobParams["inputPath"], jobParams["outputPath"], jobParams["type"], "converting"))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('AddJob Exception: %s', str(e))
+        return ret
+
+    @record
     def GetJobList(self, userName, vcName, num=None, status=None, op=("=", "or")):
         ret = []
         try:
@@ -1076,6 +1131,74 @@ class DataHandler(object):
             conn.commit()
         except Exception as e:
             logger.exception('GetJobListV2 Exception: %s', str(e))
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
+                       "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
+        return ret
+
+    @record
+    def ListModelConversionJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
+        ret = {}
+        ret["queuedJobs"] = []
+        ret["runningJobs"] = []
+        ret["finishedJobs"] = []
+        ret["visualizationJobs"] = []
+
+        conn = None
+        cursor = None
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = "SELECT j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as j left join {} as m on j.jobId = m.jobId left join {} as p on j.jobId = p.jobId where 1".format(
+                self.jobtablename, self.modelconversionjobtablename, self.jobprioritytablename)
+            if userName != "all":
+                query += " and userName = '%s'" % userName
+
+            if vcName != "all":
+                query += " and vcName = '%s'" % vcName
+
+            if status is not None:
+                if "," not in status:
+                    query += " and jobStatus %s '%s'" % (op[0], status)
+                else:
+                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_statement = (" " + op[1] + " ").join(status_list)
+                    query += " and ( %s ) " % status_statement
+
+            query += " order by jobTime Desc"
+
+            if num is not None:
+                query += " limit %s " % str(num)
+            cursor.execute(query)
+
+            columns = [column[0] for column in cursor.description]
+            data = cursor.fetchall()
+            for item in data:
+                record = dict(zip(columns, item))
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
+                if record["jobStatus"] == "running":
+                    if record["jobType"] == "ModelConversionJob":
+                        ret["runningJobs"].append(record)
+                    elif record["jobType"] == "visualization":
+                        ret["visualizationJobs"].append(record)
+                elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
+                    "jobStatus"] == "unapproved":
+                    ret["queuedJobs"].append(record)
+                else:
+                    ret["finishedJobs"].append(record)
+            conn.commit()
+        except Exception as e:
+            logger.exception('GetModelConversionJobs Exception: %s', str(e))
         finally:
             if cursor is not None:
                 cursor.close()

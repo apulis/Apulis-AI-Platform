@@ -278,7 +278,7 @@ class SubmitJob(Resource):
                 params["isParent"] = args["isParent"]
             else:
                 params["isParent"] = "1"
-                
+
             if args["jobPriority"] is not None and len(args["jobPriority"].strip()) > 0:
                 params["jobPriority"] = args["jobPriority"]
 
@@ -406,6 +406,31 @@ class PostInferenceJob(Resource):
         return resp
 
 api.add_resource(PostInferenceJob, '/PostInferenceJob')
+
+class PostModelConversionJob(Resource):
+    @api.expect(api.model("PostModelConversionJob", model.PostModelConversionJob(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Post PostInferenceJob Job")
+        logger.info(params)
+
+        ret = {}
+        output = JobRestAPIUtils.PostModelConversionJob(json.dumps(params))
+
+        if "jobId" in output:
+            ret["jobId"] = output["jobId"]
+        else:
+            if "error" in output:
+                ret["error"] = "Cannot create job!" + output["error"]
+            else:
+                ret["error"] = "Cannot create job!"
+        logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(PostModelConversionJob, '/PostModelConversionJob')
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):
@@ -548,6 +573,23 @@ class ListInferenceJob(Resource):
         resp = generate_response(jobs)
         return resp
 api.add_resource(ListInferenceJob, '/ListInferenceJob')
+
+class ListModelConversionJob(Resource):
+    @api.doc(params=model.ListModelConversionJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], args["num"])
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+        resp = generate_response(jobs)
+        return resp
+api.add_resource(ListModelConversionJob, '/ListModelConversionJob')
 
 class CountJobByStatus(Resource):
     @api.doc(params=model.CountJobByStatus.params)
@@ -972,7 +1014,7 @@ class SignUp(Resource):
         parser.add_argument('password')
         parser.add_argument('isAdmin')
         parser.add_argument('isAuthorized')
-        
+
         args = parser.parse_args()
         openId = args["openId"]
         group = args["group"]

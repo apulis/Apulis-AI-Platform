@@ -57,7 +57,6 @@ default_config_parameters = {
             "restful-url": "http://localhost:5000",
         }
     },
-    "repair-manager": { "prometheus-ip": "localhost", "prometheus-port": 9091},
 
     "repair-manager": {
         "prometheus-ip": "localhost",

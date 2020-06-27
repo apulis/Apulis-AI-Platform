@@ -151,7 +151,7 @@ router.post('/:clusterId/teams/:teamId/setFDInfo',
   require('./middlewares/user')(),
   require('./middlewares/body')('setFDInfo'),
   require('./controllers/cluster/model/setFDInfo'))
-router.post('/:clusterId/teams/:teamId/pushModelToFD',
+router.post('/:clusterId/pushModelToFD',
   require('./middlewares/user')(),
   require('./middlewares/body')('pushModelToFD'),
   require('./controllers/cluster/model/pushModelToFD'))

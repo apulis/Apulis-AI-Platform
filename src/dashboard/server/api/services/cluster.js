@@ -616,7 +616,6 @@ class Cluster extends Service {
     const response = await this.fetch('/ListModelConversionJob?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    console.log('----------', data)
 
     return [].concat(
       data['finishedJobs'],

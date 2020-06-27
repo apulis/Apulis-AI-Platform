@@ -84,7 +84,7 @@ const Model: React.FC = () => {
   const onPush = async (item: any) => {
     const info = await getFdInfo();
     if (info) {
-      axios.post(`/${selectedCluster}/teams/${selectedTeam}/pushModelToFD`, { jobId: item.jobId }).then((res: any) => {
+      axios.post(`/${selectedCluster}/pushModelToFD`, { jobId: item.jobId }).then((res: any) => {
         getData();
         message('success', `Push Inference successfully！`);
       })

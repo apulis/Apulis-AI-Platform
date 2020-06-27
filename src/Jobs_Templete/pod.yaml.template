@@ -13,7 +13,7 @@ metadata:
     podName: {{ job["podName"] }}
     jobId: {{ job["jobId"] }}
     jobRole: {{ jobRole }}
-    userName: {{ job["user"] }}
+    userName: "{{ job["user"] }}"
     vcName: "{{ job["vcName"] }}"
     type: job
     'gpu-request': '{{ job["gpuLimit"]|int }}'

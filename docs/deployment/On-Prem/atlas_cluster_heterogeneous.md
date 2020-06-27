@@ -1,12 +1,10 @@
 # DLWS集群安装步骤
 
 ### 1. 配置说明 & 示例
-| 名称             | 配置    | GPU  | 操作系统 | 公网IP       | 子网IP      | 描述                        |
-| ---------------- | ------- | ---- | -------- | ------------ | ----------- | --------------------------- |
-| atlas01          | 6C64G   | N/A  | 欧拉     | 121.46.18.83 | 192.168.3.6 | 部署发起节点 k8s master节点 |
-| atlas01-worker01 | 36C512G | 8    | 欧拉     | 121.46.18.83 | 192.168.3.2 | k8s worker节点              |
-|                  |         |      |          |              |             |                             |
-|                  |         |      |          |              |             |                             |
+| 名称             | 配置    | GPU  | 操作系统     | 公网IP       | 子网IP      | 描述                        |
+| ---------------- | ------- | ---- | ------------ | ------------ | ----------- | --------------------------- |
+| atlas01          | 6C64G   | N/A  | ubuntu 18.04 | 121.46.18.83 | 192.168.3.6 | 部署发起节点 k8s master节点 |
+| atlas01-worker01 | 36C512G | 8    | ubuntu 18.04 | 121.46.18.83 | 192.168.3.2 | k8s worker节点              |
 
 其中：
 
@@ -24,6 +22,7 @@
 - 软件：预安装ssh-server
 - 硬件：worker节点SecureBoot需禁用
 - 步骤说明：执行时如提示无权限，则使用sudo权限执行
+- 编译节点架构需与master节点架构一致
 
 #### 2.2 免密码配置
 
@@ -124,7 +123,7 @@ DNS提供商：https://dns.console.aliyun.com
 config.yaml样例
 
 ```
-cluster_name: china-gpu02
+cluster_name: apulis-atlas01
 
 network:
   domain: sigsus.cn
@@ -134,30 +133,36 @@ etcd_node_num: 1
 mounthomefolder : True
 
 # These may be needed for KubeGPU
-# # kube_custom_cri : True
-# # kube_custom_scheduler: True
+# kube_custom_cri : True
+# kube_custom_scheduler: True
 kubepresleep: 1
-cloud_influxdb_node: china-gpu02.sigsus.cn
+cloud_influxdb_node: apulis-atlas01.sigsus.cn
 
 DeployAuthentications:
 - Microsoft
+- Gmail
 
 UserGroups:
   DLWSAdmins:
     Allowed:
     - jinlmsft@hotmail.com
+    - jinli.ccs@gmail.com
     - jin.li@apulis.com
     - bifeng.peng@apulis.com
-    - hui.yuan@apulis.com
+    - tianhui.liu@apulis.com
+    - penghao.zeng@apulis.com
+    - zenglong.chen@apulis.com
     gid: "20001"
-    uid: 20000-20004
+    uid: "20000"
   DLWSRegister:
     Allowed:
-    - '@apulis.com'
+    - '@gmail.com'
+    - '@live.com'
     - '@outlook.com'
     - '@hotmail.com'
+    - '@apulis.com'
     gid: "20001"
-    uid: 20005-29999
+    uid: 20001-29999
 
 WebUIadminGroups:
 - DLWSAdmins
@@ -171,24 +176,56 @@ WebUIregisterGroups:
 WinbindServers: []
 
 datasource: MySQL
-mysql_password: corona@2020@wuhan
+mysql_password: apulis#2019#wednesday
 webuiport: 3081
 useclusterfile : true
-platform-scripts : ubuntu
-
+platform-scripts : centos
 
 machines:
-  china-gpu02:
+  atlas01:
     role: infrastructure
-    private-ip: 192.168.1.3
-  china-gpu02-worker1:
+    private-ip: 192.168.3.6
+    archtype: arm64
+    type: npu
+    vendor: huawei
+
+  atlas01-worker01:
+    archtype: arm64
     role: worker
-    type: gpu
-    vendor: nvidia
-  china-gpu02-worker2:
+    type: npu 
+    vendor: huawei
+    os: ubuntu
+
+  atlas01-worker02:
+    archtype: amd64
     role: worker
-    type: gpu
+    type: gpu 
     vendor: nvidia
+    os: ubuntu
+
+  atlas01-worker03:
+    archtype: amd64
+    role: worker
+    type: gpu 
+    vendor: nvidia
+    os: ubuntu
+
+scale_up:
+  atlas01-worker01:
+    archtype: arm64
+    role: worker
+    type: npu 
+    vendor: huawei
+    os: ubuntu
+
+scale_down:
+  atlas01-worker01:
+    archtype: amd64
+    role: worker
+    type: gpu 
+    vendor: nvidia
+    os: ubuntu
+
 
 admin_username: dlwsadmin
 
@@ -196,11 +233,14 @@ admin_username: dlwsadmin
 dockerregistry: apulistech/
 dockers:
   hub: apulistech/
-
+  tag: "1.9"
+ 
 cloud_config:
   dev_network:
     source_addresses_prefixes: [ "66.114.136.16/29", "73.140.21.119/32"]
-  default_admin_username: dlwsadmin
+
+cloud_config:
+  default_admin_username: jinl
   dev_network:
     source_addresses_prefixes:
     - 66.114.136.16/29
@@ -210,15 +250,55 @@ cloud_config:
     tcp_port_ranges: 22 1443 2379 3306 5000 8086 10250
   nfs_share:
     source_ips:
-    - 116.66.187.0/24
+    - 192.168.0.0/16
+    - 10.31.0.0/16
   nfs_ssh:
     port: 22
   tcp_port_for_pods: 30000-49999
   tcp_port_ranges: 80 443 30000-49999 25826 3000 22222 9091 9092
   udp_port_ranges: '25826'
-  vnet_range: 116.66.187.0/24
+  vnet_range: 192.168.0.0/16
+  
+cloud_elasticsearch_node: apulis-atlas01.sigsus.cn
+cloud_elasticsearch_port: '9200'
 
-cloud_elasticsearch_node: china-gpu02.sigsus.cn
+cloud_influxdb_port: '8086'
+cloud_influxdb_tp_port: '25826'
+
+custom_mounts: []
+admin_username: dlwsadmin
+
+# settings for docker
+dockerregistry: apulistech/
+dockers:
+  hub: apulistech/
+  tag: "1.9"
+ 
+cloud_config:
+  dev_network:
+    source_addresses_prefixes: [ "66.114.136.16/29", "73.140.21.119/32"]
+
+cloud_config:
+  default_admin_username: jinl
+  dev_network:
+    source_addresses_prefixes:
+    - 66.114.136.16/29
+    - 73.140.21.119/32
+    tcp_port_ranges: 22 1443 2379 3306 5000 8086 10250 10255 22222
+  inter_connect:
+    tcp_port_ranges: 22 1443 2379 3306 5000 8086 10250
+  nfs_share:
+    source_ips:
+    - 192.168.0.0/16
+    - 10.31.0.0/16
+  nfs_ssh:
+    port: 22
+  tcp_port_for_pods: 30000-49999
+  tcp_port_ranges: 80 443 30000-49999 25826 3000 22222 9091 9092
+  udp_port_ranges: '25826'
+  vnet_range: 192.168.0.0/16
+  
+cloud_elasticsearch_node: apulis-atlas01.sigsus.cn
 cloud_elasticsearch_port: '9200'
 
 cloud_influxdb_port: '8086'
@@ -228,7 +308,7 @@ custom_mounts: []
 data-disk: /dev/[sh]d[^a]
 dataFolderAccessPoint: ''
 
-
+datasource: MySQL
 defalt_virtual_cluster_name: platform
 default-storage-folders:
 - jobfiles
@@ -239,11 +319,11 @@ default-storage-folders:
 deploymounts: []
 
 discoverserver: 4.2.2.1
-dltsdata-storage-mount-path: /dltsdata
+dltsdata-atorage-mount-path: /dltsdata
 dns_server:
   azure_cluster: 8.8.8.8
-  onpremise: 8.8.8.8
-
+  onpremise: 10.50.10.50
+  
 Authentications:
   Microsoft:
     TenantId: 19441c6a-f224-41c8-ac36-82464c2d9b13
@@ -255,63 +335,50 @@ Authentications:
     AppSecret: sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj
 
   Wechat:
-    AppId: wx403e175ad2bf1d2d
-    AppSecret: dc8cb2946b1d8fe6256d49d63cd776d0
+    AppId: "wx403e175ad2bf1d2d"
+    AppSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
 
 supported_platform:  ["onpremise"]
 onpremise_cluster:
-  worker_node_num:    2
-  gpu_count_per_node: 8
+  worker_node_num:    1
+  gpu_count_per_node: 1
   gpu_type:           nvidia
-
 
 mountpoints:
   nfsshare1:
     type: nfs
-    server: storage-server
-    filesharename: /mypool
+    server: atlas01
+    filesharename: /mnt/local
     curphysicalmountpoint: /mntdlws
     mountpoints: ""
 
-nfs_disk_mnt:
-  storage-server:
-    fileshares:
-    - mypool
-    path: /
-    role: nfs
-
-nfs_client_CIDR:
-  node_range:
-  - 116.66.187.0/24
-
-basic_auth: d368c36acb3343b4,admin,1000
-deploydockerETCD: false
+jwt:
+  secret_key: "Sign key for JWT"
+  algorithm: HS256
+  token_ttl: 86400
 
 k8sAPIport: 6443
 k8s-gitbranch: v1.18.0
 deploy_method: kubeadm
 
 repair-manager:
+  cluster_name: "atlas"
   ecc_rule:
     cordon_dry_run: True
   alert:
-    smtp_url: smtp.office365.com
-    login: dev@apulis.com
-    smtp_url: smtp.office365.com
-    login: dev@apulis.com
-    password: Yitong#123
-    sender: dev@apulis.com
-    receiver: ["181330729@qq.com"]
-    
-jwt:
-  secret_key: "Sign key for JWT"
-  algorithm: HS256
-  token_ttl: 86400
+          #    smtp_url: smtp.office365.com
+          #    login: dev@apulis.com
+          #    smtp_url: smtp.office365.com
+          #    login: dev@apulis.com
+          #    password: Yitong#123
+          #    sender: dev@apulis.com
+    smtp_url: smtp.qq.com
+    login: 1023950387@qq.com
+    password: vtguxryxqyrkbfdd
+    sender: 1023950387@qq.com
+    receiver: ["1023950387@qq.com"]
 
-# for github private project 
-dockers:
-  user:
-  password: 
+enable_custom_registry_secrets: True
 ```
 
 
@@ -495,13 +562,13 @@ echo "your_root_password" > "rootpasswd"
 - ##### 安装集群基础软件
 
     ```
-    ./deploy.py --verbose execonall docker pull dlws/pause-amd64:3.0
-    ./deploy.py --verbose execonall docker tag  dlws/pause-amd64:3.0 gcr.io/google_containers/pause-amd64:3.0
-
     ./deploy.py --verbose kubeadm init
     ./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
     ```
-
+- ##### （可选）设置master充当worker
+    ```shell script
+    ./deploy.py --verbose kubernetes uncordon 
+    ```
 - ##### 设置集群节点标签
   
     ```
@@ -509,8 +576,6 @@ echo "your_root_password" > "rootpasswd"
     ./deploy.py --verbose -y kubernetes labelservice
     ./deploy.py --verbose -y labelworker
     ```
-    
-    
 
 
 #### 3.14 挂载存储节点
@@ -532,9 +597,9 @@ echo "your_root_password" > "rootpasswd"
      挂载目录需与config.yaml中所配置一致
 
      > mountpoints:
-   >   nfsshare1:
+     >   nfsshare1:
      >     type: nfs
-   >     server: storage-server
+     >     server: storage-server
      >     filesharename: /data/nfsshare
      >     curphysicalmountpoint: /mntdlws
      >     mountpoints: ""
@@ -564,10 +629,11 @@ echo "your_root_password" > "rootpasswd"
   每个节点可看到/data/nfsshare被挂载
   ```
 
-#### 3.15 部署NVidia插件
+#### 3.15 部署NVidia GPU/A910 NPU插件
 
 ```
 ./deploy.py --verbose kubernetes start nvidia-device-plugin
+./deploy.py --verbose kubernetes start a910-device-plugin
 ```
 
 ​    
@@ -639,66 +705,124 @@ clusters:
 
 
 
-#### 3.18 部署集群应用
+#### 3.18 部署集群应用 
 
-- ##### 登录docker hub （用户名为config.yaml所配置）
+1. ##### 本地登录docker hub （用户名为config.yaml所配置）
     > docker login
 
-- ##### 生成dashboard, jobmanager等服务的配置文件
+2. ##### 生成dashboard, jobmanager等服务的配置文件
     ```
     ./deploy.py --verbose webui         
     ```
 
-- ##### 编译restfulapi和webui3服务
-    ```
-    ./deploy.py --verbose --arch arm64 docker push restfulapi2
-    ./deploy.py --verbose --arch arm64 docker push webui3
-    ./deploy.py --nocache --arch arm64 docker push custom-user-dashboard-frontend
-    ./deploy.py --nocache --arch arm64 docker push custom-user-dashboard-backend
-    ```
+3. ##### 编译restfulapi和webui3服务
+    - master为AMD64架构
+        ```
+        ./deploy.py --verbose docker push restfulapi2
+        ./deploy.py --verbose docker push webui3
+        ./deploy.py --nocache docker push custom-user-dashboard-frontend
+        ./deploy.py --nocache docker push custom-user-dashboard-backend
+        ```
+    - master为ARM64架构
+        ```
+        ./deploy.py --verbose --archtype arm64 docker push restfulapi2
+        ./deploy.py --verbose --archtype arm64 docker push webui3
+        ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-frontend
+        ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-backend
+        ```
 
-- ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
-    ```
-    ./deploy.py --verbose --arch arm64 docker push init-container
-    ```
-  如果集群有x86架构的机器，在x86机器上执行
-    ```shell script
-    ./deploy.py --verbose docker push init-container
-    ```
+4. ##### 编译对请求加密组件openresty
+    - master为AMD64架构
+        ```shell script
+        ./deploy.py --verbose docker push openresty
+        ```
+    - master为ARM64架构
+        ```shell script
+        ./deploy.py --verbose --archtype arm64 docker push openresty
+        ```
+      
+5. ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
+    - master为AMD64架构
+        ```
+        ./deploy.py --verbose docker push init-container
+        ```  
+        如果集群有arm64架构的worker机器，在其中一台arm64的worker机器上执行  
+        ```
+        ./deploy.py --verbose --archtype arm64 docker push init-container
+        ```
+   - master为ARM64架构
+        ```
+        ./deploy.py --verbose --archtype arm64 docker push init-container
+        ```
+        如果集群有amd64架构的worker机器，在其中一台amd64的worker机器上执行  
+        ```
+        ./deploy.py --verbose docker push init-container
+        ```
   
-- ##### 编译监控相关的镜像
-    在arm架构的机器上
-    ```shell script
-    ./deploy.py --arch arm64 docker push watchdog
-    ./deploy.py --arch arm64 docker push gpu-reporter
-    ./deploy.py --arch arm64 docker push job-exporter
-    ```
-    如果集群有x86架构的机器，在x86机器上执行
-    ```shell script
-    ./deploy.py docker push watchdog
-    ./deploy.py docker push gpu-reporter
-    ./deploy.py docker push job-exporter
-    ```
+6. ##### 编译监控相关的镜像
+    - master为AMD64架构
+        ```shell script
+        ./deploy.py docker push watchdog
+        ./deploy.py docker push gpu-reporter
+        ./deploy.py docker push job-exporter
+        ```
+        注： 如果集群有arm64架构的worker机器，在其中一台arm64机器上执行
+        ```shell script
+        ./deploy.py --archtype arm64 docker push watchdog
+        ./deploy.py --archtype arm64 docker push gpu-reporter
+        ./deploy.py --archtype arm64 docker push job-exporter
+        ```
+    - master为ARM64架构
+        ```shell script
+        ./deploy.py --archtype arm64 docker push watchdog
+        ./deploy.py --archtype arm64 docker push gpu-reporter
+        ./deploy.py --archtype arm64 docker push job-exporter
+        ```
+        注： 如果集群有amd64架构的worker机器，在其中一台amd64机器上执行
+        ```shell script
+        ./deploy.py docker push watchdog
+        ./deploy.py docker push gpu-reporter
+        ./deploy.py docker push job-exporter
+        ```
 
-
-- ##### 配置Nginx
+7. ##### 配置Nginx
     ```
     ./deploy.py --verbose nginx fqdn
     ./deploy.py --verbose nginx config
     ```
 
-- ##### 启动集群应用
+8. ##### 启动mysql并设置
+    ```shell script
+      ./deploy.py --verbose kubernetes start mysql
     ```
-    ./deploy.py --verbose kubernetes start mysql jobmanager2 restfulapi2 monitor nginx custommetrics
-    ./deploy.py --verbose kubernetes start cloudmonitor
+    进入mysql容器
+    ```shell script
+      mysql -uroot -p
+      use mysql;
+      create user 'root'@'%' identified by '';
+      grant all privileges on *.* to 'root'@'%' with grant option;
+      flush privileges;
+      alter user 'root'@'%' identified with mysql_native_password by 'apulis#2019#wednesday';
     ```
 
-- ##### 启动dashboard
+9. ##### 启动集群应用
     ```
-    ./deploy.py --verbose nginx webui3
-    ./deploy.py --verbose kubernetes start webui3
-    ./deploy.py kubernetes start custom-user-dashboard
+    ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
     ```
 
+10. ##### 启动dashboard
+    - master为AMD64架构
+        ```
+        ./deploy.py --verbose nginx webui3
+        ./deploy.py --verbose kubernetes start webui3
+        ./deploy.py kubernetes start custom-user-dashboard
+        ```
+    - master为ARM64架构
+        ```
+        ./deploy.py --verbose --archtype arm64 nginx webui3
+        ./deploy.py --verbose kubernetes start webui3
+        ./deploy.py kubernetes start custom-user-dashboard
+        ```
+  
 
 

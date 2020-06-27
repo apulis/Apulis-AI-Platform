@@ -1,19 +1,13 @@
+import os
 import json
 import time
-from pathlib import Path
 from DataHandler import DataHandler, DataManager
 import requests
 from requests.auth import HTTPBasicAuth
 
-def loadParams(paramsJson):
-    return json.loads(paramsJson)
-
-def SetFDInfo(paramsJson):
-    ret = {}
-    params = loadParams(paramsJson)
+def SetFDInfo(params):
     dataHandler = DataHandler()
-    dataHandler.SetFDInfo(params)
-    return ret
+    return dataHandler.SetFDInfo(params)
 
 def GetFDInfo():
     dataHander = DataHandler()
@@ -23,9 +17,8 @@ def GetModelConversionInfo(jobId):
     dataHander = DataHandler()
     return dataHander.GetModelConvertInfo(jobId)
 
-def PushModelToFD(paramsJson):
+def PushModelToFD(params):
     ret = {}
-    params = loadParams(paramsJson)
     jobId = params['jobId']
     fdinfo = GetFDInfo()
     modconvertInfo = GetModelConvertInfo(jobId)
@@ -75,4 +68,4 @@ def fd_push_file(modconvertInfo, fdinfo):
     return ret
 
 def get_filename(filepath):
-    return Path(filepath).name
+    return os.path.basename(filepath)

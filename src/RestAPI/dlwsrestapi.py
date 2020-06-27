@@ -443,11 +443,13 @@ class SetFDInfo(Resource):
         logger.info(params)
 
         ret = ModelConvertPushUtils.SetFDInfo(params)
-        logger.info("Set fd server info through restapi, result is %s", result)
+        logger.info("Set fd server info through restapi, result is %s", ret)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
         return resp
+
+api.add_resource(SetFDInfo, '/SetFDInfo')
 
 class GetFDInfo(Resource):
     @api.expect(api.model("GetFDInfo", model.GetFDInfo(api).params))
@@ -459,6 +461,8 @@ class GetFDInfo(Resource):
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
         return resp
+
+api.add_resource(GetFDInfo, '/GetFDInfo')
 
 class PushModelToFD(Resource):
     @api.expect(api.model("PushModelToFD", model.PushModelToFD(api).params))
@@ -473,6 +477,8 @@ class PushModelToFD(Resource):
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
         return resp
+
+api.add_resource(PushModelToFD, '/PushModelToFD')
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):

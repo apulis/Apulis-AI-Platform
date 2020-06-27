@@ -209,7 +209,7 @@ class DataHandler(object):
                     `outputPath` TEXT NOT NULL,
                     `type`       varchar(255) NOT NULL,
                     `status`     varchar(255) NOT NULL,
-                    `fileId`     varchar(255)
+                    `fileId`     varchar(255),
                     PRIMARY KEY (`id`),
                     INDEX (`jobId`),
                     INDEX (`type`),
@@ -222,6 +222,10 @@ class DataHandler(object):
                 conn.insert_one(sql)
                 conn.commit()
 
+
+            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            print "fdserverinfo"
+            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             sql = """
                 CREATE TABLE IF NOT EXISTS  `%s`
                 (
@@ -923,11 +927,11 @@ class DataHandler(object):
     def UpdateModelConversionFileId(self, jobId, fileId):
         ret = False
         try:
-            sql = "UPDATE `%s` SET fileId='%s' WHERE jobID='%s'" % self.modelconversionjobtablename, fileId, jobId
+            sql = "UPDATE `%s` SET fileId='%s' WHERE jobID=%s" % self.modelconversionjobtablename, fileId, jobId
             with MysqlConn() as conn:
                 conn.update(sql)
                 conn.commit()
-            return = True
+            ret = True
         except Exception as e:
             logger.exception('Update modelconvert fileId failed: %s', str(e))
         return ret
@@ -937,10 +941,14 @@ class DataHandler(object):
         ret = False
         try:
             name = "default"
-            sql = "INSERT INTO " + self.fdserverinfotablename + "(name) VALUES (%s) ON DUPLICATE KEY UPDATE username='%s', password='%s', url='%s'"
+            sql = ""
+            if self.GetFDInfo() is None:
+                sql = "INSERT INTO `" + self.fdserverinfotablename + "` (username, password, url, name) VALUES (%s, %s, %s, %s)"
+            else:
+                sql = "UPDATE " + self.fdserverinfotablename + " SET username=%s, password=%s, url=%s WHERE name=%s"
             with MysqlConn() as conn:
                 conn.insert_one(sql, (
-                    name, params["username"], params["password"], params["url"]
+                    params["username"], params["password"], params["url"], name
                 ))
                 conn.commit()
             ret = True
@@ -953,7 +961,7 @@ class DataHandler(object):
         ret = None
         try:
             name = "default"
-            query = "SELECT `name`, `username`, `password`, `url` FROM `%s` where `name` = %s " % (
+            query = "SELECT name, username, password, url FROM %s where name='%s'" % (
                 self.fdserverinfotablename, name
             )
             with MysqlConn() as conn:

@@ -137,6 +137,10 @@ class GetFDInfo:
     def __init__(self, api):
         self.params = {}
 
+class GetModelConversionTypes:
+    def __init__(self, api):
+        self.params = {}
+
 class ListJobResponse(fields.Raw):
     __schema_type__ = "List"
     __schema_example__ = """[{"jobId":xxx,"jobStatus":"xxx"},....]"""

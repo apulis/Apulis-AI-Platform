@@ -590,6 +590,73 @@ class Cluster extends Service {
     const data = await response.json()
     return data
   }
+
+  async getFDInfo () {
+    const response = await this.fetch(`/GetFDInfo`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
+  async getModelConvertionTypes () {
+    const response = await this.fetch(`/ListModelConvertionTypes`)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
+  async getModelList () {
+    const { user } = this.context.state
+    const params = new URLSearchParams({
+      userName: user.userName,
+      vcName: teamId,
+      jobOwner: jobOwner,
+      num: limit
+    })
+    const response = await this.fetch('/ListModelConversionJob?' + params)
+    this.context.assert(response.ok, 502)
+    const data = await response.json()
+    return data
+  }
+
+  async setFDInfo (data) {
+    const response = await this.fetch('/SetFDInfo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    const text = await response.text();
+    this.context.assert(response.ok, response.status, response.statusText);
+    return text;
+  }
+
+  async pushModelToFD (data) {
+    const response = await this.fetch('/PushModelToFD', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    const text = await response.text();
+    this.context.assert(response.ok, response.status, response.statusText);
+    return text;
+  }
+
+  async postModelConversionJob (job) {
+    const response = await this.fetch('/PostModelConversionJob', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(job)
+    });
+    const text = await response.text();
+    this.context.assert(response.ok, response.status, response.statusText);
+    return text;
+  }
 }
 
 module.exports = Cluster

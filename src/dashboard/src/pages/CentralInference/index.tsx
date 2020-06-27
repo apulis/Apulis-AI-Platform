@@ -15,7 +15,7 @@ import AuthContext from '../../contexts/Auth';
 import useInterval from '../../hooks/useInterval';
 
 const CentralInference: React.FC = () => {
-  const { selectedCluster, availbleGpu } = useContext(ClusterContext);
+  const { selectedCluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);
   const [jobs, setJobs] = useState<any[]>([]);

@@ -16,7 +16,7 @@ module.exports = schema => {
         }
       }
 
-      if (schema === 'postInferenceJob') valid = true;
+      if (schema === 'postInferenceJob' || schema === 'setFDInfo' || schema === 'pushModelToFD' || schema === 'postModelConversionJob') valid = true;
 
       if (!valid) {
         const message = validator.errors.map(

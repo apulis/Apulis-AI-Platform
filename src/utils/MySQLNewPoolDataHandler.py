@@ -209,6 +209,7 @@ class DataHandler(object):
                     `outputPath` TEXT NOT NULL,
                     `type`       varchar(255) NOT NULL,
                     `status`     varchar(255) NOT NULL,
+                    `fileId`     varchar(255)
                     PRIMARY KEY (`id`),
                     INDEX (`jobId`),
                     INDEX (`type`),
@@ -225,7 +226,7 @@ class DataHandler(object):
                 CREATE TABLE IF NOT EXISTS  `%s`
                 (
                     `id`         INT     NOT NULL AUTO_INCREMENT,
-                    `name`       varchar(50)   NOT NULL,
+                    `name`       varchar(50)   NOT NULL UNIQUE,
                     `username`   varchar(50)   NOT NULL,
                     `password`   varchar(50)   NOT NULL,
                     `url`        varchar(255) NOT NULL,
@@ -902,6 +903,7 @@ class DataHandler(object):
             logger.exception('AddJob Exception: %s', str(e))
         return ret
 
+    ### Model Convert && FD Push functions
     @record
     def AddModelConversionJob(self, jobParams):
         ret = False
@@ -915,6 +917,62 @@ class DataHandler(object):
             ret = True
         except Exception as e:
             logger.exception('AddJob Exception: %s', str(e))
+        return ret
+
+    @record
+    def UpdateModelConversionFileId(self, jobId, fileId):
+        ret = False
+        try:
+            sql = "UPDATE `%s` SET fileId='%s' WHERE jobID='%s'" % self.modelconversionjobtablename, fileId, jobId
+            with MysqlConn() as conn:
+                conn.update(sql)
+                conn.commit()
+            return = True
+        except Exception as e:
+            logger.exception('Update modelconvert fileId failed: %s', str(e))
+        return ret
+
+    @record
+    def SetFDInfo(self, params):
+        ret = False
+        try:
+            name = "default"
+            sql = "INSERT INTO " + self.fdserverinfotablename + "(name) VALUES (%s) ON DUPLICATE KEY UPDATE username='%s', password='%s', url='%s'"
+            with MysqlConn() as conn:
+                conn.insert_one(sql, (
+                    name, params["username"], params["password"], params["url"]
+                ))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('SetFDInfo Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetFDInfo(self):
+        ret = None
+        try:
+            name = "default"
+            query = "SELECT `name`, `username`, `password`, `url` FROM `%s` where `name` = %s " % (
+                self.fdserverinfotablename, name
+            )
+            with MysqlConn() as conn:
+                ret = conn.select_one(query)
+        except Exception as e:
+            logger.exception('GetFDInfo Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetModelConvertInfo(self, jobId):
+        ret = None
+        try:
+            query = "SELECT `inputPath`, `outputPath`, `type`, `status`, `fileId` FROM `%s` where jobId = %s" (
+                self.modelconversionjobtablename, jobId
+            )
+            with MysqlConn() as conn:
+                ret = conn.select_one(query)
+        except Exception as e:
+            logger.exception("Get ModelConvert info excepthin: %s", str(e))
         return ret
 
     @record

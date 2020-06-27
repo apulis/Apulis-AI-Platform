@@ -106,7 +106,7 @@ class PostInferenceJob:
         }
 
 class PostModelConversionJob:
-    def __init__(self,api):
+    def __init__(self, api):
         self.params = {
             "image":fields.String,
             "vcName":fields.String,
@@ -118,6 +118,24 @@ class PostModelConversionJob:
             "conversionType": fields.String(example="tensorflow-A310"),
             "device": fields.String,
         }
+
+class PushModelToFD:
+    def __init__(self, api):
+        self.params = {
+            "jobId": fields.String
+        }
+
+class SetFDInfo:
+    def __init__(self, api):
+        self.params = {
+            "username": fields.String,
+            "password": fields.String,
+            "url": fields.String
+        }
+
+class GetFDInfo:
+    def __init__(self, api):
+        self.params = {}
 
 class ListJobResponse(fields.Raw):
     __schema_type__ = "List"

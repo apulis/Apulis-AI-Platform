@@ -28,6 +28,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../util
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
 import JobRestAPIUtils
+import ModelConvertPushUtils
 from authorization import ResourceType, Permission, AuthorizationManager, ACLManager
 import model
 import authorization
@@ -407,6 +408,8 @@ class PostInferenceJob(Resource):
 
 api.add_resource(PostInferenceJob, '/PostInferenceJob')
 
+### Model Convert && FD Push
+
 class PostModelConversionJob(Resource):
     @api.expect(api.model("PostModelConversionJob", model.PostModelConversionJob(api).params))
     def post(self):
@@ -431,6 +434,45 @@ class PostModelConversionJob(Resource):
         return resp
 
 api.add_resource(PostModelConversionJob, '/PostModelConversionJob')
+
+class SetFDInfo(Resource):
+    @api.expect(api.model("SetFDInfo", model.SetFDInfo(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Set FD server info")
+        logger.info(params)
+
+        ret = ModelConvertPushUtils.SetFDInfo(params)
+        logger.info("Set fd server info through restapi, result is %s", result)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+class GetFDInfo(Resource):
+    @api.expect(api.model("GetFDInfo", model.GetFDInfo(api).params))
+    def get(self):
+        logger.info("Request to get fd server info")
+        ret = ModelConvertPushUtils.GetFDInfo()
+        logger.info("Get fd server info through restapi, result is %s", ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+class PushModelToFD(Resource):
+    @api.expect(api.model("PushModelToFD", model.PushModelToFD(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Push model to fd")
+        logger.info(params)
+
+        ret = ModelConvertPushUtils.PushModelToFD(params)
+        logger.info("Push model file to fd through restapi, result is %s", ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):

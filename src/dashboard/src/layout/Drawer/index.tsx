@@ -88,12 +88,12 @@ const NavigationList: FC = () => {
       </AuthzHOC>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/model">
-          <ListItemText>Model</ListItemText>
+          <ListItemText>Edge Inference</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/centralInference">
-          <ListItemText>Central Inference</ListItemText>
+          <ListItemText>Cloud Inference</ListItemText>
         </LinkListItem>
       </AuthzHOC>
     </List>

@@ -57,7 +57,6 @@ default_config_parameters = {
             "restful-url": "http://localhost:5000",
         }
     },
-    "repair-manager": { "prometheus-ip": "localhost", "prometheus-port": 9091},
 
     "repair-manager": {
         "prometheus-ip": "localhost",
@@ -669,7 +668,13 @@ default_config_parameters = {
 
     # inferenceJob config
     "inference":{
-      "tensorflow":[{"version":"1.15","image":"emacski/tensorflow-serving:1.15.0","device":"CPU"}]
+      "tensorflow":[{"version":"1.15",
+                     "support":
+                         [
+                             {"image":"emacski/tensorflow-serving:1.15.0","device":"CPU"},
+                             {"image":"tensorflow/serving:1.15.0-gpu","device":"GPU"}
+                          ]
+                     }]
     },
 
     # System dockers.

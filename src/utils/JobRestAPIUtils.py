@@ -161,7 +161,11 @@ def SubmitJob(jobParamsJsonStr):
             return ret
 
         if not jobParams["jobPath"].startswith(userName):
-            jobParams["jobPath"] = os.path.join(userName,jobParams["jobPath"])
+            if jobParams["jobPath"] == "./":
+                jobParams["jobPath"] = os.path.join(userName,"jobs/"+time.strftime("%y%m%d")+"/"+jobParams["jobId"], jobParams["jobPath"])
+            else:
+                jobParams["jobPath"] = os.path.join(userName,jobParams["jobPath"])
+
 
     else:
         jobPath = userName+"/"+ "jobs/"+time.strftime("%y%m%d")+"/"+jobParams["jobId"]
@@ -293,7 +297,7 @@ def PostInferenceJob(jobParamsJsonStr):
     jobParams["containerUserId"] = 0
     jobParams["isPrivileged"] = False
     jobParams["hostNetwork"] = False
-    jobParams["gpuType"] = None
+    jobParams["gpuType"] = None if "gpuType" not in jobParams else jobParams["gpuType"]
 
 
     if isinstance(jobParams["resourcegpu"], basestring):
@@ -407,7 +411,12 @@ def GetAllSupportInference():
         if "inference" in config:
             for framework, items in config["inference"].items():
                 for one in items:
-                    ret.append({"framework":framework+"-"+str(one["version"]),"image":one["image"],"device":[one["device"]] if "," not in one["device"] else one["device"].split(",")})
+                    images = []
+                    devices = []
+                    for one_support in one["support"]:
+                        images.append(one_support["image"])
+                        devices.append(one_support["device"])
+                    ret.append({"framework":framework+"-"+str(one["version"]),"image":images,"device":devices})
     except Exception as e:
         logger.error('Exception: %s', str(e))
     return ret

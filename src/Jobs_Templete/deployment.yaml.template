@@ -47,6 +47,10 @@ spec:
         image: {{ job["image"] }}
         imagePullPolicy: Always
         # command: {{ job["LaunchCMD"] }}
+        args:
+        - --rest_api_port={{ job["inference_port"] }}
+        - --model_name={{ job["model_name"] }}
+        - --model_base_path={{ job["model_base_path"] }}
         securityContext:
           runAsUser: {{ job["containerUserId"] }}
           capabilities:

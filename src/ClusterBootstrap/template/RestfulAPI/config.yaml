@@ -95,10 +95,14 @@ administrators:
 inference:
   {% for framework,items in cnf["inference"].items() %}{% for one in items %}{{framework}}:
     - version: {{one["version"]}}
-      image: {{one["image"]}}
-      device: {{one["device"]}}
+      support: {% for one_support in one["support"] %}
+      - image: {{one_support["image"]}}
+        device: {{one_support["device"]}}
+      {% endfor %}
     {% endfor %}
   {% endfor %}
 
 usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend
 usermanagerapitoken: {{cnf["usermanagerapitoken"]}}
+
+enable_jobmanager_debug_mode: {{cnf["enable_jobmanager_debug_mode"]}}

@@ -218,18 +218,18 @@ const ClusterStatus: FC = () => {
           totalRow['preemptableGPU'] = 0;
           let GPUTypesSet = new Set();
           for (let us of finalUserStatus) {
-            totalRow['booked'] += parseInt(us['booked']);
-            totalRow['idle'] += parseInt(us['idle']);
+            totalRow['booked'] += parseInt(us['booked'] || 0);
+            totalRow['idle'] += parseInt(us['idle'] || 0);
             totalRow['usedGPU'] += parseInt(us['usedGPU']);
             totalRow['idleGPU'] += parseInt(us['idleGPU']);
             totalRow['preemptableGPU'] += parseInt(us['preemptableGPU']);
             GPUTypesSet.add(us['gpuType']);
           }
-          for (const t in totalRow) {
-            if (typeof totalRow[t] === 'number' && isNaN(totalRow[t])) {
-              totalRow[t] = undefined
-            }
-          }
+          // for (const t in totalRow) {
+          //   if (typeof totalRow[t] === 'number' && isNaN(totalRow[t])) {
+          //     totalRow[t] = undefined
+          //   }
+          // }
           totalRow['gpuType'] = (Array.from(GPUTypesSet)).join(',')
           totalRow['userName'] = 'Total';
           finalUserStatus.push(totalRow);

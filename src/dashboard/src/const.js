@@ -17,6 +17,4 @@ export const OneInteractivePortsMsg = 'Must be a positive integer between 40000 
 
 export const InteractivePortsMsg = 'Must be a positive integer between 40000 and 49999！Multiple can be separated by comma.';
 
-export const NpuNumMsg = 'Must be a number of 1, 2, 4, 8！';
-
 export const NoNumberText = 'Cannot contain numbers';

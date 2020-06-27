@@ -101,7 +101,7 @@ const CentralInference: React.FC = () => {
       framework: framework,
       device: deviceType,
       image: image,
-      resourcegpu: 1,
+      resourcegpu: deviceType === 'CPU' ? 0 : 1,
       gpuType: gpuType
     }).then((res: any) => {
       message('success', `Inference successfully！`);
@@ -162,6 +162,12 @@ const CentralInference: React.FC = () => {
       if (_data[i].deviceStr === 'nvidia.com/gpu') arr.push(i);
     });
     setGpuDevice(arr);
+  }
+
+  const onDeviceTypeChange = (e: any) => {
+    const val = e.target.value;
+    setDeviceType(val);
+    if (gpuDevice.length && val === 'GPU') setGpuType(gpuDevice[0]);
   }
 
   return (
@@ -251,7 +257,7 @@ const CentralInference: React.FC = () => {
               label="Device Type"
               name="device"
               fullWidth
-              onChange={(e: { target: { value: any; }; }) => setDeviceType(e.target.value)}
+              onChange={onDeviceTypeChange}
               variant="filled"
               value={deviceType}
               style={{ margin: '10px 0' }}

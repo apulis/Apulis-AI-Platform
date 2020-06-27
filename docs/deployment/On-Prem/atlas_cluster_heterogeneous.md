@@ -366,12 +366,6 @@ repair-manager:
   ecc_rule:
     cordon_dry_run: True
   alert:
-          #    smtp_url: smtp.office365.com
-          #    login: dev@apulis.com
-          #    smtp_url: smtp.office365.com
-          #    login: dev@apulis.com
-          #    password: Yitong#123
-          #    sender: dev@apulis.com
     smtp_url: smtp.qq.com
     login: 1023950387@qq.com
     password: vtguxryxqyrkbfdd
@@ -765,6 +759,7 @@ clusters:
         ./deploy.py docker push watchdog
         ./deploy.py docker push gpu-reporter
         ./deploy.py docker push job-exporter
+        ./deploy.py docker push repairmanager2
         ```
         注： 如果集群有arm64架构的worker机器，在其中一台arm64机器上执行
         ```shell script
@@ -777,6 +772,7 @@ clusters:
         ./deploy.py --archtype arm64 docker push watchdog
         ./deploy.py --archtype arm64 docker push gpu-reporter
         ./deploy.py --archtype arm64 docker push job-exporter
+        ./deploy.py --archtype arm64 docker push repairmanager2
         ```
         注： 如果集群有amd64架构的worker机器，在其中一台amd64机器上执行
         ```shell script

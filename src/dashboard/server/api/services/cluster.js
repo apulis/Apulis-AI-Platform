@@ -599,13 +599,13 @@ class Cluster extends Service {
   }
 
   async getModelConvertionTypes () {
-    const response = await this.fetch(`/ListModelConvertionTypes`)
+    const response = await this.fetch(`/GetModelConversionTypes`)
     this.context.assert(response.ok, 502)
     const data = await response.json()
     return data
   }
 
-  async getModelList () {
+  async getModelList (teamId, jobOwner, limit) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       userName: user.userName,
@@ -616,7 +616,14 @@ class Cluster extends Service {
     const response = await this.fetch('/ListModelConversionJob?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()
-    return data
+    console.log('----------', data)
+
+    return [].concat(
+      data['finishedJobs'],
+      data['queuedJobs'],
+      data['runningJobs'],
+      data['visualizationJobs']
+    )
   }
 
   async setFDInfo (data) {

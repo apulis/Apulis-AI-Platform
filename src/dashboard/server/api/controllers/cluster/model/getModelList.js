@@ -10,5 +10,14 @@ module.exports = async context => {
   const { cluster, user } = context.state
   const { teamId } = context.params;
   const { limit, jobOwner } = context.query;
-  context.body = await cluster.getModelList(teamId, jobOwner, Number(limit));
+  const jobs = await cluster.getModelList(teamId, jobOwner, Number(limit));
+  jobs.sort((jobA, jobB) => {
+    const jobATime = jobA['jobTime'];
+    const jobBTime = jobB['jobTime'];
+    const jobADate = new Date(jobATime || 0);
+    const jobBDate = new Date(jobBTime || 0);
+    return jobBDate - jobADate;
+  })
+
+  context.body = jobs;
 }

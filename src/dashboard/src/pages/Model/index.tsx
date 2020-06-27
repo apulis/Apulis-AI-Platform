@@ -1,7 +1,6 @@
 import React, { useState, FC, useEffect, useMemo, useContext } from "react";
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, RadioGroup, Radio, CircularProgress,
   FormControlLabel, TextField, MenuItem } from "@material-ui/core";
-import _ from 'lodash';
 import MaterialTable, { Column, Options } from 'material-table';
 import { renderDate, sortDate } from '../JobsV2/tableUtils';
 import './index.less';
@@ -12,16 +11,23 @@ import TeamsContext from '../../contexts/Teams';
 import message from '../../utils/message';
 import axios from 'axios';
 import AuthContext from '../../contexts/Auth';
+import useInterval from '../../hooks/useInterval';
+import { NameReg, NameErrorText, pollInterval } from '../../const';
 
 const Model: React.FC = () => {
   const { currentRole = [], userName } = useContext(AuthContext);
-  const getDate = (item: any) => new Date(item.time);
+  const getDate = (item: any) => new Date(item.jobTime);
   const isAdmin = currentRole.includes('System Admin');
   const { selectedCluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);
   const [jobs, setJobs] = useState([]);
   const [type, setType] = useState('');
+  const [fdInfo, setFdInfo] = useState({
+    username: '',
+    url: '',
+    password: ''
+  });
   const [convertionTypes, setConvertionTypes] = useState([]);
   const [modalFlag1, setModalFlag1] = useState(false);
   const [modalFlag2, setModalFlag2] = useState(false);
@@ -31,11 +37,12 @@ const Model: React.FC = () => {
   const formObj = { register, errors, setValue, clearError };
 
   const columns = useMemo<Array<Column<any>>>(() => [
-    { title: 'ID', type: 'string', field: 'ID', sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Type', type: 'string', field: 'Type', sorting: false },
-    { title: 'Time', type: 'datetime', field: 'time', 
+    { title: 'ID', type: 'string', field: 'jobId', sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
+    { title: 'Inference Name', type: 'string', field: 'jobName', sorting: false},
+    { title: 'Type', type: 'string', field: 'modelconversionType', sorting: false },
+    { title: 'Time', type: 'datetime', field: 'jobTime', 
       render: renderDate(getDate), customSort: sortDate(getDate) },
-    { title: 'Status', type: 'string', field: 'Status' },
+    { title: 'Status', type: 'string', field: 'modelconversionStatus' },
   ], []);
   const options = useMemo<Options>(() => ({
     padding: 'dense',
@@ -45,28 +52,47 @@ const Model: React.FC = () => {
 
   const getData = () => {
     const jobOwner = isAdmin ? 'all' : userName;
-    axios.get(`/clusters/${selectedCluster}/teams/${selectedTeam}/ListModelConversionJob?jobOwner=${jobOwner}&limit=999`)
+    axios.get(`/${selectedCluster}/teams/${selectedTeam}/ListModelConversionJob?jobOwner=${jobOwner}&limit=999`)
       .then((res: { data: any; }) => {
-        setJobs(res.data);
+        const { data } = res;
+        const temp1 = JSON.stringify(jobs.map((i: { jobStatus: any; }) => i.jobStatus));
+        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
+        if (temp1 !== temp2) setJobs(data);
       }, () => {
         message('error', `Failed to fetch inferences from cluster: ${selectedCluster}`);
       })
   }
 
+  const getFdInfo = () => {
+    let info = {};
+    axios.get(`/${selectedCluster}/getFDInfo`)
+    .then((res: { data: any; }) => {
+      setFdInfo(res.data);
+      info = res.data;
+    })
+    return info;
+  }
+
   useEffect(() => {
     getData();
   }, [selectedCluster, selectedTeam]);
+
+  useInterval(() => {
+    getData();
+  }, pollInterval);
   
-  const onPush = (item: any) => {
-
+  const onPush = async (item: any) => {
+    const info = await getFdInfo();
+    if (info) {
+      axios.post(`/${selectedCluster}/teams/${selectedTeam}/pushModelToFD`, { jobId: item.jobId }).then((res: any) => {
+        getData();
+        message('success', `Push Inference successfully！`);
+      })
+    } else {
+      message('error', `Please entee settings first`);
+      setModalFlag2(true);
+    }
   }
-
-  const test = [{
-    ID: '34298573428957892543',
-    Type: 'caff-A310',
-    time: 'Fri, 12 Jun 2020 06:29:22 GMT',
-    Status: 'success'
-  }]
 
   const onCloseDialog = (type: number) => {
     type === 1 ? setModalFlag1(false) : setModalFlag2(false);
@@ -74,7 +100,13 @@ const Model: React.FC = () => {
 
   const onSubmitTransform = async (val: any) => {
     setBtnLoading(true);
-    await axios.post(`/clusters/${selectedCluster}/teams/${selectedTeam}/postModelConversionJob`, val).then((res: any) => {
+    await axios.post(`/${selectedCluster}/teams/${selectedTeam}/postModelConversionJob`, {
+      ...val,
+      image: '',
+      device: null,
+      conversionType: type
+    }).then((res: any) => {
+      getData();
       message('success', `Edge Inference successfully！`);
       setModalFlag1(false);
     },  () => {
@@ -85,9 +117,9 @@ const Model: React.FC = () => {
 
   const onSubmitSettings = async (val: any) => {
     setBtnLoading(true);
-    await axios.post(`/clusters/${selectedCluster}/teams/${selectedTeam}/setFDInfo`, val).then((res: any) => {
+    await axios.post(`/${selectedCluster}/teams/${selectedTeam}/setFDInfo`, val).then((res: any) => {
       message('success', `Save Settings successfully！`);
-      setModalFlag1(false);
+      setModalFlag2(false);
     },  () => {
       message('error', `Save Settings failed！`);
     })
@@ -101,18 +133,26 @@ const Model: React.FC = () => {
     return null;
   }
 
-  const openSettings = () => {
-    axios.get(`/clusters/${selectedCluster}/getModelConvertionTypes`)
+  const openSettings = async () => {
+    await axios.get(`/${selectedCluster}/getFDInfo`)
       .then((res: { data: any; }) => {
-        setConvertionTypes(res.data);
+        setFdInfo(res.data);
       })
     setModalFlag2(true);
+  }
+
+  const openInference = () => {
+    axios.get(`/${selectedCluster}/getModelConvertionTypes`)
+      .then((res: { data: any; }) => {
+        setConvertionTypes(res.data.conversionTypes);
+      })
+    setModalFlag1(true);
   }
 
   return (
     <div className="modelList">
       <div style={{ marginBottom: 20 }}>
-        <Button variant="contained" color="primary" onClick={() => setModalFlag1(true)}>
+        <Button variant="contained" color="primary" onClick={openInference}>
           New Inference
         </Button>
         <Button variant="contained" style={{ margin: '0 20px' }} color="primary" onClick={openSettings}>
@@ -122,7 +162,7 @@ const Model: React.FC = () => {
       <MaterialTable
         title=""
         columns={columns}
-        data={test}
+        data={jobs}
         options={options}
         actions={[{
           icon: 'backup',
@@ -144,9 +184,27 @@ const Model: React.FC = () => {
             {/* <SelectTree label="Input Path" style={{ margin: '10px 0' }} formObj={formObj} name="in" />
             <SelectTree label="Output Path" style={{ margin: '10px 0' }} formObj={formObj} name="out" /> */}
             <TextField
+              label="Inference Name"
+              name="jobName"
+              fullWidth
+              variant="filled"
+              error={Boolean(errors.jobName)}
+              helperText={errors.jobName ? errors.jobName.message : ''}
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ maxLength: 20 }}
+              style={{ margin: '10px 0' }}
+              inputRef={register({
+                required: 'Inference Name is required！',
+                pattern: {
+                  value: NameReg,
+                  message: NameErrorText
+                }
+              })}
+            />
+            <TextField
               select
               label="Type"
-              name="device"
+              name="conversionType"
               fullWidth
               onChange={e => setType(e.target.value)}
               variant="filled"
@@ -164,13 +222,13 @@ const Model: React.FC = () => {
               helperText={errors. inputPath ? errors. inputPath.message : ''}
               InputLabelProps={{ shrink: true }}
               style={{ margin: '10px 0' }}
-              inputRef={register({
+              inputRef={register({ 
                 required: 'Input Path is required！',
               })}
             />
             <TextField
               label="Output Path"
-              name="model_base_path"
+              name="outputPath"
               fullWidth
               variant="filled"
               error={Boolean(errors.outputPath)}
@@ -201,6 +259,7 @@ const Model: React.FC = () => {
               fullWidth
               variant="filled"
               error={Boolean(errors.url)}
+              defaultValue={fdInfo.url}
               helperText={errors.url ? errors.url.message : ''}
               InputLabelProps={{ shrink: true }}
               inputRef={register({
@@ -212,6 +271,7 @@ const Model: React.FC = () => {
               name="username"
               fullWidth
               variant="filled"
+              defaultValue={fdInfo.username}
               error={Boolean(errors.username)}
               helperText={errors.username ? errors.username.message : ''}
               InputLabelProps={{ shrink: true }}
@@ -225,6 +285,7 @@ const Model: React.FC = () => {
               name="password"
               fullWidth
               variant="filled"
+              defaultValue={fdInfo.password}
               error={Boolean(errors.password)}
               helperText={errors.password ? errors.password.message : ''}
               InputLabelProps={{ shrink: true }}

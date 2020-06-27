@@ -80,7 +80,7 @@ const CentralInference: React.FC = () => {
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
         const temp3 = JSON.stringify(_data.map(i => i['inference-url']));
         const temp4 = JSON.stringify(data?.map((i: { [x: string]: any; }) => i['inference-url']));
-        if (!(temp1 === temp2) || !(temp3 === temp4)) {
+        if (temp1 !== temp2 || temp3 !== temp4) {
           index ? setAllJobs(data) : setJobs(data);
         }
       }, () => {

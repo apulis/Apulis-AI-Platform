@@ -3,7 +3,7 @@ import {
   Table, TableHead, TableRow, TableCell, TableBody, 
   Button, TextField, Container,
   Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText,
-  CircularProgress, MenuItem
+  CircularProgress, MenuItem, TablePagination
 } from "@material-ui/core";
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
@@ -58,7 +58,7 @@ export default class Vc extends React.Component {
     axios.get(`/${this.context.selectedCluster}/listVc`)
       .then((res) => {
         this.setState({
-          vcList: res.data.result,
+          vcList: res.data.result
         })
       })
   }
@@ -322,6 +322,13 @@ export default class Vc extends React.Component {
               ))}
             </TableBody>
           </Table>
+          {/* <TablePagination
+            count={vcList.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onChangePage={handleChangePage}
+            onChangeRowsPerPage={handleChangeRowsPerPage}
+          /> */}
           {modifyFlag && 
           <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth>
             <DialogTitle>{isEdit ? 'Modify' : 'ADD'}</DialogTitle>

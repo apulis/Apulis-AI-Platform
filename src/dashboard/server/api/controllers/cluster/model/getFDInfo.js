@@ -7,6 +7,6 @@
 /** @type {import('koa').Middleware} */
 module.exports = async context => {
   const { cluster } = context.state;
-  const ret = await cluster.getFDInfo();
-  context.body = ret
+  const res = await cluster.getFDInfo();
+  context.body = res
 }

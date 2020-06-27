@@ -429,6 +429,10 @@ def PostModelConversionJob(jobParamsJsonStr):
         jobParams["resourcegpu"] = 0
 
     # default value
+    # TODO
+    jobParams["image"] = "apulistech/atc:0.0.1"
+    jobParams["cmd"] = ""
+    # TODO
     jobParams["jobtrainingtype"] = "ModelConversionJob"
     jobParams["jobType"] = "ModelConversionJob"
     jobParams["preemptionAllowed"] = False

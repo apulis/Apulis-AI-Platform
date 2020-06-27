@@ -57,7 +57,6 @@ default_config_parameters = {
             "restful-url": "http://localhost:5000",
         }
     },
-    "repair-manager": { "prometheus-ip": "localhost", "prometheus-port": 9091},
 
     "repair-manager": {
         "prometheus-ip": "localhost",
@@ -70,6 +69,8 @@ default_config_parameters = {
     "mysql_port": "3306",
     "mysql_username": "root",
     "mysql_data_path": "/var/lib/mysql",
+
+    "extranet_protocol":"https",
 
     "datasource": "MySQL",
     "defalt_virtual_cluster_name": "platform",
@@ -818,6 +819,10 @@ default_config_parameters = {
             "memory_ratio": 0.9
         }
     },
+    "unifi_router":{
+        "username":"dlwsadmin",
+        "ip":"192.168.1.1"
+         }
 }
 
 # These are super scripts

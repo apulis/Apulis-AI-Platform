@@ -827,7 +827,7 @@ def DeleteVC(userName, vcName):
     if AuthorizationManager.IsClusterAdmin(userName):
         jobs = dataHandler.GetJobList("all", "all", num=None,status="running,scheduling,pausing")
         for job in jobs:
-            dataHandler.UpdateJobTextField(job["jobId"],"jobStatus","killing")
+            dataHandler.UpdateJobTextFields({"jobId": job["jobId"],"vcName":vcName},{"jobStatus": "killing"})
         ret = dataHandler.DeleteJobByVcExcludeKilling(vcName)
         ret = dataHandler.DeleteTemplateByVc("vc:"+vcName)
         ret =  dataHandler.DeleteVC(vcName)
@@ -913,6 +913,9 @@ def GetEndpoints(userName, jobId):
                                         epItem["password"] = i["value"]
                             except Exception as e:
                                 logger.error(e)
+                    if epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
+                        if config["extranet_port"]:
+                            epItem["domain"] = epItem["domain"] + ":"+ str(config["extranet_port"])
                     ret.append(epItem)
     except Exception as e:
         logger.error("Get endpoint exception, ex: %s", str(e))

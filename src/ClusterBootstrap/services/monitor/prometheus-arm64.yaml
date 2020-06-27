@@ -76,8 +76,8 @@ spec:
           - '--port'
           - '{{cnf["prometheus"]["reporter"]["port"]}}'
         ports:
-          - name: reporter
-            containerPort: {{cnf["prometheus"]["reporter"]["port"]}}
+        - name: reporter
+          containerPort: {{cnf["prometheus"]["reporter"]["port"]}}
       volumes:
       - name: config-volume
         configMap:

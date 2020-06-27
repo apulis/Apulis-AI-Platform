@@ -714,15 +714,20 @@ clusters:
 
 - ##### 编译restfulapi和webui3服务
     ```
-    ./deploy.py --verbose --arch arm64 docker push restfulapi2
-    ./deploy.py --verbose --arch arm64 docker push webui3
-    ./deploy.py --nocache --arch arm64 docker push custom-user-dashboard-frontend
-    ./deploy.py --nocache --arch arm64 docker push custom-user-dashboard-backend
+    ./deploy.py --verbose --arch amd64 docker push restfulapi2
+    ./deploy.py --verbose --arch amd64 docker push webui3
+    ./deploy.py --nocache --arch amd64 docker push custom-user-dashboard-frontend
+    ./deploy.py --nocache --arch amd64 docker push custom-user-dashboard-backend
     ```
 
+- ##### 编译请求加密服务openresty
+    ```shell script
+    ./deploy.py --verbose --arch amd64 docker push openresty
+    ```
+  
 - ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
     ```
-    ./deploy.py --verbose --arch arm64 docker push init-container
+    ./deploy.py --verbose --arch amd64 docker push init-container
     ```
   如果集群有x86架构的机器，在x86机器上执行
     ```shell script
@@ -730,13 +735,12 @@ clusters:
     ```
   
 - ##### 编译监控相关的镜像
-    在arm架构的机器上
     ```shell script
     ./deploy.py --arch arm64 docker push watchdog
     ./deploy.py --arch arm64 docker push gpu-reporter
     ./deploy.py --arch arm64 docker push job-exporter
     ```
-    如果集群有x86架构的机器，在x86机器上执行
+    注： 如果集群有x86架构的worker机器，在其中一台x86机器上执行
     ```shell script
     ./deploy.py docker push watchdog
     ./deploy.py docker push gpu-reporter
@@ -752,8 +756,7 @@ clusters:
 
 - ##### 启动集群应用
     ```
-    ./deploy.py --verbose kubernetes start mysql jobmanager2 restfulapi2 monitor nginx custommetrics
-    ./deploy.py --verbose kubernetes start cloudmonitor
+    ./deploy.py --verbose kubernetes start mysql jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
     ```
 
 - ##### 启动dashboard
@@ -792,6 +795,7 @@ clusters:
 
   ```
   ./deploy.py --verbose --archtype arm64 docker push nginx
+  ./deploy.py --verbose --archtype arm64 docker push openresty
   ```
 
   4. init-container

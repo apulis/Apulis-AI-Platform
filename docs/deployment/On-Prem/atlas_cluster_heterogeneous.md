@@ -564,17 +564,19 @@ echo "your_root_password" > "rootpasswd"
     ```
     ./deploy.py --verbose kubeadm init
     ./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
+    ```
 ```
     
 - ##### 设置集群节点标签
   
-    ```
+```
     ./deploy.py --verbose kubeadm join
     ./deploy.py --verbose -y kubernetes labelservice
     ./deploy.py --verbose -y labelworker
     ```
-    
-    
+
+
+​    
 
 
 #### 3.14 挂载存储节点
@@ -596,9 +598,9 @@ echo "your_root_password" > "rootpasswd"
      挂载目录需与config.yaml中所配置一致
 
      > mountpoints:
-   >   nfsshare1:
+     >   nfsshare1:
      >     type: nfs
-   >     server: storage-server
+     >     server: storage-server
      >     filesharename: /data/nfsshare
      >     curphysicalmountpoint: /mntdlws
      >     mountpoints: ""

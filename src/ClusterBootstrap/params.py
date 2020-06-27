@@ -819,6 +819,10 @@ default_config_parameters = {
             "memory_ratio": 0.9
         }
     },
+    "unifi_router":{
+        "username":"dlwsadmin",
+        "ip":"192.168.1.1"
+         }
 }
 
 # These are super scripts

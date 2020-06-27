@@ -123,7 +123,7 @@ def get_monthly_idleness(prometheus_url):
     for metric in metrics:
         username = walk_json_field_safe(metric, "metric", "username")
         vc_name = walk_json_field_safe(metric, "metric", "vc_name")
-        gpu_type = walk_json_field_safe(metric, "metric", "gpu_type")
+        gpu_type = walk_json_field_safe(metric, "metric", "device_type")
         if gpu_type == "unknown":
             continue
         if username is None or vc_name is None or gpu_type is None:

@@ -110,7 +110,7 @@ def get_monthly_idleness(prometheus_url):
 
     metrics = walk_json_field_safe(obj, "data", "result")
 
-    default = lambda : {"booked": collections.defaultdict(lambda : 0), "idle": collections.defaultdict(lambda : 0),"nonidle_util_sum": collections.defaultdict(lambda : 0.0)}
+    default = lambda : {"booked": collections.defaultdict(lambda : 0), "idle": collections.defaultdict(lambda : 0),"nonidle_util_sum": collections.defaultdict(lambda : 0.0),"nonidle_util":collections.defaultdict(lambda : 0.0)}
 
     # the first level is vc, the second level is user
     vc_level = collections.defaultdict(
@@ -163,10 +163,10 @@ def get_monthly_idleness(prometheus_url):
                 nonidle_util_sum = user_val["nonidle_util_sum"][gpu_type]
 
                 if nonidle_time == 0:
-                    user_val["nonidle_util"] = 0.0
+                    user_val["nonidle_util"][gpu_type] = 0.0
                 else:
-                    user_val["nonidle_util"] = nonidle_util_sum / nonidle_time
-                user_val.pop("nonidle_util_sum")
+                    user_val["nonidle_util"][gpu_type] = nonidle_util_sum / nonidle_time
+            user_val.pop("nonidle_util_sum")
 
     for vc_name, vc_values in user_level.items():
         for username, user_values in vc_values.items():
@@ -179,7 +179,7 @@ def get_monthly_idleness(prometheus_url):
                         job_val["nonidle_util"][gpu_type] = 0.0
                     else:
                         job_val["nonidle_util"][gpu_type] = nonidle_util_sum / nonidle_time
-                    job_val.pop("nonidle_util_sum")
+                job_val.pop("nonidle_util_sum")
 
     return {"vc_level": vc_level, "user_level": user_level}
 
@@ -193,7 +193,7 @@ def refresher(prometheus_url, atomic_ref):
                     atomic_ref.set(result)
             except Exception:
                 logger.exception("caught exception while refreshing")
-        time.sleep(5 * 60)
+        time.sleep(1 * 60)
 
 
 def serve(prometheus_url, port):

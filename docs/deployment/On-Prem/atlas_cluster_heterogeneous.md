@@ -565,18 +565,14 @@ echo "your_root_password" > "rootpasswd"
     ./deploy.py --verbose kubeadm init
     ./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
     ```
-```
     
 - ##### 设置集群节点标签
   
-```
+    ```
     ./deploy.py --verbose kubeadm join
     ./deploy.py --verbose -y kubernetes labelservice
     ./deploy.py --verbose -y labelworker
     ```
-
-
-​    
 
 
 #### 3.14 挂载存储节点
@@ -888,7 +884,6 @@ clusters:
   ./deploy.py --verbose kubernetes start openresty
   ```
 
-- 
+  
 
-- 
 

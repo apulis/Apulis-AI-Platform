@@ -4,6 +4,7 @@ import { Action } from 'material-table';
 import ConfigContext from '../contexts/Config';
 import UserContext from '../contexts/User';
 import useConfirm from './useConfirm';
+import { useTranslation } from "react-i18next";
 
 const APPROVABLE_STATUSES = [
   'unapproved'
@@ -26,6 +27,7 @@ const KILLABLE_STATUSES = [
 ];
 
 const useActions = (clusterId: string) => {
+  const {t} = useTranslation();
   const { userName, administrators } = useContext(UserContext);
   const supportMail = administrators![0];
   const confirm = useConfirm();
@@ -124,7 +126,7 @@ ${userName}
   const supportEmail = useCallback((job: any): Action<any> => {
     return {
       icon: 'help',
-      tooltip: 'Send email for support',
+      tooltip: t('hooks.sendEmailForSupport'),
       onClick: onSupport
     };
   }, [onSupport]);
@@ -134,7 +136,7 @@ ${userName}
     return {
       hidden,
       icon: 'check',
-      tooltip: 'Approve',
+      tooltip: t('hooks.approve'),
       onClick: onApprove
     }
   }, [onApprove]);
@@ -143,7 +145,7 @@ ${userName}
     return {
       hidden,
       icon: 'pause',
-      tooltip: 'Pause',
+      tooltip: t('hooks.pause'),
       onClick: onPause
     }
   }, [onPause]);
@@ -152,7 +154,7 @@ ${userName}
     return {
       hidden,
       icon: 'play_arrow',
-      tooltip: 'Resume',
+      tooltip: t('hooks.resume'),
       onClick: onResume
     }
   }, [onResume]);
@@ -161,7 +163,7 @@ ${userName}
     return {
       hidden,
       icon: 'clear',
-      tooltip: 'Kill',
+      tooltip: t('hooks.kill'),
       onClick: onKill
     }
   }, [onKill]);

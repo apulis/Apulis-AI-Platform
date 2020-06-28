@@ -1,4 +1,5 @@
 import tips from './zh-CN/tips'
+import hooks from './zh-CN/hooks/hooks'
 import components from './zh-CN/components/components'
 import layout from './zh-CN/layout/layout'
 import home from './zh-CN/pages/Home/home'
@@ -9,6 +10,7 @@ import VirtualCluster from './zh-CN/VirtualCluster';
 
 export default {
   tips,
+  hooks,
   components,
   layout,
   home,

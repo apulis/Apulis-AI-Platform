@@ -15,7 +15,7 @@ import AuthContext from '../../contexts/Auth';
 import useInterval from '../../hooks/useInterval';
 
 const CentralInference: React.FC = () => {
-  const { selectedCluster, availbleGpu } = useContext(ClusterContext);
+  const { selectedCluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);
   const [jobs, setJobs] = useState<any[]>([]);
@@ -80,7 +80,7 @@ const CentralInference: React.FC = () => {
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
         const temp3 = JSON.stringify(_data.map(i => i['inference-url']));
         const temp4 = JSON.stringify(data?.map((i: { [x: string]: any; }) => i['inference-url']));
-        if (!(temp1 === temp2) || !(temp3 === temp4)) {
+        if (temp1 !== temp2 || temp3 !== temp4) {
           index ? setAllJobs(data) : setJobs(data);
         }
       }, () => {
@@ -101,7 +101,7 @@ const CentralInference: React.FC = () => {
       framework: framework,
       device: deviceType,
       image: image,
-      resourcegpu: 1,
+      resourcegpu: deviceType === 'CPU' ? 0 : 1,
       gpuType: gpuType
     }).then((res: any) => {
       message('success', `Inference successfully！`);
@@ -162,6 +162,12 @@ const CentralInference: React.FC = () => {
       if (_data[i].deviceStr === 'nvidia.com/gpu') arr.push(i);
     });
     setGpuDevice(arr);
+  }
+
+  const onDeviceTypeChange = (e: any) => {
+    const val = e.target.value;
+    setDeviceType(val);
+    if (gpuDevice.length && val === 'GPU') setGpuType(gpuDevice[0]);
   }
 
   return (
@@ -251,7 +257,7 @@ const CentralInference: React.FC = () => {
               label="Device Type"
               name="device"
               fullWidth
-              onChange={(e: { target: { value: any; }; }) => setDeviceType(e.target.value)}
+              onChange={onDeviceTypeChange}
               variant="filled"
               value={deviceType}
               style={{ margin: '10px 0' }}

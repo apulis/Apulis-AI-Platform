@@ -138,6 +138,28 @@ router.post('/clusters/:clusterId/teams/:teamId/postInferenceJob',
   require('./middlewares/body')('postInferenceJob'),
   require('./controllers/cluster/centralReasoning/postInferenceJob'))
 
+router.get('/:clusterId/getFDInfo',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/model/getFDInfo'))
+router.get('/:clusterId/getModelConvertionTypes',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/model/getModelConvertionTypes'))
+router.get('/:clusterId/teams/:teamId/ListModelConversionJob',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/model/getModelList'))
+router.post('/:clusterId/teams/:teamId/setFDInfo',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('setFDInfo'),
+  require('./controllers/cluster/model/setFDInfo'))
+router.post('/:clusterId/pushModelToFD',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('pushModelToFD'),
+  require('./controllers/cluster/model/pushModelToFD'))
+router.post('/:clusterId/teams/:teamId/postModelConversionJob',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('postModelConversionJob'),
+  require('./controllers/cluster/model/postModelConversionJob'))
+
 // router.get('/:clusterId/listUser',
 //   require('./middlewares/user')(),
 //   require('./controllers/cluster/user/listUser'))

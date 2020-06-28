@@ -1,105 +1,264 @@
-import React, { useState, FC, useEffect, useMemo } from "react";
+import React, { useState, FC, useEffect, useMemo, useContext, useCallback } from "react";
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, RadioGroup, Radio, CircularProgress,
-  FormControl, FormControlLabel, FormLabel, FormHelperText, TextField } from "@material-ui/core";
-import _ from 'lodash';
-import MaterialTable, { Column, Options } from 'material-table';
+  FormControlLabel, TextField, MenuItem } from "@material-ui/core";
+import MaterialTable, { Column, Options, Action } from 'material-table';
 import { renderDate, sortDate } from '../JobsV2/tableUtils';
 import './index.less';
 import SelectTree from '../CommonComponents/SelectTree';
 import { useForm } from "react-hook-form";
+import ClusterContext from '../../contexts/Clusters';
+import TeamsContext from '../../contexts/Teams';
+import message from '../../utils/message';
+import axios from 'axios';
+import AuthContext from '../../contexts/Auth';
+import useInterval from '../../hooks/useInterval';
+import { NameReg, NameErrorText, pollInterval } from '../../const';
 
 const Model: React.FC = () => {
-  const getDate = (item: any) => new Date(item.time);
+  const { currentRole = [], userName } = useContext(AuthContext);
+  const getDate = (item: any) => new Date(item.jobTime);
+  const isAdmin = currentRole.includes('System Admin');
+  const { selectedCluster } = useContext(ClusterContext);
+  const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);
-  const [type, setType] = useState('1');
-  const [typeHelperText, setTypeHelperText] = useState('');
+  const [jobs, setJobs] = useState([]);
+  const [type, setType] = useState('');
+  const [fdInfo, setFdInfo] = useState({
+    username: '',
+    url: '',
+    password: ''
+  });
+  const [convertionTypes, setConvertionTypes] = useState([]);
   const [modalFlag1, setModalFlag1] = useState(false);
   const [modalFlag2, setModalFlag2] = useState(false);
+  const [pushId, setPushId] = useState('');
   const [btnLoading, setBtnLoading] = useState(false);
-  const [expandedNodeIds, setExpandedNodeIds] = useState<string[]>([]);
   const { handleSubmit, register, getValues, errors, setValue, clearError } = useForm({ mode: "onBlur" });
   const formObj = { register, errors, setValue, clearError };
-
+  const renderStatus = (job: any) => {
+    const { jobStatus, modelconversionStatus } = job;
+    let status = modelconversionStatus;
+    if (modelconversionStatus === 'converting') status = jobStatus === 'finished' ? 'convert success' : jobStatus === 'failed' ? 'convert failed' : modelconversionStatus;
+    return <p>{status}</p>
+  }
   const columns = useMemo<Array<Column<any>>>(() => [
-    { title: 'ID', type: 'string', field: 'ID', sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Type', type: 'string', field: 'Type', sorting: false },
-    { title: 'Time', type: 'datetime', field: 'time', 
+    { title: 'ID', type: 'string', field: 'jobId', sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
+    { title: 'Inference Name', type: 'string', field: 'jobName', sorting: false},
+    { title: 'Type', type: 'string', field: 'modelconversionType', sorting: false },
+    { title: 'Time', type: 'datetime', field: 'jobTime', 
       render: renderDate(getDate), customSort: sortDate(getDate) },
-    { title: 'Status', type: 'string', field: 'Status' },
+    { title: 'Status', type: 'string', field: 'modelconversionStatus', render: renderStatus },
   ], []);
   const options = useMemo<Options>(() => ({
     padding: 'dense',
     actionsColumnIndex: -1,
     pageSize
   }), [pageSize]);
-  
-  const onPush = (item: any) => {
 
+  const getData = () => {
+    // const jobOwner = isAdmin ? 'all' : userName;
+    const jobOwner = userName;
+    axios.get(`/${selectedCluster}/teams/${selectedTeam}/ListModelConversionJob?jobOwner=${jobOwner}&limit=999`)
+      .then((res: { data: any; }) => {
+        const { data } = res;
+        const temp1 = JSON.stringify(jobs.map((i: { jobStatus: any; }) => i.jobStatus));
+        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
+        const temp3 = JSON.stringify(jobs.map((i: { modelconversionStatus: any; }) => i.modelconversionStatus));
+        const temp4 = JSON.stringify(data?.map((i: { modelconversionStatus: any; }) => i.modelconversionStatus));
+        if (temp1 !== temp2 || temp3 !== temp4) setJobs(data);
+      }, () => {
+        message('error', `Failed to fetch inferences from cluster: ${selectedCluster}`);
+      })
   }
 
-  const test = [{
-    ID: '34298573428957892543',
-    Type: 'caff-A310',
-    time: 'Fri, 12 Jun 2020 06:29:22 GMT',
-    Status: 'success'
-  }]
+  const getFdInfo = () => {
+    let info = {};
+    axios.get(`/${selectedCluster}/getFDInfo`)
+    .then((res: { data: any; }) => {
+      setFdInfo(res.data);
+      info = res.data;
+    })
+    return info;
+  }
+
+  useEffect(() => {
+    getData();
+  }, [selectedCluster, selectedTeam]);
+
+  useInterval(() => {
+    getData();
+  }, pollInterval);
+  
+  const onPush = async (e: any, item: any) => {
+    const info = await getFdInfo();
+    if (info) {
+      const { jobId } = item;
+      setPushId(jobId);
+      axios.post(`/${selectedCluster}/pushModelToFD`, { jobId: jobId }).then((res: any) => {
+        getData();
+        message('success', `Push Inference successfully！`);
+      }).catch(err => {
+        console.log(err);
+        setPushId('');
+      })
+    } else {
+      message('error', `Please entee settings first`);
+      setModalFlag2(true);
+    }
+  }
+
+  const push = useCallback((job: any): Action<any> => {
+    const { jobStatus, modelconversionStatus, jobId } = job;
+    const hidden = !(modelconversionStatus === 'converting' && jobStatus === 'finished');
+    return {
+      hidden,
+      icon: 'backup',
+      tooltip: 'Push Inference',
+      onClick: onPush,
+      disabled: pushId === jobId
+    }
+  }, [onPush]);
 
   const onCloseDialog = (type: number) => {
     type === 1 ? setModalFlag1(false) : setModalFlag2(false);
   }
 
- 
-
-  const onTypeChange = (event: React.ChangeEvent<{}>, value: string) => {
-    setType(value);
-  };
-
-  const onSubmitTransform = (data: any) => {
-    console.log('aaaaaa', data)
+  const onSubmitTransform = async (val: any) => {
+    setBtnLoading(true);
+    await axios.post(`/${selectedCluster}/teams/${selectedTeam}/postModelConversionJob`, {
+      ...val,
+      image: '',
+      device: null,
+      conversionType: type
+    }).then((res: any) => {
+      getData();
+      message('success', `Edge Inference successfully！`);
+      setModalFlag1(false);
+    },  () => {
+      message('error', `Edge Inference failed！`);
+    })
+    setBtnLoading(false);
   }
 
-  const onSubmitSettings = (data: any) => {
-    console.log('getValues', data);
+  const onSubmitSettings = async (val: any) => {
+    setBtnLoading(true);
+    await axios.post(`/${selectedCluster}/teams/${selectedTeam}/setFDInfo`, val).then((res: any) => {
+      message('success', `Save Settings successfully！`);
+      setModalFlag2(false);
+    },  () => {
+      message('error', `Save Settings failed！`);
+    })
+    setBtnLoading(false);
+  }
+
+  const getConvertionTypeOptions = () => {
+    if (convertionTypes) {
+      return convertionTypes.map((i: any) => <MenuItem value={i}>{i}</MenuItem>)
+    }
+    return null;
+  }
+
+  const openSettings = async () => {
+    await axios.get(`/${selectedCluster}/getFDInfo`)
+      .then((res: { data: any; }) => {
+        setFdInfo(res.data);
+      })
+    setModalFlag2(true);
+  }
+
+  const openInference = () => {
+    axios.get(`/${selectedCluster}/getModelConvertionTypes`)
+      .then((res: { data: any; }) => {
+        setConvertionTypes(res.data.conversionTypes);
+      })
+    setModalFlag1(true);
   }
 
   return (
     <div className="modelList">
+      <div style={{ marginBottom: 20 }}>
+        <Button variant="contained" color="primary" onClick={openInference}>
+          New Inference
+        </Button>
+        <Button variant="contained" style={{ margin: '0 20px' }} color="primary" onClick={openSettings}>
+          Settings
+        </Button>
+      </div>
       <MaterialTable
-        title={
-        <>
-          <Button variant="contained" color="primary" onClick={() => setModalFlag1(true)}>
-            New Transform
-          </Button>
-          <Button variant="contained" style={{ margin: '0 20px' }} color="primary" onClick={() => setModalFlag2(true)}>
-            Settings
-          </Button>
-        </>
-        }
+        title=""
         columns={columns}
-        data={test}
+        data={jobs}
         options={options}
-        actions={[{
-          icon: 'backup',
-          tooltip: 'Push Model',
-          onClick: onPush
-        }]}
+        actions={[push]}
         onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
       />
       {modalFlag1 && 
       <Dialog open={modalFlag1} disableBackdropClick fullWidth>
-        <DialogTitle>New Model Transform</DialogTitle>
+        <DialogTitle>New Inference</DialogTitle>
         <form onSubmit={handleSubmit(onSubmitTransform)}>
           <DialogContent dividers>
-            {/* <FormControl component="fieldset">
-              
-              <FormHelperText>{typeHelperText}</FormHelperText>
-            </FormControl> */}
-            <RadioGroup row aria-label="quiz" name="quiz" value={type} onChange={onTypeChange}>
+            {/* <RadioGroup row aria-label="quiz" name="quiz" value={type} onChange={onTypeChange}>
               <FormControlLabel value="1" control={<Radio />} label="Caffe -> A310" />
               <FormControlLabel value="2" control={<Radio />} label="TensorFlow -> A310" />
-            </RadioGroup>
-            <SelectTree label="Input Path" style={{ margin: '10px 0' }} formObj={formObj} name="in" />
-            <SelectTree label="Output Path" style={{ margin: '10px 0' }} formObj={formObj} name="out" />
+            </RadioGroup> */}
+            {/* <SelectTree label="Input Path" style={{ margin: '10px 0' }} formObj={formObj} name="in" />
+            <SelectTree label="Output Path" style={{ margin: '10px 0' }} formObj={formObj} name="out" /> */}
+            <TextField
+              label="Inference Name"
+              name="jobName"
+              fullWidth
+              variant="filled"
+              error={Boolean(errors.jobName)}
+              helperText={errors.jobName ? errors.jobName.message : ''}
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ maxLength: 20 }}
+              style={{ margin: '10px 0' }}
+              inputRef={register({
+                required: 'Inference Name is required！',
+                pattern: {
+                  value: NameReg,
+                  message: NameErrorText
+                }
+              })}
+            />
+            <TextField
+              select
+              label="Type"
+              name="conversionType"
+              fullWidth
+              onChange={e => setType(e.target.value)}
+              variant="filled"
+              value={type}
+              style={{ margin: '10px 0' }}
+            >
+              {getConvertionTypeOptions()}
+            </TextField>
+            <TextField
+              label="Input Path"
+              name="inputPath"
+              fullWidth
+              variant="filled"
+              error={Boolean(errors. inputPath)}
+              helperText={errors. inputPath ? errors. inputPath.message : ''}
+              InputLabelProps={{ shrink: true }}
+              style={{ margin: '10px 0' }}
+              inputRef={register({ 
+                required: 'Input Path is required！',
+              })}
+            />
+            <TextField
+              label="Output Path"
+              name="outputPath"
+              fullWidth
+              variant="filled"
+              error={Boolean(errors.outputPath)}
+              helperText={errors.outputPath ? errors.outputPath.message : ''}
+              InputLabelProps={{ shrink: true }}
+              style={{ margin: '10px 0' }}
+              inputRef={register({
+                required: 'Output Path is required！',
+              })}
+            />
           </DialogContent>
           <DialogActions>
             <Button onClick={() => onCloseDialog(1)} color="primary" variant="outlined">Cancel</Button>
@@ -120,6 +279,7 @@ const Model: React.FC = () => {
               fullWidth
               variant="filled"
               error={Boolean(errors.url)}
+              defaultValue={fdInfo.url}
               helperText={errors.url ? errors.url.message : ''}
               InputLabelProps={{ shrink: true }}
               inputRef={register({
@@ -131,6 +291,7 @@ const Model: React.FC = () => {
               name="username"
               fullWidth
               variant="filled"
+              defaultValue={fdInfo.username}
               error={Boolean(errors.username)}
               helperText={errors.username ? errors.username.message : ''}
               InputLabelProps={{ shrink: true }}
@@ -144,6 +305,7 @@ const Model: React.FC = () => {
               name="password"
               fullWidth
               variant="filled"
+              defaultValue={fdInfo.password}
               error={Boolean(errors.password)}
               helperText={errors.password ? errors.password.message : ''}
               InputLabelProps={{ shrink: true }}
@@ -155,7 +317,7 @@ const Model: React.FC = () => {
           <DialogActions>
             <Button onClick={() => onCloseDialog(2)} color="primary" variant="outlined">Cancel</Button>
             <Button type="submit" color="primary" disabled={btnLoading} variant="contained" style={{ marginLeft: 8 }}>
-              {btnLoading && <CircularProgress size={20}/>}Submit
+              {btnLoading && <CircularProgress size={20}/>}Save
             </Button>
           </DialogActions>
         </form>

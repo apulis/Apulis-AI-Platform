@@ -39,7 +39,7 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   const saveClusterId = (clusterId: React.SetStateAction<string>) => {
     setClusterId(clusterId);
   };
-  const [teams, setTeams] = useState([]);
+  const [teams, setTeams] = useState<{id: string; clusters: any[]}[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<string>('');
   const saveSelectedTeam = (team: SetStateAction<string>) => {
     setSelectedTeam(team);
@@ -62,8 +62,18 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   }, [])
 
   useEffect(()=> {
-    if (localStorage.getItem('team')) {
-      setSelectedTeam((String)(localStorage.getItem('team')))
+    console.log('tema', teams)
+    const currentTeam = localStorage.getItem('team');
+    if (currentTeam) {
+      if (teams.find(t => t.id === currentTeam)) {
+        setSelectedTeam(currentTeam);
+      } else {
+        const localTeam = teams && teams[0] && teams[0].id;
+        if (localTeam) {
+          localStorage.team = localTeam;
+          setSelectedTeam(localTeam);
+        }
+      }
     } else {
       setSelectedTeam(_.map(teams, 'id')[0]);
     }

@@ -28,6 +28,6 @@ export default{
     SameNameErrorText:'已经有相同的名字了!',
     NoChineseErrorText:'不能包含汉字!',
     OneInteractivePortsMsg:'必须是40000到49999之间的正整数!',
-    InteractivePortsMsg:'必须是40000到49999之间的正整数!倍数可以用逗号分隔。',
+    InteractivePortsMsg:'必须是40000到49999之间的正整数!多个端口之间使用逗号分隔。',
     NoNumberText:'不能包含数字',
 }

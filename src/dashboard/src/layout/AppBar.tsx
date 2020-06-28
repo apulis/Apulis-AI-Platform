@@ -159,6 +159,7 @@ const LangMenu: React.FC = () => {
   const selectLang = (lang: string) => {
     localStorage.language = lang;
     changeLanguage(lang);
+    document.cookie=`lang=${lang}; path=/`;
   };
   const onMenuItemClick = React.useCallback(
     menu => () => {

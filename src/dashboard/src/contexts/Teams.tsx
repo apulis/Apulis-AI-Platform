@@ -62,7 +62,6 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   }, [])
 
   useEffect(()=> {
-    console.log('tema', teams)
     const currentTeam = localStorage.getItem('team');
     if (currentTeam) {
       if (teams.find(t => t.id === currentTeam)) {

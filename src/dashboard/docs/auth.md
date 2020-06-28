@@ -27,7 +27,6 @@ bootstap({
 })
 ```
 
-如果未登录，则返回的数据是 undefined
 
 ## teams 接口
 

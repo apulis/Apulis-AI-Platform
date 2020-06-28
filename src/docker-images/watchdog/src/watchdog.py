@@ -745,7 +745,7 @@ def process_vc_info(vc_quota_url, device_type_quota_url,vc_usage, cluster_gpu_in
         return []
 
 def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info):
-    logger.info("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s",
+    logger.debug("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s",
             vc_info, vc_usage, cluster_gpu_info,cluster_npu_info)
 
     vc_total_gauge = gen_k8s_vc_device_total()

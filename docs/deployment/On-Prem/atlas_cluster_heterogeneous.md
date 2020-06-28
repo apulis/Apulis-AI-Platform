@@ -1,4 +1,5 @@
-# DLWS集群安装步骤
+1. # DLWS集群安装步骤
+
 
 ### 1. 配置说明 & 示例
 | 主机名      | 配置    | 计算设备 | 操作系统       | 公网IP       | 子网IP      | 描述                           |
@@ -38,15 +39,15 @@
 
 - **硬件配置**
 
-  1. worker节点：需禁用SecureBoot（如不禁用，将导致GPU驱动无法升级）
+  - worker节点：需禁用SecureBoot（如不禁用，将导致GPU驱动无法升级）
 
-  2. 所有节点：配置并允许SSH连接、关闭防火墙
+  - 所有节点：配置并允许SSH连接、关闭防火墙
 
-  3. GPU节点：预装好驱动，NVIDIA GPU请参考[安装手册](https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#ubuntu-lts)
+  - GPU节点：预装好驱动，NVIDIA GPU请参考[安装手册](https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#ubuntu-lts)
 
-  4. NPU节点：预装好驱动，华为NPU请参考 A910驱动安装手册
+  - NPU节点：预装好驱动，华为NPU请参考 A910驱动安装手册
 
-     
+    
 
 - **步骤说明**：执行时如提示无权限，则使用sudo权限执行
 
@@ -56,8 +57,10 @@
   
 #### 2.2 配置节点Hostname
 
-​	将各个节点的主机名，按照**配置说明**配置
-​	配置方法（依atlas02为例子）：
+​	将各个节点的主机名，按照**配置说明**配置   
+​	
+
+​     配置方法（依atlas02为例子）：
 
 - 编辑/etc/hostname，更新内容为atlas02
 - 设置hostname立即生效：sudo hostnamectl set-hostname atlas02
@@ -88,21 +91,25 @@
 
     `apt install resolvconf`
 
-  - 增加短域名
+  - 增加短域名   
 
-  ​        `mkdir -p /etc/resolvconf/resolv.conf.d/`
+  ​        `mkdir -p /etc/resolvconf/resolv.conf.d/`   
 
-  ​        `echo "search sigsus.cn" > /etc/resolvconf/resolv.conf.d/base` 
+  ​        `echo "search sigsus.cn" > /etc/resolvconf/resolv.conf.d/base`     
 
-  ​		`sudo resolvconf -u`
+  ​		`sudo resolvconf -u`    
 
-  ​        此处sigsus.cnb必须与config.yaml中domain一致
+  
+
+  ​        此处**sigsus.cn**即为config.yaml中的domain  
 
   ​        见**3.2 设置集群配置文件** 章节
 
-- **在独立公网IP**
+  
 
-  通过DNS提供上为每个节点配置IP路由
+- **节点存在独立公网IP（选项一）**
+
+   通过DNS提供上为每个节点配置IP路由
 
   配置示例：
 
@@ -112,13 +119,13 @@
   | atlas-gpu01.sigsus.cn | A        | 121.46.18.xxx |
   | atlas-gpu02.sigsus.cn | A        | 121.46.18.xxx |
 
-- **节点不存在公网IP**
+- **节点不存在公网IP（选项二）**
 
-  此种情况需为每个节点配置 短域名解析，于SHELL执行以下指令
+     此种情况需为每个节点配置 短域名解析，于SHELL执行以下指令
 
-  1. `mkdir -p deploy/etc`
+  - `mkdir -p deploy/etc`
 
-  2. 配置hosts
+  - 配置hosts
 
      ```shell
      cat << EOF > deploy/etc/hosts
@@ -140,9 +147,9 @@
      EOF
      ```
 
-  3. `chmod 666 deploy/etc/hosts`
+  - `chmod 666 deploy/etc/hosts`
 
-  4. 于HOST路径（容器外）**DLWorkspace/src/ClusterBootstrap/**下执行
+  - 于HOST路径（容器外）**DLWorkspace/src/ClusterBootstrap/** 下执行
 
      `cp ./deploy/etc/hosts  /etc/hosts`
 
@@ -150,7 +157,7 @@
 
 ### 3. 执行安装
 
-#### 3.1 安装脚本路径说明  
+#### 3.1 安装脚本路径说明       
 
 ​		执行目录 ：**DLWorkspace/src/ClusterBootstrap/**  
 ​		集群配置文件：**DLWorkspace/src/ClusterBootstrap/config.yaml**   
@@ -160,76 +167,21 @@
 
 ​	以下字段做相应修改
 
-- cluster_name —— 集群名称
-
-- cloud_influxdb_node —— master节点FQDN
-
-- Authentications 登录方式
-
-  1. 用户名密码（默认登录方式）
-
-  2. 微软登录
-
-     [微软登录方式参数获取参考](https://github.com/apulis/dev_document/tree/master/dlts/redirect_url_registration)
-
-  3. 微信登录
-
-     示例
-
-     `  Wechat:
-         AppId: "wx403e175ad2bf1d2d"
-         AppSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"`
-
-     
-
-     APPID与AppClient的获取，请参考https://open.weixin.qq.com/ --> [网站应用](https://open.weixin.qq.com/cgi-bin/frame?t=home/web_tmpl&lang=zh_CN)
-
-     所申请的域名是：cluster_name+domain
-
-     
-
-     譬如：
-
-     cluster_name：**atlas**
-
-     domain：**sigsus.cn**
-
-     那么域名为：**atlas.sigsus.cn**
-
-     
-
-- DLWSAdmins —— 增加部署用户的名称（程序部署集群所采用的用户）
-
-- mysql_password —— 修改为指定的密码
-
-- machines 
-
-  - atlas02 —— private-id —— 修改为对应master节点的内网IP
-  - type和vendor —— 更改为对应的硬件和厂家名
-  - os —— 操作系统名称，譬如ubuntu或centos
-
-- dockerregistry —— 更改为对应的docker hub
-
-- onpremise_cluster
-
-  - worker_node_num —— 更改为worker节点数
-  - gpu_count_per_node —— 更改为节点gpu数量
-
-- mountpoints
-
-  - server —— 更改为数据节点的短域名
-  - filesharename —— 挂载点目录名（可不更改）
-
-- nfs_disk_mnt
-
-  - 更改为master节点短域名
-
-  
+| cluster_name      | 集群名称，必须保证唯一                                       |
+| ----------------- | ------------------------------------------------------------ |
+| DLWSAdmins        | 程序部署集群所采用的用户                                     |
+| mysql_password    | 集群mysql存储的登录密码                                      |
+| machines          | 格式：<br>    machine_hostname: <br>             role: infrastructure<br/>             private-ip: 192.168.3.6<br/>             archtype: arm64<br/>             type: npu<br/>             vendor: huawei<br />    machine_hostname:<br/>              archtype: amd64<br/>              role: worker<br/>              type: gpu <br/>              vendor: nvidia<br/>              os: ubuntu<br><BR> 说明：<BR> archType表示架构，arm64或amd64<br> type表示计算设备类型，gpu或npu<BR> os当前支持ubuntu |
+| dockerregistry    | 镜像仓库                                                     |
+| onpremise_cluster | 集群基础信息<BR>worker_node_num表示总worker数<br>gpu_count_per_node表示每个节点的总GPU/NPU数 |
+| mountpoints       | 存储挂载点配置<BR>字段说明：<BR>        server表示存储点的主机名<BR>        filesharename表示存储Server的数据存储路径<BR>        curphysicalmountpoint表示存储设备在集群各个节点的挂载路径 |
+| k8s-gitbranch     | k8s版本号                                                    |
+| Authentications   | 登录方式：<br>       1. 用户名密码（默认登录方式）<BR>       2. 微软登录 <BR>       3. 微信登录 <br> <br> 微软登录：<br> TenantId、ClientId、ClientSecret的获取请参考 [微软官方说明](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps) <br> <br> 微信登录：<br> TenantId、ClientId、ClientSecret的获取请参考 [微信官方说明](https://open.weixin.qq.com/cgi-bin/frame?t=home/web_tmpl&lang=zh_CN) <br> <BR> 域名说明：<br> 假设cluster_name=atlas，domain=**sigsus.cn** <BR> 那么域名即为：**atlas.sigsus.cn** <BR> 微软登录与微信登录 必须基于此域名申请 |
 
 config.yaml样例
 
-```
-cluster_name: apulis-atlas01
+```yaml
+cluster_name: atlas
 
 network:
   domain: sigsus.cn
@@ -242,7 +194,6 @@ mounthomefolder : True
 # kube_custom_cri : True
 # kube_custom_scheduler: True
 kubepresleep: 1
-cloud_influxdb_node: apulis-atlas01.sigsus.cn
 
 UserGroups:
   DLWSAdmins:
@@ -250,10 +201,6 @@ UserGroups:
     - jinlmsft@hotmail.com
     - jinli.ccs@gmail.com
     - jin.li@apulis.com
-    - bifeng.peng@apulis.com
-    - tianhui.liu@apulis.com
-    - penghao.zeng@apulis.com
-    - zenglong.chen@apulis.com
     gid: "20001"
     uid: "20000"
   DLWSRegister:
@@ -275,59 +222,40 @@ WebUIauthorizedGroups:
 WebUIregisterGroups:
 - DLWSRegister
 
-WinbindServers: []
-
 datasource: MySQL
 mysql_password: apulis#2019#wednesday
 webuiport: 3081
 useclusterfile : true
-platform-scripts : centos
 
 machines:
-  atlas01:
+  atlas02:
     role: infrastructure
-    private-ip: 192.168.3.6
+    private-ip: 192.168.3.2
     archtype: arm64
     type: npu
     vendor: huawei
 
-  atlas01-worker01:
-    archtype: arm64
-    role: worker
-    type: npu 
-    vendor: huawei
-    os: ubuntu
-
-  atlas01-worker02:
-    archtype: amd64
-    role: worker
-    type: gpu 
-    vendor: nvidia
-    os: ubuntu
-
-  atlas01-worker03:
-    archtype: amd64
-    role: worker
-    type: gpu 
-    vendor: nvidia
-    os: ubuntu
-
 scale_up:
-  atlas01-worker01:
+  atlas01:
     archtype: arm64
     role: worker
     type: npu 
     vendor: huawei
     os: ubuntu
 
-scale_down:
-  atlas01-worker01:
+  atlas-gpu01:
     archtype: amd64
     role: worker
     type: gpu 
     vendor: nvidia
     os: ubuntu
 
+  atlas-gpu02:
+    archtype: amd64
+    role: worker
+    type: gpu 
+    vendor: nvidia
+    os: ubuntu
 
 admin_username: dlwsadmin
 
@@ -337,35 +265,6 @@ dockers:
   hub: apulistech/
   tag: "1.9"
  
-cloud_config:
-  dev_network:
-    source_addresses_prefixes: [ "66.114.136.16/29", "73.140.21.119/32"]
-
-cloud_config:
-  default_admin_username: jinl
-  dev_network:
-    source_addresses_prefixes:
-    - 66.114.136.16/29
-    - 73.140.21.119/32
-    tcp_port_ranges: 22 1443 2379 3306 5000 8086 10250 10255 22222
-  inter_connect:
-    tcp_port_ranges: 22 1443 2379 3306 5000 8086 10250
-  nfs_share:
-    source_ips:
-    - 192.168.0.0/16
-    - 10.31.0.0/16
-  nfs_ssh:
-    port: 22
-  tcp_port_for_pods: 30000-49999
-  tcp_port_ranges: 80 443 30000-49999 25826 3000 22222 9091 9092
-  udp_port_ranges: '25826'
-  vnet_range: 192.168.0.0/16
-  
-cloud_elasticsearch_node: apulis-atlas01.sigsus.cn
-cloud_elasticsearch_port: '9200'
-
-cloud_influxdb_port: '8086'
-cloud_influxdb_tp_port: '25826'
 
 custom_mounts: []
 admin_username: dlwsadmin
@@ -376,35 +275,6 @@ dockers:
   hub: apulistech/
   tag: "1.9"
  
-cloud_config:
-  dev_network:
-    source_addresses_prefixes: [ "66.114.136.16/29", "73.140.21.119/32"]
-
-cloud_config:
-  default_admin_username: jinl
-  dev_network:
-    source_addresses_prefixes:
-    - 66.114.136.16/29
-    - 73.140.21.119/32
-    tcp_port_ranges: 22 1443 2379 3306 5000 8086 10250 10255 22222
-  inter_connect:
-    tcp_port_ranges: 22 1443 2379 3306 5000 8086 10250
-  nfs_share:
-    source_ips:
-    - 192.168.0.0/16
-    - 10.31.0.0/16
-  nfs_ssh:
-    port: 22
-  tcp_port_for_pods: 30000-49999
-  tcp_port_ranges: 80 443 30000-49999 25826 3000 22222 9091 9092
-  udp_port_ranges: '25826'
-  vnet_range: 192.168.0.0/16
-  
-cloud_elasticsearch_node: apulis-atlas01.sigsus.cn
-cloud_elasticsearch_port: '9200'
-
-cloud_influxdb_port: '8086'
-cloud_influxdb_tp_port: '25826'
 
 custom_mounts: []
 data-disk: /dev/[sh]d[^a]
@@ -445,7 +315,7 @@ onpremise_cluster:
 mountpoints:
   nfsshare1:
     type: nfs
-    server: atlas01
+    server: atlas02
     filesharename: /mnt/local
     curphysicalmountpoint: /mntdlws
     mountpoints: ""
@@ -464,6 +334,12 @@ repair-manager:
   ecc_rule:
     cordon_dry_run: True
   alert:
+          #    smtp_url: smtp.office365.com
+          #    login: dev@apulis.com
+          #    smtp_url: smtp.office365.com
+          #    login: dev@apulis.com
+          #    password: Yitong#123
+          #    sender: dev@apulis.com
     smtp_url: smtp.qq.com
     login: 1023950387@qq.com
     password: vtguxryxqyrkbfdd

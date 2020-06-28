@@ -169,7 +169,9 @@ const Model: React.FC = () => {
   const openInference = () => {
     axios.get(`/${selectedCluster}/getModelConvertionTypes`)
       .then((res: { data: any; }) => {
-        setConvertionTypes(res.data.conversionTypes);
+        const { conversionTypes } = res.data;
+        setConvertionTypes(conversionTypes);
+        setType(conversionTypes[1]);
       })
     setModalFlag1(true);
   }

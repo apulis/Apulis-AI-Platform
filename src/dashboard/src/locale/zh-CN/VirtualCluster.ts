@@ -14,11 +14,11 @@ export default {
     'Cancel': '取消',
     'Save': '保存',
     //Modify Dialog
-    'A VC contains active jobs cannot be modified': 'VC包含活动作业，无法修改。',
+    'A VC contains active jobs cannot be modified': '虚拟集群包含活动作业，无法修改。',
     //Delete Dialog
     'Are you sure to delete this VC?': '确定要删除该虚拟集群？',
     //Tips
-    'vcName is required！': 'vcName是必需的！',
+    'vcName is required！': '虚拟集群名称是必需的！',
     'Must be a positive integer from 0 to ${max}': '必须是从0到 ${max}的正整数',
     'Modified failed！':'修改失败！',
     'Added failed！':'新增失败！',

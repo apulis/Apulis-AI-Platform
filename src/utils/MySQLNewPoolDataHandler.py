@@ -223,9 +223,6 @@ class DataHandler(object):
                 conn.commit()
 
 
-            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            print "fdserverinfo"
-            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
             sql = """
                 CREATE TABLE IF NOT EXISTS  `%s`
                 (
@@ -912,11 +909,11 @@ class DataHandler(object):
     def AddModelConversionJob(self, jobParams):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.modelconvertionjobtablename + "` (jobId, inputPath, outputPath, type, status) VALUES (%s, %s, %s, %s, %s)"
+            sql = "INSERT INTO `" + self.modelconversionjobtablename + "` (jobId, inputPath, outputPath, type, status) VALUES (%s, %s, %s, %s, %s)"
             jobParam = base64.b64encode(json.dumps(jobParams))
             with MysqlConn() as conn:
                 conn.insert_one(sql, (
-                    jobParams["jobId"], jobParams["inputPath"], jobParams["outputPath"], jobParams["type"], "converting"))
+                    jobParams["jobId"], jobParams["inputPath"], jobParams["outputPath"], jobParams["conversionType"], "converting"))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -927,13 +924,26 @@ class DataHandler(object):
     def UpdateModelConversionFileId(self, jobId, fileId):
         ret = False
         try:
-            sql = "UPDATE `%s` SET fileId='%s' WHERE jobID=%s" % self.modelconversionjobtablename, fileId, jobId
+            sql = "UPDATE `%s` SET fileId='%s' WHERE jobID='%s'" % (self.modelconversionjobtablename, fileId, jobId)
             with MysqlConn() as conn:
                 conn.update(sql)
                 conn.commit()
             ret = True
         except Exception as e:
             logger.exception('Update modelconvert fileId failed: %s', str(e))
+        return ret
+
+    @record
+    def UpdateModelConversionStatus(self, jobId, status):
+        ret = False
+        try:
+            sql = "UPDATE `%s` SET status='%s' WHERE jobID='%s'" % (self.modelconversionjobtablename, status, jobId)
+            with MysqlConn() as conn:
+                conn.update(sql)
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('Update modelconvert status failed: %s', str(e))
         return ret
 
     @record
@@ -974,13 +984,31 @@ class DataHandler(object):
     def GetModelConvertInfo(self, jobId):
         ret = None
         try:
-            query = "SELECT `inputPath`, `outputPath`, `type`, `status`, `fileId` FROM `%s` where jobId = %s" (
+            query = "SELECT `jobId`, `inputPath`, `outputPath`, `type`, `status`, `fileId` FROM `%s` where jobId='%s'" % (
                 self.modelconversionjobtablename, jobId
             )
             with MysqlConn() as conn:
                 ret = conn.select_one(query)
         except Exception as e:
-            logger.exception("Get ModelConvert info excepthin: %s", str(e))
+            logger.exception("Get ModelConvert info exception: %s", str(e))
+        return ret
+
+    @record
+    def GetModelConvertInfoByOutputpath(self, outputpath):
+        ret = None
+        try:
+            query = "SELECT `jobId`, `inputPath`, `outputPath`, `type`, `status`, `fileId` FROM `%s` where outputPath='%s' ORDER BY id DESC" % (
+                self.modelconversionjobtablename, outputpath
+            )
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+                for ret in rets:
+                    fileId = ret["fileId"]
+                    if fileId is not None and fileId not in ["", "NULL", "None", "null"]:
+                        return ret
+                return None
+        except Exception as e:
+            logger.exception("Get ModelConvert info exception: %s", str(e))
         return ret
 
     @record
@@ -1221,8 +1249,8 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as j left join {} as m on j.jobId = m.jobId left join {} as p on j.jobId = p.jobId where 1".format(
-                self.jobtablename, self.modelconversionjobtablename, self.jobprioritytablename)
+            query = "SELECT j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1".format(
+                self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
 
@@ -1242,6 +1270,10 @@ class DataHandler(object):
             if num is not None:
                 query += " limit %s " % str(num)
             cursor.execute(query)
+
+            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
+            print query
+            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()

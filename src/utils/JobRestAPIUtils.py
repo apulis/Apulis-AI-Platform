@@ -429,18 +429,30 @@ def PostModelConversionJob(jobParamsJsonStr):
         jobParams["resourcegpu"] = 0
 
     # default value
-    # TODO
-    jobParams["image"] = "apulistech/atc:0.0.1"
-    jobParams["cmd"] = ""
-    # TODO
-    jobParams["jobtrainingtype"] = "ModelConversionJob"
+    jobParams["jobtrainingtype"] = "RegularJob"
     jobParams["jobType"] = "ModelConversionJob"
     jobParams["preemptionAllowed"] = False
     jobParams["containerUserId"] = 0
     jobParams["isPrivileged"] = False
     jobParams["hostNetwork"] = False
-    jobParams["gpuType"] = None if "gpuType" not in jobParams else jobParams["gpuType"]
+    #jobParams["gpuType"] = None if "gpuType" not in jobParams else jobParams["gpuType"]
+    jobParams["gpuType"] = "huawei_npu_arm64"
 
+    # atc values
+    jobParams["image"] = "apulistech/atc:0.0.1"
+    supportedConversionTypes = ["caffe-Ascend310", "tensorflow-Ascend310"]
+    if jobParams["conversionType"] in supportedConversionTypes:
+        raw_cmd = ""
+        if jobParams["conversionType"] == "tensorflow-Ascend310":
+            raw_cmd = "atc --framework=3 --model=%s --output=%s --soc_version=Ascend310" % (jobParams["inputPath"], jobParams["outputPath"])
+        elif jobParams["conversionType"] == "caffe-Ascend310":
+            raw_cmd = "atc --model=%s --weight=resnet50.caffemodel --framework=0 --mode=1 --output=%s --soc_version=Ascend310" % (jobParams["inputPath"], jobParams["outputPath"])
+        jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s"' % (raw_cmd, jobParams["outputPath"] + ".om")
+    else:
+        ret["error"] = "ERROR: .. convert type " + jobParams["conversionType"] + " not supported"
+        return ret
+
+    # env
 
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
@@ -455,8 +467,6 @@ def PostModelConversionJob(jobParamsJsonStr):
 
     userName = getAlias(jobParams["userName"])
 
-    if "cmd" not in jobParams:
-        jobParams["cmd"] = ""
 
     if "jobPath" in jobParams and len(jobParams["jobPath"].strip()) > 0:
         jobPath = jobParams["jobPath"]
@@ -539,7 +549,7 @@ def PostModelConversionJob(jobParamsJsonStr):
 
                 job_priorities = {jobParams["jobId"]: priority}
                 dataHandler.update_job_priority(job_priorities)
-            if "jobtrainingtype" in jobParams and jobParams["jobtrainingtype"] == "ModelConversionJob":
+            if "jobType" in jobParams and jobParams["jobType"] == "ModelConversionJob":
                 dataHandler.AddModelConversionJob(jobParams)
         else:
             ret["error"] = "Cannot schedule job. Cannot add job into database."

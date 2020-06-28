@@ -57,13 +57,13 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
       {
         userStatus ?  <MaterialTable
           title=""
-          columns={[{title: t('Username'), field: 'userName'},
+          columns={[{title:  t('Username'), field: 'userName'},
             {title: t('DeviceType'), field: 'gpuType',type:'numeric'},
             {title: t('CurrentlyAllocated'), field: 'usedGPU',type:'numeric'},
-            {title: t('CurrentlyAllocatedPreemptible'), field: 'preemptableGPU',type:'numeric', render: (rowData: any) => <span>{rowData['preemptableGPU'] ? rowData['preemptableGPU'] : '0'}</span>},
+            {title:  t('CurrentlyAllocatedPreemptible'), field: 'preemptableGPU',type:'numeric', render: (rowData: any) => <span>{rowData['preemptableGPU'] ? rowData['preemptableGPU'] : '0'}</span>},
             {title: t('CurrentlyIdle'), field: 'idleGPU',type:'numeric'},
-            {title: t('PastMonthBookedHour'), field: 'booked',type:'numeric'},
-            {title: t('PastMonthIdleHour'), field: 'idle',type:'numeric'},
+            {title: t('PastMonthBookedHour'), field: 'booked',type:'numeric', render: (rowData: any) => <span>{rowData['booked'] ? rowData['booked'] : '0'}</span>},
+            {title: t('PastMonthIdleHour'), field: 'idle',type:'numeric', render: (rowData: any) => <span>{rowData['idle'] ? rowData['idle'] : '0'}</span>},
             {title: t('PastMonthIdleHour%'), field: '',type:'numeric', render: (rowData: any) => currentCluster === 'Lab-RR1-V100' ? null : <span style={{ color: Math.floor((rowData['idle'] / rowData['booked']) * 100) > 50 ? "red" : "black" }}>{rowData['booked'] == '0' ? '-' : Math.floor(((rowData['idle'] || 0) / (rowData['booked'])) * 100)}</span>, customSort: (a: any, b: any) => {return Math.floor((a['idle'] / a['booked']) * 100) - Math.floor((b['idle'] / b['booked']) * 100)}}
           ]}
           data={showCurrentUser ? userStatus.filter((uc: any)=>uc['usedGPU'] > 0 && uc['userName'] !== 'Total') : userStatus}

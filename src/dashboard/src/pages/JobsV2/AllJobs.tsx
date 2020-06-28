@@ -81,7 +81,7 @@ const AllJobs: FunctionComponent = () => {
   const {t} = useTranslation();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
-  const [limit, setLimit] = useState(999);
+  const [limit, setLimit] = useState(9999);
   const [jobs, setJobs] = useState<any[]>();
   useEffect(() => {
     setJobs(undefined);

@@ -51,7 +51,7 @@ There is some issue in my job ${window.location.origin}/jobs-v2/${encodeURICompo
 <Issue description by user>
 
 Thanks,
- ${userName}
+${userName}
     `.trim();
     const link = `mailto:${supportMail || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(link);

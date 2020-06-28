@@ -27,9 +27,11 @@ RUN curl -SL https://download.docker.com/linux/static/stable/$(uname -m)/docker-
 
 
 RUN pip3 install prometheus_client twisted
+COPY npu/lib/ /lib
+RUN mkdir /lib64 && cp -r lib/. /lib64
+COPY npu/Ascend910-smitool-1.5.2-aarch64.run /tmp
 
-RUN mkdir /lib64 && cp lib/ld-linux-aarch64.so.1 /lib64/ld-linux-aarch64.so.1
+RUN chmod +x /tmp/Ascend910-smitool-1.5.2-aarch64.run
+RUN /tmp/Ascend910-smitool-1.5.2-aarch64.run --full
 
-COPY lib/ /lib/
-COPY npu-smi /usr/local/sbin/npu-smi
 COPY src/*.py /job_exporter/

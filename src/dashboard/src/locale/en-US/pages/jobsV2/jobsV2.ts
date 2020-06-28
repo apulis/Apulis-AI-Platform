@@ -50,7 +50,9 @@ const materialTable = {
     lastPage:'Last Page',
     search:'Search',
     actions:'Actions',
-    noRecordsToDisplay:'No records to display'
+    noRecordsToDisplay:'No records to display',
+    labelRowsPerPage: 'rows',
+    labelRowsSelect: 'rows'
 }
 const brief = {
     brief:'Brief',

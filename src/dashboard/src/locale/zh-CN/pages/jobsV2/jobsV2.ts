@@ -52,7 +52,9 @@ const materialTable = {
     lastPage:'末尾页',
     search:'搜索',
     actions:'操作',
-    noRecordsToDisplay:'没有数据'
+    noRecordsToDisplay:'没有数据',
+    labelRowsPerPage: '行',
+    labelRowsSelect: '行'
 }
 const brief = {
     brief:'简介',

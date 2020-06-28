@@ -106,7 +106,9 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
             firstTooltip: t('jobsV2.firstPage'),
             previousTooltip: t('jobsV2.previousPage'),
             nextTooltip: t('jobsV2.nextPage'),
-            lastTooltip: t('jobsV2.lastPage')
+            lastTooltip: t('jobsV2.lastPage'),
+            labelRowsPerPage: t('jobsV2.labelRowsPerPage'),
+            labelRowsSelect: t('jobsV2.labelRowsSelect')
         },
         toolbar: {
             nRowsSelected: '{0} row(s) selected',

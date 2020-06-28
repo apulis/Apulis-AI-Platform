@@ -110,13 +110,12 @@ const Model: React.FC = () => {
 
   const push = useCallback((job: any): Action<any> => {
     const { jobStatus, modelconversionStatus, jobId } = job;
-    const hidden = !(modelconversionStatus === 'converting' && jobStatus === 'finished');
+    const disabled = (!(modelconversionStatus === 'converting' && jobStatus === 'finished') || pushId === jobId);
     return {
-      hidden,
       icon: 'backup',
       tooltip: 'Push Inference',
       onClick: onPush,
-      disabled: pushId === jobId
+      disabled: disabled
     }
   }, [onPush]);
 

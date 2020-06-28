@@ -53,15 +53,15 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
 
   const getTeams = () => {
     axios.get('/teams').then(res => {
-      setTeams(res.data);
+      if (res && res.data && JSON.stringify(res.data) !== JSON.stringify(teams)) {
+        setTeams(res.data);
+      }
     })
   }
 
   useEffect(() => {
-    setTimeout(() => {
-      getTeams();
-    }, 1000);
-  }, [teams])
+    getTeams();
+  }, [])
 
   useEffect(()=> {
     const currentTeam = localStorage.getItem('team');

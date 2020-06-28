@@ -162,13 +162,13 @@ then
 fi
 
 # find ib ip
+HOST_CONFIG_FILE=/job/.hosts
+IB_CONFIG_FILE=/job/ib_config
 if [ "$DLWS_ROLE_NAME" = "worker" ] && command -v ifconfig ;
 then
   ib_ip=`ifconfig |grep ib -A 1|grep inet |awk '{print $2}'`
   if ifconfig |grep ib -A 1|grep inet ;
   then
-    HOST_CONFIG_FILE=/job/.hosts
-    IB_CONFIG_FILE=/job/ib_config
     if [ ! -f $IB_CONFIG_FILE ];then touch $IB_CONFIG_FILE;fi
     if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
     if ! cat $IB_CONFIG_FILE |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX};

@@ -3798,9 +3798,36 @@ def check_archtype_valid(archtype):
             return False
     return True
 
-def upload_dns_config():
+def upload_dns_config_to_unifi():
     with open("/etc/hosts","r") as f:
         local_config = f.readlines()
+    utils.sudo_scp_to_local(config["ssh_cert"], "/etc/hosts","./deploy/unifirouter.hostsfile", config["unifi_router"]["username"], config["unifi_router"]["ip"])
+    with open("./deploy/unifirouter.hostsfile","r") as f:
+        remote_config = f.read()
+    flag = False
+    for one in local_config:
+        split_after = one.strip().split(" ",1)
+        if len(split_after)<=1:
+            continue
+        ip,host = one.strip().split(" ",1)
+        ip, host = ip.strip(),host.strip()
+        if ip == "127.0.0.1" or ip == "127.0.1.1":
+            continue
+        if not re.match("(\d+).(\d+).(\d+).(\d+)",ip):
+            continue
+        # if "#" in host:
+        #     host = host.split("#")[0].strip()
+        if host in remote_config:
+            continue
+        print("find one entry: %s" %(one))
+        remote_config += one
+        flag = True
+    with open("./deploy/unifirouter.hostsfile.update","wt") as f:
+        f.write(remote_config)
+    if flag:
+        utils.SSH_exec_cmd(config["ssh_cert"], config["unifi_router"]["username"], config["unifi_router"]["ip"],"sudo mv /etc/hosts /etc/hosts.bak")
+        utils.sudo_scp(config["ssh_cert"], "./deploy/unifirouter.hostsfile.update", "/etc/hosts",config["unifi_router"]["username"], config["unifi_router"]["ip"])
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["unifi_router"]["username"], config["unifi_router"]["ip"], "sudo /etc/init.d/dnsmasq restart")
 
 # get scale info
 def get_scale_nodes(config, scale_type):
@@ -4896,6 +4923,9 @@ def run_command( args, command, nargs, parser ):
 
         else:
             pass
+
+    elif command == "upload_dns_config_to_unifi":
+        upload_dns_config_to_unifi()
 
     else:
         parser.print_help()

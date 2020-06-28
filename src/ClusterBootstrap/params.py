@@ -70,6 +70,8 @@ default_config_parameters = {
     "mysql_username": "root",
     "mysql_data_path": "/var/lib/mysql",
 
+    "extranet_protocol":"https",
+
     "datasource": "MySQL",
     "defalt_virtual_cluster_name": "platform",
     # Discover server is used to find IP address of the host, it need to be a well-known IP address
@@ -829,6 +831,10 @@ default_config_parameters = {
             "memory_ratio": 0.9
         }
     },
+    "unifi_router":{
+        "username":"dlwsadmin",
+        "ip":"192.168.1.1"
+         }
 }
 
 # These are super scripts

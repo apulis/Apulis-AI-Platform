@@ -762,6 +762,7 @@ class PythonLauncher(Launcher):
             return True
         else:
             dataFields["jobStatus"] = "error"
+            dataFields["jobStatusDetail"] = base64.b64encode(errors)
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
             if dataHandlerOri is None:
                 dataHandler.Close()

@@ -564,8 +564,11 @@ echo "your_root_password" > "rootpasswd"
     ```
     ./deploy.py --verbose kubeadm init
     ./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config
-```
-    
+    ```
+- ##### （可选）设置master充当worker
+    ```shell script
+    ./deploy.py --verbose kubernetes uncordon 
+    ```
 - ##### 设置集群节点标签
   
     ```
@@ -573,8 +576,6 @@ echo "your_root_password" > "rootpasswd"
     ./deploy.py --verbose -y kubernetes labelservice
     ./deploy.py --verbose -y labelworker
     ```
-    
-    
 
 
 #### 3.14 挂载存储节点
@@ -596,9 +597,9 @@ echo "your_root_password" > "rootpasswd"
      挂载目录需与config.yaml中所配置一致
 
      > mountpoints:
-   >   nfsshare1:
+     >   nfsshare1:
      >     type: nfs
-   >     server: storage-server
+     >     server: storage-server
      >     filesharename: /data/nfsshare
      >     curphysicalmountpoint: /mntdlws
      >     mountpoints: ""
@@ -704,189 +705,124 @@ clusters:
 
 
 
-#### 3.18 部署集群应用 （master为AMD64架构)
+#### 3.18 部署集群应用 
 
-- ##### 登录docker hub （用户名为config.yaml所配置）
+1. ##### 本地登录docker hub （用户名为config.yaml所配置）
     > docker login
 
-- ##### 生成dashboard, jobmanager等服务的配置文件
+2. ##### 生成dashboard, jobmanager等服务的配置文件
     ```
     ./deploy.py --verbose webui         
     ```
 
-- ##### 编译restfulapi和webui3服务
-    ```
-    ./deploy.py --verbose docker push restfulapi2
-    ./deploy.py --verbose docker push webui3
-    ./deploy.py --nocache docker push custom-user-dashboard-frontend
-    ./deploy.py --nocache docker push custom-user-dashboard-backend
-    ```
+3. ##### 编译restfulapi和webui3服务
+    - master为AMD64架构
+        ```
+        ./deploy.py --verbose docker push restfulapi2
+        ./deploy.py --verbose docker push webui3
+        ./deploy.py --nocache docker push custom-user-dashboard-frontend
+        ./deploy.py --nocache docker push custom-user-dashboard-backend
+        ```
+    - master为ARM64架构
+        ```
+        ./deploy.py --verbose --archtype arm64 docker push restfulapi2
+        ./deploy.py --verbose --archtype arm64 docker push webui3
+        ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-frontend
+        ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-backend
+        ```
 
-- ##### 编译GPU Reporter
-    ```
-    ./deploy.py --verbose docker push gpu-reporter
-    ```
+4. ##### 编译对请求加密组件openresty
+    - master为AMD64架构
+        ```shell script
+        ./deploy.py --verbose docker push openresty
+        ```
+    - master为ARM64架构
+        ```shell script
+        ./deploy.py --verbose --archtype arm64 docker push openresty
+        ```
+      
+5. ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
+    - master为AMD64架构
+        ```
+        ./deploy.py --verbose docker push init-container
+        ```  
+        如果集群有arm64架构的worker机器，在其中一台arm64的worker机器上执行  
+        ```
+        ./deploy.py --verbose --archtype arm64 docker push init-container
+        ```
+   - master为ARM64架构
+        ```
+        ./deploy.py --verbose --archtype arm64 docker push init-container
+        ```
+        如果集群有amd64架构的worker机器，在其中一台amd64的worker机器上执行  
+        ```
+        ./deploy.py --verbose docker push init-container
+        ```
+  
+6. ##### 编译监控相关的镜像
+    - master为AMD64架构
+        ```shell script
+        ./deploy.py docker push watchdog
+        ./deploy.py docker push gpu-reporter
+        ./deploy.py docker push job-exporter
+        ```
+        注： 如果集群有arm64架构的worker机器，在其中一台arm64机器上执行
+        ```shell script
+        ./deploy.py --archtype arm64 docker push watchdog
+        ./deploy.py --archtype arm64 docker push gpu-reporter
+        ./deploy.py --archtype arm64 docker push job-exporter
+        ```
+    - master为ARM64架构
+        ```shell script
+        ./deploy.py --archtype arm64 docker push watchdog
+        ./deploy.py --archtype arm64 docker push gpu-reporter
+        ./deploy.py --archtype arm64 docker push job-exporter
+        ```
+        注： 如果集群有amd64架构的worker机器，在其中一台amd64机器上执行
+        ```shell script
+        ./deploy.py docker push watchdog
+        ./deploy.py docker push gpu-reporter
+        ./deploy.py docker push job-exporter
+        ```
 
-- ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
-    ```
-    ./deploy.py --verbose docker push init-container
-    ```
-
-- ##### 配置Nginx
+7. ##### 配置Nginx
     ```
     ./deploy.py --verbose nginx fqdn
     ./deploy.py --verbose nginx config
     ```
 
-- ##### 启动集群应用
+8. ##### 启动mysql并设置
+    ```shell script
+      ./deploy.py --verbose kubernetes start mysql
     ```
-    ./deploy.py --verbose kubernetes start mysql jobmanager2 restfulapi2 monitor nginx custommetrics
-    ./deploy.py --verbose kubernetes start cloudmonitor
+    进入mysql容器
+    ```shell script
+      mysql -uroot -p
+      use mysql;
+      create user 'root'@'%' identified by '';
+      grant all privileges on *.* to 'root'@'%' with grant option;
+      flush privileges;
+      alter user 'root'@'%' identified with mysql_native_password by 'apulis#2019#wednesday';
     ```
 
-- ##### 启动dashboard
+9. ##### 启动集群应用
     ```
-    ./deploy.py --verbose nginx webui3
-    ./deploy.py --verbose kubernetes start webui3
-    ./deploy.py kubernetes start custom-user-dashboard
+    ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
     ```
 
-#### 3.18 部署集群应用 （master为ARM64架构)
+10. ##### 启动dashboard
+    - master为AMD64架构
+        ```
+        ./deploy.py --verbose nginx webui3
+        ./deploy.py --verbose kubernetes start webui3
+        ./deploy.py kubernetes start custom-user-dashboard
+        ```
+    - master为ARM64架构
+        ```
+        ./deploy.py --verbose --archtype arm64 nginx webui3
+        ./deploy.py --verbose kubernetes start webui3
+        ./deploy.py kubernetes start custom-user-dashboard
+        ```
+  
 
-- ### 使用dev_docker
-
-  ```
-  sudo python devenv_arm64.py
-  ```
-
-- ### 镜像准备
-
-  如果异构集群，要在不同架构机器分别push对应镜像。只需push dockerhub不存在的镜像。
-
-  1. backendbase image
-
-  ```
-  ./deploy.py --verbose --archtype arm64 docker push backendbase
-  ```
-
-  2. restfulapi2 webui3
-
-  ```
-  ./deploy.py --verbose --archtype arm64 docker push restfulapi2
-  ./deploy.py --verbose --archtype arm64 docker push webui3
-  ```
-
-  3. nginx
-
-  ```
-  ./deploy.py --verbose --archtype arm64 docker push nginx
-  ```
-
-  4. init-container
-
-  ```
-  ./deploy.py --verbose --archtype arm64 docker push init-container
-  ```
-
-  5. watchdog
-
-  ```
-  ./deploy.py --verbose --archtype arm64 docker push watchdog
-  ```
-
-  6. job-exporter
-
-  ```
-  ./deploy.py --verbose --archtype arm64 docker push job-exporter
-  ```
-
-- ### 集群配置
-
-  1. webui config generation
-
-  ```
-  ./deploy.py --verbose webui
-  ```
-
-  2. nginx config
-
-  ```
-  ./deploy.py --verbose nginx fqdn
-  ./deploy.py --verbose nginx config
-  ```
-
-  3. label
-
-  ```
-  ./deploy.py --verbose kubernetes uncordon # master同时充当worker
-  ./deploy.py --verbose kubernetes labelservice
-  ./deploy.py --verbose labelworker
-  ```
-
-- ### 集群启动
-
-  1. mysql
-
-  ```
-  ./deploy.py --verbose kubernetes start mysql
-  ```
-
-  - 允许root远程登陆
-
-  ```
-  # 进入mysql容器
-  mysql -uroot -p
-  use mysql;
-  create user 'root'@'%' identified by '';
-  grant all privileges on *.* to 'root'@'%' with grant option;
-  flush privileges;
-  alter user 'root'@'%' identified with mysql_native_password by 'apulis#2019#wednesday';
-  ```
-
-  2. jobmanager2
-
-  ```
-  ./deploy.py --verbose kubernetes start jobmanager2
-  ```
-
-  3. restfulapi2
-
-  ```
-  ./deploy.py --verbose kubernetes start restfulapi2
-  ```
-
-  4. monitor
-
-  ```
-  ./deploy.py --verbose kubernetes start monitor
-  ```
-
-  5. nginx
-
-  ```
-  ./deploy.py --verbose kubernetes start nginx
-  ```
-
-  6. custommetrics
-
-  ```
-  ./deploy.py --verbose kubernetes start custommetrics
-  ```
-
-  7. 启动dashboard 目前master只一台机器，故从命令行传入架构信息
-
-  ```
-  ./deploy.py --verbose --archtype arm64 nginx webui3
-  ./deploy.py --verbose kubernetes start webui3
-  ```
-
-  8. openresty
-
-  ```
-  ./deploy.py --verbose kubernetes start openresty
-  ```
-
-- 
-
-- 
 

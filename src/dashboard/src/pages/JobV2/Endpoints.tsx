@@ -37,6 +37,7 @@ import axios from 'axios';
 import useInterval from '../../hooks/useInterval';
 import UserContext from '../../contexts/User';
 import AuthContext from '../../contexts/Auth';
+import { useTranslation } from "react-i18next";
 
 interface RouteParams {
   clusterId: string;
@@ -115,6 +116,7 @@ const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> =
 };
 
 const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: any }> = ({ endpoints, setPollTime }) => {
+  const {t} = useTranslation()
   const { job } = useContext(Context);
   const { userName } = useContext(UserContext);
   const { permissionList = [] } = useContext(AuthContext);
@@ -189,7 +191,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       } else {
         flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       }
-      !flag && setError('interactivePorts', 'validate', OneInteractivePortsMsg);
+      !flag && setError('interactivePorts', 'validate', t('tips.OneInteractivePortsMsg'));
       return flag;
     }
     return true;
@@ -233,7 +235,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
           defaultValue={''}
-          helperText={errors.interactivePorts ? errors.interactivePorts.message || OneInteractivePortsMsg : ''}
+          helperText={errors.interactivePorts ? errors.interactivePorts.message || t('tips.OneInteractivePortsMsg') : ''}
           inputRef={register({
             validate: val => validateInteractivePorts(val)
           })}

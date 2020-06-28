@@ -1,3 +1,5 @@
+import tips from './zh-CN/tips'
+import components from './zh-CN/components/components'
 import layout from './zh-CN/layout/layout'
 import home from './zh-CN/pages/Home/home'
 import submission from './zh-CN/pages/Submission/submission'
@@ -6,6 +8,8 @@ import ClusterStatus from './zh-CN/ClusterStatus';
 import VirtualCluster from './zh-CN/VirtualCluster';
 
 export default {
+  tips,
+  components,
   layout,
   home,
   submission,

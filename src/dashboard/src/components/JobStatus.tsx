@@ -13,12 +13,14 @@ import {
   Help
 } from '@material-ui/icons';
 import message from '../utils/message';
+import { useTranslation } from "react-i18next";
 
 interface Props {
   job: any;
 }
 
 const JobStatus: FunctionComponent<Props> = ({ job }) => {
+  const {t} = useTranslation();
   const status = useMemo<string>(() => job['jobStatus'], [job]);
   const icon = useMemo(() =>
     status === 'unapproved' ? <HourglassEmpty/>
@@ -33,7 +35,7 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
     : status === 'killed' ? <RemoveCircleOutline/>
     : <Help/>
   , [status]);
-  const label = useMemo(() => capitalize(status), [status]);
+  const label = useMemo(() => capitalize(t('components.'+status)), [status]);
   const detail = useMemo<Array<any>>(() => job['jobStatusDetail'], [job]);
   const title = useMemo(() => {
     if (!Array.isArray(detail)) return null;

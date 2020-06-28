@@ -161,7 +161,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
     if (!tplName) {
-      setError('templateName', 'required','Template Name is required！');
+      setError('templateName', 'required',t('TemplateNameisrequired'));
       return;
     }
     if (Boolean(errors.templateName)) return;
@@ -218,7 +218,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
     if (!selectDelTPName) {
-      message('error', 'Need select one template')
+      message('error', t('Needselectonetemplate'))
       return
     }
     try {
@@ -230,7 +230,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setSelectDelTPName('');
       getTemplates();
     } catch (error) {
-      enqueueSnackbar('Failed to delete the template', {
+      enqueueSnackbar( t('Failedtodeletethetemplate'), {
         variant: 'error',
       })
       console.error(error);
@@ -444,7 +444,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       // }
       let workersNeeded = workers * 8;
       if (workersNeeded > gpuAvailable) {
-        if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
+        if (!window.confirm(t('TherewontbeenoughworkersmatchyourrequestnProceed'))) {
           return;
         }
       }
@@ -522,12 +522,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (val) {
       const _val = Number(val);
       if (_val < 0 || !Number.isInteger(_val) || _val > gpusPerNode) {
-        setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode}`);
+        setNpuNumMsg(`${t('Mustbeapositiveintegerfrom0to')}  ${gpusPerNode}`);
         return false;
       }
       if (allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
         if (_val !== 0 && _val !== 1 &&_val !== 2 && _val !== 4 && _val !== 8) {
-          setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode}，and can only be one of 0, 1, 2, 4, 8`);
+          setNpuNumMsg(`${t('Mustbeapositiveintegerfrom0to')} ${gpusPerNode}，${t('andcanonlybeoneof01248')}`);
           return false;
         }
       }
@@ -647,7 +647,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     );
   };
   const styleSnack={backgroundColor: green[400]};
-
+  const jobNameIsRequired = t('submission.jobNameIsRequired');
+  const dockerImageIsRequired = t('submission.dockerImageIsRequired');
+  const commandIsRequired = t('submission.commandIsRequired');
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
@@ -709,10 +711,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     InputLabelProps={{ shrink: true }}
                     inputProps={{ maxLength: 20 }}
                     inputRef={register({
-                      required: 'Job Name is required！',
+                      required: jobNameIsRequired,
                       pattern: {
                         value: NameReg,
-                        message: NameErrorText
+                        message: t('tips.NameErrorText')
                       }
                     })}
                   />
@@ -839,7 +841,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     error={Boolean(errors.image)}
                       helperText={errors.image ? errors.image.message : ''}
                       inputRef={register({
-                        required: 'Docker Image is required！'
+                        required: dockerImageIsRequired
                       })}
                   />
                 </Grid>
@@ -858,7 +860,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       error={Boolean(errors.command)}
                       helperText={errors.command ? errors.command.message : ''}
                       inputRef={register({
-                        required: 'Command is required！'
+                        required: commandIsRequired
                       })}
                     />
                   </MonospacedThemeProvider>
@@ -866,7 +868,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12}>
                   <TextField
                     label={t('submission.interactivePorts')}
-                    placeholder={InteractivePortsMsg}
+                    placeholder={t('tips.InteractivePortsMsg')}
                     fullWidth
                     variant="filled"
                     rows="10"
@@ -909,7 +911,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 {iconInfoShow && <Grid item xs={12} container justify="flex-end">
                   <Chip
                     icon={<Info/>}
-                    label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
+                    label={t('submission.tensorboardListenTips')}
                   />
                 </Grid>}
               </Grid>
@@ -981,7 +983,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           inputRef={register({
                             pattern: {
                               value: NoChineseReg,
-                              message: NoChineseErrorText
+                              message: t('tips.NoChineseErrorText')
                             }
                           })}
                         />
@@ -1011,7 +1013,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           inputRef={register({
                             pattern: {
                               value: NoChineseReg,
-                              message: NoChineseErrorText
+                              message: t('tips.NoChineseErrorText')
                             }
                           })}
                         />
@@ -1041,7 +1043,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           inputRef={register({
                             pattern: {
                               value: NoChineseReg,
-                              message: NoChineseErrorText
+                              message: t('tips.NoChineseErrorText')
                             }
                           })}
                         />
@@ -1072,7 +1074,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       <TableRow key={index}>
                         <TableCell>
                           <TextField
-                            label="Environment Variable Name"
+                            label={t('submission.environmentVariableName')}
                             fullWidth
                             margin="dense"
                             variant="filled"
@@ -1092,7 +1094,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         </TableCell>
                         <TableCell>
                           <TextField
-                            label="Environment Variable Value"
+                            label={t('submission.environmentVariableValue')}
                             fullWidth
                             margin="dense"
                             variant="filled"
@@ -1139,7 +1141,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       inputRef={register({
                         pattern: {
                           value: NameReg,
-                          message: NameErrorText
+                          message: t('tips.NameErrorText')
                         }
                       })}
                     />

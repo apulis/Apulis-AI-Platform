@@ -43,6 +43,15 @@ const allJob = {
     unapprovedJobs:'Unapproved Jobs',
     pauseesJobs:'Pausses Jobs',
 }
+const materialTable = {
+    firstPage:'First Page',
+    previousPage:'Previous Page',
+    nextPage:'Next Page',
+    lastPage:'Last Page',
+    search:'Search',
+    actions:'Actions',
+    noRecordsToDisplay:'No records to display'
+}
 const brief = {
     brief:'Brief',
     endpoints:'Endpoints',
@@ -68,6 +77,7 @@ export default{
     ...index,
     ...myJob,
     ...allJob,
+    ...materialTable,
     ...brief,
     ...endpoints
 }

@@ -44,30 +44,30 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
   // const onChangePage = useCallback((page: number) => {
   //   const maxPage = Math.ceil(jobs.length / pageSize) - 1;
   //   if (page >= maxPage) {
-  //     onExpectMoreJobs(pageSize);
+  //     onExpectMoreJobs(pageSize);w
   //   }
   // }, [jobs, pageSize, onExpectMoreJobs]);
   const renderPrioirty = useCallback((job: any) => (
     <PriorityField job={job}/>
   ), [])
 
-  const columns = useMemo<Array<Column<any>>>(() => [
-    { title: t('jobsV2.id'), type: 'string', field: 'jobId',
-      render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: t('jobsV2.name'), type: 'string', field: 'jobName', sorting: false },
-    { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
-    { title: t('jobsV2.deviceNumber'), type: 'numeric',
-      render: renderGPU, customSort: sortGPU },
-    { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
-    { title: t('jobsV2.priority'), type: 'numeric',
-      render: renderPrioirty, disableClick: true },
-    { title: t('jobsV2.submitted'), type: 'datetime',
-      render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
-    { title: t('jobsV2.started'), type: 'datetime',
-      render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
-    { title: t('jobsV2.finished'), type: 'datetime',
-      render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
-  ], [renderPrioirty]);
+  // const columns = useMemo<Array<Column<any>>>(() => [
+  //   { title: t('jobsV2.id'), type: 'string', field: 'jobId',
+  //     render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
+  //   { title: t('jobsV2.name'), type: 'string', field: 'jobName', sorting: false },
+  //   { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
+  //   { title: t('jobsV2.deviceNumber'), type: 'numeric',
+  //     render: renderGPU, customSort: sortGPU },
+  //   { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
+  //   { title: t('jobsV2.priority'), type: 'numeric',
+  //     render: renderPrioirty, disableClick: true },
+  //   { title: t('jobsV2.submitted'), type: 'datetime',
+  //     render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
+  //   { title: t('jobsV2.started'), type: 'datetime',
+  //     render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
+  //   { title: t('jobsV2.finished'), type: 'datetime',
+  //     render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
+  // ], [renderPrioirty]);
   const options = useMemo<Options>(() => ({
     padding: 'dense',
     actionsColumnIndex: -1,
@@ -78,17 +78,58 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
   return (
     <MaterialTable
       title={t('jobsV2.myJobs')}
-      columns={columns}
+      // columns = {columns}
+      columns={[
+        { title: t('jobsV2.id'), type: 'string', field: 'jobId',
+          render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
+        { title: t('jobsV2.name'), type: 'string', field: 'jobName', sorting: false },
+        { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
+        { title: t('jobsV2.deviceNumber'), type: 'numeric',
+          render: renderGPU, customSort: sortGPU },
+        { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
+        { title: t('jobsV2.priority'), type: 'numeric',
+          render: renderPrioirty, disableClick: true },
+        { title: t('jobsV2.submitted'), type: 'datetime',
+          render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
+        { title: t('jobsV2.started'), type: 'datetime',
+          render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
+        { title: t('jobsV2.finished'), type: 'datetime',
+          render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
+      ]}
       data={jobs}
       options={options}
       actions={actions}
       onChangeRowsPerPage={onChangeRowsPerPage}
+      localization={{
+        pagination: {
+            labelDisplayedRows: '{from}-{to} of {count}',
+            firstTooltip: t('jobsV2.firstPage'),
+            previousTooltip: t('jobsV2.previousPage'),
+            nextTooltip: t('jobsV2.nextPage'),
+            lastTooltip: t('jobsV2.lastPage')
+        },
+        toolbar: {
+            nRowsSelected: '{0} row(s) selected',
+            searchTooltip: t('jobsV2.search'),
+            searchPlaceholder: t('jobsV2.search')
+        },
+        header: {
+            actions: t('jobsV2.actions')
+        },
+        body: {
+            emptyDataSourceMessage: t('jobsV2.noRecordsToDisplay'),
+            filterRow: {
+                filterTooltip: 'Filter'
+            }
+        }
+      }} 
       // onChangePage={onChangePage}
     />
   );
 };
 
 const MyJobs: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
@@ -118,7 +159,7 @@ const MyJobs: FunctionComponent = () => {
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
         if (!(temp1 === temp2)) setJobs(res.data);
       }, () => {
-        message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
+        message('error', `${t('Failed to fetch jobs from cluster')}: ${cluster.id}`);
       })
   }
 

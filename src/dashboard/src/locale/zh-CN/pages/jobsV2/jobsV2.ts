@@ -1,3 +1,5 @@
+import MyJobs from "../../../../pages/JobsV2/MyJobs"
+
 const index = {
     chooseCluster:'选择集群',
     myJobs:'我的任务',
@@ -43,6 +45,15 @@ const allJob = {
     unapprovedJobs:'无效任务',
     pauseesJobs:'暂停任务'
 }
+const materialTable = {
+    firstPage:'第一页',
+    previousPage:'前一页',
+    nextPage:'后一页',
+    lastPage:'末尾页',
+    search:'搜索',
+    actions:'操作',
+    noRecordsToDisplay:'没有数据'
+}
 const brief = {
     brief:'简介',
     endpoints:'终端',
@@ -66,7 +77,9 @@ const endpoints = {
 }
 export default{
     ...index,
+    ...myJob,
     ...allJob,
+    ...materialTable,
     ...brief,
     ...endpoints
 }

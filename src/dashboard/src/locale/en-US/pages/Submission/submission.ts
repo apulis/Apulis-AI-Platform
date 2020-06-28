@@ -28,8 +28,15 @@ const advance = {
     jobPath:'Job Path',
     environmentVariables:'Environment Variables',
     name:'Name',
-    value:'Value'
+    value:'Value',
+    environmentVariableName:'Environment Variable Name',
+    environmentVariableValue:'Environment Variable Value',
+    jobNameIsRequired:'Job Name is required',
+    dockerImageIsRequired:'Docker Image is required',
+    commandIsRequired:'Command is required',
+    tensorboardListenTips:"TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
 }
+
 const template = {
     templateManagements:'Template Managements',
     templateName:'Template name',

@@ -73,6 +73,29 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
       options={options}
       actions={permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB') ? actions : undefined}
       onChangeRowsPerPage={onChangeRowsPerPage}
+      localization={{
+        pagination: {
+            labelDisplayedRows: '{from}-{to} of {count}',
+            firstTooltip: t('jobsV2.firstPage'),
+            previousTooltip: t('jobsV2.previousPage'),
+            nextTooltip: t('jobsV2.nextPage'),
+            lastTooltip: t('jobsV2.lastPage')
+        },
+        toolbar: {
+            nRowsSelected: '{0} row(s) selected',
+            searchTooltip: t('jobsV2.search'),
+            searchPlaceholder: t('jobsV2.search')
+        },
+        header: {
+            actions: t('jobsV2.actions')
+        },
+        body: {
+            emptyDataSourceMessage: t('jobsV2.noRecordsToDisplay'),
+            filterRow: {
+                filterTooltip: 'Filter'
+            }
+        }
+      }}  
     />
   );
 }
@@ -103,7 +126,7 @@ const AllJobs: FunctionComponent = () => {
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
         if (!(temp1 === temp2))  setJobs(res.data);
       }, () => {
-        message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
+        message('error', `${t('Failedtofetchjobsfromcluster')}: ${cluster.id}`);
       })
   }
 
@@ -138,7 +161,7 @@ const AllJobs: FunctionComponent = () => {
       {unapprovedJobs && <JobsTable title={t('jobsV2.unapprovedJobs')} jobs={unapprovedJobs}/>}
       {pausedJobs && <JobsTable title={t('jobsV2.pauseJobs')} jobs={pausedJobs}/>}
       {jobs.length === 0 &&
-        <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3>
+        <h3 style={{marginLeft: '10px'}}>{t('OnlyRunningOrQueuingOrUnapprovedOrPausesjobswillbeshownandwillnotshowFinishedjobs')}</h3>
       }
     </>
   );

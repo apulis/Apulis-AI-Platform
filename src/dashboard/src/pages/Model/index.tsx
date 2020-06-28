@@ -82,6 +82,7 @@ const Model: React.FC = () => {
   }
 
   useEffect(() => {
+    getFdInfo();
     getData();
   }, [selectedCluster, selectedTeam]);
 
@@ -159,10 +160,7 @@ const Model: React.FC = () => {
   }
 
   const openSettings = async () => {
-    await axios.get(`/${selectedCluster}/getFDInfo`)
-      .then((res: { data: any; }) => {
-        setFdInfo(res.data);
-      })
+    await getFdInfo();
     setModalFlag2(true);
   }
 
@@ -185,6 +183,9 @@ const Model: React.FC = () => {
         <Button variant="contained" style={{ margin: '0 20px' }} color="primary" onClick={openSettings}>
           Settings
         </Button>
+        {fdInfo.url !== '' && <Button variant="contained" color="primary" href={fdInfo.url} target="blank">
+          FD Server
+        </Button>}
       </div>
       <MaterialTable
         title=""

@@ -1,80 +1,34 @@
-sign: "apulistechjwtsecretsample001"
+sign: "Sign key for JWT"
 winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
 masterToken: "Access token of all users"
 
-AddGroupLink: http://add-group/
-WikiLink: http://wiki/
-
-authEnabled:
-  wechat: 1
-  microsoft: 1
+activeDirectory:
+  tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
+  clientId: "487f34da-74af-4c0d-85d9-d678a118d99d"
+  clientSecret: "1MZ[7?g0vPv_6cahAvPuohwuQKrrJEh."
 
 wechat:
   appId: "wx403e175ad2bf1d2d"
   appSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
 
-userGroup:
-  type: custom
-  domain: http://sandbox2-master.sigsus.cn:52080
-  backEndPath: /custom-user-dashboard-backend
-  frontEndPath: /custom-user-dashboard
-
-activeDirectory:
-  tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
-  clientId: "6d93837b-d8ce-48b9-868a-39a9d843dc57"
-  clientSecret: "eIHVKiG2TlYa387tssMSj?E?qVGvJi[]"
-
-dingtalk:
-  appId: "dingoap3bz8cizte9xu62e"
-  appSecret: "sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj"
-
-# domain: "http://huawei-infra01.sigsus.cn/"
-# casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
-
-# administrators:
-#   - jinlmsft@hotmail.com
-#   - jinli.ccs@gmail.com
-#   - jin.li@apulis.com
-
-# clusters:
-#   apulis-dev:
-#     restfulapi: "http://huawei-infra01.sigsus.cn//apis"
-#     title: Grafana-endpoint-of-the-cluster
-#     workStorage: work
-#     dataStorage: data
-#     grafana: "http://huawei-infra01.sigsus.cn//grafana/"
-#     prometheus: http://huawei-infra01.sigsus.cn/:9091
-
-# domain: "https://apulis-test.sigsus1.cn:51444"
-# casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
-
-# administrators:
-#   - jinlmsft@hotmail.com
-#   - jinli.ccs@gmail.com
-#   - jin.li@apulis.com
-
-# clusters:
-#   apulis-dev:
-#     restfulapi: "https://apulis-test.sigsus1.cn:51444/apis"
-#     title: Grafana-endpoint-of-the-cluster
-#     workStorage: work
-#     dataStorage: data
-#     grafana: "https://apulis-test.sigsus1.cn:51444/grafana"
-#     prometheus: http://huawei-infra01.sigsus.cn/:9091
-
-domain: "http://sandbox2-master.sigsus.cn:52080"
-casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
-
+domain: "https://atlas.sigsus.cn"
 administrators:
   - jinlmsft@hotmail.com
-  - jinli.ccs@gmail.com
   - jin.li@apulis.com
+  - bifeng.peng@apulis.com
+  - hui.yuan@apulis.com
 
 clusters:
-  apulis-dev:
-    restfulapi: "http://sandbox2-master.sigsus.cn:52080/apis"
-    title: Grafana-endpoint-of-the-cluster
-    workStorage: work
-    dataStorage: data
-    grafana: "http://sandbox2-master.sigsus.cn:52080/endpoints/grafana"
-    prometheus: http://sandbox2-master.sigsus.cn:52080
+  atlas02:
+      restfulapi: "http://altas.sigsus.cn/apis"
+      title: Grafana-endpoint-of-the-cluster
+      workStorage: work
+      dataStorage: data
+      grafana: "https://atlas.sigsus.cn/grafana/"
+      prometheus: http://atlas.sigsus.cn:9091
+      
+userGroup:
+  type: custom
+  domain: http://atlas.sigsus.cn
+  backEndPath: /custom-user-dashboard-backend
+  frontEndPath: /custom-user-dashboard

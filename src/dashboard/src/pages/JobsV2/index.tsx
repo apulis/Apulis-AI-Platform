@@ -28,12 +28,14 @@ import MyJobs from './MyJobs';
 import AllJobs from './AllJobs';
 import './index.less';
 import AuthzHOC from '../../components/AuthzHOC';
+import { useTranslation } from "react-i18next";
 
 interface RouteParams {
   clusterId: string;
 }
 
 const TabView: FunctionComponent = () => {
+  const {t} = useTranslation();
   const [index, setIndex] = useState(Number(window.location.search.split('index=')[1]) || 0);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
@@ -51,8 +53,8 @@ const TabView: FunctionComponent = () => {
           textColor="primary"
           indicatorColor="primary"
         >
-          <Tab label="My Jobs"/>
-          <Tab label="All Jobs"/>
+          <Tab label={t('jobsV2.myJobs')}/>
+          <Tab label={t('jobsV2.allJobs')}/>
         </Tabs>
       </AuthzHOC>
       <SwipeableViews
@@ -77,6 +79,7 @@ const ClusterJobs: FunctionComponent<{ cluster: any }> = ({ cluster }) => {
 }
 
 const Jobs: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { clusters } = useContext(ClustersContext);
   const history = useHistory();
   const { clusterId } = useParams<RouteParams>();
@@ -96,7 +99,7 @@ const Jobs: FunctionComponent = () => {
     <Container fixed maxWidth="xl">
       <Toolbar disableGutters>
         <FormControl fullWidth>
-          <InputLabel>Choose Cluster</InputLabel>
+  <InputLabel>{t('jobsV2.chooseCluster')}</InputLabel>
           <ClusterSelector defaultId={clusterId} onChange={onClusterChange}/>
         </FormControl>
       </Toolbar>

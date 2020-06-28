@@ -18,6 +18,7 @@ import PriorityField from './PriorityField';
 import message from '../../utils/message';
 import { pollInterval } from '../../const';
 import useInterval from '../../hooks/useInterval';
+import { useTranslation } from "react-i18next";
 
 const renderUser = (job: any) => job['userName'].split('@', 1)[0];
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
@@ -31,6 +32,7 @@ interface JobsTableProps {
 }
 
 const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
+  const {t} = useTranslation();
   const { cluster } = useContext(ClusterContext);
   const { permissionList = [] } = useContext(AuthContext);
   const [pageSize, setPageSize] = useState(5);
@@ -38,21 +40,21 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
     setPageSize(pageSize);
   }, [setPageSize]);
   const columns: Column<any>[]  = [
-    { title: 'Id', type: 'string', field: 'jobId',
+    { title: t('jobsV2.id'), type: 'string', field: 'jobId',
       render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Name', type: 'string', field: 'jobName', sorting: false },
-    { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
-    { title: 'Number of Device', type: 'numeric',
+    { title: t('jobsV2.name'), type: 'string', field: 'jobName', sorting: false },
+    { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
+    { title: t('jobsV2.deviceNumber'), type: 'numeric',
       render: renderGPU, customSort: sortGPU },
-    { title: 'User', type: 'string', render: renderUser},
-    { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},
-    { title: 'Priority', type: 'numeric',
+    { title: t('jobsV2.user'), type: 'string', render: renderUser},
+    { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
+    { title: t('jobsV2.priority'), type: 'numeric',
       render: (job: any) => (<PriorityField job={job} key={job.jobId} />), disableClick: true },
-    { title: 'Submitted', type: 'datetime',
+    { title: t('jobsV2.submitted'), type: 'datetime',
       render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
-    { title: 'Started', type: 'datetime',
+    { title: t('jobsV2.started'), type: 'datetime',
       render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
-    { title: 'Finished', type: 'datetime',
+    { title: t('jobsV2.finished'), type: 'datetime',
       render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
   ];
   const options = useMemo<Options>(() => ({
@@ -76,6 +78,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
 }
 
 const AllJobs: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [limit, setLimit] = useState(999);
@@ -130,10 +133,10 @@ const AllJobs: FunctionComponent = () => {
   }, [jobs]);
   if (jobs !== undefined) return (
     <>
-      {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}
-      {queuingJobs && <JobsTable title="Queuing Jobs" jobs={queuingJobs}/>}
-      {unapprovedJobs && <JobsTable title="Unapproved Jobs" jobs={unapprovedJobs}/>}
-      {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>}
+      {runningJobs && <JobsTable title={t('jobsV2.runningJobs')} jobs={runningJobs}/>}
+      {queuingJobs && <JobsTable title={t('jobsV2.queueingJobs')} jobs={queuingJobs}/>}
+      {unapprovedJobs && <JobsTable title={t('jobsV2.unapprovedJobs')} jobs={unapprovedJobs}/>}
+      {pausedJobs && <JobsTable title={t('jobsV2.pauseJobs')} jobs={pausedJobs}/>}
       {jobs.length === 0 &&
         <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3>
       }

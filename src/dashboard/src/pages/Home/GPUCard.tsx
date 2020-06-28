@@ -47,6 +47,7 @@ import {type} from "os";
 import useCheckIsDesktop from "../../utlities/layoutUtlities";
 import AuthzHOC from '../../components/AuthzHOC';
 import './index.less';
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   avatar: {
@@ -83,6 +84,7 @@ const useStyles = makeStyles((theme: Theme) => createStyles({
 }));
 
 const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
+  const {t} = useTranslation();
   const [open, setOpen] = useState(false);
   const iconButton = useRef<any>();
   const onIconButtonClick = useCallback(() => setOpen(true), [setOpen]);
@@ -102,10 +104,10 @@ const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
           onClose={onMenuClose}
         >
           <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
-            <MenuItem component={Link} to={"/cluster-status"}>Cluster Status</MenuItem>
+  <MenuItem component={Link} to={"/cluster-status"}>{t('home.clusterStatus')}</MenuItem>
           </AuthzHOC>
           <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']}>
-            <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>View Jobs</MenuItem>
+  <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>{t('home.viewJobs')}</MenuItem>
           </AuthzHOC>
         </Menu>
       </AuthzHOC>
@@ -120,6 +122,7 @@ const Chart: FC<{
   isActive: boolean;
 
 }> = ({ available, used, reserved ,isActive}) => {
+  const {t} = useTranslation();
   const theme = useTheme();
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -128,9 +131,9 @@ const Chart: FC<{
     data = [{ name: "NO Resources", value: 100, color: "#e0e0e0" }];
   } else {
     data = [
-      { name: "Available", value: available, color: lightGreen[400] },
-      { name: "Used", value: used, color: theme.palette.grey[500] },
-      { name: "Unschedulable", value: reserved, color: deepOrange[400]},
+      { name: t('home.chartAvailable'), value: available, color: lightGreen[400] },
+      { name: t('home.chartUsed'), value: used, color: theme.palette.grey[500] },
+      { name: t('home.chartUnschedulable'), value: reserved, color: deepOrange[400]},
     ];
   }
   if (reserved === 0) {
@@ -217,6 +220,7 @@ export const DirectoryPathTextField: FC<{
   label: string;
   value: string;
 }> = ({ label, value }) => {
+  const {t} = useTranslation();
   const input = useRef<HTMLInputElement>(null);
   const [openCopyWarn, setOpenCopyWarn] = useState(false);
   const handleWarnClose = () => {
@@ -246,7 +250,7 @@ export const DirectoryPathTextField: FC<{
           readOnly: true,
           endAdornment: (
             <InputAdornment position="end">
-              <Tooltip title="Copy" placement="right">
+              <Tooltip title={t('copy')} placement="right">
                 <IconButton>
                   <FileCopyRounded onClick={handleCopy} />
                 </IconButton>
@@ -261,6 +265,7 @@ export const DirectoryPathTextField: FC<{
 }
 
 const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
+  const {t} = useTranslation();
   const styles = useStyles();
   const [activeJobs, setActiveJobs] = useState(0);
   const [available, setAvailable] = useState(0);
@@ -431,7 +436,7 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
           variant: "body2",
           noWrap: true
         }}
-        subheader={` ${activeJobs} Active Jobs`}
+        subheader={` ${activeJobs} ${t('home.activeJobs')}`}
         action={<ActionIconButton cluster={cluster}/>}
         classes={{ content: styles.cardHeaderContent }}
       />
@@ -439,7 +444,7 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
         <Chart available={available} used={used} reserved={reversed} isActive={activate} />
         <Divider />
         <Typography  variant="h6" id="tableTitle" className={styles.tableTitle}>
-          {"Storage (GB)"}
+          {t('home.storage')+" (GB)"}
         </Typography>
         <Box height={102} style={{ overflow: 'auto' }}>
           <MuiThemeProvider theme={tableTheme}>
@@ -459,7 +464,7 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
                     <TableRow key={index}>
                       <TableCell>
                         {value < 80 ? <BorderLinearProgress value={value} variant={"determinate"}/> : value >= 80 && value < 90 ? <GenernalLinerProgress value={value} variant={"determinate"}/> : <FullBorderLinearProgress value={value} variant={"determinate"}/>}
-                        <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(used: ${nfs['used']}, total: ${nfs['total']}) ${Math.floor(value)}% used`}</span></div>
+                        <div className={styles.tableInfo}><span>{`${mounName}`}</span><span>{`(${t('home.used')}: ${nfs['used']}, ${t('home.total')}: ${nfs['total']}) ${Math.floor(value)}% ${t('home.used')}`}</span></div>
                       </TableCell>
                     </TableRow>
                   )
@@ -475,7 +480,7 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
             to={{pathname: "/submission/training-cluster", state: { cluster } }}
             size="small" color="secondary"
           >
-            Submit Training Job
+            {t('home.submitTrainingJob')}
           </Button>
           {/* <Button component={Link}
             to={{pathname: "/submission/data", state: { cluster } }}
@@ -488,11 +493,11 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
       </AuthzHOC>
       <CardContent>
         <DirectoryPathTextField
-          label="Work Directory"
+          label={t('home.workDirectory')}
           value={workStorage}
         />
         <DirectoryPathTextField
-          label="Data Directory"
+          label={t('home.dataDirectory')}
           value={dataStorage}
         />
       </CardContent>

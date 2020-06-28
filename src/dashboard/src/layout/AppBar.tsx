@@ -41,6 +41,7 @@ import copy from 'clipboard-copy'
 import {green,purple} from "@material-ui/core/colors";
 import AuthzHOC from '../components/AuthzHOC';
 import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -75,10 +76,11 @@ const Transition = React.forwardRef<unknown, TransitionProps>(function Transitio
   return <Slide direction="up" ref={ref} {...props} />;
 });
 const OpenDrawerButton: React.FC = () => {
+  const {t} = useTranslation();
   const { setOpen, open } = React.useContext(DrawerContext);
   const onClick = React.useCallback(() => setOpen(!open), [setOpen, open]);
   return (
-    <Tooltip title={open ? 'Hide' : 'Show'}>
+    <Tooltip title={open ? t('layout.hide') : t('layout.show') }>
       <IconButton edge="start" color="inherit" onClick={onClick}>
         <MenuRounded />
       </IconButton>
@@ -139,6 +141,7 @@ TeamMenu = () => {
 };
 
 const UserButton: React.FC = () => {
+  const {t} = useTranslation();
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
   const { nickName, userName, permissionList, currentRole, userGroupPath } = React.useContext(UserContext);
@@ -162,7 +165,7 @@ const UserButton: React.FC = () => {
     <main>
       <Button variant="outlined" color="inherit" style={{ marginRight: '10px' }} href={userGroupPath}>
         <Dashboard className={styles.leftIcon}/>
-        User Dashboard
+        {t('layout.userDashboard')}
       </Button>
       <Button variant="outlined" color="inherit" onClick={showUserProfile} className={classes.userLabel}>
         <AccountBox className={styles.leftIcon}/>
@@ -221,9 +224,10 @@ const clearAuthInfo = async (userGroupPath: string) => {
   window.location.href = userGroupPath + '/user/login?' + encodeURIComponent(window.location.href);
 }
 const SignOutButton: React.FC = () => {
+  const {t} = useTranslation();
   const { userGroupPath } = React.useContext(UserContext);
   return (
-    <Tooltip title="Sign Out" onClick={() => {delete localStorage.token}}>
+    <Tooltip title={t('layout.signOut')} onClick={() => {delete localStorage.token}}>
       <IconButton edge="end" color="inherit" onClick={() => clearAuthInfo(userGroupPath || '')}>
         <ExitToApp />
       </IconButton>

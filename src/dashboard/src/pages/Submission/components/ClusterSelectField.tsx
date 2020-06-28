@@ -8,6 +8,7 @@ import TeamsContext from "../../../contexts/Teams";
 import useFetch from "use-http";
 import _ from "lodash";
 import {sumValues} from "../../../utlities/ObjUtlities";
+import { useTranslation } from "react-i18next";
 
 interface ClusterSelectFieldProps {
   cluster: string | undefined;
@@ -19,6 +20,7 @@ interface ClusterSelectFieldProps {
 const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps> = (
   { cluster, onClusterChange, variant="standard", ...props }
 ) => {
+  const {t} = useTranslation();
   const { clusters,selectedCluster, saveSelectedCluster } = React.useContext(ClustersContext);
   const { selectedTeam } = React.useContext(TeamsContext);
   const fetchVcStatusUrl = `/api`;
@@ -68,7 +70,7 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
   return (
     <TextField
       select
-      label="Cluster"
+      label={t('submission.cluster')}
       helperText={helperText}
       value={cluster}
       onChange={onChange}

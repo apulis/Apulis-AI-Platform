@@ -1,0 +1,17 @@
+const gpuCard = {
+    clusterStatus:'Cluster Status',
+    viewJobs:'View Jobs',
+    storage:'Storage',
+    submitTrainingJob:'SUBMIT TRAINING JOB',
+    used:'used',
+    total:'total',
+    workDirectory:'Work Directory',
+    dataDirectory:'Data Directory',
+    chartAvailable:'Available',
+    chartUsed:"Used",
+    chartUnschedulable:'Unschedulable',
+    activeJobs:'Active Jobs'
+}
+export default{
+    ...gpuCard
+}

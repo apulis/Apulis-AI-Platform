@@ -89,6 +89,29 @@ export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
           ]}
           data={nodeStatus}
           options={{filtering: false,paging: true, pageSizeOptions:[10],pageSize:nodeStatus.length < 10 ? nodeStatus.length : 10,sorting: false}}
+          localization={{
+            pagination: {
+                labelDisplayedRows: '{from}-{to} of {count}',
+                firstTooltip: t('First Page'),
+                previousTooltip: t('Previous Page'),
+                nextTooltip: t('Next Page'),
+                lastTooltip: t('Last Page')
+            },
+            toolbar: {
+                nRowsSelected: '{0} row(s) selected',
+                searchTooltip: t('Search'),
+                searchPlaceholder: t('Search')
+            },
+            header: {
+                actions: 'Actions'
+            },
+            body: {
+                emptyDataSourceMessage: t('No records to display'),
+                filterRow: {
+                    filterTooltip: 'Filter'
+                }
+            }
+          }}       
         /> :
           <CircularProgress/>
       }

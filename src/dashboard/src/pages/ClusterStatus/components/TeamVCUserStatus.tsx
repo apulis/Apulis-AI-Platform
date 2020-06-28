@@ -45,7 +45,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
                   </Tooltip>
                 </div>
               )
-            }}
+            }}            
           /> :
             <CircularProgress/>
         }
@@ -60,7 +60,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
           columns={[{title:  t('Username'), field: 'userName'},
             {title: t('DeviceType'), field: 'gpuType',type:'numeric'},
             {title: t('CurrentlyAllocated'), field: 'usedGPU',type:'numeric'},
-            {title:  t('CurrentlyAllocatedPreemptible'), field: 'preemptableGPU',type:'numeric', render: (rowData: any) => <span>{rowData['preemptableGPU'] ? rowData['preemptableGPU'] : '0'}</span>},
+            {title: t('CurrentlyAllocatedPreemptible'), field: 'preemptableGPU',type:'numeric', render: (rowData: any) => <span>{rowData['preemptableGPU'] ? rowData['preemptableGPU'] : '0'}</span>},
             {title: t('CurrentlyIdle'), field: 'idleGPU',type:'numeric'},
             {title: t('PastMonthBookedHour'), field: 'booked',type:'numeric', render: (rowData: any) => <span>{rowData['booked'] ? rowData['booked'] : '0'}</span>},
             {title: t('PastMonthIdleHour'), field: 'idle',type:'numeric', render: (rowData: any) => <span>{rowData['idle'] ? rowData['idle'] : '0'}</span>},
@@ -80,6 +80,29 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
                 </Tooltip>
               </div>
             )
+          }}
+          localization={{
+            pagination: {
+                labelDisplayedRows: '{from}-{to} of {count}',
+                firstTooltip: t('First Page'),
+                previousTooltip: t('Previous Page'),
+                nextTooltip: t('Next Page'),
+                lastTooltip: t('Last Page')
+            },
+            toolbar: {
+                nRowsSelected: '{0} row(s) selected',
+                searchTooltip: t('Search'),
+                searchPlaceholder: t('Search')
+            },
+            header: {
+                actions: 'Actions'
+            },
+            body: {
+                emptyDataSourceMessage: t('No records to display'),
+                filterRow: {
+                    filterTooltip: 'Filter'
+                }
+            }
           }}
         /> :
           <CircularProgress/>

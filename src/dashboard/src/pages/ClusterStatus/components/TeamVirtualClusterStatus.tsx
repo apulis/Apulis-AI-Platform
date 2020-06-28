@@ -90,6 +90,29 @@ export const TeamVirtualClusterStatus = (props: TeamVC) => {
           ]}
           data={gpuStatusList || []}
           options={{filtering: false, paging: true, pageSize: gpuStatusList.length < 10 ? gpuStatusList.length : 10, pageSizeOptions: [10], sorting: false}}
+          localization={{
+            pagination: {
+                labelDisplayedRows: '{from}-{to} of {count}',
+                firstTooltip: t('First Page'),
+                previousTooltip: t('Previous Page'),
+                nextTooltip: t('Next Page'),
+                lastTooltip: t('Last Page')                
+            },
+            toolbar: {
+                nRowsSelected: '{0} row(s) selected',
+                searchTooltip: t('Search'),
+                searchPlaceholder: t('Search')
+            },
+            header: {
+                actions: 'Actions'
+            },
+            body: {
+                emptyDataSourceMessage: t('No records to display'),
+                filterRow: {
+                    filterTooltip: 'Filter'
+                }
+            }
+          }}          
         /> 
         // : <CircularProgress/>
       }

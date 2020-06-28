@@ -9,7 +9,6 @@ export default {
     'PreemptibleUsed': 'Preemptible Used',
     'Available': 'Available',
     'ActiveJobs': 'Active Jobs',
-    'Search': 'Search',
     //Team VC User Status
     'TeamVCUserStatus': 'Team VC User Status',
     'Username': 'Username',
@@ -30,5 +29,12 @@ export default {
     'NodeName': 'Node Name',
     'NodeIP': 'Node IP',
     'Pods': 'Pods',
-    'Status': 'Status'
+    'Status': 'Status',
+    //MaterialTable
+    'Search': 'Search',
+    'No records to display': 'No records to display',
+    'First Page': 'First Page',
+    'Previous Page': 'Previous Page',
+    'Next Page': 'Next Page',
+    'Last Page': 'Last Page'
   }

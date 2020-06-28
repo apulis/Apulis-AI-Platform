@@ -9,7 +9,6 @@ export default {
     'PreemptibleUsed': '可被抢占',
     'Available': '可用',
     'ActiveJobs': '运行中任务',
-    'Search': '查找',
     //Team VC User Status
     'TeamVCUserStatus': '团队虚拟集群用户状态',
     'Username': '用户名',
@@ -30,5 +29,12 @@ export default {
     'NodeName': '节点名称',
     'NodeIP': '节点IP',
     'Pods': 'Pods',
-    'Status': '状态' 
+    'Status': '状态',
+    //MaterialTable
+    'Search': '查找',
+    'No records to display': '记录为空',
+    'First Page': '第一页',
+    'Previous Page': '前一页',
+    'Next Page': '后一页',
+    'Last Page': '最后页'    
   }

@@ -38,9 +38,13 @@
 
 - **硬件配置**
 
-  1. worker节点需禁用SecureBoot、如不禁用，将导致GPU驱动无法升级
+  1. worker节点：需禁用SecureBoot（如不禁用，将导致GPU驱动无法升级）
 
-  2. 所有节点需配置并允许ssh连接
+  2. 所有节点：配置并允许SSH连接、关闭防火墙
+
+  3. GPU节点：预装好驱动，NVIDIA GPU请参考[安装手册](https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#ubuntu-lts)
+
+  4. NPU节点：预装好驱动，华为NPU请参考 A910驱动安装手册
 
      
 

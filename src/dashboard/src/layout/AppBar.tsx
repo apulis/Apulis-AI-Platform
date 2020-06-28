@@ -29,6 +29,7 @@ import {
   Group,
   MenuRounded,
   Dashboard,
+  Translate
 } from '@material-ui/icons';
 import CloseIcon from '@material-ui/icons/Close';
 import { TransitionProps } from '@material-ui/core/transitions';
@@ -43,6 +44,7 @@ import AuthzHOC from '../components/AuthzHOC';
 import axios from 'axios';
 import { useTranslation } from "react-i18next";
 
+import i18n from "i18next";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -133,6 +135,64 @@ TeamMenu = () => {
               <Group className={styles.leftIcon} />
             )}
             <Typography>{team}</Typography>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+};
+
+const LangMenu: React.FC = () => {
+  const lng = localStorage.language || navigator.language;
+  const selectedMenu = lng === 'zh-CN' ? {label: '中文', value: 'zh-CN'} : {label: 'English', value: 'en-US'}
+  const menus = [{label: '中文', value: 'zh-CN'}, {label: 'English', value: 'en-US'}]
+
+  const [open, setOpen] = React.useState(false);
+
+  const button = React.useRef<any>(null);
+
+  const onButtonClick = React.useCallback(() => setOpen(true), [setOpen]);
+  const onMenuClose = React.useCallback(() => setOpen(false), [setOpen]);
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+  const selectLang = (lang: string) => {
+    localStorage.language = lang;
+    changeLanguage(lang);
+  };
+  const onMenuItemClick = React.useCallback(
+    menu => () => {
+      selectLang(menu.value);
+      setOpen(false);
+    },
+    [selectedMenu]
+  );  
+  const styles = useStyles({});
+  return (
+    <>
+      <Button
+        ref={button}
+        variant="outlined"
+        color="inherit"
+        onClick={onButtonClick}
+        style={{ textTransform: 'none' }}
+      >
+        <Translate className={styles.leftIcon} />
+        {selectedMenu.label}
+      </Button>
+      <Menu anchorEl={button.current} open={open} onClose={onMenuClose}>
+        {menus.map((menu: any) => (
+          <MenuItem
+            key={menu.value}
+            disabled={menu.value === selectedMenu.value}
+            onClick={onMenuItemClick(menu)}
+          >
+            {menu.value === selectedMenu.value ? (
+              <Check className={styles.leftIcon} />
+            ) : (
+              <Translate className={styles.leftIcon} />
+            )}
+            <Typography>{menu.label}</Typography>
           </MenuItem>
         ))}
       </Menu>
@@ -277,6 +337,9 @@ const DashboardAppBar: React.FC = () => {
           </Grid>
           <Grid item style={{ marginLeft:'10px' }}>
             <UserButton />
+          </Grid>
+          <Grid item style={{ marginLeft:'10px' }}>
+            <LangMenu />
           </Grid>
           <Grid item>
             {' '}

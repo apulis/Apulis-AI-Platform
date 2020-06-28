@@ -72,13 +72,18 @@ def fd_push_file(modconvertInfo, fdinfo):
     files = {
         "tiFile": (get_filename(modconvertInfo["outputPath"]), open(get_om_filepath(modconvertInfo["outputPath"]), 'rb'))
     }
-    resp = requests.post(url, auth=auth, verify=False, headers=headers, files=files)
-    if resp.status_code == 201:
-        ret["success"] = True
-        dataHandler.UpdateModelConversionStatus(modconvertInfo['jobId'], "push success")
-    else:
+    try:
+        resp = requests.post(url, auth=auth, verify=False, headers=headers, files=files)
+        if resp.status_code == 201:
+            ret["success"] = True
+            dataHandler.UpdateModelConversionStatus(modconvertInfo['jobId'], "push success")
+        else:
+            ret["success"] = False
+            ret["msg"] = resp.json()['error']
+            dataHandler.UpdateModelConversionStatus(modconvertInfo['jobId'], "push failed")
+    except Exception as e:
         ret["success"] = False
-        ret["msg"] = resp.json()['error']
+        ret["msg"] = str(e)
         dataHandler.UpdateModelConversionStatus(modconvertInfo['jobId'], "push failed")
     return ret
 

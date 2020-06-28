@@ -10,6 +10,7 @@ export default {
   home,
   submission,
   jobsV2,
-  ClusterStatus,
+  ...ClusterStatus,
+  ...VirtualCluster,
   copy:'复制'
 }

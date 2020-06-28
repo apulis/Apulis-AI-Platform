@@ -89,7 +89,7 @@ def get_monthly_idleness(prometheus_url):
     now = int(datetime.datetime.timestamp(now))
 
     args = urllib.parse.urlencode({
-        "query": "task_device_percent{device_str='nvidia.com/gpu'}",
+        "query": "task_device_percent",
         "start": str(one_month_ago),
         "end": str(now),
         "step": str(STEP_MINUTE) + "m",
@@ -110,7 +110,7 @@ def get_monthly_idleness(prometheus_url):
 
     metrics = walk_json_field_safe(obj, "data", "result")
 
-    default = lambda : {"booked": collections.defaultdict(lambda : 0), "idle": collections.defaultdict(lambda : 0)}
+    default = lambda : {"booked": collections.defaultdict(lambda : 0), "idle": collections.defaultdict(lambda : 0),"nonidle_util_sum": collections.defaultdict(lambda : 0.0),"nonidle_util":collections.defaultdict(lambda : 0.0)}
 
     # the first level is vc, the second level is user
     vc_level = collections.defaultdict(
@@ -123,7 +123,9 @@ def get_monthly_idleness(prometheus_url):
     for metric in metrics:
         username = walk_json_field_safe(metric, "metric", "username")
         vc_name = walk_json_field_safe(metric, "metric", "vc_name")
-        gpu_type = walk_json_field_safe(metric, "metric", "gpu_type")
+        gpu_type = walk_json_field_safe(metric, "metric", "device_type")
+        job_id = walk_json_field_safe(metric, "metric", "job_name")
+
         if gpu_type == "unknown":
             continue
         if username is None or vc_name is None or gpu_type is None:
@@ -146,38 +148,37 @@ def get_monthly_idleness(prometheus_url):
             else:
                 nonidle_util_sum += utils * step_seconds
 
-        vc_level[vc_name][username]["booked"] += booked_seconds
-        vc_level[vc_name][username]["idle"] += idleness_seconds
-        vc_level[vc_name][username]["nonidle_util_sum"] += nonidle_util_sum
+        vc_level[vc_name][username]["booked"][gpu_type] += booked_seconds
+        vc_level[vc_name][username]["idle"][gpu_type] += idleness_seconds
+        vc_level[vc_name][username]["nonidle_util_sum"][gpu_type] += nonidle_util_sum
 
-        user_level[vc_name][username][job_id]["booked"] += booked_seconds
-        user_level[vc_name][username][job_id]["idle"] += idleness_seconds
-        user_level[vc_name][username][job_id][
-            "nonidle_util_sum"] += nonidle_util_sum
+        user_level[vc_name][username][job_id]["booked"][gpu_type] += booked_seconds
+        user_level[vc_name][username][job_id]["idle"][gpu_type] += idleness_seconds
+        user_level[vc_name][username][job_id]["nonidle_util_sum"][gpu_type] += nonidle_util_sum
 
     for vc_name, vc_values in vc_level.items():
         for username, user_val in vc_values.items():
-            nonidle_time = user_val["booked"] - user_val["idle"]
-            nonidle_util_sum = user_val["nonidle_util_sum"]
+            for gpu_type in user_val["booked"].keys():
+                nonidle_time = user_val["booked"][gpu_type] - user_val["idle"][gpu_type]
+                nonidle_util_sum = user_val["nonidle_util_sum"][gpu_type]
 
-            if nonidle_time == 0:
-                user_val["nonidle_util"] = 0.0
-            else:
-                user_val["nonidle_util"] = nonidle_util_sum / nonidle_time
+                if nonidle_time == 0:
+                    user_val["nonidle_util"][gpu_type] = 0.0
+                else:
+                    user_val["nonidle_util"][gpu_type] = nonidle_util_sum / nonidle_time
             user_val.pop("nonidle_util_sum")
-        result[vc_name][username]["booked"][gpu_type] += booked_seconds
-        result[vc_name][username]["idle"][gpu_type] += idleness_seconds
 
     for vc_name, vc_values in user_level.items():
         for username, user_values in vc_values.items():
             for job_id, job_val in user_values.items():
-                nonidle_time = job_val["booked"] - job_val["idle"]
-                nonidle_util_sum = job_val["nonidle_util_sum"]
+                for gpu_type in job_val["booked"].keys():
+                    nonidle_time = job_val["booked"][gpu_type] - job_val["idle"][gpu_type]
+                    nonidle_util_sum = job_val["nonidle_util_sum"][gpu_type]
 
-                if nonidle_time == 0:
-                    job_val["nonidle_util"] = 0.0
-                else:
-                    job_val["nonidle_util"] = nonidle_util_sum / nonidle_time
+                    if nonidle_time == 0:
+                        job_val["nonidle_util"][gpu_type] = 0.0
+                    else:
+                        job_val["nonidle_util"][gpu_type] = nonidle_util_sum / nonidle_time
                 job_val.pop("nonidle_util_sum")
 
     return {"vc_level": vc_level, "user_level": user_level}
@@ -192,7 +193,7 @@ def refresher(prometheus_url, atomic_ref):
                     atomic_ref.set(result)
             except Exception:
                 logger.exception("caught exception while refreshing")
-        time.sleep(5 * 60)
+        time.sleep(1 * 60)
 
 
 def serve(prometheus_url, port):

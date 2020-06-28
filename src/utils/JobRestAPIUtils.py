@@ -824,8 +824,10 @@ def GetJobTotalGpu(jobParams):
 
 def DeleteVC(userName, vcName):
     dataHandler = DataHandler()
+    if len(dataHandler.ListVCs())==1:
+        return False
     if AuthorizationManager.IsClusterAdmin(userName):
-        jobs = dataHandler.GetJobList("all", "all", num=None,status="running,scheduling,pausing")
+        jobs = dataHandler.GetJobList("all", vcName, num=None,status="running,scheduling,pausing")
         for job in jobs:
             dataHandler.UpdateJobTextFields({"jobId": job["jobId"],"vcName":vcName},{"jobStatus": "killing"})
         ret = dataHandler.DeleteJobByVcExcludeKilling(vcName)

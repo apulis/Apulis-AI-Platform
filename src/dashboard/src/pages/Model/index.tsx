@@ -1,7 +1,7 @@
-import React, { useState, FC, useEffect, useMemo, useContext } from "react";
+import React, { useState, FC, useEffect, useMemo, useContext, useCallback } from "react";
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, RadioGroup, Radio, CircularProgress,
   FormControlLabel, TextField, MenuItem } from "@material-ui/core";
-import MaterialTable, { Column, Options } from 'material-table';
+import MaterialTable, { Column, Options, Action } from 'material-table';
 import { renderDate, sortDate } from '../JobsV2/tableUtils';
 import './index.less';
 import SelectTree from '../CommonComponents/SelectTree';
@@ -31,18 +31,23 @@ const Model: React.FC = () => {
   const [convertionTypes, setConvertionTypes] = useState([]);
   const [modalFlag1, setModalFlag1] = useState(false);
   const [modalFlag2, setModalFlag2] = useState(false);
-  const [pushBtnDisabled, setPushBtnDisabled] = useState(false);
+  const [pushId, setPushId] = useState('');
   const [btnLoading, setBtnLoading] = useState(false);
   const { handleSubmit, register, getValues, errors, setValue, clearError } = useForm({ mode: "onBlur" });
   const formObj = { register, errors, setValue, clearError };
-
+  const renderStatus = (job: any) => {
+    const { jobStatus, modelconversionStatus } = job;
+    let status = modelconversionStatus;
+    if (modelconversionStatus === 'converting') status = jobStatus === 'finished' ? 'convert success' : jobStatus === 'failed' ? 'convert failed' : modelconversionStatus;
+    return <p>{status}</p>
+  }
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'ID', type: 'string', field: 'jobId', sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Inference Name', type: 'string', field: 'jobName', sorting: false},
     { title: 'Type', type: 'string', field: 'modelconversionType', sorting: false },
     { title: 'Time', type: 'datetime', field: 'jobTime', 
       render: renderDate(getDate), customSort: sortDate(getDate) },
-    { title: 'Status', type: 'string', field: 'modelconversionStatus' },
+    { title: 'Status', type: 'string', field: 'modelconversionStatus', render: renderStatus },
   ], []);
   const options = useMemo<Options>(() => ({
     padding: 'dense',
@@ -51,13 +56,16 @@ const Model: React.FC = () => {
   }), [pageSize]);
 
   const getData = () => {
-    const jobOwner = isAdmin ? 'all' : userName;
+    // const jobOwner = isAdmin ? 'all' : userName;
+    const jobOwner = userName;
     axios.get(`/${selectedCluster}/teams/${selectedTeam}/ListModelConversionJob?jobOwner=${jobOwner}&limit=999`)
       .then((res: { data: any; }) => {
         const { data } = res;
         const temp1 = JSON.stringify(jobs.map((i: { jobStatus: any; }) => i.jobStatus));
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
-        if (temp1 !== temp2) setJobs(data);
+        const temp3 = JSON.stringify(jobs.map((i: { modelconversionStatus: any; }) => i.modelconversionStatus));
+        const temp4 = JSON.stringify(data?.map((i: { modelconversionStatus: any; }) => i.modelconversionStatus));
+        if (temp1 !== temp2 || temp3 !== temp4) setJobs(data);
       }, () => {
         message('error', `Failed to fetch inferences from cluster: ${selectedCluster}`);
       })
@@ -81,18 +89,35 @@ const Model: React.FC = () => {
     getData();
   }, pollInterval);
   
-  const onPush = async (item: any) => {
+  const onPush = async (e: any, item: any) => {
     const info = await getFdInfo();
     if (info) {
-      axios.post(`/${selectedCluster}/pushModelToFD`, { jobId: item.jobId }).then((res: any) => {
+      const { jobId } = item;
+      setPushId(jobId);
+      axios.post(`/${selectedCluster}/pushModelToFD`, { jobId: jobId }).then((res: any) => {
         getData();
         message('success', `Push Inference successfully！`);
+      }).catch(err => {
+        console.log(err);
+        setPushId('');
       })
     } else {
       message('error', `Please entee settings first`);
       setModalFlag2(true);
     }
   }
+
+  const push = useCallback((job: any): Action<any> => {
+    const { jobStatus, modelconversionStatus, jobId } = job;
+    const hidden = !(modelconversionStatus === 'converting' && jobStatus === 'finished');
+    return {
+      hidden,
+      icon: 'backup',
+      tooltip: 'Push Inference',
+      onClick: onPush,
+      disabled: pushId === jobId
+    }
+  }, [onPush]);
 
   const onCloseDialog = (type: number) => {
     type === 1 ? setModalFlag1(false) : setModalFlag2(false);
@@ -164,17 +189,12 @@ const Model: React.FC = () => {
         columns={columns}
         data={jobs}
         options={options}
-        actions={[{
-          icon: 'backup',
-          tooltip: 'Push Model',
-          onClick: onPush,
-          disabled: pushBtnDisabled
-        }]}
+        actions={[push]}
         onChangeRowsPerPage={(pageSize: any) => setPageSize(pageSize)}
       />
       {modalFlag1 && 
       <Dialog open={modalFlag1} disableBackdropClick fullWidth>
-        <DialogTitle>New Model Transform</DialogTitle>
+        <DialogTitle>New Inference</DialogTitle>
         <form onSubmit={handleSubmit(onSubmitTransform)}>
           <DialogContent dividers>
             {/* <RadioGroup row aria-label="quiz" name="quiz" value={type} onChange={onTypeChange}>

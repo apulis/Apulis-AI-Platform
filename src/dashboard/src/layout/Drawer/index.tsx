@@ -91,11 +91,11 @@ const NavigationList: FC = () => {
           <ListItemText>Edge Inference</ListItemText>
         </LinkListItem>
       </AuthzHOC>
-      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+      {/* <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/centralInference">
           <ListItemText>Cloud Inference</ListItemText>
         </LinkListItem>
-      </AuthzHOC>
+      </AuthzHOC> */}
     </List>
   );
 };

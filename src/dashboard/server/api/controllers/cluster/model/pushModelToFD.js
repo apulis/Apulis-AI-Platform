@@ -1,5 +1,3 @@
-const uuid = require('uuid');
-
 /**
  * @typedef {Object} State
  * @property {import('../../../services/cluster')} cluster
@@ -8,6 +6,5 @@ const uuid = require('uuid');
 /** @type {import('koa').Middleware<State>} */
 module.exports = async context => {
   const { cluster } = context.state;
-
   context.body = await cluster.pushModelToFD(context.request.body);
 }

@@ -14,7 +14,6 @@ import _ from 'lodash';
 import AuthzHOC from '../../components/AuthzHOC';
 import i18next from 'i18next';
 import { withTranslation } from 'react-i18next';
-import { useTranslation } from "react-i18next";
 
 const empty = {
   text: '',
@@ -150,7 +149,6 @@ class Vc extends React.Component {
   }
 
   delete = () => {
-    const {t:translation} = useTranslation();
     const { t } = this.props;
     const [ tSuccess, tFailed ] = [t('Delete successfully！'), t('Delete failed！')]
     const { selectedCluster, getTeams } = this.context;
@@ -175,7 +173,7 @@ class Vc extends React.Component {
     const val = e.target.value;
     const hasNames = vcList.map(i => i.vcName);
     const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
-    const text = !val ? tRequired : !NameReg.test(val) ?  translation('tips.NameErrorText') : hasNames.includes(val) ? translation('tips.SameNameErrorText')  : '';
+    const text = !val ? tRequired : !NameReg.test(val) ?  t('tips.NameErrorText') : hasNames.includes(val) ? t('tips.SameNameErrorText')  : '';
     this.setState({ 
       vcName: val,
       vcNameValidateObj: {

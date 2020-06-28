@@ -1,106 +1,208 @@
 # DLWS集群安装步骤
 
 ### 1. 配置说明 & 示例
-| 名称             | 配置    | GPU  | 操作系统     | 公网IP       | 子网IP      | 描述                        |
-| ---------------- | ------- | ---- | ------------ | ------------ | ----------- | --------------------------- |
-| atlas01          | 6C64G   | N/A  | ubuntu 18.04 | 121.46.18.83 | 192.168.3.6 | 部署发起节点 k8s master节点 |
-| atlas01-worker01 | 36C512G | 8    | ubuntu 18.04 | 121.46.18.83 | 192.168.3.2 | k8s worker节点              |
+| 主机名      | 配置    | 计算设备 | 操作系统       | 公网IP       | 子网IP      | 描述                           |
+| ----------- | ------- | -------- | -------------- | ------------ | ----------- | ------------------------------ |
+| atlas02     | 6C64G   | 8 NPU    | ubuntu 18.04.1 | 121.46.18.84 | 192.168.3.6 | NPU Woker节点                  |
+| atlas01     | 36C512G | 8 NPU    | ubuntu 18.04.1 | 121.46.18.84 | 192.168.3.2 | k8s master节点/NPU worker 节点 |
+| atlas-gpu01 | 6C64G   | 8 GPU    | ubuntu 18.04.4 | 121.46.18.84 | 192.168.3.4 | GPU Woker节点                  |
+| atlas-gpu02 | 6C64G   | 8 GPU    | ubuntu 18.04.4 | 121.46.18.84 | 192.168.3.3 | GPU Woker节点                  |
 
 其中：
 
 1. master和worker需在同一个子网或VPC，dev与master、worker可以不在同一个子网或VPC
-
-2. worker节点需携带GPU，GPU类别为NVidia，安装驱动（driver）版本>= 430  
+2. worker节点计算设备配置
+   - 若设备为NVIDIA GPU，则驱动版本不低于430
+   - 若设备为Huawei NPU, 则驱动版本不低于 1.72.T2.100.B020
 ****
 
 ### 2. 安装准备
 
 #### 2.1 安装要求
 
-- 系统：ubuntu 18.04 server
-- 用户：root用户，或具备sudo权限的非ROOT用户；所有机器允许root登录
-- 软件：预安装ssh-server
-- 硬件：worker节点SecureBoot需禁用
-- 步骤说明：执行时如提示无权限，则使用sudo权限执行
-- 编译节点架构需与master节点架构一致
+- **操作系统**
 
-#### 2.2 免密码配置
+  普通节点：ubuntu 18.04 server
 
-   **针对非root用户，需在dev、master、worker三个机器中配置**
-
-- 执行sudo visudo
-
-- 检查文件内容，确认是否存在以下配置，没有则新增
-
-     ```
-     %sudo ALL=(ALL:ALL) ALL
-     %sudo ALL=(ALL) NOPASSWD:ALL
-     ```
-
-####  2.3 配置节点Hostname
-
-在master、worker节点中配置主机名
-
-atlas01
-
-atlas01-worker01
-
-
-
-配置方法（依atlas01为例子）：
-
-- 更新/etc/hostname内容为atlas01
-
-- 设置hostname立即生效：sudo hostnamectl set-hostname atlas01
+  NPU节点：ubuntu 18.04.1 server （小版本号必须为1）
 
   
 
-#### 2.4 配置DNS
+- **用户配置**
 
-**需要在DNS提供商控制台进行配置**
+  root用户，或具备sudo权限的非ROOT用户
 
-DNS提供商：https://dns.console.aliyun.com
+  **所有机器允许root登录，且root密码一致**
 
-主域名：sigsus.cn
+  
 
- 示例：
+- **硬件配置**
 
-| 主机记录 | 记录类型 | 记录值 | 对应节点(参考) |
-| ---- | ---- | ---- | ---- |
-| atlas01 | A | 121.46.18.83 | master |
-| atlas01-worker01 | A | 121.46.18.83 | woker01 |
-|                  |          |              |                |
+  1. worker节点需禁用SecureBoot、如不禁用，将导致GPU驱动无法升级
+
+  2. 所有节点需配置并允许ssh连接
+
+     
+
+- **步骤说明**：执行时如提示无权限，则使用sudo权限执行
+
+- **编译节点：CPU架构需与master节点架构一致，譬如同为AMD64或同为Arm64**
+  
+    
+  
+#### 2.2 配置节点Hostname
+
+​	将各个节点的主机名，按照**配置说明**配置
+​	配置方法（依atlas02为例子）：
+
+- 编辑/etc/hostname，更新内容为atlas02
+- 设置hostname立即生效：sudo hostnamectl set-hostname atlas02
+
+  
+
+#### 2.3 配置域名DNS（如不提供公网访问，请跳过此章节）
+
+​     **需要在DNS提供商控制台进行配置**
+
+​	 以阿里云为例：https://dns.console.aliyun.com
+
+​	 主域名：**sigsus.cn**
+
+ 	配置示例：
+
+| 主机记录 | 记录类型 | 记录值 |
+| ---- | ---- | ---- |
+| atlas.sigsus.cn | A | 121.46.18.84 |
+
+#### 2.4 配置Worker节点DNS
+
+- **配置短域名搜索**（所有机器）
+
+  - 安装resolvconf
+
+    `apt update`
+
+    `apt install resolvconf`
+
+  - 增加短域名
+
+  ​        `mkdir -p /etc/resolvconf/resolv.conf.d/`
+
+  ​        `echo "search sigsus.cn" > /etc/resolvconf/resolv.conf.d/base` 
+
+  ​		`sudo resolvconf -u`
+
+  ​        此处sigsus.cnb必须与config.yaml中domain一致
+
+  ​        见**3.2 设置集群配置文件** 章节
+
+- **在独立公网IP**
+
+  通过DNS提供上为每个节点配置IP路由
+
+  配置示例：
+
+  | 主机记录              | 记录类型 | 记录值        |
+  | --------------------- | -------- | ------------- |
+  | atlas01.sigsus.cn     | A        | 121.46.18.xxx |
+  | atlas-gpu01.sigsus.cn | A        | 121.46.18.xxx |
+  | atlas-gpu02.sigsus.cn | A        | 121.46.18.xxx |
+
+- **节点不存在公网IP**
+
+  此种情况需为每个节点配置 短域名解析，于SHELL执行以下指令
+
+  1. `mkdir -p deploy/etc`
+
+  2. 配置hosts
+
+     ```shell
+     cat << EOF > deploy/etc/hosts
+     127.0.0.1       localhost
+     
+      192.168.3.2    atlas02
+      192.168.3.2    atlas02.sigsus.cn
+      192.168.3.2    atlas.sigsus.cn
+     
+      192.168.3.6    atlas01
+      192.168.3.6    atlas01.sigsus.cn
+     
+     
+      192.168.3.3    atlas-gpu02
+      192.168.3.3    atlas-gpu02.sigsus.cn
+     
+      192.168.3.4    atlas-gpu01
+      192.168.3.4    atlas-gpu01.sigsus.cn 
+     EOF
+     ```
+
+  3. `chmod 666 deploy/etc/hosts`
+
+  4. 于HOST路径（容器外）**DLWorkspace/src/ClusterBootstrap/**下执行
+
+     `cp ./deploy/etc/hosts  /etc/hosts`
+
+----
 
 ### 3. 执行安装
 
-#### 3.1 文件/路径说明  
+#### 3.1 安装脚本路径说明  
 
-​		安装程序所在目录 ：**DLWorkspace/src/ClusterBootstrap/**  
+​		执行目录 ：**DLWorkspace/src/ClusterBootstrap/**  
 ​		集群配置文件：**DLWorkspace/src/ClusterBootstrap/config.yaml**   
-​		安装文件：**DLWorkspace/src/ClusterBootstrap/deploy.py**
+​		安装脚本：**DLWorkspace/src/ClusterBootstrap/deploy.py**
 
 #### 3.2 设置集群配置文件
 
-以下字段做相应修改
+​	以下字段做相应修改
 
 - cluster_name —— 集群名称
 
 - cloud_influxdb_node —— master节点FQDN
 
-- DeployAuthentications —— 登录方式（如有微信，需相应增加）
+- Authentications 登录方式
 
-  [微软登录方式参数获取参考](https://github.com/apulis/dev_document/tree/master/dlts/redirect_url_registration)
+  1. 用户名密码（默认登录方式）
 
-  
+  2. 微软登录
 
-- DLWSAdmins —— 增加对应的管理员名称
+     [微软登录方式参数获取参考](https://github.com/apulis/dev_document/tree/master/dlts/redirect_url_registration)
+
+  3. 微信登录
+
+     示例
+
+     `  Wechat:
+         AppId: "wx403e175ad2bf1d2d"
+         AppSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"`
+
+     
+
+     APPID与AppClient的获取，请参考https://open.weixin.qq.com/ --> [网站应用](https://open.weixin.qq.com/cgi-bin/frame?t=home/web_tmpl&lang=zh_CN)
+
+     所申请的域名是：cluster_name+domain
+
+     
+
+     譬如：
+
+     cluster_name：**atlas**
+
+     domain：**sigsus.cn**
+
+     那么域名为：**atlas.sigsus.cn**
+
+     
+
+- DLWSAdmins —— 增加部署用户的名称（程序部署集群所采用的用户）
 
 - mysql_password —— 修改为指定的密码
 
 - machines 
 
-  - china-gpu02-master —— private-id —— 修改为对应master节点的内网IP
+  - atlas02 —— private-id —— 修改为对应master节点的内网IP
   - type和vendor —— 更改为对应的硬件和厂家名
+  - os —— 操作系统名称，譬如ubuntu或centos
 
 - dockerregistry —— 更改为对应的docker hub
 
@@ -137,10 +239,6 @@ mounthomefolder : True
 # kube_custom_scheduler: True
 kubepresleep: 1
 cloud_influxdb_node: apulis-atlas01.sigsus.cn
-
-DeployAuthentications:
-- Microsoft
-- Gmail
 
 UserGroups:
   DLWSAdmins:
@@ -330,10 +428,6 @@ Authentications:
     ClientId: 487f34da-74af-4c0d-85d9-d678a118d99d
     ClientSecret: "1MZ[7?g0vPv_6cahAvPuohwuQKrrJEh."
 
-  DingTalk:
-    AppId: dingoap3bz8cizte9xu62e
-    AppSecret: sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj
-
   Wechat:
     AppId: "wx403e175ad2bf1d2d"
     AppSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
@@ -375,118 +469,69 @@ repair-manager:
 enable_custom_registry_secrets: True
 ```
 
+#### 3.3 设置**DEV**执行环境
+
+- 通过容器执行部署（**选项一**）
+
+  AMD64架构：`python3 devenv.py`
+
+  Arm64架构：`python3 devenv_arm64.py`
+
+  架构配置要求，请参考 **“2.1 安装要求”、“编译节点”说明**
+
+- 通过HOST机器执行部署（**选项二**）
+
+  cd到执行目录，执行`./scripts/prepare_ubuntu_dev.sh`
 
 
-#### 3.3 安装**DEV**执行环境
+#### 3.4 创建集群ID
 
-```
-./scripts/prepare_ubuntu_dev.sh
-```
-
-  
-
-#### 3.4 配置DNS内网解析-1
-
-**以下机器：dev、master、worker三个机器**  
-
-- 创建目录：mkdir -p /etc/resolvconf/resolv.conf.d/
-
-  修改文件：vim /etc/resolvconf/resolv.conf.d/base  
-
-  增加数据：search sigsus.cn  
-  执行指令：sudo resolvconf -u
-
-  
-
-- 配置节点hosts文件（**在集群共享一个公网IP且Router不具备短域名或局域网内DNS配置功能**）
-
-  执行：mkdir -p deploy/etc
-
-  路径：DLWorkspace/src/ClusterBootstrap/deploy/etc/hosts
-
-  作用：实现内网DNS解析
-
-  ```
-  127.0.0.1       localhost
-  
-  127.0.0.1      apulis-atlas01
-  192.168.3.6    atlas01
-  192.168.3.2    atlas01-worker01
-  
-  127.0.0.1      atlas01.sigsus.cn
-  192.168.3.6    atlas01.sigsus.cn
-  192.168.3.2    atlas01-worker01.sigsus.cn
-  
-  127.0.0.1      apulis-atlas01.sigsus.cn
-  192.168.3.6    apulis-atlas01.sigsus.cn
-  192.168.3.2    apulis-atlas01-worker01.sigsus.cn
-  ```
-  
-- 执行hosts文件配置（deploy.py位于**DLWorkspace/src/ClusterBootstrap/**）
-
-  ```
-  sudo cp ./deploy/etc/hosts  /etc/hosts
-  ```
-
-  
-
-
-#### 3.5 创建集群ID
-
-```
+```shell
 ./deploy.py --verbose -y build 
 ```
 
+#### 3.5 配置节点ROOT用户密码
 
+​       为集群节点配置一致的ROOT密码，执行指令：
 
-#### 3.6 配置节点ROOT用户密码
+​    （此步骤用于为每个节点 创建部署集群的用户）
 
-将集群节点ROOT密码设置一致，然后执行指令：
-
-（此步骤用于为每个节点 创建安装用户）
-
-```
+```shell
 cd deploy/sshkey
 echo "root" > "rootuser"
 echo "your_root_password" > "rootpasswd"
 ```
 
-
-
-#### 3.7 安装SSH Key到所有节点
+#### 3.6 安装SSH Key到所有节点
 
 ```
  ./deploy.py --verbose sshkey install
 ```
 
+#### 3.7 配置/检测内网DNS解析 
 
-
-#### 3.8 配置DNS内网解析-2    
+- **节点不存在公网IP（参考关联章节： 2.4 配置Worker节点DNS - 节点不存在公网IP）**
 
 ```
 ./deploy.py --verbose copytoall ./deploy/etc/hosts  /etc/hosts
 ```
 
-检查DNS配置
+-  **检查所有机器DNS配置是否成功**（atlas02为master节点主机名）：
 
-在master、proxy上指令执行看是否成功 
 
-``` 
-  ping atlas01
-  ping atlas01-worker01
+``` shell
+./deploy.py execonall ping atlas02 -c 2
 ```
 
-#### 3.9 检查集群节点是否可正常访问
+-  **检查集群节点是否可正常访问**
 
 ```
 ./deploy.py --verbose execonall sudo ls -al
 ```
 
+#### 3.8 设置集群节点的安装环境
 
-
-#### 3.10 设置集群节点的安装环境
-
-```
+```shell
 ./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh
 
 上一个语句会重启worker节点。需等待所有服务器 启动完毕，再执行以下步骤！！
@@ -502,7 +547,7 @@ echo "your_root_password" > "rootpasswd"
 
   
 
-#### 3.11 Worker机器状态确认
+#### 3.9 GPU Worker机器状态确认
 
 ```
 1、指令确认
@@ -536,11 +581,10 @@ echo "your_root_password" > "rootpasswd"
 
 
 
-#### 3.12 安装kubeadm客户端
-     ./deploy.py runscriptonroles infra worker           
-     ./scripts/install_kubeadm.sh
+#### 3.10 安装kubeadm客户端
+     ./deploy.py runscriptonroles infra worker ./scripts/install_kubeadm.sh
 
-#### 3.13 安装K8S集群平台
+#### 3.11 安装K8S集群平台
 
 - ##### 各节点关闭swap
 
@@ -572,41 +616,39 @@ echo "your_root_password" > "rootpasswd"
     ```
 
 
-#### 3.14 挂载存储节点
+#### 3.12 挂载存储节点
 
-- ##### 安装NFS服务（所有节点，包括存储点）
+- ##### 安装NFS服务
     ```
-    sudo apt-get update
-    sudo apt-get install nfs-kernel-server nfs-common portmap
-    sudo ln -s /etc/init.d/nfs-kernel-server /etc/init.d/nfs
-
-    /etc/init.d/nfs-kernel-server restart
+    ./deploy.py runscriptonroles infra worker ./scripts/install_nfs.sh
     ```
 
 
-- ##### 配置挂载目录（存储节点）
+- ##### 配置挂载目录（在存储节点操作）
 
-  - 创建目录。假设所要挂载的目录是：/data/nfsshare
+  - 创建目录
+
+     假设所要挂载的目录是：/mnt/local
 
      挂载目录需与config.yaml中所配置一致
 
      > mountpoints:
      >   nfsshare1:
      >     type: nfs
-     >     server: storage-server
-     >     filesharename: /data/nfsshare
+     >     server: atlas02
+     >     filesharename: /mnt/local
      >     curphysicalmountpoint: /mntdlws
      >     mountpoints: ""
-  
+
      执行：
-  
-     `mkdir -p /data/nfsshare` 
-  
+
+     `mkdir -p /mnt/local`
+
   - 设置白名单
-  
+
      编辑文件 /etc/exports，并增加挂载目录的IP白名单
-  
-     > /data/nfsshare               192.168.1.0/24(rw,fsid=0,insecure,no_subtree_check,async,no_root_squash)
+
+     >  /mnt/local               *(rw,fsid=0,insecure,no_subtree_check,async,no_root_squash)
 
 - ##### 更新共享信息
 
@@ -619,11 +661,10 @@ echo "your_root_password" > "rootpasswd"
 - **挂载结果确认**
 
   ```
-  /deploy.py --verbose execonall df -h
-  每个节点可看到/data/nfsshare被挂载
+  ./deploy.py --verbose execonall df -h
   ```
 
-#### 3.15 部署NVidia GPU/A910 NPU插件
+#### 3.13 部署NVidia GPU/A910 NPU插件
 
 ```
 ./deploy.py --verbose kubernetes start nvidia-device-plugin
@@ -632,55 +673,41 @@ echo "your_root_password" > "rootpasswd"
 
 ​    
 
-#### 3.16 重置APIServer NodePort端口段
+#### 3.14 重置APIServer NodePort端口段
 
-编辑文件/etc/kubernetes/manifests/kube-apiserver.yaml
+​          编辑文件/etc/kubernetes/manifests/kube-apiserver.yaml
 
-增加指定参数：
+​          增加指定参数：
 
 ```
 - --service-node-port-range=30000-49999
 ```
 
-保存文件后，API-SERVER自动重启并生效
+​           保存文件后，大约1分钟后API-SERVER自动重启并生效
 
+#### 3.15 设置webui服务配置文件
 
+​		文件：**DLWorkspace/src/dashboard/config/local.yaml**
 
-#### 3.17 设置webui服务配置文件
+​		domain、casUrl以及clusters，**三者需依据集群实际的域名，做相应的修改**
 
-文件：**DLWorkspace/src/dashboard/config/local.yaml**
-
-domain、casUrl以及clusters，**三者需依据集群实际的域名，做相应的修改**
-
-
-
-内容样例：
+​		内容样例：
 
 ```
 sign: "Sign key for JWT"
 winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
 masterToken: "Access token of all users"
 
-authEnabled:
-  wechat: 1
-  microsoft: 1
-
 activeDirectory:
   tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
   clientId: "487f34da-74af-4c0d-85d9-d678a118d99d"
   clientSecret: "1MZ[7?g0vPv_6cahAvPuohwuQKrrJEh."
 
-dingtalk:
-  appId: "dingoap3bz8cizte9xu62e"
-  appSecret: "sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj"
-
 wechat:
   appId: "wx403e175ad2bf1d2d"
   appSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
 
-domain: "https://china-gpu02.sigsus.cn"
-casUrl: "http://china-gpu02.sigsus.cn/cas"
-
+domain: "https://atlas.sigsus.cn"
 administrators:
   - jinlmsft@hotmail.com
   - jin.li@apulis.com
@@ -688,18 +715,24 @@ administrators:
   - hui.yuan@apulis.com
 
 clusters:
-  china-gpu02:
-      restfulapi: "http://china-gpu02.sigsus.cn/apis"
+  atlas02:
+      restfulapi: "http://altas.sigsus.cn/apis"
       title: Grafana-endpoint-of-the-cluster
       workStorage: work
       dataStorage: data
-      grafana: "https://china-gpu02.sigsus.cn/grafana/"
-      prometheus: http://china-gpu02.sigsus.cn:9091
+      grafana: "https://atlas.sigsus.cn/grafana/"
+      prometheus: http://atlas.sigsus.cn:9091
+      
+userGroup:
+  type: custom
+  domain: http://atlas.sigsus.cn
+  backEndPath: /custom-user-dashboard-backend
+  frontEndPath: /custom-user-dashboard
 ```
 
 
 
-#### 3.18 部署集群应用 
+#### 3.16 部署集群应用 
 
 1. ##### 本地登录docker hub （用户名为config.yaml所配置）
     > docker login
@@ -734,12 +767,12 @@ clusters:
         ```shell script
         ./deploy.py --verbose --archtype arm64 docker push openresty
         ```
-      
+    
 5. ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
     - master为AMD64架构
         ```
         ./deploy.py --verbose docker push init-container
-        ```  
+        ```
         如果集群有arm64架构的worker机器，在其中一台arm64的worker机器上执行  
         ```
         ./deploy.py --verbose --archtype arm64 docker push init-container
@@ -819,6 +852,6 @@ clusters:
         ./deploy.py --verbose kubernetes start webui3
         ./deploy.py kubernetes start custom-user-dashboard
         ```
-  
+
 
 

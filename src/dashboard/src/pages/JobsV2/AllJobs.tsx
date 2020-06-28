@@ -126,7 +126,7 @@ const AllJobs: FunctionComponent = () => {
         const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
         if (!(temp1 === temp2))  setJobs(res.data);
       }, () => {
-        message('error', `${t('Failedtofetchjobsfromcluster')}: ${cluster.id}`);
+        message('error', `${t('tips.Failedtofetchjobsfromcluster')}: ${cluster.id}`);
       })
   }
 
@@ -161,7 +161,7 @@ const AllJobs: FunctionComponent = () => {
       {unapprovedJobs && <JobsTable title={t('jobsV2.unapprovedJobs')} jobs={unapprovedJobs}/>}
       {pausedJobs && <JobsTable title={t('jobsV2.pauseJobs')} jobs={pausedJobs}/>}
       {jobs.length === 0 &&
-        <h3 style={{marginLeft: '10px'}}>{t('OnlyRunningOrQueuingOrUnapprovedOrPausesjobswillbeshownandwillnotshowFinishedjobs')}</h3>
+        <h3 style={{marginLeft: '10px'}}>{t('tips.OnlyRunningOrQueuingOrUnapprovedOrPausesjobswillbeshownandwillnotshowFinishedjobs')}</h3>
       }
     </>
   );

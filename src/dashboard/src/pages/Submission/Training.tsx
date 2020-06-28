@@ -161,7 +161,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
     if (!tplName) {
-      setError('templateName', 'required',t('TemplateNameisrequired'));
+      setError('templateName', 'required',t('tips.TemplateNameisrequired'));
       return;
     }
     if (Boolean(errors.templateName)) return;
@@ -218,7 +218,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
     if (!selectDelTPName) {
-      message('error', t('Needselectonetemplate'))
+      message('error', t('tips.Needselectonetemplate'))
       return
     }
     try {
@@ -230,7 +230,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setSelectDelTPName('');
       getTemplates();
     } catch (error) {
-      enqueueSnackbar( t('Failedtodeletethetemplate'), {
+      enqueueSnackbar( t('tips.Failedtodeletethetemplate'), {
         variant: 'error',
       })
       console.error(error);
@@ -444,7 +444,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       // }
       let workersNeeded = workers * 8;
       if (workersNeeded > gpuAvailable) {
-        if (!window.confirm(t('TherewontbeenoughworkersmatchyourrequestnProceed'))) {
+        if (!window.confirm(t('tips.TherewontbeenoughworkersmatchyourrequestnProceed'))) {
           return;
         }
       }
@@ -522,12 +522,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (val) {
       const _val = Number(val);
       if (_val < 0 || !Number.isInteger(_val) || _val > gpusPerNode) {
-        setNpuNumMsg(`${t('Mustbeapositiveintegerfrom0to')}  ${gpusPerNode}`);
+        setNpuNumMsg(`${t('tips.Mustbeapositiveintegerfrom0to')}  ${gpusPerNode}`);
         return false;
       }
       if (allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
         if (_val !== 0 && _val !== 1 &&_val !== 2 && _val !== 4 && _val !== 8) {
-          setNpuNumMsg(`${t('Mustbeapositiveintegerfrom0to')} ${gpusPerNode}，${t('andcanonlybeoneof01248')}`);
+          setNpuNumMsg(`${t('tips.Mustbeapositiveintegerfrom0to')} ${gpusPerNode}，${t('tips.andcanonlybeoneof01248')}`);
           return false;
         }
       }

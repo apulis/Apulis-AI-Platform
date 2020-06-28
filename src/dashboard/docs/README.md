@@ -19,37 +19,40 @@ const config = require('config')
 便能读取到 local.yaml 的内容，当前正在使用的内容如下
 
 ```yaml
-sign: "Sign key for JWT"
+sign: "apulistechjwtsecretsample001"
 winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
 masterToken: "Access token of all users"
 
-AddGroupLink: http://add-group/
-WikiLink: http://wiki/
-
+wechat:
+  appId: "wx403e175ad2bf1d2d"
+  appSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
+ 
+userGroup:
+  type: custom
+  domain: http://sandbox2-master.sigsus.cn:52080
+  backEndPath: /custom-user-dashboard-backend
+  frontEndPath: /custom-user-dashboard
+ 
 activeDirectory:
   tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
   clientId: "6d93837b-d8ce-48b9-868a-39a9d843dc57"
   clientSecret: "eIHVKiG2TlYa387tssMSj?E?qVGvJi[]"
 
-dingtalk:
-  appId: "dingoap3bz8cizte9xu62e"
-  appSecret: "sipRMeNixpgWQOw-sI6TFS5vdvtXozY3y75ik_Zue2KGywfSBBwV7er_8yp-7vaj"
-
-domain: "https://apulis-dev-infra01.westus.cloudapp.azure.com"
-casUrl: "http://apulis-dev-infra01.westus.cloudapp.azure.com/cas"
-
+domain: "http://sandbox2-master.sigsus.cn:52080"
+ 
 administrators:
   - jinlmsft@hotmail.com
   - jinli.ccs@gmail.com
   - jin.li@apulis.com
-
+ 
 clusters:
-  apulis-dev:
-    restfulapi: "https://apulis-china-infra01.sigsus.cn/apis"
+  apulis-atlas01:
+    restfulapi: "http://sandbox2-master.sigsus.cn:52080/apis"
     title: Grafana-endpoint-of-the-cluster
     workStorage: work
     dataStorage: data
-    grafana: "https://apulis-dev-infra01.westus.cloudapp.azure.com/grafana/"
+    grafana: "http://sandbox2-master.sigsus.cn:52080/endpoints/grafana"
+    prometheus: http://sandbox2-master.sigsus.cn:52080
 
 ```
 

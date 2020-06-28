@@ -1271,10 +1271,6 @@ class DataHandler(object):
                 query += " limit %s " % str(num)
             cursor.execute(query)
 
-            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-            print query
-            print "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
-
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
             for item in data:

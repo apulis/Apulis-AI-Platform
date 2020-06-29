@@ -18,8 +18,8 @@ export default {
     'PastMonthBookedHour': '上月使用小时数',
     'PastMonthIdleHour': '上月空闲小时数',
     'PastMonthIdleHour%': '上月空闲百分比',
-    'Show Current Use': '显示当前已使用',
-    'Show All Use': '显示所有已使用',
+    'Show Current Use': '显示当前用量',
+    'Show All Use': '显示所有用量',
     'ShowStatisticsofAllUsers': '显示所有用户的使用统计',
     'ShowStatisticsofCurrentUser': '显示当前用户的使用统计',
     //Cluster Usage

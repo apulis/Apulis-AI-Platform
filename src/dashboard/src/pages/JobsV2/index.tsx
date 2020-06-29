@@ -26,7 +26,6 @@ import Loading from '../../components/Loading';
 import ClusterContext from './ClusterContext';
 import MyJobs from './MyJobs';
 import AllJobs from './AllJobs';
-import './index.less';
 import AuthzHOC from '../../components/AuthzHOC';
 
 interface RouteParams {
@@ -42,7 +41,7 @@ const TabView: FunctionComponent = () => {
     setIndex(index);
   }, [setIndex]);
   return (
-    <div className="jobs-table-wrap">
+    <div>
       <AuthzHOC needPermission={['VIEW_ALL_USER_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB']}>
         <Tabs
           value={index}
@@ -93,7 +92,7 @@ const Jobs: FunctionComponent = () => {
   }, [history]);
 
   return (
-    <Container fixed maxWidth="xl">
+    <>
       <Toolbar disableGutters>
         <FormControl fullWidth>
           <InputLabel>Choose Cluster</InputLabel>
@@ -105,7 +104,7 @@ const Jobs: FunctionComponent = () => {
           ? <ClusterJobs key={cluster.id} cluster={cluster}/>
           : <Loading/>
       }
-    </Container>
+    </>
   );
 };
 

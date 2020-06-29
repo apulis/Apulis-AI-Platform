@@ -18,7 +18,8 @@ export default {
     'PastMonthBookedHour': 'Past Month Booked Hour',
     'PastMonthIdleHour': 'Past Month Idle Hour',
     'PastMonthIdleHour%': 'Past Month Idle Hour %',
-    'ShowCurrentUser': 'Show Current User',
+    'Show Current Use': 'Show Current Use',
+    'Show All Use': 'Show All Use',
     'ShowStatisticsofAllUsers': 'Show Statistics of All Users',
     'ShowStatisticsofCurrentUser': 'Show Statistics of Current User',
     //Cluster Usage

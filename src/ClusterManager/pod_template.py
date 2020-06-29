@@ -113,7 +113,7 @@ class PodTemplate():
 
         if "nodeSelector" not in params:
             params["nodeSelector"] = {}
-        if "gpuType" in params:
+        if "gpuType" in params and params["gpuType"]:
             params["nodeSelector"]["gpuType"] = params["gpuType"]
 
         # Set up VC dedicated node usage
@@ -170,7 +170,7 @@ class PodTemplate():
             pod["fragmentGpuJob"] = True
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
-            if "gpuStr" not in pod:
+            if "gpuStr" not in pod and "gpuType" in pod and pod["gpuType"]:
                 deviceDict = gpuMapping.get(pod["gpuType"])
                 if deviceDict is None:
                     return None,"wrong device type"
@@ -179,14 +179,19 @@ class PodTemplate():
 
             if params["jobtrainingtype"] == "InferenceJob":
                 pod["gpuLimit"] = 0
+                if "inference_port" not in pod:
+                    pod["inference_port"] = 8080
+                pod["model_name"] = pod["jobName"]
+                pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/data/flowers"
 
+            pod["jobtrainingtype"]=params["jobtrainingtype"]
             # mount /pod
             pod_path = job.get_hostpath(job.job_path, "master")
             pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")
-                if pod["gpuType"].endswith("arm64"):
+                if "gpuType" in pod and pod["gpuType"] and pod["gpuType"].endswith("arm64"):
                     pod["init-container"] += "-arm64"
 
             k8s_pod = self.generate_pod(pod, params["cmd"])
@@ -200,16 +205,27 @@ class PodTemplate():
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
 
+            if "gpuStr" not in pod and "gpuType" in pod and pod["gpuType"]:
+                deviceDict = gpuMapping.get(pod["gpuType"])
+                if deviceDict is None:
+                    return None,"wrong device type"
+                else:
+                    pod["gpuStr"] = deviceDict.get("deviceStr")
+
             pod["envs"].append({"name": "DLWS_ROLE_NAME", "value": "inferenceworker"})
-            pod["envs"].append({"name": "DLWS_NUM_GPU_PER_WORKER", "value": 1})
+            pod["envs"].append({"name": "DLWS_NUM_GPU_PER_WORKER", "value": 0})
 
             pod_path = job.get_hostpath(job.job_path, "master")
             pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
 
-
             pod["podName"] = job.job_id
-            pod["deployment_replicas"] = params["resourcegpu"]
-            pod["gpu_per_pod"] = 1
+            # for now,deployment_replicas is o
+            pod["deployment_replicas"] = pod["resourcegpu"]
+            pod["device_per_pod"] = 1
+            if "inference_port" not in pod:
+                pod["inference_port"] = 8080
+            pod["model_name"] = pod["jobName"]
+            pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/data/flowers"
             k8s_deployment = self.generate_deployment(pod)
             k8s_pods.append(k8s_deployment)
 

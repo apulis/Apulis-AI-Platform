@@ -28,6 +28,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../util
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
 import JobRestAPIUtils
+import ModelConvertPushUtils
 from authorization import ResourceType, Permission, AuthorizationManager, ACLManager
 import model
 import authorization
@@ -278,7 +279,7 @@ class SubmitJob(Resource):
                 params["isParent"] = args["isParent"]
             else:
                 params["isParent"] = "1"
-                
+
             if args["jobPriority"] is not None and len(args["jobPriority"].strip()) > 0:
                 params["jobPriority"] = args["jobPriority"]
 
@@ -379,12 +380,118 @@ class PostJob(Resource):
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
         return resp
-##
-## Actually setup the Api resource routing here
-##
+
 api.add_resource(PostJob, '/PostJob')
 
+class PostInferenceJob(Resource):
+    @api.expect(api.model("PostInferenceJob", model.PostInferenceJob(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Post PostInferenceJob Job")
+        logger.info(params)
 
+        ret = {}
+        output = JobRestAPIUtils.PostInferenceJob(json.dumps(params))
+
+        if "jobId" in output:
+            ret["jobId"] = output["jobId"]
+        else:
+            if "error" in output:
+                ret["error"] = "Cannot create job!" + output["error"]
+            else:
+                ret["error"] = "Cannot create job!"
+        logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(PostInferenceJob, '/PostInferenceJob')
+
+### Model Convert && FD Push
+
+class PostModelConversionJob(Resource):
+    @api.expect(api.model("PostModelConversionJob", model.PostModelConversionJob(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Post PostInferenceJob Job")
+        logger.info(params)
+
+        ret = {}
+        output = JobRestAPIUtils.PostModelConversionJob(json.dumps(params))
+
+        if "jobId" in output:
+            ret["jobId"] = output["jobId"]
+        else:
+            if "error" in output:
+                ret["error"] = "Cannot create job!" + output["error"]
+            else:
+                ret["error"] = "Cannot create job!"
+        logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(PostModelConversionJob, '/PostModelConversionJob')
+
+class SetFDInfo(Resource):
+    @api.expect(api.model("SetFDInfo", model.SetFDInfo(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Set FD server info")
+        logger.info(params)
+
+        ret = ModelConvertPushUtils.SetFDInfo(params)
+        logger.info("Set fd server info through restapi, result is %s", ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(SetFDInfo, '/SetFDInfo')
+
+class GetFDInfo(Resource):
+    @api.expect(api.model("GetFDInfo", model.GetFDInfo(api).params))
+    def get(self):
+        logger.info("Request to get fd server info")
+        ret = ModelConvertPushUtils.GetFDInfo()
+        logger.info("Get fd server info through restapi, result is %s", ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetFDInfo, '/GetFDInfo')
+
+class GetModelConversionTypes(Resource):
+    @api.expect(api.model("GetModelConversionTypes", model.GetModelConversionTypes(api).params))
+    def get(self):
+        logger.info("Request to get fd server info")
+        ret = {"conversionTypes": ["caffe-Ascend310", "tensorflow-Ascend310"]}
+        logger.info("Get fd server info through restapi, result is %s", ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetModelConversionTypes, '/GetModelConversionTypes')
+
+class PushModelToFD(Resource):
+    @api.expect(api.model("PushModelToFD", model.PushModelToFD(api).params))
+    def post(self):
+        params = request.get_json(force=True)
+        logger.info("Push model to fd")
+        logger.info(params)
+
+        ret = ModelConvertPushUtils.PushModelToFD(params)
+        logger.info("Push model file to fd through restapi, result is %s", ret)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(PushModelToFD, '/PushModelToFD')
 
 # shows a list of all todos, and lets you POST to add new tasks
 class ListJobs(Resource):
@@ -501,6 +608,49 @@ class GetAllDevice(Resource):
         resp.headers["dataType"] = "json"
         return resp
 api.add_resource(GetAllDevice, '/GetAllDevice')
+
+class GetAllSupportInference(Resource):
+    def get(self):
+        result = JobRestAPIUtils.GetAllSupportInference()
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(GetAllSupportInference, '/GetAllSupportInference')
+
+class ListInferenceJob(Resource):
+    @api.doc(params=model.ListInferenceJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],args["num"])
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+        resp = generate_response(jobs)
+        return resp
+api.add_resource(ListInferenceJob, '/ListInferenceJob')
+
+class ListModelConversionJob(Resource):
+    @api.doc(params=model.ListModelConversionJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], args["num"])
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+        resp = generate_response(jobs)
+        return resp
+api.add_resource(ListModelConversionJob, '/ListModelConversionJob')
 
 class CountJobByStatus(Resource):
     @api.doc(params=model.CountJobByStatus.params)
@@ -925,7 +1075,7 @@ class SignUp(Resource):
         parser.add_argument('password')
         parser.add_argument('isAdmin')
         parser.add_argument('isAuthorized')
-        
+
         args = parser.parse_args()
         openId = args["openId"]
         group = args["group"]

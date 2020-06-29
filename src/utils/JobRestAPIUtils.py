@@ -268,6 +268,309 @@ def SubmitJob(jobParamsJsonStr):
     dataHandler.Close()
     return ret
 
+def PostInferenceJob(jobParamsJsonStr):
+    ret = {}
+
+    jobParams = LoadJobParams(jobParamsJsonStr)
+
+    if "jobName" not in jobParams or len(jobParams["jobName"].strip()) == 0:
+        ret["error"] = "ERROR: Job name cannot be empty"
+        return ret
+    if "vcName" not in jobParams or len(jobParams["vcName"].strip()) == 0:
+        ret["error"] = "ERROR: VC name cannot be empty"
+        return ret
+    if "userId" not in jobParams or len(str(jobParams["userId"]).strip()) == 0:
+        jobParams["userId"] = GetUser(jobParams["userName"])["uid"]
+
+    uniqId = str(uuid.uuid4())
+    if "jobId" not in jobParams or jobParams["jobId"] == "":
+        jobParams["jobId"] = uniqId
+
+    if "resourcegpu" not in jobParams:
+        jobParams["resourcegpu"] = 0
+    if "device" in jobParams and jobParams["device"] == "CPU":
+        jobParams["resourcegpu"] = 0
+
+    # default value
+    jobParams["jobtrainingtype"] = "InferenceJob"
+    jobParams["jobType"] = "InferenceJob"
+    jobParams["preemptionAllowed"] = False
+    jobParams["containerUserId"] = 0
+    jobParams["isPrivileged"] = False
+    jobParams["hostNetwork"] = False
+    jobParams["gpuType"] = None if "gpuType" not in jobParams else jobParams["gpuType"]
+
+
+    if isinstance(jobParams["resourcegpu"], basestring):
+        if len(jobParams["resourcegpu"].strip()) == 0:
+            jobParams["resourcegpu"] = 0
+        else:
+            jobParams["resourcegpu"] = int(jobParams["resourcegpu"])
+
+    if "familyToken" not in jobParams or jobParams["familyToken"].isspace():
+        jobParams["familyToken"] = uniqId
+    if "isParent" not in jobParams:
+        jobParams["isParent"] = 1
+
+    userName = getAlias(jobParams["userName"])
+
+    if "cmd" not in jobParams:
+        jobParams["cmd"] = ""
+
+    if "jobPath" in jobParams and len(jobParams["jobPath"].strip()) > 0:
+        jobPath = jobParams["jobPath"]
+        if ".." in jobParams["jobPath"]:
+            ret["error"] = "ERROR: '..' cannot be used in job directory"
+            return ret
+
+        if "\\." in jobParams["jobPath"]:
+            ret["error"] = "ERROR: invalided job directory"
+            return ret
+
+        if jobParams["jobPath"].startswith("/") or jobParams["jobPath"].startswith("\\"):
+            ret["error"] = "ERROR: job directory should not start with '/' or '\\' "
+            return ret
+
+        if not jobParams["jobPath"].startswith(userName):
+            jobParams["jobPath"] = os.path.join(userName,jobParams["jobPath"])
+
+    else:
+        jobPath = userName+"/"+ "jobs/"+time.strftime("%y%m%d")+"/"+jobParams["jobId"]
+        jobParams["jobPath"] = jobPath
+
+    if "workPath" not in jobParams or len(jobParams["workPath"].strip()) == 0:
+       jobParams["workPath"] = "."
+
+    if ".." in jobParams["workPath"]:
+        ret["error"] = "ERROR: '..' cannot be used in work directory"
+        return ret
+
+    if "\\." in jobParams["workPath"]:
+        ret["error"] = "ERROR: invalided work directory"
+        return ret
+
+    if jobParams["workPath"].startswith("/") or jobParams["workPath"].startswith("\\"):
+        ret["error"] = "ERROR: work directory should not start with '/' or '\\' "
+        return ret
+
+    if not jobParams["workPath"].startswith(userName):
+        jobParams["workPath"] = os.path.join(userName,jobParams["workPath"])
+
+    if "dataPath" not in jobParams or len(jobParams["dataPath"].strip()) == 0:
+        jobParams["dataPath"] = "."
+
+    if ".." in jobParams["dataPath"]:
+        ret["error"] = "ERROR: '..' cannot be used in data directory"
+        return ret
+
+    if "\\." in jobParams["dataPath"]:
+        ret["error"] = "ERROR: invalided data directory"
+        return ret
+
+    if jobParams["dataPath"][0] == "/" or jobParams["dataPath"][0] == "\\":
+        ret["error"] = "ERROR: data directory should not start with '/' or '\\' "
+        return ret
+
+    jobParams["dataPath"] = jobParams["dataPath"].replace("\\","/")
+    jobParams["workPath"] = jobParams["workPath"].replace("\\","/")
+    jobParams["jobPath"] = jobParams["jobPath"].replace("\\","/")
+    jobParams["dataPath"] = os.path.realpath(os.path.join("/",jobParams["dataPath"]))[1:]
+    jobParams["workPath"] = os.path.realpath(os.path.join("/",jobParams["workPath"]))[1:]
+    jobParams["jobPath"] = os.path.realpath(os.path.join("/",jobParams["jobPath"]))[1:]
+
+    dataHandler = DataHandler()
+
+    if "error" not in ret:
+        if dataHandler.AddJob(jobParams):
+            ret["jobId"] = jobParams["jobId"]
+            if "jobPriority" in jobParams:
+                priority = DEFAULT_JOB_PRIORITY
+                try:
+                    priority = int(jobParams["jobPriority"])
+                except Exception as e:
+                    pass
+
+                permission = Permission.User
+                if AuthorizationManager.HasAccess(jobParams["userName"], ResourceType.VC, jobParams["vcName"].strip(), Permission.Admin):
+                    permission = Permission.Admin
+
+                priority = adjust_job_priority(priority, permission)
+
+                job_priorities = {jobParams["jobId"]: priority}
+                dataHandler.update_job_priority(job_priorities)
+            if "jobtrainingtype" in jobParams and jobParams["jobtrainingtype"] == "InferenceJob":
+                dataHandler.AddInferenceJob(jobParams)
+        else:
+            ret["error"] = "Cannot schedule job. Cannot add job into database."
+
+    dataHandler.Close()
+    return ret
+
+def PostModelConversionJob(jobParamsJsonStr):
+    ret = {}
+
+    jobParams = LoadJobParams(jobParamsJsonStr)
+
+    if "jobName" not in jobParams or len(jobParams["jobName"].strip()) == 0:
+        ret["error"] = "ERROR: Job name cannot be empty"
+        return ret
+    if "vcName" not in jobParams or len(jobParams["vcName"].strip()) == 0:
+        ret["error"] = "ERROR: VC name cannot be empty"
+        return ret
+    if "userId" not in jobParams or len(str(jobParams["userId"]).strip()) == 0:
+        jobParams["userId"] = GetUser(jobParams["userName"])["uid"]
+
+    uniqId = str(uuid.uuid4())
+    if "jobId" not in jobParams or jobParams["jobId"] == "":
+        jobParams["jobId"] = uniqId
+
+    if "resourcegpu" not in jobParams:
+        jobParams["resourcegpu"] = 0
+
+    # default value
+    jobParams["jobtrainingtype"] = "RegularJob"
+    jobParams["jobType"] = "ModelConversionJob"
+    jobParams["preemptionAllowed"] = False
+    jobParams["containerUserId"] = 0
+    jobParams["isPrivileged"] = False
+    jobParams["hostNetwork"] = False
+    #jobParams["gpuType"] = None if "gpuType" not in jobParams else jobParams["gpuType"]
+    jobParams["gpuType"] = "huawei_npu_arm64"
+
+    # atc values
+    jobParams["image"] = "apulistech/atc:0.0.1"
+    supportedConversionTypes = ["caffe-Ascend310", "tensorflow-Ascend310"]
+    if jobParams["conversionType"] in supportedConversionTypes:
+        raw_cmd = ""
+        if jobParams["conversionType"] == "tensorflow-Ascend310":
+            raw_cmd = "atc --framework=3 --model=%s --output=%s --soc_version=Ascend310" % (jobParams["inputPath"], jobParams["outputPath"])
+        elif jobParams["conversionType"] == "caffe-Ascend310":
+            raw_cmd = "atc --model=%s --weight=resnet50.caffemodel --framework=0 --mode=1 --output=%s --soc_version=Ascend310" % (jobParams["inputPath"], jobParams["outputPath"])
+        jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s"' % (raw_cmd, jobParams["outputPath"] + ".om")
+    else:
+        ret["error"] = "ERROR: .. convert type " + jobParams["conversionType"] + " not supported"
+        return ret
+
+    # env
+
+    if isinstance(jobParams["resourcegpu"], basestring):
+        if len(jobParams["resourcegpu"].strip()) == 0:
+            jobParams["resourcegpu"] = 0
+        else:
+            jobParams["resourcegpu"] = int(jobParams["resourcegpu"])
+
+    if "familyToken" not in jobParams or jobParams["familyToken"].isspace():
+        jobParams["familyToken"] = uniqId
+    if "isParent" not in jobParams:
+        jobParams["isParent"] = 1
+
+    userName = getAlias(jobParams["userName"])
+
+
+    if "jobPath" in jobParams and len(jobParams["jobPath"].strip()) > 0:
+        jobPath = jobParams["jobPath"]
+        if ".." in jobParams["jobPath"]:
+            ret["error"] = "ERROR: '..' cannot be used in job directory"
+            return ret
+
+        if "\\." in jobParams["jobPath"]:
+            ret["error"] = "ERROR: invalided job directory"
+            return ret
+
+        if jobParams["jobPath"].startswith("/") or jobParams["jobPath"].startswith("\\"):
+            ret["error"] = "ERROR: job directory should not start with '/' or '\\' "
+            return ret
+
+        if not jobParams["jobPath"].startswith(userName):
+            jobParams["jobPath"] = os.path.join(userName,jobParams["jobPath"])
+
+    else:
+        jobPath = userName+"/"+ "jobs/"+time.strftime("%y%m%d")+"/"+jobParams["jobId"]
+        jobParams["jobPath"] = jobPath
+
+    if "workPath" not in jobParams or len(jobParams["workPath"].strip()) == 0:
+       jobParams["workPath"] = "."
+
+    if ".." in jobParams["workPath"]:
+        ret["error"] = "ERROR: '..' cannot be used in work directory"
+        return ret
+
+    if "\\." in jobParams["workPath"]:
+        ret["error"] = "ERROR: invalided work directory"
+        return ret
+
+    if jobParams["workPath"].startswith("/") or jobParams["workPath"].startswith("\\"):
+        ret["error"] = "ERROR: work directory should not start with '/' or '\\' "
+        return ret
+
+    if not jobParams["workPath"].startswith(userName):
+        jobParams["workPath"] = os.path.join(userName,jobParams["workPath"])
+
+    if "dataPath" not in jobParams or len(jobParams["dataPath"].strip()) == 0:
+        jobParams["dataPath"] = "."
+
+    if ".." in jobParams["dataPath"]:
+        ret["error"] = "ERROR: '..' cannot be used in data directory"
+        return ret
+
+    if "\\." in jobParams["dataPath"]:
+        ret["error"] = "ERROR: invalided data directory"
+        return ret
+
+    if jobParams["dataPath"][0] == "/" or jobParams["dataPath"][0] == "\\":
+        ret["error"] = "ERROR: data directory should not start with '/' or '\\' "
+        return ret
+
+    jobParams["dataPath"] = jobParams["dataPath"].replace("\\","/")
+    jobParams["workPath"] = jobParams["workPath"].replace("\\","/")
+    jobParams["jobPath"] = jobParams["jobPath"].replace("\\","/")
+    jobParams["dataPath"] = os.path.realpath(os.path.join("/",jobParams["dataPath"]))[1:]
+    jobParams["workPath"] = os.path.realpath(os.path.join("/",jobParams["workPath"]))[1:]
+    jobParams["jobPath"] = os.path.realpath(os.path.join("/",jobParams["jobPath"]))[1:]
+
+    dataHandler = DataHandler()
+
+    if "error" not in ret:
+        if dataHandler.AddJob(jobParams):
+            ret["jobId"] = jobParams["jobId"]
+            if "jobPriority" in jobParams:
+                priority = DEFAULT_JOB_PRIORITY
+                try:
+                    priority = int(jobParams["jobPriority"])
+                except Exception as e:
+                    pass
+
+                permission = Permission.User
+                if AuthorizationManager.HasAccess(jobParams["userName"], ResourceType.VC, jobParams["vcName"].strip(), Permission.Admin):
+                    permission = Permission.Admin
+
+                priority = adjust_job_priority(priority, permission)
+
+                job_priorities = {jobParams["jobId"]: priority}
+                dataHandler.update_job_priority(job_priorities)
+            if "jobType" in jobParams and jobParams["jobType"] == "ModelConversionJob":
+                dataHandler.AddModelConversionJob(jobParams)
+        else:
+            ret["error"] = "Cannot schedule job. Cannot add job into database."
+
+    dataHandler.Close()
+    return ret
+
+def GetAllSupportInference():
+    ret = []
+    try:
+        if "inference" in config:
+            for framework, items in config["inference"].items():
+                for one in items:
+                    images = []
+                    devices = []
+                    for one_support in one["support"]:
+                        images.append(one_support["image"])
+                        devices.append(one_support["device"])
+                    ret.append({"framework":framework+"-"+str(one["version"]),"image":images,"device":devices})
+    except Exception as e:
+        logger.error('Exception: %s', str(e))
+    return ret
 
 def GetJobList(userName, vcName, jobOwner, num=None):
     try:
@@ -310,6 +613,38 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             jobs = dataHandler.GetJobListV2(userName, vcName, num)
     except Exception as e:
         logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+    return jobs
+
+def ListInferenceJob(jobOwner,vcName,num):
+    jobs = {}
+    dataHandler = None
+    try:
+        dataHandler = DataHandler()
+        if jobOwner == "all":
+            jobs = dataHandler.ListInferenceJob("all", vcName, num, pendingStatus, ("=", "or"))
+        else:
+            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num)
+    except Exception as e:
+        logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+    return jobs
+
+def ListModelConversionJob(jobOwner,vcName,num):
+    jobs = {}
+    dataHandler = None
+    try:
+        dataHandler = DataHandler()
+        if jobOwner == "all":
+            jobs = dataHandler.ListModelConversionJob("all", vcName, num, pendingStatus, ("=", "or"))
+        else:
+            jobs = dataHandler.ListModelConversionJob(jobOwner, vcName, num)
+    except Exception as e:
+        logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:
         if dataHandler is not None:
             dataHandler.Close()
@@ -772,6 +1107,8 @@ def GetVC(userName, vcName):
                 if job["vcName"] == vcName and job["jobStatus"] == "running":
                     username = job["userName"]
                     jobParam = json.loads(base64.b64decode(job["jobParams"]))
+                    if not jobParam["gpuType"]:
+                        continue
                     num_active_jobs.setdefault(jobParam["gpuType"],0)
                     num_active_jobs[jobParam["gpuType"]] += 1
                     if "gpuType" in jobParam:
@@ -915,6 +1252,11 @@ def GetEndpoints(userName, jobId):
                                         epItem["password"] = i["value"]
                             except Exception as e:
                                 logger.error(e)
+                        elif epItem["name"] == "inference-url":
+                            epItem["modelname"] = endpoint["modelname"]
+                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
+                        elif epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
+                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
                     if epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
                         if "extranet_port" in config and config["extranet_port"]:
                             epItem["domain"] = epItem["domain"] + ":"+ str(config["extranet_port"])

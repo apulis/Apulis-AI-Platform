@@ -39,6 +39,7 @@ import { Link } from 'react-router-dom';
 import _ from 'lodash';
 import copy from 'clipboard-copy'
 import {green,purple} from "@material-ui/core/colors";
+import { SlideProps } from '@material-ui/core/Slide';
 import AuthzHOC from '../components/AuthzHOC';
 import axios from 'axios';
 
@@ -72,7 +73,7 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 const Transition = React.forwardRef<unknown, TransitionProps>(function Transition(props, ref) {
-  return <Slide direction="up" ref={ref} {...props} />;
+  return <Slide direction="up" ref={ref} {...props as SlideProps} />;
 });
 const OpenDrawerButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);

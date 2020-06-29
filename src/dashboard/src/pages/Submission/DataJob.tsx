@@ -18,7 +18,7 @@ import ClustersContext from "../../contexts/Clusters";
 import UserContext from "../../contexts/User";
 import TeamsContext from "../../contexts/Teams";
 import {Link} from "react-router-dom";
-import Slide from "@material-ui/core/Slide";
+import Slide, { SlideProps } from "@material-ui/core/Slide";
 import {green} from "@material-ui/core/colors";
 import useFetch from "use-http";
 import formats from '../../Configuration/foldFormat.json';
@@ -37,7 +37,7 @@ const useStyles = makeStyles(() =>
 );
 
 const Transition = React.forwardRef<unknown, TransitionProps>(function Transition(props, ref) {
-  return <Slide direction="down" ref={ref} {...props} />;
+  return <Slide direction="down" ref={ref} {...props as SlideProps} />;
 });
 
 const DataJob: React.FC = (props: any) => {

@@ -26,6 +26,7 @@ const allJob = {
     name:'Name',
     status:'Status',
     deviceNumber:'Number of Device',
+    user:'user',
     preemptible:'Preemptible',
     priority:'Priority',
     submitted:'Submitted',
@@ -39,9 +40,9 @@ const allJob = {
     queued:'Queued',
     error:'Error',
     runningJob:'Running Jobs',
-    queuingJobs:'Queuing Jobs',
+    queueingJobs:'Queuing Jobs',
     unapprovedJobs:'Unapproved Jobs',
-    pauseesJobs:'Pausses Jobs',
+    pauseJobs:'Pausses Jobs',
 }
 const materialTable = {
     firstPage:'First Page',
@@ -54,23 +55,7 @@ const materialTable = {
     labelRowsPerPage: 'rows',
     labelRowsSelect: 'rows'
 }
-const brief = {
-    brief:'Brief',
-    endpoints:'Endpoints',
-    metrics:'Metrics',
-    console:'Console',
-    jobId:'Job Id',
-    jobName:'Job Name',
-    vcName:'VCName',
-    dockerImage:'Docker Image',
-    command:'Command',
-    dataPath:'Data Path',
-    workPath:'Work Path',
-    jobPath:'Job Path',
-    deviceType:'Device Type',
-    jobStatus:'Job Status',
-    jobSubmissionTime:'Job Submission Time'
-}
+
 const endpoints = {
     newInteractivePort:'New Interactive Port',
     sendEmailForSupport:'Send email for support'
@@ -80,6 +65,5 @@ export default{
     ...myJob,
     ...allJob,
     ...materialTable,
-    ...brief,
     ...endpoints
 }

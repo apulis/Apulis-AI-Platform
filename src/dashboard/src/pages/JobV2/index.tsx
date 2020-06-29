@@ -47,6 +47,7 @@ import message from '../../utils/message';
 import useInterval from '../../hooks/useInterval';
 import { pollInterval } from '../../const';
 import AuthContext from '../../contexts/Auth';
+import { useTranslation } from "react-i18next";
 
 interface RouteParams {
   clusterId: string;
@@ -99,6 +100,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean; isMyJob: boolean }> =
 }
 
 const ManagableJob: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
+  const {t} = useTranslation();
   const [index, setIndex] = useState(0);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
@@ -115,10 +117,10 @@ const ManagableJob: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
         textColor="primary"
         indicatorColor="primary"
       >
-        <Tab label="Brief"/>
-        <Tab label="Endpoints"/>
-        <Tab label="Metrics"/>
-        <Tab label="Console"/>
+        <Tab label={t('jobV2.brief')}/>
+        <Tab label={t('jobV2.endpoints')}/>
+        <Tab label={t('jobV2.metrics')}/>
+        <Tab label={t('jobV2.console')}/>
       </Tabs>
       <SwipeableViews
         index={index}

@@ -3,7 +3,7 @@ const userActions = {
     approve: '批准',
     pause: '暂停',
     resume:'中断',
-    kill:'杀死'
+    kill:'终止'
 }
 export default {
     ...userActions

@@ -47,11 +47,18 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
       const idx1 = firstDetailMessage.indexOf('20');
       const idx2 = firstDetailMessage.indexOf('+');
       if (idx1 > -1 && idx2 > -1) {
+        // todo
+        console.log('firstDetailMessage',firstDetailMessage)
         const oldStr = firstDetailMessage.slice(idx1, idx2);
         const time = new Date(`${oldStr}+00:00`).toLocaleString('en');
         const temp1 = firstDetailMessage.split(oldStr);
         const temp2 = firstDetailMessage.split(temp1[1]);
-        const msg = `${temp1[0]}${time}${temp2[1]}`;
+        console.log('oldStr',oldStr)
+        console.log('time',time)
+        console.log('temp1',temp1)
+        console.log('temp2',temp2)
+        console.log(t)
+        const msg = `${t('components.'+temp1[0])}${time}${temp2[1]}`;
         return msg;
       }
       return firstDetailMessage;

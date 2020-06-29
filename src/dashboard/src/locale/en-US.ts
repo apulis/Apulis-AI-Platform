@@ -1,4 +1,5 @@
 import tips from './en-US/tips'
+import jobV2 from './en-US/pages/jobV2/jobV2'
 import hooks from './en-US/hooks/hooks'
 import components from './en-US/components/components'
 import layout from './en-US/layout/layout'
@@ -10,6 +11,7 @@ import VirtualCluster from './en-US/VirtualCluster';
 
 export default {
   tips,
+  jobV2,
   hooks,
   components,
   layout,

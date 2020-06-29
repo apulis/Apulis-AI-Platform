@@ -9,7 +9,13 @@ const jobStatus = {
     'paused':'已暂停',
     'killing' :'关闭中',
     'killed':'已关闭',
-    'error':'错误'
+    'error':'错误',
+    'started at ':'开始于： ',
+    'error at ':'发生错误于： ',
+    'paused at ':'停止于：',
+    'failed at ':'失败于： ',
+    'finished at ':'完成于： ',
+    'killed at ':'终止于： '
 }
 export default{
     ...jobStatus

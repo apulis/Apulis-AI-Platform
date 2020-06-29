@@ -224,13 +224,13 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
         <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
       </FormGroup>
       {iconInfoShow && <Chip icon={<Info/>}
-        label={<p>TensorBoard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
+        label={<p>{t('jobV2.tensorBoardWillListenOnDirectory')}<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>{t('jobV2.insideDockerContainer')}</p>}
       />}
       {/* <AuthzHOC needPermission={'"MANAGE_ALL_USERS_JOB"'}></AuthzHOC> */}
       <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>
         <TextField
           fullWidth
-          label="New Interactive Port"
+          label={t('jobV2.newInteractivePort')}
           disabled={disabled}
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}

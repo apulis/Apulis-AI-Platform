@@ -25,7 +25,7 @@ const KILLABLE_STATUSES = [
   'paused'
 ];
 
-const useActions = (clusterId: string) => {
+const useActions = (clusterId: string, isInference?: boolean) => {
   const { userName, administrators } = useContext(UserContext);
   const supportMail = administrators![0];
   const confirm = useConfirm();
@@ -107,7 +107,7 @@ ${userName}
 
   const onKill = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`Kill job ${title} ?`).then((answer) => {
+    return confirm(`Kill ${isInference ? 'inference' : 'job'} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
       enqueueSnackbar(`${title} is being killed.`);

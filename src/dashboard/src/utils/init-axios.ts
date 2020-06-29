@@ -67,7 +67,6 @@ axios.interceptors.response.use((response: AxiosResponse) => {
 
 
 const initAxios = (msg: Message, userGroupPath: string) => {
-  console.log(111)
   message = msg;
   userGroupPathCopy = userGroupPath;
   initMessage(msg);

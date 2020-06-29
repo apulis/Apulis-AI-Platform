@@ -236,7 +236,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
   const [json, setJson] = useState('');
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
-  const onTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
     if (val === 'None (Apply a Template)') {
       setName("");
@@ -835,10 +835,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     name="image"
                     onChange={e => setImage(e.target.value)}
                     error={Boolean(errors.image)}
-                      helperText={errors.image ? errors.image.message : ''}
-                      inputRef={register({
-                        required: 'Docker Image is required！'
-                      })}
+                    helperText={errors.image ? errors.image.message : ''}
+                    inputRef={register({
+                      required: 'Docker Image is required！'
+                    })}
                   />
                 </Grid>
                 <Grid item xs={12}>

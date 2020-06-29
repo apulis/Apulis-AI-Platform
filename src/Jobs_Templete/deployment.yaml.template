@@ -29,7 +29,6 @@ spec:
       labels:
         jobId: {{ job["jobId"] }}
         worker: active
-
     spec:
       affinity:
         podAffinity:
@@ -47,7 +46,11 @@ spec:
       - name: {{ job["podName"] }}-deployment
         image: {{ job["image"] }}
         imagePullPolicy: Always
-        command: {{ job["LaunchCMD"] }}
+        # command: {{ job["LaunchCMD"] }}
+        args:
+        - --rest_api_port={{ job["inference_port"] }}
+        - --model_name={{ job["model_name"] }}
+        - --model_base_path={{ job["model_base_path"] }}
         securityContext:
           runAsUser: {{ job["containerUserId"] }}
           capabilities:
@@ -56,7 +59,7 @@ spec:
             - SYS_ADMIN
         resources:
           limits:
-            nvidia.com/gpu: {{ job["gpu_per_pod"] }}
+            {% if "gpuStr" in job %}{{ job["gpuStr"] }}: {{ job["device_per_pod"] }}{% endif %}
         {% if not job["cpurequest"] %}
           requests:
             cpu: 1.0

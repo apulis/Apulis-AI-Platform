@@ -80,6 +80,7 @@ src/ClusterBootstrap/services/jobmanager2/dlws-scripts.yaml
 src/ClusterBootstrap/services/monitor/alerting/kill-idle.rules
 
 /src/dashboard/build/*
+src/dashboard/config/local.yaml
 
 *.log
 src/ClusterBootstrap/template/*config.yaml.template

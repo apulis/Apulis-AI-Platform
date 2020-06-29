@@ -101,7 +101,7 @@ def enable_cpu_config(pod, config):
     # When cpuworker is enabled, CPU job should have gpuType=None
     if "nodeSelector" not in pod:
         pod["nodeSelector"] = {}
-    pod["nodeSelector"]["gpuType"] = "None"
+    # pod["nodeSelector"]["gpuType"] = "None"
 
     job_training_type = pod.get("jobtrainingtype", None)
     dist_role = pod.get("distRole", None)

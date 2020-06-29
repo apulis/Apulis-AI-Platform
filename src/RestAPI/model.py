@@ -34,7 +34,7 @@ class SubmitJob:
 
 class RandomNumber(fields.Raw):
     __schema_type__ = "dict"
-    __schema_example__ = """{"blobfuse": [{"accountKey": "", "containerName": "", "mountPath": "", "mountOptions": "", "accountName": ""}], 
+    __schema_example__ = """{"blobfuse": [{"accountKey": "", "containerName": "", "mountPath": "", "mountOptions": "", "accountName": ""}],
 "imagePull": [{"username": "", "password": "", "registry": ""}]}"""
     def format(self, value):
         return 111
@@ -86,10 +86,60 @@ class PostJob:
             "enablejobpath":fields.Boolean,
             "team":fields.String,
             "gpuType":fields.String,
+            "model_base_path": fields.String
         }
         self.model = {
             'jobId': fields.String
         }
+
+class PostInferenceJob:
+    def __init__(self,api):
+        self.params = {
+            "image":fields.String,
+            "vcName":fields.String,
+            "userId": fields.Integer(example="12345678"),
+            "userName":fields.String,
+            "jobName":fields.String,
+            "model_base_path": fields.String,
+            "framework": fields.String,
+            "device": fields.String,
+        }
+
+class PostModelConversionJob:
+    def __init__(self, api):
+        self.params = {
+            "image":fields.String,
+            "vcName":fields.String,
+            "userId": fields.Integer(example="12345678"),
+            "userName":fields.String,
+            "jobName":fields.String,
+            "inputPath": fields.String,
+            "outputPath": fields.String,
+            "conversionType": fields.String(example="tensorflow-A310"),
+            "device": fields.String,
+        }
+
+class PushModelToFD:
+    def __init__(self, api):
+        self.params = {
+            "jobId": fields.String
+        }
+
+class SetFDInfo:
+    def __init__(self, api):
+        self.params = {
+            "username": fields.String,
+            "password": fields.String,
+            "url": fields.String
+        }
+
+class GetFDInfo:
+    def __init__(self, api):
+        self.params = {}
+
+class GetModelConversionTypes:
+    def __init__(self, api):
+        self.params = {}
 
 class ListJobResponse(fields.Raw):
     __schema_type__ = "List"
@@ -455,6 +505,24 @@ class GetAllDeviceModel(fields.Raw):
 class GetAllDevice:
     params = {
         "userName": {"description": 'userName', "_in": 'query', "type": "string", "required": True},
+    }
+    model = {
+        "device type":GetAllDeviceModel}
+
+class ListInferenceJob:
+    params = {
+        "jobOwner": {"description": 'jobOwner', "_in": 'query', "type": "string", "required": True},
+        "vcName": {"description": 'vcName', "_in": 'query', "type": "string", "required": True},
+        "num": {"description": 'num', "_in": 'query', "type": "string", "required": False},
+    }
+    model = {
+        "device type":GetAllDeviceModel}
+
+class ListModelConversionJob:
+    params = {
+        "jobOwner": {"description": 'jobOwner', "_in": 'query', "type": "string", "required": True},
+        "vcName": {"description": 'vcName', "_in": 'query', "type": "string", "required": True},
+        "num": {"description": 'num', "_in": 'query', "type": "string", "required": False},
     }
     model = {
         "device type":GetAllDeviceModel}

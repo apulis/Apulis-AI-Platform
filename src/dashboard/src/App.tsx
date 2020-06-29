@@ -100,7 +100,6 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
             <Redirect strict exact from="/jobs-v2/:clusterId" to="/jobs-v2/:clusterId/"/>
             <Redirect strict exact from="/jobs-v2" to="/jobs-v2/"/>
             <Redirect to="/home"/>
-            
           </Switch>
         </React.Suspense>
       </Content>

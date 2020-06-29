@@ -1258,7 +1258,7 @@ def GetEndpoints(userName, jobId):
                         elif epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
                             epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
                     if epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
-                        if config["extranet_port"]:
+                        if "extranet_port" in config and config["extranet_port"]:
                             epItem["domain"] = epItem["domain"] + ":"+ str(config["extranet_port"])
                     ret.append(epItem)
     except Exception as e:

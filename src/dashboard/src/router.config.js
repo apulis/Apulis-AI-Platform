@@ -55,16 +55,16 @@ export default [
     component: Vc,
     needPermission: ['VIEW_VC', 'MANAGE_VC']
   },
-  // {
-  //   path: '/model',
-  //   component: Model,
-  //   needPermission: ['SUBMIT_TRAINING_JOB']
-  // },
   {
-    path: '/centralInference',
-    component: CentralInference,
+    path: '/model',
+    component: Model,
     needPermission: ['SUBMIT_TRAINING_JOB']
-  }
+  },
+  // {
+  //   path: '/centralInference',
+  //   component: CentralInference,
+  //   needPermission: ['SUBMIT_TRAINING_JOB']
+  // }
 ];
 
 

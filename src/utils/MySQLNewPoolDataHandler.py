@@ -297,6 +297,7 @@ class DataHandler(object):
             gpu_count_per_node = config["gpu_count_per_node"]
             worker_node_num = config["worker_node_num"]
             gpu_type = config["gpu_type"]
+            default_type = json.dumps({one:0 for one in config["defalt_virtual_cluster_device_type_list"] })
 
             sql = """
                 CREATE TABLE IF NOT EXISTS  `%s`
@@ -310,9 +311,8 @@ class DataHandler(object):
                     PRIMARY KEY (`id`),
                     CONSTRAINT `hierarchy` FOREIGN KEY (`parent`) REFERENCES `%s` (`vcName`)
                 )
-                AS SELECT \'%s\' AS vcName, NULL AS parent, '{"%s":%s}' AS quota, '{}' AS metadata;
-                """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'], "sample",
-                       0)
+                AS SELECT \'%s\' AS vcName, NULL AS parent, '%s' AS quota, '{}' AS metadata;
+                """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'],default_type)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)

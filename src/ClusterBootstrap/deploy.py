@@ -895,12 +895,25 @@ def gen_configs():
 
     check_config(config)
     gen_platform_wise_config()
+    gen_device_type_config(config)
     gen_usermanagerapitoken(config)
     utils.render_template_directory("./template/etcd", "./deploy/etcd",config)
     utils.render_template_directory("./template/master", "./deploy/master",config)
     utils.render_template_directory("./template/web-docker", "./deploy/web-docker",config)
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+
+def gen_device_type_config(config):
+    defalt_virtual_cluster_device_type_list = set()
+    specific_processor_type = ["npu", "gpu"]
+    for nodename, nodeInfo in config["machines"].items():
+        archtype = "amd64"
+        if "archtype" in nodeInfo:
+            archtype = nodeInfo["archtype"]
+        if nodeInfo["role"] == "worker":
+            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+    config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")

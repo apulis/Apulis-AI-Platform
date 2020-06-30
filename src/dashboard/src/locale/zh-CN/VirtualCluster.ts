@@ -10,7 +10,7 @@ export default {
     //Add Dialog
     'vcName': '虚拟集群名称',
     'Type': '类型',
-    'Value': '值',
+    'Value': '数量',
     'Cancel': '取消',
     'Save': '保存',
     //Modify Dialog

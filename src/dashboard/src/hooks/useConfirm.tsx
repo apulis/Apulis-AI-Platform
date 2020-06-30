@@ -46,7 +46,7 @@ const ConfirmProvider: FunctionComponent = ({ children }) => {
       <>
         {children}
         <Dialog open={open} onClose={onClose}>
-          <DialogTitle>Apulis Deep Learning Platform </DialogTitle>
+          <DialogTitle>Apulis Platform </DialogTitle>
           <DialogContent>
             <DialogContentText>{message}</DialogContentText>
           </DialogContent>

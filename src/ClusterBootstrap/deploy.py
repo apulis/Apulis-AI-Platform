@@ -1131,7 +1131,7 @@ def deploy_masters_by_kubeadm(force = False):
             utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
             #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
             kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
-            run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
+            # run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
         else:
             pass
 
@@ -3939,10 +3939,10 @@ def scale_up(config):
         print(node_info)
 
         ## install necessary software
-        run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
-        time.sleep(60)
-        run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
-        run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
+        # run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
+        # time.sleep(60)
+        # run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
+        # run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
 
         ## turn off swap
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)

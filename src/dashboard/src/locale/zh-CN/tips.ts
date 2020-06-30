@@ -19,11 +19,18 @@ const training = {
     Mustbeapositiveintegerfrom0to:'必须是一个从0到',
     andcanonlybeoneof01248:'并且只能是0、1、2、4、8中的一个',
 }
+const userActionTips = {
+    pauseJob:'停止任务',
+    isBeingPaused:'正在停止。',
+    pauseRequestAccepted:'的停止请求已经发起',
+    isFailedToPause:'停止失败',
+}
 export default{
     ...allJobTips,
     ...myJobsTips,
     ...priorityField,
     ...training,
+    ...userActionTips,
     NameErrorText:'名称必须由字母、数字、下划线或水平线组成!',
     SameNameErrorText:'已经有相同的名字了!',
     NoChineseErrorText:'不能包含汉字!',

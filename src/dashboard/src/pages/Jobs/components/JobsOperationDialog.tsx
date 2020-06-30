@@ -1,6 +1,6 @@
 import React from "react";
 import {DLTSDialog} from "../../CommonComponents/DLTSDialog";
-
+import { useTranslation } from "react-i18next";
 
 interface DialogProps {
   children?: React.ReactNode;
@@ -16,6 +16,7 @@ interface DialogProps {
   titleStyle: object;
 }
 export const JobsOperationDialog = (props: DialogProps) => {
+  const {t} = useTranslation();
   const {job,open,handleClose,handleConfirm,openApprove,openPause,openResume,openUpdatePriority,title,titleStyle} = props;
   let message = '';
   if (openApprove) {
@@ -41,6 +42,6 @@ export const JobsOperationDialog = (props: DialogProps) => {
       message={message}
       handleClose={handleClose}
       handleConfirm={handleConfirm}
-      confirmBtnTxt={"Yes"} cancelBtnTxt={"No"}/>
+      confirmBtnTxt={t('jobs.yes')} cancelBtnTxt={t('jobs.no')}/>
   )
 }

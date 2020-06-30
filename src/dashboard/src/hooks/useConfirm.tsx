@@ -13,6 +13,8 @@ import {
   DialogContentText,
   DialogActions
 } from '@material-ui/core';
+import { useTranslation } from "react-i18next";
+
 
 interface ConfirmContext {
   setMessage: (message: string) => void;
@@ -27,6 +29,7 @@ const ConfirmContext = createContext<ConfirmContext>({
 });
 
 const ConfirmProvider: FunctionComponent = ({ children }) => {
+  const {t} = useTranslation()
   const [message, setMessage] = useState<string>();
   const [open, setOpen] = useState(false);
   const [resolve, setResolve] = useState<(value: boolean) => void>();
@@ -51,8 +54,8 @@ const ConfirmProvider: FunctionComponent = ({ children }) => {
             <DialogContentText>{message}</DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button autoFocus color="primary" onClick={onNoClick}>No</Button>
-            <Button onClick={onYesClick}>Yes</Button>
+  <Button autoFocus color="primary" onClick={onNoClick}>{t('hooks.no')}</Button>
+            <Button onClick={onYesClick}>{t('hooks.yes')}</Button>
           </DialogActions>
         </Dialog>
       </>

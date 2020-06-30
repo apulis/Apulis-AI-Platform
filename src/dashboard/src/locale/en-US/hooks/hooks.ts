@@ -5,6 +5,11 @@ const userActions = {
     resume:'Resume',
     kill:'Kill'
 }
+const useConfirm = {
+    no:'NO',
+    yes:'YES',
+}
 export default {
-    ...userActions
+    ...userActions,
+    ...useConfirm
 }

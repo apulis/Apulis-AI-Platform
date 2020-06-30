@@ -1,3 +1,7 @@
+const copyableTextListItem = {
+    'copyiedToClipboard':'Copied to clipboard',
+    'failedToCopyText':'Failed to copy text',
+}
 const jobStatus = {
     'unapproved':'Unapproved',
     'queued' :'Queued',
@@ -15,8 +19,10 @@ const jobStatus = {
     'paused at ':'paused at',
     'failed at ':'failed at ',
     'finished at ':'finished at ',
-    'killed at ':'killed at '
+    'killed at ':'killed at ',
+    'toUse':'to use'
 }
 export default{
-    ...jobStatus
+    ...jobStatus,
+    ...copyableTextListItem,
 }

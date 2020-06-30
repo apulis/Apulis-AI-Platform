@@ -729,7 +729,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     value={selectTPName}
                     onChange={onTemplateChange}
                   >
-                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
+                    <MenuItem value={'None (Apply a Template)'} divider>{t('submission.noneApplyAtemplate')}</MenuItem>
                     {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
                       <MenuItem key={index} value={`${name}.${scope}`}>{`${name}(${scope})`}</MenuItem>
                     ))}
@@ -744,8 +744,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     value={type}
                     onChange={e => setType(e.target.value as string)}
                   >
-                    <MenuItem value="RegularJob">Regular Job</MenuItem>
-                    <MenuItem value="PSDistJob">Distributed Job</MenuItem>
+                    <MenuItem value="RegularJob">{t('submission.regularJob')}</MenuItem>
+                    <MenuItem value="PSDistJob">{t('submission.distributedJob')}</MenuItem>
                     {/* <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
                   </TextField>
                 </Grid>
@@ -801,7 +801,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       type="number"
-                      label="Number of Nodes"
+                      label={t('submission.numberOfNodes')}
                       fullWidth
                       variant="filled"
                       value={workers}
@@ -821,7 +821,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     <TextField
                       disabled
                       type="number"
-                      label="Total Number of Device"
+                      label={t('submission.totalNumberOfDevice')}
                       // value = {workers * gpusPerNode}
                       value = {workers * 8}
                       fullWidth

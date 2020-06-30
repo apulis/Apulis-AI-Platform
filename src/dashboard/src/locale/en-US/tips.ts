@@ -20,11 +20,18 @@ const training = {
     Mustbeapositiveintegerfrom0to:'Must be a positive integer from 0 to',
     andcanonlybeoneof01248:'and can only be one of 0, 1, 2, 4, 8',
 }
+const userActionTips = {
+    pauseJob:'Pause job',
+    isBeingPaused:'is being paused.',
+    pauseRequestAccepted:'\'s pause request is accepted.',
+    isFailedToPause:'is failed to pause.',
+}
 export default{
     ...allJobTips,
     ...myJobsTips,
     ...priorityField,
     ...training,
+    ...userActionTips,
     NameErrorText:'The Name Must be composed of letter, numbers, underscore or horizontal line！',
     SameNameErrorText:'Already has the same name!',
     NoChineseErrorText:'Cannot contain Chinese characters!',

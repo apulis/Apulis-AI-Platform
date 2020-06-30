@@ -1,3 +1,4 @@
+import jobs from './en-US/pages/jobs/jobs'
 import tips from './en-US/tips'
 import jobV2 from './en-US/pages/jobV2/jobV2'
 import hooks from './en-US/hooks/hooks'
@@ -11,6 +12,7 @@ import VirtualCluster from './en-US/VirtualCluster';
 
 export default {
   tips,
+  jobs,
   jobV2,
   hooks,
   components,

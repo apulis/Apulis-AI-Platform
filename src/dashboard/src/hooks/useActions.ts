@@ -77,15 +77,15 @@ ${userName}
 
   const onPause = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`Pause job ${title} ?`).then((answer) => {
+    return confirm(`${t('tips.pauseJob')} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being paused.`);
+      enqueueSnackbar(`${title} ${t('tips.isBeingPaused')}`);
       return updateStatus(job.jobId, 'pausing').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s pause request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('tips.pauseRequestAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to pause.`, { variant: 'error' });
+          enqueueSnackbar(`${title} ${t('tips.isFailedToPause')}`, { variant: 'error' });
         }
       });
     });

@@ -9,8 +9,9 @@ const gpuCard = {
     dataDirectory:'数据目录',
     chartAvailable:'可用',
     chartUsed:"已用",
-    chartUnschedulable:'未安排',
-    activeJobs:'运行中任务'
+    noResources:"没有资源",
+    chartUnschedulable:'不可调度的',
+    activeJobs:'个运行中任务'
 }
 export default{
     ...gpuCard

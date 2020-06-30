@@ -9,8 +9,10 @@ const gpuCard = {
     dataDirectory:'Data Directory',
     chartAvailable:'Available',
     chartUsed:"Used",
+    noResources:"NO Resources",
     chartUnschedulable:'Unschedulable',
-    activeJobs:'Active Jobs'
+    activeJobs:'Active Jobs',
+
 }
 export default{
     ...gpuCard

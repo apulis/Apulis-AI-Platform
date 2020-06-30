@@ -8,12 +8,17 @@ const index = {
     preemptibleJob:'Preemptible Job',
     deviceType:'Device Type',
     deviceNumber:'Number of Device',
+    numberOfNodes:'Number of Nodes',
+    totalNumberOfDevice:'Total Number of Device',
+    noneApplyAtemplate:'None (Apply a Template)',
+    regularJob:'Regular Job',
+    distributedJob:'Distributed Job',
     dockerImage:'Docker Image',
     command:'Command',
     interactivePorts:'Interactive Ports',
     advanced:'ADVANCED',
     template:'TEMPLATE',
-    submit:'SUBMIT'
+    submit:'SUBMIT',
 }
 const advance = {
     customDockerRegistry:'Custom Docker Registry',

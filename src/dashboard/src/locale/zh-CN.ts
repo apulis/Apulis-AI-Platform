@@ -1,5 +1,6 @@
 import tips from './zh-CN/tips'
 import jobV2 from './zh-CN/pages/jobV2/jobV2'
+import jobs from './zh-CN/pages/jobs/jobs'
 import hooks from './zh-CN/hooks/hooks'
 import components from './zh-CN/components/components'
 import layout from './zh-CN/layout/layout'
@@ -11,6 +12,7 @@ import VirtualCluster from './zh-CN/VirtualCluster';
 
 export default {
   tips,
+  jobs,
   jobV2,
   hooks,
   components,

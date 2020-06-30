@@ -802,8 +802,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       variant="filled"
                       value={workers}
                       name="workers"
-                      onChange={e => setWorkers(Number(e.target.value))}
-                      InputProps={{ inputProps: { min: 0 } }}
+                      onChange={e => setWorkers(Number(e.target.value) > 1 ? Math.floor(Number(e.target.value)) : 1)}
+                      InputProps={{ inputProps: { min: 1, step: 1 } }}
                       // error={Boolean(errors.workers)}
                       // helperText={errors.workers ? NpuNumMsg : ''}
                       // inputRef={register({

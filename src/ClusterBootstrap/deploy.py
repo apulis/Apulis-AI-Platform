@@ -1118,7 +1118,7 @@ def deploy_masters_by_kubeadm(force = False):
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     render_service_templates()
-    utils.exec_cmd_local("./scripts/install_kubeadm.sh")
+    # utils.exec_cmd_local("./scripts/install_kubeadm.sh")
 
     for i,kubernetes_master in enumerate(kubernetes_masters):
 
@@ -1131,7 +1131,7 @@ def deploy_masters_by_kubeadm(force = False):
             utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
             #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
             kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
-            # run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
+            run_kubectl( ['apply -f "/home/dlwsadmin/DLWorkspace/temp-config/weave-net.yaml"'] )
         else:
             pass
 

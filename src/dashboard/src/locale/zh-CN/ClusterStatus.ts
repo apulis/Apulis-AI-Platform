@@ -31,6 +31,8 @@ export default {
     'NodeIP': '节点IP',
     'Pods': 'Pods',
     'Status': '状态',
+    'unschedulable': '不可调度',
+    'ok': '正常',
     //MaterialTable
     'Search': '查找',
     'No records to display': '记录为空',

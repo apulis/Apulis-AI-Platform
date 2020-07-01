@@ -31,6 +31,8 @@ export default {
     'NodeIP': 'Node IP',
     'Pods': 'Pods',
     'Status': 'Status',
+    'unschedulable': 'unschedulable',
+    'ok': 'ok',    
     //MaterialTable
     'Search': 'Search',
     'No records to display': 'No records to display',

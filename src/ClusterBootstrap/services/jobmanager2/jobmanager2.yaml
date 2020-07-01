@@ -28,7 +28,7 @@ spec:
       - name: jobmanager
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}
         command: ["/runScheduler.sh"]
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: INIT_CONTAINER_IMAGE
           value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}

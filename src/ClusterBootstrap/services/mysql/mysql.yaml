@@ -35,6 +35,8 @@ spec:
         name: mysql
         env:
           # Use secret in real usage
+        - name: MYSQL_ROOT_HOST
+          value: "%"
         - name: MYSQL_ROOT_PASSWORD
           value: "{{cnf["mysql_password"]}}"
         ports:

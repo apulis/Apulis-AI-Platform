@@ -2250,9 +2250,9 @@ def config_webui(nargs, archtype=None):
         reponame = reponame + "-" + archtype
 
     for node in nodes:
-        # pull new image
-        remotecmd = "sudo docker pull %s" % reponame
-        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+        # pull new image 2020/7/1: no need, no network, image is prepared
+        # remotecmd = "sudo docker pull %s" % reponame
+        # utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
         # todo:
         # should judge if dashboard folder exists

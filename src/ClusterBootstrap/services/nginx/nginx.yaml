@@ -25,7 +25,7 @@ spec:
       containers:
       - name: nginx
         image: {{cnf["dockers"]["container"]["nginx"]["fullname"]}}
-        imagePullPolicy: Always   
+        imagePullPolicy: IfNotPresent
         command: ["/home/auto-reload-nginx.sh"]
         livenessProbe:
           httpGet:

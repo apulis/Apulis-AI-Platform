@@ -24,7 +24,7 @@ spec:
       containers:
       - name: openresty
         image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command: ["/start.sh"]
         readinessProbe:
           failureThreshold: 3

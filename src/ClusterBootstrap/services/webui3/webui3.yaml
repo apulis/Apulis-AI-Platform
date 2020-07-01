@@ -39,13 +39,13 @@ spec:
       containers:
       - name: webui3
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}webui3:{{cnf["dockertag"]}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         {% if false %}
         ports:
           - name: webui3
             containerPort: {{cnf["webuiport"]}}
         {% endif %}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /WebUI
           name: webuiconfig

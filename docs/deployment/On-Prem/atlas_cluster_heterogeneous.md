@@ -716,10 +716,19 @@ userGroup:
 
 9. ##### 启动集群应用
     ```
-    ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
+    1. ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
+    2. ./deploy.py --background --sudo runscriptonall scripts/npu/npu_info_gen.py
+3. ./deploy.py --verbose kubernetes start monitor
     ```
-
+    
+    注意：
+    
+    指令2必须先于指令3执行
+    
+    
+    
 10. ##### 启动dashboard
+
     - master为AMD64架构
         ```
         ./deploy.py --verbose nginx webui3

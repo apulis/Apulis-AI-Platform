@@ -112,8 +112,8 @@ const App: React.FC<BootstrapProps> = (props) => {
     <SnackbarProvider>
       <Contexts {...props} >
       <Helmet
-        titleTemplate="Apulis Deep Learning Platform"
-        defaultTitle="Apulis Deep Learning Platform"
+        titleTemplate="Apulis Platform"
+        defaultTitle="Apulis Platform"
       />
       <CssBaseline/>
       <Box display="flex" minHeight="100vh" maxWidth="100vw">

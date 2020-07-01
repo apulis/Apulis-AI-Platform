@@ -57,6 +57,11 @@ then
 	touch ${PROC_DIR}/CONTAINER_READY
 fi
 
+# setup ib config
+echo "===========================begin to setup ib config=============================="&>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/setup_ib_config.sh &>> ${LOG_DIR}/bootstrap.log
+echo "===========================setup ib config done!================================="&>> ${LOG_DIR}/bootstrap.log
+
 # Setup roles
 echo "===========================begin to start ssh=============================="&>> ${LOG_DIR}/bootstrap.log
 bash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log

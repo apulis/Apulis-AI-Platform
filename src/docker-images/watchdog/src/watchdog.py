@@ -758,6 +758,8 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
 
         for vc_name, gpu_info in vc_info.items():
             for gpu_type, total in gpu_info.items():
+                if gpu_type not in device_type_info:
+                    continue
                 vc_total_gauge.add_metric([vc_name, device_type_info[gpu_type]["deviceStr"]], total)
                 vc_quota_sum[device_type_info[gpu_type]["deviceStr"]] += total
 
@@ -771,6 +773,8 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
 
         for vc_name, gpu_info in vc_info.items():
             for gpu_type, quota in gpu_info.items():
+                if gpu_type not in device_type_info:
+                    continue
                 if vc_quota_sum[device_type_info[gpu_type]["deviceStr"]] == 0:
                     vc_quota = 0
                 else:
@@ -783,11 +787,15 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
         ratio_sum = collections.defaultdict(lambda : [0,0])
         for vc_name, gpu_info in ratio.items():
             for gpu_type, cur_ratio in gpu_info.items():
+                if gpu_type not in device_type_info:
+                    continue
                 deviceStr = device_type_info[gpu_type]["deviceStr"]
                 ratio_sum[deviceStr] = list(map(add,ratio_sum[deviceStr],cur_ratio))
 
         for vc_name, gpu_info in ratio.items():
             for gpu_type, cur_ratio in gpu_info.items():
+                if gpu_type not in device_type_info:
+                    continue
                 if vc_name not in vc_usage.map or gpu_type not in vc_usage.map[vc_name]:
                     deviceStr = device_type_info[gpu_type]["deviceStr"]
                     labels = [vc_name, deviceStr]
@@ -809,6 +817,8 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
 
         for vc_name, vc_usage_info in vc_usage.map.items():
             for gpu_type, vc_used in vc_usage_info.items():
+                if gpu_type not in device_type_info:
+                    continue
                 if vc_name not in vc_info:
                     logger.warning("ignore used gpu in %s, but vc quota do not have this vc, possible due to job template error", vc_name)
                     continue

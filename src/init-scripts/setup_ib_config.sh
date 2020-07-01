@@ -27,7 +27,3 @@ then
   fi
 fi
 
-if [ "$DLWS_ROLE_NAME" = "ps" ];then
-  if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
-  cat $HOST_CONFIG_FILE >> /etc/hosts
-fi

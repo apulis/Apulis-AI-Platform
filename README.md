@@ -1,4 +1,4 @@
-# Apulis Deep Learning Platform
+# Apulis AI Platform
 
 
 The AI platform is designed to provide an end-to-end AI solution to users from different industries and enable them to start the high-performance AI development work with significantly reduced ramp up time, thereby saving costs and improving efficiency. It will also provide a highly efficient, low cost private cloud AI solution for small and medium size company. 

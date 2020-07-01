@@ -37,4 +37,4 @@ if __name__ == '__main__':
     dockername = dockerprefix + ":" + dockertag
     #print args.nocache
     dockername = build_docker(dockername, dirname, nocache = args.nocache)
-    run_docker(dockername, "DevDocker")
+    run_docker(dockername, "DevDocker", devenv=True)

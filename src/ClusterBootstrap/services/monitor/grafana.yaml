@@ -23,7 +23,7 @@ spec:
       containers:
       - name: grafana
         image: {{cnf["dockers"]["container"]["grafana"]["fullname"]}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: {{cnf["grafana"]["port"]}}
           protocol: TCP

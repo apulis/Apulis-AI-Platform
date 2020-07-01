@@ -20,7 +20,7 @@ spec:
       containers:
           #- image: prom/node-exporter:v0.16.0
       - image: {{cnf["dockers"]["container"]["node-exporter"]["fullname"]}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         readinessProbe:
           tcpSocket:
             port: {{ cnf["node-exporter"]["port"] }}

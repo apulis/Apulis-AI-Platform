@@ -704,7 +704,7 @@ userGroup:
     ```shell script
       ./deploy.py --verbose kubernetes start mysql
     ```
-    进入mysql容器
+    进入mysql容器，执行如下指令。**以下步骤是必须的，否则连接 MySQL 会报错**
     ```shell script
       mysql -uroot -p
       use mysql;
@@ -714,6 +714,8 @@ userGroup:
       alter user 'root'@'%' identified with mysql_native_password by 'apulis#2019#wednesday';
     ```
 
+    注意这里的数据库密码应该是数据库当前的密码
+    
 9. ##### 启动集群应用
     ```
     ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty

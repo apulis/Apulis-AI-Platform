@@ -714,7 +714,7 @@ userGroup:
       alter user 'root'@'%' identified with mysql_native_password by 'apulis#2019#wednesday';
     ```
 
-    注意这里的数据库密码应该是数据库当前的密码
+    注意这里的 'apulis#2019#wednesday' 应该替换为数据库当前的密码
     
 9. ##### 启动集群应用
     ```

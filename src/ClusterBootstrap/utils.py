@@ -145,12 +145,25 @@ def SSH_exec_cmd(identity_file, user,host,cmd,showCmd=True):
         return;
 
     if showCmd or verbose:
+        print ("""ssh -f -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
+
+    os.system("""ssh -f -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
+
+    return
+
+# Execute a remote SSH cmd with identity file (private SSH key), user, host
+# run in the background
+def SSH_exec_cmd_2(identity_file, user,host,cmd,showCmd=True):
+
+    if len(cmd)==0:
+        return;
+
+    if showCmd or verbose:
         print ("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
 
     os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
 
     return
-
 
 # SSH Connect to a remote host with identity file (private SSH key), user, host
 # Program usually exit here.
@@ -347,7 +360,11 @@ def get_mac_address( identity_file, user, host, show=True ):
 # and then remove the temporary folder.
 # Command should assume that it starts srcdir, and execute a shell script in there.
 # If dstdir is given, the remote command will be executed at dstdir, and its content won't be removed
-def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd, supressWarning = False, preRemove = True, removeAfterExecution = True, dstdir = None ):
+def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd, 
+        supressWarning = False, preRemove = True, 
+        removeAfterExecution = True, dstdir = None,
+        background=False):
+
     if dstdir is None:
         tmpdir = os.path.join("/tmp", str(uuid.uuid4()))
         preRemove = False
@@ -360,14 +377,35 @@ def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd, supress
 
     scp( identity_file, srcdir, tmpdir, user, host)
     dstcmd = "cd "+tmpdir + "; "
+    
+    # background process needs be exec immediately
+    if background:
+        dstcmd += "nohup " 
+        dstcmd += cmd + "  > foo.out 2> foo.err < /dev/null & "
+        print(dstcmd)
+        SSH_exec_cmd( identity_file, user, host, dstcmd )
+        
+        # cannot delete src file for backgroud jobs
+        return
+
+    else:
+        pass
+
+
+    print(dstcmd)
     if supressWarning:
         dstcmd += cmd + " 2>/dev/null; "
     else:
         dstcmd += cmd + "; "
+
     dstcmd += "cd /tmp; "
     if removeAfterExecution:
         dstcmd += "rm -r " + tmpdir + "; "
+    else:
+        pass
+
     SSH_exec_cmd( identity_file, user, host, dstcmd )
+
 
 
 # Execute a remote SSH cmd with identity file (private SSH key), user, host,

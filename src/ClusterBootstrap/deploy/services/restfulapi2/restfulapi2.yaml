@@ -1,0 +1,76 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: restfulapi
+  namespace: default
+  labels:
+     run: dlwsrestfulapi
+spec:
+  selector:
+    matchLabels:
+      restfulapi-node: pod
+  template:
+    metadata:
+      name: restfulapi
+      labels:
+        restfulapi-node: pod
+        app: restfulapi
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "5000"
+    spec:
+      
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
+      hostNetwork: true
+      containers:
+      - name: restfulapi
+        image: apulistech/atlas_restfulapi2:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /usr/bin/kubectl
+          name: kubectl-binary
+          readOnly: true
+        - mountPath: /root/.kube/config
+          name: kubeconfig
+          readOnly: true
+        - mountPath: /etc/resolv.conf
+          name: resolv
+        - mountPath: /RestfulAPI
+          name: apiconfig
+        - mountPath: /var/log/apache2
+          name: log
+        - mountPath: /data
+          name: data
+        ports:
+        - containerPort: 5000
+          hostPort: 5000
+          name: main
+        
+      volumes:
+      - name: kubectl-binary
+        hostPath:
+          path: /usr/bin/kubectl
+      - name: kubeconfig
+        hostPath:
+          path: /etc/kubernetes/admin.conf
+      - name: resolv
+        hostPath:
+          path: /etc/resolv.conf
+      - name: apiconfig
+        hostPath:
+          path: /etc/RestfulAPI
+      - name: log
+        hostPath:
+          path: /var/log/restfulapi
+      - name: data
+        hostPath:
+          path: /dlwsdata/storage
+      
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

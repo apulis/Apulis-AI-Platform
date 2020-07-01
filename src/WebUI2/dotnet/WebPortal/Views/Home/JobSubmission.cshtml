@@ -1,0 +1,1127 @@
+﻿@using Microsoft.AspNetCore.Http;
+
+@{
+    ViewData["Title"] = "Submit Training Job";
+}
+
+<link rel="stylesheet" href="~/layui/css/layui.css" media="all">
+
+<style>
+    a:link {
+        color: #1F45FC
+    }
+
+    code {
+        color: #000000;
+        background-color: #ffffff;
+    }
+</style>
+
+
+<script type="text/javascript">
+   $(function () {
+        $('[data-toggle="tooltip"]').tooltip({
+            container: 'body',
+            show: {
+                effect: "slideDown",
+                delay: 1000
+            }
+
+        })
+    })
+    var app = angular.module('jobApp', ["xeditable", "ui.select", "ngMaterial", 'ngMessages']);
+
+    app.run(function (editableOptions) {
+        editableOptions.theme = 'bs3';
+    });
+
+    app.controller('jobCtrl', function ($scope, $http, $log, $filter) {
+        var tolist = function (info) {
+            if (typeof info === 'string' || info instanceof String)
+                return [info];
+            else if (info)
+                return info;
+            else
+                return [];
+        };
+
+        var tobool = function (sec, property, defValue) {
+            if (!(sec.hasOwnProperty(property))) {
+                sec[property] = defValue;
+            }
+            if (typeof (sec[property]) == "string") {
+                var firstchar = sec[property].trim().toLowerCase()[0];
+                sec[property] == (firstchar == 't' || firstchar == 'y');
+            }
+            return sec[property];
+        }
+
+        $scope.toggle01 = function (sec, property, defValue) {
+            if (!(sec.hasOwnProperty(property))) {
+                sec[property] = defValue;
+            }
+            if (sec[property] == '0')
+                sec[property] = '1';
+            else
+                sec[property] = '0';
+        };
+
+        $scope.checkCurrent = function () {
+            if ($scope.current == null)
+                $scope.current = {
+                    // here to set default parameters.
+                    resourcegpu: 0,
+                    workPath: ".",
+                    dataPath: ".",
+                    jobPath: "",
+                    enableworkpath: true,
+                    enabledatapath: true,
+                    enablejobpath: true,
+                };
+            $scope.current.runningasroot = "1";
+
+            if ($scope.current.interactivePorts == null) {
+                $scope.current.interactivePorts = [];
+            }
+            if ($scope.current.mountpoints == null) {
+                $scope.current.mountpoints = [];
+            };
+            if ($scope.current.env == null) {
+                $scope.current.env = [];
+            };
+        };
+
+        $scope.checkExtras = function () {
+            if ($scope.extras == null) {
+                $scope.extras = {
+                    gpuType: null,
+                    preemptionAllowed: "False",
+                }
+            }
+            if ($scope.extras.gpuType == null && $scope.gpus != null) {
+                $scope.extras.gpuType = Object.keys($scope.gpus)[0];
+            }
+        }
+
+        var parseMounts = function (mountpoints, mountdescription, username, mounthomefolder, deploymounts) {
+            var mounts = [];
+            var homefolderDescription = "";
+            for (var sharename in mountpoints) {
+                if (mountpoints.hasOwnProperty(sharename)) {
+                    sharemounts = mountpoints[sharename].mountpoints;
+                    mountlist = tolist(sharemounts);
+                    var nIsRoot = -1;
+                    for (var i in mountlist) {
+                        if (mountlist[i] == "") {
+                            nIsRoot = i;
+                        };
+                    };
+                    if (nIsRoot >= 0) {
+                        mountlist.splice(nIsRoot, 1, "jobfiles", "storage", "work");
+                    }
+
+                    validmountlist = [];
+                    for (var i in mountlist) {
+                        var onemount = mountlist[i];
+                        // System share is not processed
+                        if (onemount != "" && onemount != "jobfiles" && onemount != "storage" && onemount != "work") {
+                            var mts = tolist(deploymounts);
+                            var mtsIndex = mts.indexOf(onemount);
+                            if (mtsIndex >= 0) {
+                                validmountlist.push(onemount);
+                            }
+                        }
+                        else {
+                            /*
+                            var shareType = mountpoints[sharename].type;
+                            var description = mountdescription[shareType];
+                            var hostPath = "/dlwsdata" + onemount;
+                            var containerPath = "/" + onemount;
+                            if (onemount == "jobfiles")
+                                containerPath = "/job";
+                            mounts = mounts.concat({ "containerPath": containerPath, "hostPath": hostPath, "description": description, "enabled": true });
+                            */
+                        }
+                        if (onemount == "" || onemount == "work") {
+                            var shareType = mountpoints[sharename].type;
+                            homefolderDescription = mountdescription[shareType];
+                        }
+                    };
+                    if (validmountlist.length > 0) {
+                        for (var i in validmountlist) {
+                            var onemount = validmountlist[i];
+                            var allshares = tolist(mountpoints[sharename].publicshare);
+                            /*
+                            var publicshareinfo = tolist(mountpoints[sharename].publicshare)
+                            allshares = [];
+                            if ("all" in publicshareinfo)
+                                allshares = allshares.concat(tolist(publicshareinfo["all"]))
+                            if (onemount in publicshareinfo)
+                                allshares = allshares.concat(tolist(publicshareinfo[onemount])) */
+                            allshares.push(username);
+                            for (var j in allshares) {
+                                var oneshare = allshares[j];
+                                // var containerPath = $.grep(["", onemount, oneshare], Boolean).join("/");
+                                // var hostPath = $.grep(["/dlwsdata", onemount, oneshare], Boolean).join("/");
+                                // Work folder are treated differently.
+                                var containerPath = "/" + onemount + "/" + oneshare;
+                                var hostPath = "/dlwsdata" + containerPath;
+                                var shareType = mountpoints[sharename].type;
+                                if (shareType && mountdescription[shareType]) {
+                                    description = mountdescription[shareType];
+                                }
+                                else {
+                                    description = "Generic Shared File System";
+                                };
+                                mounts = mounts.concat({ "containerPath": containerPath, "hostPath": hostPath, "description": description, "enabled": true });
+                            };
+                        };
+                    };
+                };
+            };
+            if (mounthomefolder) {
+                mounts.unshift({"name":"homefolder", "containerPath": "/home/" + username, "hostPath": "/dlwsdata/work/" + username, "description": homefolderDescription, "enabled": true });
+            }
+            return mounts;
+        };
+
+        $scope.clusters = @Html.Raw(@Context.Session.GetString("TeamClusters"));
+        $scope.cluster = $scope.clusters[0];
+        $scope.checkCurrent();
+        $scope.checkExtras();
+        $scope.curtemplateValue = 0;
+        $scope.lastTemplateValue = -1;
+        $scope.adancedOption = false;
+
+        $scope.$watch('cluster', function (cluster, oldValue) {
+            if (cluster !== oldValue) {
+                $scope.current.jobName = "";
+                $scope.current.resourcegpu = 0;
+                $scope.current.image = "";
+                $scope.current.cmd = "";
+                $scope.current.jobtrainingtype = "RegularJob";
+            }
+            $http.get('/api/dlws/GetMountPoints', { params: { cluster: cluster } }).then(function (response) {
+                var mpstring = response.data.mountpoints;
+                var mpdescription = response.data.mountdescription;
+                $scope.mountpoints = $scope.$eval(mpstring);
+                $scope.mountdescription = $scope.$eval(mpdescription);
+                $scope.username = response.data.username;
+                $scope.mounthomefolder = response.data.mounthomefolder;
+                $scope.deploymounts = $scope.$eval(response.data.deploymounts);
+                $scope.mounts = parseMounts($scope.mountpoints, $scope.mountdescription, $scope.username, $scope.mounthomefolder, $scope.deploymounts);
+                $scope.showMounts = false;
+                $scope.showEnv = false;
+                $scope.manageTemplate = false;
+                $scope.setMounts();
+                $scope.checkCurrent();
+                //$log.log($scope.mountpoints);
+                //$log.log($scope.mountdescription);
+            });
+
+            $http.get("/api/dlws/GetTemplates?type=job", { params: { cluster: cluster } }).then(function (response) {
+                $scope.joblist = response.data;
+                $log.log($scope.joblist);
+                for (var i = 0; i < $scope.joblist.length; i++) {
+                    var name = $scope.joblist[i].Name;
+                    var counter = 0;
+                    for (var j = 0; j < $scope.joblist.length; j++) {
+                        if ($scope.joblist[j].Name == name)
+                        {
+                            counter = counter + 1;
+                        }
+                    }
+
+                    if (counter == 1)
+                        $scope.joblist[i].Text = name;
+                    else {
+                        var username = $scope.joblist[i].Username;
+                        if ($scope.joblist[i].Database.trim() == "Master")
+                            $scope.joblist[i].Text = name + "(master)";
+                        else
+                            $scope.joblist[i].Text = name + "(" + username.trim().split('@@')[0] + ")";
+                    }
+
+                    $scope.joblist[i].Value = i;
+                }
+                $scope.curtemplateValue = 0;
+                $scope.loadTemplate();
+                //$log.log($scope.joblist);
+            });
+            $scope.joblist = null;
+
+            var currentTeam = '@Context.Session.GetString("Team")';
+            $http.get("/api/dlws/GetVC", { params: { cluster: cluster, vcName: currentTeam } }).then(function (response) {
+                var result = response.data;
+                var gpu_available = result.gpu_avaliable;
+                var quota = JSON.parse(result.quota);
+
+                $scope.gpus = {};
+                angular.forEach(JSON.parse(result.metadata), function (value, key) {
+                    var gpu = {
+                        num_gpu_per_node: value.num_gpu_per_node,
+                        gpu_available: gpu_available[key] < 0 ? 0 : gpu_available[key],
+                        quota: quota[key]
+                    };
+                    $scope.isLowPriority = value.low_priority === true ? true : false;
+                   /* if ($scope.isLowPriority) {
+                        var filteredJobList = [];
+                        $scope.joblist.forEach(function(job) {
+                            if (JSON.parse(job.Json).jobtrainingtype !== "PSDistJob") {
+                                filteredJobList.push(job);
+                            }
+                        });
+                        $scope.joblist = filteredJobList;
+                    }*/
+
+                    $scope.gpus[key] = gpu;
+                });
+                $scope.checkExtras();
+            })
+            $scope.extras.gpuType = null;
+
+        });
+
+        $scope.$watch('current.jobtrainingtype', function (value) {
+            if (value === 'PSDistJob') {
+                $scope.current.numps = 1;
+                $scope.current.resourcegpu = $scope.gpus[$scope.extras.gpuType]['num_gpu_per_node'];
+                $scope.current.hostNetwork = true;
+                $scope.current.isPrivileged = true;
+            } else {
+                delete $scope.current.numps;
+                $scope.current.hostNetwork = false;
+                $scope.current.isPrivileged = false;
+            }
+        })
+
+        $scope.$watch('extras.gpuType', function () {
+            if ($scope.current.jobtrainingtype === 'PSDistJob') {
+                $scope.current.resourcegpu = $scope.gpus[$scope.extras.gpuType]['num_gpu_per_node'];
+            }
+        })
+
+        $scope.loadTemplate = function () {
+            $scope.curtemplate = $scope.joblist[$scope.curtemplateValue];
+            $scope.template = {};
+            $scope.curTemplateName = $scope.curtemplate.Name;
+            $scope.template.useTemplateName = $scope.curTemplateName;
+            $scope.curTemplateDatabase = $scope.curtemplate.Database;
+            $scope.curUsername = $scope.curtemplate.Username;
+            $scope.masterFlag = false;
+        };
+
+        $scope.setMounts = function () {
+            if ($scope.current == null || $scope.mounts == null)
+                return;
+            var examinemounts = $scope.current.mountpoints;
+            if (examinemounts == null)
+                examinemounts = [];
+            $scope.current.mountpoints = []
+            for (var i = 0; i < $scope.mounts.length ; i++) {
+                var onemount = $scope.mounts[i];
+                var selected = $filter('filter')(examinemounts, { hostPath: onemount.hostPath });
+                if (selected.length <= 0) {
+                    $scope.current.mountpoints.push(onemount);
+                }
+                else {
+                    $scope.current.mountpoints.push(selected[0]);
+                }
+            }
+        };
+
+
+
+
+        $scope.showTemplate = function () {
+            //$log.log($scope.curtemplateValue);
+            var selected = $filter('filter')($scope.joblist, { Value: $scope.curtemplateValue });
+            var showName = "None";
+            if ($scope.curtemplateValue > 0 && selected.length) {
+                if ($scope.lastTemplateValue && $scope.lastTemplateValue == $scope.curtemplateValue) { 
+                }
+                else {
+                    $scope.current = $scope.$eval(selected[0].Json);
+                    $scope.loadTemplate();
+                    $scope.setMounts();
+                    $scope.checkCurrent();
+
+                    if (!$scope.current.hasOwnProperty("runningasroot"))
+                        $scope.current.runningasroot = false;
+                    if (typeof ($scope.current.runningasroot) == "string") {
+                        if ($scope.current.runningasroot == "1")
+                            $scope.current.runningasroot = true;
+                        else
+                            $scope.current.runningasroot = false;
+                    };
+                    if (typeof ($scope.current.runningasroot) == "number") {
+                        if ($scope.current.runningasroot == 1)
+                            $scope.current.runningasroot = true;
+                        else
+                            $scope.current.runningasroot = false;
+                    };
+
+                    if (!$scope.current.hasOwnProperty("resourcegpu"))
+                        $scope.current.resourcegpu = 0;
+                    if (typeof ($scope.current.resourcegpu) == "string") {
+                        $scope.current.resourcegpu = parseInt($scope.current.resourcegpu)
+                    };
+
+
+                    if (!$scope.current.hasOwnProperty("jobtrainingtype"))
+                        $scope.current.jobtrainingtype = "RegularJob";
+
+
+                    $scope.current.enableworkpath = true;
+                    $scope.current.enabledatapath = true;
+                    $scope.current.enablejobpath = true;
+
+                }
+                showName = selected[0].Text.replace(/%20/g,"_");
+                if (!$scope.current.hasOwnProperty("jobName") || $scope.current.jobName=="")
+                    $scope.current.jobName = showName;
+            }
+            return showName;
+        };
+
+        $scope.newEnvironment = function () {
+            var cur = $scope.current;
+            if (!cur) {
+                return;
+            }
+            if (!(cur.env)) {
+                cur.env = [];
+            };
+            var curenv = cur.env;
+
+            inserted = {
+                name: "",
+                value: ""
+            };
+            curenv.push(inserted);
+        };
+
+        $scope.removeItem = function (menuitems, index) {
+            menuitems.splice(index, 1);
+        };
+
+        $scope.DownloadFile = function (json) {
+            var str = JSON.stringify(json);
+            var file = new Blob([str], { type: "text/plain" });
+            var filename = "Templates.json";
+            if (window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            }
+            else {
+                var a = document.createElement("a");
+                var url = URL.createObjectURL(file);
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function () {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                },
+                    0);
+            }
+        }
+
+        $scope.toggleMasterFlag = function () {
+            $scope.masterFlag = !($scope.masterFlag);
+        };
+
+        $scope.getDatabase = function () {
+            var loc = "CurrentCluster";
+            if ($scope.masterFlag)
+                loc = "Master";
+            return loc;
+        };
+
+        $scope.DownloadDatabase = function () {
+            var loc = $scope.getDatabase();
+            var params = "location=" + loc + "&cluster=" + $scope.cluster;
+            var url = "/api/dlws/GetDatabase?" + params;
+            $.ajax({ url: url, dataType: 'json', error: $scope.AlertAPIError, timeout: 10000 }).done($scope.DownloadFile);
+        };
+
+        $scope.AlertAPIError = function (xhr, ajaxOptions, thrownError) {
+            layer.alert("Restful API Error: \n" + JSON.stringify(thrownError), { icon: 5, btn: 'Ok', title: 'alert' })
+        };
+
+        $scope.AlertAPIResult = function (payload) {
+            layer.alert(payload.message, { icon: 6, btn: 'Ok', title: 'alert' })
+        };
+
+        $scope.SaveTemplateAPI = function (params) {
+            var url = "/api/dlws/submit?cluster=" + $scope.cluster;
+            $.ajax({ url: url, method: 'POST', data: params, error: $scope.AlertAPIError, timeout: 10000 }).done();
+        };
+
+        $scope.SaveTemplate = function () {
+            var params = {};
+            params.Name = $scope.template.useTemplateName;
+            params.Json = JSON.stringify($scope.current);
+            params.Database = $scope.getDatabase();
+            $scope.SaveTemplateAPI(params);
+        };
+
+        $scope.submitJob = function () {
+            if (!$scope.submittable()) return;
+            $scope.busy = true;
+            var params = {};
+            var job = angular.extend({}, $scope.current, $scope.extras);
+
+            params.Name = $scope.template.useTemplateName;
+            params.Json = JSON.stringify(job);
+            params.Database = $scope.getDatabase();
+            var url = "/api/dlws/postJob?cluster=" + $scope.cluster;
+            console.log(url);
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: params,
+                error: function (xhr, ajaxOptions, thrownError) {
+                    var message = "RestfulAPI error!";
+                    if (xhr.status === 400) {
+                        message = xhr.responseText;
+                    }
+                    layer.alert(message, { icon: 5, btn: 'Ok', title: 'alert' })
+                    $scope.$apply('busy = false');
+                },
+                timeout: 10000 //10 second timeout
+            }).then(function (resp) {
+                var payload = $scope.$eval(resp);
+                if (payload.jobId && (
+                    $scope.current.ssh ||
+                    $scope.current.ipython ||
+                    $scope.current.tensorboard ||
+                    $scope.current.interactivePorts.length > 0
+                )) {
+                    const endpoints = [];
+                    if ($scope.current.ssh) { endpoints.push('ssh') }
+                    if ($scope.current.ipython) { endpoints.push('ipython') }
+                    if ($scope.current.tensorboard) { endpoints.push('tensorboard') }
+                    if ($scope.current.interactivePorts.length > 0) {
+                        $scope.current.interactivePorts.forEach(function (port) {
+                            if (typeof port !== 'number') { return; }
+                            if (port < 40000 || port > 49999) { return; }
+                            endpoints.push({
+                                name: "port-" + port,
+                                podPort: port
+                            });
+                        })
+                    }
+                    return $http({
+                        method: "POST",
+                        url: "/api/dlws/endpoints",
+                        params: { cluster: $scope.cluster },
+                        data: {
+                            jobId: payload.jobId,
+                            endpoints: endpoints
+                        }
+                    }).then(function () { return resp }, function () {
+                        layer.alert("RestfulAPI error in creating endpoints!\nGo to job details page and enable endpoints again please.", {
+                            icon: 5, btn: 'Ok', title: 'alert', success: function (layero) {
+                                var btn = layero.find('.layui-layer-btn');
+                                btn.find('.layui-layer-btn0').attr({
+                                    href: '/Home/ViewJobs'
+                                    , target: '_self'
+                                });
+                            }
+                        })
+                        $scope.$apply('busy = false');
+                    })
+                } else {
+                    return resp;
+                }
+            }).done(
+                function (resp) {
+                    payload = $scope.$eval(resp);
+                    console.log(payload);
+                    if (payload.jobId) {
+                        layer.alert("Job Submitted! <br> Job ID:" + payload.jobId, {
+                            time: 0, icon: 6, btn: 'Ok', title: 'Job Submitted', success: function (layero) {
+                                var btn = layero.find('.layui-layer-btn');
+                                btn.find('.layui-layer-btn0').attr({
+                                    href: '/Home/ViewJobs'
+                                    , target: '_self'
+                                });
+                            }
+                        })
+                    } else if (payload.error) {
+                        layer.msg("Error: " + payload.error);
+                        $scope.$apply('busy = false');
+                    } else {
+                        layer.msg("Unexpected error: " + payload);
+                        $scope.$apply('busy = false');
+                    };
+
+                });
+        };
+
+
+        $scope.DeleteTemplate = function () {
+            var templatename = $scope.curTemplateName;
+            if (templatename == "") {
+                layer.msg("Unable to delete a null template!");
+                return;
+            }
+            var loc = $scope.getDatabase();
+            var params = "";
+            params = params + "name=" + templatename + "&" + "location=" + loc + "&cluster=" + $scope.cluster;
+            var url = "/api/dlws/DeleteTemplate?" + params;
+            $.ajax({ url: url, dataType: 'json', error: $scope.AlertAPIError, timeout: 10000 }).done($scope.AlertAPIResult);
+        }
+
+        $scope.UploadDatabase = function () {
+            var fileToLoad = document.getElementById("fileInput").files[0];
+            var fileReader = new FileReader();
+            fileReader.onload = function (fileLoadedEvent) {
+                var textFromFileLoaded = fileLoadedEvent.target.result;
+                var templateArray = JSON.parse(textFromFileLoaded);
+                for (var i = 0, length = templateArray.length; i < length; i++) {
+                    var params = {};
+                    params.Name = templateArray[i].Name;
+                    params.Username = templateArray[i].Username;
+                    params.Json = templateArray[i].Json;
+                    params.Database = $scope.getDatabase();
+                    $scope.SaveTemplateAPI(params);
+                }
+            }
+            fileReader.readAsText(fileToLoad, "UTF-8");
+        };
+
+        $scope.ChooseFile = function () {
+            $("#fileInput").click();
+            $("#fileInput").attr("value", "");
+        };
+
+        $scope.chooseValue = function (val, trueChoice, falseChoice, def) {
+            var var1 = val;
+            if (var1 == null)
+                var1 = def;
+            if (var1)
+                return trueChoice;
+            else
+                return falseChoice;
+        };
+
+        $scope.changeDNSPolicy = function () {
+            if ($scope.current.dnsPolicy) {
+                if ($scope.current.dnsPolicy == "ClusterFirst")
+                    $scope.current.dnsPolicy = "ClusterFirstWithHostNet";
+                else {
+                    delete $scope.current.dnsPolicy;
+                }
+            }
+            else {
+                $scope.current.dnsPolicy = "ClusterFirst";
+            }
+        };
+
+        $scope.submittable = function () {
+            if (!$scope.cluster) return false;
+            if (!$scope.extras.gpuType) return false;
+            if (!$scope.current.jobName) return false;
+            if (!$scope.current.image) return false;
+            if (!$scope.current.cmd || !String($scope.current.cmd).trim()) return false;
+            if (
+                $scope.current.jobtrainingtype === 'RegularJob' &&
+                typeof $scope.current.resourcegpu !== 'number'
+            ) return false;
+            if (
+                $scope.current.jobtrainingtype === 'PSDistJob' &&
+                typeof $scope.current.numpsworker !== 'number'
+            ) return false;
+            if ($scope.busy) return false;
+            return true;
+        }
+
+        $scope.addInteractivePort = function ($chip) {
+            var port = Number($chip)
+            if (isNaN(port)) return null;
+            if (port < 40000 || port > 49999) return null;
+
+            return port;
+        }
+
+        $scope.portBlur = function ($event) {
+            var port = $scope.addInteractivePort($event.target.value);
+            if (port === undefined) {
+                port = $event.target.value;
+            }
+            if (port !== null) {
+                $scope.current.interactivePorts.push(port);
+            }
+            $event.target.value = '';
+        }
+    });
+
+
+
+</script>
+
+
+<div ng-app="jobApp" ng-controller="jobCtrl" layout="column" ng-cloak class="modal-dialog" role="document" style="width:60%;bottom:30px;">
+    <md-content layout-padding>
+        <form name="jobSubmissionForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="submitModalLabel">@((ViewData["Mode"].Equals("Templates")) ? "Manage Templates" : "Submit Job")</h4>
+                </div>
+
+
+
+
+                <div class="modal-body">
+                    <div layout="row">
+                        <md-input-container flex="50">
+                            <label> Cluster </label>
+                            <md-select name="jobtrainingtype" ng-model="cluster" required md-no-asterisk>
+                                <md-option ng-value="name" ng-repeat="name in clusters">{{ name }}</md-option>
+                            </md-select>
+                        </md-input-container>
+
+                        <md-input-container flex="50">
+                            <label> GPU Type </label>
+                            <md-select name="jobtrainingtype" ng-model="extras.gpuType" required md-no-asterisk>
+                                <md-option ng-value="name" ng-repeat="(name, gpu) in gpus">{{ name }} ({{ gpu.gpu_available }}/{{ gpu.quota }} to use)</md-option>
+                            </md-select>
+                        </md-input-container>
+                    </div>
+
+
+                    <div layout="row">
+                        <md-input-container flex="50">
+                            <label>Job Template</label>
+                            <md-select name="curtemplateValue" ng-model="curtemplateValue" ng-change="showTemplate()">
+                                <md-option ng-value="{{g.Value}}" ng-repeat="g in joblist">{{ g.Text }}</md-option>
+                            </md-select>
+                        </md-input-container>
+                        <md-input-container flex="50">
+                            <label>Job Type</label>
+                            <md-select name="jobtrainingtype" ng-model="current.jobtrainingtype" ng-disabled="curtemplateValue === 0 ? false : true"  required md-no-asterisk>
+                                <md-option value="RegularJob" selected>Regular Job</md-option>
+                                <md-option value="PSDistJob">Distributed Job</md-option>
+                            </md-select>
+                        </md-input-container>
+                    </div>
+
+
+                    <div layout="row">
+                        <md-input-container flex="50">
+                            <label> Job Name </label>
+                            <input ng-model="current.jobName" required md-no-asterisk>
+                            <div class="hint" ng-if="showHints">Tell us the name of your job</div>
+                        </md-input-container>
+
+                        <md-input-container flex="50">
+                            <label> Job Priority </label>
+                            <md-select name="jobtrainingtype" ng-model="extras.preemptionAllowed" ng-disabled="isLowPriority ? true : false" md-no-asterisk>
+                                <md-option value="False" selected>Non-Preemptible Job</md-option>
+                                <md-option value="True">Preemptible Job</md-option>
+                            </md-select>
+                        </md-input-container>
+                    </div>
+
+                    <div layout="row" ng-if="current.jobtrainingtype=='PSDistJob'">
+
+                        <md-input-container flex="50">
+                            <label> Number of Nodes </label>
+                            <input ng-model="current.numpsworker" required type="number" step="1" min="1" md-no-asterisk>
+                        </md-input-container>
+
+                        <md-input-container flex="50">
+                            <label> Total Number of GPUs </label>
+                            <input ng-value="current.numpsworker * gpus[extras.gpuType]['num_gpu_per_node']" disabled type="number" md-no-asterisk>
+                        </md-input-container>
+
+                    </div>
+
+                    <md-input-container class="md-block" ng-if="current.jobtrainingtype=='RegularJob'">
+                        <label> Number of GPUs</label>
+                        <input ng-model="current.resourcegpu" required type="number" name="resourcegpu" step="1" min="0" max="{{gpus[extras.gpuType]['num_gpu_per_node']}}" md-no-asterisk>
+                        <div ng-messages="jobApp.resourcegpu.$error" multiple>
+                            <div ng-message="required">
+                                You have to let us know the number of gpus per worker.
+                            </div>
+
+                            <div ng-message="min">
+                                You have to request at least 0 GPU per worker.
+                            </div>
+
+                            <div ng-message="max">
+                                You can request at most {{gpus[extras.gpuType]['num_gpu_per_node']}} GPUs per worker.
+                            </div>
+                        </div>
+                    </md-input-container>
+
+
+
+                    <md-input-container class="md-block">
+                        <label> Docker Image </label>
+                        <input ng-model="current.image" required md-no-asterisk>
+                    </md-input-container>
+
+                    <md-input-container class="md-block">
+                        <label>Command</label>
+                        <textarea ng-model="current.cmd" rows="10"></textarea>
+                    </md-input-container>
+
+                    <label>
+                        Interactive Ports (40000 - 49999)
+                    </label>
+                    <md-chips ng-model="current.interactivePorts" md-transform-chip="addInteractivePort($chip)" md-separator-keys="[13, 32, 186, 188]">
+                        <md-chip-template>
+                            <span class="md-body-1">{{$chip}}</span>
+                        </md-chip-template>
+                        <input type="number" min="40000" max="49999" class="md-body-1" ng-blur="portBlur($event)">
+                    </md-chips>
+
+                    <div layout="row" layout-align="space-between">
+                        <md-switch ng-model="current.ssh" md-no-asterisk flex="60">
+                            SSH
+                        </md-switch>
+                        <md-switch ng-model="current.ipython" md-no-asterisk flex="60">
+                            iPython
+                        </md-switch>
+                        <md-switch ng-model="current.tensorboard" md-no-asterisk flex="60">
+                            <span>Tensorboard</span>
+                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                        </md-switch>
+                    </div>
+                    <div layout="row" layout-align="space-between">
+                        <p style="font-size: small">
+                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                            Tensorboard will listen on directory <samp>~/tensorboard/${DLWS_JOB_ID}/logs</samp> inside docker container.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="layui-collapse">
+
+                        <div class="layui-colla-item">
+                            <h2 class="layui-colla-title">Advanced Options</h2>
+                            <div class="layui-colla-content">
+
+                                <div class="layui-colla-item">
+                                    <h2 class="layui-colla-title">Mount Directories</h2>
+                                    <div class="layui-colla-content">
+                                        <div>
+                                            <table class="layui-table" width="100%">
+                                                <thead>
+                                                <th>Path inside container</th>
+                                                <th>Path on host machine (or storage server)</th>
+                                                <th>Enable</th>
+                                                <th>Description</th>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>/work </td>
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <label> Work Path </label>
+                                                                <input ng-model="current.workPath" required md-no-asterisk>
+                                                            </md-input-container>
+                                                        </td>
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <md-switch class="md-primary" name="enableworkpath" aria-label="enableworkpath" ng-model="current.enableworkpath" md-no-asterisk ng-disabled="true">
+                                                                </md-switch>
+                                                            </md-input-container>
+                                                        </td>
+                                                        <td>
+                                                            <a href='#' onclick="layer.alert('path relative to  @ViewData["workPath"].ToString().Replace("file:", "").Replace("/", "\\\\")',{ icon: 1, btn: 'Ok', title: 'Info' });"> <i class="layui-icon">&#xe60b;</i></a>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>/data </td>
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <label> Data Path </label>
+                                                                <input ng-model="current.dataPath" required md-no-asterisk>
+                                                            </md-input-container>
+                                                        </td>
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <md-switch class="md-primary" name="enabledatapath" aria-label="enabledatapath" ng-model="current.enabledatapath" md-no-asterisk ng-disabled="true">
+                                                                </md-switch>
+                                                            </md-input-container>
+                                                        </td>
+                                                        <td>
+                                                            <a href='#' onclick="layer.alert('path relative to @ViewData["dataPath"].ToString().Replace("file:", "").Replace("/", "\\\\")',{ icon: 1, btn: 'Ok', title: 'Info' });"> <i class="layui-icon">&#xe60b;</i></a>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>/job </td>
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <label> Job Path </label>
+                                                                <input ng-model="current.jobPath" md-no-asterisk>
+                                                            </md-input-container>
+                                                        </td>
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <md-switch class="md-primary" name="enablejobpath" aria-label="enablejobpath" ng-model="current.enablejobpath" md-no-asterisk ng-disabled="true">
+                                                                </md-switch>
+                                                            </md-input-container>
+                                                        </td>
+                                                        <td>
+                                                            <a href='#' onclick="layer.alert('empty by default;',{ icon: 1, btn: 'Ok', title: 'Info' });"> <i class="layui-icon">&#xe60b;</i></a>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr ng-repeat="onemount in current.mountpoints">
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <label> Container Path </label>
+                                                                <input ng-model="onemount.containerPath" md-no-asterisk>
+                                                            </md-input-container>
+
+                                                        </td>
+                                                        <td>
+                                                            {{onemount.hostPath}}
+                                                        </td>
+                                                        <td>
+                                                            <md-input-container class="md-block">
+                                                                <md-switch class="md-primary" ng-model="onemount.enabled" md-no-asterisk>
+                                                                </md-switch>
+                                                            </md-input-container>
+                                                        </td>
+                                                        <td>
+                                                            <a href='#' onclick="layer.alert('{{onemount.description}}',{ icon: 1, btn: 'Ok', title: 'Info' });"> <i class="layui-icon">&#xe60b;</i></a>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+
+
+
+
+
+
+
+                                    </div>
+                                </div>
+
+
+
+
+
+                                <div class="layui-colla-item" ng-hide="true">
+                                    <h2 class="layui-colla-title">HyperParameter Turning</h2>
+                                    <div class="layui-colla-content">
+
+                                        <md-input-container class="md-block">
+                                            <label> HyperParameter Name </label>
+                                            <input ng-model="current.hyperparametername" required md-no-asterisk>
+                                        </md-input-container>
+                                        <md-input-container class="md-block">
+                                            <label> Start Value </label>
+                                            <input ng-model="current.hyperparameterstartvalue" required md-no-asterisk>
+                                        </md-input-container>
+                                        <md-input-container class="md-block">
+                                            <label> End Value </label>
+                                            <input ng-model="current.hyperparameterendvalue" required md-no-asterisk>
+                                        </md-input-container>
+                                        <md-input-container class="md-block">
+                                            <label> Step </label>
+                                            <input ng-model="current.hyperparameterstep" required md-no-asterisk>
+                                        </md-input-container>
+
+
+
+                                    </div>
+                                </div>
+
+                                <div class="layui-colla-item">
+                                    <h2 class="layui-colla-title">Environmet variables</h2>
+                                    <div class="layui-colla-content">
+                                        <table width="100%">
+                                            <tbody>
+                                                <tr ng-repeat="oneenv in current.env">
+                                                    <td>
+                                                        <md-input-container class="md-block">
+                                                            <label> Name of the Environment Variable </label>
+                                                            <input ng-model="oneenv.name" required md-no-asterisk>
+                                                        </md-input-container>
+                                                    </td>
+                                                    <td>
+                                                        <md-input-container class="md-block">
+                                                            <label> Value of the Environment Variable </label>
+                                                            <input ng-model="oneenv.value" required md-no-asterisk>
+                                                        </md-input-container>
+                                                    </td>
+                                                    <td>
+                                                        <a class="fa fa-times fa-lg text-danger" ng-click="removeItem(current.env,$index)">
+                                                        </a>
+                                                    </td>
+
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <button type="button" class="btn btn-info" ng-click="newEnvironment()">
+                                            <i class="layui-icon" style="font-size: 18px; color: #000000;">&#xe654;</i> Add Environment Variable
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="layui-colla-item" ng-hide="true">
+                                    <h2 class="layui-colla-title">Host Network</h2>
+                                    <div class="layui-colla-content">
+                                        <md-input-container class="md-block" flex="50">
+                                            <label> Use Host network in container? </label>
+                                            <md-switch class="md-primary" ng-model="current.hostNetwork" ng-disabled="true" md-no-asterisk>
+                                            </md-switch>
+                                        </md-input-container>
+                                    </div>
+                                </div>
+                                <div class="layui-colla-item" ng-hide="true">
+                                    <h2 class="layui-colla-title">GPU Topology</h2>
+                                    <div class="layui-colla-content">
+
+
+                                        <md-input-container class="md-block">
+                                            <label> Request GPU topology </label>
+                                            <md-switch class="md-primary" ng-model="current.useGPUTopology" md-no-asterisk aria-label="useGPUTopology">
+                                            </md-switch>
+                                        </md-input-container>
+
+                                    </div>
+                                </div>
+                                <div class="layui-colla-item" ng-hide="true">
+                                    <h2 class="layui-colla-title">Privileged Docker</h2>
+                                    <div class="layui-colla-content">
+
+
+                                        <md-input-container class="md-block">
+                                            <label> Launch privileged docker </label>
+                                            <md-switch class="md-primary" ng-model="current.isPrivileged" md-no-asterisk aria-label="isPrivileged">
+                                            </md-switch>
+                                        </md-input-container>
+
+
+                                        <div ng-if="current.isPrivileged" class="form-group">
+
+                                            <div layout="row">
+
+
+                                                <md-input-container class="md-block" flex="50">
+                                                    <label> Use Host IPC in container? </label>
+                                                    <md-switch class="md-primary" ng-model="current.hostIPC" md-no-asterisk>
+                                                    </md-switch>
+                                                </md-input-container>
+
+
+                                                <md-input-container class="md-block" flex="50">
+                                                    <label>Container DNS Policy</label>
+                                                    <md-select name="dnsPolicy" ng-model="current.dnsPolicy" required md-no-asterisk>
+                                                        <md-option value="Default" selected>Default</md-option>
+                                                        <md-option value="ClusterFirstWithHostNet">ClusterFirstWithHostNet</md-option>
+                                                        <md-option value="ClusterFirst">ClusterFirst</md-option>
+                                                    </md-select>
+                                                </md-input-container>
+                                            </div>
+                                            <div layout="row">
+                                                <md-input-container class="md-block" flex="50">
+                                                    <label> CPU Request </label>
+                                                    <input ng-model="current.cpurequest" required md-no-asterisk>
+                                                </md-input-container>
+
+
+                                                <md-input-container class="md-block" flex="50">
+                                                    <label> Memory Request </label>
+                                                    <input ng-model="current.memoryrequest" required md-no-asterisk>
+                                                </md-input-container>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <a class="btn pull-right btn-primary" ng-click="submitJob()" ng-disabled="!submittable()">
+                        Submit Job
+                    </a>
+                </div>
+
+            </div>
+
+
+
+
+        </form>
+    </md-content>
+
+
+    <div class="modal-content">
+        <div class="layui-collapse">
+            <div class="layui-colla-item">
+                <h2 class="layui-colla-title">Job Template Operations</h2>
+                <div class="layui-colla-content">
+
+                    <md-input-container class="md-block">
+                        <label> Template Name </label>
+                        <input ng-model="template.useTemplateName" required md-no-asterisk md-select-on-focus>
+                    </md-input-container>
+
+                    <label>
+                        Template Location
+                    </label>
+                    <a class="btn" ng-class="{true: 'btn-primary', false: 'btn-danger'}[masterFlag]" ng-click="toggleMasterFlag()">
+                        {{masterFlag && 'Master' || 'Current User' }}
+                    </a>
+
+
+                    <div class="modal-footer">
+                        <a ng-click="DeleteTemplate()" class="btn btn-success" href="#">Delete Template</a>
+                        <a ng-click="SaveTemplate()" class="btn btn-success" href="#" ng-disabled="template.useTemplateName === 'None' || !template.useTemplateName ? true : false">Save Template</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-collapse">
+            <div class="layui-colla-item">
+                <h2 class="layui-colla-title">Database operation</h2>
+                <div class="layui-colla-content">
+                    <a ng-click="DownloadDatabase()" class="btn btn-success" href="#">Download JSON</a>
+                    <a ng-click="ChooseFile()" class="btn btn-success" href="#">Upload JSON</a>
+                    <div style="height: 0px; overflow: hidden">
+                        <input type="file" id="fileInput" name="fileInput" ng-model="fileInput" onchange="angular.element(this).scope().UploadDatabase()" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<br />
+
+<script src="/layui/layui.js" charset="utf-8"></script>
+<script>
+    layui.use(['element', 'layer'], function () {
+        var element = layui.element;
+        element.on('collapse(test)', function (data) {
+        });
+    });
+</script>

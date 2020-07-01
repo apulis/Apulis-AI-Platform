@@ -1,0 +1,14 @@
+groups:
+    - name: gpu_related
+      rules:
+      - alert: NvidiaSmiEccError
+        expr: nvidiasmi_ecc_error_count{type="volatile_double"} > 0
+        for: 30m
+        annotations:
+          summary: "nvidia card from {{$labels.instance}} minor number {{$labels.minor_number}} has {{$labels.type}} ecc error, count {{$value}}"
+
+      - alert: NvidiaRetiredPage
+        expr: sum (nvidiasmi_retired_page_count) by (instance, minor_number) > 60
+        for: 30m
+        annotations:
+          summary: "gpu retired page from {{$labels.instance}} {{$labels.minor_number}} exceed threshold, may need to replace this gpu"

@@ -1,0 +1,88 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: repairmanager
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      repairmanager-node: pod
+  template:
+    metadata:
+      name: repairmanager
+      labels:
+        repairmanager-node: pod
+        app: repairmanager
+    spec:
+      
+      hostNetwork: true
+      nodeSelector:
+        repairmanager: active
+      containers:
+      - name: repairmanager
+        image: apulistech//atlas_/repairmanager:latest
+        command: ["/run.sh"]
+        imagePullPolicy: Always
+        env:
+        - name: PROMETHEUS_URL
+          value: http://localhost:9091
+        volumeMounts:
+        - mountPath: /etc/kubernetes/ssl
+          name: certs
+        - mountPath: /etc/kubernetes/restapi-kubeconfig.yaml
+          name: kubeconfig
+        - mountPath: /dlwsdata/work
+          name: dlwsdatawork
+        - mountPath: /dlwsdata/storage
+          name: dlwsdatadata
+        - mountPath: /dlwsdata/jobfiles
+          name: dlwsdatajobfiles
+        - mountPath: /dltsdata
+          name: dltsdata
+        - mountPath: /opt/auto_share
+          name: folderautoshare
+        - mountPath: /var/log/dlworkspace
+          name: log
+        - mountPath: /etc/RepairManager
+          name: repairmanagerdata
+      - name: etcd
+        image: apulistech//atlas_/repairmanageretcd:latest
+        command: ["/run.sh"]
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /etc/RepairManager
+          name: repairmanagerdata
+      
+      volumes:
+      - name: certs
+        hostPath:
+          path: /etc/kubernetes/ssl
+      - name: kubeconfig
+        hostPath:
+          path: /etc/kubernetes/restapi-kubeconfig.yaml
+      - name: dlwsdatawork
+        hostPath:
+          path: /dlwsdata/work
+      - name: dlwsdatadata
+        hostPath:
+          path: /dlwsdata/storage
+      - name: dlwsdatajobfiles
+        hostPath:
+          path: /dlwsdata/jobfiles
+      - name: dltsdata
+        hostPath:
+          path: /dltsdata
+      - name: folderautoshare
+        hostPath:
+          path: /opt/auto_share
+      - name: log
+        hostPath:
+          path: /var/log/clustermanager
+      - name: repairmanagerdata
+        hostPath:
+          path: /etc/RepairManager
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

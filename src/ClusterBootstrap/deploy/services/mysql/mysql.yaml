@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: kube-system
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: mysql
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: mysql
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      nodeSelector:
+      
+        mysql: active
+      
+      hostNetwork: true    
+      containers:
+      - image: mysql/mysql-server:8.0
+        name: mysql
+        env:
+          # Use secret in real usage
+        - name: MYSQL_ROOT_PASSWORD
+          value: "apulis#2019#wednesday"
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-log
+          mountPath: /var/log/mysql          
+      
+      volumes:
+      - name: mysql-storage
+        hostPath:
+          path: /var/lib/mysql
+      - name: mysql-log
+        hostPath:
+          path: /var/log/mysql
+          
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule            

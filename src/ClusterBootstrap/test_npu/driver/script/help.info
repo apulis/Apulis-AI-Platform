@@ -1,0 +1,9 @@
+  --full                            install full mode
+  --run                             install run mode
+  --docker                          install docker mode
+  --upgrade                         upgrade product immediately
+  --install-path=<path>             install to specific dir
+  --install-username=<username>     install to specific username
+  --install-usergroup=<usergroup>   install to specific usrgroup
+  --uninstall                       uninstall product
+  --version                         query the package version

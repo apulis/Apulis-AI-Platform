@@ -1,0 +1,115 @@
+database :
+  hostname : {{cnf["sqlserver-hostname"]}}
+  username : {{cnf["sqlserver-username"]}}
+  password : "{{cnf["sqlserver-password"]}}"
+  database : {{cnf["sqlserver-database"]}}
+mysql :
+  hostname : {{cnf["mysql_node"]}}
+  port : {{cnf["mysql_port"]}}
+  username : {{cnf["mysql_username"]}}
+  password : "{{cnf["mysql_password"]}}"
+kubelet-path : /usr/bin/kubectl
+deploy_method: {{cnf["deploy_method"]}}
+storage-mount-path : {{cnf["storage-mount-path"]}}
+dltsdata-storage-mount-path : {{cnf["dltsdata-storage-mount-path"]}}
+folder_auto_share: {{cnf["folder_auto_share"]}}
+root-path : /DLWorkspace/src/
+nvidiaDriverPath : {{cnf["nvidia-driver-path"]}}
+clusterId : {{cnf["clusterId"]}}
+domain : {{cnf["network"]["domain"]}}
+apiserver: {{cnf["api_servers"]}}
+certificate-authority: /etc/kubernetes/ssl/ca.pem
+client-certificate: /etc/kubernetes/ssl/apiserver.pem
+client-key: /etc/kubernetes/ssl/apiserver-key.pem
+pod_ip_range: {{cnf["pod_ip_range"]}}
+per_user_gpu_limit: {{cnf["per_user_gpu_limit"]}}
+rest-api: {{cnf["rest-api"]}}
+usefreeflow: {{cnf["usefreeflow"]}}
+mountdescription : {{cnf["mountdescription"]}}
+mountpoints : {{cnf["mountpoints"]}} 
+mounthomefolder : {{cnf["mounthomefolder"]}}
+deploymounts : {{cnf["deploymounts"]}}
+default-storage-folders : {{cnf["default-storage-folders"]}}
+webportal_node: {{cnf["webportal_node"]}}
+datasource : {{cnf["datasource"]}}
+kube_custom_scheduler: {{cnf["kube_custom_scheduler"]}}
+WinbindServers: {{cnf["WinbindServers"]}}
+gpu_count_per_node: {{cnf["gpu_count_per_node"]}}
+worker_node_num: {{cnf["worker_node_num"]}}
+gpu_type: {{cnf["gpu_type"]}}
+defalt_virtual_cluster_name: {{cnf["defalt_virtual_cluster_name"]}}
+{% if cnf["job-manager"] %}
+job-manager:
+  {% if cnf["job-manager"]["notifier"] %}
+  notifier:
+    {% if cnf["job-manager"]["notifier"]["cluster"] %}
+    cluster: {{ cnf["job-manager"]["notifier"]["cluster"] }}
+    {% endif %}
+    {% if cnf["job-manager"]["notifier"]["alert-manager-url"] %}
+    alert-manager-url: {{ cnf["job-manager"]["notifier"]["alert-manager-url"] }}
+    {% endif %}
+  {% endif %}
+{% endif %}
+
+infiniband_mounts: {{cnf["infiniband_mounts"]}}
+custom_mounts: {{cnf["custom_mounts"]}}
+
+enable_cpuworker: {{cnf["enable_cpuworker"]}}
+default_cpurequest: {{cnf["default_cpurequest"]}}
+default_cpulimit: {{cnf["default_cpulimit"]}}
+default_memoryrequest: {{cnf["default_memoryrequest"]}}
+default_memorylimit: {{cnf["default_memorylimit"]}}
+default_cpu_sku: {{cnf["default_cpu_sku"]}}
+sku_meta: {{cnf["sku_meta"]}}
+
+enable_blobfuse: {{cnf["enable_blobfuse"]}}
+
+local_fast_storage: {{cnf["local_fast_storage"]}}
+enable_custom_registry_secrets: {{cnf["enable_custom_registry_secrets"]}}
+master_token: {{cnf["master_token"]}}
+nccl_ib_disable: {{cnf["nccl_ib_disable"]}}
+vc_node_hard_assignment: {{cnf["vc_node_hard_assignment"]}}
+
+gpu_reporter: 'http://{{cnf["prometheus"]["host"]}}:{{cnf["prometheus"]["reporter"]["port"]}}'
+
+vc_without_shared_storage: {{cnf["vc_without_shared_storage"]}}
+
+jwt:
+  secret_key: {{cnf["jwt"]["secret_key"]}}
+  algorithm: {{cnf["jwt"]["algorithm"]}}
+  token_ttl: {{cnf["jwt"]["token_ttl"]}}
+
+Authentication:
+  WeChat:
+    AppId: "{{cnf["Authentications"]["Wechat"]["AppId"]}}"
+    AppSecret: "{{cnf["Authentications"]["Wechat"]["AppSecret"]}}"
+  Microsoft:
+    ClientId: "{{cnf["Authentications"]["Microsoft"]["ClientId"]}}"
+    ClientSecret: "{{cnf["Authentications"]["Microsoft"]["ClientSecret"]}}"
+
+administrators:
+{% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
+  - {{admin}}
+{% endfor %}
+
+inference:
+  {% for framework,items in cnf["inference"].items() %}{% for one in items %}{{framework}}:
+    - version: {{one["version"]}}
+      support: {% for one_support in one["support"] %}
+      - image: {{one_support["image"]}}
+        device: {{one_support["device"]}}
+      {% endfor %}
+    {% endfor %}
+  {% endfor %}
+
+usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend
+usermanagerapitoken: {{cnf["usermanagerapitoken"]}}
+
+enable_jobmanager_debug_mode: {{cnf["enable_jobmanager_debug_mode"]}}
+
+extranet_port: {{cnf["extranet_port"]}}
+
+defalt_virtual_cluster_device_type_list:
+{% for one in cnf["defalt_virtual_cluster_device_type_list"] %}
+  - {{ one }}
+{%endfor%}

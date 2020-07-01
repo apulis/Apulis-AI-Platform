@@ -1,0 +1,44 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: custom-user-dashboard-frontend
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: custom-user-dashboard-frontend
+      labels:
+        jobmanager-node: pod
+        app: custom-user-dashboard-frontend
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      hostNetwork: true
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      containers:
+      - name: custom-user-dashboard-frontend
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}custom-user-dashboard-frontend:{{cnf["dockertag"]}}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3083
+            hostPort: 3083
+            protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 3083
+          timeoutSeconds: 10
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

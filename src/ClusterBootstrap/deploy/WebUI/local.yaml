@@ -1,0 +1,53 @@
+sign: Sign key for JWT
+winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
+masterToken: "Access token of all users"
+
+authEnabled:
+  wechat: 1
+  microsoft: 1
+
+
+activeDirectory:
+  tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
+  clientId: "6d93837b-d8ce-48b9-868a-39a9d843dc57"
+  clientSecret: "eIHVKiG2TlYa387tssMSj?E?qVGvJi[]"
+
+
+
+wechat:
+  appId: "wxa3883ec76f021456"
+  appSecret: "e334bbddd8d4f56d718dbe267050e137"
+
+
+domain: "https://atlas02.sigsus.cn"
+casUrl: "http://atlas02.sigsus.cn/cas"
+
+administrators:
+
+  - jinlmsft@hotmail.com
+
+  - jinli.ccs@gmail.com
+
+  - jin.li@apulis.com
+
+  - bifeng.peng@apulis.com
+
+  - tianhui.liu@apulis.com
+
+  - penghao.zeng@apulis.com
+
+  - zenglong.chen@apulis.com
+
+clusters:
+  atlas:
+      restfulapi: "http://atlas02.sigsus.cn/apis"
+      title: Grafana-endpoint-of-the-cluster
+      workStorage: /dlwsdata/work
+      dataStorage: /dlwsdata/storage
+      grafana: "https://atlas02.sigsus.cn/endpoints/grafana/"
+      prometheus: http://atlas02.sigsus.cn:9091
+userGroup:
+  type: custom
+  domain: "https://atlas02.sigsus.cn"
+  backEndPath: /custom-user-dashboard-backend
+  frontEndPath: /custom-user-dashboard

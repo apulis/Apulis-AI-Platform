@@ -1,0 +1,28 @@
+ifneq ($(KERNELRELEASE),)
+
+obj-m := pcie_host/
+obj-m += hdc_host/
+obj-m += pcievnic_host/
+obj-m += devdrv_manager_host/
+obj-m += libc_sec/
+obj-m += devdrv_driver_host/
+obj-m += devmm/
+
+else
+
+KVERSION := $(shell uname -r)
+PWD := $(shell pwd)
+
+DAVINCI_HIAI_DKMS := y
+HIAI_DKMS_DIR := $(shell pwd)
+
+export DAVINCI_HIAI_DKMS
+export HIAI_DKMS_DIR
+
+all:
+	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) modules
+
+clean:
+	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) clean
+
+endif

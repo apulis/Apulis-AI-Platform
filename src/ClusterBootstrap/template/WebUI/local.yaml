@@ -1,0 +1,45 @@
+sign: {{cnf["jwt"]["secret_key"]}}
+winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
+masterToken: "Access token of all users"
+
+authEnabled:
+  wechat: {% if cnf["Authentications"]["Wechat"] %}1{% else %}0{% endif %}
+  microsoft: {% if cnf["Authentications"]["Microsoft"] %}1{% else %}0{% endif %}
+
+{% if cnf["Authentications"]["Microsoft"] %}
+activeDirectory:
+  tenant: "{{cnf["Authentications"]["Microsoft"]["TenantId"]}}"
+  clientId: "{{cnf["Authentications"]["Microsoft"]["ClientId"]}}"
+  clientSecret: "{{cnf["Authentications"]["Microsoft"]["ClientSecret"]}}"
+{% endif %}
+{% if cnf["Authentications"]["DingTalk"] %}
+dingtalk:
+  appId: "{{cnf["Authentications"]["DingTalk"]["AppId"]}}"
+  appSecret: "{{cnf["Authentications"]["DingTalk"]["AppSecret"]}}"
+{% endif %}
+{% if cnf["Authentications"]["Wechat"] %}
+wechat:
+  appId: "{{cnf["Authentications"]["Wechat"]["AppId"]}}"
+  appSecret: "{{cnf["Authentications"]["Wechat"]["AppSecret"]}}"
+{% endif %}
+
+domain: "https://{{cnf["webportal_node"]}}"
+casUrl: "http://{{cnf["webportal_node"]}}/cas"
+
+administrators:
+{% for admin in cnf["UserGroups"]["DLWSAdmins"]["Allowed"] %}
+  - {{admin}}
+{% endfor %}
+clusters:
+  {{cnf["cluster_name"]}}:
+      restfulapi: "http://{{cnf["restfulapi_node"]}}/apis"
+      title: Grafana-endpoint-of-the-cluster
+      workStorage: {{cnf["storage-mount-path"]}}/work
+      dataStorage: {{cnf["storage-mount-path"]}}/storage
+      grafana: "{{cnf['extranet_protocol']}}://{{cnf['webportal_node']}}{% if 'extranet_port' in cnf and cnf['extranet_port'] %}:{{cnf['extranet_port']}}{%endif%}/endpoints/grafana/"
+      prometheus: http://{{cnf["restfulapi_node"]}}:9091
+userGroup:
+  type: custom
+  domain: "http://{{cnf["webportal_node"]}}"
+  backEndPath: /custom-user-dashboard-backend
+  frontEndPath: /custom-user-dashboard

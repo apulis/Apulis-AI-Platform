@@ -1,0 +1,42 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: custom-user-dashboard-frontend-arm64
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: custom-user-dashboard-frontend-arm64
+      labels:
+        jobmanager-node: pod
+        app: custom-user-dashboard-frontend-arm64
+    spec:
+      
+      hostNetwork: true
+      nodeSelector:
+        jobmanager: active
+        archType: arm64
+      containers:
+      - name: custom-user-dashboard-frontend-arm64
+        image: apulistech/atlas_custom-user-dashboard-frontend:latest-arm64
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3083
+            hostPort: 3083
+            protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 3083
+          timeoutSeconds: 10
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

@@ -1,0 +1,47 @@
+
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: dashboard
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      dashboard-node: pod
+  template:
+    metadata:
+      name: dashboard
+      labels:
+        app: dashboard
+        dashboard-node: pod
+    spec:
+      
+      nodeSelector:
+        dashboard: active
+        
+      hostNetwork: true
+      
+      containers:
+      - name: dashboard
+        image: apulistech//atlas_/dashboard:latest
+        imagePullPolicy: Always
+        
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /usr/src/app/config
+          name: dashboardconfig
+        - mountPath: /var/log/dashboard
+          name: dashboardlog
+      
+      volumes:
+      - name: dashboardconfig
+        hostPath:
+          path: /etc/dashboard
+      - name: dashboardlog
+        hostPath:
+          path: /var/log/dashboard
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule            

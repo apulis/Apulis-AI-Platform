@@ -1,0 +1,46 @@
+
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: webui2
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      webportal-node: pod
+  template:
+    metadata:
+      name: webui2
+      labels:
+        app: webui2
+        webportal-node: pod
+    spec:
+      
+      nodeSelector:
+        webportal: active
+        
+      hostNetwork: true
+      
+      containers:
+      - name: webui2
+        image: apulistech/atlas_webui2:latest
+        imagePullPolicy: Always
+        
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /WebUI
+          name: webuiconfig
+        - mountPath: /var/log/webui
+          name: webuilog
+      volumes:
+      - name: webuiconfig
+        hostPath:
+          path: /etc/WebUI
+      - name: webuilog
+        hostPath:
+          path: /var/log/webui
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule            

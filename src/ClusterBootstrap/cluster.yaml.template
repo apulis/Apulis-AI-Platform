@@ -1,0 +1,31 @@
+# Configuration file for OneNet Test cluster
+id: onenet
+###Use cluster.yaml to locate nodes (instead of using the cluster report service)
+useclusterfile : true
+
+coreos:
+  version: 1235.9.0
+
+network:
+  domain: redmond.corp.microsoft.com
+
+machines:
+  onenet13:
+    role: infrastructure 
+  onenet14:
+    role: worker
+  onenet15:
+    role: worker
+  onenet16:
+    role: worker
+  onenet17:
+    role: worker
+  onenet18:
+    role: worker
+  onenet18:
+    role: worker
+  onenet19:
+    role: worker
+  onenet20:
+    role: worker
+  

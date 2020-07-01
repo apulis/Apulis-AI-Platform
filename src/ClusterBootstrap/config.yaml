@@ -1,0 +1,186 @@
+cluster_name: atlas
+
+network:
+  domain: sigsus.cn
+  container-network-iprange: "10.0.0.0/8"
+
+etcd_node_num: 1
+mounthomefolder : True
+
+# These may be needed for KubeGPU
+# kube_custom_cri : True
+# kube_custom_scheduler: True
+kubepresleep: 1
+
+UserGroups:
+  DLWSAdmins:
+    Allowed:
+    - jinlmsft@hotmail.com
+    - jinli.ccs@gmail.com
+    - jin.li@apulis.com
+    - bifeng.peng@apulis.com
+    - tianhui.liu@apulis.com
+    - penghao.zeng@apulis.com
+    - zenglong.chen@apulis.com
+    gid: "20001"
+    uid: "20000"
+  DLWSRegister:
+    Allowed:
+    - '@gmail.com'
+    - '@live.com'
+    - '@outlook.com'
+    - '@hotmail.com'
+    - '@apulis.com'
+    gid: "20001"
+    uid: 20001-29999
+
+WebUIadminGroups:
+- DLWSAdmins
+
+WebUIauthorizedGroups:
+- DLWSAdmins
+
+WebUIregisterGroups:
+- DLWSRegister
+
+datasource: MySQL
+mysql_password: apulis#2019#wednesday
+webuiport: 3081
+useclusterfile : true
+
+machines:
+  atlas02:
+    role: infrastructure
+    private-ip: 192.168.3.2
+    archtype: arm64
+    type: npu
+    vendor: huawei
+
+  atlas01:
+    archtype: arm64
+    role: worker
+    type: npu
+    vendor: huawei
+    os: ubuntu
+
+  atlas-gpu01:
+    archtype: amd64
+    role: worker
+    type: gpu 
+    vendor: nvidia
+    os: ubuntu
+
+  atlas-gpu02:
+    archtype: amd64
+    role: worker
+    type: gpu 
+    vendor: nvidia
+    os: ubuntu
+
+scale_up:
+  atlas01:
+    archtype: arm64
+    role: worker
+    type: npu
+    vendor: huawei
+    os: ubuntu
+
+scale_down:
+  atlas-gpu02:
+    archtype: amd64
+    role: worker
+    type: gpu 
+    vendor: nvidia
+    os: ubuntu
+
+
+admin_username: dlwsadmin
+
+# settings for docker
+dockerregistry: apulistech/
+dockers:
+  hub: apulistech/
+  tag: "1.9"
+ 
+
+custom_mounts: []
+admin_username: dlwsadmin
+
+# settings for docker
+dockerregistry: apulistech/
+dockers:
+  hub: apulistech/
+  tag: "1.9"
+ 
+
+custom_mounts: []
+data-disk: /dev/[sh]d[^a]
+dataFolderAccessPoint: ''
+
+datasource: MySQL
+defalt_virtual_cluster_name: platform
+default-storage-folders:
+- jobfiles
+- storage
+- work
+- namenodeshare
+
+deploymounts: []
+
+discoverserver: 4.2.2.1
+dltsdata-atorage-mount-path: /dltsdata
+dns_server:
+  azure_cluster: 8.8.8.8
+  onpremise: 10.50.10.50
+  
+Authentications:
+  Microsoft:
+    TenantId: 19441c6a-f224-41c8-ac36-82464c2d9b13
+    ClientId: 6d93837b-d8ce-48b9-868a-39a9d843dc57
+    ClientSecret: "eIHVKiG2TlYa387tssMSj?E?qVGvJi[]"
+
+  Wechat:
+    AppId: "wxa3883ec76f021456"
+    AppSecret: "e334bbddd8d4f56d718dbe267050e137"
+
+supported_platform:  ["onpremise"]
+onpremise_cluster:
+  worker_node_num:    1
+  gpu_count_per_node: 1
+  gpu_type:           nvidia
+
+mountpoints:
+  nfsshare1:
+    type: nfs
+    server: atlas02
+    filesharename: /mnt/local
+    curphysicalmountpoint: /mntdlws
+    mountpoints: ""
+
+jwt:
+  secret_key: "Sign key for JWT"
+  algorithm: HS256
+  token_ttl: 86400
+
+k8sAPIport: 6443
+k8s-gitbranch: v1.18.0
+deploy_method: kubeadm
+
+repair-manager:
+  cluster_name: "atlas"
+  ecc_rule:
+    cordon_dry_run: True
+  alert:
+          #    smtp_url: smtp.office365.com
+          #    login: dev@apulis.com
+          #    smtp_url: smtp.office365.com
+          #    login: dev@apulis.com
+          #    password: Yitong#123
+          #    sender: dev@apulis.com
+    smtp_url: smtp.qq.com
+    login: 1023950387@qq.com
+    password: vtguxryxqyrkbfdd
+    sender: 1023950387@qq.com
+    receiver: ["1023950387@qq.com"]
+
+enable_custom_registry_secrets: True

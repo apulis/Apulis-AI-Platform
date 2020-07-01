@@ -1,0 +1,17 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ svc["serviceId"] }}
+  labels:
+    run: {{ svc["jobId"] }}
+    jobId: {{svc["jobId"]}}
+    podName: {{ svc["podName"] }}
+spec:
+  type: NodePort
+  selector:
+    podName: {{ svc["podName"] }}
+  ports:
+  - name: {{ svc["port-name"] }}
+    protocol: {{ svc["port-type"] }}
+    port: {{ svc["port"] }}
+    targetPort: {{ svc["port"] }}

@@ -1,0 +1,65 @@
+{
+  "Logging": {
+    "IncludeScopes": false,
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    }
+  },
+  
+  "UserGroups": {{cnf["UserGroups"]}},
+  "WinbindServers": {{cnf["WinbindServers"]}},
+  "DeployAuthentications": {{cnf["DeployAuthentications"]}},
+
+
+  "DLClusters" : 
+  {
+     "{{cnf["cluster_name"]}}" : {
+        "AdminGroups": {{cnf["WebUIadminGroups"]}},
+        "AuthorizedGroups": {{cnf["WebUIauthorizedGroups"]}},
+        "RegisterGroups": {{cnf["WebUIregisterGroups"]}},
+        "ClusterId": "{{cnf["clusterId"]}}",
+        "Restapi": "{{cnf["restapi"]}}",
+	"Grafana": "",
+        "WorkFolderAccessPoint": "{{cnf["workFolderAccessPoint"]}}",
+        "DataFolderAccessPoint": "{{cnf["dataFolderAccessPoint"]}}", 
+        "smbUsername":"{{cnf["smbUsername"]}}", 
+        "smbUserPassword":"{{cnf["smbUserPassword"]}}", 
+        "SQLHostname": "{{cnf["sqlserver-hostname"]}}", 
+        "SQLUsername": "{{cnf["sqlserver-username"]}}", 
+        "SQLPassword": "{{cnf["sqlserver-password"]}}", 
+        "SQLDatabaseForUser": "AuthorizeUser-", 
+        "MySQLHostname": "{{cnf["mysql_node"]}}", 
+        "MySQLPort": "{{cnf["mysql_port"]}}", 
+        "MySQLUsername": "{{cnf["mysql_username"]}}", 
+        "MySQLPassword": "{{cnf["mysql_password"]}}",     
+        "datasource": "{{cnf["datasource"]}}",        
+        "mountdescription" : "{{cnf["mountdescription"]}}",
+        "mountpoints" : "{{cnf["mountpoints"]}}", 
+        "mounthomefolder" : "{{cnf["mounthomefolder"]}}",
+        "deploymounts" : "{{cnf["deploymounts"]}}"
+        {% if cnf["proxy"] %}
+        , "proxy": "{{cnf["proxy"]}}"
+        {% endif %}
+        {% if cnf["network"]["domain"] %}
+        , "domain": "{{cnf["network"]["domain"]}}"
+        {% endif %}
+    },
+  },
+
+  "MasterTemplates" :
+  {
+    "SQLHostname": "{{cnf["sqlserver-hostname"]}}", 
+    "SQLUsername": "{{cnf["sqlserver-username"]}}", 
+    "SQLPassword": "{{cnf["sqlserver-password"]}}", 
+    "SQLDatabaseForTemplates": "Templates-master", 
+    "MySQLHostname": "{{cnf["mysql_node"]}}", 
+    "MySQLPort": "{{cnf["mysql_port"]}}", 
+    "MySQLUsername": "{{cnf["mysql_username"]}}", 
+    "MySQLPassword": "{{cnf["mysql_password"]}}",     
+    "datasource": "{{cnf["datasource"]}}",
+  },
+
+
+}

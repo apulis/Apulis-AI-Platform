@@ -1,0 +1,89 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: repairmanager2-arm64
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      repairmanager-node: pod
+  template:
+    metadata:
+      name: repairmanager2-arm64
+      labels:
+        repairmanager-node: pod
+        app: repairmanager
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+    spec:
+      
+      hostNetwork: true    
+      nodeSelector:
+        repairmanager: active
+        archType: arm64
+      containers:
+      - name: repairmanager
+        image: apulistech/atlas_repairmanager2:latest-arm64
+        command: ["/run.sh"]
+        imagePullPolicy: Always
+        env:
+        - name: PROMETHEUS_URL
+          value: http://localhost:9091
+        volumeMounts:
+        - mountPath: /usr/bin/kubectl
+          name: kubectl-binary
+          readOnly: true
+        - mountPath: /root/.kube/config
+          name: kubeconfig
+          readOnly: true
+        - mountPath: /dlwsdata/work
+          name: dlwsdatawork
+        - mountPath: /dlwsdata/storage
+          name: dlwsdatadata 
+        - mountPath: /dlwsdata/jobfiles
+          name: dlwsdatajobfiles
+        - mountPath: /dltsdata
+          name: dltsdata
+        - mountPath: /opt/auto_share
+          name: folderautoshare
+        - mountPath: /var/log/dlworkspace
+          name: log
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 9200
+          timeoutSeconds: 10
+      volumes:
+      - name: kubectl-binary
+        hostPath:
+          path: /usr/bin/kubectl
+      - name: kubeconfig
+        hostPath:
+          path: /etc/kubernetes/admin.conf
+      - name: dlwsdatawork
+        hostPath:
+          path: /dlwsdata/work 
+      - name: dlwsdatadata
+        hostPath:
+          path: /dlwsdata/storage
+      - name: dlwsdatajobfiles
+        hostPath:
+          path: /dlwsdata/jobfiles           
+      - name: dltsdata
+        hostPath:
+          path: /dltsdata
+      - name: folderautoshare
+        hostPath:
+          path: /opt/auto_share
+      - name: log
+        hostPath:
+          path: /var/log/clustermanager   
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule           

@@ -1,0 +1,8 @@
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: alert-manager
+  namespace: kube-system
+data:
+  config.yml: |-

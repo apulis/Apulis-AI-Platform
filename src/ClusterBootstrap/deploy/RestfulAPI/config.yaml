@@ -1,0 +1,120 @@
+database :
+  hostname : 
+  username : 
+  password : ""
+  database : 
+mysql :
+  hostname : atlas02.sigsus.cn
+  port : 3306
+  username : root
+  password : "apulis#2019#wednesday"
+kubelet-path : /usr/bin/kubectl
+deploy_method: kubeadm
+storage-mount-path : /dlwsdata
+dltsdata-storage-mount-path : /dltsdata
+folder_auto_share: /opt/auto_share
+root-path : /DLWorkspace/src/
+nvidiaDriverPath : /opt/nvidia-driver/current
+clusterId : 3924e5ca-00c9-4245-a49f-08f817d1d954
+domain : sigsus.cn
+apiserver: https://atlas02.sigsus.cn:6443
+certificate-authority: /etc/kubernetes/ssl/ca.pem
+client-certificate: /etc/kubernetes/ssl/apiserver.pem
+client-key: /etc/kubernetes/ssl/apiserver-key.pem
+pod_ip_range: 10.2.0.0/16
+per_user_gpu_limit: -1
+rest-api: 
+usefreeflow: 
+mountdescription : {'hdfs': 'Hadoop file system (replicated distribute storage).', 'azurefileshare': 'Azure file storage', 'localHDD': 'Local HDD. ', 'glusterfs': 'GlusterFS (replicated distributed storage)', 'nfs': 'NFS (remote file share)', 'emptyDir': 'Kubernetes emptyDir (folder will be erased after job termination).', 'local': 'Local SSD. '}
+mountpoints : {'nfsshare1': {'mountpoints': '', 'filesharename': '/mnt/local', 'type': 'nfs', 'server': 'atlas02', 'curphysicalmountpoint': '/mntdlws'}} 
+mounthomefolder : True
+deploymounts : []
+default-storage-folders : ['jobfiles', 'storage', 'work', 'namenodeshare']
+webportal_node: atlas02.sigsus.cn
+datasource : MySQL
+kube_custom_scheduler: False
+WinbindServers: 
+gpu_count_per_node: 1
+worker_node_num: 1
+gpu_type: nvidia
+defalt_virtual_cluster_name: platform
+
+
+infiniband_mounts: []
+custom_mounts: []
+
+enable_cpuworker: False
+default_cpurequest: 
+default_cpulimit: 
+default_memoryrequest: 
+default_memorylimit: 
+default_cpu_sku: Standard_D2s_v3
+sku_meta: {'default': {'memory_ratio': 0.8, 'cpu_ratio': 0.8}, 'Standard_D2s_v3': {'memory_ratio': 0.9, 'memory': 8, 'cpu': 2, 'cpu_ratio': 0.9}}
+
+enable_blobfuse: False
+
+local_fast_storage: 
+enable_custom_registry_secrets: True
+master_token: 
+nccl_ib_disable: 
+vc_node_hard_assignment: 
+
+gpu_reporter: 'http://atlas02.sigsus.cn:9092'
+
+vc_without_shared_storage: 
+
+jwt:
+  secret_key: Sign key for JWT
+  algorithm: HS256
+  token_ttl: 86400
+
+Authentication:
+  WeChat:
+    AppId: "wxa3883ec76f021456"
+    AppSecret: "e334bbddd8d4f56d718dbe267050e137"
+  Microsoft:
+    ClientId: "6d93837b-d8ce-48b9-868a-39a9d843dc57"
+    ClientSecret: "eIHVKiG2TlYa387tssMSj?E?qVGvJi[]"
+
+administrators:
+
+  - jinlmsft@hotmail.com
+
+  - jinli.ccs@gmail.com
+
+  - jin.li@apulis.com
+
+  - bifeng.peng@apulis.com
+
+  - tianhui.liu@apulis.com
+
+  - penghao.zeng@apulis.com
+
+  - zenglong.chen@apulis.com
+
+
+inference:
+  tensorflow:
+    - version: 1.15
+      support: 
+      - image: emacski/tensorflow-serving:1.15.0
+        device: CPU
+      
+      - image: tensorflow/serving:1.15.0-gpu
+        device: GPU
+      
+    
+  
+
+usermanagerapi: http://atlas02.sigsus.cn/custom-user-dashboard-backend
+usermanagerapitoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjMwMDAwfQ.72IHfoQCsme92ymkqAY2cQ1Vb6Dy3rmY1U--03zSXrI
+
+
+enable_jobmanager_debug_mode: 
+
+extranet_port: 
+
+defalt_virtual_cluster_device_type_list: 
+  - huawei_npu_arm64
+
+  - nvidia_gpu_amd64

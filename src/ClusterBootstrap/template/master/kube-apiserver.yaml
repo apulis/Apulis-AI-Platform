@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-apiserver
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-apiserver
+    image: {{cnf["dockers"]["container"]["hyperkube"]["fullname"]}}
+    command:
+    - /hyperkube      
+    - kube-apiserver
+    - --bind-address=0.0.0.0
+    - --etcd-servers={{cnf["etcd_endpoints"]}}
+    - --etcd-cafile=/etc/kubernetes/ssl/ca.pem
+    - --etcd-certfile=/etc/kubernetes/ssl/apiserver.pem
+    - --etcd-keyfile=/etc/kubernetes/ssl/apiserver-key.pem    
+    - --allow-privileged=true
+    - --service-cluster-ip-range={{cnf["service_cluster_ip_range"]}}
+    - --secure-port={{cnf["k8sAPIport"]}}
+    - --advertise-address={{cnf["master_ip"]}} 
+    - --enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota
+    #- --enable-admission-plugins=NamespaceLifecycle,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota
+    - --tls-cert-file=/etc/kubernetes/ssl/apiserver.pem
+    - --tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+    - --client-ca-file=/etc/kubernetes/ssl/ca.pem
+    - --service-account-key-file=/etc/kubernetes/ssl/apiserver-key.pem
+    - --runtime-config=extensions/v1beta1/networkpolicies=true
+    - --anonymous-auth=false
+    - --basic-auth-file=/etc/kubernetes/basicauth
+    - --requestheader-client-ca-file=/etc/kubernetes/pki/ca.crt
+    - --requestheader-allowed-names=aggregator
+    - --requestheader-extra-headers-prefix=X-Remote-Extra-
+    - --requestheader-group-headers=X-Remote-Group
+    - --requestheader-username-headers=X-Remote-User
+    - --proxy-client-cert-file=/etc/kubernetes/pki/proxy-client.crt
+    - --proxy-client-key-file=/etc/kubernetes/pki/proxy-client.key
+    - --runtime-config=api/all=true
+    
+{% if "kubelogdir" in cnf %}
+    - --log-dir={{cnf["kubelogdir"]}}/kubeapiserver
+    - --logtostderr=false
+{% endif %}
+{% if "kubeloglevel" in cnf %}
+    - --v={{cnf["kubeloglevel"]}}
+{% endif %}
+    livenessProbe:
+      httpGet:
+        host: 127.0.0.1
+        port: 8080
+        path: /healthz
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    ports:
+    - containerPort: {{cnf["k8sAPIport"]}}
+      hostPort: {{cnf["k8sAPIport"]}}
+      name: https
+    - containerPort: 8080
+      hostPort: 8080
+      name: local
+    volumeMounts:
+    - mountPath: /etc/kubernetes
+      name: ssl-certs-kubernetes
+      readOnly: true
+    - mountPath: /etc/ssl/certs
+      name: ssl-certs-host
+      readOnly: true
+    - mountPath: /etc/resolv.conf
+      name: resolv
+{% if "kubelogdir" in cnf %}
+    - mountPath: {{cnf["kubelogdir"]}}/kubeapiserver
+      name: logs
+{% endif %}
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes
+    name: ssl-certs-kubernetes
+  - hostPath:
+      path: /usr/share/ca-certificates
+    name: ssl-certs-host
+  - name: resolv
+    hostPath:
+      path: /etc/resolv.conf
+{% if "kubelogdir" in cnf %}
+  - hostPath:
+      path: {{cnf["kubelogdir"]}}/kubeapiserver
+    name: logs
+{% endif %}

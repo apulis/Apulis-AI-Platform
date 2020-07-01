@@ -1,0 +1,58 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: restfulapi
+  namespace: default
+  labels:
+     run: dlwsrestfulapi
+spec:
+  selector:
+    matchLabels:
+      restfulapi-node: pod
+  template:
+    metadata:
+      name: restfulapi
+      labels:
+        restfulapi-node: pod
+        app: restfulapi
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "5000"
+    spec:
+      
+      nodeSelector:
+        restfulapi: active
+      hostNetwork: true
+      containers:
+      - name: restfulapi
+        image: apulistech/atlas_restfulapi:latest
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - mountPath: /etc/resolv.conf
+          name: resolv
+        - mountPath: /RestfulAPI
+          name: apiconfig
+        - mountPath: /var/log/apache2
+          name: log
+        ports:
+        - containerPort: 5000
+          hostPort: 5000
+          name: main
+        
+      volumes:
+      - name: resolv
+        hostPath:
+          path: /etc/resolv.conf
+      - name: apiconfig
+        hostPath:
+          path: /etc/RestfulAPI
+      - name: log
+        hostPath:
+          path: /var/log/restfulapi
+      
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

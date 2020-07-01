@@ -1,0 +1,99 @@
+apiVersion: v1
+data:
+  gpu.rules: |
+    groups:
+        - name: gpu_related
+          rules:
+          - alert: NvidiaSmiEccError
+            expr: nvidiasmi_ecc_error_count{type="volatile_double"} > 0
+            for: 30m
+            annotations:
+              summary: "nvidia card from {{$labels.instance}} minor number {{$labels.minor_number}} has {{$labels.type}} ecc error, count {{$value}}"
+
+          - alert: NvidiaRetiredPage
+            expr: sum (nvidiasmi_retired_page_count) by (instance, minor_number) > 60
+            for: 30m
+            annotations:
+              summary: "gpu retired page from {{$labels.instance}} {{$labels.minor_number}} exceed threshold, may need to replace this gpu"
+  jobs.rules: |
+    groups:
+        - name: idle-job
+          rules:
+          - alert: zero-gpu-usage
+            expr: avg(task_device_percent) by (user_email, job_name, vc_name) == 0
+            for: 4h
+            labels:
+              type: idle_gpu
+  k8s.rules: |
+    groups:
+        - name: k8s_component
+          rules:
+          - alert: k8sApiServerNotOk
+            expr: k8s_api_server_count{error!="ok"} > 0
+            for: 30m
+            annotations:
+              summary: "api server in {{$labels.host_ip}} is {{$labels.error}}"
+
+          - alert: k8sDockerDaemonNotOk
+            expr: docker_daemon_count{error!="ok"} > 0
+            for: 30m
+            annotations:
+              summary: "docker daemon in {{$labels.ip}} is {{$labels.error}}"
+  kill-idle.rules: ""
+  node.rules: |
+    groups:
+        - name: node-rules
+          rules:
+          - alert: NodeDiskPressure
+            expr: pai_node_count{disk_pressure="true"} > 0
+            for: 30m
+            annotations:
+              summary: "{{$labels.name}} is under disk pressure"
+
+          - alert: NodeOutOfDisk
+            expr: pai_node_count{out_of_disk="true"} > 0
+            for: 10m
+            annotations:
+              summary: "{{$labels.name}} is out of disk"
+
+          - alert: NodeNotReady
+            expr: pai_node_count{ready!="true"} > 0
+            for: 10m
+            annotations:
+              summary: "{{$labels.name}} is not ready"
+
+          - alert: NFSHanging
+            expr: zombie_process_count{command="bash"} > 0
+            for: 10m
+            annotations:
+              summary: "User's job in {{$labels.instance}} is hanging in scheduling, will need to restart the node to recover"
+  services.rules: |
+    groups:
+        - name: services
+          rules:
+          - alert: ServicePodNotRunning
+            expr: pai_pod_count{phase!="running"} > 0
+            for: 30m
+            annotations:
+              summary: "{{$labels.name}} in {{$labels.host_ip}} not running detected"
+
+          - alert: ServicePodNotReady
+            expr: pai_pod_count{phase="running", ready="false"} > 0
+            for: 30m
+            labels:
+              type: pai_service
+            annotations:
+              summary: "{{$labels.name}} in {{$labels.host_ip}} not ready detected"
+
+          - alert: ServiceNotUp
+            expr: up != 1
+            for: 30m
+            labels:
+              type: pai_service
+            annotations:
+              summary: "{{$labels.pai_service_name}} in {{$labels.instance}} not up detected"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: prometheus-alert
+  namespace: kube-system

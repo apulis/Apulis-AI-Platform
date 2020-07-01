@@ -1,0 +1,92 @@
+
+
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-deployment-arm64
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      name: prometheus
+      labels:
+        task: monitoring
+        app: prometheus
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: '9092'
+    spec:
+      nodeSelector:
+        prometheus: active
+        archType: arm64
+      hostNetwork: true
+      initContainers:
+      - name: init
+        image: bash:5
+        volumeMounts:
+        - name: prometheus-data
+          mountPath: /prometheus-data
+        command: ["chmod", "777", "/prometheus-data"] # newly create dir have permission 755, which makes prometheus container unable to write
+      serviceAccountName: prometheus
+      
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.18.0
+        resources:
+          limits:
+            memory: "10Gi"
+          requests:
+            memory: "256Mi"
+        args:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--web.listen-address=0.0.0.0:9091'
+          - '--web.external-url=http://localhost:9091/prometheus/'
+          - '--web.route-prefix=prometheus'
+          - '--storage.tsdb.path=/prometheus-data'
+          - '--storage.tsdb.retention=365d'
+        ports:
+        - name: web
+          containerPort: 9091
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus
+        - name: rules-volume
+          mountPath: /etc/prometheus-alert
+        - name: prometheus-data
+          mountPath: /prometheus-data
+      - name: gpu-reporter
+        image: apulistech/atlas_gpu-reporter:latest-arm64
+        args:
+          - 'python'
+          - '/gpu-reporter/reporter.py'
+          - '--prometheus_url'
+          - 'http://localhost:9091'
+          - '--port'
+          - '9092'
+        ports:
+        - name: reporter
+          containerPort: 9092
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-configmap
+      - name: rules-volume
+        configMap:
+          name: prometheus-alert
+      - name: prometheus-data
+        hostPath:
+          path: /data/prometheus/data
+      tolerations:
+      - key: node.kubernetes.io/memory-pressure
+        operator: "Exists"
+      - key: node.kubernetes.io/disk-pressure
+        operator: "Exists"
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

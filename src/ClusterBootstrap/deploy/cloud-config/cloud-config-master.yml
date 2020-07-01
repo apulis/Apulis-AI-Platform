@@ -1,0 +1,133 @@
+#cloud-config
+coreos:
+  update:
+    reboot-strategy: off
+  units:
+    # There should be exactly 4 spaces before
+    - name: update-engine.service
+      command: stop
+    - name: locksmithd.service
+      command: stop
+    - name: reportcluster.service
+      command: start
+      content: |
+        [Unit]
+        Description=Report node to cluster portal
+        After=network-online.target
+        Requires=network-online.target
+        [Service]
+        #RemainAfterExit=true
+        Restart=always
+        RestartSec=60s
+        ExecStart=/bin/bash /opt/report.sh
+        [Install]
+        WantedBy=local.target
+    - name: nvidia-driver.service
+      command: start
+      content: |
+        [Unit]
+        Description=Install Nvidia driver
+        After=local-fs.target network.target
+        Wants=docker.service 
+        [Service]
+
+        Environment=IMG=dlws/nvidia_driver:375.20 CNAME=nvidia-driver
+
+        RemainAfterExit=yes
+        Restart=on-failure
+        RestartSec=10
+        TimeoutStartSec=1200
+        TimeoutStopSec=120
+
+        ExecStartPre=/bin/bash -c 'if lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*"; then /usr/bin/docker inspect $IMG &> /dev/null || /usr/bin/docker pull $IMG ; else exit 0 ; fi'
+        ExecStartPre=/bin/bash -c 'if lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*"; then /usr/bin/docker rm $CNAME &> /dev/null; exit 0 ; else exit 0 ; fi'
+        ExecStartPre=/bin/bash -c 'if lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*"; then docker run --name $CNAME --privileged -v /opt/nvidia-driver:/opt/nvidia-driver -v /opt/bin:/opt/bin -v /dev:/dev $IMG && mkdir -p /etc/ld.so.conf.d/  && tee /etc/ld.so.conf.d/nvidia-ml.conf <<< /opt/nvidia-driver/current/lib64  && ldconfig ; else exit 0 ; fi'
+        ExecStart=/bin/true
+
+        [Install]
+        WantedBy=multi-user.target
+
+
+    - name: nvidia-docker.service
+      command: start
+      content: |
+        [Unit]
+        Description=NVIDIA Docker plugin
+        After=local-fs.target network.target nvidia-driver.service
+        Wants=docker.service nvidia-driver.service
+        [Service]
+        Environment="SOCK_DIR=/var/lib/nvidia-docker"
+        Environment="SPEC_FILE=/etc/docker/plugins/nvidia-docker.spec"
+        Environment="NVIDIA_VERSION=375.20"
+
+        Restart=on-failure
+        RestartSec=10
+        TimeoutStartSec=0
+        TimeoutStopSec=20
+
+
+        ExecStartPre=/bin/bash -c 'if [ ! -f /opt/bin/nvidia-docker ]; then wget -q -O - /tmp https://github.com/NVIDIA/nvidia-docker/releases/download/v1.0.1/nvidia-docker_1.0.1_amd64.tar.xz | sudo tar --strip-components=1 -C /opt/bin -Jxvf - ; fi'
+        ExecStartPre=/bin/bash -c 'if lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*"; then until [ -f /proc/driver/nvidia/version ] && grep -q $NVIDIA_VERSION /proc/driver/nvidia/version && lsmod | grep -qE "^nvidia" && [ -e /dev/nvidia0 ] && [ -e /opt/nvidia-driver/current/lib64/libnvidia-ml.so ] ; do /bin/echo "waiting for nvidia-driver..." ; /bin/sleep 2 ; done else exit 0 ; fi'
+        ExecStartPre=/bin/bash -c 'docker volume rm nvidia_driver_$NVIDIA_VERSION ; exit 0'
+        ExecStart=/bin/bash -c 'if lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*"; then PATH=$PATH:/opt/bin /opt/bin/nvidia-docker-plugin -s $SOCK_DIR ; else exit 0 ; fi'
+        ExecStartPost=/bin/bash -c '/bin/mkdir -p $( dirname $SPEC_FILE ) ; exit 0'
+        ExecStartPost=/bin/bash -c '/bin/echo unix://$SOCK_DIR/nvidia-docker.sock > $SPEC_FILE ; exit 0'
+        ExecStopPost=/bin/bash -c '/bin/rm -f $SPEC_FILE ; exit 0'
+        ExecStopPost=/bin/bash -c '/bin/rm /opt/nvidia-docker-plugin.log ; exit 0'
+        ExecStopPost=/bin/bash -c 'docker volume rm nvidia_driver_$NVIDIA_VERSION ; exit 0'
+
+        [Install]
+        WantedBy=multi-user.target
+
+    - name: rpc-statd.service
+      command: start
+      enable: true
+    - name: dlwsdata.mount
+      command: start
+      enable: true
+      content: |
+        [Mount]
+        What=
+        Where=/dlwsdata
+        Type=nfs
+        [Install]
+        WantedBy = multi-user.target
+
+
+
+ssh_authorized_keys:
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCsKym1yByYVrPaQWumD2dI3VyDFjMSPJUTS6cMuz/KfgsMskvnyhumiwCXkxnb5obOyweuNrgHSPSOqgHK9r53lcb0kNd0NQZ1lkVHmV8fChQnrt2XElqm+WskCcJ+jYgWEC7LvSHSwLyCwbWoOCM6KkjVwDMrxPOjBP+D8G/jCKZnwgbogw7ToymAgPlcIpiFAHjsv8fRdMPSxOiOpG7E+p5zh/mD99RTeb5Mo5+KtiyR9kwSEnVXlzQycTmWIa36tgKVDS2M01dBiZM3abHIxoNVj21AyGZd3Ioi8j0IfTIOVjDkdTzkpRNyPOjv4tMh+oRAudCFycEudlnx5uOuZBLLVkmUU6nMAn2sbs8MZS4t+n1ZWOAr44kOdcdvxzJKHtsxnmeZ/Lcz4rOc8ChYUnihJVuY4O/p9yPjyTDg5JGeZJtBGU79H05vSOURaFz++4VNGaDRa+uHa9qcjTXUb3y1fZD3FzopTNiqyHC3R4tpUlhybGtPxiv0msNggCWUrDW1vfLLTzhEZm/3xxY8mUC8qQ2s+xJV1HemutUtn4h5FBW81KuCg+WQmTGpxvru+MtVn3IwLnBD9nBuclVQ8Q73+4pNBh0jgP4MqhLVoNEK3B94ysmpT8KzsAcUuP8ZDOUc94iV+LP8HFpAqZOfFhfcm+1oG36kAa+dYHbirQ== root@DevDocker
+
+
+write_files:
+  # There should be exactly 2 spaces before
+  - path: "/opt/homeinserver"
+    permissions: "0755"
+    owner: "core"
+    content: |
+      http://dlws-clusterportal.westus.cloudapp.azure.com:5000
+      
+  - path: "/opt/homeininterval"
+    permissions: "0755"
+    owner: "core"
+    content: |
+      600
+      
+  - path: "/opt/discoverserver"
+    permissions: "0755"
+    owner: "core"
+    content: |
+      4.2.2.1
+
+  - path: "/opt/systemrole"
+    permissions: "0755"
+    owner: "core"
+    content: |
+      master
+
+  - path: "/opt/report.sh"
+    permissions: "0755"
+    owner: "root"
+    encoding: "base64"
+    content: |
+      IyEvYmluL2Jhc2ggCiMgT3B0aW9uYWwgYWRkaXRpb25hbCBzdGFydHVwIHNjcmlwdCB0byBiZSBleGVjdXRlZAoKIyBOb2RlIGhvbWUgaW4sIGZvciBib290c3RyYXAgc3RhZ2Ugb25seS4gCmV4cG9ydCBkaXNjb3ZlcnNlcnZlcj0iJChjYXQgL29wdC9kaXNjb3ZlcnNlcnZlcikiCi9iaW4vYmFzaCAtYyAndW50aWwgcGluZyAtYzEgJHtkaXNjb3ZlcnNlcnZlcn07IGRvIHNsZWVwIDE7IGRvbmU7JwoKaWYgWyAtZiAvb3B0L3N5c3RlbXJvbGUgXQp0aGVuCiAgIHN5c3RlbXJvbGU9IiQoY2F0IC9vcHQvc3lzdGVtcm9sZSkiCmVsc2UKICAgc3lzdGVtcm9sZT0id29ya2VyIgogICBlY2hvICRzeXN0ZW1yb2xlID4gL29wdC9zeXN0ZW1yb2xlCmZpCgppZiBbIC1mIC9vcHQvc3lzdGVtaWQgXQp0aGVuCiAgIHV1aWQ9JChjYXQgL29wdC9zeXN0ZW1pZCkKICAgc3lzdGVtbmFtZT0iJHtzeXN0ZW1yb2xlfS0ke3V1aWR9IgplbHNlCiAgIHV1aWQ9JCh1dWlkZ2VuKQogICBlY2hvICR1dWlkID4gL29wdC9zeXN0ZW1pZAogICBzeXN0ZW1uYW1lPSIke3N5c3RlbXJvbGV9LSR7dXVpZH0iCiAgICNob3N0bmFtZWN0bCBzZXQtaG9zdG5hbWUgJHN5c3RlbW5hbWUgICAKICAgZXhwb3J0IEhvc3RJUD0kKGlwIHJvdXRlIGdldCAke2Rpc2NvdmVyc2VydmVyfSB8IGF3ayAne3ByaW50ICRORjsgZXhpdH0nKQogICBob3N0bmFtZWN0bCBzZXQtaG9zdG5hbWUgJEhvc3RJUApmaQoKd2hpbGUgWyAtZiAvb3B0L2hvbWVpbnNlcnZlciBdOwpkbwogIGhvbWVpbnNlcnZlcj0iJChjYXQgL29wdC9ob21laW5zZXJ2ZXIpIgogIGRpc2NvdmVyc2VydmVyPSIkKGNhdCAvb3B0L2Rpc2NvdmVyc2VydmVyKSIKICBleHBvcnQgSG9zdElQPSQoaXAgcm91dGUgZ2V0ICR7ZGlzY292ZXJzZXJ2ZXJ9IHwgYXdrICd7cHJpbnQgJE5GOyBleGl0fScpCiAgY3VybCAiJHtob21laW5zZXJ2ZXJ9L1JlcG9ydD9ob3N0SVA9JEhvc3RJUCZzeXNJZD0kdXVpZCZjbHVzdGVySWQ9MzkyNGU1Y2EtMDBjOS00MjQ1LWE0OWYtMDhmODE3ZDFkOTU0JnJvbGU9JHN5c3RlbXJvbGUiIHx8IGVjaG8gIiEhIUNhbm5vdCByZXBvcnQgdG8gY2x1c3RlciBwb3J0YWwhISEgQ2hlY2sgdGhlIGludGVybmV0IGNvbm5lY3Rpb24iCiAgZWNobyAic3lzdGVtSWQ6JHV1aWQiCiAgZWNobyAic3lzdGVtcm9sZTokc3lzdGVtcm9sZSIKICBlY2hvICJIb3N0SVA6JEhvc3RJUCIKICBpZiBbIC1mIC9vcHQvaG9tZWluaW50ZXJ2YWwgXQogIHRoZW4KICAgIGhvbWVpbmludGVydmFsPSIkKGNhdCAvb3B0L2hvbWVpbmludGVydmFsKSIKICBlbHNlCiAgICBob21laW5pbnRlcnZhbD02CiAgZmkKICBzbGVlcCAkaG9tZWluaW50ZXJ2YWwKZG9uZQo=

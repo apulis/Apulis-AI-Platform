@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: elasticsearch
+  namespace: kube-system
+  labels:
+    app: elasticsearch
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/metrics'
+        prometheus.io/port: '9114'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        elasticsearch: active
+      initContainers:
+      - name: elasticsearch-sysctl
+        image: alpine:3.9
+        command:
+        - "/sbin/sysctl"
+        - "-w"
+        - "vm.max_map_count=262144"
+        securityContext:
+          privileged: true
+      - name: elasticsearch-chown
+        image: alpine:3.9
+        command:
+        - "chown"
+        - "-R"
+        - "1000:1000"
+        - "/usr/share/elasticsearch/data"
+        volumeMounts:
+        - name: elasticsearch
+          mountPath: /usr/share/elasticsearch/data
+      containers:
+      - name: elasticsearch
+        image: 'dlws/elasticsearch:6.8.5'
+        env:
+        
+        - name: 'node.name'
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: "discovery.zen.ping.unicast.hosts"
+          value: 'a,t,l,a,s,0,2,.,s,i,g,s,u,s,.,c,n'
+        - name: "http.port"
+          value: '9200'
+        - name: "transport.port"
+          value: '9300'
+        resources:
+          requests:
+            cpu: 100m
+        
+        ports:
+        - containerPort: 9200
+          name: http
+          protocol: TCP
+        - containerPort: 9300
+          name: transport
+          protocol: TCP
+        volumeMounts:
+        - name: elasticsearch
+          mountPath: /usr/share/elasticsearch/data
+      - name: elasticsearch-exporter
+        image: 'dlws/elasticsearch-exporter:1.1.0'
+        args:
+        - '--es.uri=http://127.0.0.1:9200'
+        - '--web.listen-address=:9114'
+        resources:
+          limits:
+            cpu: 1000m
+          requests:
+            cpu: 100m
+        ports:
+        - containerPort: 9114
+          name: web
+          protocol: TCP
+      
+      volumes:
+      - name: elasticsearch
+        hostPath:
+          path: /data/elasticsearch
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: kube-system
+  labels:
+    app: elasticsearch
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    app: elasticsearch
+  ports:
+  - name: http
+    port: 9200
+    targetPort: 9200

@@ -1,0 +1,63 @@
+{
+  "Logging": {
+    "IncludeScopes": false,
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    }
+  },
+  
+  "UserGroups": {'DLWSRegister': {'gid': '20001', 'uid': '20001-29999', 'Allowed': ['@gmail.com', '@live.com', '@outlook.com', '@hotmail.com', '@apulis.com']}, 'Live': {'gid': '508953967', 'uid': '7000000000-7999999999', 'Allowed': ['@live.com', '@hotmail.com', '@outlook.com']}, 'MicrosoftUsers': {'gid': '508953967', 'uid': '900000000-999999999', 'Allowed': ['@microsoft.com']}, 'DLWSAdmins': {'gid': '20001', 'uid': '20000', 'Allowed': ['jinlmsft@hotmail.com', 'jinli.ccs@gmail.com', 'jin.li@apulis.com', 'bifeng.peng@apulis.com', 'tianhui.liu@apulis.com', 'penghao.zeng@apulis.com', 'zenglong.chen@apulis.com']}, 'CCSAdmins': {'gid': '508953967', 'uid': '900000000-999999999', 'Allowed': ['hongzl@microsoft.com', 'anbhu@microsoft.com', 'jachzh@microsoft.com', 'zhexu@microsoft.com', 'dixu@microsoft.com', 'qixcheng@microsoft.com', 'jingzhao@microsoft.com', 'hayua@microsoft.com']}, 'Gmail': {'gid': '508953967', 'uid': '8000000000-8999999999', 'Allowed': ['@gmail.com']}},
+  "WinbindServers": ,
+  "DeployAuthentications": ['Corp', 'Live', 'Gmail'],
+
+
+  "DLClusters" : 
+  {
+     "atlas" : {
+        "AdminGroups": ['DLWSAdmins'],
+        "AuthorizedGroups": ['DLWSAdmins'],
+        "RegisterGroups": ['DLWSRegister'],
+        "ClusterId": "3924e5ca-00c9-4245-a49f-08f817d1d954",
+        "Restapi": "http://atlas02.sigsus.cn:5000",
+	"Grafana": "",
+        "WorkFolderAccessPoint": "/",
+        "DataFolderAccessPoint": "", 
+        "smbUsername":"", 
+        "smbUserPassword":"", 
+        "SQLHostname": "", 
+        "SQLUsername": "", 
+        "SQLPassword": "", 
+        "SQLDatabaseForUser": "AuthorizeUser-", 
+        "MySQLHostname": "atlas02.sigsus.cn", 
+        "MySQLPort": "3306", 
+        "MySQLUsername": "root", 
+        "MySQLPassword": "apulis#2019#wednesday",     
+        "datasource": "MySQL",        
+        "mountdescription" : "{'hdfs': 'Hadoop file system (replicated distribute storage).', 'azurefileshare': 'Azure file storage', 'localHDD': 'Local HDD. ', 'glusterfs': 'GlusterFS (replicated distributed storage)', 'nfs': 'NFS (remote file share)', 'emptyDir': 'Kubernetes emptyDir (folder will be erased after job termination).', 'local': 'Local SSD. '}",
+        "mountpoints" : "{'nfsshare1': {'mountpoints': '', 'filesharename': '/mnt/local', 'type': 'nfs', 'server': 'atlas02', 'curphysicalmountpoint': '/mntdlws'}}", 
+        "mounthomefolder" : "True",
+        "deploymounts" : "[]"
+        
+        
+        , "domain": "sigsus.cn"
+        
+    },
+  },
+
+  "MasterTemplates" :
+  {
+    "SQLHostname": "", 
+    "SQLUsername": "", 
+    "SQLPassword": "", 
+    "SQLDatabaseForTemplates": "Templates-master", 
+    "MySQLHostname": "atlas02.sigsus.cn", 
+    "MySQLPort": "3306", 
+    "MySQLUsername": "root", 
+    "MySQLPassword": "apulis#2019#wednesday",     
+    "datasource": "MySQL",
+  },
+
+
+}

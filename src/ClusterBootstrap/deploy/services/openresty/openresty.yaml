@@ -1,0 +1,39 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: openresty
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      openresty: active
+  template:
+    metadata:
+      name: openresty
+      labels:
+        app: openresty
+        openresty: active
+    spec:
+      
+      hostNetwork: true
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
+      containers:
+      - name: openresty
+        image: apulistech/atlas_openresty:latest
+        imagePullPolicy: Always
+        command: ["/start.sh"]
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 5080
+          timeoutSeconds: 10
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

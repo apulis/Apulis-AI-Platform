@@ -50,7 +50,7 @@
         function removeCustomAlert() {
             document.getElementsByTagName("body")[0].removeChild(document.getElementById("modalContainer"));
         }
-         alert("您当前没有钱江源集群权限。请联系管理员<br>或发邮件到qianjiangyuan@aliyun.com申请相关权限");
+         alert("您当前没有Apulis AI Platform集群权限。请联系管理员<br>或发邮件到dev@apulis.com申请相关权限");
     </script>
 }
 
@@ -58,7 +58,7 @@
 @if (ViewData["isAuthorized"] != null && (bool)ViewData["isAuthorized"])
 {
     <div class="row">
-        <h2>Welcome to QianJiangYuan, @ViewData["Username"] !</h2>
+        <h2>Welcome to Apulis AI Platform, @ViewData["Username"] !</h2>
         <span class="label label-default">Cluster Resource</span>
         <table id="cluster_status" class="table table-bordered table-condensed table-hover table-striped">
             <thead>
@@ -95,7 +95,7 @@ else
                 <img src="~/images/banner1.jpg" width="100%" alt="ASP.NET" class="img-responsive" />
                 <div class="carousel-caption" role="option">
                     <p>
-                        Welcome to QianJiangYuan!
+                        Welcome to Apulis AI Platform!
                     </p>
                 </div>
             </div>

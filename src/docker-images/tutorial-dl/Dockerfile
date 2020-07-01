@@ -1,5 +1,5 @@
 #First build Tutorial tensorflow
-FROM qianjiangyuan/tutorial-horovod:1.7
+FROM apulistech/tutorial-horovod:1.7
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 
 # Add Glove vectors 

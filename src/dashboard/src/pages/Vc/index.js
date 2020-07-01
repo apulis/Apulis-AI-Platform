@@ -224,9 +224,11 @@ export default class Vc extends React.Component {
 
   onNumValChange = (key, oldVal, m, type, val, max) => {
     const _val = Number(val);
+    const { quotaValidateObj } = this.state;
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       this.setState({
         quotaValidateObj: {
+          ...quotaValidateObj,
           [m]: {
             error: true,
             text: `Must be a positive integer from 0 to ${max}`
@@ -237,6 +239,7 @@ export default class Vc extends React.Component {
     } else {
       this.setState({
         quotaValidateObj: {
+          ...quotaValidateObj,
           [m]: empty
         }
       });
@@ -285,7 +288,6 @@ export default class Vc extends React.Component {
       qSelectData,
     })
   }
-
   render() {
     const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice, vcNameValidateObj } = this.state;
     return (

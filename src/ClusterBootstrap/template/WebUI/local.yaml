@@ -23,7 +23,7 @@ wechat:
   appSecret: "{{cnf["Authentications"]["Wechat"]["AppSecret"]}}"
 {% endif %}
 
-domain: "https://{{cnf["webportal_node"]}}"
+domain: "http://{{cnf["webportal_node"]}}"
 casUrl: "http://{{cnf["webportal_node"]}}/cas"
 
 administrators:
@@ -40,6 +40,6 @@ clusters:
       prometheus: http://{{cnf["restfulapi_node"]}}:9091
 userGroup:
   type: custom
-  domain: "https://{{cnf["webportal_node"]}}"
+  domain: "http://{{cnf["webportal_node"]}}"
   backEndPath: /custom-user-dashboard-backend
   frontEndPath: /custom-user-dashboard

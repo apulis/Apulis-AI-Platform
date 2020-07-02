@@ -38,7 +38,7 @@ const advance = {
     environmentVariableValue:'环境变量值',
     jobNameIsRequired:'请输入任务名',
     dockerImageIsRequired:'请输入docker镜像',
-    commandIsRequired:'请输入命令',
+    commandIsRequired:'请输入指令',
     tensorboardListenTips:'在docker容器中，tensorboard将监听的目录：~/tensorboard/<JobId>/logs'
 }
 const template = {

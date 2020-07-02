@@ -22,20 +22,36 @@ const training = {
 }
 const userActionTips = {
     pauseJob:'Pause job',
+    resumeJob:'Resume job',
     isBeingPaused:'is being paused.',
     pauseRequestAccepted:'\'s pause request is accepted.',
     isFailedToPause:'is failed to pause.',
 }
+const warnConstants = {
+    SUCCESSFULLYAPPROVED : "Successfully scheduled for approving",
+    SUCCESSFULLYPAUSED : "Successfully scheduled for  pausing",
+    SUCCESSFULLYRESUMED : "Successfully scheduled for resuming",
+    SUCCESSFULLYUPDATEDPRIORITY : "Successfully updated priority",
+    SUCESSFULKILLED : "Successfully scheduled for killing",
+    SUCCESSFULSUBMITTED : "Job submitted successfully",
+    SUCCESSFULTEMPLATEDELETE : "Template deleted",
+    SUCCESSFULTEMPLATEDSAVE : "Template saved",
+}
+const global = {
+    deepLearningPlatform:'Apulis Deep Learning Platform ',
+}
 export default{
+    ...global,
     ...allJobTips,
     ...myJobsTips,
     ...priorityField,
     ...training,
     ...userActionTips,
+    ...warnConstants,
     NameErrorText:'The Name Must be composed of letter, numbers, underscore or horizontal line！',
     SameNameErrorText:'Already has the same name!',
     NoChineseErrorText:'Cannot contain Chinese characters!',
     OneInteractivePortsMsg:'Must be a positive integer between 40000 and 49999！',
     InteractivePortsMsg:'Must be a positive integer between 40000 and 49999！Multiple can be separated by comma.',
-    NoNumberText:'Cannot contain numbers'
+    NoNumberText:'Cannot contain numbers',
 }

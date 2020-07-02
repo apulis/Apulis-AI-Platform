@@ -5,6 +5,11 @@ const index = {
     myJobs:'我的任务',
     allJobs:'所有任务'
 }
+const priorityField ={
+    priorityIsSetSuccessfully:'优先级设置成功',
+    failedToSetPriority:'优先级设置失败',
+    priorityIsBeingSet:'正在设置优先级...',
+}
 const myJob = {
     id:'Id',
     name:'名称',
@@ -64,6 +69,7 @@ const endpoints = {
 }
 export default{
     ...index,
+    ...priorityField,
     ...myJob,
     ...allJob,
     ...materialTable,

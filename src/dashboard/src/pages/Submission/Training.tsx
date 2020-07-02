@@ -41,14 +41,10 @@ import theme, { Provider as MonospacedThemeProvider } from "../../contexts/Monos
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
 import {green, grey, red} from "@material-ui/core/colors";
 import {DLTSDialog} from "../CommonComponents/DLTSDialog";
-import {
-  SUCCESSFULSUBMITTED,
-  SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
-} from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, 
-  NoNumberReg, NoNumberText } from '../../const';
+import { NameReg, NoChineseReg, 
+  NoNumberReg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -120,6 +116,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [showSaveTemplate, setSaveTemplate] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
+  const SUCCESSFULSUBMITTED = t('tips.SUCCESSFULSUBMITTED')
+  const SUCCESSFULTEMPLATEDELETE = t('tips.SUCCESSFULTEMPLATEDELETE')
+  const SUCCESSFULTEMPLATEDSAVE = t('tips.SUCCESSFULTEMPLATEDSAVE')
   const [allDevice, setAllDevice] = useState<{
     [name: string]: { deviceStr: string }
   }>({});
@@ -650,6 +649,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const jobNameIsRequired = t('submission.jobNameIsRequired');
   const dockerImageIsRequired = t('submission.dockerImageIsRequired');
   const commandIsRequired = t('submission.commandIsRequired');
+  const NoNumberText = t('tips.NoNumberText');
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
@@ -877,7 +877,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     InputLabelProps={{ shrink: true }}
                     onChange={e => setInteractivePorts(e.target.value)}
                     error={Boolean(errors.interactivePorts)}
-                    helperText={errors.interactivePorts ? InteractivePortsMsg : ''}
+                    helperText={errors.interactivePorts ? t('tips.InteractivePortsMsg') : ''}
                     inputRef={register({
                       validate: val => validateInteractivePorts(val)
                     })}
@@ -1087,7 +1087,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             inputRef={register({
                               pattern: {
                                 value: NoNumberReg,
-                                message: NoNumberText
+                                message:NoNumberText
                               }
                             })}
                           />
@@ -1178,12 +1178,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         </form>
         {deleteModal &&
         <Dialog open={deleteModal} maxWidth='xs' fullWidth onClose={() => setDeleteModal(false)}>
-          <DialogTitle>Delete Template</DialogTitle>
+          <DialogTitle>{t('submission.deleteTemplate')}</DialogTitle>
           <DialogContent>
             <TextField
               disabled={templates.length === 0}
               select
-              label="Select Template"
+              label={t('submission.selectTemplate')}
               fullWidth
               variant="filled"
               value={selectDelTPName}
@@ -1196,10 +1196,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteModal(false)} color="primary">
-              Cancel
+            {t('submission.cancel')}
             </Button>
             <Button onClick={onDeleteTemplateClick} color="secondary">
-            Delete
+            {t('submission.delete')}
             </Button>
           </DialogActions>
         </Dialog>}

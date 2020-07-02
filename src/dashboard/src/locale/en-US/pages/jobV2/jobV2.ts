@@ -7,7 +7,13 @@ const index = {
 const endpoints = {
     newInteractivePort:'New Interactive Port',
     tensorBoardWillListenOnDirectory:'TensorBoard will listen on directory',
-    insideDockerContainer:'inside docker container.'
+    insideDockerContainer:'inside docker container.',
+    enabled:'enabled',
+    enabling:'Enabling',
+    failedToEnable:'Failed to enable',
+    jobIs:'Job is',
+    now:'now.',
+    interactivePortIsRequired:'Interactive Port is required！',
 }
 const brief = {
     jobId:'Job Id',
@@ -24,8 +30,12 @@ const brief = {
     jobStatus:'Job Status',
     jobSubmissionTime:'Job Submission Time'
 }
+const console = {
+    becauseThisJobHasNotStarted:'Because this job has not started, there is no logs'
+}
 export default{
     ...index,
     ...endpoints,
-    ...brief
+    ...brief,
+    ...console,
 }

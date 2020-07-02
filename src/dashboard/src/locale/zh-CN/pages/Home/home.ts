@@ -11,7 +11,8 @@ const gpuCard = {
     chartUsed:"已用",
     noResources:"没有资源",
     chartUnschedulable:'不可调度的',
-    activeJobs:'个运行中任务'
+    activeJobs:'个运行中任务',
+    successfullyCopied:'复制成功',
 }
 export default{
     ...gpuCard

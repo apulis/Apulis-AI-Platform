@@ -64,12 +64,12 @@ ${userName}
     return confirm(`Approve job ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being approved.`);
+      enqueueSnackbar(`${title}${t('hooks.isBeingApproved')}`);
       return updateStatus(job.jobId, 'approved').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s approve request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('hooks.approveRequestIsAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to approve.`, { variant: 'error' });
+          enqueueSnackbar(`${title}${t('hooks.isFailedToApprove')}`, { variant: 'error' });
         }
       });
     });
@@ -93,15 +93,15 @@ ${userName}
 
   const onResume = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`Resume job ${title} ?`).then((answer) => {
+    return confirm(`t('tips.resumeJob')} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being resumed.`);
+      enqueueSnackbar(`${title}${t('hooks.isBeingResumed')}`);
       return updateStatus(job.jobId, 'queued').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s resume request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('hooks.resumeRequestIsAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to resume.`, { variant: 'error' });
+          enqueueSnackbar(`${title}${t('hooks.isFailedToResume')}`, { variant: 'error' });
         }
       });
     });
@@ -112,12 +112,12 @@ ${userName}
     return confirm(`Kill job ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being killed.`);
+      enqueueSnackbar(`${title}${t('hooks.isBeingKilled')}`);
       return updateStatus(job.jobId, 'killing').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s kill request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('hooks.killRequestIsAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to kill.`, { variant: 'error' });
+          enqueueSnackbar(`${title}${t('hooks.isFailedToKill')}`, { variant: 'error' });
         }
       });
     });

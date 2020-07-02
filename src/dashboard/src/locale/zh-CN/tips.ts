@@ -16,21 +16,37 @@ const training = {
     Failedtodeletethetemplate:'删除模板失败',
     TemplateNameisrequired:'请输入模板名称',
     TherewontbeenoughworkersmatchyourrequestnProceed:'There won\'t be enough workers match your request.\nProceed?',
-    Mustbeapositiveintegerfrom0to:'必须是一个从0到',
+    Mustbeapositiveintegerfrom0to:'必须是一正整数，可选范围 0 -',
     andcanonlybeoneof01248:'并且只能是0、1、2、4、8中的一个',
 }
 const userActionTips = {
     pauseJob:'停止任务',
+    resumeJob:'继续任务',
     isBeingPaused:'正在停止。',
     pauseRequestAccepted:'的停止请求已经发起',
     isFailedToPause:'停止失败',
+}
+const warnConstants = {
+    SUCCESSFULLYAPPROVED : "批准成功",
+    SUCCESSFULLYPAUSED : "暂停成功",
+    SUCCESSFULLYRESUMED : "恢复成功",
+    SUCCESSFULLYUPDATEDPRIORITY : "更新优先级成功",
+    SUCESSFULKILLED : "中断成功",
+    SUCCESSFULSUBMITTED : "任务提交成功",
+    SUCCESSFULTEMPLATEDELETE : "删除模板成功",
+    SUCCESSFULTEMPLATEDSAVE : "保存模板成功",
+}
+const global = {
+    deepLearningPlatform:'Apulis Deep Learning Platform ',
 }
 export default{
     ...allJobTips,
     ...myJobsTips,
     ...priorityField,
     ...training,
+    ...global,
     ...userActionTips,
+    ...warnConstants,
     NameErrorText:'名称必须由字母、数字、下划线或水平线组成!',
     SameNameErrorText:'已经有相同的名字了!',
     NoChineseErrorText:'不能包含汉字!',

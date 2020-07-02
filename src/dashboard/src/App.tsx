@@ -27,6 +27,7 @@ import ROUTER from './router.config';
 
 import en from './locale/en-US';
 import cn from './locale/zh-CN';
+import { useTranslation } from "react-i18next";
 
 const theme = createMuiTheme();
 
@@ -140,12 +141,13 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 }
 
 const App: React.FC<BootstrapProps> = (props) => {
+  const {t} = useTranslation();
   return (
     <SnackbarProvider>
       <Contexts {...props} >
       <Helmet
-        titleTemplate="Apulis Deep Learning Platform"
-        defaultTitle="Apulis Deep Learning Platform"
+        titleTemplate={t('tips.deepLearningPlatform')}
+        defaultTitle={t('tips.deepLearningPlatform')}
       />
       <CssBaseline/>
       <Box display="flex" minHeight="100vh" maxWidth="100vw">

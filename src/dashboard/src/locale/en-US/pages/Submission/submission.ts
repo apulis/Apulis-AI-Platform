@@ -47,7 +47,11 @@ const template = {
     templateName:'Template name',
     scope:'Scope',
     save:'Save',
-    delete:'Delete'
+    delete:'Delete',
+    deleteTemplate:'Delete Template',
+    selectTemplate:'Select Template',
+    cancel:'CANCEL',
+    templateSaved:'Template saved',
 }
 export default{
     ...index,

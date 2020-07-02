@@ -37,6 +37,7 @@ import {checkObjIsEmpty, toLocalTime} from "../../utlities/ObjUtlities";
 import ReactJson from "react-json-view";
 import TablePagination from "@material-ui/core/TablePagination";
 import {checkFinishedJob} from "../../utlities/interactionUtlties";
+import { useTranslation } from "react-i18next";
 
 const variantIcon = {
   success: CheckCircleIcon,
@@ -93,6 +94,12 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 const Jobs: React.FC = (props: any) => {
+  const {t} = useTranslation();
+  const SUCCESSFULLYAPPROVED = t('tips.SUCCESSFULLYAPPROVED')
+  const SUCCESSFULLYPAUSED= t('tips.SUCCESSFULLYPAUSED')
+  const SUCCESSFULLYRESUMED= t('tips.SUCCESSFULLYRESUMED')
+  const SUCCESSFULLYUPDATEDPRIORITY= t('tips.SUCCESSFULLYUPDATEDPRIORITY')
+  const SUCESSFULKILLED= t('tips.SUCESSFULKILLED')
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
   const [refresh, setRefresh] = React.useState(window.navigator.userAgent.indexOf('Edge') == -1);

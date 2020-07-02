@@ -7,7 +7,13 @@ const index = {
 const endpoints = {
     newInteractivePort:'新建交互端口',
     tensorBoardWillListenOnDirectory:'TensorBoard将监听docker容器内部中的目录地址：',
-    insideDockerContainer:''
+    insideDockerContainer:'',
+    enabled:'启动成功',
+    enabling:'启动中',
+    failedToEnable:'启动失败',
+    jobIs:'任务正在',
+    now:'',
+    interactivePortIsRequired:'请输入交互式端口',
 }
 const brief = {
     jobId:'任务 Id',
@@ -24,8 +30,12 @@ const brief = {
     jobStatus:'任务状态',
     jobSubmissionTime:'任务提交时间'
 }
+const console = {
+    becauseThisJobHasNotStarted:'任务未开始，没有日志',
+}
 export default{
     ...index,
     ...endpoints,
-    ...brief
+    ...brief,
+    ...console,
 }

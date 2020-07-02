@@ -20,7 +20,9 @@ const jobStatus = {
     'failed at ':'failed at ',
     'finished at ':'finished at ',
     'killed at ':'killed at ',
-    'toUse':'to use'
+    'toUse':'to use',
+    'waiting for available resource. requested: ':'waiting for available resource. requested: ',
+    '. available: ':'. available: ',
 }
 export default{
     ...jobStatus,

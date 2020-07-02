@@ -12,7 +12,7 @@ const gpuCard = {
     noResources:"NO Resources",
     chartUnschedulable:'Unschedulable',
     activeJobs:'Active Jobs',
-
+    successfullyCopied:'Successfully copied',
 }
 export default{
     ...gpuCard

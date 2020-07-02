@@ -259,7 +259,7 @@ export const DirectoryPathTextField: FC<{
           )
         }}
       />
-      <DLTSSnackbar message={"Successfully copied"} autoHideDuration={500} open={openCopyWarn} handleWarnClose={handleWarnClose} />
+      <DLTSSnackbar message={t('home.successfullyCopied')} autoHideDuration={500} open={openCopyWarn} handleWarnClose={handleWarnClose} />
     </>
   );
 }

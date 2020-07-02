@@ -169,6 +169,7 @@ const UnmanagableJob: FunctionComponent = () => {
 }
 
 const JobContent: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { email, userName } = useContext(UserContext);
@@ -233,7 +234,7 @@ const JobContent: FunctionComponent = () => {
   const status = useMemo(() => job && job['jobStatus'], [job]);
   const previousStatus = usePrevious(status);
   if (previousStatus !== undefined && status !== previousStatus) {
-    enqueueSnackbar(`Job is ${status} now.`, { variant: "info" });
+    enqueueSnackbar(`${t('jobV2.jobIs')} ${t('components.'+status)} t('jobV2.now')`, { variant: "info" });
   }
 
   if (cluster === undefined || job === undefined) {

@@ -37,6 +37,33 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
   , [status]);
   const label = useMemo(() => capitalize(t('components.'+status)), [status]);
   const detail = useMemo<Array<any>>(() => job['jobStatusDetail'], [job]);
+  const splitMessage = (msg:string)=>{
+    let arr = []
+    let stack = []
+    let cur = ''
+    for(let char of msg){
+        if(char==='{'){
+            if(cur){
+                arr.push(cur)
+                cur = '{'
+            }
+        }
+        else if(char==='}'){
+            if(cur){
+                cur+=char
+                arr.push(cur)
+                cur = ''
+            }
+        }
+        else{
+            cur += char
+        }
+    }
+    if(cur){
+        arr.push(cur)
+    }
+    return arr
+}
   const title = useMemo(() => {
     if (!Array.isArray(detail)) return null;
     if (detail.length === 0) return null;
@@ -48,20 +75,15 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
       const idx2 = firstDetailMessage.indexOf('+');
       if (idx1 > -1 && idx2 > -1) {
         // todo
-        console.log('firstDetailMessage',firstDetailMessage)
         const oldStr = firstDetailMessage.slice(idx1, idx2);
         const time = new Date(`${oldStr}+00:00`).toLocaleString('en');
         const temp1 = firstDetailMessage.split(oldStr);
         const temp2 = firstDetailMessage.split(temp1[1]);
-        console.log('oldStr',oldStr)
-        console.log('time',time)
-        console.log('temp1',temp1)
-        console.log('temp2',temp2)
-        console.log(t)
         const msg = `${t('components.'+temp1[0])}${time}${temp2[1]}`;
         return msg;
       }
-      return firstDetailMessage;
+      let arr = splitMessage(firstDetailMessage);
+      return t('components.'+arr[0])+arr[1]+t('components.'+arr[2])+arr[3];
     };
     if (typeof firstDetailMessage === 'object') return (
       <pre>{JSON.stringify(firstDetailMessage, null, 2)}</pre>

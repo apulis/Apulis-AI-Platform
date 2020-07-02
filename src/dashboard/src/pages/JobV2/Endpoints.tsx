@@ -31,7 +31,7 @@ import Loading from '../../components/Loading';
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import Context from './Context';
 import { useForm } from "react-hook-form";
-import { OneInteractivePortsMsg, pollInterval } from '../../const';
+import {pollInterval } from '../../const';
 import message from '../../utils/message';
 import axios from 'axios';
 import useInterval from '../../hooks/useInterval';
@@ -142,19 +142,19 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
     const _name = name === 'iPython' ? 'Jupyter' : name;
-    enqueueSnackbar(`Enabling ${_name}...`);
+    enqueueSnackbar(`${t('jobV2.enabling')} ${_name}...`);
     post({
       endpoints: [name.toLowerCase()]
     }).then(() => {
-      enqueueSnackbar(`${_name} enabled`, { variant: 'success' })
+      enqueueSnackbar(`${_name} ${t('jobV2.enabled')}`, { variant: 'success' })
     }, () => {
-      enqueueSnackbar(`Failed to enable ${_name}`, { variant: 'error' })
+      enqueueSnackbar(`${t('jobV2.failedToEnable')} ${_name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
 
   const onSubmit = (data: any) => {
     if (!data.interactivePorts) {
-      setError('interactivePorts', 'validate', 'Interactive Port is required！');
+      setError('interactivePorts', 'validate', t('jobV2.interactivePortIsRequired'));
       return;
     }
     const port = Number(data.interactivePorts);

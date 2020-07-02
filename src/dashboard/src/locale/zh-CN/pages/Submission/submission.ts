@@ -9,7 +9,7 @@ const index = {
     deviceType:'设备类型',
     noneApplyAtemplate:'无（应用模板）',
     regularJob:'常规任务',
-    distributedJob:'分配任务',
+    distributedJob:'分布式任务',
     numberOfNodes:'节点数量',
     totalNumberOfDevice:'全部设备数量',
     deviceNumber:'设备数量',
@@ -46,7 +46,11 @@ const template = {
     templateName:'模板名称',
     scope:'作用域',
     save:'保存',
-    delete:'删除'
+    delete:'删除',
+    deleteTemplate:'删除模板',
+    selectTemplate:'选择模板',
+    cancel:'取消',
+    templateSaved:'模板保存成功',
 }
 export default{
    ...index,

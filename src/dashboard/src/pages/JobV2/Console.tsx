@@ -11,6 +11,7 @@ import useFetch from 'use-http-2';
 import { useSnackbar } from 'notistack';
 
 import Loading from '../../components/Loading';
+import { useTranslation } from "react-i18next";
 
 interface RouteParams {
   clusterId: string;
@@ -18,6 +19,7 @@ interface RouteParams {
 }
 
 const Console: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { error, data, get, response } = useFetch(
@@ -71,7 +73,7 @@ const Console: FunctionComponent = () => {
     return (
       <Box p={1} style={{ overflow: 'auto' }}>
         <Box m={0} component="pre">
-          Because this job has not started, there is no logs
+          {t('jobV2.becauseThisJobHasNotStarted')}
         </Box>
       </Box>
     )

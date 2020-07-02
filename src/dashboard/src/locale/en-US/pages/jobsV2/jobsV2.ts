@@ -3,6 +3,11 @@ const index = {
     myJobs:'My Jobs',
     allJobs:'All Jobs'
 }
+const priorityField ={
+    priorityIsSetSuccessfully:'Priority is set successfully',
+    failedToSetPriority:'Failed to set priority',
+    priorityIsBeingSet:'Priority is being set...',
+}
 const myJob = {
     id:'Id',
     name:'Name',
@@ -64,6 +69,7 @@ export default{
     ...index,
     ...myJob,
     ...allJob,
+    ...priorityField,
     ...materialTable,
     ...endpoints
 }

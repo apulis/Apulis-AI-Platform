@@ -21,6 +21,8 @@ const jobStatus = {
     'finished at ':'完成于： ',
     'killed at ':'终止于： ',
     'toUse':'可用',
+    'waiting for available resource. requested: ':'等待可用资源，已请求资源：',
+    '. available: ':'可用资源： ',
 }
 export default{
     ...jobStatus,

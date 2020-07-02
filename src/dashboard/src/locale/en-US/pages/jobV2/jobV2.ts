@@ -2,7 +2,9 @@ const index = {
     brief:'Brief',
     endpoints:'Endpoints',
     metrics:'Metrics',
-    console:'Console'
+    console:'Console',
+    failedToFetchClusterConfig:'Failed to fetch cluster config:',
+    failedToFetchJob:'Failed to fetch job:',
 }
 const endpoints = {
     newInteractivePort:'New Interactive Port',
@@ -14,6 +16,11 @@ const endpoints = {
     jobIs:'Job is',
     now:'now.',
     interactivePortIsRequired:'Interactive Port is required！',
+    port:'Port',
+    exposed:'exposed',
+    failedToExposePort:'Failed to expose port',
+    exposingPort:'Exposing port',
+    alreadyHasPort:'Already has port',
 }
 const brief = {
     jobId:'Job Id',

@@ -199,7 +199,7 @@ const JobContent: FunctionComponent = () => {
 
   useEffect(() => {
     if (clusterError !== undefined) {
-      const key = enqueueSnackbar(`Failed to fetch cluster config: ${clusterId}`, {
+      const key = enqueueSnackbar(`t('jobV2.failedToFetchClusterConfig')} ${clusterId}`, {
         variant: 'error',
         persist: true
       });
@@ -227,14 +227,14 @@ const JobContent: FunctionComponent = () => {
         if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
         if (!(temp1 === temp2)) setJob(data);
       }, () => {
-        message('error', `Failed to fetch job: ${clusterId}/${jobId}`);
+        message('error', `${t('jobV2.failedToFetchJob')} ${clusterId}/${jobId}`);
       })
   }
 
   const status = useMemo(() => job && job['jobStatus'], [job]);
   const previousStatus = usePrevious(status);
   if (previousStatus !== undefined && status !== previousStatus) {
-    enqueueSnackbar(`${t('jobV2.jobIs')} ${t('components.'+status)} t('jobV2.now')`, { variant: "info" });
+    enqueueSnackbar(`${t('jobV2.jobIs')} ${t('components.'+status)} ${t('jobV2.now')}`, { variant: "info" });
   }
 
   if (cluster === undefined || job === undefined) {

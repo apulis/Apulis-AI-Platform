@@ -93,7 +93,7 @@ ${userName}
 
   const onResume = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`t('tips.resumeJob')} ${title} ?`).then((answer) => {
+    return confirm(`${t('tips.resumeJob')} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
       enqueueSnackbar(`${title}${t('hooks.isBeingResumed')}`);
@@ -109,7 +109,7 @@ ${userName}
 
   const onKill = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`Kill job ${title} ?`).then((answer) => {
+    return confirm(`${t('tips.killJob')} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
       enqueueSnackbar(`${title}${t('hooks.isBeingKilled')}`);

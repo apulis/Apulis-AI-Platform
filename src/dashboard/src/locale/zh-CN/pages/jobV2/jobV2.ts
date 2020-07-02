@@ -2,7 +2,9 @@ const index = {
     brief:'简介',
     endpoints:'终端',
     metrics:'指标',
-    console:'控制台'
+    console:'控制台',
+    failedToFetchClusterConfig:'获取集群配置失败:',
+    failedToFetchJob:'获取任务失败',
 }
 const endpoints = {
     newInteractivePort:'新建交互端口',
@@ -14,6 +16,11 @@ const endpoints = {
     jobIs:'任务正在',
     now:'',
     interactivePortIsRequired:'请输入交互式端口',
+    port:'端口',
+    exposed:'已经暴露',
+    failedToExposePort:'暴露端口失败',
+    exposingPort:'正在暴露端口',
+    alreadyHasPort:'已经存在端口',
 }
 const brief = {
     jobId:'任务 Id',

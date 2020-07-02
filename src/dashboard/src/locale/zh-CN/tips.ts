@@ -15,7 +15,7 @@ const training = {
     Needselectonetemplate:'需要保存一个模板',
     Failedtodeletethetemplate:'删除模板失败',
     TemplateNameisrequired:'请输入模板名称',
-    TherewontbeenoughworkersmatchyourrequestnProceed:'There won\'t be enough workers match your request.\nProceed?',
+    TherewontbeenoughworkersmatchyourrequestnProceed:'没有足够的工作节点 \n是否继续?',
     Mustbeapositiveintegerfrom0to:'必须是一正整数，可选范围 0 -',
     andcanonlybeoneof01248:'并且只能是0、1、2、4、8中的一个',
 }
@@ -37,7 +37,7 @@ const warnConstants = {
     SUCCESSFULTEMPLATEDSAVE : "保存模板成功",
 }
 const global = {
-    deepLearningPlatform:'Apulis Deep Learning Platform ',
+    deepLearningPlatform:'Apulis 深度学习平台 ',
 }
 export default{
     ...allJobTips,

@@ -161,22 +161,22 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
     for (const i of endpoints) {
       const { status, podPort, name } = i;
       if (status === 'running' && name !== 'ssh' && name !== 'ipython' && name !== 'tensorboard' && podPort === port) {
-        enqueueSnackbar(`Already has port ${port}！`, { variant: 'error' });
+        enqueueSnackbar(`${t('jobV2.alreadyHasPort')} ${port}！`, { variant: 'error' });
         return;
       }
     }
-    enqueueSnackbar(`Exposing port ${port}...`);
+    enqueueSnackbar(`${t('jobV2.exposingPort')} ${port}...`);
     post({
       endpoints: [{
         name: `port-${port}`,
         podPort: port
       }]
     }).then(() => {
-      enqueueSnackbar(`Port ${port} exposed`, { variant: 'success' });
+      enqueueSnackbar(`${t('jobV2.port')} ${port} ${t('jobV2.exposed')}`, { variant: 'success' });
       setValue('interactivePorts', '');
       setPollTime(pollInterval);
     }, () => {
-      enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
+      enqueueSnackbar(`${t('jobV2.port')} ${port}`, { variant: 'error' });
     });
   };
 

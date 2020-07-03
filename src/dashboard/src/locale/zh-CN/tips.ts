@@ -22,6 +22,7 @@ const training = {
 const userActionTips = {
     pauseJob:'停止任务',
     resumeJob:'继续任务',
+    killJob:'中断任务',
     isBeingPaused:'正在停止。',
     pauseRequestAccepted:'的停止请求已经发起',
     isFailedToPause:'停止失败',

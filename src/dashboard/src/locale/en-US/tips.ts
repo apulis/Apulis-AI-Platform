@@ -23,6 +23,7 @@ const training = {
 const userActionTips = {
     pauseJob:'Pause job',
     resumeJob:'Resume job',
+    killJob:'Kill job',
     isBeingPaused:'is being paused.',
     pauseRequestAccepted:'\'s pause request is accepted.',
     isFailedToPause:'is failed to pause.',

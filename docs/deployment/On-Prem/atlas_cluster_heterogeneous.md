@@ -34,7 +34,7 @@
 * 所有节点：允许SSH连接
 * GPU节点：预装NVIDIA GPU驱动，请参考[安装手册](https://docs.nvidia.com/datacenter/tesla/sla-installation-notes/index.html#ubuntu-lts)
 * NPU节点：预装华为NPU驱动，请参考 A910驱动安装手册
-* **编译节点：CPU架构需与master节点架构一致，譬如同为AMD64或同为Arm64**
+* 编译节点：CPU架构需与master节点架构一致，譬如同为AMD64或同为ARM64
 * 支持的平台版本：Apulis Platfom release-0.1.0
 
 其中：

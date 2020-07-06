@@ -38,8 +38,8 @@ const CentralInference: React.FC = () => {
       deviceStr: string
     }
   }>({});
-  const { currentRole = [], userName } = useContext(AuthContext);
-  const isAdmin = currentRole.includes('System Admin');
+  const { permissionList = [], userName } = useContext(AuthContext);
+  const isAdmin = permissionList.includes('CLOUD_INFERENCE');
   const { handleSubmit, register, getValues, errors, setValue, clearError, setError } = useForm({ mode: "onBlur" });
   const { kill } = useActions(selectedCluster, true);
   const _renderId = (job: any) => <p title={job.jobId} style={{maxWidth: 300}}>{job.jobId}</p>;

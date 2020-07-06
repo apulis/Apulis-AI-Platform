@@ -42,6 +42,8 @@
    - 若设备为NVIDIA GPU，则驱动版本不低于 430
    - 若设备为Huawei NPU，则驱动版本不低于 1.72.T2.100.B020
 
+* 集群所在网络建议简化配置，其中路由或网关必须支持DNS Local Maping，DHCP Server等。 
+
 节点组网规划示例
 --------------------------------------------------------------------------------
 **master和worker需在同一个子网或VPC**
@@ -92,6 +94,13 @@
     sudo resolvconf -u
     ​​# 此处**sigsus.cn**即为config.yaml中的domain
     ```
+
+* 配置外网DNS
+  
+  ```
+  vim /etc/resolv.conf
+  nameserver 192.168.2.1
+  ```
 
 * 同步代码库
 
@@ -212,7 +221,7 @@ WebUIregisterGroups:
 - DLWSRegister
 
 datasource: MySQL
-mysql_password: ********
+mysql_password: ******** # apulis#2019#wednesday
 webuiport: 3081
 useclusterfile : true
 
@@ -287,13 +296,13 @@ dns_server:
   
 Authentications:
   Microsoft:
-    TenantId: ********
-    ClientId: ********
-    ClientSecret: ********  
+    TenantId: 19441c6a-f224-41c8-ac36-82464c2d9b13 # 获取方法请参考微软官方说明 
+    ClientId: 487f34da-74af-4c0d-85d9-d678a118d99d # 获取方法请参考微软官方说明 
+    ClientSecret: "1MZ[7?g0vPv_6cahAvPuohwuQKrrJEh." # 获取方法请参考微软官方说明  
 
   Wechat:
-    AppId: ********
-    AppSecret: ********
+    AppId: "wx403e175ad2bf1d2d" # 获取方法请参考微信官方说明 
+    AppSecret: "dc8cb2946b1d8fe6256d49d63cd776d0" # 获取方法请参考微信官方说明 
 
 supported_platform:  ["onpremise"]
 onpremise_cluster:
@@ -325,7 +334,7 @@ repair-manager:
   alert:
     smtp_url: smtp.qq.com
     login: admin@admin.com
-    password: *********
+    password: *********  # vtguxryxqyrkbfdd
     sender: dmin@admin.com
     receiver: ["dmin@admin.com"]
 
@@ -333,6 +342,11 @@ enable_custom_registry_secrets: True
 ```
 
 3. 设置配置环境
+
+* 通过容器执行部署（**选项一**）
+
+    AMD64架构：`python3 devenv.py`
+    Arm64架构：`python3 devenv_arm64.py`
 
 * 在master host节点执行部署
   ```
@@ -457,10 +471,6 @@ enable_custom_registry_secrets: True
 
       `./deploy.py --verbose copytoall ./deploy/sshkey/admin.conf /root/.kube/config`
 
-- （可选）设置master充当worker
-
-    `./deploy.py --verbose kubernetes uncordon`
-
 - 设置集群节点标签
   
     ```
@@ -532,42 +542,45 @@ enable_custom_registry_secrets: True
     *根据据集群实际的域名，修改domain、casUrl以及clusters*
 
     ```
-    sign: "Sign key for JWT"
+     sign: "Sign key for JWT"
     winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
     masterToken: "Access token of all users"
 
     activeDirectory:
-    tenant: "********************"
-    clientId: "********************"
-    clientSecret: "********************"
+    tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
+    clientId: "487f34da-74af-4c0d-85d9-d678a118d99d"
+    clientSecret: "1MZ[7?g0vPv_6cahAvPuohwuQKrrJEh."
 
     wechat:
-    appId: "********************"
-    appSecret: "********************"
+    appId: "wx403e175ad2bf1d2d"
+    appSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
 
     domain: "https://atlas.sigsus.cn"
     administrators:
-    - tom@hotmail.com
-    - jeck@apulis.com
-    - tony@apulis.com
-    - tomas@apulis.com
+    - jinlmsft@hotmail.com
+    - jin.li@apulis.com
+    - bifeng.peng@apulis.com
+    - hui.yuan@apulis.com
 
     clusters:
     atlas02:
-        restfulapi: "http://altas02.sigsus.cn/apis"
+        restfulapi: "http://altas.sigsus.cn/apis"
         title: Grafana-endpoint-of-the-cluster
         workStorage: work
         dataStorage: data
-        grafana: "http://atlas02.sigsus.cn/grafana/"
-        prometheus: http://atlas02.sigsus.cn:9091
+        grafana: "https://atlas.sigsus.cn/grafana/"
+        prometheus: http://atlas.sigsus.cn:9091
         
     userGroup:
     type: custom
-    domain: http://atlas02.sigsus.cn
+    domain: http://atlas.sigsus.cn
     backEndPath: /custom-user-dashboard-backend
     frontEndPath: /custom-user-dashboard
     ```
 
+16. 设置master充当worker
+
+    `./deploy.py --verbose kubernetes uncordon`
 
 部署集群应用
 -------------------------------------------------------------------------------
@@ -804,11 +817,11 @@ FAQ
 
 2. 强制 Kill Job方法：
     ```
-    Kubectl get pods                     # 查看僵死pod
-    Kubectl delete po --force <pod id>   # 强制 kill pod 
-    Docker ps |grep mind* <tf>           # 查看响应的容器
-    Docker top <docker id>               # 查看容器内的进程
-    Kill -9 <process id>                 # 逐个kill容器中所有进程
+    kubectl get pods                     # 查看僵死pod
+    kubectl delete po --force <pod id>   # 强制 kill pod 
+    docker ps |grep mind* <tf>           # 查看响应的容器
+    docker top <docker id>               # 查看容器内的进程
+    kill -9 <process id>                 # 逐个kill容器中所有进程
     ```
 
 3. 使用私有镜像库

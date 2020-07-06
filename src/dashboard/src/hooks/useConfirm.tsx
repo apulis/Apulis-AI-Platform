@@ -23,13 +23,13 @@ interface ConfirmContext {
 }
 
 const ConfirmContext = createContext<ConfirmContext>({
-  setMessage () { return; },
-  setOpen () { return; },
-  setResolve () { return; }
+  setMessage() { return; },
+  setOpen() { return; },
+  setResolve() { return; }
 });
 
 const ConfirmProvider: FunctionComponent = ({ children }) => {
-  const {t} = useTranslation()
+  const { t } = useTranslation()
   const [message, setMessage] = useState<string>();
   const [open, setOpen] = useState(false);
   const [resolve, setResolve] = useState<(value: boolean) => void>();
@@ -49,12 +49,12 @@ const ConfirmProvider: FunctionComponent = ({ children }) => {
       <>
         {children}
         <Dialog open={open} onClose={onClose}>
-  <DialogTitle>{t('tips.deepLearningPlatform')}</DialogTitle>
+          <DialogTitle>{t('tips.deepLearningPlatform')}</DialogTitle>
           <DialogContent>
             <DialogContentText>{message}</DialogContentText>
           </DialogContent>
           <DialogActions>
-  <Button autoFocus color="primary" onClick={onNoClick}>{t('hooks.no')}</Button>
+            <Button autoFocus color="primary" onClick={onNoClick}>{t('hooks.no')}</Button>
             <Button onClick={onYesClick}>{t('hooks.yes')}</Button>
           </DialogActions>
         </Dialog>

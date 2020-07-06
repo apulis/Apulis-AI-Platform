@@ -237,7 +237,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
   const [json, setJson] = useState('');
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
-  const onTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
     if (val === 'None (Apply a Template)') {
       setName("");
@@ -806,8 +806,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       variant="filled"
                       value={workers}
                       name="workers"
-                      onChange={e => setWorkers(Number(e.target.value))}
-                      InputProps={{ inputProps: { min: 0 } }}
+                      onChange={e => setWorkers(Number(e.target.value) > 1 ? Math.floor(Number(e.target.value)) : 1)}
+                      InputProps={{ inputProps: { min: 1, step: 1 } }}
                       // error={Boolean(errors.workers)}
                       // helperText={errors.workers ? NpuNumMsg : ''}
                       // inputRef={register({

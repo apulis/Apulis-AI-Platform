@@ -4,11 +4,12 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Slide
 } from "@material-ui/core";
 import {grey} from "@material-ui/core/colors";
 import {TransitionProps} from "@material-ui/core/transitions";
-import Slide from "@material-ui/core/Slide";
+import { SlideProps } from "@material-ui/core/Slide";
 
 interface DialogProps {
   children?: React.ReactNode;
@@ -22,7 +23,7 @@ interface DialogProps {
   titleStyle: object;
 }
 const Transition = React.forwardRef<unknown, TransitionProps>(function Transition(props, ref) {
-  return <Slide direction="down" ref={ref} {...props} />;
+  return <Slide direction="down" ref={ref} {...props as SlideProps} />;
 });
 export const DLTSDialog = (props: DialogProps) => {
   const { children, open,message,handleClose,handleConfirm,confirmBtnTxt,cancelBtnTxt,title,titleStyle } = props;

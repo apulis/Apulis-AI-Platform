@@ -38,7 +38,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
     )
   }, [job])
   const [priority, setPriority] = useState(Number(job['priority']) || 100);
-  const onBlur = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onBlur = (event: any) => {
     setEditing(false);
     const val = priority < 1 ? 1 : priority > 1000 ? 1000 : priority;
     setPriority(val);

@@ -26,7 +26,7 @@ echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 if ! [ -x "$(command -v sudo)" ] ; then
     time apt-get update && time apt-get install -y sudo
 fi
-if ! [ -x "$(`command -v ifconfig`)"];then
+if ! [ -x "$(command -v ifconfig)" ];then
    time apt-get update && time apt-get install -y net-tools
 fi
 
@@ -48,38 +48,31 @@ then
 fi
 
 # Setup container
-echo "=========================================================
-            begin to create user and setup env
-========================================================="
+echo "==========================begin to create user and setup env =============" &>> ${LOG_DIR}/bootstrap.log
 bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
-echo "=========================================================
-            create user done!
-========================================================="
+echo "==========================create user done!===============================" &>> ${LOG_DIR}/bootstrap.log
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
 	touch ${PROC_DIR}/CONTAINER_READY
 fi
 
+# setup ib config
+echo "===========================begin to setup ib config=============================="&>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/setup_ib_config.sh &>> ${LOG_DIR}/bootstrap.log
+echo "===========================setup ib config done!================================="&>> ${LOG_DIR}/bootstrap.log
+
 # Setup roles
-echo "=========================================================
-            begin to start ssh
-========================================================="
+echo "===========================begin to start ssh=============================="&>> ${LOG_DIR}/bootstrap.log
 bash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log
-echo "=========================================================
-            start ssh done!
-========================================================="
+echo "===========================start ssh done!================================="&>> ${LOG_DIR}/bootstrap.log
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
-  echo "=========================================================
-            begin to setup ssh!
-========================================================="
+  echo "=========================begin to setup ssh!============================="&>> ${LOG_DIR}/bootstrap.log
     bash ${SCRIPT_DIR}/setup_ssh_config.sh &>> ${LOG_DIR}/bootstrap.log
 	touch ${PROC_DIR}/ROLE_READY
-	echo "=========================================================
-            setup ssh done!
-========================================================="
+	echo "=========================setup ssh done!================================"&>> ${LOG_DIR}/bootstrap.log
 
 	# Setup job
 	# TODO
@@ -114,9 +107,7 @@ else
     printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
     chmod ugo+rx /pod/job_command.sh
     chmod ugo+rx /pod.env
-    	echo "=========================================================
-                begin to exec command!
-========================================================="
+    echo "============================begin to exec command!=========================="&>> ${LOG_DIR}/bootstrap.log
     runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh
     # Save exit code
     EXIT_CODE=$?

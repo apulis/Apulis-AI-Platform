@@ -24,13 +24,3 @@ prometheus:
       interval: 10 # minutes
       percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
       name: "filesystem left space less than 20%"
-    - query_expression: 'nvidiasmi_utilization_gpu>90'
-      step: 1
-      interval: 10 # minutes
-      percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
-      name: "nvidiasmi_utilization_gpu more than 90%"
-    - query_expression: 'nvidiasmi_utilization_memory>90'
-      step: 1
-      interval: 10 # minutes
-      percent_threshold: 90 # percentage of data points with ecc error to be considered a bad node
-      name: "nvidiasmi_utilization_memory more than 90%"

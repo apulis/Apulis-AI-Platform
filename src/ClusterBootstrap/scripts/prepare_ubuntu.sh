@@ -379,10 +379,10 @@ main () {
     purge_install_flags
     install_preparation
 
-    set_apt_mirror
+    #set_apt_mirror
     
     install_docker
-    pull_k8s_images
+    #pull_k8s_images
     
     install_python
     install_shell_utils

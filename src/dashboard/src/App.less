@@ -3,6 +3,17 @@ table th .material-icons {
   height: 20px;
 }
 
+.MuiTableCell-alignRight {
+  text-align: left !important;
+  flex-direction: unset !important;
+}
+
+.MuiTableCell-body, .MuiTableCell-body > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .MuiTooltip-tooltip pre {
   white-space: pre-wrap;
 }

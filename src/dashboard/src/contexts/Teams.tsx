@@ -53,7 +53,9 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
 
   const getTeams = () => {
     axios.get('/teams').then(res => {
-      setTeams(res.data);
+      if (res && res.data && JSON.stringify(res.data) !== JSON.stringify(teams)) {
+        setTeams(res.data);
+      }
     })
   }
 
@@ -65,10 +67,13 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
     const currentTeam = localStorage.getItem('team');
     if (currentTeam) {
       if (teams.find(t => t.id === currentTeam)) {
-
         setSelectedTeam(currentTeam);
       } else {
-        setSelectedTeam(teams && teams[0] && teams[0].id)
+        const localTeam = teams && teams[0] && teams[0].id;
+        if (localTeam) {
+          localStorage.team = localTeam;
+          setSelectedTeam(localTeam);
+        }
       }
     } else {
       setSelectedTeam(_.map(teams, 'id')[0]);

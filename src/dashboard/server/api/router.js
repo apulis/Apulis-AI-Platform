@@ -9,25 +9,9 @@ router.get('/',
 router.get('/bootstrap.js',
   require('./middlewares/user')(false),
   require('./controllers/bootstrap'))
-// if (authEnabled.microsoft) {
-//   router.get('/authenticate',
-//     require('./controllers/authenticate'))
-// }
-// if (authEnabled.wechat) {
-//   router.get('/authenticate/wechat',
-//     require('./controllers/authenticate/wechat'))
-// }
 
 router.get('/authenticate/logout',
   require('./controllers/authenticate/logout'))
-// router.get('/authenticate/dingtalk',
-//   require('./controllers/authenticate/dingtalk'))
-// router.get('/authenticate/zjlab',
-//   require('./controllers/authenticate/zjlab'))
-
-// router.get('/authenticate/signup',
-//   require('./middlewares/user')(),
-//   require('./controllers/authenticate/signup'))
 
 router.param('clusterId',
   require('./middlewares/cluster'))
@@ -126,6 +110,39 @@ router.get('/:clusterId/countJobByStatus/:targetStatus/:vcName',
 router.get('/:clusterId/getAllDevice',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/getAllDevice'))
+
+router.get('/clusters/:clusterId/teams/:teamId/inferenceJobs',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/centralReasoning/getInferenceJobs'))
+router.get('/:clusterId/getAllSupportInference',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/centralReasoning/getAllSupportInference'))
+router.post('/clusters/:clusterId/teams/:teamId/postInferenceJob',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('postInferenceJob'),
+  require('./controllers/cluster/centralReasoning/postInferenceJob'))
+
+router.get('/:clusterId/getFDInfo',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/model/getFDInfo'))
+router.get('/:clusterId/getModelConvertionTypes',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/model/getModelConvertionTypes'))
+router.get('/:clusterId/teams/:teamId/ListModelConversionJob',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/model/getModelList'))
+router.post('/:clusterId/teams/:teamId/setFDInfo',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('setFDInfo'),
+  require('./controllers/cluster/model/setFDInfo'))
+router.post('/:clusterId/pushModelToFD',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('pushModelToFD'),
+  require('./controllers/cluster/model/pushModelToFD'))
+router.post('/:clusterId/teams/:teamId/postModelConversionJob',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('postModelConversionJob'),
+  require('./controllers/cluster/model/postModelConversionJob'))
 
 // router.get('/:clusterId/listUser',
 //   require('./middlewares/user')(),

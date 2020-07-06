@@ -36,10 +36,10 @@ clusters:
       title: Grafana-endpoint-of-the-cluster
       workStorage: {{cnf["storage-mount-path"]}}/work
       dataStorage: {{cnf["storage-mount-path"]}}/storage
-      grafana: "https://{{cnf["webportal_node"]}}/endpoints/grafana/"
+      grafana: "{{cnf['extranet_protocol']}}://{{cnf['webportal_node']}}{% if 'extranet_port' in cnf and cnf['extranet_port'] %}:{{cnf['extranet_port']}}{%endif%}/endpoints/grafana/"
       prometheus: http://{{cnf["restfulapi_node"]}}:9091
 userGroup:
   type: custom
-  domain: "https://{{cnf["webportal_node"]}}"
+  domain: "http://{{cnf["webportal_node"]}}"
   backEndPath: /custom-user-dashboard-backend
   frontEndPath: /custom-user-dashboard

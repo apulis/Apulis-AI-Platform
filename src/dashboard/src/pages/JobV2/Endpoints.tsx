@@ -201,21 +201,21 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
     <Box px={2}>
       <FormGroup aria-label="position" row>
         <FormControlLabel
-          checked={ssh || undefined}
+          checked={ssh}
           disabled={ssh || disabled}
           control={<Switch/>}
           label="SSH"
           onChange={onChange('SSH')}
         />
         <FormControlLabel
-          checked={ipython || undefined}
+          checked={ipython}
           disabled={ipython || disabled}
           control={<Switch/>}
           label="Jupyter"
           onChange={onChange('iPython')}
         />
         <FormControlLabel
-          checked={tensorboard || undefined}
+          checked={tensorboard}
           disabled={tensorboard || disabled}
           control={<Switch/>}
           label="TensorBoard"

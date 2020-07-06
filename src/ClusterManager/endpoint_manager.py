@@ -85,7 +85,27 @@ spec:
     logger.info("endpointDescription: %s", endpoint_description)
     return endpoint_description
 
-
+def generate_node_port_service_for_deployment(job_id, pod_name, endpoint_id, name, target_port):
+    endpoint_description = """kind: Service
+apiVersion: v1
+metadata:
+  name: {2}
+  labels:
+    run: {0}
+    jobId: {0}
+    podName: {1}
+spec:
+  type: NodePort
+  selector:
+    jobId: {0}
+  ports:
+  - name: {3}
+    protocol: "TCP"
+    targetPort: {4}
+    port: {4}
+""".format(job_id, pod_name, endpoint_id, name, target_port)
+    logger.info("endpointDescription: %s", endpoint_description)
+    return endpoint_description
 
 def setup_ssh_server(user_name, pod_name, host_network=False):
     '''Setup ssh server on pod and return the port'''
@@ -99,8 +119,7 @@ def setup_ssh_server(user_name, pod_name, host_network=False):
 
 
 def setup_jupyter_server(user_name, pod_name,jupyter_port,nodePort):
-    #bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
-    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && touch /job/jupyter.log && chmod 777 /job/jupyter.log && cd /home/" + user_name + " &&  runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
+    bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && touch /job/jupyter.log && chmod 777 /job/jupyter.log && cd /home/" + user_name + " && mkdir -p ./.local ./.jupyter && chmod -R 777 ./.local && chmod -R 777 ./.jupyter &&  runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
     output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start jupyter server in container. JobId: %s " % pod_name)
@@ -138,8 +157,10 @@ def start_endpoint(endpoint):
 
     port_name = endpoint["name"]
     if port_name == "ipython":
+        port = base64.b64encode(str(port).encode("utf-8"))
         setup_jupyter_server(user_name, pod_name,podPort,port)
     elif port_name == "tensorboard":
+        port = base64.b64encode(str(port).encode("utf-8"))
         setup_tensorboard(user_name, pod_name,podPort,port)
 
 def create_node_port(endpoint):
@@ -156,7 +177,10 @@ def create_node_port(endpoint):
     else:
         endpoint["podPort"] = int(endpoint["podPort"])
 
-    endpoint_description = generate_node_port_service(endpoint["jobId"], endpoint["podName"], endpoint["id"], endpoint["name"], endpoint["podPort"])
+    if port_name == "inference-url":
+        endpoint_description = generate_node_port_service_for_deployment(endpoint["jobId"], endpoint["podName"], endpoint["id"], endpoint["name"], endpoint["podPort"])
+    else:
+        endpoint_description = generate_node_port_service(endpoint["jobId"], endpoint["podName"], endpoint["id"], endpoint["name"], endpoint["podPort"])
     endpoint_description_path = os.path.join(config["storage-mount-path"], endpoint["endpointDescriptionPath"])
     logger.info("endpointDescriptionPath: %s", endpoint_description_path)
     with open(endpoint_description_path, 'w') as f:

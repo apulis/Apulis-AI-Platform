@@ -88,6 +88,16 @@ const NavigationList: FC = () => {
           <ListItemText>{t("layout.VirtualCluster")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
+      <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <LinkListItem to="/model">
+          <ListItemText>Edge Inference</ListItemText>
+        </LinkListItem>
+      </AuthzHOC>
+      {/* <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
+        <LinkListItem to="/centralInference">
+          <ListItemText>Cloud Inference</ListItemText>
+        </LinkListItem>
+      </AuthzHOC> */}
     </List>
   );
 };

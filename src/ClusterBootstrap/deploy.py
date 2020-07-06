@@ -895,12 +895,25 @@ def gen_configs():
 
     check_config(config)
     gen_platform_wise_config()
+    gen_device_type_config(config)
     gen_usermanagerapitoken(config)
     utils.render_template_directory("./template/etcd", "./deploy/etcd",config)
     utils.render_template_directory("./template/master", "./deploy/master",config)
     utils.render_template_directory("./template/web-docker", "./deploy/web-docker",config)
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
+
+def gen_device_type_config(config):
+    defalt_virtual_cluster_device_type_list = set()
+    specific_processor_type = ["npu", "gpu"]
+    for nodename, nodeInfo in config["machines"].items():
+        archtype = "amd64"
+        if "archtype" in nodeInfo:
+            archtype = nodeInfo["archtype"]
+        if nodeInfo["role"] == "worker":
+            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+    config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")
@@ -2944,14 +2957,15 @@ def exec_on_rand_master(args, supressWarning = False):
     exec_on_all_with_output([master_node], args, supressWarning)
 
 # run a shell script on one remote node
-def run_script(node, args, sudo = False, supressWarning = False):
-
+def run_script(node, args, sudo = False, supressWarning = False, background=False):
 
     if ".py" in args[0]:
         if sudo:
-            fullcmd = "sudo /opt/bin/python"
+            fullcmd = "sudo python"
         else:
-            fullcmd = "/opt/bin/python"
+            fullcmd = "python"
+
+
     else:
         if sudo:
             fullcmd = "sudo bash"
@@ -2964,8 +2978,10 @@ def run_script(node, args, sudo = False, supressWarning = False):
             fullcmd += " " + os.path.basename(args[i])
         else:
             fullcmd += " " + args[i]
+
     srcdir = os.path.dirname(args[0])
-    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning)
+    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning, 
+            background=background)
 
 
 def run_script_wrapper(arg_tuple):
@@ -2974,9 +2990,9 @@ def run_script_wrapper(arg_tuple):
 
 
 # run a shell script on all remote nodes
-def run_script_on_all(nodes, args, sudo = False, supressWarning = False):
+def run_script_on_all(nodes, args, sudo = False, supressWarning = False, background=False):
     for node in nodes:
-        run_script( node, args, sudo = sudo, supressWarning = supressWarning)
+        run_script( node, args, sudo = sudo, supressWarning = supressWarning, background=background)
 
 def run_script_on_all_in_parallel(nodes, args, sudo=False, supressWarning=False):
     args_list = [(node, args, sudo, supressWarning) for node in nodes]
@@ -3798,9 +3814,36 @@ def check_archtype_valid(archtype):
             return False
     return True
 
-def upload_dns_config():
+def upload_dns_config_to_unifi():
     with open("/etc/hosts","r") as f:
         local_config = f.readlines()
+    utils.sudo_scp_to_local(config["ssh_cert"], "/etc/hosts","./deploy/unifirouter.hostsfile", config["unifi_router"]["username"], config["unifi_router"]["ip"])
+    with open("./deploy/unifirouter.hostsfile","r") as f:
+        remote_config = f.read()
+    flag = False
+    for one in local_config:
+        split_after = one.strip().split(" ",1)
+        if len(split_after)<=1:
+            continue
+        ip,host = one.strip().split(" ",1)
+        ip, host = ip.strip(),host.strip()
+        if ip == "127.0.0.1" or ip == "127.0.1.1":
+            continue
+        if not re.match("(\d+).(\d+).(\d+).(\d+)",ip):
+            continue
+        # if "#" in host:
+        #     host = host.split("#")[0].strip()
+        if host in remote_config:
+            continue
+        print("find one entry: %s" %(one))
+        remote_config += one
+        flag = True
+    with open("./deploy/unifirouter.hostsfile.update","wt") as f:
+        f.write(remote_config)
+    if flag:
+        utils.SSH_exec_cmd(config["ssh_cert"], config["unifi_router"]["username"], config["unifi_router"]["ip"],"sudo mv /etc/hosts /etc/hosts.bak")
+        utils.sudo_scp(config["ssh_cert"], "./deploy/unifirouter.hostsfile.update", "/etc/hosts",config["unifi_router"]["username"], config["unifi_router"]["ip"])
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["unifi_router"]["username"], config["unifi_router"]["ip"], "sudo /etc/init.d/dnsmasq restart")
 
 # get scale info
 def get_scale_nodes(config, scale_type):
@@ -4182,7 +4225,7 @@ def run_command( args, command, nargs, parser ):
     elif command == "dnssetup":
         os.system("./gene_loc_dns.sh")
         nodes = get_nodes(config["clusterId"])
-        run_script_on_all(nodes, "./scripts/dns.sh", sudo = args.sudo )
+        run_script_on_all(nodes, "./scripts/dns.sh", sudo = args.sudo)
 
     elif command == "sshkey":
         if len(nargs) >=1 and nargs[0] == "install":
@@ -4494,7 +4537,7 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "runscriptonall" and len(nargs)>=1:
         nodes = get_nodes(config["clusterId"])
-        run_script_on_all(nodes, nargs, sudo = args.sudo )
+        run_script_on_all(nodes, nargs, sudo = args.sudo, background=args.background )
 
     elif command == "runscriptonallinparallel" and len(nargs)>=1:
         nodes = get_nodes(config["clusterId"])
@@ -4897,6 +4940,9 @@ def run_command( args, command, nargs, parser ):
         else:
             pass
 
+    elif command == "upload_dns_config_to_unifi":
+        upload_dns_config_to_unifi()
+
     else:
         parser.print_help()
         print "Error: Unknown command " + command
@@ -5228,6 +5274,10 @@ Command:
         help = "Build docker without cache",
         action="store_true")
 
+    parser.add_argument("--background",
+        help = "Run script in the background",
+        action="store_true")
+
     parser.add_argument("--glusterfs",
         help = textwrap.dedent('''"Additional glusterfs launch parameter, \
         detach: detach all glusterfs nodes (to rebuild cluster),
@@ -5252,9 +5302,11 @@ Command:
     parser.add_argument('nargs', nargs=argparse.REMAINDER,
         help="Additional command argument",
         )
+
     args = parser.parse_args()
     command = args.command
     nargs = args.nargs
+
     if args.verbose:
         verbose = True
         utils.verbose = True

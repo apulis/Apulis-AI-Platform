@@ -95,13 +95,6 @@
     ​​# 此处**sigsus.cn**即为config.yaml中的domain
     ```
 
-* 配置外网DNS
-  
-  ```
-  vim /etc/resolv.conf
-  nameserver 192.168.2.1
-  ```
-
 * 同步代码库
 
     ```
@@ -221,7 +214,7 @@ WebUIregisterGroups:
 - DLWSRegister
 
 datasource: MySQL
-mysql_password: ******** # apulis#2019#wednesday
+mysql_password: ********
 webuiport: 3081
 useclusterfile : true
 
@@ -296,13 +289,13 @@ dns_server:
   
 Authentications:
   Microsoft:
-    TenantId: 19441c6a-f224-41c8-ac36-82464c2d9b13 # 获取方法请参考微软官方说明 
-    ClientId: 487f34da-74af-4c0d-85d9-d678a118d99d # 获取方法请参考微软官方说明 
-    ClientSecret: "1MZ[7?g0vPv_6cahAvPuohwuQKrrJEh." # 获取方法请参考微软官方说明  
+    TenantId: ********
+    ClientId: ********
+    ClientSecret: ********  
 
   Wechat:
-    AppId: "wx403e175ad2bf1d2d" # 获取方法请参考微信官方说明 
-    AppSecret: "dc8cb2946b1d8fe6256d49d63cd776d0" # 获取方法请参考微信官方说明 
+    AppId: ********
+    AppSecret: ********
 
 supported_platform:  ["onpremise"]
 onpremise_cluster:
@@ -334,7 +327,7 @@ repair-manager:
   alert:
     smtp_url: smtp.qq.com
     login: admin@admin.com
-    password: *********  # vtguxryxqyrkbfdd
+    password: *********
     sender: dmin@admin.com
     receiver: ["dmin@admin.com"]
 
@@ -342,11 +335,6 @@ enable_custom_registry_secrets: True
 ```
 
 3. 设置配置环境
-
-* 通过容器执行部署（**选项一**）
-
-    AMD64架构：`python3 devenv.py`
-    Arm64架构：`python3 devenv_arm64.py`
 
 * 在master host节点执行部署
   ```
@@ -542,42 +530,41 @@ enable_custom_registry_secrets: True
     *根据据集群实际的域名，修改domain、casUrl以及clusters*
 
     ```
-     sign: "Sign key for JWT"
+    sign: "Sign key for JWT"
     winbind: "Will call /domaininfo/GetUserId with userName query to get the user's id info"
     masterToken: "Access token of all users"
 
     activeDirectory:
-    tenant: "19441c6a-f224-41c8-ac36-82464c2d9b13"
-    clientId: "487f34da-74af-4c0d-85d9-d678a118d99d"
-    clientSecret: "1MZ[7?g0vPv_6cahAvPuohwuQKrrJEh."
+    tenant: "********************"
+    clientId: "********************"
+    clientSecret: "********************"
 
     wechat:
-    appId: "wx403e175ad2bf1d2d"
-    appSecret: "dc8cb2946b1d8fe6256d49d63cd776d0"
+    appId: "********************"
+    appSecret: "********************"
 
     domain: "https://atlas.sigsus.cn"
     administrators:
-    - jinlmsft@hotmail.com
-    - jin.li@apulis.com
-    - bifeng.peng@apulis.com
-    - hui.yuan@apulis.com
+    - tom@hotmail.com
+    - jeck@apulis.com
+    - tony@apulis.com
+    - tomas@apulis.com
 
     clusters:
     atlas02:
-        restfulapi: "http://altas.sigsus.cn/apis"
+        restfulapi: "http://altas02.sigsus.cn/apis"
         title: Grafana-endpoint-of-the-cluster
         workStorage: work
         dataStorage: data
-        grafana: "https://atlas.sigsus.cn/grafana/"
-        prometheus: http://atlas.sigsus.cn:9091
+        grafana: "http://atlas02.sigsus.cn/grafana/"
+        prometheus: http://atlas02.sigsus.cn:9091
         
     userGroup:
     type: custom
-    domain: http://atlas.sigsus.cn
+    domain: http://atlas02.sigsus.cn
     backEndPath: /custom-user-dashboard-backend
     frontEndPath: /custom-user-dashboard
     ```
-
 16. 设置master充当worker
 
     `./deploy.py --verbose kubernetes uncordon`
@@ -790,6 +777,38 @@ enable_custom_registry_secrets: True
 
     `./deploy.py restore [backup_file] [password]`
 
+扩容和缩容
+-------------------------------------------------------------------------
+
+* 在平台配置文件`src/ClusterBootstrap/config.yaml`中添加扩容配置`scale_up`或缩容配置`scale_down`
+
+    ```
+    scale_up:
+      atlas-gpu02:
+        archtype: amd64
+        role: worker
+        type: gpu
+        vendor: nvidia
+        os: ubuntu
+
+    scale_down:
+      atlas-gpu02:
+        archtype: amd64
+        role: worker
+        type: gpu
+        vendor: nvidia
+        os: ubuntu
+    ```
+
+**注意：在扩容或缩容节点前，应确保没有相关Job处于Queue,Schduling或Running状态**
+
+* 如果缩容节点`atlas-gpu02`,则在终端下执行
+
+  `./deploy.py --verbose scale down`
+
+* 如果扩容节点`atlas-gpu02`,则在终端下执行
+
+  `./deploy.py --verbose scale up`
 
 
 清除集群信息(***高危操作***)
@@ -817,11 +836,11 @@ FAQ
 
 2. 强制 Kill Job方法：
     ```
-    kubectl get pods                     # 查看僵死pod
-    kubectl delete po --force <pod id>   # 强制 kill pod 
-    docker ps |grep mind* <tf>           # 查看响应的容器
-    docker top <docker id>               # 查看容器内的进程
-    kill -9 <process id>                 # 逐个kill容器中所有进程
+    Kubectl get pods                     # 查看僵死pod
+    Kubectl delete po --force <pod id>   # 强制 kill pod 
+    Docker ps |grep mind* <tf>           # 查看响应的容器
+    Docker top <docker id>               # 查看容器内的进程
+    Kill -9 <process id>                 # 逐个kill容器中所有进程
     ```
 
 3. 使用私有镜像库
@@ -870,3 +889,4 @@ FAQ
     yes | sudo apt-get install -y nvidia-driver-430
     sudo shutdown -r
     ```
+

@@ -4940,6 +4940,9 @@ def run_command( args, command, nargs, parser ):
     elif command == "upload_dns_config_to_unifi":
         upload_dns_config_to_unifi()
 
+    elif command == "renderservice":
+        render_service_templates()
+
     else:
         parser.print_help()
         print "Error: Unknown command " + command
@@ -5232,6 +5235,7 @@ Command:
   listmac   display mac address of the cluster notes
   checkconfig   display config items
   rendertemplate template_file target_file
+  renderservice
   upgrade_masters Upgrade the master nodes.
   upgrade_workers [nodes] Upgrade the worker nodes. If no additional node is specified, all nodes will be updated.
   upgrade [nodes] Upgrade the cluster and nodes. If no additional node is specified, all nodes will be updated.

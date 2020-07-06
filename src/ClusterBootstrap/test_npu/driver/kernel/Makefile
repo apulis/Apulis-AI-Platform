@@ -1,1 +1,0 @@
-/usr/local/Ascend/driver/kernel/Makefile_cloud

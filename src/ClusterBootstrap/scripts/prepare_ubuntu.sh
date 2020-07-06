@@ -261,7 +261,7 @@ install_gpu_utils() {
             yes | sudo apt-get install -y nvidia-driver-430
 
             show_continue_msg 
-            sudo shutdown -r
+            # sudo shutdown -r
             return 0
 
         ## resume the installation, 

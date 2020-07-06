@@ -250,7 +250,7 @@ export const DirectoryPathTextField: FC<{
           readOnly: true,
           endAdornment: (
             <InputAdornment position="end">
-              <Tooltip title={t('copy')} placement="right">
+              <Tooltip title={(t('copy') as string)} placement="right">
                 <IconButton>
                   <FileCopyRounded onClick={handleCopy} />
                 </IconButton>

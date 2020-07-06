@@ -41,7 +41,7 @@ const CentralInference: React.FC = () => {
   const { currentRole = [], userName } = useContext(AuthContext);
   const isAdmin = currentRole.includes('System Admin');
   const { handleSubmit, register, getValues, errors, setValue, clearError, setError } = useForm({ mode: "onBlur" });
-  const { kill } = useActions(selectedCluster, true);
+  const { kill } = useActions(selectedCluster);
   const _renderId = (job: any) => <p title={job.jobId} style={{maxWidth: 300}}>{job.jobId}</p>;
   const _renderURL = (job: any) => <p title={job['inference-url'] || '--'}>{job['inference-url'] || '--'}</p>;
   const _renderPath = (job: any) => <p title={job.jobParams.model_base_path || '--'} style={{maxWidth: 300}}>{job.jobParams.model_base_path || '--'}</p>;

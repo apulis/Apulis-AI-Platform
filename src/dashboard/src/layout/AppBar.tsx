@@ -83,7 +83,7 @@ const OpenDrawerButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
   const onClick = React.useCallback(() => setOpen(!open), [setOpen, open]);
   return (
-    <Tooltip title={open ? t('layout.hide') : t('layout.show') }>
+    <Tooltip title={(open ? t('layout.hide') : t('layout.show')) as string }>
       <IconButton edge="start" color="inherit" onClick={onClick}>
         <MenuRounded />
       </IconButton>
@@ -289,7 +289,7 @@ const SignOutButton: React.FC = () => {
   const {t} = useTranslation();
   const { userGroupPath } = React.useContext(UserContext);
   return (
-    <Tooltip title={t('layout.signOut')} onClick={() => {delete localStorage.token}}>
+    <Tooltip title={(t('layout.signOut') as string)} onClick={() => {delete localStorage.token}}>
       <IconButton edge="end" color="inherit" onClick={() => clearAuthInfo(userGroupPath || '')}>
         <ExitToApp />
       </IconButton>

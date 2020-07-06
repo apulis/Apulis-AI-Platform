@@ -4054,7 +4054,6 @@ def scale_up(config):
         #    sleep 1;
         #done
 
-        time.sleep(60)
         run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
         run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
 

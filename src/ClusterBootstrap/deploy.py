@@ -4096,13 +4096,8 @@ def scale_down(config):
         print(node_info)
         node = node_name + domain
 
-        ## drain
-        cmd = "drain %s --ignore-daemonsets" % (node_name)
-        run_kubectl([cmd])
-
-        ## delete node
-        cmd = "delete node %s" % (node_name)
-        run_kubectl([cmd])
+        cmd = "yes | sudo kubeadm reset"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
 
         cmd = "yes | sudo kubeadm reset"
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)

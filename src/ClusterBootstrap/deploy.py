@@ -3399,6 +3399,74 @@ def kubernetes_label_nodes( verb, servicelists, force ):
 
     return
 
+# Label kubernete nodes according to a service.
+# A service (usually a Kubernete daemon service) can request to be run on:
+# all: all nodes
+# etcd_node: all etcd node
+# etcd_node_n: a particular etcd node
+# worker_node: all worker node
+# The kubernete node will be marked accordingly to facilitate the running of daemon service.
+
+def kubernetes_label_nodes_2(node_name, verb, servicelists, force ):
+    servicedic = get_all_services()
+
+    if verbose:
+        print ( "servicedic == %s" % servicedic )
+
+    get_nodes(config["clusterId"])
+    labels = fetch_config(config, ["kubelabels"])
+
+    if verbose:
+        print ( "labels == %s " % labels )
+
+    for service, serviceinfo in servicedic.iteritems():
+        if verbose:
+            print("Examine service %s" % service)
+        servicename = get_service_name(servicedic[service])
+        if (not service in labels) and (not servicename in labels) and "default" in labels and (not servicename is None):
+            print "not in: {},{}\n".format(service, serviceinfo)
+            labels[servicename] = labels["default"]
+    if len(servicelists)==0:
+        servicelists = labels
+    else:
+        for service in servicelists:
+            if (not service in labels) and "default" in labels:
+                labels[service] = labels["default"]
+
+    print servicelists
+
+    for label in servicelists:
+        nodes = get_node_lists_for_service(label)
+
+        if verbose:
+            print "kubernetes: apply action %s to label %s to nodes: %s" %(verb, label, nodes)
+        else:
+            pass
+
+        if force:
+            cmdoptions = "--overwrite"
+        else:
+            cmdoptions = ""
+
+        for node in nodes:
+            nodename = kubernetes_get_node_name(node)
+
+            if nodename != node_name:
+                continue
+            else:
+                pass
+
+            if verb == "active":
+                kubernetes_label_node(cmdoptions, nodename, label+"=active")
+            elif verb == "inactive":
+                kubernetes_label_node(cmdoptions, nodename, label+"=inactive")
+            elif verb == "remove":
+                kubernetes_label_node(cmdoptions, nodename, label+"-")
+            else:
+                pass
+
+    return
+
 def populate_machine_sku(machine_info):
     """Potentially adds sku for and returns the modified machine_info.
 
@@ -3956,7 +4024,36 @@ def scale_up(config):
 
         ## install necessary software
         run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
-        time.sleep(60)
+
+        ## wait for node to reboot
+        while True: 
+            cmd = "ping -c 1 node &> /dev/null; echo $?"
+            output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+            output = output.strip()
+            print(output)
+
+            if output == "0":
+                print("%s started! wait for 10 more seconds and continue" % (node))
+                time.sleep(10)
+                break
+            else:
+                print("waiting for %s to reboot" % (node))
+                time.sleep(1)
+
+        #while true;
+        #do
+        #    if ping -c 1 node &> /dev/null
+        #    then
+        #        echo "$node started! wait for 10 more seconds and continue"
+        #        sleep 10
+        #        break
+        #    else
+        #        echo "wating for $node to start!" 
+        #    fi
+
+        #    sleep 1;
+        #done
+
         run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
         run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
 
@@ -3973,11 +4070,9 @@ def scale_up(config):
 
         ## join worker
         update_worker_nodes_by_kubeadm_2([node])
-        ## for test only
-        time.sleep(100)
-
+        
         ## label service
-        kubernetes_label_nodes("active", [], False)
+        kubernetes_label_nodes_2(node_name, "active", [], False)
 
         ## label worker
         kubernetes_label_worker_2(node_name, node_info)
@@ -3993,9 +4088,13 @@ def scale_down(config):
     else:
         pass
 
+    domain = get_domain()
+
     for node_name in config["scale_down"]:
         node_info = config["scale_down"][node_name]
+
         print(node_info)
+        node = node_name + domain
 
         ## drain
         cmd = "drain %s --ignore-daemonsets" % (node_name)
@@ -4005,6 +4104,11 @@ def scale_down(config):
         cmd = "delete node %s" % (node_name)
         run_kubectl([cmd])
 
+        cmd = "yes | sudo kubeadm reset"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+
+        cmd = "rm -rf /etc/cni/net.d/ && rm -rf $HOME/.kube"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
 
     return
 

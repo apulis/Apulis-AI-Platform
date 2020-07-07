@@ -209,6 +209,14 @@ install_gpu_utils() {
     ## Check if this node has gpu
     if  lspci -vnnn | perl -lne 'print if /^\d+\:.+(\[\S+\:\S+\])/' | grep VGA | grep -i NVIDIA; 
     then
+        ## check if driver is installed
+	if [[ -z `nvidia-smi -x -q | grep -i driver_version|grep 440` ]];
+	then 
+	    echo "nvidia driver not found. to install next"
+	else
+	    echo "nvidia driver found. "
+	    return
+	fi
 
         ## install from the beginning
         if ! resume_mode;
@@ -258,10 +266,10 @@ install_gpu_utils() {
             sudo add-apt-repository -y ppa:graphics-drivers/ppa
             sudo apt-get purge -y nvidia*
             sudo apt-get update
-            yes | sudo apt-get install -y nvidia-driver-430
+            yes | sudo apt-get install -y nvidia-driver-440
 
             show_continue_msg 
-            # sudo shutdown -r
+            sudo shutdown -r
             return 0
 
         ## resume the installation, 

@@ -17,6 +17,7 @@ package deviceplugin
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"path"
@@ -63,6 +64,7 @@ type server struct {
 	postAllocate func(*pluginapi.AllocateResponse) error
 	state        serverState
 	stateMutex   sync.Mutex
+	grouper      grouping
 }
 
 // newServer creates a new server satisfying the devicePluginServer interface.
@@ -73,6 +75,7 @@ func newServer(devType string, postAllocate func(*pluginapi.AllocateResponse) er
 		devices:      make(map[string]DeviceInfo),
 		postAllocate: postAllocate,
 		state:        uninitialized,
+		grouper:      &atlasNPUGrouping{},
 	}
 }
 
@@ -120,8 +123,8 @@ func (srv *server) Allocate(ctx context.Context, rqt *pluginapi.AllocateRequest)
 	var hisi *pluginapi.DeviceSpec
 
 	npuList := []string{}
-
 	response := new(pluginapi.AllocateResponse)
+
 	for _, crqt := range rqt.ContainerRequests {
 		cresp := new(pluginapi.ContainerAllocateResponse)
 		for _, id := range crqt.DevicesIDs {
@@ -151,7 +154,10 @@ func (srv *server) Allocate(ctx context.Context, rqt *pluginapi.AllocateRequest)
 				myid := matches[0]
 				npuList = append(npuList, myid)
 			}
+		}
 
+		if valid, err := srv.grouper.validate(npuList); !valid {
+			return nil, err
 		}
 
 		// No mater which device we choose, we need to send all other devices along the devices
@@ -175,7 +181,17 @@ func (srv *server) Allocate(ctx context.Context, rqt *pluginapi.AllocateRequest)
 		if cresp.Envs == nil {
 			cresp.Envs = make(map[string]string)
 		}
+
 		cresp.Envs["VISIBLE_IDS"] = strings.Join(npuList, ",")
+		if ips, err := srv.getDeviceIP(npuList); err == nil {
+
+			cresp.Envs["NPU_IPS"] = ips
+			debug.Print("NPU_IPS: ", ips)
+		} else {
+
+			cresp.Envs["NPU_IPS"] = ""
+			debug.Print("NPU_IPS: ", err)
+		}
 
 		response.ContainerResponses = append(response.ContainerResponses, cresp)
 	}
@@ -282,6 +298,46 @@ func (srv *server) setupAndServe(namespace string, devicePluginPath string, kube
 	}
 
 	return nil
+}
+
+func (srv *server) getDeviceIP(npuIdList []string) (string, error) {
+
+	// read device ip info from file
+	debug.Print("getDeviceIP called\n")
+	hccn_file_path := "/etc/hccn.conf"
+	bytesRead, _ := ioutil.ReadFile(hccn_file_path)
+
+	file_content := string(bytesRead)
+	lines := strings.Split(file_content, "\n")
+
+	re := regexp.MustCompile(`address_[0-9]=`)
+	ipArr := make([]string, 0)
+	idToIp := make(map[string]string)
+
+	debug.Print("hccl: %v", lines)
+	debug.Print("npuList: %v", npuIdList)
+
+	// print ip info
+	for _, line := range(lines)  {
+
+		if index_arr := re.FindStringIndex(line); len(index_arr) >= 2 {
+			idx := index_arr[1]
+			ip := line[idx:]
+			id := line[(idx-2):(idx-1)]
+			idToIp[id]=ip
+		}
+	}
+
+	for _, id := range(npuIdList) {
+		if ip, ok := idToIp[id]; ok {
+			ipArr = append(ipArr, fmt.Sprintf("%s:%s", id, ip))
+		}
+	}
+
+	ipLine := strings.Join(ipArr, ",")
+	debug.Print("ipline: %+v", ipLine)
+
+	return  ipLine, nil
 }
 
 func watchFile(file string) error {

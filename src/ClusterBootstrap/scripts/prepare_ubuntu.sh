@@ -209,18 +209,20 @@ install_gpu_utils() {
     ## Check if this node has gpu
     if  lspci -vnnn | perl -lne 'print if /^\d+\:.+(\[\S+\:\S+\])/' | grep VGA | grep -i NVIDIA; 
     then
-        ## check if driver is installed
-	if [[ -z `nvidia-smi -x -q | grep -i driver_version|grep 440` ]];
-	then 
-	    echo "nvidia driver not found. to install next"
-	else
-	    echo "nvidia driver found. "
-	    return
-	fi
 
         ## install from the beginning
         if ! resume_mode;
         then
+        
+            ## check if driver is installed
+            if [[ -z `nvidia-smi -x -q | grep -i driver_version|grep 440` ]];
+            then 
+                echo "nvidia driver not found. to install next"
+            else
+                echo "nvidia driver found. "
+                return
+            fi
+
             # https://askubuntu.com/questions/481414/install-nvidia-driver-instead-of-nouveau
             # Start from 10/05/2017 the following is needed. 
             if ! grep -q "blacklist nouveau" -F /etc/modprobe.d/blacklist.conf; then 

@@ -4026,6 +4026,9 @@ def scale_up(config):
         run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
 
         ## wait for node to reboot
+        print("waiting for 2 seconds...")
+        time.sleep(2)
+
         while True: 
             cmd = "ping -c 1 node &> /dev/null; echo $?"
             output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)

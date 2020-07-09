@@ -93,7 +93,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
-  const [workers, setWorkers] = useState(0);
+  const [workers, setWorkers] = useState(1);
   const [image, setImage] = useState("");
   const [command, setCommand] = useState("");
   const [interactivePorts, setInteractivePorts] = useState("");
@@ -119,8 +119,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
   const [allDevice, setAllDevice] = useState<{
-    [name: string]: { deviceStr: string }
+    [name: string]: { deviceStr: string, capacity: number, detail: Array<[]> }
   }>({});
+  const [gpuNumPerDevice, setGpuNumPerDevice] = useState(1);
+  const [gpuNumPerDeviceOptions, setGpuNumPerDeviceOptions] = useState<number[]>([]);
+  
   const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const newEnvironmentVariables = environmentVariables.slice()
@@ -508,25 +511,30 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }
 
-  // const validateNumDevices = (val: string) => {
-  //   if (val) {
-  //     const _val = Number(val);
-  //     return (!(_val < 0) && Number.isInteger(_val) && !(_val > gpusPerNode));
-  //   }
-  //   return true;
-  // }
-
-  const validateNpuNum = (val: string) => {
+  const validateNumDevices = (val: string) => {
     if (val) {
       const _val = Number(val);
-      if (_val < 0 || !Number.isInteger(_val) || _val > gpusPerNode) {
-        setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode}`);
-        return false;
-      }
-      if (allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
-        if (_val !== 0 && _val !== 1 &&_val !== 2 && _val !== 4 && _val !== 8) {
-          setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode}，and can only be one of 0, 1, 2, 4, 8`);
-          return false;
+      if (allDevice[gpuType]) {
+        const { deviceStr } = allDevice[gpuType];
+        if (deviceStr === 'npu.huawei.com/NPU') {
+          if (_val !== 1 &&_val !== 2 && _val !== 4 && _val !== 8) {
+            setNpuNumMsg(`Must be a positive integer from 1 to ${gpusPerNode}，and can only be one of 1, 2, 4, 8`);
+            return false;
+          }
+        } else if (deviceStr === 'nvidia.com/gpu') {
+          const { detail } = allDevice[gpuType];
+          const allocatableArr = detail.map((i: any) => i.allocatable);
+          const capacityArr = detail.map((i: any) => i.capacity);
+          const maxAllocatable = Math.max(...allocatableArr);
+          const maxCapacity = Math.max(...capacityArr);
+
+          if (_val < 0 || !Number.isInteger(_val) || _val > maxCapacity) {
+            setNpuNumMsg(`Must be a positive integer from 0 to ${maxCapacity}`);
+            return false;
+          }
+          if (_val > maxAllocatable) {
+            if (!window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')) return false;
+          }
         }
       }
     }
@@ -537,6 +545,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     getTemplates();
     getAllDevice();
   }, [selectedTeam]);
+
+  useEffect(() => {
+    if (type === 'PSDistJob' && allDevice[gpuType]) {
+      const temp = allDevice[gpuType].detail.map((i: any) => i.capacity);
+      const maxNum = Math.max(...temp);
+      let options = [1];
+      for (let n = 2; n <= maxNum; n = n * 2) {
+        options.push(n);
+      }
+      setGpuNumPerDeviceOptions(options);
+    }
+  }, [type]);
 
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
@@ -782,13 +802,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       defaultValue={gpus}
                       error={Boolean(errors.gpus)}
                       onChange={e => setGpus(Number(e.target.value))}
-                      // helperText={errors.gpus ? `Must be a positive integer from 0 to ${gpusPerNode}` : ''}
-                      // inputRef={register({
-                      //   validate: val => validateNumDevices(val)
-                      // })}
                       helperText={errors.gpus ? npuNumMsg : ''}
                       inputRef={register({
-                        validate: val => validateNpuNum(val)
+                        validate: val => validateNumDevices(val)
                       })}
                     />
                   </Grid>
@@ -804,12 +820,25 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       name="workers"
                       onChange={e => setWorkers(Number(e.target.value) > 1 ? Math.floor(Number(e.target.value)) : 1)}
                       InputProps={{ inputProps: { min: 1, step: 1 } }}
-                      // error={Boolean(errors.workers)}
-                      // helperText={errors.workers ? NpuNumMsg : ''}
-                      // inputRef={register({
-                      //   validate: val => validateNpuNum(val)
-                      // })}
                     />
+                  </Grid>
+                )}
+                { type === 'PSDistJob' && allDevice[gpuType].deviceStr === 'nvidia.com/gpu' && (
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      select
+                      label="Number of per device"
+                      fullWidth
+                      variant="filled"
+                      value={gpuNumPerDevice}
+                      name="gpuNumPerDevice"
+                      onChange={e => setGpuNumPerDevice(Number(e.target.value))}
+                      
+                    >
+                      {gpuNumPerDeviceOptions.map(i => (
+                        <MenuItem value={i}>{i}</MenuItem>
+                      ))}
+                    </TextField>
                   </Grid>
                 )}
                 { type === 'PSDistJob' && (
@@ -818,8 +847,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       disabled
                       type="number"
                       label="Total Number of Device"
-                      // value = {workers * gpusPerNode}
-                      value = {workers * 8}
+                      value = {allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU' ? workers * 8 : workers * gpuNumPerDevice}
                       fullWidth
                       variant="filled"
                     />

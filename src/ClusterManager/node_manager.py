@@ -303,7 +303,7 @@ def get_cluster_status():
             dataHandler.DeleteDeviceType(one_device_type)
     for gpuType,gpuStrDict in gpuMapping.items():
         if gpuType:
-            dataHandler.AddDevice(gpuType,gpuStrDict["deviceStr"],gpuStrDict["capacity"])
+            dataHandler.AddDevice(gpuType,gpuStrDict["deviceStr"],gpuStrDict["capacity"],gpuStrDict["detail"])
     dataHandler.Close()
     return cluster_status
 

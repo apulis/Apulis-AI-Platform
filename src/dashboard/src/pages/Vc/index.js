@@ -148,6 +148,10 @@ export default class Vc extends React.Component {
     this.setState({ btnLoading: true });
     axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
       .then((res) => {
+        if (res.data.result === false) {
+          message('error', 'Could not delete last VC');
+          return;
+        }
         message('success', 'Delete successfully！');
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();

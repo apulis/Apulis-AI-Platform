@@ -247,7 +247,7 @@ def get_cluster_status():
                 gpu_unschedulable.Add(ResourceInfo(node_status["gpu_capacity"]))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_used"])))
                 gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
-                                                                     "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]),
+                                                                     "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]) if node_status["gpuType"] in node_status["gpu_capacity"] else 0,
                                                                      "allocatable": 0})
             else:
                 # gpu_used may larger than allocatable: used one GPU that has uncorrectable errors
@@ -255,8 +255,9 @@ def get_cluster_status():
                 gpu_unschedulable.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
-                                                                     "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]),
-                                                                     "allocatable": max(int(node_status["gpu_allocatable"][node_status["gpuType"]])-int(node_status["gpu_used"][node_status["gpuType"]]),0)})
+                                                                     "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]) if node_status["gpuType"] in node_status["gpu_capacity"] else 0,
+                                                                     "allocatable": max(int(node_status["gpu_allocatable"][node_status["gpuType"]])-int(node_status["gpu_used"][node_status["gpuType"]]),0)
+                                                                     if node_status["gpuType"] in node_status["gpu_allocatable"] else 0})
             gpu_used.Add(ResourceInfo(node_status["gpu_used"]))
             gpu_capacity.Add(ResourceInfo(node_status["gpu_capacity"]))
 

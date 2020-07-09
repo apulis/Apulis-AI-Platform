@@ -1162,7 +1162,7 @@ def GetJobTotalGpu(jobParams):
 def DeleteVC(userName, vcName):
     dataHandler = DataHandler()
     if len(dataHandler.ListVCs())==1:
-        return False
+        return "Can't delete the last Vc!"
     if AuthorizationManager.IsClusterAdmin(userName):
         jobs = dataHandler.GetJobList("all", vcName, num=None,status="running,scheduling,pausing")
         for job in jobs:

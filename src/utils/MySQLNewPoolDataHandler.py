@@ -394,6 +394,7 @@ class DataHandler(object):
                         `deviceType`    varchar(50)   NOT NULL,
                         `deviceStr`     varchar(50)   NOT NULL,
                         `capacity`      INT NOT NULL,
+                        `detail`        LONGTEXT NOT NULL,
                         `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
                         PRIMARY KEY (`id`),
                         UNIQUE KEY (`deviceType`)
@@ -445,13 +446,13 @@ class DataHandler(object):
                 conn.commit()
 
     @record
-    def AddDevice(self,deviceType, deviceStr, capacity):
+    def AddDevice(self,deviceType, deviceStr, capacity,detail):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.deviceStatusTableName + "` (deviceType, deviceStr, capacity) VALUES (%s,%s,%s) " \
-                                                                 "ON DUPLICATE KEY UPDATE deviceStr=values(deviceStr),capacity=values(capacity) "
+            sql = "INSERT INTO `" + self.deviceStatusTableName + "` (deviceType, deviceStr, capacity,`detail`) VALUES (%s,%s,%s,%s) " \
+                                                                 "ON DUPLICATE KEY UPDATE deviceStr=values(deviceStr),capacity=values(capacity),`detail`=values(`detail`) "
             with MysqlConn() as conn:
-                conn.insert_one(sql, (deviceType, deviceStr, capacity))
+                conn.insert_one(sql, (deviceType, deviceStr, capacity,json.dumps(detail)))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -462,11 +463,11 @@ class DataHandler(object):
     def GetAllDevice(self):
         ret = {}
         try:
-            sql = """select deviceType, deviceStr, capacity from `%s`""" %(self.deviceStatusTableName)
+            sql = """select deviceType, deviceStr, capacity,`detail` from `%s`""" %(self.deviceStatusTableName)
             with MysqlConn() as conn:
                 rets = conn.select_many(sql)
             for one in rets:
-                ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"]}
+                ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"],"detail":json.loads(one["detail"])}
         except Exception as e:
             logger.exception('AddStorage Exception: %s', str(e))
         return ret

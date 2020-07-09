@@ -247,7 +247,7 @@ def get_cluster_status():
                 gpu_unschedulable.Add(ResourceInfo(node_status["gpu_capacity"]))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_used"])))
                 gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
-                                                                     "capacity": ResourceInfo(node_status["gpu_capacity"]).ToSerializable(),
+                                                                     "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]),
                                                                      "allocatable": 0})
             else:
                 # gpu_used may larger than allocatable: used one GPU that has uncorrectable errors
@@ -255,8 +255,8 @@ def get_cluster_status():
                 gpu_unschedulable.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
-                                                                     "capacity": ResourceInfo(node_status["gpu_capacity"]).ToSerializable(),
-                                                                     "allocatable": ResourceInfo(node_status["gpu_allocatable"]).ToSerializable() - ResourceInfo(node_status["gpu_used"]).ToSerializable()})
+                                                                     "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]),
+                                                                     "allocatable": max(int(node_status["gpu_allocatable"][node_status["gpuType"]])-int(node_status["gpu_used"][node_status["gpuType"]]),0)})
             gpu_used.Add(ResourceInfo(node_status["gpu_used"]))
             gpu_capacity.Add(ResourceInfo(node_status["gpu_capacity"]))
 

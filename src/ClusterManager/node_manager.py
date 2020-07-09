@@ -247,7 +247,7 @@ def get_cluster_status():
                 gpu_unschedulable.Add(ResourceInfo(node_status["gpu_capacity"]))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_used"])))
                 gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
-                                                                     "capacity": int(node_status["gpu_capacity"]),
+                                                                     "capacity": int(node_status["gpu_capacity"].ToSerializable()),
                                                                      "allocatable": 0})
             else:
                 # gpu_used may larger than allocatable: used one GPU that has uncorrectable errors
@@ -255,8 +255,8 @@ def get_cluster_status():
                 gpu_unschedulable.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
-                                                                     "capacity": int(node_status["gpu_capacity"]),
-                                                                     "allocatable": int(node_status["gpu_allocatable"]) - int(node_status["gpu_used"])})
+                                                                     "capacity": int(node_status["gpu_capacity"].ToSerializable()),
+                                                                     "allocatable": int(node_status["gpu_allocatable"].ToSerializable()) - int(node_status["gpu_used"].ToSerializable())})
             gpu_used.Add(ResourceInfo(node_status["gpu_used"]))
             gpu_capacity.Add(ResourceInfo(node_status["gpu_capacity"]))
 

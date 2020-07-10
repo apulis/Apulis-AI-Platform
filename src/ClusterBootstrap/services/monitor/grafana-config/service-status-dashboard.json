@@ -400,8 +400,6 @@
   "timepicker": {
     "now": true,
     "refresh_intervals": [
-      "5s",
-      "10s",
       "30s",
       "1m",
       "5m",

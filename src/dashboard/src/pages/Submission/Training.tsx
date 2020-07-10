@@ -518,7 +518,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         const { deviceStr } = allDevice[gpuType];
         if (deviceStr === 'npu.huawei.com/NPU') {
           if (_val !== 1 &&_val !== 2 && _val !== 4 && _val !== 8) {
-            setNpuNumMsg(`Must be a positive integer from 1 to ${gpusPerNode}，and can only be one of 1, 2, 4, 8`);
+            setNpuNumMsg(`Must be a positive integer from 1 to ${gpusPerNode > 8 ? 8 : gpusPerNode}，and can only be one of 1, 2, 4, 8`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
@@ -547,8 +547,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [selectedTeam]);
 
   useEffect(() => {
+    if (type === 'PSDistJob' && allDevice[gpuType].deviceStr === 'nvidia.com/gpu') {
+      setGpuNumPerDevice(1);
+    }
+  }, [gpuType]);
+
+  useEffect(() => {
     if (type === 'PSDistJob' && allDevice[gpuType]) {
-      const temp = allDevice[gpuType].detail.map((i: any) => i.capacity);
+      const data = allDevice[gpuType];
+      if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
+      const temp = data.detail.map((i: any) => i.capacity);
       const maxNum = Math.max(...temp);
       let options = [1];
       for (let n = 2; n <= maxNum; n = n * 2) {
@@ -823,11 +831,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     />
                   </Grid>
                 )}
-                { type === 'PSDistJob' && allDevice[gpuType].deviceStr === 'nvidia.com/gpu' && (
+                { type === 'PSDistJob' && (
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
-                      label="Number of per device"
+                      disabled={allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU'}
+                      label="Number of Devices Per Node"
                       fullWidth
                       variant="filled"
                       value={gpuNumPerDevice}
@@ -847,7 +856,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       disabled
                       type="number"
                       label="Total Number of Device"
-                      value = {allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU' ? workers * 8 : workers * gpuNumPerDevice}
+                      value = {workers * gpuNumPerDevice}
                       fullWidth
                       variant="filled"
                     />

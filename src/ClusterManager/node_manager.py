@@ -247,7 +247,8 @@ def get_cluster_status():
             if node_status["unschedulable"]:
                 gpu_unschedulable.Add(ResourceInfo(node_status["gpu_capacity"]))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_used"])))
-                gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
+                if node_status["gpuType"]:
+                    gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
                                                                      "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]) if node_status["gpuType"] in node_status["gpu_capacity"] else 0,
                                                                      "allocatable": 0})
             else:
@@ -255,7 +256,8 @@ def get_cluster_status():
                 gpu_avaliable.Add(ResourceInfo.DifferenceMinZero(ResourceInfo(node_status["gpu_allocatable"]), ResourceInfo(node_status["gpu_used"])))
                 gpu_unschedulable.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
-                gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
+                if node_status["gpuType"]:
+                    gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
                                                                      "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]) if node_status["gpuType"] in node_status["gpu_capacity"] else 0,
                                                                      "allocatable": max(int(node_status["gpu_allocatable"][node_status["gpuType"]])-int(node_status["gpu_used"][node_status["gpuType"]]),0)
                                                                      if node_status["gpuType"] in node_status["gpu_allocatable"] else 0})

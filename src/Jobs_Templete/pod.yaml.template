@@ -107,7 +107,7 @@ spec:
   {% endif %}
   initContainers:
   - name: init
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     image: {{ job["init-container"] }}
     volumeMounts:
     - mountPath: /dlts-runtime

@@ -63,7 +63,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}username{{'}}'}}",
+                    "legendFormat": "{{username}}",
                     "refId": "A"
                   }
                 ],
@@ -151,7 +151,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}vc_name{{'}}'}} allocation",
+                    "legendFormat": "{{vc_name}} allocation",
                     "refId": "A"
                   },
                   {
@@ -165,7 +165,7 @@ data:
                     "expr": "k8s_vc_device_total",
                     "format": "time_series",
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}vc_name{{'}}'}} quota",
+                    "legendFormat": "{{vc_name}} quota",
                     "refId": "C"
                   },
                   {
@@ -259,7 +259,7 @@ data:
                     "expr": "count (task_device_percent) by (vc_name) / sum (k8s_vc_device_total) by (vc_name)",
                     "format": "time_series",
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}vc_name{{'}}'}}",
+                    "legendFormat": "{{vc_name}}",
                     "refId": "A"
                   },
                   {
@@ -353,7 +353,7 @@ data:
                     "expr": "avg (task_device_percent) by (username)",
                     "format": "time_series",
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}username{{'}}'}}",
+                    "legendFormat": "{{username}}",
                     "refId": "A"
                   }
                 ],
@@ -440,7 +440,7 @@ data:
                     "expr": "avg (task_device_percent) by (vc_name)",
                     "format": "time_series",
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}vc_name{{'}}'}}",
+                    "legendFormat": "{{vc_name}}",
                     "refId": "A"
                   },
                   {
@@ -621,7 +621,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_used{device_str='nvidia.com/gpu'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_used{device_str='nvidia.com/gpu'})",
                     "format": "time_series",
                     "instant": true,
                     "intervalFactor": 2,
@@ -697,7 +697,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_available{device_str='nvidia.com/gpu'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_available{device_str='nvidia.com/gpu'})",
                     "format": "time_series",
                     "instant": true,
                     "intervalFactor": 2,
@@ -773,7 +773,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_reserved{device_str='nvidia.com/gpu'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_reserved{device_str='nvidia.com/gpu'})",
                     "format": "time_series",
                     "instant": true,
                     "intervalFactor": 2,
@@ -849,7 +849,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_total{device_str='nvidia.com/gpu'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'})",
                     "format": "time_series",
                     "hide": false,
                     "instant": true,
@@ -939,7 +939,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_used{device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_used{device_str='npu.huawei.com/NPU'})",
                     "format": "time_series",
                     "instant": true,
                     "intervalFactor": 2,
@@ -1015,7 +1015,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_available{device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
                     "format": "time_series",
                     "instant": true,
                     "intervalFactor": 2,
@@ -1091,7 +1091,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_reserved{device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_reserved{device_str='npu.huawei.com/NPU'})",
                     "format": "time_series",
                     "instant": true,
                     "intervalFactor": 2,
@@ -1167,7 +1167,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "sum(avg by (host_ip) (k8s_node_device_total{device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
+                    "expr": "sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'})",
                     "format": "time_series",
                     "hide": false,
                     "instant": true,
@@ -1257,7 +1257,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "count(task_cpu_percent) OR on() vector(0)",
+                    "expr": "count(task_cpu_percent)",
                     "format": "time_series",
                     "hide": false,
                     "instant": true,
@@ -1334,7 +1334,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "count(pai_node_count{ready=\"true\", unschedulable=\"false\"}) OR on() vector(0)",
+                    "expr": "count(pai_node_count{ready=\"true\", unschedulable=\"false\"})",
                     "format": "time_series",
                     "hide": false,
                     "instant": true,
@@ -1411,7 +1411,7 @@ data:
                 "tableColumn": "",
                 "targets": [
                   {
-                    "expr": "count(pai_node_count) OR on() vector(0)",
+                    "expr": "count(pai_node_count)",
                     "format": "time_series",
                     "hide": false,
                     "instant": true,
@@ -1541,10 +1541,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "count_values(\"gpu_available\", avg by (host_ip)(k8s_node_device_available{device_str='nvidia.com/gpu'}))",
+                  "expr": "count_values(\"gpu_available\", k8s_node_device_available{device_str='nvidia.com/gpu'})",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}gpu_available{{'}}'}} available gpus",
+                  "legendFormat": "{{gpu_available}} available gpus",
                   "refId": "A"
                 }
               ],
@@ -1616,10 +1616,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "count_values(\"npu_available\", avg by (host_ip) (k8s_node_device_available{device_str='npu.huawei.com/NPU'}))",
+                  "expr": "count_values(\"npu_available\", k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}npu_available{{'}}'}} available npus",
+                  "legendFormat": "{{npu_available}} available npus",
                   "refId": "A"
                 }
               ],
@@ -1768,21 +1768,21 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum (avg (k8s_node_device_available{device_str='nvidia.com/gpu'})by (host_ip) )",
+                  "expr": "sum(k8s_node_device_available{device_str='nvidia.com/gpu'})",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "Available",
                   "refId": "A"
                 },
                 {
-                  "expr": "sum(avg (k8s_node_device_total{device_str='nvidia.com/gpu'})by (host_ip) )",
+                  "expr": "sum(k8s_node_device_total{device_str='nvidia.com/gpu'})",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "Total",
                   "refId": "B"
                 },
                 {
-                  "expr": "sum(avg (k8s_node_device_reserved{device_str='nvidia.com/gpu'})by (host_ip) )",
+                  "expr": "sum(k8s_node_device_reserved{device_str='nvidia.com/gpu'})",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "Reserved",
@@ -1858,21 +1858,21 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(avg (k8s_node_device_available{device_str='npu.huawei.com/NPU'})by (host_ip))",
+                  "expr": "sum(k8s_node_device_available{device_str='npu.huawei.com/NPU'})",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "Available",
                   "refId": "A"
                 },
                 {
-                  "expr": "sum(avg (k8s_node_device_total{device_str='npu.huawei.com/NPU'})by (host_ip))",
+                  "expr": "sum(k8s_node_device_total{device_str='npu.huawei.com/NPU'})",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "Total",
                   "refId": "B"
                 },
                 {
-                  "expr": "sum(avg (k8s_node_device_reserved{device_str='npu.huawei.com/NPU'})by (host_ip))",
+                  "expr": "sum(k8s_node_device_reserved{device_str='npu.huawei.com/NPU'})",
                   "format": "time_series",
                   "intervalFactor": 2,
                   "legendFormat": "Reserved",
@@ -16647,7 +16647,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -16723,7 +16723,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -16811,7 +16811,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -16887,7 +16887,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -16975,7 +16975,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17051,7 +17051,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17139,7 +17139,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17215,7 +17215,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17303,7 +17303,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17379,7 +17379,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17467,7 +17467,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17543,7 +17543,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17631,7 +17631,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17707,7 +17707,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17795,7 +17795,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17871,7 +17871,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -17959,7 +17959,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18035,7 +18035,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18123,7 +18123,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18199,7 +18199,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18287,7 +18287,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18363,7 +18363,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18451,7 +18451,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18527,7 +18527,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18615,7 +18615,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18691,7 +18691,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18779,7 +18779,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18855,7 +18855,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -18943,7 +18943,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -19019,7 +19019,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -19107,7 +19107,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -19183,7 +19183,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -19271,7 +19271,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -19347,7 +19347,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -19435,7 +19435,7 @@ data:
                     "format": "time_series",
                     "hide": false,
                     "intervalFactor": 2,
-                    "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                    "legendFormat": "GPU {{minor_number}} on {{instance}}",
                     "refId": "A"
                   }
                 ],
@@ -19608,10 +19608,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg (task_cpu_percent{job_name=\"$job_id\"}) by (instance)",
+                  "expr": "task_cpu_percent{job_name=\"$job_name\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "{{instance}}",
                   "refId": "A"
                 }
               ],
@@ -19671,7 +19671,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -19683,10 +19683,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg (task_mem_usage_byte{job_name=\"$job_id\"}) by (instance)",
+                  "expr": "task_mem_usage_byte{job_name=\"$job_name\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "{{instance}}",
                   "refId": "A"
                 }
               ],
@@ -19758,7 +19758,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -19770,18 +19770,18 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "sum(rate(task_net_in_byte{job_name=\"$job_id\"}[5m])) by (instance)",
+                  "expr": "sum(rate(task_net_in_byte{job_name=\"$job_name\"}[5m])) by (instance)",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
+                  "legendFormat": "{{instance}} Inbound",
                   "refId": "A"
                 },
                 {
-                  "expr": "sum(rate(task_net_out_byte{job_name=\"$job_id\"}[5m])) by (instance)",
+                  "expr": "sum(rate(task_net_out_byte{job_name=\"$job_name\"}[5m])) by (instance)",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
+                  "legendFormat": "{{instance}} Outbound",
                   "refId": "B"
                 }
               ],
@@ -19841,7 +19841,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -19853,18 +19853,18 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg (irate(task_block_in_byte{job_name=\"$job_id\"}[300s])) by (instance)",
+                  "expr": "irate(task_block_in_byte{job_name=\"$job_name\"}[300s])",
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
+                  "legendFormat": "{{instance}} Read",
                   "refId": "A"
                 },
                 {
-                  "expr": "avg (irate(task_block_out_byte{job_name=\"$job_id\"}[300s])) by (instance)",
+                  "expr": "irate(task_block_out_byte{job_name=\"$job_name\"}[300s])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
+                  "legendFormat": "{{instance}} Write",
                   "refId": "B"
                 }
               ],
@@ -19936,7 +19936,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -19948,11 +19948,11 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg by (minor_number,instance) (task_device_percent{job_name=\"$job_id\",device_str='npu.huawei.com/NPU'})",
+                  "expr": "task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "NPU {{minor_number}} on {{instance}}",
                   "refId": "A"
                 }
               ],
@@ -20012,7 +20012,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -20024,10 +20024,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg by (minor_number,instance) (task_device_mem_percent{job_name=\"$job_id\",device_str='npu.huawei.com/NPU'})",
+                  "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "NPU {{minor_number}} on {{instance}}",
                   "refId": "A"
                 }
               ],
@@ -20099,7 +20099,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -20111,11 +20111,11 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg by (minor_number,instance) (task_device_percent{job_name=\"$job_id\",device_str='nvidia.com/gpu'})",
+                  "expr": "task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "GPU {{minor_number}} on {{instance}}",
                   "refId": "A"
                 }
               ],
@@ -20175,7 +20175,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -20187,10 +20187,10 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg by (minor_number,instance) (task_device_mem_percent{job_name=\"$job_id\",device_str='nvidia.com/gpu'})",
+                  "expr": "task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "GPU {{minor_number}} on {{instance}}",
                   "refId": "A"
                 }
               ],
@@ -20262,7 +20262,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -20274,11 +20274,11 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg by (minor_number,instance) (task_dcgm_gpu_util{job_name=\"$job_id\"})",
+                  "expr": "task_dcgm_gpu_util{job_name=\"$job_name\"}",
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "GPU {{minor_number}} on {{instance}}",
                   "refId": "A"
                 }
               ],
@@ -20338,7 +20338,7 @@ data:
               "lines": true,
               "linewidth": 1,
               "links": [],
-              "nullPointMode": "connected",
+              "nullPointMode": "null",
               "percentage": false,
               "pointradius": 5,
               "points": false,
@@ -20350,11 +20350,11 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "avg by (minor_number,instance) (task_dcgm_mem_copy_util{job_name=\"$job_id\"})",
+                  "expr": "task_dcgm_mem_copy_util{job_name=\"$job_name\"}",
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "GPU {{minor_number}} on {{instance}}",
                   "refId": "A"
                 }
               ],
@@ -20416,7 +20416,7 @@ data:
             "includeAll": false,
             "label": null,
             "multi": false,
-            "name": "job_id",
+            "name": "job_name",
             "options": [],
             "query": "label_values(task_cpu_percent, job_name)",
             "refresh": 1,
@@ -20938,7 +20938,7 @@ data:
                 {
                   "expr": "nvidiasmi_utilization_gpu{instance=~\"$node(:[0-9]*)?$\"}",
                   "format": "time_series",
-                  "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
+                  "legendFormat": "{{minor_number}}",
                   "interval": "",
                   "intervalFactor": 2,
                   "metric": "",
@@ -21021,7 +21021,7 @@ data:
                 {
                   "expr": "nvidiasmi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
                   "format": "time_series",
-                  "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
+                  "legendFormat": "{{minor_number}}",
                   "intervalFactor": 2,
                   "refId": "A"
                 }
@@ -21112,7 +21112,7 @@ data:
                 {
                   "expr": "huaweismi_utilization_npu{instance=~\"$node(:[0-9]*)?$\"}",
                   "format": "time_series",
-                  "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
+                  "legendFormat": "{{minor_number}}",
                   "interval": "",
                   "intervalFactor": 2,
                   "metric": "",
@@ -21195,7 +21195,7 @@ data:
                 {
                   "expr": "huaweismi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
                   "format": "time_series",
-                  "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
+                  "legendFormat": "{{minor_number}}",
                   "intervalFactor": 2,
                   "refId": "A"
                 }
@@ -21283,7 +21283,7 @@ data:
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}device{{'}}'}}",
+                  "legendFormat": "{{device}}",
                   "refId": "A"
                 }
               ],
@@ -21358,7 +21358,7 @@ data:
                   "expr": "avg by (device) (node_filesystem_files_free{instance=~\"$node(:[0-9]*)?$\", device=~\"/dev/.*\"} / node_filesystem_files) * 100",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}device{{'}}'}}",
+                  "legendFormat": "{{device}}",
                   "refId": "A"
                 }
               ],
@@ -21635,21 +21635,21 @@ data:
                 "steppedLine": false,
                 "targets": [
                   {
-                    "expr": "sum( avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
+                    "expr": "sum(k8s_vc_device_total{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "legendFormat": "Total",
                     "refId": "A"
                   },
                   {
-                    "expr": "sum( avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
+                    "expr": "sum(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "legendFormat": "Available",
                     "refId": "B"
                   },
                   {
-                    "expr": "sum( avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
+                    "expr": "sum(k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "legendFormat": "Preemptive available",
@@ -21724,21 +21724,21 @@ data:
                 "steppedLine": false,
                 "targets": [
                   {
-                    "expr": "sum( avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})  by(vc_name) )",
+                    "expr": "sum(k8s_vc_device_total{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "legendFormat": "Total",
                     "refId": "A"
                   },
                   {
-                    "expr": "sum( avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) by(vc_name) )",
+                    "expr": "sum(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "legendFormat": "Available",
                     "refId": "B"
                   },
                   {
-                    "expr": "sum( avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) by(vc_name) )",
+                    "expr": "sum(k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
                     "format": "time_series",
                     "intervalFactor": 2,
                     "legendFormat": "Preemptive available",
@@ -21918,7 +21918,7 @@ data:
                     "expr": "histogram_quantile(0.9, sum(rate(datahandler_fn_latency_seconds_bucket{scraped_from=~\"jobmanager.*\"}[5m])) by (le, fn_name))",
                     "format": "time_series",
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}fn_name{{'}}'}}",
+                    "legendFormat": "{{fn_name}}",
                     "refId": "A"
                   }
                 ],
@@ -21993,7 +21993,7 @@ data:
                     "expr": "histogram_quantile(0.9, sum(rate(datahandler_fn_latency_seconds_bucket{scraped_from=~\"restfulapi.*\"}[5m])) by (le, fn_name))",
                     "format": "time_series",
                     "intervalFactor": 2,
-                    "legendFormat": "{{'{{'}}fn_name{{'}}'}}",
+                    "legendFormat": "{{fn_name}}",
                     "refId": "A"
                   }
                 ],
@@ -22319,7 +22319,7 @@ data:
                   "expr": "service_cpu_percent{name=\"$service_name\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "{{instance}}",
                   "refId": "A"
                 }
               ],
@@ -22395,7 +22395,7 @@ data:
                   "expr": "service_mem_usage_byte{name=\"$service_name\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}}",
+                  "legendFormat": "{{instance}}",
                   "refId": "A"
                 }
               ],
@@ -22484,14 +22484,14 @@ data:
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
+                  "legendFormat": "{{instance}} Inbound",
                   "refId": "A"
                 },
                 {
                   "expr": "service_net_out_byte{name=\"$service_name\"}",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
+                  "legendFormat": "{{instance}} Outbound",
                   "refId": "B"
                 }
               ],
@@ -22568,14 +22568,14 @@ data:
                   "format": "time_series",
                   "interval": "",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
+                  "legendFormat": "{{instance}} Read",
                   "refId": "A"
                 },
                 {
                   "expr": "irate(service_block_out_byte{name=\"$service_name\"}[300s])",
                   "format": "time_series",
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
+                  "legendFormat": "{{instance}} Write",
                   "refId": "B"
                 }
               ],
@@ -22744,11 +22744,11 @@ data:
               "steppedLine": false,
               "targets": [
                 {
-                  "expr": "min ((node_filesystem_size_bytes - node_filesystem_avail_bytes{fstype=~\"nfs[0-9]?\"}) / node_filesystem_size_bytes) by (device) * 100",
+                  "expr": "min ((node_filesystem_size_bytes - node_filesystem_avail_bytes{fstype=\"nfs4\"}) / node_filesystem_size_bytes) by (device) * 100",
                   "format": "time_series",
                   "hide": false,
                   "intervalFactor": 2,
-                  "legendFormat": "{{'{{'}} device {{'}}'}}",
+                  "legendFormat": "{{ device }}",
                   "refId": "A"
                 }
               ],
@@ -22942,7 +22942,7 @@ data:
                     "refId": "A"
                   }
                 ],
-                "title": "User GPU Status",
+                "title": "User Status",
                 "transform": "table",
                 "type": "table"
               },
@@ -23023,7 +23023,7 @@ data:
                     "refId": "A"
                   }
                 ],
-                "title": "User NPU Status",
+                "title": "User Status",
                 "transform": "table",
                 "type": "table"
               }

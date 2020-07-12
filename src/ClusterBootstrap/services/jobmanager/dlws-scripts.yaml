@@ -3,7 +3,7 @@ data:
   bootstrap.sh: "#! /bin/bash\nset -ex\n\nRUN_TIME_DIR=/dlts-runtime\nSCRIPT_DIR=/pod/scripts\nLOG_DIR=/pod/logs\n\nmkdir
     -p ${RUN_TIME_DIR}\nmkdir -p ${SCRIPT_DIR}\nmkdir -p ${LOG_DIR}\n\n. ${RUN_TIME_DIR}/env/init.env\nsh
     -x ${RUN_TIME_DIR}/install.sh\n\n# set apt mirrors for foreign sources\n#sudo
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub\n#sed
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub\nsed
     -i 's|https\\?://[^/]\\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list\n\n#
     to avoid apt-get update error:\n# download.nvidia.cn: connection timeout\nrm -rf
     /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/cuda.list.save /etc/apt/sources.list.d/graphics-drivers-ubuntu-ppa-bionic.list

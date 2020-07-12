@@ -43,12 +43,12 @@ import az_tools
 
 from params import default_config_parameters, scriptblocks
 from ConfigUtils import *
-import pdb
 
 capacityMatch = re.compile("\d+\.?\d*\s*[K|M|G|T|P]B")
 digitsMatch = re.compile("\d+\.?\d*")
 defanswer = ""
 ipAddrMetaname = "hostIP"
+ssh_port = "3399"
 
 # CoreOS version and channels, further configurable.
 coreosversion = "1235.9.0"
@@ -512,7 +512,8 @@ def init_deployment():
 
 
 def check_node_availability(ipAddress):
-    status = os.system('ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -oBatchMode=yes %s@%s hostname > /dev/null' % (config["admin_username"], config["ssh_cert"], ipAddress))
+    global  ssh_port
+    status = os.system('ssh -p %s -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -oBatchMode=yes %s@%s hostname > /dev/null' % (ssh_port, config["admin_username"], config["ssh_cert"], ipAddress))
     #status = sock.connect_ex((ipAddress,22))
     return status == 0
 
@@ -1830,7 +1831,7 @@ def install_ssh_key(key_files):
 
     rootpasswdfile = "./deploy/sshkey/rootpasswd"
     rootuserfile = "./deploy/sshkey/rootuser"
-
+    global  ssh_port
 
     with open(rootpasswdfile, "r") as f:
         rootpasswd = f.read().strip()
@@ -1847,17 +1848,17 @@ def install_ssh_key(key_files):
         if len(key_files)>0:
             for key_file in key_files:
                 print "Install key %s on %s" % (key_file, node)
-                os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i %s %s@%s""" %(rootpasswdfile, key_file, rootuser, node))
+                os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i %s -p %s %s@%s""" %(rootpasswdfile, key_file, ssh_port, rootuser, node))
         else:
             print "Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node)
-            os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub %s@%s""" %(rootpasswdfile, rootuser, node))
+            os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub -p %s %s@%s""" %(rootpasswdfile, ssh_port, rootuser, node))
 
 
     if rootuser != config["admin_username"]:
          for node in all_nodes:
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile,rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile,rootuser, node,config["admin_username"])) # TODO centos command different
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile,rootuser, node, config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile, ssh_port, rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"])) # TODO centos command different
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile, ssh_port, rootuser, node, config["admin_username"]))
 
 
             if len(key_files)>0:
@@ -1866,18 +1867,18 @@ def install_ssh_key(key_files):
                     with open(key_file, "r") as f:
                         publicKey = f.read().strip()
                         f.close()
-                    os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
+                    os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,publicKey,config["admin_username"]))
 
             else:
                 print "Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node)
                 with open("./deploy/sshkey/id_rsa.pub", "r") as f:
                     publicKey = f.read().strip()
                     f.close()
-                os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
+                os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,publicKey,config["admin_username"]))
 
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,config["admin_username"]))
-            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"]))
+            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"]))
 
 
 
@@ -3952,7 +3953,7 @@ def get_admin_usr_password():
 
 # install ssh key remotely
 def install_ssh_key_by_nodes(all_nodes):
-
+    global ssh_port 
     rootuser, rootpasswd, rootpasswdfile = get_admin_usr_password()
     if rootuser is None or rootpasswd is None or rootpasswdfile is None:
         return
@@ -3962,35 +3963,33 @@ def install_ssh_key_by_nodes(all_nodes):
     ## install sshkeys using defalt key file (./deploy/sshkey/xxx)
     for node in all_nodes:
         print("Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node))
-        os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub %s@%s""" %(rootpasswdfile, rootuser, node))
+        os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub -p %s %s@%s""" %(rootpasswdfile, ssh_port, rootuser, node))
 
     ## dlwsadmin is not root
     if rootuser != config["admin_username"]:
         for node in all_nodes:
             # create new user on target machine
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile,rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile,rootuser, node,config["admin_username"])) # TODO centos command different
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile,rootuser, node, config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile, ssh_port, rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"])) # TODO centos command different
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile, ssh_port, rootuser, node, config["admin_username"]))
 
             print("Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node))
             with open("./deploy/sshkey/id_rsa.pub", "r") as f:
                 publicKey = f.read().strip()
                 f.close()
 
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,publicKey,config["admin_username"]))
 
             ## set no password
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,config["admin_username"]))
-            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"]))
+            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"]))
     else:
         pass
 
     return
 
 def scale_up(config):
-
-    #pdb.set_trace()
 
     if "scale_up" not in config:
         print("Error: not scale_up config\n")

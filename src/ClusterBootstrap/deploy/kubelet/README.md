@@ -1,1 +1,0 @@
-# This folder contains the script/template to be deployed to CoreOS node. 

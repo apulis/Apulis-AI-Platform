@@ -1,9 +1,0 @@
-{
-  "type": "object",
-  "properties": {
-    "priority": {
-      "type": "number"
-    }
-  },
-  "required": ["priority"]
-}

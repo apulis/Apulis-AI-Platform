@@ -1,7 +1,0 @@
-root: true
-extends:
-- plugin:@typescript-eslint/recommended
-- react-app
-rules:
-  '@typescript-eslint/explicit-function-return-type': off
-  '@typescript-eslint/no-explicit-any': off

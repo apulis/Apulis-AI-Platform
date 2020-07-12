@@ -39,7 +39,12 @@ data:
             for: 30m
             annotations:
               summary: "docker daemon in {{$labels.ip}} is {{$labels.error}}"
-  kill-idle.rules: ""
+  kill-idle.rules: |2+
+
+    groups:
+      - name: kill-idle
+        rules:
+
   node.rules: |
     groups:
         - name: node-rules

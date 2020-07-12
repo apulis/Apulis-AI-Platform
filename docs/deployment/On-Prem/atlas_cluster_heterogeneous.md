@@ -43,16 +43,53 @@
    - 若设备为Huawei NPU，则驱动版本不低于 1.72.T2.100.B020
 
 * 集群所在网络建议简化配置，其中路由或网关必须支持DNS Local Maping，DHCP Server等。 
+* Atlas NPU 集群需要 100G 交换机，每台的8个NPU都要接上交换机的百G口，配置交换机网关启用流控。
+* Atlas 多节点集群需要配置局域网络
+
 
 节点组网规划示例
 --------------------------------------------------------------------------------
-**master和worker需在同一个子网或VPC**
-| 主机名       | 配置    | 计算设备  | 操作系统       | 公网IP        | 子网IP      | 描述                          |
-| ----------- | ------- | -------- | -------------- | ------------ | ----------- | ----------------------------- |
-| atlas02     | 6C64G   | 8 NPU    | ubuntu 18.04.1 | 121.46.18.84 | 192.168.3.6 | k8s master节点/NPU worker 节点 |
-| atlas01     | 36C512G | 8 NPU    | ubuntu 18.04.1 | 121.46.18.84 | 192.168.3.2 | NPU Woker节点                  |
-| atlas-gpu01 | 6C64G   | 8 GPU    | ubuntu 18.04.4 | 121.46.18.84 | 192.168.3.4 | GPU Woker节点                  |
-| atlas-gpu02 | 6C64G   | 8 GPU    | ubuntu 18.04.4 | 121.46.18.84 | 192.168.3.3 | GPU Woker节点                  |
+
+**master和worker需在同一个局域网或VPC**
+| 主机名       | 公网IP      | mask        | gateway   |DNS            |iBMC公网IP  |私网IP      |
+|:----------- |:-----------|:------------|:----------|:--------------|:-----------|:-----------|
+| atlas01     |121.37.54.23|255.255.255.0|121.37.54.1|114.114.114.114|121.37.54.26|            |
+| atlas02     |121.37.54.25|255.255.255.0|121.37.54.1|114.114.114.114|121.37.54.26|            |
+| atlas03     |121.37.54.27|255.255.255.0|121.37.54.1|114.114.114.114|121.37.54.26|            |
+
+**3 台 atlas 的 NPU 组网规划：**
+
+| node    | npu_id | address       | netmask       |
+|---------|--------|---------------|---------------|
+| atlas01 | NPU0   | 192.168.10.11 | 255.255.255.0 |
+| atlas01 | NPU1   | 192.168.20.11 | 255.255.255.0 |
+| atlas01 | NPU2   | 192.168.30.11 | 255.255.255.0 |
+| atlas01 | NPU3   | 192.168.40.11 | 255.255.255.0 |
+| atlas01 | NPU4   | 192.168.10.12 | 255.255.255.0 |
+| atlas01 | NPU5   | 192.168.20.12 | 255.255.255.0 |
+| atlas01 | NPU6   | 192.168.30.12 | 255.255.255.0 |
+| atlas01 | NPU7   | 192.168.40.12 | 255.255.255.0 |
+| atlas02 | NPU0   | 192.168.10.21 | 255.255.255.0 |
+| atlas02 | NPU1   | 192.168.20.21 | 255.255.255.0 |
+| atlas02 | NPU2   | 192.168.30.21 | 255.255.255.0 |
+| atlas02 | NPU3   | 192.168.40.21 | 255.255.255.0 |
+| atlas02 | NPU4   | 192.168.10.22 | 255.255.255.0 |
+| atlas02 | NPU5   | 192.168.20.22 | 255.255.255.0 |
+| atlas02 | NPU6   | 192.168.30.22 | 255.255.255.0 |
+| atlas02 | NPU7   | 192.168.40.22 | 255.255.255.0 |
+| atlas03 | NPU0   | 192.168.10.31 | 255.255.255.0 |
+| atlas03 | NPU1   | 192.168.20.31 | 255.255.255.0 |
+| atlas03 | NPU2   | 192.168.30.31 | 255.255.255.0 |
+| atlas03 | NPU3   | 192.168.40.31 | 255.255.255.0 |
+| atlas03 | NPU4   | 192.168.10.32 | 255.255.255.0 |
+| atlas03 | NPU5   | 192.168.20.32 | 255.255.255.0 |
+| atlas03 | NPU6   | 192.168.30.32 | 255.255.255.0 |
+| atlas03 | NPU7   | 192.168.40.32 | 255.255.255.0 |
+
+**atlas集群网络拓扑示例**
+
+![atlas集群网络拓扑示例](./atlas集群拓扑图.png)
+
 
 节点基础配置
 -------------------------------------------------------------------------------
@@ -71,12 +108,12 @@
 
     ​*需要在DNS提供商如[阿里云](https://dns.console.aliyun.com)控制台进行配置*
 
-    * 主域名：**sigsus.cn**
+    * 主域名：**ascend.cn**
     * 配置示例：
 
     | 主机记录 | 记录类型 | 记录值 |
-    | ---- | ---- | ---- |
-    | atlas.sigsus.cn | A | 121.46.18.84 |
+    | ----    | ----     | ---- |
+    | atlas.ascend.cn | A | 121.37.54.27 |
 
 3. 配置Worker节点DNS
 
@@ -90,9 +127,9 @@
   - 增加短域名   
     ```
     ​mkdir -p /etc/resolvconf/resolv.conf.d/
-    ​echo "search sigsus.cn" > /etc/resolvconf/resolv.conf.d/base
+    ​echo "search ascend.cn" > /etc/resolvconf/resolv.conf.d/base
     sudo resolvconf -u
-    ​​# 此处**sigsus.cn**即为config.yaml中的domain
+    ​​# 此处**ascend.cn**即为config.yaml中的domain
     ```
 
 * 同步代码库
@@ -110,9 +147,10 @@
 
   | 主机记录              | 记录类型 | 记录值        |
   | --------------------- | -------- | ------------- |
-  | atlas01.sigsus.cn     | A        | 121.46.18.xxx |
-  | atlas-gpu01.sigsus.cn | A        | 121.46.18.xxx |
-  | atlas-gpu02.sigsus.cn | A        | 121.46.18.xxx |
+  | atlas01.ascend.cn     | A        | 121.37.54.23 |
+  | atlas02.ascend.cn     | A        | 121.37.54.25 |
+  | atlas03.ascend.cn     | A        | 121.37.54.27 |
+
 
 * 选项二：节点没有公网IP
 
@@ -124,19 +162,17 @@
     cat << EOF > deploy/etc/hosts
     127.0.0.1       localhost
 
-    192.168.3.2    atlas02
-    192.168.3.2    atlas02.sigsus.cn
-    192.168.3.2    atlas.sigsus.cn
+    192.168.3.2    atlas01
+    192.168.3.2    atlas01.ascend.cn
+    192.168.3.2    atlas.ascend.cn
 
-    192.168.3.6    atlas01
-    192.168.3.6    atlas01.sigsus.cn
+    192.168.3.4    atlas02
+    192.168.3.4    atlas02.ascend.cn
 
 
-    192.168.3.3    atlas-gpu02
-    192.168.3.3    atlas-gpu02.sigsus.cn
+    192.168.3.5    atlas03
+    192.168.3.5    atlas03.ascend.cn
 
-    192.168.3.4    atlas-gpu01
-    192.168.3.4    atlas-gpu01.sigsus.cn 
     EOF
 
     chmod 666 deploy/etc/hosts
@@ -166,7 +202,7 @@
 | onpremise_cluster | 集群基础信息<BR>worker_node_num表示总worker数<br>gpu_count_per_node表示每个节点的总GPU/NPU数 |
 | mountpoints       | 存储挂载点配置<BR>字段说明：<BR>        server表示存储点的主机名<BR>        filesharename表示存储Server的数据存储路径<BR>        curphysicalmountpoint表示存储设备在集群各个节点的挂载路径 |
 | k8s-gitbranch     | k8s版本号                                                    |
-| Authentications   | 登录方式：<br>       1. 用户名密码（默认登录方式）<BR>       2. 微软登录 <BR>TenantId、ClientId、ClientSecret的获取请参考 [微软官方说明](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps) <br> 3. 微信登录：<br> TenantId、ClientId、ClientSecret的获取请参考 [微信官方说明](https://open.weixin.qq.com/cgi-bin/frame?t=home/web_tmpl&lang=zh_CN) <br> 域名说明：<br> 假设cluster_name=atlas，domain=**sigsus.cn** <BR> 那么域名即为：**atlas.sigsus.cn** <BR> 微软登录与微信登录 必须基于此域名申请 |
+| Authentications   | 登录方式：<br>       1. 用户名密码（默认登录方式）<BR>       2. 微软登录 <BR>TenantId、ClientId、ClientSecret的获取请参考 [微软官方说明](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps) <br> 3. 微信登录：<br> TenantId、ClientId、ClientSecret的获取请参考 [微信官方说明](https://open.weixin.qq.com/cgi-bin/frame?t=home/web_tmpl&lang=zh_CN) <br> 域名说明：<br> 假设cluster_name=atlas，domain=**ascend.cn** <BR> 那么域名即为：**atlas.ascend.cn** <BR> 微软登录与微信登录 必须基于此域名申请 |
 
 * 平台配置示例
 
@@ -175,7 +211,7 @@
 cluster_name: atlas
 
 network:
-  domain: sigsus.cn
+  domain: ascend.cn
   container-network-iprange: "10.0.0.0/8"
 
 etcd_node_num: 1
@@ -219,9 +255,9 @@ webuiport: 3081
 useclusterfile : true
 
 machines:
-  atlas02:
+  atlas03:
     role: infrastructure
-    private-ip: 192.168.3.2
+    private-ip: 192.168.3.5
     archtype: arm64
     type: npu
     vendor: huawei
@@ -234,13 +270,21 @@ scale_up:
     vendor: huawei
     os: ubuntu
 
-  atlas-gpu01:
+  atlas02:
+    archtype: arm64
+    role: worker
+    type: npu 
+    vendor: huawei
+    os: ubuntu
+
+  atlas-gpu02:
     archtype: amd64
     role: worker
     type: gpu 
     vendor: nvidia
     os: ubuntu
 
+scale_down:
   atlas-gpu02:
     archtype: amd64
     role: worker
@@ -384,7 +428,6 @@ enable_custom_registry_secrets: True
     ./deploy.py --verbose execonall sudo usermod -aG docker dlwsadmin
     ```
 
-
     **注意：**
 
     * dlwsadmin为操作集群机器所采用的用户名，配置于config.yaml
@@ -398,6 +441,7 @@ enable_custom_registry_secrets: True
       docker run --rm -ti dlws/cuda nvidia-smi
       ```
     * 注意问题：
+
     如docker指令执行正常，但nvidia-docker指令执行错误，则修改`/etc/docker/daemon.json`，
     将"nvidia-docker"设置为`default runtime`
       ```
@@ -444,15 +488,18 @@ enable_custom_registry_secrets: True
       ./deploy.py --verbose kubeadm init
 
       # 如果 coredns 一直pending，请执行：
-      # weave.yaml 可以在 https://cloud.weave.works/k8s/net?k8s-version=v1.18.0 下载
+      curl -L https://cloud.weave.works/k8s/net?k8s-version=v1.18.0 -o weave.yaml
       kubectl apply -f  /home/apulis/weave.yaml
       ```
 
       *如果出现 x509: certificate signed by unknown authority，在同步证书之前执行以下步骤：*
 
       ```
+      # mkdir -p $HOME/.kube
       cp  /etc/kubernetes/admin.conf ./deploy/sshkey/admin.conf
       chown $(id -u):$(id -g) ./deploy/sshkey/admin.conf
+      # cp  /etc/kubernetes/admin.conf $HOME/.kube/config
+      # chown $(id -u):$(id -g) $HOME/.kube/config
       ```
 
     * 同步证书
@@ -466,6 +513,25 @@ enable_custom_registry_secrets: True
     ./deploy.py --verbose -y kubernetes labelservice
     ./deploy.py --verbose -y labelworker
     ```
+    *如果在 Join node过程提示 `cannot execute 'docker info -f {{.CgroupDriver}}': executable file not found in $PATH`*
+
+    ```
+    # 在对应node中执行
+    apt install docker.io -y
+    systemctl enable docker.service
+
+    ```
+
+    *如果在 Join 过程提示 `[ERROR FileContent--proc-sys-net-bridge-bridge-nf-call-iptables]: /proc/sys/net/bridge/bridge-nf-call-iptables does not exist`*
+
+    ```
+    # 在对应node中执行
+    modprobe br_netfilter
+    echo 1 > /proc/sys/net/bridge/bridge-nf-call-iptables
+    ```
+
+    *如果加入节点状态为 not ready，需查看weave net的pod状态，必要情况下需要在每个node重新apply weave-net*
+
 
 12. 挂载存储节点
 
@@ -485,7 +551,7 @@ enable_custom_registry_secrets: True
     mountpoints:
       nfsshare1:
         type: nfs
-        server: atlas02
+        server: atlas03
         filesharename: /mnt/local
         curphysicalmountpoint: /mntdlws
         mountpoints: ""
@@ -498,11 +564,11 @@ enable_custom_registry_secrets: True
 
 * 更新共享目录信息
 
-    sudo exportfs -a
+    ` sudo exportfs -a`
     
 * 执行挂载
 
-  `./deploy.py --verbose mount`
+    `./deploy.py --verbose mount`
 
 * 挂载结果确认
 
@@ -543,7 +609,7 @@ enable_custom_registry_secrets: True
     appId: "********************"
     appSecret: "********************"
 
-    domain: "https://atlas.sigsus.cn"
+    domain: "https://atlas.ascend.cn"
     administrators:
     - tom@hotmail.com
     - jeck@apulis.com
@@ -552,16 +618,16 @@ enable_custom_registry_secrets: True
 
     clusters:
     atlas02:
-        restfulapi: "http://altas02.sigsus.cn/apis"
+        restfulapi: "http://altas02.ascend.cn/apis"
         title: Grafana-endpoint-of-the-cluster
         workStorage: work
         dataStorage: data
-        grafana: "http://atlas02.sigsus.cn/grafana/"
-        prometheus: http://atlas02.sigsus.cn:9091
+        grafana: "http://atlas02.ascend.cn/grafana/"
+        prometheus: http://atlas02.ascend.cn:9091
         
     userGroup:
     type: custom
-    domain: http://atlas02.sigsus.cn
+    domain: http://atlas02.ascend.cn
     backEndPath: /custom-user-dashboard-backend
     frontEndPath: /custom-user-dashboard
     ```
@@ -573,7 +639,7 @@ enable_custom_registry_secrets: True
 -------------------------------------------------------------------------------
 
 1. 本地登录docker hub （账号为 docker hub 注册账号）
-    > docker login
+    `docker login`
 
 2. 生成dashboard, jobmanager等服务的配置文件
 
@@ -663,11 +729,15 @@ enable_custom_registry_secrets: True
     * 安装Mysql客户端 `apt install mysql-client-core-5.7 -y`
     * 配置Mysql账号和权限
     ```bash
-      mysql -h 127.0.0.1 -uroot -p
-      use mysql;
-      grant all privileges on *.* to 'root'@'%' with grant option;
+      kubectl get pods -n kube-system    # 查看mysql pod name
+      kubectl exec -it <MYSQL_POD_NAME> -- /bin/bash   # 进入pod
+      mysql -uroot -p  # 登录mysql，配置root账号和访问权限
+      update user set host='%' where user='root';
+      Grant all privileges on test.* to 'root'@'%';
+      alter user root identified with mysql_native_password by 'apulis#2019#wednesday';
+      alter user 'root'@'%' identified with mysql_native_password by 'apulis#2019#wednesday';
       flush privileges;
-      alter user 'root'@'%' identified with mysql_native_password by '******';
+      exit;
     ```
 
 9. 启动集群应用
@@ -693,6 +763,40 @@ enable_custom_registry_secrets: True
         ./deploy.py kubernetes start custom-user-dashboard
         ```
 
+访问和检查平台状态
+------------------------------------------------------------------------------
+
+* 检查集群pod状态
+
+  `kubectl get pods -n kube-system `
+
+* 检查平台pod状态
+
+  `kubectl get pods  `
+
+* 检查npu状态
+    ```
+    # npu 连接状态
+    for i in {0..7}; do hccn_tool -i ${i} -link -g; done
+    # 使用状态
+    npu-smi info
+    # npu监控数据
+    cat /var/log/npu/npu_smi/device0
+    ```
+* 访问平台
+    ```
+    # 浏览器访问 http://121.37.54.27/home
+    # 访问账号可查看前端配置文件 cat /etc/WebUI/local.yaml
+      administrators:
+
+        - xytxuyetao@163.com
+
+        - jiangfeng31@hisilicon.com
+
+        - maohongchao@huawei.com
+    用户名为邮箱名，不带后缀，默认密码：123456
+    例如：xytxuyetao : 123456
+    ```
 
 平台升级
 -------------------------------------------------------------------------------
@@ -864,29 +968,35 @@ FAQ
 
     clusters:
       sandbox03-master:
-          restfulapi: "http://altas02.sigsus.cn/apis"
+          restfulapi: "http://altas02.ascend.cn/apis"
           title: Grafana-endpoint-of-the-cluster
           workStorage: work
           dataStorage: data
-          grafana: "http://altas02.sigsus.cn/endpoints/grafana/"
-          prometheus: http://altas02.sigsus.cn:9091
+          grafana: "http://altas02.ascend.cn/endpoints/grafana/"
+          prometheus: http://altas02.ascend.cn:9091
     userGroup:
       type: custom
-      domain: "http://altas02.sigsus.cn"
+      domain: "http://altas02.ascend.cn"
       backEndPath: /custom-user-dashboard-backend
       frontEndPath: /custom-user-dashboard
     ```
 
 6. NPU 节点重启之后，需要重新配置
 
-    `./deploy.py --background --sudo runscriptonall scripts/npu/npu_info_gen.py`
-
-7. 如果master节点上有gpu资源`./deploy.py --verbose runscriptonall ./scripts/prepare_ubuntu.sh`执行上述语句的时候，master可能会重启，导致worker节点装不上gpu驱动，需要手动在worker节点进行安装
     ```
-    sudo add-apt-repository -y ppa:graphics-drivers/ppa
-    sudo apt-get purge -y nvidia*
-    sudo apt-get update
-    yes | sudo apt-get install -y nvidia-driver-430
-    sudo shutdown -r
+    ./deploy.py --background --sudo runscriptonall scripts/npu/npu_info_gen.py
+    ./deploy.py --verbose kubernetes <stop/start> monitor
+    ```
+7. 重启平台或集群pod，服务仍旧没有回复
+    ```
+    # 首先要stop pod
+    ./deploy.py --verbose kubernetes stop <要重启的pod或服务>
+    
+    # 查看pod状态已经terminal
+    kubectl get pods -w -o wide
+
+    # 再start pod
+    ./deploy.py --verbose kubernetes start <要重启的pod或服务>
+
     ```
 

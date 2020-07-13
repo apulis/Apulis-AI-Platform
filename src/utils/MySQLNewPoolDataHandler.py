@@ -1172,7 +1172,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints, FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             if userName != "all":

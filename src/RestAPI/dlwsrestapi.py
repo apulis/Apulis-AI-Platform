@@ -11,6 +11,7 @@ import timeit
 import thread
 import time
 import sys
+import math
 import traceback
 import threading
 from logging.config import dictConfig
@@ -618,15 +619,20 @@ class GetAllSupportInference(Resource):
         return resp
 api.add_resource(GetAllSupportInference, '/GetAllSupportInference')
 
-class ListInferenceJob(Resource):
+class ListInferenceJobV2(Resource):
     @api.doc(params=model.ListInferenceJob.params)
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('num')
+        parser.add_argument('size')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
+        parser.add_argument('page')
+        parser.add_argument('jobOwner')
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],args["num"])
+        page = args["page"]
+        size = args["size"]
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None)
+        jobs.pop("meta")
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:
@@ -634,8 +640,36 @@ class ListInferenceJob(Resource):
         tmp = []
         for k,v in jobs.items():
             for one in v:
+                one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
                 tmp.append(one)
-        resp = generate_response(tmp.sort(key=lambda x:x["jobTime"]))
+        tmp.sort(key=lambda x: x["jobTime"])
+        if not page:
+            page = 1
+        if not size:
+            size = 5
+        a = slice(max((int(page)-1),0)*int(size),int(size)*int(page))
+        ret = {"inferences":tmp[a],"total":len(tmp),"totalPage":math.ceil(float(len(tmp))/int(size))}
+        resp = generate_response(ret)
+        return resp
+api.add_resource(ListInferenceJobV2, '/ListInferenceJobV2')
+
+class ListInferenceJob(Resource):
+    @api.doc(params=model.ListInferenceJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        parser.add_argument('page')
+        parser.add_argument('jobOwner')
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],args["num"])
+        jobs.pop("meta")
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+        resp = generate_response(jobs)
         return resp
 api.add_resource(ListInferenceJob, '/ListInferenceJob')
 
@@ -1943,12 +1977,12 @@ def metrics():
 
 
 class Infer(Resource):
-    def get(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
         args = parser.parse_args()
         jobId = args["jobId"]
-        image = request.files.get("image")
+        image = request.files.get("file").read()
         ret = JobRestAPIUtils.Infer(jobId,image)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"

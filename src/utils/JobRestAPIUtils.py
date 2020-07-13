@@ -864,7 +864,7 @@ def Infer(jobId,image):
         if "inference-url" in job:
             inference_url = job["inference-url"]
             res = requests.post(inference_url,json={"instances":[
-                {"image_bytes":{"b64":image},
+                {"image_bytes":{"b64":base64.b64encode(image).decode("utf-8")},
                  "key":" 1"}
             ]})
             ret = res.json().get("predictions")

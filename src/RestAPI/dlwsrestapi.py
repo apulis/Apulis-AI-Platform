@@ -1943,7 +1943,6 @@ def metrics():
 
 
 class Infer(Resource):
-    @api.doc(params=model.Infer.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')

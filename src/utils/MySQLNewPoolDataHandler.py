@@ -1174,11 +1174,17 @@ class DataHandler(object):
 
             query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
                     jobType, jobTime, jobParams, priority FROM {} left join {} 
-                    on {}.jobId =  {}.jobId where jobType='{}' and jobStatus='{}'""".format(self.jobtablename, 
+                    on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename, 
                     self.jobtablename, self.jobprioritytablename, 
                     self.jobtablename, self.jobprioritytablename, 
-                    jobType, jobStatus)
+                    jobType)
 
+            ## all jobs
+            if jobStatus.lower() != "all":
+                query += " and jobStatus = '%s'" % jobStatus 
+            else:
+                pass 
+            
             query += " and userName = '%s'" % userName
             query += " and vcName = '%s'" % vcName
 
@@ -1221,7 +1227,7 @@ class DataHandler(object):
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
                     "jobStatus"] == "unapproved":
                     ret["queuedJobs"].append(record)
-                    
+
                 else:
                     ret["finishedJobs"].append(record)
 

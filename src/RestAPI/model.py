@@ -245,6 +245,12 @@ class GetJobDetailV2:
         "result": OneJobResponse
     }
 
+class GetInferenceJobDetail:
+    params = {
+        "jobId": {"description": 'job id', "_in": 'query', "type": "string","required":True},
+        "userName": {"description": 'current user name', "_in": 'query', "type": "string","required":True},
+    }
+
 class GetJobLog:
     params = {
         "jobId": {"description": 'job id', "_in": 'query', "type": "string","required":True},

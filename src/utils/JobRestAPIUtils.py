@@ -793,6 +793,22 @@ def GetJobDetailV2(userName, jobId):
             dataHandler.Close()
     return job
 
+def GetInferenceJobDetail(userName, jobId):
+    job = {}
+    dataHandler = None
+    try:
+        dataHandler = DataHandler()
+        jobs = dataHandler.GetInferenceJob(jobId)
+        if len(jobs) == 1:
+            if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
+                job = jobs[0]
+    except Exception as e:
+        logger.error("get job detail v2 exception for user: %s, jobId: %s, exception: %s", userName, jobId, str(e))
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+    return job
+
 def GetJobStatus(jobId):
     result = None
     dataHandler = DataHandler()
@@ -839,6 +855,25 @@ def updateUserPerm(identityName,isAdmin,isAuthorized):
     ret = dataHandler.UpdateIdentityInfoPerm(identityName,isAdmin,isAuthorized)
     dataHandler.Close()
     return ret
+
+def Infer(jobId,image):
+    dataHandler = DataHandler()
+    jobs = dataHandler.GetInferenceJob(jobId)
+    if len(jobs)>0:
+        job = jobs[0]
+        if "inference-url" in job:
+            inference_url = job["inference-url"]
+            res = requests.post(inference_url,json={"instances":[
+                {"image_bytes":{"b64":image},
+                 "key":" 1"}
+            ]})
+            ret = res.json().get("predictions")
+        else:
+            ret = "job not running"
+    else:
+        ret = "can't get job for jobid: " + jobId
+    return ret
+
 
 def AddUser(username,uid,gid,groups):
     ret = None

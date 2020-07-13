@@ -631,7 +631,11 @@ class ListInferenceJob(Resource):
             if isinstance(joblist, list):
                 for job in joblist:
                     remove_creds(job)
-        resp = generate_response(jobs)
+        tmp = []
+        for k,v in jobs.items():
+            for one in v:
+                tmp.append(one)
+        resp = generate_response(tmp.sort(key=lambda x:x["jobTime"]))
         return resp
 api.add_resource(ListInferenceJob, '/ListInferenceJob')
 
@@ -892,6 +896,24 @@ class GetJobDetailV2(Resource):
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(GetJobDetailV2, '/GetJobDetailV2')
+
+class GetInferenceJobDetail(Resource):
+    @api.doc(params=model.GetInferenceJobDetail.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        userName = args["userName"]
+        job = JobRestAPIUtils.GetInferenceJobDetail(userName, jobId)
+        remove_creds(job)
+        resp = generate_response(job)
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetInferenceJobDetail, '/GetInferenceJobDetail')
 
 
 class GetJobLog(Resource):
@@ -1918,6 +1940,23 @@ def dumpstacks(signal, frame):
 @app.route("/metrics")
 def metrics():
     return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+
+class Infer(Resource):
+    @api.doc(params=model.Infer.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        image = request.files.get("image")
+        ret = JobRestAPIUtils.Infer(jobId,image)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(Infer, '/Infer')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

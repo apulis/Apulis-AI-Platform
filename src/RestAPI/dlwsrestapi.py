@@ -589,10 +589,39 @@ class ListJobsV2(Resource):
 
         resp = generate_response(jobs)
         return resp
-##
-## Actually setup the Api resource routing here
-##
-api.add_resource(ListJobsV2, '/ListJobsV2')
+
+# shows a list of all jobs, and lets you POST to add new tasks
+class ListJobsV3(Resource):
+    @api.doc(params=model.ListJobsV2.params)
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+
+        args = parser.parse_args()
+        num = None
+
+        if args["num"] is not None:
+            try:
+                num = int(args["num"])
+            except:
+                pass
+
+        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], args["jobType"], args["jobStatus"], num)
+
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+
+        resp = generate_response(jobs)
+        return resp
 
 class GetAllDevice(Resource):
     @api.doc(params=model.GetAllDevice.params)

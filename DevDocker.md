@@ -1,4 +1,4 @@
-# Development docker of DLWorkspace
+# Development docker of Apulis platform
 
 * Prerequisite: python and docker. 
   If your system is Ubuntu, and hasn't installed python and docker, please run the following to install the required development environment for DL Workspace. If you are using other flavor of Linux or using other system, please consult its instruction on installing docker, python, and other required component. 

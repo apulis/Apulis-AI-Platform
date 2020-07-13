@@ -48,8 +48,10 @@ const Model: React.FC = () => {
   const renderStatus = (job: any) => {
     const { jobStatus, modelconversionStatus } = job;
     let status = modelconversionStatus;
-    if (modelconversionStatus === 'converting') status = jobStatus === 'finished' ? t('convert success') : jobStatus === 'failed' ? 'convert failed' : modelconversionStatus;
-    return <p>{status}</p>
+    if (modelconversionStatus === 'converting') {
+      status = jobStatus === 'finished' ? t('convert success') : jobStatus === 'failed' ? t('convert failed') : modelconversionStatus;
+    }
+    return <p>{t(status)}</p>
   }
   const options = useMemo<Options>(() => ({
     padding: 'dense',
@@ -68,9 +70,8 @@ const Model: React.FC = () => {
         const temp3 = JSON.stringify(jobs.map((i: { modelconversionStatus: any; }) => i.modelconversionStatus));
         const temp4 = JSON.stringify(data?.map((i: { modelconversionStatus: any; }) => i.modelconversionStatus));
         if (temp1 !== temp2 || temp3 !== temp4) setJobs(data);
-      }, () => {
-        //TODO:
-        message('error', `Failed to fetch inferences from cluster: ${selectedCluster}`);
+      }, () => {  
+        message('error', `${t('Failed to fetch inferences from cluster')}: ${selectedCluster}`);
       })
   }
 

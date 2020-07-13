@@ -13,8 +13,16 @@ import axios from 'axios';
 import AuthContext from '../../contexts/Auth';
 import useInterval from '../../hooks/useInterval';
 import { NameReg, NameErrorText, pollInterval } from '../../const';
+import { useTranslation } from "react-i18next";
 
 const Model: React.FC = () => {
+  const { t } = useTranslation();
+  const inferenceNameTip=t('Inference Name is required！')
+  const inputPathTip=t('Input Path is required！')
+  const outputPathTip=t('Output Path is required！')
+  const URLTip=t('URL is required！')
+  const usernameTip=t('Username is required！')
+  const passwordTip=t('Password is required！')
   const { currentRole = [], userName } = useContext(AuthContext);
   const getDate = (item: any) => new Date(item.jobTime);
   const isAdmin = currentRole.includes('System Admin');
@@ -38,16 +46,16 @@ const Model: React.FC = () => {
   const renderStatus = (job: any) => {
     const { jobStatus, modelconversionStatus } = job;
     let status = modelconversionStatus;
-    if (modelconversionStatus === 'converting') status = jobStatus === 'finished' ? 'convert success' : jobStatus === 'failed' ? 'convert failed' : modelconversionStatus;
+    if (modelconversionStatus === 'converting') status = jobStatus === 'finished' ? t('convert success') : jobStatus === 'failed' ? 'convert failed' : modelconversionStatus;
     return <p>{status}</p>
   }
   const columns = useMemo<Array<Column<any>>>(() => [
     { title: 'ID', type: 'string', field: 'jobId', sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Inference Name', type: 'string', field: 'jobName', sorting: false},
-    { title: 'Type', type: 'string', field: 'modelconversionType', sorting: false },
-    { title: 'Time', type: 'datetime', field: 'jobTime', 
+    { title: t('Inference Name'), type: 'string', field: 'jobName', sorting: false},
+    { title: t('Type'), type: 'string', field: 'modelconversionType', sorting: false },
+    { title: t('Time'), type: 'datetime', field: 'jobTime', 
       render: renderDate(getDate), customSort: sortDate(getDate) },
-    { title: 'Status', type: 'string', field: 'modelconversionStatus', render: renderStatus },
+    { title: t('Status'), type: 'string', field: 'modelconversionStatus', render: renderStatus },
   ], []);
   const options = useMemo<Options>(() => ({
     padding: 'dense',
@@ -67,6 +75,7 @@ const Model: React.FC = () => {
         const temp4 = JSON.stringify(data?.map((i: { modelconversionStatus: any; }) => i.modelconversionStatus));
         if (temp1 !== temp2 || temp3 !== temp4) setJobs(data);
       }, () => {
+        //TODO:
         message('error', `Failed to fetch inferences from cluster: ${selectedCluster}`);
       })
   }
@@ -92,28 +101,31 @@ const Model: React.FC = () => {
   
   const onPush = async (e: any, item: any) => {
     const info = await getFdInfo();
+    const successTip=t('Push Inference successfully！')
+    const errorTip=t('Please enter settings first')
     if (info) {
       const { jobId } = item;
       setPushId(jobId);
       axios.post(`/${selectedCluster}/pushModelToFD`, { jobId: jobId }).then((res: any) => {
         getData();
-        message('success', `Push Inference successfully！`);
+        message('success', successTip);
       }).catch(err => {
         console.log(err);
         setPushId('');
       })
     } else {
-      message('error', `Please entee settings first`);
+      message('error', errorTip);
       setModalFlag2(true);
     }
   }
 
   const push = useCallback((job: any): Action<any> => {
     const { jobStatus, modelconversionStatus, jobId } = job;
+    const pushInference=t('Push Inference')
     const disabled = (!(modelconversionStatus === 'converting' && jobStatus === 'finished') || pushId === jobId);
     return {
       icon: 'backup',
-      tooltip: 'Push Inference',
+      tooltip: pushInference,
       onClick: onPush,
       disabled: disabled
     }
@@ -125,6 +137,8 @@ const Model: React.FC = () => {
 
   const onSubmitTransform = async (val: any) => {
     setBtnLoading(true);
+    const successTip=t('Edge Inference successfully！')
+    const errorTip=t('Edge Inference failed！')
     await axios.post(`/${selectedCluster}/teams/${selectedTeam}/postModelConversionJob`, {
       ...val,
       image: '',
@@ -132,21 +146,23 @@ const Model: React.FC = () => {
       conversionType: type
     }).then((res: any) => {
       getData();
-      message('success', `Edge Inference successfully！`);
+      message('success', successTip);
       setModalFlag1(false);
     },  () => {
-      message('error', `Edge Inference failed！`);
+      message('error', errorTip);
     })
     setBtnLoading(false);
   }
 
   const onSubmitSettings = async (val: any) => {
     setBtnLoading(true);
+    const successTip=t('Save Settings successfully！')
+    const errorTip=t('Save Settings failed！')
     await axios.post(`/${selectedCluster}/teams/${selectedTeam}/setFDInfo`, val).then((res: any) => {
-      message('success', `Save Settings successfully！`);
+      message('success', successTip);
       setModalFlag2(false);
     },  () => {
-      message('error', `Save Settings failed！`);
+      message('error', errorTip);
     })
     setBtnLoading(false);
   }
@@ -177,13 +193,13 @@ const Model: React.FC = () => {
     <div className="modelList">
       <div style={{ marginBottom: 20 }}>
         <Button variant="contained" color="primary" onClick={openInference}>
-          New Inference
+          {t("New Inference")}
         </Button>
         <Button variant="contained" style={{ margin: '0 20px' }} color="primary" onClick={openSettings}>
-          Settings
+          {t("Settings")}
         </Button>
         {fdInfo.url !== '' && <Button variant="contained" color="primary" href={fdInfo.url} target="blank">
-          FD Server
+          {t("FD Server")}
         </Button>}
       </div>
       <MaterialTable
@@ -196,7 +212,7 @@ const Model: React.FC = () => {
       />
       {modalFlag1 && 
       <Dialog open={modalFlag1} disableBackdropClick fullWidth>
-        <DialogTitle>New Inference</DialogTitle>
+        <DialogTitle>{t("New Inference")}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmitTransform)}>
           <DialogContent dividers>
             {/* <RadioGroup row aria-label="quiz" name="quiz" value={type} onChange={onTypeChange}>
@@ -206,7 +222,7 @@ const Model: React.FC = () => {
             {/* <SelectTree label="Input Path" style={{ margin: '10px 0' }} formObj={formObj} name="in" />
             <SelectTree label="Output Path" style={{ margin: '10px 0' }} formObj={formObj} name="out" /> */}
             <TextField
-              label="Inference Name"
+              label={t("Inference Name")}
               name="jobName"
               fullWidth
               variant="filled"
@@ -216,7 +232,7 @@ const Model: React.FC = () => {
               inputProps={{ maxLength: 20 }}
               style={{ margin: '10px 0' }}
               inputRef={register({
-                required: 'Inference Name is required！',
+                required: inferenceNameTip,
                 pattern: {
                   value: NameReg,
                   message: NameErrorText
@@ -225,7 +241,7 @@ const Model: React.FC = () => {
             />
             <TextField
               select
-              label="Type"
+              label={t("Type")}
               name="conversionType"
               fullWidth
               onChange={e => setType(e.target.value)}
@@ -236,7 +252,7 @@ const Model: React.FC = () => {
               {getConvertionTypeOptions()}
             </TextField>
             <TextField
-              label="Input Path"
+              label={t("Input Path")}
               name="inputPath"
               fullWidth
               variant="filled"
@@ -245,11 +261,11 @@ const Model: React.FC = () => {
               InputLabelProps={{ shrink: true }}
               style={{ margin: '10px 0' }}
               inputRef={register({ 
-                required: 'Input Path is required！',
+                required: inputPathTip,
               })}
             />
             <TextField
-              label="Output Path"
+              label={t("Output Path")}
               name="outputPath"
               fullWidth
               variant="filled"
@@ -258,21 +274,21 @@ const Model: React.FC = () => {
               InputLabelProps={{ shrink: true }}
               style={{ margin: '10px 0' }}
               inputRef={register({
-                required: 'Output Path is required！',
+                required: outputPathTip,
               })}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => onCloseDialog(1)} color="primary" variant="outlined">Cancel</Button>
+            <Button onClick={() => onCloseDialog(1)} color="primary" variant="outlined">{t('Cancel')}</Button>
             <Button type="submit" color="primary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
-              {btnLoading && <CircularProgress size={20}/>}Submit
+              {btnLoading && <CircularProgress size={20}/>}{t('Submit')}
             </Button>
           </DialogActions>
         </form>
       </Dialog>}
       {modalFlag2 && 
       <Dialog open={modalFlag2} disableBackdropClick fullWidth>
-        <DialogTitle>Settings</DialogTitle>
+        <DialogTitle>{t("Settings")}</DialogTitle>
         <form onSubmit={handleSubmit(onSubmitSettings)}>
           <DialogContent dividers>
             <TextField
@@ -285,11 +301,11 @@ const Model: React.FC = () => {
               helperText={errors.url ? errors.url.message : ''}
               InputLabelProps={{ shrink: true }}
               inputRef={register({
-                required: 'URL is required！'
+                required: URLTip
               })}
             />
             <TextField
-              label="Username"
+              label={t("Username")}
               name="username"
               fullWidth
               variant="filled"
@@ -298,12 +314,12 @@ const Model: React.FC = () => {
               helperText={errors.username ? errors.username.message : ''}
               InputLabelProps={{ shrink: true }}
               inputRef={register({
-                required: 'Username is required！'
+                required: usernameTip
               })}
               style={{ margin: '20px 0' }}
             />
             <TextField
-              label="Password"
+              label={t("Password")}
               name="password"
               fullWidth
               variant="filled"
@@ -312,14 +328,14 @@ const Model: React.FC = () => {
               helperText={errors.password ? errors.password.message : ''}
               InputLabelProps={{ shrink: true }}
               inputRef={register({
-                required: 'Password is required！'
+                required: passwordTip
               })}
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => onCloseDialog(2)} color="primary" variant="outlined">Cancel</Button>
+            <Button onClick={() => onCloseDialog(2)} color="primary" variant="outlined">{t('Cancel')}</Button>
             <Button type="submit" color="primary" disabled={btnLoading} variant="contained" style={{ marginLeft: 8 }}>
-              {btnLoading && <CircularProgress size={20}/>}Save
+              {btnLoading && <CircularProgress size={20}/>}{("Save")}
             </Button>
           </DialogActions>
         </form>

@@ -9,6 +9,7 @@ import submission from './zh-CN/pages/Submission/submission'
 import jobsV2 from './zh-CN/pages/jobsV2/jobsV2'
 import ClusterStatus from './zh-CN/ClusterStatus';
 import VirtualCluster from './zh-CN/VirtualCluster';
+import model from './zh-CN/model'
 
 export default {
   tips,
@@ -22,5 +23,6 @@ export default {
   jobsV2,
   ...ClusterStatus,
   ...VirtualCluster,
+  ...model,
   copy:'复制'
 }

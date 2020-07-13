@@ -90,7 +90,7 @@ const NavigationList: FC = () => {
       </AuthzHOC>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/model">
-          <ListItemText>Edge Inference</ListItemText>
+          <ListItemText>{t("layout.Edge Inference")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       {/* <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>

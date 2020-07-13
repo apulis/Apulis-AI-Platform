@@ -3,7 +3,8 @@ const topBar = {
     'SubmitTrainingJob': '提交训练任务',
     'ViewandManageJobs': '查看/管理任务',
     'ClusterStatus': '集群状态',
-    'VirtualCluster': '虚拟集群'
+    'VirtualCluster': '虚拟集群',
+    'Edge Inference':'边缘推理'
 }
 const sideBar = {
     userDashboard:'用户仪表盘',

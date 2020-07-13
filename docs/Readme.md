@@ -1,9 +1,10 @@
 # [](#header-1)Project Overview
 
-QianJiangYuan (DL Workspace) is an open source toolkit that allows AI scientists to spin up an AI cluster in turn-key fashion (either in a public cloud such as Azure, or in an on-perm cluster). It has been used in daily production for Microsoft internal groups (e.g., Microsoft Cognitive Service, SwiftKey, Bing Relevance, etc.. ).
-Once setup, the DL Workspace provides web UI and/or restful API that allows AI scientist to run job (interactive exploration, training, inferencing, data analytics)
-on the cluster with resource allocated by DL Workspace cluster for each job (e.g., a single node job with a couple of GPUs with GPU Direct connection, or a distributed job with multiple GPUs per node). DL Workspace also provides
-unified job template and operating environment that allows AI scientists to easily share their job and setting among themselves and with outside community. DLWorkspace out-of-box supports all major deep learning toolkits (PyTorch, TensorFlow, CNTK, Caffe, MxNet, etc..), and supports popular big data analytic toolkit such as hadoop/spark. 
+The AI platform is designed to provide an end-to-end AI solution to users from different industries and enable them to start the high-performance AI development work with significantly reduced ramp up time, thereby saving costs and improving efficiency. It will also provide a highly efficient, low cost private cloud AI solution for small and medium size company. 
+
+The platform incorporates TensorFlow, PyTorch, MindSpore and other open source AI frameworks, thereby provides user friendly development environment for AI model training, auto ML, hardware status monitoring etc., making it very easy for AI developers to quickly develop AI application. It also has built-in comprehensive early warning system which can automatically alert the system administrator on any anomaly, thereby improve the platform efficiency and security. 
+
+The platform adopts the lightweight virtualization technologies, such as Docker containers that containerizes one or more programs, and provide a standard management interface. Each container is separated from each other. Kubernetes clustering technology is used to orchestrate the containerized applications for planning, automated deployment, updates, and maintenance. 
 
 # [](#header-2)Documentations
 

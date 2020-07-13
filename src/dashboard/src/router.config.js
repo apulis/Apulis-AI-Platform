@@ -57,12 +57,12 @@ export default [
   {
     path: '/model',
     component: Model,
-    needPermission: ['SUBMIT_TRAINING_JOB']
+    needPermission: ['EDGE_INFERENCE']
   },
   // {
   //   path: '/centralInference',
   //   component: CentralInference,
-  //   needPermission: ['SUBMIT_TRAINING_JOB']
+  //   needPermission: ['CLOUD_INFERENCE']
   // }
 ];
 

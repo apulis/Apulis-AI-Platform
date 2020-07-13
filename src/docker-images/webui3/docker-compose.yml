@@ -1,8 +1,8 @@
 version: '2.1'
 
 services:
-  qianjiangyuan:
-    image: qianjiangyuan
+  apulistech:
+    image: apulistech
     build: .
     environment:
       NODE_ENV: production

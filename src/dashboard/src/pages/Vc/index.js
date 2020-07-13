@@ -156,7 +156,11 @@ class Vc extends React.Component {
     this.setState({ btnLoading: true });
     axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
       .then((res) => {
-        message('success', tSuccess);
+        if (res.data.result === false) {
+          message(tFailed);
+          return;
+        }
+        message(tSuccess);
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();
         this.getVcList();
@@ -238,9 +242,11 @@ class Vc extends React.Component {
     const {t} = this.props;
     const tTip = t('Must be a positive integer from 0 to ${max}').replace('${max}', `${max}`)
     const _val = Number(val);
+    const { quotaValidateObj } = this.state;
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       this.setState({
         quotaValidateObj: {
+          ...quotaValidateObj,
           [m]: {
             error: true,
             text: tTip
@@ -251,6 +257,7 @@ class Vc extends React.Component {
     } else {
       this.setState({
         quotaValidateObj: {
+          ...quotaValidateObj,
           [m]: empty
         }
       });
@@ -300,7 +307,6 @@ class Vc extends React.Component {
       qSelectData,
     })
   }
-
   render() {
     const { t } = this.props;
     const tQuota = t('quota');

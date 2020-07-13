@@ -598,10 +598,23 @@ class PythonLauncher(Launcher):
                     job_object.params["job_token"] = hashlib.md5(job_object.params["userName"]+":"+config["master_token"]).hexdigest()
                 else:
                     job_object.params["job_token"] = "tryme2017"
+
             if "env" in job_object.params:
                 job_object.params["envs"]=job_object.params["env"]
+
             if "envs" not in job_object.params:
                 job_object.params["envs"] =[]
+
+            if "codePath" in job_object.params:
+                job_object.params["envs"].append({"name": "CODE_PATH", "value": job_object.params["codePath"]})  
+            else:
+                pass    
+
+            if "outputPath" in job_object.params:
+                job_object.params["envs"].append({"name": "OUTPUT_PATH", "value": job_object.params["outputPath"]})  
+            else:
+                pass    
+
             job_object.params["envs"].append({"name": "DLTS_JOB_TOKEN", "value": job_object.params["job_token"]})              
             job_object.params["envs"].append({"name": "IDENTITY_TOKEN", "value": jwt_authorization.create_jwt_token_with_message(
                                               {"userName":job_object.params["userName"],"uid":user_info["uid"]}

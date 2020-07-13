@@ -452,7 +452,6 @@ def PostModelConversionJob(jobParamsJsonStr):
         return ret
 
     # env
-
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
             jobParams["resourcegpu"] = 0

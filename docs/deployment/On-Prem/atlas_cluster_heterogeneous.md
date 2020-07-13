@@ -53,9 +53,9 @@
 **master和worker需在同一个局域网或VPC**
 | 主机名       | 公网IP      | mask        | gateway   |DNS            |iBMC公网IP  |私网IP      |
 |:----------- |:-----------|:------------|:----------|:--------------|:-----------|:-----------|
-| atlas01     |121.37.54.23|255.255.255.0|121.37.54.1|114.114.114.114|121.37.54.26|            |
-| atlas02     |121.37.54.25|255.255.255.0|121.37.54.1|114.114.114.114|121.37.54.26|            |
-| atlas03     |121.37.54.27|255.255.255.0|121.37.54.1|114.114.114.114|121.37.54.26|            |
+| atlas01     |xxx.xxx.xxx.xxx|255.255.255.0|xxx.xxx.xxx.xxx|114.114.114.114|xxx.xxx.xxx.xxx|            |
+| atlas02     |xxx.xxx.xxx.xxx|255.255.255.0|xxx.xxx.xxx.xxx|114.114.114.114|xxx.xxx.xxx.xxx|            |
+| atlas03     |xxx.xxx.xxx.xxx|255.255.255.0|xxx.xxx.xxx.xxx|114.114.114.114|xxx.xxx.xxx.xxx|            |
 
 **3 台 atlas 的 NPU 组网规划：**
 
@@ -113,7 +113,7 @@
 
     | 主机记录 | 记录类型 | 记录值 |
     | ----    | ----     | ---- |
-    | atlas.ascend.cn | A | 121.37.54.27 |
+    | atlas.ascend.cn | A | xxx.xxx.xxx.xxx |
 
 3. 配置Worker节点DNS
 
@@ -147,9 +147,9 @@
 
   | 主机记录              | 记录类型 | 记录值        |
   | --------------------- | -------- | ------------- |
-  | atlas01.ascend.cn     | A        | 121.37.54.23 |
-  | atlas02.ascend.cn     | A        | 121.37.54.25 |
-  | atlas03.ascend.cn     | A        | 121.37.54.27 |
+  | atlas01.ascend.cn     | A        | xxx.xxx.xxx.xxx |
+  | atlas02.ascend.cn     | A        | xxx.xxx.xxx.xxx |
+  | atlas03.ascend.cn     | A        | xxx.xxx.xxx.xxx |
 
 
 * 选项二：节点没有公网IP
@@ -206,177 +206,179 @@
 
 * 平台配置示例
 
-```yaml
-# Configuration Path: src/ClusterBootstrap/config.yaml
-cluster_name: atlas
+  `cp src/ClusterBootstrap/config.yaml.template src/ClusterBootstrap/config.yaml`
 
-network:
-  domain: ascend.cn
-  container-network-iprange: "10.0.0.0/8"
+  ```yaml
+  # Configuration Path: src/ClusterBootstrap/config.yaml
+  cluster_name: atlas
 
-etcd_node_num: 1
-mounthomefolder : True
+  network:
+    domain: ascend.cn
+    container-network-iprange: "10.0.0.0/8"
 
-# These may be needed for KubeGPU
-# kube_custom_cri : True
-# kube_custom_scheduler: True
-kubepresleep: 1
+  etcd_node_num: 1
+  mounthomefolder : True
 
-UserGroups:
-  DLWSAdmins:
-    Allowed:
-    - jeck@hotmail.com
-    - stef.jobs@gmail.com
-    - tony@apulis.com
-    gid: "20001"
-    uid: "20000"
-  DLWSRegister:
-    Allowed:
-    - '@gmail.com'
-    - '@live.com'
-    - '@outlook.com'
-    - '@hotmail.com'
-    - '@apulis.com'
-    gid: "20001"
-    uid: 20001-29999
+  # These may be needed for KubeGPU
+  # kube_custom_cri : True
+  # kube_custom_scheduler: True
+  kubepresleep: 1
 
-WebUIadminGroups:
-- DLWSAdmins
+  UserGroups:
+    DLWSAdmins:
+      Allowed:
+      - jeck@hotmail.com
+      - stef.jobs@gmail.com
+      - tony@apulis.com
+      gid: "20001"
+      uid: "20000"
+    DLWSRegister:
+      Allowed:
+      - '@gmail.com'
+      - '@live.com'
+      - '@outlook.com'
+      - '@hotmail.com'
+      - '@apulis.com'
+      gid: "20001"
+      uid: 20001-29999
 
-WebUIauthorizedGroups:
-- DLWSAdmins
+  WebUIadminGroups:
+  - DLWSAdmins
 
-WebUIregisterGroups:
-- DLWSRegister
+  WebUIauthorizedGroups:
+  - DLWSAdmins
 
-datasource: MySQL
-mysql_password: ********
-webuiport: 3081
-useclusterfile : true
+  WebUIregisterGroups:
+  - DLWSRegister
 
-machines:
-  atlas03:
-    role: infrastructure
-    private-ip: 192.168.3.5
-    archtype: arm64
-    type: npu
-    vendor: huawei
+  datasource: MySQL
+  mysql_password: ********
+  webuiport: 3081
+  useclusterfile : true
 
-scale_up:
-  atlas01:
-    archtype: arm64
-    role: worker
-    type: npu 
-    vendor: huawei
-    os: ubuntu
+  machines:
+    atlas03:
+      role: infrastructure
+      private-ip: 192.168.3.5
+      archtype: arm64
+      type: npu
+      vendor: huawei
 
-  atlas02:
-    archtype: arm64
-    role: worker
-    type: npu 
-    vendor: huawei
-    os: ubuntu
+  scale_up:
+    atlas01:
+      archtype: arm64
+      role: worker
+      type: npu 
+      vendor: huawei
+      os: ubuntu
 
-  atlas-gpu02:
-    archtype: amd64
-    role: worker
-    type: gpu 
-    vendor: nvidia
-    os: ubuntu
+    atlas02:
+      archtype: arm64
+      role: worker
+      type: npu 
+      vendor: huawei
+      os: ubuntu
 
-scale_down:
-  atlas-gpu02:
-    archtype: amd64
-    role: worker
-    type: gpu 
-    vendor: nvidia
-    os: ubuntu
+    atlas-gpu02:
+      archtype: amd64
+      role: worker
+      type: gpu 
+      vendor: nvidia
+      os: ubuntu
 
-admin_username: dlwsadmin
+  scale_down:
+    atlas-gpu02:
+      archtype: amd64
+      role: worker
+      type: gpu 
+      vendor: nvidia
+      os: ubuntu
 
-# settings for docker
-dockerregistry: apulistech/
-dockers:
-  hub: apulistech/
-  tag: "1.9"
- 
+  admin_username: dlwsadmin
 
-custom_mounts: []
-admin_username: dlwsadmin
-
-# settings for docker
-dockerregistry: apulistech/
-dockers:
-  hub: apulistech/
-  tag: "1.9"
- 
-
-custom_mounts: []
-data-disk: /dev/[sh]d[^a]
-dataFolderAccessPoint: ''
-
-datasource: MySQL
-defalt_virtual_cluster_name: platform
-default-storage-folders:
-- jobfiles
-- storage
-- work
-- namenodeshare
-
-deploymounts: []
-
-discoverserver: 4.2.2.1
-dltsdata-atorage-mount-path: /dltsdata
-dns_server:
-  azure_cluster: 8.8.8.8
-  onpremise: 10.50.10.50
+  # settings for docker
+  dockerregistry: apulistech/
+  dockers:
+    hub: apulistech/
+    tag: "1.9"
   
-Authentications:
-  Microsoft:
-    TenantId: ********
-    ClientId: ********
-    ClientSecret: ********  
 
-  Wechat:
-    AppId: ********
-    AppSecret: ********
+  custom_mounts: []
+  admin_username: dlwsadmin
 
-supported_platform:  ["onpremise"]
-onpremise_cluster:
-  worker_node_num:    1
-  gpu_count_per_node: 1
-  gpu_type:           nvidia
+  # settings for docker
+  dockerregistry: apulistech/
+  dockers:
+    hub: apulistech/
+    tag: "1.9"
+  
 
-mountpoints:
-  nfsshare1:
-    type: nfs
-    server: atlas02
-    filesharename: /mnt/local
-    curphysicalmountpoint: /mntdlws
-    mountpoints: ""
+  custom_mounts: []
+  data-disk: /dev/[sh]d[^a]
+  dataFolderAccessPoint: ''
 
-jwt:
-  secret_key: "Sign key for JWT"
-  algorithm: HS256
-  token_ttl: 86400
+  datasource: MySQL
+  defalt_virtual_cluster_name: platform
+  default-storage-folders:
+  - jobfiles
+  - storage
+  - work
+  - namenodeshare
 
-k8sAPIport: 6443
-k8s-gitbranch: v1.18.0
-deploy_method: kubeadm
+  deploymounts: []
 
-repair-manager:
-  cluster_name: "atlas"
-  ecc_rule:
-    cordon_dry_run: True
-  alert:
-    smtp_url: smtp.qq.com
-    login: admin@admin.com
-    password: *********
-    sender: dmin@admin.com
-    receiver: ["dmin@admin.com"]
+  discoverserver: 4.2.2.1
+  dltsdata-atorage-mount-path: /dltsdata
+  dns_server:
+    azure_cluster: 8.8.8.8
+    onpremise: 10.50.10.50
+    
+  Authentications:
+    Microsoft:
+      TenantId: ********
+      ClientId: ********
+      ClientSecret: ********  
 
-enable_custom_registry_secrets: True
-```
+    Wechat:
+      AppId: ********
+      AppSecret: ********
+
+  supported_platform:  ["onpremise"]
+  onpremise_cluster:
+    worker_node_num:    1
+    gpu_count_per_node: 1
+    gpu_type:           nvidia
+
+  mountpoints:
+    nfsshare1:
+      type: nfs
+      server: atlas03
+      filesharename: /mnt/local
+      curphysicalmountpoint: /mntdlws
+      mountpoints: ""
+
+  jwt:
+    secret_key: "Sign key for JWT"
+    algorithm: HS256
+    token_ttl: 86400
+
+  k8sAPIport: 6443
+  k8s-gitbranch: v1.18.0
+  deploy_method: kubeadm
+
+  repair-manager:
+    cluster_name: "atlas"
+    ecc_rule:
+      cordon_dry_run: True
+    alert:
+      smtp_url: smtp.qq.com
+      login: admin@admin.com
+      password: *********
+      sender: dmin@admin.com
+      receiver: ["dmin@admin.com"]
+
+  enable_custom_registry_secrets: True
+  ```
 
 3. 设置配置环境
 
@@ -785,7 +787,7 @@ enable_custom_registry_secrets: True
     ```
 * 访问平台
     ```
-    # 浏览器访问 http://121.37.54.27/home
+    # 浏览器访问 http://xxx.xxx.xxx.xxx/home
     # 访问账号可查看前端配置文件 cat /etc/WebUI/local.yaml
       administrators:
 

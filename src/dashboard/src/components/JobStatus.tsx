@@ -35,7 +35,7 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
     : status === 'killed' ? <RemoveCircleOutline/>
     : <Help/>
   , [status]);
-  const label = useMemo(() => capitalize(t('components.'+status)), [status]);
+  const label = capitalize(t('components.'+status));
   const detail = useMemo<Array<any>>(() => job['jobStatusDetail'], [job]);
   const splitMessage = (msg:string)=>{
     let arr = []

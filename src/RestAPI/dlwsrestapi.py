@@ -565,7 +565,6 @@ class ListJobs(Resource):
 api.add_resource(ListJobs, '/ListJobs')
 
 # shows a list of all jobs, and lets you POST to add new tasks
-api.add_resource(ListJobsV2, '/ListJobsV2')
 class ListJobsV2(Resource):
     @api.doc(params=model.ListJobsV2.params)
     def get(self):
@@ -591,8 +590,9 @@ class ListJobsV2(Resource):
         resp = generate_response(jobs)
         return resp
 
+api.add_resource(ListJobsV2, '/ListJobsV2')
+
 # shows a list of all jobs, and lets you POST to add new tasks
-api.add_resource(ListJobsV3, '/ListJobsV3')
 class ListJobsV3(Resource):
     @api.doc(params=model.ListJobsV2.params)
     def get(self):
@@ -624,6 +624,8 @@ class ListJobsV3(Resource):
 
         resp = generate_response(jobs)
         return resp
+
+api.add_resource(ListJobsV3, '/ListJobsV3')
 
 class GetAllDevice(Resource):
     @api.doc(params=model.GetAllDevice.params)

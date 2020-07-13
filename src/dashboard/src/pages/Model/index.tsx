@@ -363,7 +363,7 @@ const Model: React.FC = () => {
             <DialogActions>
               <Button onClick={() => onCloseDialog(2)} color="primary" variant="outlined">{t('Cancel')}</Button>
               <Button type="submit" color="primary" disabled={btnLoading} variant="contained" style={{ marginLeft: 8 }}>
-                {btnLoading && <CircularProgress size={20} />}{("Save")}
+              {btnLoading && <CircularProgress size={20} />}{t("Save")}
               </Button>
             </DialogActions>
           </form>

@@ -113,3 +113,5 @@ defalt_virtual_cluster_device_type_list:
 {% for one in cnf["defalt_virtual_cluster_device_type_list"] %}
   - {{ one }}
 {%endfor%}
+
+master_private_ip: {{cnf["etcd_private_ip"}}

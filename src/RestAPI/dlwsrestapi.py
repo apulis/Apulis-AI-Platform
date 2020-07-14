@@ -1992,6 +1992,7 @@ class Infer(Resource):
 api.add_resource(Infer, '/Infer')
 
 class ConvertDataFormat(Resource):
+    @api.doc(params=model.ConvertDataFormat.params)
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('datasetId')
@@ -2011,6 +2012,7 @@ class ConvertDataFormat(Resource):
 api.add_resource(ConvertDataFormat, '/ConvertDataFormat')
 
 class GetConvertList(Resource):
+    @api.doc(params=model.GetConvertList.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('targetStatus')
@@ -2024,6 +2026,7 @@ class GetConvertList(Resource):
 api.add_resource(GetConvertList, '/GetConvertList')
 
 class GetConvertDetail(Resource):
+    @api.doc(params=model.GetConvertDetail.params)
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('datasetId')

@@ -23,6 +23,14 @@ spec:
         imagePullPolicy: IfNotPresent
         workingDir: "/RemoteSensing-UI/src/projects/WebUI/WebUI"
         command: ["dotnet", "run",'--urls=http://*:3088']
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 3088
+          timeoutSeconds: 10
         volumeMounts:
         - mountPath: /var/log/webui
           name: dotnet-log

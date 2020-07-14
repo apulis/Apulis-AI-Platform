@@ -52,11 +52,10 @@ def mkdirs(path):
         os.makedirs(path,exist_ok=True)
 
 def merge_json_to_coco_dataset(json_path,coco_file_path,prefix="",args=None):
-    with open("meta.json","r") as f:
-        coco = json.load(f)
-        coco["images"] = []
-        coco["categories"] = []
-        coco["annotations"] = []
+    coco = {}
+    coco["images"] = []
+    coco["categories"] = []
+    coco["annotations"] = []
     with open(os.path.join(json_path, "list.json"), "r") as f:
         ImgIDs = json.load(f)["ImgIDs"]
     categories = {}
@@ -98,6 +97,7 @@ def DoDataConvert():
                 merge_json_to_coco_dataset(json_path,coco_file_path)
                 dataHandler.updateConvertStatus("finished",oneJob["id"])
             except Exception as e:
+                logging.exception(e)
                 dataHandler.updateConvertStatus("error", oneJob["id"],e)
 
 def Run():

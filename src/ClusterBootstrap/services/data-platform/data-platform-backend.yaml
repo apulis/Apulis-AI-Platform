@@ -1,0 +1,55 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: dotnet-server
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: dotnet-server
+  template:
+    metadata:
+      name: dotnet-server
+      labels:
+        app: dotnet-server
+        dotnet-server: active
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        restfulapi: active
+      containers:
+      - name: dotnet-server
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}data-platform-backend:{{cnf["dockertag"]}}
+        imagePullPolicy: IfNotPresent
+        workingDir: "/RemoteSensing-UI/src/projects/WebUI/WebUI"
+        command: ["dotnet", "run",'--urls=http://*:3088']
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 3088
+          timeoutSeconds: 10
+        volumeMounts:
+        - mountPath: /var/log/webui
+          name: dotnet-log
+        - mountPath: /RemoteSensing-UI/src/projects/WebUI/WebUI/appsettings.json
+          name: dotnet-config
+        - mountPath: /mntdlws/nfs/label
+          name: data
+      volumes:
+      - name: dotnet-log
+        hostPath:
+          path: /var/log/webui
+      - name: dotnet-config
+        hostPath:
+          path: /etc/RestfulAPI/appsettings.json
+      - name: data
+        hostPath:
+          path: /mntdlws/nfs/label
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

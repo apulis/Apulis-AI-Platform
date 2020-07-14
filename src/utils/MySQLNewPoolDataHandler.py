@@ -2002,7 +2002,7 @@ class DataHandler(object):
         ret = []
         try:
             if errMsg:
-                query = "update `%s` set `status`=%s,`errMsg`=%s where id=%s" % (self.dataconvert,"%s","%s","%s")
+                query = "update `%s` set `status`=%s,`errorMsg`=%s where id=%s" % (self.dataconvert,"%s","%s","%s")
                 params = (targetStatus,errMsg, id)
             else:
                 query = "update `%s` set `status`=%s where id=%s" % (self.dataconvert, "%s", "%s")

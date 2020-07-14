@@ -95,8 +95,10 @@ def DoDataConvert():
                 list_path = os.path.join(config["data_platform_path"], "public/tasks/%s" % (oneJob["datasetId"]))
                 json_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s" % (oneJob["datasetId"], oneJob["projectId"]))
                 coco_file_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s/convert_coco.json" % (oneJob["datasetId"], oneJob["projectId"]))
+                logging.info("=============start convert to format %s" % (oneJob["targetFormat"]))
                 merge_json_to_coco_dataset(list_path,json_path,coco_file_path)
                 dataHandler.updateConvertStatus("finished",oneJob["id"],coco_file_path)
+                logging.info("=============convert to format %s done" % (oneJob["targetFormat"]))
             except Exception as e:
                 logging.exception(e)
                 dataHandler.updateConvertStatus("error", oneJob["id"],e)

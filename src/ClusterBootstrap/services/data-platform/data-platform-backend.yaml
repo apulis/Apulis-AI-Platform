@@ -34,7 +34,7 @@ spec:
         volumeMounts:
         - mountPath: /var/log/webui
           name: dotnet-log
-        - mountPath: /RemoteSensing-UI/src/projects/WebUI/appsettings.json
+        - mountPath: /RemoteSensing-UI/src/projects/WebUI/WebUI/appsettings.json
           name: dotnet-config
         - mountPath: /mntdlws/nfs/label
           name: data

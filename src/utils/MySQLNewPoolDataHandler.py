@@ -1230,6 +1230,7 @@ class DataHandler(object):
             else:
                 pass
 
+            print(query)
             cursor.execute(query)
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()

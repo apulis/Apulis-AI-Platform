@@ -1258,10 +1258,10 @@ class DataHandler(object):
                 else:
                     ret["finishedJobs"].append(record)
 
-                if record["jobStatusDetail"] is not None:
-                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
-                if record["jobParams"] is not None:
-                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+                #if record["jobStatusDetail"] is not None:
+                #    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                #if record["jobParams"] is not None:
+                #    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
             conn.commit()
         except Exception as e:

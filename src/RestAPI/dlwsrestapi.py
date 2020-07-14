@@ -468,7 +468,8 @@ class GetModelConversionTypes(Resource):
     @api.expect(api.model("GetModelConversionTypes", model.GetModelConversionTypes(api).params))
     def get(self):
         logger.info("Request to get fd server info")
-        ret = {"conversionTypes": ["caffe-Ascend310", "tensorflow-Ascend310"]}
+        conversion_types = JobRestAPIUtils.GetModelConversionTypes()
+        ret = {"conversionTypes": conversion_types}
         logger.info("Get fd server info through restapi, result is %s", ret)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"

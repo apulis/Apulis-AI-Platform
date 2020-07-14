@@ -213,6 +213,16 @@ install_gpu_utils() {
         ## install from the beginning
         if ! resume_mode;
         then
+        
+            ## check if driver is installed
+            if [[ -z `nvidia-smi -x -q | grep -i driver_version|grep 440` ]];
+            then 
+                echo "nvidia driver not found. to install next"
+            else
+                echo "nvidia driver found. "
+                return
+            fi
+
             # https://askubuntu.com/questions/481414/install-nvidia-driver-instead-of-nouveau
             # Start from 10/05/2017 the following is needed. 
             if ! grep -q "blacklist nouveau" -F /etc/modprobe.d/blacklist.conf; then 
@@ -258,7 +268,7 @@ install_gpu_utils() {
             sudo add-apt-repository -y ppa:graphics-drivers/ppa
             sudo apt-get purge -y nvidia*
             sudo apt-get update
-            yes | sudo apt-get install -y nvidia-driver-430
+            yes | sudo apt-get install -y nvidia-driver-440
 
             show_continue_msg 
             sudo shutdown -r

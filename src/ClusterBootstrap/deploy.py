@@ -918,7 +918,7 @@ def gen_device_type_config(config):
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")
     cmd = """jwt_header=$(echo -n '{"alg":"HS256","typ":"JWT"}' | base64 | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
-    cmd += """payload=$(echo -n '{"uid":30000}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
+    cmd += """payload=$(echo -n '{"uid":30000,"exp":""" + str(time.time()+3600*24**30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
     cmd += """secret=\""""+config["jwt"]["secret_key"] + "\";"
     cmd += """hexsecret=$(echo -n "$secret" | xxd -p | paste -sd "");"""
     cmd += """hmac_signature=$(echo -n "${jwt_header}.${payload}" |  openssl dgst -sha256 -mac HMAC -macopt hexkey:$hexsecret -binary | base64  | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
@@ -1816,6 +1816,7 @@ def deploy_webUI_on_node(ipAddress):
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/config.yaml","/etc/RestfulAPI/config.yaml", sshUser, webUIIP )
+    utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/appsettings.json","/etc/RestfulAPI/appsettings.json", sshUser, webUIIP )
     utils.sudo_scp(config["ssh_cert"],"./deploy/UserDashboard/local.config","/etc/UserDashboard/local.config", sshUser, webUIIP )
 
     utils.render_template_directory("./template/dashboard", "./deploy/dashboard",config)
@@ -2242,7 +2243,7 @@ def config_fqdn():
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
-        ## 
+        ##
         remotecmd = "sudo mkdir -p /etc/nginx/fqdn; echo %s | sudo tee /etc/nginx/fqdn/hostname-fqdn; sudo chmod +r /etc/nginx/fqdn/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
@@ -2961,14 +2962,15 @@ def exec_on_rand_master(args, supressWarning = False):
     exec_on_all_with_output([master_node], args, supressWarning)
 
 # run a shell script on one remote node
-def run_script(node, args, sudo = False, supressWarning = False):
-
+def run_script(node, args, sudo = False, supressWarning = False, background=False):
 
     if ".py" in args[0]:
         if sudo:
-            fullcmd = "sudo /opt/bin/python"
+            fullcmd = "sudo python"
         else:
-            fullcmd = "/opt/bin/python"
+            fullcmd = "python"
+
+
     else:
         if sudo:
             fullcmd = "sudo bash"
@@ -2981,8 +2983,10 @@ def run_script(node, args, sudo = False, supressWarning = False):
             fullcmd += " " + os.path.basename(args[i])
         else:
             fullcmd += " " + args[i]
+
     srcdir = os.path.dirname(args[0])
-    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning)
+    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning,
+            background=background)
 
 
 def run_script_wrapper(arg_tuple):
@@ -2991,9 +2995,9 @@ def run_script_wrapper(arg_tuple):
 
 
 # run a shell script on all remote nodes
-def run_script_on_all(nodes, args, sudo = False, supressWarning = False):
+def run_script_on_all(nodes, args, sudo = False, supressWarning = False, background=False):
     for node in nodes:
-        run_script( node, args, sudo = sudo, supressWarning = supressWarning)
+        run_script( node, args, sudo = sudo, supressWarning = supressWarning, background=background)
 
 def run_script_on_all_in_parallel(nodes, args, sudo=False, supressWarning=False):
     args_list = [(node, args, sudo, supressWarning) for node in nodes]
@@ -3388,6 +3392,74 @@ def kubernetes_label_nodes( verb, servicelists, force ):
 
         for node in nodes:
             nodename = kubernetes_get_node_name(node)
+
+            if verb == "active":
+                kubernetes_label_node(cmdoptions, nodename, label+"=active")
+            elif verb == "inactive":
+                kubernetes_label_node(cmdoptions, nodename, label+"=inactive")
+            elif verb == "remove":
+                kubernetes_label_node(cmdoptions, nodename, label+"-")
+            else:
+                pass
+
+    return
+
+# Label kubernete nodes according to a service.
+# A service (usually a Kubernete daemon service) can request to be run on:
+# all: all nodes
+# etcd_node: all etcd node
+# etcd_node_n: a particular etcd node
+# worker_node: all worker node
+# The kubernete node will be marked accordingly to facilitate the running of daemon service.
+
+def kubernetes_label_nodes_2(node_name, verb, servicelists, force ):
+    servicedic = get_all_services()
+
+    if verbose:
+        print ( "servicedic == %s" % servicedic )
+
+    get_nodes(config["clusterId"])
+    labels = fetch_config(config, ["kubelabels"])
+
+    if verbose:
+        print ( "labels == %s " % labels )
+
+    for service, serviceinfo in servicedic.iteritems():
+        if verbose:
+            print("Examine service %s" % service)
+        servicename = get_service_name(servicedic[service])
+        if (not service in labels) and (not servicename in labels) and "default" in labels and (not servicename is None):
+            print "not in: {},{}\n".format(service, serviceinfo)
+            labels[servicename] = labels["default"]
+    if len(servicelists)==0:
+        servicelists = labels
+    else:
+        for service in servicelists:
+            if (not service in labels) and "default" in labels:
+                labels[service] = labels["default"]
+
+    print servicelists
+
+    for label in servicelists:
+        nodes = get_node_lists_for_service(label)
+
+        if verbose:
+            print "kubernetes: apply action %s to label %s to nodes: %s" %(verb, label, nodes)
+        else:
+            pass
+
+        if force:
+            cmdoptions = "--overwrite"
+        else:
+            cmdoptions = ""
+
+        for node in nodes:
+            nodename = kubernetes_get_node_name(node)
+
+            if nodename != node_name:
+                continue
+            else:
+                pass
 
             if verb == "active":
                 kubernetes_label_node(cmdoptions, nodename, label+"=active")
@@ -3960,6 +4032,42 @@ def scale_up(config):
         # time.sleep(60)
         # run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
         # run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
+        run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
+
+        ## wait for node to reboot
+        print("waiting for 2 seconds...")
+        time.sleep(2)
+
+        while True:
+            cmd = "ping -c 1 node &> /dev/null; echo $?"
+            output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+            output = output.strip()
+            print(output)
+
+            if output == "0":
+                print("%s started! wait for 10 more seconds and continue" % (node))
+                time.sleep(10)
+                break
+            else:
+                print("waiting for %s to reboot" % (node))
+                time.sleep(1)
+
+        #while true;
+        #do
+        #    if ping -c 1 node &> /dev/null
+        #    then
+        #        echo "$node started! wait for 10 more seconds and continue"
+        #        sleep 10
+        #        break
+        #    else
+        #        echo "wating for $node to start!"
+        #    fi
+
+        #    sleep 1;
+        #done
+
+        run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
+        run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
 
         ## turn off swap
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)
@@ -3974,11 +4082,9 @@ def scale_up(config):
 
         ## join worker
         update_worker_nodes_by_kubeadm_2([node])
-        ## for test only
-        time.sleep(100)
 
         ## label service
-        kubernetes_label_nodes("active", [], False)
+        kubernetes_label_nodes_2(node_name, "active", [], False)
 
         ## label worker
         kubernetes_label_worker_2(node_name, node_info)
@@ -3994,9 +4100,13 @@ def scale_down(config):
     else:
         pass
 
+    domain = get_domain()
+
     for node_name in config["scale_down"]:
         node_info = config["scale_down"][node_name]
+
         print(node_info)
+        node = node_name + domain
 
         ## drain
         cmd = "drain %s --ignore-daemonsets" % (node_name)
@@ -4005,6 +4115,9 @@ def scale_down(config):
         ## delete node
         cmd = "delete node %s" % (node_name)
         run_kubectl([cmd])
+
+        cmd = "yes | sudo kubeadm reset"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
 
 
     return
@@ -4226,7 +4339,7 @@ def run_command( args, command, nargs, parser ):
     elif command == "dnssetup":
         os.system("./gene_loc_dns.sh")
         nodes = get_nodes(config["clusterId"])
-        run_script_on_all(nodes, "./scripts/dns.sh", sudo = args.sudo )
+        run_script_on_all(nodes, "./scripts/dns.sh", sudo = args.sudo)
 
     elif command == "sshkey":
         if len(nargs) >=1 and nargs[0] == "install":
@@ -4538,7 +4651,7 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "runscriptonall" and len(nargs)>=1:
         nodes = get_nodes(config["clusterId"])
-        run_script_on_all(nodes, nargs, sudo = args.sudo )
+        run_script_on_all(nodes, nargs, sudo = args.sudo, background=args.background )
 
     elif command == "runscriptonallinparallel" and len(nargs)>=1:
         nodes = get_nodes(config["clusterId"])
@@ -5285,6 +5398,10 @@ Command:
         help = "Build docker without cache",
         action="store_true")
 
+    parser.add_argument("--background",
+        help = "Run script in the background",
+        action="store_true")
+
     parser.add_argument("--glusterfs",
         help = textwrap.dedent('''"Additional glusterfs launch parameter, \
         detach: detach all glusterfs nodes (to rebuild cluster),
@@ -5309,9 +5426,11 @@ Command:
     parser.add_argument('nargs', nargs=argparse.REMAINDER,
         help="Additional command argument",
         )
+
     args = parser.parse_args()
     command = args.command
     nargs = args.nargs
+
     if args.verbose:
         verbose = True
         utils.verbose = True

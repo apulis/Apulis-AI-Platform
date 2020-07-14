@@ -15,9 +15,9 @@ import useInterval from '../../hooks/useInterval';
 import { NameReg, NameErrorText, pollInterval } from '../../const';
 
 const Model: React.FC = () => {
-  const { currentRole = [], userName } = useContext(AuthContext);
+  const { permissionList = [], userName } = useContext(AuthContext);
   const getDate = (item: any) => new Date(item.jobTime);
-  const isAdmin = currentRole.includes('System Admin');
+  // const isAdmin = permissionList.includes('EDGE_INFERENCE');
   const { selectedCluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [pageSize, setPageSize] = useState(10);

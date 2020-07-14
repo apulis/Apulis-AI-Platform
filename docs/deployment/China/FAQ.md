@@ -1,4 +1,4 @@
-# Deployment of QianJiangYuan in China
+# Deployment of Apulis AI Platform in China
 
 ## app-get install fails due to 
 

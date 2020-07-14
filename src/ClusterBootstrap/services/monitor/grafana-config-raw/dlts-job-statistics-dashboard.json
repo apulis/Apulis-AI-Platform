@@ -830,7 +830,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)",
+          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>=0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -913,7 +913,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)",
+          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>=0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1177,7 +1177,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0)",
+          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>=0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1260,7 +1260,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0)",
+          "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>=0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -2542,8 +2542,6 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
-      "10s",
       "30s",
       "1m",
       "5m",

@@ -1,4 +1,4 @@
-FROM qianjiangyuan/tutorial-horovod:1.8
+FROM apulistech/tutorial-horovod:1.8
 
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 

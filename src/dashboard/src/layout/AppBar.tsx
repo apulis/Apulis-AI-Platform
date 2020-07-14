@@ -29,7 +29,8 @@ import {
   Group,
   MenuRounded,
   Dashboard,
-  Translate
+  Translate,
+  KeyboardReturn
 } from '@material-ui/icons';
 import CloseIcon from '@material-ui/icons/Close';
 import { TransitionProps } from '@material-ui/core/transitions';
@@ -228,6 +229,15 @@ const UserButton: React.FC = () => {
       <Button variant="outlined" color="inherit" style={{ marginRight: '10px' }} href={userGroupPath}>
         <Dashboard className={styles.leftIcon}/>
         {t('layout.userDashboard')}
+      </Button>
+      <Button
+        style={{ textTransform: 'none', marginRight: '10px' }}
+        variant="outlined"
+        color="inherit"
+        href="/AIarts"
+      >
+        <KeyboardReturn />
+        返回 AIArts
       </Button>
       <Button variant="outlined" color="inherit" onClick={showUserProfile} className={classes.userLabel}>
         <AccountBox className={styles.leftIcon}/>

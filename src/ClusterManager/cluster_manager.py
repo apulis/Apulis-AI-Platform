@@ -128,7 +128,7 @@ def Run(args):
         "endpoint_manager":
         ["python", os.path.join(cwd, "endpoint_manager.py"), "--port", str(args.e)],
         "data_convert":
-        ["python", os.path.join(cwd, "data_convert.py"), "--port", str(args.d)]
+        ["python", os.path.join(cwd, "dataset_convert.py"), "--port", str(args.d)]
     }
 
     FNULL = open(os.devnull, "w")
@@ -184,7 +184,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", help="port of joblog_manager", type=int, default=9203)
     parser.add_argument("-c", help="port of command_manager", type=int, default=9204)
     parser.add_argument("-e", help="port of endpoint_manager", type=int, default=9205)
-    parser.add_argument("-d", help="port of data_convert", type=int, default=9209)
+    parser.add_argument("-d", help="port of dataset_convert", type=int, default=9209)
     args = parser.parse_args()
 
     sys.exit(Run(args))

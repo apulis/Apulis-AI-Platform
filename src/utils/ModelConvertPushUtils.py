@@ -63,10 +63,17 @@ def fd_push_file(modconvertInfo, fdinfo):
     ret = {}
     dataHandler = DataHandler()
     dataHandler.UpdateModelConversionStatus(modconvertInfo['jobId'], "pushing")
+    current_version = fd_get_version_num(modconvertInfo["fileId"], fdinfo)
+    if current_version >= 32:
+        ret["success"] = False
+        ret["msg"] = "fd only support less than 32 versions"
+        return ret
+
+    version = 'v' + str(current_version)
     url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles/" + modconvertInfo["fileId"] + '/Versions'
     auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
     headers = {
-        "Version": str(int(time.time())),
+        "Version": version,
         "Description": modconvertInfo["jobId"] + " model file",
     }
     files = {
@@ -86,6 +93,21 @@ def fd_push_file(modconvertInfo, fdinfo):
         ret["msg"] = str(e)
         dataHandler.UpdateModelConversionStatus(modconvertInfo['jobId'], "push failed")
     return ret
+
+def fd_get_version_num(fileid, fdinfo):
+    url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles/" + fileId
+    auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
+    headers = {
+        "Version": str(int(time.time())),
+        "Description": modconvertInfo["jobId"] + " model file",
+    }
+    try:
+        resp = requests.get(url, auth=auth, headers=headers)
+        if resp.status_code == 200:
+            return len(resp.json()['Versions'])
+        return 0
+    except Exception:
+        return 0
 
 def get_filename(filepath):
     head, tail = ntpath.split(filepath)

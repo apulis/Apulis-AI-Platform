@@ -1527,7 +1527,22 @@ def getAlias(username):
         username = username.split("/")[1].strip()
     return username
 
-
+def ConvertDataFormat(projectId, datasetId,datasetType,targetFormat):
+    data_handler = None
+    if datasetType is None:
+        datasetType = "image"
+    if targetFormat is None:
+        targetFormat = "coco"
+    try:
+        data_handler = DataHandler()
+        ret = data_handler.ConvertDataFormat(projectId, datasetId,datasetType,targetFormat)
+        return ret
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+    return None
 
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False

@@ -1991,6 +1991,25 @@ class Infer(Resource):
 
 api.add_resource(Infer, '/Infer')
 
+class ConvertDataFormat(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('datasetId')
+        parser.add_argument('projectId')
+        parser.add_argument('type')
+        parser.add_argument('target')
+        args = parser.parse_args()
+        datasetId = args["datasetId"]
+        projectId = args["projectId"]
+        type = args["type"]
+        target = args["target"]
+        ret = JobRestAPIUtils.ConvertDataFormat(projectId, datasetId,type,target)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(ConvertDataFormat, '/ConvertDataFormat')
+
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)

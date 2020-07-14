@@ -182,6 +182,7 @@ if __name__ == "__main__":
     parser.add_argument("-l", help="port of joblog_manager", type=int, default=9203)
     parser.add_argument("-c", help="port of command_manager", type=int, default=9204)
     parser.add_argument("-e", help="port of endpoint_manager", type=int, default=9205)
+    parser.add_argument("-d", help="port of data_convert", type=int, default=9209)
     args = parser.parse_args()
 
     sys.exit(Run(args))

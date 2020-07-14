@@ -81,6 +81,7 @@ class DataHandler(object):
         self.jobtablename = "jobs"
         self.inferencejobtablename = "inferencejobs"
         self.modelconversionjobtablename = "modelconversionjobs"
+        self.dataconvert = "dataconvert"
         self.fdserverinfotablename = "fdserverinfo"
         self.identitytablename = "identity"
         self.acltablename = "acl"
@@ -445,6 +446,27 @@ class DataHandler(object):
                 conn.insert_one(sql)
                 conn.commit()
 
+            sql = """
+                CREATE TABLE IF NOT EXISTS  `%s`
+                (
+                    `id`         INT     NOT NULL AUTO_INCREMENT,
+                    `projectId`      varchar(50)   NOT NULL,
+                    `datasetId`      varchar(50)   NOT NULL,
+                    `targetFormat`      varchar(50)   NOT NULL,
+                    `type`       varchar(255) NOT NULL,
+                    `status`     varchar(255) NOT NULL DEFAULT 'queued',
+                    `errorMsg`      LONGTEXT  NULL,
+                    `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    PRIMARY KEY (`id`),
+                    INDEX (`projectId`),
+                    INDEX (`datasetId`),
+                    INDEX (`status`)
+                )
+                """ % (self.dataconvert)
+
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
     @record
     def AddDevice(self,deviceType, deviceStr, capacity,detail):
         ret = False
@@ -1941,6 +1963,55 @@ class DataHandler(object):
             ret = True
         except Exception as e:
             logger.exception('update_job_priority Exception: %s', str(e))
+        return ret
+
+    @record
+    def ConvertDataFormat(self,projectId, datasetId,datasetType,targetFormat):
+        ret = False
+        try:
+            query = "INSERT INTO `%s` (projectId, datasetId, `type`,`targetFormat`) VALUES(%s,%s,%s,%s)" % (self.dataconvert,"%s","%s","%s","%s")
+            with MysqlConn() as conn:
+                conn.insert_one(query,(projectId,datasetId,datasetType,targetFormat))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
+        return ret
+
+    @record
+    def getConvertList(self,targetStatus=None):
+        ret = []
+        try:
+            query = "select `id`,projectId, datasetId, `type`,`targetFormat`,`status` FROM `%s` where 1" % (self.dataconvert,)
+            params = []
+            if targetStatus:
+                if "," in targetStatus:
+                    query += " and `status` in %s"
+                    params.extend(targetStatus.split(","))
+                else:
+                    query += " and `status` = %s"
+                    params.append(targetStatus)
+            with MysqlConn() as conn:
+                ret = conn.select_many(query,params)
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
+        return ret
+
+    @record
+    def updateConvertStatus(self,targetStatus,id,errMsg=None):
+        ret = []
+        try:
+            if errMsg:
+                query = "update `%s` set `status`=%s,`errMsg`=%s where id=%s" % (self.dataconvert,"%s","%s","%s")
+                params = (targetStatus,errMsg, id)
+            else:
+                query = "update `%s` set `status`=%s where id=%s" % (self.dataconvert, "%s", "%s")
+                params = (targetStatus, id)
+            with MysqlConn() as conn:
+                conn.insert_one(query,params)
+                conn.commit()
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
         return ret
 
     def __del__(self):

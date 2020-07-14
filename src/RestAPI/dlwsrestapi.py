@@ -1758,13 +1758,14 @@ class Endpoint(Resource):
     @api.doc(params=model.EndpointPost.params)
     @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
+        
         '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
         args = parser.parse_args()
         username = args["userName"]
 
-        params = request.get_json(silent=True)
+        params = request.get_json(force=True)
         job_id = params["jobId"]
         requested_endpoints = params["endpoints"]
 

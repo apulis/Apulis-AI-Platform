@@ -1183,7 +1183,7 @@ class DataHandler(object):
 
     @record
     def GetJobListV3(self, userName, vcName, jobType, jobStatus, num=None, status=None, op=("=", "or")):
-
+    
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1245,7 +1245,10 @@ class DataHandler(object):
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "visualization":
+                    if record["jobType"] == jobType:
+                        ret["runningJobs"].append(record)
+
+                    elif record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)
 
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
@@ -1254,6 +1257,11 @@ class DataHandler(object):
 
                 else:
                     ret["finishedJobs"].append(record)
+
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
             conn.commit()
         except Exception as e:

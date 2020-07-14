@@ -538,7 +538,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             return false;
           }
           if (_val > maxAllocatable) {
-            if (!window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')) return false;
+            if (!window.confirm(t('tips.Therewontbeenoughdevicenumsmatchyourrequest'))) return false;
           }
         }
       }

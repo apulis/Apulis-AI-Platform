@@ -19,6 +19,7 @@ const training = {
     TherewontbeenoughworkersmatchyourrequestnProceed:'There won\'t be enough workers match your request.\nProceed?',
     Mustbeapositiveintegerfrom0to:'Must be a positive integer from 0 to',
     andcanonlybeoneof01248:'and can only be one of 0, 1, 2, 4, 8',
+    Therewontbeenoughdevicenumsmatchyourrequest: 'There won\'t be enough device nums match your request, job will be in queue status.\nProceed?'
 }
 const userActionTips = {
     pauseJob:'Pause job',

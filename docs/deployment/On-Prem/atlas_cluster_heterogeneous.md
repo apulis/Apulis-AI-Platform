@@ -403,8 +403,12 @@
     ```
 
 6. 安装SSH Key到所有节点
-
-    `./deploy.py --verbose sshkey install`
+    ```
+    # 初始化 sshkey
+    ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+    cp $HOME/.ssh/id* ./deploy/sshkey/
+    ./deploy.py --verbose sshkey install
+    ```
 
 7. 配置/检测内网DNS解析 
 

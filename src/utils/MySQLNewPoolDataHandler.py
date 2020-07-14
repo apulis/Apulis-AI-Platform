@@ -454,6 +454,7 @@ class DataHandler(object):
                     `datasetId`      varchar(50)   NOT NULL,
                     `targetFormat`      varchar(50)   NOT NULL,
                     `type`       varchar(255) NOT NULL,
+                    `outPath`    varchar(255) NULL,
                     `status`     varchar(255) NOT NULL DEFAULT 'queued',
                     `errorMsg`      LONGTEXT  NULL,
                     `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -1969,7 +1970,7 @@ class DataHandler(object):
     def ConvertDataFormat(self,projectId, datasetId,datasetType,targetFormat):
         ret = False
         try:
-            query = "INSERT INTO `%s` (projectId, datasetId, `type`,`targetFormat`) VALUES(%s,%s,%s,%s)" % (self.dataconvert,"%s","%s","%s","%s")
+            query = "INSERT INTO `%s` (projectId, datasetId, `type`,`targetFormat`) VALUES(%s,%s,%s,%s) ON DUPLICATE KEY UPDATE `status`='queued'" % (self.dataconvert,"%s","%s","%s","%s")
             with MysqlConn() as conn:
                 conn.insert_one(query,(projectId,datasetId,datasetType,targetFormat))
                 conn.commit()
@@ -1982,7 +1983,7 @@ class DataHandler(object):
     def getConvertList(self,targetStatus=None):
         ret = []
         try:
-            query = "select `id`,projectId, datasetId, `type`,`targetFormat`,`status` FROM `%s` where 1" % (self.dataconvert,)
+            query = "select `id`,projectId, datasetId, `type`,`targetFormat`,`status`,`time`,`outPath` FROM `%s` where 1" % (self.dataconvert,)
             params = []
             if targetStatus:
                 if "," in targetStatus:
@@ -1998,12 +1999,26 @@ class DataHandler(object):
         return ret
 
     @record
-    def updateConvertStatus(self,targetStatus,id,errMsg=None):
+    def GetConvertDetail(self,projectId,datasetId):
+        ret = []
+        try:
+            query = "select `id`,`type`,`targetFormat`,`status`,`time`,`outPath` FROM `%s` where `projectId`=%s and `datasetId`=%s " % (self.dataconvert,"%s","%s")
+            with MysqlConn() as conn:
+                ret = conn.select_many(query,[projectId,datasetId])
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
+        return ret
+
+    @record
+    def updateConvertStatus(self,targetStatus,id,errMsg=None,outPath=None):
         ret = []
         try:
             if errMsg:
                 query = "update `%s` set `status`=%s,`errorMsg`=%s where id=%s" % (self.dataconvert,"%s","%s","%s")
                 params = (targetStatus,errMsg, id)
+            elif outPath:
+                query = "update `%s` set `status`=%s,`outPath`=%s where id=%s" % (self.dataconvert, "%s", "%s", "%s")
+                params = (targetStatus, outPath, id)
             else:
                 query = "update `%s` set `status`=%s where id=%s" % (self.dataconvert, "%s", "%s")
                 params = (targetStatus, id)

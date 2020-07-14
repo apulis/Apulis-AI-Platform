@@ -2010,6 +2010,35 @@ class ConvertDataFormat(Resource):
         return resp
 api.add_resource(ConvertDataFormat, '/ConvertDataFormat')
 
+class GetConvertList(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('targetStatus')
+        args = parser.parse_args()
+        target = args["targetStatus"]
+        ret = JobRestAPIUtils.GetConvertList(target)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(GetConvertList, '/GetConvertList')
+
+class GetConvertDetail(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('datasetId')
+        parser.add_argument('projectId')
+        args = parser.parse_args()
+        datasetId = args["datasetId"]
+        projectId = args["projectId"]
+        ret = JobRestAPIUtils.GetConvertDetail(projectId,datasetId)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetConvertDetail, '/GetConvertDetail')
+
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)

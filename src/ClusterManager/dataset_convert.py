@@ -51,12 +51,13 @@ def mkdirs(path):
     if not os.path.exists(path):
         os.makedirs(path,exist_ok=True)
 
-def merge_json_to_coco_dataset(json_path,coco_file_path,prefix="",args=None):
+index = 0
+def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",args=None):
     coco = {}
     coco["images"] = []
     coco["categories"] = []
     coco["annotations"] = []
-    with open(os.path.join(json_path, "list.json"), "r") as f:
+    with open(os.path.join(list_ppath, "list.json"), "r") as f:
         ImgIDs = json.load(f)["ImgIDs"]
     categories = {}
     for ImgID in ImgIDs:
@@ -91,11 +92,11 @@ def DoDataConvert():
     for oneJob in jobs:
         if oneJob["type"] == "image" and oneJob["targetFormat"]=="coco":
             try:
-                json_path = os.path.join(config["data_platform_path"], "private/%s/%s")
-                coco_file_path = os.path.join(config["data_platform_path"], "private/%s/%s/convert_coco.json" % (
-                oneJob["datasetId"], oneJob["projectId"]))
-                merge_json_to_coco_dataset(json_path,coco_file_path)
-                dataHandler.updateConvertStatus("finished",oneJob["id"])
+                list_path = os.path.join(config["data_platform_path"], "public/tasks/%s" % (oneJob["datasetId"]))
+                json_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s" % (oneJob["datasetId"], oneJob["projectId"]))
+                coco_file_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s/convert_coco.json" % (oneJob["datasetId"], oneJob["projectId"]))
+                merge_json_to_coco_dataset(list_path,json_path,coco_file_path)
+                dataHandler.updateConvertStatus("finished",oneJob["id"],coco_file_path)
             except Exception as e:
                 logging.exception(e)
                 dataHandler.updateConvertStatus("error", oneJob["id"],e)

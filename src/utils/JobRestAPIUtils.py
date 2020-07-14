@@ -1544,6 +1544,33 @@ def ConvertDataFormat(projectId, datasetId,datasetType,targetFormat):
             data_handler.Close()
     return None
 
+def GetConvertList(status):
+    data_handler = None
+    try:
+        data_handler = DataHandler()
+        ret = data_handler.getConvertList(status)
+        return ret
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+    return None
+
+def GetConvertDetail(projectId,datasetId):
+    data_handler = None
+    try:
+        data_handler = DataHandler()
+        ret = data_handler.GetConvertDetail(projectId,datasetId)
+        if len(ret)>0:
+            return ret[0]
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+    return None
+
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False
     TEST_JOB_STATUS = True

@@ -1816,6 +1816,7 @@ def deploy_webUI_on_node(ipAddress):
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/config.yaml","/etc/RestfulAPI/config.yaml", sshUser, webUIIP )
+    utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/appsettings.json","/etc/RestfulAPI/appsettings.json", sshUser, webUIIP )
     utils.sudo_scp(config["ssh_cert"],"./deploy/UserDashboard/local.config","/etc/UserDashboard/local.config", sshUser, webUIIP )
 
     utils.render_template_directory("./template/dashboard", "./deploy/dashboard",config)

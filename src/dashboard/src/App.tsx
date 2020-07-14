@@ -89,7 +89,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
   }, userGroupPath || '');
   console.log('permissionList',permissionList)
   return(
-    <BrowserRouter>
+    <BrowserRouter basename="/expert">
       <ConfigProvider>
         <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
           <ConfirmProvider>

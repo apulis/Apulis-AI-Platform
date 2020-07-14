@@ -2242,6 +2242,10 @@ def config_fqdn():
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
+        ## 
+        remotecmd = "sudo mkdir -p /etc/nginx/fqdn; echo %s | sudo tee /etc/nginx/fqdn/hostname-fqdn; sudo chmod +r /etc/nginx/fqdn/hostname-fqdn" % node
+        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+
 def config_webui(nargs, archtype=None):
 
     nodes = get_node_lists_for_service("restfulapi")

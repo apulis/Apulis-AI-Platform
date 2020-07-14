@@ -40,7 +40,7 @@ spec:
           name: nginx-log         
         - mountPath: /etc/nginx/conf.other
           name: configmap-volume
-        - mountPath: /etc/hostname-fqdn
+        - mountPath: /etc/nginx/fqdn/
           name: hostname-fqdn
         - mountPath: /etc/letsencrypt
           name: etc-letsencrpyt  
@@ -57,7 +57,7 @@ spec:
           path: /etc/nginx/conf.other
       - name: hostname-fqdn
         hostPath:
-          path: /etc/hostname-fqdn
+          path: /etc/nginx/fqdn/
       - name: nginx-log
         hostPath:
           path: /var/log/nginx

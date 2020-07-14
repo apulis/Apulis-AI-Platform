@@ -452,7 +452,6 @@ def PostModelConversionJob(jobParamsJsonStr):
         return ret
 
     # env
-
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
             jobParams["resourcegpu"] = 0
@@ -611,12 +610,39 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             jobs = dataHandler.GetJobListV2("all", vcName, num, pendingStatus, ("=","or"))
         else:
             jobs = dataHandler.GetJobListV2(userName, vcName, num)
+
     except Exception as e:
         logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
     finally:
         if dataHandler is not None:
             dataHandler.Close()
     return jobs
+
+def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, num=None):
+
+    jobs = {}
+    dataHandler = None
+
+    try:
+        dataHandler = DataHandler()
+        hasAccessOnAllJobs = False
+
+        # if user needs to access all jobs, and has been authorized, 
+        # he could get all pending jobs; otherwise, he could get his 
+        # own jobs with all status
+        jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus, num)
+            
+    except Exception as e:
+        logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
+
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+        else:
+            pass
+
+    return jobs
+
 
 def ListInferenceJob(jobOwner,vcName,num):
     jobs = {}

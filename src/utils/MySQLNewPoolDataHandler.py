@@ -1182,6 +1182,94 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus, num=None, status=None, op=("=", "or")):
+
+        ret = {}
+        ret["queuedJobs"] = []
+        ret["runningJobs"] = []
+        ret["finishedJobs"] = []
+        ret["visualizationJobs"] = []
+
+        conn = None
+        cursor = None
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
+                    jobType, jobTime, jobParams, priority FROM {} left join {} 
+                    on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename, 
+                    self.jobtablename, self.jobprioritytablename, 
+                    self.jobtablename, self.jobprioritytablename, 
+                    jobType)
+
+            ## all jobs
+            if jobStatus.lower() != "all":
+                query += " and jobStatus = '%s'" % jobStatus 
+            else:
+                pass 
+            
+            query += " and userName = '%s'" % userName
+            query += " and vcName = '%s'" % vcName
+
+            if status is not None:
+                if "," not in status:
+                    query += " and jobStatus %s '%s'" % (op[0], status)
+                else:
+                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_statement = (" " + op[1] + " ").join(status_list)
+                    query += " and ( %s ) " % status_statement
+
+            else:
+                pass
+
+            query += " order by jobTime Desc"
+
+            if num is not None:
+                query += " limit %s " % str(num)
+            else:
+                pass
+
+            cursor.execute(query)
+            columns = [column[0] for column in cursor.description]
+            data = cursor.fetchall()
+
+            for item in data:
+
+                record = dict(zip(columns, item))
+
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
+                if record["jobStatus"] == "running":
+                    if record["jobType"] == "visualization":
+                        ret["visualizationJobs"].append(record)
+
+                elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
+                    "jobStatus"] == "unapproved":
+                    ret["queuedJobs"].append(record)
+
+                else:
+                    ret["finishedJobs"].append(record)
+
+            conn.commit()
+        except Exception as e:
+            logger.exception('GetJobListV2 Exception: %s', str(e))
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
+                       "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
+        return ret
+
+    @record
     def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
         ret = {}
         ret["queuedJobs"] = []

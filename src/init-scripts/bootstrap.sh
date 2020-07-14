@@ -12,6 +12,15 @@ mkdir -p ${LOG_DIR}
 . ${RUN_TIME_DIR}/env/init.env
 sh -x ${RUN_TIME_DIR}/install.sh
 
+# create path for training jobs
+if [ ! -z ${CODE_PATH} ]; then
+	mkdir -p ${CODE_PATH}
+fi
+
+if [ ! -z ${OUTPUT_PATH} ]; then
+	mkdir -p ${OUTPUT_PATH}
+fi
+
 # set apt mirrors for foreign sources
 #sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
 #sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list

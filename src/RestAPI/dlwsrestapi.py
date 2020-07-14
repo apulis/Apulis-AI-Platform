@@ -590,10 +590,43 @@ class ListJobsV2(Resource):
 
         resp = generate_response(jobs)
         return resp
-##
-## Actually setup the Api resource routing here
-##
+
 api.add_resource(ListJobsV2, '/ListJobsV2')
+
+# shows a list of all jobs, and lets you POST to add new tasks
+class ListJobsV3(Resource):
+    @api.doc(params=model.ListJobsV2.params)
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('num')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+
+        args = parser.parse_args()
+        num = None
+
+        if args["num"] is not None:
+            try:
+                num = int(args["num"])
+            except:
+                pass
+
+        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], args["jobType"], args["jobStatus"], num)
+
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+
+        resp = generate_response(jobs)
+        return resp
+
+api.add_resource(ListJobsV3, '/ListJobsV3')
 
 class GetAllDevice(Resource):
     @api.doc(params=model.GetAllDevice.params)
@@ -1781,13 +1814,14 @@ class Endpoint(Resource):
     @api.doc(params=model.EndpointPost.params)
     @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
+        
         '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
         args = parser.parse_args()
         username = args["userName"]
 
-        params = request.get_json(silent=True)
+        params = request.get_json(force=True)
         job_id = params["jobId"]
         requested_endpoints = params["endpoints"]
 

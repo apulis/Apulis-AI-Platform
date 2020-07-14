@@ -127,6 +127,8 @@ def Run(args):
         ["python", os.path.join(cwd, "command_manager.py"), "--port", str(args.c)],
         "endpoint_manager":
         ["python", os.path.join(cwd, "endpoint_manager.py"), "--port", str(args.e)],
+        "data_convert":
+        ["python", os.path.join(cwd, "data_convert.py"), "--port", str(args.d)]
     }
 
     FNULL = open(os.devnull, "w")

@@ -1,4 +1,4 @@
-1. # DLWS集群安装步骤
+# DLWS集群安装步骤
 
 
 ### 1. 配置说明 & 示例
@@ -704,7 +704,7 @@ userGroup:
     ```shell script
       ./deploy.py --verbose kubernetes start mysql
     ```
-    进入mysql容器
+    进入mysql容器，执行如下指令。**以下步骤是必须的，否则连接 MySQL 会报错**
     ```shell script
       mysql -uroot -p
       use mysql;
@@ -714,12 +714,24 @@ userGroup:
       alter user 'root'@'%' identified with mysql_native_password by 'apulis#2019#wednesday';
     ```
 
+    注意这里的 'apulis#2019#wednesday' 应该替换为数据库当前的密码
+    
 9. ##### 启动集群应用
     ```
-    ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
+    1. ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
+    2. ./deploy.py --background --sudo runscriptonall scripts/npu/npu_info_gen.py
+3. ./deploy.py --verbose kubernetes start monitor
     ```
-
+    
+    注意：
+    
+    - 指令2必须先于指令3执行
+    - node重启后 需重新执行指令2 (华为发布NPU-SMI指令后, 可自动兼容)
+    
+    
+    
 10. ##### 启动dashboard
+
     - master为AMD64架构
         ```
         ./deploy.py --verbose nginx webui3

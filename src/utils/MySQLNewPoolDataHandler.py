@@ -81,6 +81,7 @@ class DataHandler(object):
         self.jobtablename = "jobs"
         self.inferencejobtablename = "inferencejobs"
         self.modelconversionjobtablename = "modelconversionjobs"
+        self.dataconvert = "dataconvert"
         self.fdserverinfotablename = "fdserverinfo"
         self.identitytablename = "identity"
         self.acltablename = "acl"
@@ -394,6 +395,7 @@ class DataHandler(object):
                         `deviceType`    varchar(50)   NOT NULL,
                         `deviceStr`     varchar(50)   NOT NULL,
                         `capacity`      INT NOT NULL,
+                        `detail`        LONGTEXT NOT NULL,
                         `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
                         PRIMARY KEY (`id`),
                         UNIQUE KEY (`deviceType`)
@@ -444,14 +446,36 @@ class DataHandler(object):
                 conn.insert_one(sql)
                 conn.commit()
 
+            sql = """
+                CREATE TABLE IF NOT EXISTS  `%s`
+                (
+                    `id`         INT     NOT NULL AUTO_INCREMENT,
+                    `projectId`      varchar(50)   NOT NULL,
+                    `datasetId`      varchar(50)   NOT NULL,
+                    `targetFormat`      varchar(50)   NOT NULL,
+                    `type`       varchar(255) NOT NULL,
+                    `outPath`    varchar(255) NULL,
+                    `status`     varchar(255) NOT NULL DEFAULT 'queued',
+                    `errorMsg`      LONGTEXT  NULL,
+                    `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    PRIMARY KEY (`id`),
+                    INDEX (`projectId`),
+                    INDEX (`datasetId`),
+                    INDEX (`status`)
+                )
+                """ % (self.dataconvert)
+
+            with MysqlConn() as conn:
+                conn.insert_one(sql)
+                conn.commit()
     @record
-    def AddDevice(self,deviceType, deviceStr, capacity):
+    def AddDevice(self,deviceType, deviceStr, capacity,detail):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.deviceStatusTableName + "` (deviceType, deviceStr, capacity) VALUES (%s,%s,%s) " \
-                                                                 "ON DUPLICATE KEY UPDATE deviceStr=values(deviceStr),capacity=values(capacity) "
+            sql = "INSERT INTO `" + self.deviceStatusTableName + "` (deviceType, deviceStr, capacity,`detail`) VALUES (%s,%s,%s,%s) " \
+                                                                 "ON DUPLICATE KEY UPDATE deviceStr=values(deviceStr),capacity=values(capacity),`detail`=values(`detail`) "
             with MysqlConn() as conn:
-                conn.insert_one(sql, (deviceType, deviceStr, capacity))
+                conn.insert_one(sql, (deviceType, deviceStr, capacity,json.dumps(detail)))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -462,11 +486,11 @@ class DataHandler(object):
     def GetAllDevice(self):
         ret = {}
         try:
-            sql = """select deviceType, deviceStr, capacity from `%s`""" %(self.deviceStatusTableName)
+            sql = """select deviceType, deviceStr, capacity,`detail` from `%s`""" %(self.deviceStatusTableName)
             with MysqlConn() as conn:
                 rets = conn.select_many(sql)
             for one in rets:
-                ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"]}
+                ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"],"detail":json.loads(one["detail"])}
         except Exception as e:
             logger.exception('AddStorage Exception: %s', str(e))
         return ret
@@ -1486,6 +1510,46 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetInferenceJob(self, jobId):
+        ret = []
+        conn = None
+        cursor = None
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+            query = "SELECT `jobId`, `jobName`, `userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobTime`, `jobParams`,`endpoints`  FROM `%s` where `jobId` = %s " % (
+            self.jobtablename, "%s")
+            cursor.execute(query,[jobId])
+
+            columns = [column[0] for column in cursor.description]
+            data = cursor.fetchall()
+            for item in data:
+                record = dict(zip(columns, item))
+
+                endpoints = record["endpoints"]
+                if endpoints:
+                    endpoints = json.loads(record["endpoints"]).values()
+                    if len(endpoints)==1:
+                        endpoint = endpoints[0]
+                        if endpoint["status"]=="running":
+                            record["inference-url"] = "http://"+config["webportal_node"].split(config["domain"])[0]+config["domain"]+"/endpoints/v2/"+ \
+                                                      base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+                ret.append(record)
+            conn.commit()
+        except Exception as e:
+            logger.exception('GetJobV2 Exception: %s', str(e))
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+        return ret
+
+    @record
     def DeleteJobByVc(self,vcname):
         try:
             sql = "DELETE FROM `%s` WHERE `vcName`= %s " %(self.jobtablename,"%s")
@@ -1988,6 +2052,69 @@ class DataHandler(object):
             ret = True
         except Exception as e:
             logger.exception('update_job_priority Exception: %s', str(e))
+        return ret
+
+    @record
+    def ConvertDataFormat(self,projectId, datasetId,datasetType,targetFormat):
+        ret = False
+        try:
+            query = "INSERT INTO `%s` (projectId, datasetId, `type`,`targetFormat`) VALUES(%s,%s,%s,%s) ON DUPLICATE KEY UPDATE `status`='queued'" % (self.dataconvert,"%s","%s","%s","%s")
+            with MysqlConn() as conn:
+                conn.insert_one(query,(projectId,datasetId,datasetType,targetFormat))
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
+        return ret
+
+    @record
+    def getConvertList(self,targetStatus=None):
+        ret = []
+        try:
+            query = "select `id`,projectId, datasetId, `type`,`targetFormat`,`status`,`time`,`outPath` FROM `%s` where 1" % (self.dataconvert,)
+            params = []
+            if targetStatus:
+                if "," in targetStatus:
+                    query += " and `status` in %s"
+                    params.extend(targetStatus.split(","))
+                else:
+                    query += " and `status` = %s"
+                    params.append(targetStatus)
+            with MysqlConn() as conn:
+                ret = conn.select_many(query,params)
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
+        return ret
+
+    @record
+    def GetConvertDetail(self,projectId,datasetId):
+        ret = []
+        try:
+            query = "select `id`,`type`,`targetFormat`,`status`,`time`,`outPath` FROM `%s` where `projectId`=%s and `datasetId`=%s " % (self.dataconvert,"%s","%s")
+            with MysqlConn() as conn:
+                ret = conn.select_many(query,[projectId,datasetId])
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
+        return ret
+
+    @record
+    def updateConvertStatus(self,targetStatus,id,errMsg=None,outPath=None):
+        ret = []
+        try:
+            if errMsg:
+                query = "update `%s` set `status`=%s,`errorMsg`=%s where id=%s" % (self.dataconvert,"%s","%s","%s")
+                params = (targetStatus,errMsg, id)
+            elif outPath:
+                query = "update `%s` set `status`=%s,`outPath`=%s where id=%s" % (self.dataconvert, "%s", "%s", "%s")
+                params = (targetStatus, outPath, id)
+            else:
+                query = "update `%s` set `status`=%s where id=%s" % (self.dataconvert, "%s", "%s")
+                params = (targetStatus, id)
+            with MysqlConn() as conn:
+                conn.insert_one(query,params)
+                conn.commit()
+        except Exception as e:
+            logger.exception('add ConvertDataFormat Exception: %s', str(e))
         return ret
 
     def __del__(self):

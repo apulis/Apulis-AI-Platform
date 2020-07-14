@@ -245,6 +245,12 @@ class GetJobDetailV2:
         "result": OneJobResponse
     }
 
+class GetInferenceJobDetail:
+    params = {
+        "jobId": {"description": 'job id', "_in": 'query', "type": "string","required":True},
+        "userName": {"description": 'current user name', "_in": 'query', "type": "string","required":True},
+    }
+
 class GetJobLog:
     params = {
         "jobId": {"description": 'job id', "_in": 'query', "type": "string","required":True},
@@ -537,4 +543,23 @@ class CountJobByStatus:
 class HasCurrentActiveJob:
     params = {
         "userName": {"description": 'userName', "_in": 'query', "type": "string", "required": True},
+    }
+
+class ConvertDataFormat:
+    params = {
+        "projectId": {"description": 'projectId', "_in": 'query', "type": "string", "required": True},
+        "datasetId": {"description": 'datasetId', "_in": 'query', "type": "string", "required": True},
+        "type": {"description": 'type', "_in": 'query', "type": "string", "required": True},
+        "target": {"description": 'target', "_in": 'query', "type": "string", "required": True},
+    }
+
+class GetConvertList:
+    params = {
+        "targetStatus": {"description": 'projectId', "_in": 'query', "type": "string", "required": True},
+    }
+
+class GetConvertDetail:
+    params = {
+        "projectId": {"description": 'projectId', "_in": 'query', "type": "string", "required": True},
+        "datasetId": {"description": 'datasetId', "_in": 'query', "type": "string", "required": True},
     }

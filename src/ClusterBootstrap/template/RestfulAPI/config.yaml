@@ -113,3 +113,5 @@ defalt_virtual_cluster_device_type_list:
 {% for one in cnf["defalt_virtual_cluster_device_type_list"] %}
   - {{ one }}
 {%endfor%}
+
+data_platform_path: {{cnf["data_platform_path"}}

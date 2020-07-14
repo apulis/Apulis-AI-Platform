@@ -91,9 +91,10 @@ def DoDataConvert():
     jobs = dataHandler.getConvertList(targetStatus="queued")
     for oneJob in jobs:
         if oneJob["type"] == "image" and oneJob["targetFormat"]=="coco":
-            json_path = os.path.join(config["data_platform_path"],"private/%s/%s")
-            coco_file_path = os.path.join(config["data_platform_path"],"private/%s/%s/convert_coco.json" %(oneJob["datasetId"],oneJob["projectId"]))
             try:
+                json_path = os.path.join(config["data_platform_path"], "private/%s/%s")
+                coco_file_path = os.path.join(config["data_platform_path"], "private/%s/%s/convert_coco.json" % (
+                oneJob["datasetId"], oneJob["projectId"]))
                 merge_json_to_coco_dataset(json_path,coco_file_path)
                 dataHandler.updateConvertStatus("finished",oneJob["id"])
             except Exception as e:

@@ -24,12 +24,14 @@ COPY ClusterManager/requirements.txt /
 RUN rm -rf /usr/lib/python2.7/dist-packages/yaml
 RUN rm -rf /usr/lib/python2.7/dist-packages/PyYAML-*
 RUN pip install -r /requirements.txt
-RUN pip install MySQL-python
-RUN pip install DBUtils
+RUN pip install MySQL-python DBUtils Pillow opencv-python easydict
 
 ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete
 ADD utils /DLWorkspace/src/utils
 ADD RestAPI /DLWorkspace/src/RestAPI
 ADD ClusterManager /DLWorkspace/src/ClusterManager
+
+RUN apt update && apt install -y libsm6 libxext6 libglib2.0-0
+RUN apt-get install -y libxrender-dev
 
 CMD /run.sh

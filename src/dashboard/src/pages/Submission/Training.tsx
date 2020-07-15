@@ -188,6 +188,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         type,
         gpus,
         workers,
+        gpuNumPerDevice,
         image,
         command,
         workPath,
@@ -273,6 +274,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         type,
         gpus,
         workers,
+        gpuNumPerDevice,
         image,
         command,
         workPath,
@@ -300,6 +302,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         formValSet('gpus', gpus);
       }
       if (workers !== undefined) setWorkers(workers);
+      if (gpuNumPerDevice) setGpuNumPerDevice(Number(gpuNumPerDevice));
       if (image !== undefined) {
         setImage(image);
         formValSet('image', image);
@@ -547,8 +550,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [selectedTeam]);
 
   useEffect(() => {
-    if (type === 'PSDistJob' && allDevice[gpuType].deviceStr === 'nvidia.com/gpu') {
-      setGpuNumPerDevice(1);
+    if (type === 'PSDistJob') {
+      setGpuNumPerDevice(allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
     }
   }, [gpuType]);
 

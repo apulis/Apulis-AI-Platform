@@ -24,6 +24,7 @@ COPY ClusterManager/requirements.txt /
 RUN rm -rf /usr/lib/python2.7/dist-packages/yaml
 RUN rm -rf /usr/lib/python2.7/dist-packages/PyYAML-*
 RUN pip install -r /requirements.txt
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 RUN pip install MySQL-python DBUtils Pillow opencv-python easydict
 
 RUN apt update && apt install -y libsm6 libxext6 libglib2.0-0

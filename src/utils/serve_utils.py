@@ -151,12 +151,12 @@ def postprocess_boxes(pred_bbox, org_img_shape, input_size, score_threshold):
          pred_xywh[:, :2] + pred_xywh[:, 2:] * 0.5], axis=-1)
 
     org_h, org_w = org_img_shape
-    resize_ratio = min(input_size / org_w, input_size / org_h)
+    resize_ratio = min(input_size*1.0 / org_w, input_size*1.0 / org_h)
 
     # print('resize_ratio', resize_ratio)
 
-    dw = (input_size - resize_ratio * org_w) / 2
-    dh = (input_size - resize_ratio * org_h) / 2
+    dw = (input_size - resize_ratio * org_w)*1.0 / 2
+    dh = (input_size - resize_ratio * org_h)*1.0 / 2
     # print(org_w)  # 500
     # print(org_h)  # 375
     # print(dw)  # 0.0

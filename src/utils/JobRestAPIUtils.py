@@ -860,13 +860,15 @@ def updateUserPerm(identityName,isAdmin,isAuthorized):
 def Infer(jobId,image,signature_name):
     dataHandler = DataHandler()
     jobs = dataHandler.GetInferenceJob(jobId)
+    if not signature_name:
+        signature_name = "predict"
     if len(jobs)>0:
         job = jobs[0]
         if "inference-url" in job:
             inference_url = job["inference-url"]
             # ret = inference.object_classifier_infer(inference_url,image,signature_name)
             ret = inference.object_detaction_infer(inference_url,image,signature_name)
-            ret = base64.b64encode(ret).decode()
+            ret = base64.b64encode(ret)
         else:
             ret = "job not running"
     else:

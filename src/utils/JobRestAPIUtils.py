@@ -28,6 +28,7 @@ import authorization
 from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
+import inference
 import quota
 
 import copy
@@ -882,18 +883,18 @@ def updateUserPerm(identityName,isAdmin,isAuthorized):
     dataHandler.Close()
     return ret
 
-def Infer(jobId,image):
+def Infer(jobId,image,signature_name):
     dataHandler = DataHandler()
     jobs = dataHandler.GetInferenceJob(jobId)
+    if not signature_name:
+        signature_name = "predict"
     if len(jobs)>0:
         job = jobs[0]
         if "inference-url" in job:
             inference_url = job["inference-url"]
-            res = requests.post(inference_url,json={"instances":[
-                {"image_bytes":{"b64":base64.b64encode(image).decode("utf-8")},
-                 "key":" 1"}
-            ]})
-            ret = res.json().get("predictions")
+            # ret = inference.object_classifier_infer(inference_url,image,signature_name)
+            ret = inference.object_detaction_infer(inference_url,image,signature_name)
+            ret = base64.b64encode(ret)
         else:
             ret = "job not running"
     else:

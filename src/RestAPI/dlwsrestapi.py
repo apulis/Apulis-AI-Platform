@@ -2014,10 +2014,12 @@ class Infer(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId')
+        parser.add_argument('signature_name')
         args = parser.parse_args()
         jobId = args["jobId"]
+        signature_name = args["signature_name"]
         image = request.files.get("file").read()
-        ret = JobRestAPIUtils.Infer(jobId,image)
+        ret = JobRestAPIUtils.Infer(jobId,image,signature_name)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

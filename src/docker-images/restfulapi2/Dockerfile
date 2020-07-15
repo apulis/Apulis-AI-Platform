@@ -31,7 +31,7 @@ ADD utils /DLWorkspace/src/utils
 ADD RestAPI /DLWorkspace/src/RestAPI
 ADD ClusterManager /DLWorkspace/src/ClusterManager
 
-RUN apt update && apt install -y libsm6 libxext6
+RUN apt update && apt install -y libsm6 libxext6 libglib2.0-0
 RUN apt-get install -y libxrender-dev
 
 CMD /run.sh

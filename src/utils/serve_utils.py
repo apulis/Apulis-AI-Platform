@@ -27,7 +27,7 @@ def image_preporcess(image, target_size, gt_boxes=None):
     ih, iw = target_size
     h, w, _ = image.shape
 
-    scale = min(iw / w, ih / h)
+    scale = min(float(iw) / w, float(ih) / h)
     nw, nh = int(scale * w), int(scale * h)
     image_resized = cv2.resize(image, (nw, nh))
 

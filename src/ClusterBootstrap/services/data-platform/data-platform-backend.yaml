@@ -38,6 +38,8 @@ spec:
           name: dotnet-config
         - mountPath: /mntdlws/nfs/label
           name: data
+        - mountPath: /data
+          name: dataset
       volumes:
       - name: dotnet-log
         hostPath:
@@ -48,6 +50,9 @@ spec:
       - name: data
         hostPath:
           path: /mntdlws/nfs/label
+      - name: dataset
+        hostPath:
+          path: /mntdlws/storage
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

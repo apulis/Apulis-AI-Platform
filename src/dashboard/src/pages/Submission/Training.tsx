@@ -189,6 +189,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         type,
         gpus,
         workers,
+        gpuNumPerDevice,
         image,
         command,
         workPath,
@@ -274,6 +275,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         type,
         gpus,
         workers,
+        gpuNumPerDevice,
         image,
         command,
         workPath,
@@ -301,6 +303,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         formValSet('gpus', gpus);
       }
       if (workers !== undefined) setWorkers(workers);
+      if (gpuNumPerDevice) setGpuNumPerDevice(Number(gpuNumPerDevice));
       if (image !== undefined) {
         setImage(image);
         formValSet('image', image);
@@ -430,23 +433,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     let totalGpus = gpus;
     if (type === 'PSDistJob') {
       job.numps = 1;
-      job.resourcegpu = 8;  //gpusPerNode
+      job.resourcegpu = gpuNumPerDevice;  //gpusPerNode
       job.numpsworker = workers;
-      totalGpus = 8 * workers;  //gpusPerNode
+      totalGpus = gpuNumPerDevice * workers;  //gpusPerNode
     } else {
       job.resourcegpu = gpus;
     }
     if (type === 'PSDistJob') {
-      // let workersNeeded = workers;
-      // for (const { metric, value } of gpuFragmentation) {
-      //   if (Number(metric['gpu_available']) >= gpusPerNode) {
-      //     workersNeeded -= (Number(value[1]) || 0);
-      //   }
-      //   if (workersNeeded <= 0) break;
-      // }
-      let workersNeeded = workers * 8;
-      if (workersNeeded > gpuAvailable) {
-        if (!window.confirm(t('tips.TherewontbeenoughworkersmatchyourrequestnProceed'))) {
+      if (workers * 8 > gpuAvailable) {
+        if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
           return;
         }
       }
@@ -552,8 +547,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [selectedTeam]);
 
   useEffect(() => {
-    if (type === 'PSDistJob' && allDevice[gpuType].deviceStr === 'nvidia.com/gpu') {
-      setGpuNumPerDevice(1);
+    if (type === 'PSDistJob') {
+      setGpuNumPerDevice(allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
     }
   }, [gpuType]);
 

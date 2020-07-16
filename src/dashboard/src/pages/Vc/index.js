@@ -317,7 +317,7 @@ class Vc extends React.Component {
           <AuthzHOC needPermission={'MANAGE_VC'}>
             <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>{t('ADD')}</Button></div>
           </AuthzHOC>
-          <Table style={{ width: '80%', marginTop: 20 }}>
+          <Table style={{ marginTop: 20 }}>
             <TableHead> 
               <TableRow style={{ backgroundColor: '#7583d1' }}>
                 <TableCell style={{ color: '#fff' }}>{t('VcName')}</TableCell>

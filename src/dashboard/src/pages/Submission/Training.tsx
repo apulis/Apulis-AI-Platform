@@ -432,22 +432,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     let totalGpus = gpus;
     if (type === 'PSDistJob') {
       job.numps = 1;
-      job.resourcegpu = 8;  //gpusPerNode
+      job.resourcegpu = gpuNumPerDevice;  //gpusPerNode
       job.numpsworker = workers;
-      totalGpus = 8 * workers;  //gpusPerNode
+      totalGpus = gpuNumPerDevice * workers;  //gpusPerNode
     } else {
       job.resourcegpu = gpus;
     }
     if (type === 'PSDistJob') {
-      // let workersNeeded = workers;
-      // for (const { metric, value } of gpuFragmentation) {
-      //   if (Number(metric['gpu_available']) >= gpusPerNode) {
-      //     workersNeeded -= (Number(value[1]) || 0);
-      //   }
-      //   if (workersNeeded <= 0) break;
-      // }
-      let workersNeeded = workers * 8;
-      if (workersNeeded > gpuAvailable) {
+      if (workers * 8 > gpuAvailable) {
         if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
           return;
         }

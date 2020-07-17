@@ -58,7 +58,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "service_cpu_percent{name=\"$service_name\"}",
+              "expr": "avg by (instance)(service_cpu_percent{name=\"$service_name\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}}",
@@ -134,7 +134,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "service_mem_usage_byte{name=\"$service_name\"}",
+              "expr": "avg by (instance)(service_mem_usage_byte{name=\"$service_name\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}}",
@@ -222,7 +222,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "service_net_in_byte{name=\"$service_name\"}",
+              "expr": "avg by (instance)(service_net_in_byte{name=\"$service_name\"})",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -230,7 +230,7 @@
               "refId": "A"
             },
             {
-              "expr": "service_net_out_byte{name=\"$service_name\"}",
+              "expr": "avg by (instance)(service_net_out_byte{name=\"$service_name\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
@@ -306,7 +306,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(service_block_in_byte{name=\"$service_name\"}[300s])",
+              "expr": "avg by (instance)(irate(service_block_in_byte{name=\"$service_name\"}[300s]))",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -314,7 +314,7 @@
               "refId": "A"
             },
             {
-              "expr": "irate(service_block_out_byte{name=\"$service_name\"}[300s])",
+              "expr": "avg by (instance)(irate(service_block_out_byte{name=\"$service_name\"}[300s]))",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{'{{'}}instance{{'}}'}} Write",

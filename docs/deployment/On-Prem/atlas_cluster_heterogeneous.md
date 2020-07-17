@@ -88,7 +88,7 @@
 
 **atlas集群网络拓扑示例**
 
-![atlas集群网络拓扑示例](./atlas集群拓扑图.png)
+![atlas集群网络拓扑示例](./static/atlas集群拓扑图.png)
 
 
 节点基础配置

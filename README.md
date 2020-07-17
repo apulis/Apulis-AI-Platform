@@ -11,13 +11,11 @@ The platform adopts the lightweight virtualization technologies, such as Docker 
 |-- devenv                          Dockerfile for creating dev environment on amd64 arch
 |-- devenv.arm64                    Dockerfile for creating dev environment on arm64 arch
 |-- docs
-|   |-- KnownIssues
-|   |-- Presentation
 |   |-- deployment
 |   `-- tutorial
 |-- example
 |   `-- resnet50_cifar10
-|-- license.old
+|-- License
 `-- src
     |-- ARM
     |-- ClusterBootstrap            deployment module

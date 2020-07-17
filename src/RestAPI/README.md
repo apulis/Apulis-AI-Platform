@@ -1,4 +1,4 @@
-# Rest API for job submission in DL Workspace
+# Rest API for job submission in Apulis Platform
 
 # ToDo: we should provide documentation on 
 # 1. The execution environment expected by the Rest API

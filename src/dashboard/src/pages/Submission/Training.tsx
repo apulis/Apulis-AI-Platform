@@ -126,8 +126,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   
   const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      const val = event.target.value;
       const newEnvironmentVariables = environmentVariables.slice()
-      environmentVariables[index].name = event.target.value;
+      environmentVariables[index].name = val;
       setEnvironmentVariables(newEnvironmentVariables);
     },
     [environmentVariables]
@@ -502,6 +503,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       }
       return flag;
+    }
+    return true;
+  }
+
+  const validateEVName = (val: string, index: any) => {
+    if (val) {
+      if (environmentVariables.findIndex(i => i.name === val) > -1) {
+        setError('environmentVariables', 'error','Already has the same name！');
+        return false;
+      } else if (!NoNumberReg.test(val)) {
+        setError('environmentVariables', 'error',NoNumberText);
+        return false;
+      } else {
+        const newEnvironmentVariables = environmentVariables.slice()
+        environmentVariables[index].name = val;
+        setEnvironmentVariables(newEnvironmentVariables);
+        return true;
+      }
     }
     return true;
   }
@@ -1106,17 +1125,20 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             fullWidth
                             margin="dense"
                             variant="filled"
-                            value={name}
+                            // value={name}
                             name="environmentVariables"
-                            onChange={onEnvironmentVariableNameChange(index)}
+                            // onChange={onEnvironmentVariableNameChange(index)}
                             error={Boolean(errors.environmentVariables)}
                             helperText={errors.environmentVariables ? errors.environmentVariables.message : ''}
                             InputLabelProps={{ shrink: true }}
+                            // inputRef={register({
+                            //   pattern: {
+                            //     value: NoNumberReg,
+                            //     message: NoNumberText
+                            //   }
+                            // })}
                             inputRef={register({
-                              pattern: {
-                                value: NoNumberReg,
-                                message: NoNumberText
-                              }
+                              validate: val => validateEVName(val, index)
                             })}
                           />
                         </TableCell>
@@ -1140,11 +1162,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     <TableRow>
                       <TableCell/>
                       <TableCell/>
-                      <TableCell align="center">
+                      {environmentVariables.length < 10 && <TableCell align="center">
                         <IconButton size="small" color="secondary" onClick={onAddEnvironmentVariableClick}>
                           <Add/>
                         </IconButton>
-                      </TableCell>
+                      </TableCell>}
                     </TableRow>
                   </TableBody>
                 </Table>

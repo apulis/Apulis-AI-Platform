@@ -35,7 +35,6 @@ interface JobsTableProps {
 
 const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }) => {
   const { cluster } = useContext(ClusterContext);
-  console.log('cluster',cluster)
 
   const [pageSize, setPageSize] = useState(10);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {

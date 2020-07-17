@@ -1996,17 +1996,8 @@ api.add_resource(Infer, '/Infer')
 class ConvertDataFormat(Resource):
     @api.doc(params=model.ConvertDataFormat.params)
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('datasetId')
-        parser.add_argument('projectId')
-        parser.add_argument('type')
-        parser.add_argument('target')
-        args = parser.parse_args()
-        datasetId = args["datasetId"]
-        projectId = args["projectId"]
-        type = args["type"]
-        target = args["target"]
-        ret = JobRestAPIUtils.ConvertDataFormat(projectId, datasetId,type,target)
+        params = request.get_json(force=True)
+        ret = JobRestAPIUtils.ConvertDataFormat(params["projectId"], params["datasetId"],params["type"],params["target"])
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

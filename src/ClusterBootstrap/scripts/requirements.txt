@@ -1,5 +1,0 @@
-requests
-subprocess32
-tzlocal
-pycurl
-PyYAML

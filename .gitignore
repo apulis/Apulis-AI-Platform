@@ -12,10 +12,9 @@
 **/id_rsa.pub
 **/deploy/*
 src/ClusterBootstrap/*.yaml
-src/dashboard/config/local.yaml
-
-
-
+src/ClusterBootstrap/dashboard/config/local.yaml
+**/services/*
+**/scripts/*
 *.iso
 *.srl
 *.swp
@@ -92,5 +91,6 @@ src/ClusterBootstrap/template/*config.yaml.template
 venv
 
 # Rendered configuation for each cluter or platform
-**/services/*
-**/scripts/*
+src/ClusterBootstrap/services/*
+src/ClusterBootstrap/scripts/*
+src/user-synchronizer/*

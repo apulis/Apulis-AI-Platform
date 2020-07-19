@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: apulis-demo-pod
+  labels:
+    jobgroup: apulis-demo
+spec:
+  restartPolicy: Never
+  containers:
+    - name: apulis-demo-job-r
+      image: apulis/npu-test:devel
+      imagePullPolicy: IfNotPresent
+      command: [ "/bin/bash" , "-c", "--"]
+      args: ["/d_solution/main.sh;  sleep infinity & wait"]
+      resources:
+        limits:
+          npu.huawei.com/NPU: 1
+      volumeMounts:
+        - name: hiai
+          mountPath: /usr/local/HiAI
+          # readOnly: true
+        - name: data
+          mountPath: /data
+          readOnly: true
+        - name: code
+          mountPath: /code
+  volumes:
+    - name: hiai
+      hostPath:
+        path: /usr/local/HiAI
+    - name: data
+      hostPath:
+        path: /root/host/case/data
+    - name: code
+      hostPath:
+        path: /root/host/case/code

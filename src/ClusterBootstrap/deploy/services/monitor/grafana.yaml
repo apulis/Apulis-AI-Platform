@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        app: grafana
+    spec:
+      nodeSelector:
+        grafana: active
+        archType: amd64
+      hostNetwork: true
+      hostPID: false
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: grafana
+        image: apulistech/grafana:6.7.3
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /grafana-configuration
+          name: grafana-confg-volume
+        - mountPath: /etc/ssl/certs
+          name: ca-certificates
+          readOnly: true
+        - mountPath: /etc/hostname-fqdn
+          name: hostname-fqdn
+          readOnly: true
+        resources:
+          limits:
+            memory: "256Mi"
+        env:
+        - name : GRAFANA_URL
+          value: 'http://127.0.0.1:3000' # for script to install dashboard only
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_SERVER_HTTP_PORT
+          value: '3000'
+          # The following env variables are required to make Grafana accessible via
+          # the kubernetes api-server proxy. On production clusters, we recommend
+          # removing these env variables, setup auth for grafana, and expose the grafana
+          # service using a LoadBalancer or a public IP.
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+        #  value: Admin
+          value: Viewer
+        - name: GF_SERVER_ROOT_URL
+          # If you're only using the API Server proxy, set this value instead:
+          #value: /api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/
+          value: /endpoints/grafana/
+          # value: /
+        - name: GF_SECURITY_ALLOW_EMBEDDING
+          value: "true"
+      volumes:
+      - name: grafana-confg-volume
+        configMap:
+          name: grafana-configuration
+      - name: ca-certificates
+        hostPath:
+          path: /etc/ssl/certs
+      - name: hostname-fqdn
+        hostPath:
+          path: /etc/hostname-fqdn
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

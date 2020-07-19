@@ -1,0 +1,13 @@
+version: '2.1'
+
+services:
+  apulistech:
+    image: apulistech
+    build: .
+    environment:
+      NODE_ENV: development
+    ports:
+      - 3081:3081
+      - 9229:9229
+    ## set your startup file here
+    command: node --inspect=0.0.0.0:9229 index.js

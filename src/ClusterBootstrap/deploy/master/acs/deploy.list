@@ -1,0 +1,14 @@
+./deploy/master/basicauth,/etc/kubernetes/basicauth
+./deploy/kube-addons,/opt/addons/kube-addons
+./deploy/bin/macvlan,/opt/cni/bin/macvlan
+./deploy/bin/dhcp,/opt/cni/bin/dhcp
+./deploy/bin/loopback,/opt/cni/bin/loopback
+./deploy/bin/ptp,/opt/cni/bin/ptp
+./deploy/bin/ipvlan,/opt/cni/bin/ipvlan
+./deploy/bin/bridge,/opt/cni/bin/bridge
+./deploy/bin/tuning,/opt/cni/bin/tuning
+./deploy/bin/noop,/opt/cni/bin/noop
+./deploy/bin/host-local,/opt/cni/bin/host-local
+./deploy/bin/cnitool,/opt/cni/bin/cnitool
+./deploy/bin/flannel,/opt/cni/bin/flannel
+./deploy/master/dns-kubeconfig.yaml,/etc/kubernetes/dns-kubeconfig.yaml

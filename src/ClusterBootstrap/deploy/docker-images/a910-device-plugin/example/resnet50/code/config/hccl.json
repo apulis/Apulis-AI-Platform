@@ -1,0 +1,11 @@
+{
+  "group_count": "1",
+  "group_list": [
+    {
+      "group_name": "worker",
+      "instance_count": "1",
+      "instance_list": [{"devices":[{"device_id":"0","device_ip":"loop"}],"pod_name":"cloud0","server_id":"10.151.161.191"}]
+    }
+  ],
+  "status": "completed"
+}

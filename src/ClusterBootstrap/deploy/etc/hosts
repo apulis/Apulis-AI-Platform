@@ -1,0 +1,15 @@
+127.0.0.1       localhost
+
+ 192.168.3.2    atlas02
+ 192.168.3.2    atlas02.sigsus.cn
+ 192.168.3.2    atlas.sigsus.cn
+
+ 192.168.3.6    atlas01
+ 192.168.3.6    atlas01.sigsus.cn
+
+
+ 192.168.3.3    atlas-gpu02
+ 192.168.3.3    atlas-gpu02.sigsus.cn
+
+ 192.168.3.4    atlas-gpu01
+ 192.168.3.4    atlas-gpu01.sigsus.cn 

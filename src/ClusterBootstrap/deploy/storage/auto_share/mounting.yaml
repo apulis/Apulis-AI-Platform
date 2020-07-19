@@ -1,0 +1,15 @@
+dltsdata-storage-mount-path: /dltsdata
+mountpoints:
+  nfsshare1:
+    curphysicalmountpoint: /mntdlws
+    filesharename: /mnt/local
+    mountpoints:
+    - jobfiles
+    - storage
+    - work
+    - namenodeshare
+    options: rsize=8192,timeo=14,intr,tcp
+    server: atlas02
+    type: nfs
+physical-mount-path: /mntdlws
+storage-mount-path: /dlwsdata

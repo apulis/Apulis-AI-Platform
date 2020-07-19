@@ -1,0 +1,10 @@
+[Unit]
+Description=Mount GlusterFS volume automatically  
+After=docker.service
+
+
+[Mount]
+What=:
+Where=
+Type=glusterfs
+Options=

@@ -1,0 +1,5 @@
+smtp_url: smtp.qq.com
+login: 1023950387@qq.com
+password: vtguxryxqyrkbfdd
+sender: 1023950387@qq.com
+receiver: ['1023950387@qq.com']

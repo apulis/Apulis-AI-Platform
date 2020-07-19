@@ -1,0 +1,10 @@
+version: '2.1'
+
+services:
+  apulistech:
+    image: apulistech
+    build: .
+    environment:
+      NODE_ENV: production
+    ports:
+      - 3081:3081

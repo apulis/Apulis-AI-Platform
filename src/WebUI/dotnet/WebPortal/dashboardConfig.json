@@ -1,1 +1,0 @@
-{"hdfs": {"port": 50070}, "yarn": {"port": 8088}, "influxDB": {"servers": "atlas03.ascend.cn", "dbName": "WebUI", "supress": true, "port": 8086}, "grafana": {"url": "grafana", "port": 3000, "servers": "atlas03.ascend.cn"}}

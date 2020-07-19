@@ -1,8 +1,0 @@
-{
-  "name": "PM",
-  "url": "http://{{cnf['grafana']['prometheus-ip']}}:9091/prometheus",
-  "basicAuth": false,
-  "access": "proxy",
-  "type": "prometheus",
-  "isDefault": true
-}

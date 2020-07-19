@@ -91,6 +91,6 @@ src/ClusterBootstrap/template/*config.yaml.template
 venv
 
 # Rendered configuation for each cluter or platform
-src/ClusterBootstrap/services/*
-src/ClusterBootstrap/scripts/*
-src/user-synchronizer/*
+src/ClusterBootstrap/services/
+src/ClusterBootstrap/scripts/
+

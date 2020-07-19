@@ -1,4 +1,4 @@
-# Docker environment for development of DL workspace
+# Docker environment for development of Apulis Platform
 FROM ubuntu:18.04
 MAINTAINER Jin Li <jinlmsft@hotmail.com>
 

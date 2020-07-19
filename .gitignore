@@ -12,6 +12,9 @@
 **/id_rsa.pub
 **/deploy/*
 src/ClusterBootstrap/*.yaml
+src/dashboard/config/local.yaml
+
+
 
 *.iso
 *.srl
@@ -88,3 +91,6 @@ src/ClusterBootstrap/template/*config.yaml.template
 .idea
 venv
 
+# Rendered configuation for each cluter or platform
+**/services/*
+**/scripts/*

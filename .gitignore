@@ -12,10 +12,8 @@
 **/id_rsa.pub
 **/deploy/*
 src/ClusterBootstrap/*.yaml
-src/dashboard/config/local.yaml
-
-
-
+**/services/*
+**/scripts/*
 *.iso
 *.srl
 *.swp

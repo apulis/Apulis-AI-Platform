@@ -559,6 +559,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     for deviceType,detail in details.items():
         for one in detail["detail"]:
+            logging.info(one)
             detail_resources[deviceType].append(one["allocatable"])
 
     jobsInfo = []

@@ -43,7 +43,7 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
   if (!isLogin) {
     if (!/localhost/.test(href)) {
       onClick('/user/login');
-      return null;
+      // return null;
     }
     chidComponent = (<Box display="flex">
       <Dialog open>
@@ -72,7 +72,7 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
   if (!isRegister) {
     if (!/localhost/.test(href)) {
       onClick('/user/register');
-      return null;
+      // return null;
     }
     chidComponent = (<Box display="flex">
       <Dialog open>

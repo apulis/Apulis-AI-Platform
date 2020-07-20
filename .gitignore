@@ -13,8 +13,6 @@
 **/deploy/*
 src/ClusterBootstrap/*.yaml
 src/ClusterBootstrap/dashboard/config/local.yaml
-**/services/*
-**/scripts/*
 *.iso
 *.srl
 *.swp
@@ -84,13 +82,10 @@ src/ClusterBootstrap/services/monitor/alerting/kill-idle.rules
 /src/dashboard/build/*
 
 *.log
-src/ClusterBootstrap/template/*config.yaml.template
 
 **/.vscode/*
 .idea
 venv
 
 # Rendered configuation for each cluter or platform
-src/ClusterBootstrap/services/
-src/ClusterBootstrap/scripts/
 

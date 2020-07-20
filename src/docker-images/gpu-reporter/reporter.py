@@ -89,7 +89,7 @@ def get_monthly_idleness(prometheus_url):
     now = int(datetime.datetime.timestamp(now))
 
     args = urllib.parse.urlencode({
-        "query": "avg by(instance,username,vc_name,device_type,job_name) (task_device_percent)",
+        "query": "avg by(instance,username,vc_name,device_type) (task_device_percent)",
         "start": str(one_month_ago),
         "end": str(now),
         "step": str(STEP_MINUTE) + "m",

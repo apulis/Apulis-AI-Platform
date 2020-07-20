@@ -557,7 +557,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             vc_schedulable[gpu_type] = total - vc_unschedulable[vc_name][gpu_type]
         vc_resources[vc_name] = ResourceInfo(vc_schedulable)
 
-    for deviceType,detail in details:
+    for deviceType,detail in details.items():
         for one in detail:
             detail_resources[deviceType].append(one["allocatable"])
 

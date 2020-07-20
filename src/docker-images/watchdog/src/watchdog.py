@@ -72,6 +72,11 @@ def gen_pai_pod_gauge():
             labels=["service_name", "name", "namespace", "phase", "host_ip",
                 "initialized", "pod_scheduled", "ready"])
 
+def gen_job_pod_gauge():
+    return GaugeMetricFamily("job_pod_count", "count of job pod",
+            labels=["job_id", "name", "namespace", "phase", "host_ip",
+                "initialized", "pod_scheduled", "ready"])
+
 def gen_pai_container_gauge():
     return GaugeMetricFamily("pai_container_count", "count of container pod",
             labels=["service_name", "pod_name", "name", "namespace", "state",
@@ -283,7 +288,7 @@ def process_service_endpoints(service_name, host_ip, annotations, service_endpoi
                 ServiceEndpoint(service_name, host_ip, port, path, timeout))
 
 
-def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage):
+def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage,job_pod_gauge):
     """ add metrics to pai_pod_gauge or pai_container_gauge if successfully paesed pod.
     Because we are parsing json outputed by k8s, its format is subjected to change,
     we should test if field exists before accessing it to avoid KeyError """
@@ -363,13 +368,17 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
         pass
 
     labels = pod["metadata"].get("labels")
-    if labels is None or "app" not in labels :
+    isJob = False
+    if labels is None or "app" not in labels or "jobId" not in labels:
         logger.info("unknown pod %s", pod["metadata"]["name"])
         return None
+    elif "jobId" in labels:
+        service_name = labels["jobId"]
+        isJob = True
     else:
-        pass
+        service_name = labels["app"] # get pai service name from label
 
-    service_name = labels["app"] # get pai service name from label
+
     annotations = walk_json_field_safe(pod, "metadata", "annotations") or {}
 
     if host_ip != "unscheduled":
@@ -402,8 +411,13 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
                 error_counter.labels(type="unknown_pod_cond").inc()
                 logger.error("unexpected condition %s in pod %s", cond_t, pod_name)
 
-    pai_pod_gauge.add_metric([service_name, pod_name, namespace, phase, host_ip,
-        initialized, pod_scheduled, ready], 1)
+    if isJob:
+        job_pod_gauge.add_metric([service_name, pod_name, namespace, phase, host_ip,
+                                  initialized, pod_scheduled, ready], 1)
+        return
+    else:
+        pai_pod_gauge.add_metric([service_name, pod_name, namespace, phase, host_ip,
+            initialized, pod_scheduled, ready], 1)
 
     # generate pai_containers
     if status.get("containerStatuses") is not None:
@@ -432,14 +446,14 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
 
 
 def process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge,
-        pods_info, service_endpoints, vc_usage):
+        pods_info, service_endpoints, vc_usage,job_pod_gauge):
     def _map_fn(item):
         return catch_exception(parse_pod_item,
                 "catch exception when parsing pod item",
                 None,
                 item,
                 pai_pod_gauge, pai_container_gauge,
-                pods_info, service_endpoints, vc_usage)
+                pods_info, service_endpoints, vc_usage,job_pod_gauge)
 
     list(map(_map_fn, pods_object["items"]))
 
@@ -857,11 +871,12 @@ def process_pods(k8s_api_addr, ca_path, headers, pods_info, service_endpoints, v
     list_pods_url = "{}/api/v1/pods".format(k8s_api_addr)
 
     pai_pod_gauge = gen_pai_pod_gauge()
+    job_pod_gauge = gen_job_pod_gauge()
     pai_container_gauge = gen_pai_container_gauge()
 
     try:
         pods_object = get_pods_info(list_pods_histogram)
-        process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage)
+        process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage,job_pod_gauge)
 
     except Exception as e:
         error_counter.labels(type="parse").inc()

@@ -369,7 +369,7 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
 
     labels = pod["metadata"].get("labels")
     isJob = False
-    if labels is None or "app" not in labels or "jobId" not in labels:
+    if labels is None or ("app" not in labels and "jobId" not in labels):
         logger.info("unknown pod %s", pod["metadata"]["name"])
         return None
     elif "jobId" in labels:
@@ -412,6 +412,7 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
                 logger.error("unexpected condition %s in pod %s", cond_t, pod_name)
 
     if isJob:
+        logging.info("count job_id %s"%service_name)
         job_pod_gauge.add_metric([service_name, pod_name, namespace, phase, host_ip,
                                   initialized, pod_scheduled, ready], 1)
         return
@@ -882,7 +883,7 @@ def process_pods(k8s_api_addr, ca_path, headers, pods_info, service_endpoints, v
         error_counter.labels(type="parse").inc()
         logger.exception("failed to process pods")
 
-    return [pai_pod_gauge, pai_container_gauge]
+    return [pai_pod_gauge, pai_container_gauge,job_pod_gauge]
 
 
 def process_nodes(k8s_api_addr, ca_path, headers, pods_info,

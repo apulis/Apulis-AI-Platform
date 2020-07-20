@@ -102,10 +102,7 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   //   )
   // };
   if (!teams || teams.length === 0) {
-    return <Context.Provider
-      value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
-      children={<Loading />}
-    />;
+    return <Loading />;
   }
   if (teams !== undefined && teams.length === 0) {
     return (

@@ -558,7 +558,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         vc_resources[vc_name] = ResourceInfo(vc_schedulable)
 
     for deviceType,detail in details.items():
-        for one in detail:
+        for one in detail["detail"]:
             detail_resources[deviceType].append(one["allocatable"])
 
     jobsInfo = []

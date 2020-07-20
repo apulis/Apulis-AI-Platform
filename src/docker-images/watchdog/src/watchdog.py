@@ -369,7 +369,7 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
 
     labels = pod["metadata"].get("labels")
     isJob = False
-    if labels is None or "app" not in labels or "jobId" not in labels:
+    if labels is None or ("app" not in labels and "jobId" not in labels):
         logger.info("unknown pod %s", pod["metadata"]["name"])
         return None
     elif "jobId" in labels:

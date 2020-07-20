@@ -117,10 +117,11 @@ def get_cluster_status():
                         node_status["gpuType"] = s
 
                 canUseGpuStrSet = set(node["status"]["allocatable"].keys()).intersection(gpuStrList)
-                gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else gpuStr
+                gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else "reserved/cpu"
                 if node_status["gpuType"]:
                     if node_status["gpuType"] not in gpuMapping:
-                        gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0,"detail":[]}
+                        if gpuStr!="reserved/cpu":
+                            gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0,"detail":[]}
                 if canUseGpuStrSet:
                     node_status["gpu_allocatable"] = ResourceInfo({node_status["gpuType"]: int(node["status"]["allocatable"][gpuStr])}).ToSerializable()
                 else:
@@ -167,7 +168,7 @@ def get_cluster_status():
                 if labels is None:
                     continue
                 gpuStrDict = gpuMapping.get(labels.get("gpuType"))
-                gpuStr = gpuStrDict.get("deviceStr") if gpuStrDict else "nvidia.com/gpu"
+                gpuStr = gpuStrDict.get("deviceStr") if gpuStrDict else "reserved/cpu"
                 if "status" in pod and "phase" in pod["status"]:
                     phase = pod["status"]["phase"]
                     if phase == "Succeeded" or phase == "Failed":
@@ -246,7 +247,8 @@ def get_cluster_status():
             if node_status["unschedulable"]:
                 gpu_unschedulable.Add(ResourceInfo(node_status["gpu_capacity"]))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_used"])))
-                gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
+                if node_status["gpuType"]:
+                    gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
                                                                      "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]) if node_status["gpuType"] in node_status["gpu_capacity"] else 0,
                                                                      "allocatable": 0})
             else:
@@ -254,7 +256,8 @@ def get_cluster_status():
                 gpu_avaliable.Add(ResourceInfo.DifferenceMinZero(ResourceInfo(node_status["gpu_allocatable"]), ResourceInfo(node_status["gpu_used"])))
                 gpu_unschedulable.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
                 gpu_reserved.Add(ResourceInfo.Difference(ResourceInfo(node_status["gpu_capacity"]), ResourceInfo(node_status["gpu_allocatable"])))
-                gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
+                if node_status["gpuType"]:
+                    gpuMapping[node_status["gpuType"]]["detail"].append({"nodeName": node_name,
                                                                      "capacity": int(node_status["gpu_capacity"][node_status["gpuType"]]) if node_status["gpuType"] in node_status["gpu_capacity"] else 0,
                                                                      "allocatable": max(int(node_status["gpu_allocatable"][node_status["gpuType"]])-int(node_status["gpu_used"][node_status["gpuType"]]),0)
                                                                      if node_status["gpuType"] in node_status["gpu_allocatable"] else 0})

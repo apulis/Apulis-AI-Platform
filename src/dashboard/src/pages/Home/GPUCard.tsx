@@ -276,7 +276,7 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
   const [activate,setActivate] = useState(false);
   const { userName } = useContext(UserContext);
   const {selectedTeam} = useContext(TeamsContext);
-  const fetchDiretoryUrl = `api/clusters/${cluster}`;
+  const fetchDiretoryUrl = `/api/clusters/${cluster}`;
   const request = useFetch(fetchDiretoryUrl);
   const fetchDirectories = async () => {
     const data = await request.get('');

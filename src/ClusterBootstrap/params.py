@@ -106,7 +106,7 @@ default_config_parameters = {
     "physical-mount-path": "/mntdlws",
     # the path of where local device is mounted.
     "local-mount-path": "/mnt",
-
+    "data_platform_path": "/mntdlws/nfs/label/",
     "physical-mount-path-vc": "/mntdlts/nfs",
 
     # required storage folder under storage-mount-path

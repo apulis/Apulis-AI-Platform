@@ -18,6 +18,7 @@ const training = {
     TherewontbeenoughworkersmatchyourrequestnProceed:'没有足够的工作节点 \n是否继续?',
     Mustbeapositiveintegerfrom0to:'必须是一正整数，可选范围 0 -',
     andcanonlybeoneof01248:'并且只能是0、1、2、4、8中的一个',
+    Therewontbeenoughdevicenumsmatchyourrequest: '没有足够的设备数匹配你的请求,任务将会进入排队状态.\n是否继续?'
 }
 const userActionTips = {
     pauseJob:'停止任务',

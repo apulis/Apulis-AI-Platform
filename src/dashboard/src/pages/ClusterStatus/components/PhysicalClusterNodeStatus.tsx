@@ -36,7 +36,6 @@ const sumDeviceTypes = (obj: any) => {
 export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
   const theme = useTheme();
   const {nodeStatus} = props;
-  // console.log('nodeStatus', nodeStatus)
   return (
     <MuiThemeProvider theme={useCheckIsDesktop ? theme : tableTheme}>
       {

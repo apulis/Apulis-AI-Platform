@@ -12,6 +12,7 @@ const index = {
     distributedJob:'分布式任务',
     numberOfNodes:'节点数量',
     totalNumberOfDevice:'全部设备数量',
+    numberOfDevicesPerNode:'每个节点设备数量',
     deviceNumber:'设备数量',
     dockerImage:'Docker 镜像',
     command:'指令',

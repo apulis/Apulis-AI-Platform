@@ -9,6 +9,7 @@ const index = {
     deviceType:'Device Type',
     deviceNumber:'Number of Device',
     numberOfNodes:'Number of Nodes',
+    numberOfDevicesPerNode:'Number of Devices Per Node',
     totalNumberOfDevice:'Total Number of Device',
     noneApplyAtemplate:'None (Apply a Template)',
     regularJob:'Regular Job',

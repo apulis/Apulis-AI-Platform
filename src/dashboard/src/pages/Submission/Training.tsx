@@ -844,7 +844,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     <TextField
                       select
                       disabled={allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU'}
-                      label="Number of Devices Per Node"
+                      label={t('submission.numberOfDevicesPerNode')}
                       fullWidth
                       variant="filled"
                       value={gpuNumPerDevice}

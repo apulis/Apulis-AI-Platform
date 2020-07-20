@@ -55,6 +55,7 @@ import { useForm } from "react-hook-form";
 interface EnvironmentVariable {
   name: string;
   value: string;
+  time: number;
 }
 
 const sanitizePath = (path: string) => {
@@ -123,6 +124,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }>({});
   const [gpuNumPerDevice, setGpuNumPerDevice] = useState(1);
   const [gpuNumPerDeviceOptions, setGpuNumPerDeviceOptions] = useState<number[]>([]);
+  const [numNodesOptions, setNumNodesOptions] = useState<number[]>([]);
   
   const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,18 +143,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [environmentVariables]
   );
-  const onRemoveEnvironmentVariableClick = useCallback(
-    (index: number) => () => {
-      const newEnvironmentVariables = environmentVariables.slice();
-      newEnvironmentVariables.splice(index, 1);
-      setEnvironmentVariables(newEnvironmentVariables)
-    },
-    [environmentVariables]
-  )
+  const onRemoveEnvironmentVariableClick = (time: number) => {
+    const newArr = environmentVariables.filter(i => i.time !== time);
+    const nameArr = newArr.map(i => `environmentVariables${i.time}`);
+    setEnvironmentVariables(newArr);
+  }
+
   const onAddEnvironmentVariableClick = useCallback(() => {
     setEnvironmentVariables(
       environmentVariables.concat(
-        [{ name: "", value: "" }]));
+        [{ name: "", value: "" , time: new Date().getTime() }]));
   }, [environmentVariables]);
   const [database, setDatabase] = useState(false);
   const [tplName, setTplName] = useState("");
@@ -163,7 +163,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
     if (!tplName) {
-      setError('templateName', 'required','Template Name is required！');
+      setError('templateName', 'required', 'Template Name is required！');
       return;
     }
     if (Boolean(errors.templateName)) return;
@@ -507,16 +507,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return true;
   }
 
-  const validateEVName = (val: string, index: any) => {
+  const validateEVName = (val: string, index: number, time: number) => {
     if (val) {
       if (environmentVariables.findIndex(i => i.name === val) > -1) {
-        setError('environmentVariables', 'error','Already has the same name！');
+        setError(`environmentVariables${time}`, 'error', 'Already has the same name！');
         return false;
       } else if (!NoNumberReg.test(val)) {
-        setError('environmentVariables', 'error',NoNumberText);
+        setError(`environmentVariables${time}`, 'error', NoNumberText);
         return false;
       } else {
-        const newEnvironmentVariables = environmentVariables.slice()
+        errors[`environmentVariables${time}`] && clearError(`environmentVariables${time}`);
+        const newEnvironmentVariables = environmentVariables.slice();
         environmentVariables[index].name = val;
         setEnvironmentVariables(newEnvironmentVariables);
         return true;
@@ -570,13 +571,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (type === 'PSDistJob' && allDevice[gpuType]) {
       const data = allDevice[gpuType];
       if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
-      const temp = data.detail.map((i: any) => i.capacity);
-      const maxNum = Math.max(...temp);
+      let temp1: any[] = [], temp2: any[] = []; 
+      data.detail.forEach((i: any, index) => {
+        temp1.push(i.capacity);
+        temp2.push(index + 1);
+      });
+      const maxNum = Math.max(...temp1);
       let options = [1];
       for (let n = 2; n <= maxNum; n = n * 2) {
         options.push(n);
       }
       setGpuNumPerDeviceOptions(options);
+      setNumNodesOptions(temp2);
     }
   }, [type]);
 
@@ -834,15 +840,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 { type === 'PSDistJob'  && (
                   <Grid item xs={12} sm={6}>
                     <TextField
-                      type="number"
+                      select
                       label="Number of Nodes"
                       fullWidth
                       variant="filled"
                       value={workers}
                       name="workers"
-                      onChange={e => setWorkers(Number(e.target.value) > 1 ? Math.floor(Number(e.target.value)) : 1)}
-                      InputProps={{ inputProps: { min: 1, step: 1 } }}
-                    />
+                      onChange={e => setWorkers(Number(e.target.value))}
+                    >
+                      {numNodesOptions?.map(i => (
+                        <MenuItem value={i}>{i}</MenuItem>
+                      ))}
+                    </TextField>
                   </Grid>
                 )}
                 { type === 'PSDistJob' && (
@@ -856,7 +865,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       value={gpuNumPerDevice}
                       name="gpuNumPerDevice"
                       onChange={e => setGpuNumPerDevice(Number(e.target.value))}
-                      
                     >
                       {gpuNumPerDeviceOptions.map(i => (
                         <MenuItem value={i}>{i}</MenuItem>
@@ -1117,8 +1125,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {environmentVariables.map(({ name, value }, index) => (
-                      <TableRow key={index}>
+                    {environmentVariables.map(({ name, value, time }, index) => (
+                      <TableRow key={time}>
                         <TableCell>
                           <TextField
                             label="Environment Variable Name"
@@ -1126,10 +1134,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             margin="dense"
                             variant="filled"
                             // value={name}
-                            name="environmentVariables"
+                            name={`environmentVariables${time}`}
                             // onChange={onEnvironmentVariableNameChange(index)}
-                            error={Boolean(errors.environmentVariables)}
-                            helperText={errors.environmentVariables ? errors.environmentVariables.message : ''}
+                            error={Boolean(errors[`environmentVariables${time}`])}
+                            helperText={errors[`environmentVariables${time}`] ? errors[`environmentVariables${time}`].message : ''}
                             InputLabelProps={{ shrink: true }}
                             // inputRef={register({
                             //   pattern: {
@@ -1138,7 +1146,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             //   }
                             // })}
                             inputRef={register({
-                              validate: val => validateEVName(val, index)
+                              validate: val => validateEVName(val, index, time)
                             })}
                           />
                         </TableCell>
@@ -1153,7 +1161,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           />
                         </TableCell>
                         <TableCell align="center">
-                          <IconButton size="small" color="secondary" onClick={onRemoveEnvironmentVariableClick(index)}>
+                          <IconButton size="small" color="secondary" onClick={() => onRemoveEnvironmentVariableClick(time)}>
                             <Delete/>
                           </IconButton>
                         </TableCell>

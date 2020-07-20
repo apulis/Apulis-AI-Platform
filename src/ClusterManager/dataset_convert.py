@@ -47,9 +47,19 @@ def create_log(logdir = '/var/log/dlworkspace'):
         logging_config["handlers"]["file"]["filename"] = logdir+"/dataconvert.log"
         logging.config.dictConfig(logging_config)
 
-def mkdirs(path):
-    if not os.path.exists(path):
-        os.makedirs(path,exist_ok=True)
+def insert_status_to_dataset(datasetId,projectId,status,out_path=None):
+    dataset_info_path = os.path.join(config["data_platform_path"],"private/account/%s/membership.json" % (projectId))
+    with open(dataset_info_path,"r") as f:
+        infos = json.loads(f.read())
+    if "dataSets" in infos:
+        if datasetId in infos["dataSets"]:
+            one_info = infos["dataSets"][datasetId]
+            if "convertStatus" in one_info:
+                logging.info("dataset: %s %s update status again!" % (projectId,datasetId))
+            one_info["convertStatus"] = status
+            one_info["convertOutPath"] = out_path
+            with open(dataset_info_path,"w") as f:
+                f.write(json.dumps(infos,indent=4, separators=(',', ':')))
 
 index = 0
 def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",args=None):
@@ -98,10 +108,12 @@ def DoDataConvert():
                 logging.info("=============start convert to format %s" % (oneJob["targetFormat"]))
                 merge_json_to_coco_dataset(list_path,json_path,coco_file_path)
                 dataHandler.updateConvertStatus("finished",oneJob["id"],coco_file_path)
+                insert_status_to_dataset(oneJob["datasetId"], oneJob["projectId"],"finished",coco_file_path)
                 logging.info("=============convert to format %s done" % (oneJob["targetFormat"]))
             except Exception as e:
                 logging.exception(e)
                 dataHandler.updateConvertStatus("error", oneJob["id"],e)
+                insert_status_to_dataset(oneJob["datasetId"], oneJob["projectId"],"error")
 
 def Run():
     register_stack_trace_dump()

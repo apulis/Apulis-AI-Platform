@@ -3617,6 +3617,12 @@ def kubernetes_label_worker_2(nodename, nodeInfo):
 
     return
 
+def kubernetes_setup_worker_infiniband_ip():
+    for nodename,nodeInfo in config["machines"].items():
+        if "ib_ip" in nodeInfo:
+            utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], nodename, "ifconfig ib0 "+nodeInfo["ib_ip"]+"/24")
+
+
 def kubernetes_label_cpuworker():
     """Label kubernetes nodes with cpuworker=active."""
     label = "cpuworker=active"
@@ -4895,6 +4901,9 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "labelworker":
         kubernetes_label_worker()
+
+    elif command == "setupib":
+        kubernetes_setup_worker_infiniband_ip()
 
     elif command == "gpulabel":
         kubernetes_label_GpuTypes()

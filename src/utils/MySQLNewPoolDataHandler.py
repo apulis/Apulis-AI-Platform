@@ -1233,8 +1233,12 @@ class DataHandler(object):
                     if len(endpoints)==1:
                         endpoint = endpoints[0]
                         if endpoint["status"]=="running":
-                            record["inference-url"] = "http://"+config["webportal_node"].split(config["domain"])[0]+config["domain"]+"/endpoints/v2/"+ \
-                                                      base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                            if "master_private_ip" in config:
+                                domain = config["master_private_ip"]
+                            else:
+                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
+                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
+                                                          base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
 
                 if record["jobStatus"] == "running":
                     if record["jobType"] == "InferenceJob":
@@ -1444,7 +1448,11 @@ class DataHandler(object):
                     if len(endpoints)==1:
                         endpoint = endpoints[0]
                         if endpoint["status"]=="running":
-                            record["inference-url"] = "http://"+config["webportal_node"].split(config["domain"])[0]+config["domain"]+"/endpoints/v2/"+ \
+                            if "master_private_ip" in config:
+                                domain = config["master_private_ip"]
+                            else:
+                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
+                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
                                                       base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))

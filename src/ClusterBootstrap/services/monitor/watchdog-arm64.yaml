@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watchdog-arm64
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watchdog
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: '{{cnf["watchdog"]["port"]}}'
+        prometheus.io/scrape: 'true'
+      labels:
+        app: watchdog
+        task: monitoring
+      name: watchdog-arm64
+    spec:
+      nodeSelector:
+        watchdog: active
+        archType: arm64
+      containers:
+      - command:
+        - python
+        - /watchdog.py
+        - --interval
+        - '30'
+        - --port
+        - '{{cnf["watchdog"]["port"]}}'
+        - --ca
+        - /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        - --bearer
+        - /var/run/secrets/kubernetes.io/serviceaccount/token
+        - https://{{ cnf["api-server-ip"] }}:443
+        {% if "vc_url" in cnf["watchdog"] %}
+        - --vc_url
+        - {{cnf["watchdog"]["vc_url"]}}
+        {% endif %}
+        env:
+        - name: LOGGING_LEVEL
+          value: INFO
+        volumeMounts:
+        - mountPath: /usr/bin/kubectl
+          name: kubectl-binary
+          readOnly: true
+        - mountPath: /root/.kube/config 
+          name: kubeconfig
+          readOnly: true    
+        image: {{cnf["dockers"]["container"]["watchdog"]["fullname"]}}-arm64
+        imagePullPolicy: Always
+        name: watchdog
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: {{cnf["watchdog"]["port"]}}
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          timeoutSeconds: 10
+        resources:
+          limits:
+            memory: 256Mi
+      hostNetwork: true
+      imagePullSecrets:
+      - name: pai-secret
+      volumes:
+      - name: kubectl-binary
+        hostPath:
+          path: /usr/bin/kubectl         
+      - name: kubeconfig
+        hostPath:
+          path: /etc/kubernetes/admin.conf
+
+      {% if cnf["private_docker_registry_username"] %}
+      - name: svccred
+      {% endif %}
+      tolerations:
+      - key: node.kubernetes.io/memory-pressure
+        operator: Exists
+      - key: node.kubernetes.io/disk-pressure
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

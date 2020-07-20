@@ -1,0 +1,70 @@
+{% if false %}
+apiVersion: v1
+kind: Service
+metadata:
+  name: webui3-arm64
+  namespace: default
+spec:
+  ports:
+  - port: {{cnf["webuiport"]}}
+  selector:
+    app: webui3
+---
+{% endif %}
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: webui3-arm64
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      webportal-node: pod
+  template:
+    metadata:
+      name: webui3
+      labels:
+        app: webui3
+        webportal-node: pod
+    spec:
+      {% if cnf["dnsPolicy"] %}    
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      nodeSelector:
+        archType: arm64
+        webportal: active
+      {% if true %}  
+      hostNetwork: true
+      {% endif %}
+      containers:
+      - name: webui3
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}webui3:{{cnf["dockertag"]}}-arm64
+        imagePullPolicy: Always
+        {% if false %}
+        ports:
+          - name: webui3
+            containerPort: {{cnf["webuiport"]}}
+        {% endif %}
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /WebUI
+          name: webuiconfig
+        - mountPath: /usr/src/app/config
+          name: nodejsconfig
+        - mountPath: /var/log/webui3
+          name: webuilog
+      volumes:
+      - name: webuiconfig
+        hostPath:
+          path: /etc/WebUI
+      - name: webuilog
+        hostPath:
+          path: /var/log/webui3
+      - name: nodejsconfig
+        hostPath:
+          path: /etc/WebUI
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule            

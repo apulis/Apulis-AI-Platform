@@ -80,33 +80,36 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
     }
   },[teams]);
   
-  const EmptyTeam: FC = () => {
-    return (
-      <Box display="flex">
-        <Dialog open>
-          <DialogTitle style={{ color: 'red' }}>
-            {"warning"}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {"There are no virtual cluster available for the current cluster, please contact the administrator"}
-            </DialogContentText>
-          </DialogContent>
-        </Dialog>
-      </Box>
-    )
-  };
-  if (teams === undefined) {
-    return (
+  // const EmptyTeam: FC = () => {
+  //   return (
+  //     <Box display="flex">
+  //       <Dialog open>
+  //         <DialogTitle style={{ color: 'red' }}>
+  //           {"warning"}
+  //         </DialogTitle>
+  //         <DialogContent>
+  //           <DialogContentText>
+  //             {"There are no virtual cluster available for the current cluster, please contact the administrator"}
+  //           </DialogContentText>
+  //         </DialogContent>
+  //       </Dialog>
+  //     </Box>
+  //   )
+  // };
+  // if (teams === undefined) {
+  //   return (
 
-      <Context.Provider
-        value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
-        children={<Loading />}
-      />
-    )
-  }
+  //     <Context.Provider
+  //       value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
+  //       children={<Loading />}
+  //     />
+  //   )
+  // }
   if (teams !== undefined && teams.length === 0) {
-    return <EmptyTeam />;
+    return <Context.Provider
+      value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
+      children={<Loading />}
+    />;
   }
   return (
     <Context.Provider

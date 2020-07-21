@@ -28,7 +28,7 @@ import authorization
 from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
-import inference
+# import inference
 import quota
 
 import copy
@@ -834,15 +834,18 @@ def GetJobLog(userName, jobId,page=1):
                         max_page = int(f.read())
                 if max_page<page:
                     page = max_page
+                if not page:
+                    page = 1
                 if os.path.exists(os.path.join(logPath,"log-container-" +jobId + ".txt"+"."+str(page))):
                     with open(os.path.join(logPath,"log-container-" + jobId + ".txt"+"."+str(page)), "r") as f:
                         log = f.read()
-                if log is not None:
-                    return {
-                        "log": log,
-                        "cursor": None,
-                    }
-            except:
+                    if log is not None:
+                        return {
+                            "log": log,
+                            "cursor": None,
+                        }
+            except Exception as e:
+                logger.exception(e)
                 pass
     return {
         "log": {},

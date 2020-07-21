@@ -101,7 +101,7 @@ def extract_job_log(jobId,logPath,userId):
         logLines = logStr.split('\n')
         length = len(logLines)
         if (length <= 2000):
-            save_log(jobLogDir,str(jobId),userId,trimlogstr)
+            save_log(jobLogDir,str(jobId),userId,logStr)
         else:
             with open(os.path.join(jobLogDir,"max_page"), 'w') as f:
                 f.write(str(length//2000+1))

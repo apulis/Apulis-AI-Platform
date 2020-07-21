@@ -114,6 +114,6 @@ defalt_virtual_cluster_device_type_list:
   - {{ one }}
 {%endfor%}
 
-master_private_ip: {{cnf["etcd_private_ip"}}
+master_private_ip: {{cnf["etcd_private_ip"]}}
 
 data_platform_path: {{cnf["data_platform_path"]}}

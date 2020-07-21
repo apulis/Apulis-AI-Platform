@@ -26,6 +26,9 @@ spec:
         image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}-arm64
         imagePullPolicy: Always
         command: ["/start.sh"]
+        ports:
+        - containerPort: 5080
+          name: main
         readinessProbe:
           failureThreshold: 3
           initialDelaySeconds: 3

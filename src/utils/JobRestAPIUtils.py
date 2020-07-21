@@ -1083,30 +1083,45 @@ def AddVC(userName, vcName, quota, metadata):
     dataHandler.Close()
     return ret
 
-def getClusterVCs():
+def getClusterVCs(page=None,size=None):
     vcList = None
     try:
-        with vc_cache_lock:
-            vcList = copy.deepcopy(vc_cache.values())
+        if page and size:
+            with vc_cache_lock:
+                if str(page)+str(size) in vc_cache:
+                    vcList = copy.deepcopy(vc_cache[str(page)+str(size)].values())
+        else:
+            if "all" in vc_cache:
+                with vc_cache_lock:
+                    vcList = copy.deepcopy(vc_cache["all"].values())
     except Exception:
         pass
 
     if not vcList:
-        vcList = DataManager.ListVCs()
-        with vc_cache_lock:
-            for vc in vcList:
-                vc_cache[vc["vcName"]] = vc
+        vcList = DataManager.ListVCs(page,size)
+        tmp = {}
+        for vc in vcList:
+            tmp[vc["vcName"]] = vc
+
+        if page and size:
+            with vc_cache_lock:
+                vc_cache[str(page)+str(size)] = tmp
+        else:
+            with vc_cache_lock:
+                vc_cache["all"] = tmp
 
     return vcList
 
-def ListVCs(userName):
-    ret = []
-    vcList = getClusterVCs()
+def ListVCs(userName,page=None,size=None):
+    ret = {"result":[]}
+    vcList = getClusterVCs(page,size)
 
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
-            ret.append(vc)
+            ret["result"].append(vc)
+
+    ret["totalNum"] = DataHandler().CountVCs()
     # web portal (client) can filter out Default VC
     return ret
 

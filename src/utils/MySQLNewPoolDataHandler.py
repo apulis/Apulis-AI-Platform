@@ -591,14 +591,28 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListVCs(self):
+    def ListVCs(self,page=None,size=None):
         ret = []
         try:
-            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+            if page and size:
+                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s` limit %d offset %d" % (self.vctablename,int(size),(int(page)-1)*int(size))
+            else:
+                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
+        except Exception as e:
+            logger.exception('ListVCs Exception: %s', str(e))
+        return ret
+
+    @record
+    def CountVCs(self):
+        ret = None
+        try:
+            query = "SELECT count(1) FROM `%s`" % (self.vctablename)
+            with MysqlConn() as conn:
+                ret = conn.select_one_value(query)
         except Exception as e:
             logger.exception('ListVCs Exception: %s', str(e))
         return ret

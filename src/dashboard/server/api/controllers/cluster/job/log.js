@@ -7,7 +7,7 @@
 module.exports = async context => {
   const { cluster } = context.state
   const { jobId } = context.params
-  const { cursor } = context.query
+  const { cursor, page } = context.query
 
-  context.body = await cluster.getJobLog(jobId, cursor)
+  context.body = await cluster.getJobLog(jobId, page, cursor)
 }

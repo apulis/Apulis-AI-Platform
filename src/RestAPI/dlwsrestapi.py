@@ -1538,10 +1538,13 @@ class ListVCs(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
+        parser.add_argument('page')
+        parser.add_argument('size')
         args = parser.parse_args()
         userName = args["userName"]
-        ret = {}
-        ret["result"] = JobRestAPIUtils.ListVCs(userName)
+        page = args["page"]
+        size = args["size"]
+        ret = JobRestAPIUtils.ListVCs(userName,page,size)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

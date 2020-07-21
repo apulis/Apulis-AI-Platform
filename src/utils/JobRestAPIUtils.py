@@ -28,7 +28,7 @@ import authorization
 from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
-import inference
+# import inference
 import quota
 
 import copy
@@ -817,24 +817,35 @@ def GetJobStatus(jobId):
     dataHandler.Close()
     return result
 
-def GetJobLog(userName, jobId):
+def GetJobLog(userName, jobId,page=1):
     dataHandler = DataHandler()
     jobs =  dataHandler.GetJob(jobId=jobId)
     if len(jobs) == 1:
         if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
             try:
-                log = dataHandler.GetJobTextField(jobId,"jobLog")
-                try:
-                    if isBase64(log):
-                        log = base64.b64decode(log)
-                except Exception:
-                    pass
-                if log is not None:
-                    return {
-                        "log": log,
-                        "cursor": None,
-                    }
-            except:
+                # log = dataHandler.GetJobTextField(jobId,"jobLog")
+                jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
+                jobPath = "work/"+jobParams["jobPath"]
+                localJobPath = os.path.join(config["storage-mount-path"], jobPath)
+                logPath = os.path.join(localJobPath, "logs")
+                max_page = 1
+                if os.path.exists(os.path.join(logPath,"max_page")):
+                    with open(os.path.join(logPath,"max_page"),"r") as f:
+                        max_page = int(f.read())
+                if max_page<page:
+                    page = max_page
+                if not page:
+                    page = 1
+                if os.path.exists(os.path.join(logPath,"log-container-" +jobId + ".txt"+"."+str(page))):
+                    with open(os.path.join(logPath,"log-container-" + jobId + ".txt"+"."+str(page)), "r") as f:
+                        log = f.read()
+                    if log is not None:
+                        return {
+                            "log": log,
+                            "cursor": None,
+                        }
+            except Exception as e:
+                logger.exception(e)
                 pass
     return {
         "log": {},

@@ -37,7 +37,6 @@ interface JobsTableProps {
 const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }) => {
   const {t} = useTranslation();
   const { cluster } = useContext(ClusterContext);
-  console.log('cluster',cluster)
 
   const [pageSize, setPageSize] = useState(10);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
@@ -54,20 +53,20 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
   ), [])
 
   // const columns = useMemo<Array<Column<any>>>(() => [
-  //   { title: t('jobsV2.id'), type: 'string', field: 'jobId',
+  //   { title: 'Id', type: 'string', field: 'jobId',
   //     render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-  //   { title: t('jobsV2.name'), type: 'string', field: 'jobName', sorting: false },
-  //   { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
-  //   { title: t('jobsV2.deviceNumber'), type: 'numeric',
+  //   { title: 'Name', type: 'string', field: 'jobName', sorting: false },
+  //   { title: 'Status', type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
+  //   { title: 'Number of Device', type: 'numeric',
   //     render: renderGPU, customSort: sortGPU },
-  //   { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
-  //   { title: t('jobsV2.priority'), type: 'numeric',
+  //   { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},
+  //   { title: 'Priority', type: 'numeric', sorting: false,
   //     render: renderPrioirty, disableClick: true },
-  //   { title: t('jobsV2.submitted'), type: 'datetime',
+  //   { title: 'Submitted', type: 'datetime',
   //     render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
-  //   { title: t('jobsV2.started'), type: 'datetime',
+  //   { title: 'Started', type: 'datetime',
   //     render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
-  //   { title: t('jobsV2.finished'), type: 'datetime',
+  //   { title: 'Finished', type: 'datetime',
   //     render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
   // ], [renderPrioirty]);
   const options = useMemo<Options>(() => ({
@@ -89,7 +88,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
         { title: t('jobsV2.deviceNumber'), type: 'numeric',
           render: renderGPU, customSort: sortGPU },
         { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
-        { title: t('jobsV2.priority'), type: 'numeric',
+        { title: t('jobsV2.priority'), type: 'numeric', sorting: false,
           render: renderPrioirty, disableClick: true },
         { title: t('jobsV2.submitted'), type: 'datetime',
           render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },

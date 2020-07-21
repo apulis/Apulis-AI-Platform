@@ -109,6 +109,9 @@ const ActionIconButton: FC<{cluster?: string}> = ({cluster}) => {
           <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'MANAGE_ALL_USERS_JOB']}>
   <MenuItem component={Link} to={`/jobs-v2/${cluster}`}>{t('home.viewJobs')}</MenuItem>
           </AuthzHOC>
+          <AuthzHOC needPermission={'EDGE_INFERENCE'}>
+            <MenuItem component={Link} to="/model">Edge Inference</MenuItem>
+          </AuthzHOC>
         </Menu>
       </AuthzHOC>
     </>

@@ -29,7 +29,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
   // const input = useRef<HTMLInputElement>();
   const buttonEnabled = useMemo(() => {
     return (
-      job['jobStatus'] === 'running' ||
+      // job['jobStatus'] === 'running' ||
       job['jobStatus'] === 'queued' ||
       job['jobStatus'] === 'scheduling' ||
       job['jobStatus'] === 'unapproved' ||

@@ -38,7 +38,6 @@ export const PhysicalClusterNodeStatus = (props: PhClusterNSType) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const {nodeStatus} = props;
-  // console.log('nodeStatus', nodeStatus)
   return (
     <MuiThemeProvider theme={useCheckIsDesktop ? theme : tableTheme}>
       {

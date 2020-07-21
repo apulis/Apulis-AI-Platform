@@ -8,11 +8,12 @@ interface TabPanelProps {
   dir?: string;
   index: any;
   value: any;
-  title?: string;
+  title?: any;
+  className?: any;
 }
 
 export const DLTSTabPanel = (props: TabPanelProps) => {
-  const { children, value, index, title,...other } = props;
+  const { children, value, index, title, className, ...other } = props;
   return (
     <Container maxWidth={useCheckIsDesktop ? 'xl' : 'lg'}>
       <Typography
@@ -27,7 +28,7 @@ export const DLTSTabPanel = (props: TabPanelProps) => {
           <Grid item xs={12}>
             <Paper  style={{ marginTop: '10px', }}>
               <Toolbar>
-                <Typography component="h2" variant="h6">
+                <Typography component="h2" variant="h6" className={className}>
                   {title}
                 </Typography>
               </Toolbar>

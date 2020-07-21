@@ -96,7 +96,7 @@ const Model: React.FC = () => {
 
   const onPush = async (e: any, item: any) => {
     const info = await getFdInfo();
-    const successTip = t('Push Inference successfully！');
+    const successTip = t('Submitted successfully！');
     const errorTip = t('Please enter settings first');
     if (info) {
       const { jobId } = item;
@@ -132,8 +132,8 @@ const Model: React.FC = () => {
 
   const onSubmitTransform = async (val: any) => {
     setBtnLoading(true);
-    const successTip = t('Edge Inference successfully！');
-    const errorTip = t('Edge Inference failed！');
+    const successTip = t('Submitted successfully！');
+    const errorTip = t('Submitted failed！');
     await axios.post(`/${selectedCluster}/teams/${selectedTeam}/postModelConversionJob`, {
       ...val,
       image: '',

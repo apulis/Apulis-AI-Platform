@@ -80,31 +80,23 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
     }
   },[teams]);
   
-  // const EmptyTeam: FC = () => {
-  //   return (
-  //     <Box display="flex">
-  //       <Dialog open>
-  //         <DialogTitle style={{ color: 'red' }}>
-  //           {"warning"}
-  //         </DialogTitle>
-  //         <DialogContent>
-  //           <DialogContentText>
-  //             {"You are not an authorized user for this cluster. Please request to join a security group by following the button below."}
-  //           </DialogContentText>
-  //         </DialogContent>
-  //         <DialogActions>
-  //           <Button onClick={onClick} color="primary">
-  //             JOIN SG
-  //           </Button>
-  //         </DialogActions>
-  //       </Dialog>
-  //     </Box>
-  //   )
-  // };
-  if (!teams || teams.length === 0) {
-    return <Loading />;
-  }
-  if (teams !== undefined && teams.length === 0) {
+  const EmptyTeam: FC = () => {
+    return (
+      <Box display="flex">
+        <Dialog open>
+          <DialogTitle style={{ color: 'red' }}>
+            {"warning"}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {"There are no virtual cluster available for the current cluster, please contact the administrator"}
+            </DialogContentText>
+          </DialogContent>
+        </Dialog>
+      </Box>
+    )
+  };
+  if (teams === undefined) {
     return (
 
       <Context.Provider
@@ -112,6 +104,9 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
         children={<Loading />}
       />
     )
+  }
+  if (teams !== undefined && teams.length === 0) {
+    return <EmptyTeam />;
   }
   return (
     <Context.Provider

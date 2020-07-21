@@ -28,7 +28,7 @@ import authorization
 from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
-import inference
+# import inference
 import quota
 
 import copy

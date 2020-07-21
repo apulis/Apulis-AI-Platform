@@ -829,13 +829,14 @@ def GetJobLog(userName, jobId,page=1):
                 localJobPath = os.path.join(config["storage-mount-path"], jobPath)
                 logPath = os.path.join(localJobPath, "logs")
                 max_page = 1
+                if not page:
+                    page = 1
+                page = int(page)
                 if os.path.exists(os.path.join(logPath,"max_page")):
                     with open(os.path.join(logPath,"max_page"),"r") as f:
                         max_page = int(f.read())
                 if max_page<page:
                     page = max_page
-                if not page:
-                    page = 1
                 if os.path.exists(os.path.join(logPath,"log-container-" +jobId + ".txt"+"."+str(page))):
                     with open(os.path.join(logPath,"log-container-" + jobId + ".txt"+"."+str(page)), "r") as f:
                         log = f.read()
@@ -843,6 +844,7 @@ def GetJobLog(userName, jobId,page=1):
                         return {
                             "log": log,
                             "cursor": None,
+                            "max_page":max_page
                         }
             except Exception as e:
                 logger.exception(e)
@@ -850,6 +852,7 @@ def GetJobLog(userName, jobId,page=1):
     return {
         "log": {},
         "cursor": None,
+        "max_page":0
     }
 
 def GetClusterStatus():

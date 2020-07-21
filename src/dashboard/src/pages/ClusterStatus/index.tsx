@@ -13,7 +13,6 @@ import { DLTSTabPanel } from '../CommonComponents/DLTSTabPanel'
 import TeamContext from "../../contexts/Teams";
 import ClusterContext from '../../contexts/Clusters';
 import useFetch from "use-http";
-
 import _ from "lodash";
 import { mergeTwoObjsByKey, convertToArrayByKey, mergePropertyByKey, mergePropertyByUserNameAndGPUType, sumObjectValues } from '../../utlities/ObjUtlities';
 import {handleChangeIndex} from "../../utlities/interactionUtlties";
@@ -26,7 +25,8 @@ import {TeamVirtualClusterStatus} from "./components/TeamVirtualClusterStatus";
 import {TeamVCUserStatus} from "./components/TeamVCUserStatus";
 import {ClusterUsage} from "./components/ClusterUsage";
 import {PhysicalClusterNodeStatus} from "./components/PhysicalClusterNodeStatus";
-import { MarkunreadSharp } from "@material-ui/icons";
+import RefreshIcon from '@material-ui/icons/Refresh';
+import './index.less';
 
 const ClusterStatus: FC = () => {
   const theme = useTheme();
@@ -238,10 +238,8 @@ const ClusterStatus: FC = () => {
         })
 
         setIframeUrl(userfetchs['GranaUrl'] );
-        // console.log('GranaUrl', userfetchs['GranaUrl'])
         setNodeStatus(userfetchs['node_status']);
         setIframeUrlForPerVC(userfetchs['GPUStatisticPerVC']);
-        // console.log('GPUStatisticPerVC', userfetchs['GPUStatisticPerVC'])
         setVcStatus(res.filter(Boolean));
       })
     }
@@ -253,7 +251,7 @@ const ClusterStatus: FC = () => {
     let timeout: any;
     if (mount) {
       fetchClusterStatus(mount)
-      timeout = setTimeout(() => {fetchClusterStatus(mount)}, 30000)
+      timeout = setTimeout(() => {fetchClusterStatus(mount)}, 3000)
     }
 
     return () => {
@@ -264,7 +262,8 @@ const ClusterStatus: FC = () => {
       mount = false;
       clearTimeout(timeout)
     }
-  },[clusters, selectedTeam])
+  },[clusters, selectedTeam]);
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>, mount: boolean) => {
     setSelectedValue(event.target.value);
     localStorage.setItem('selectedCluster', event.target.value);
@@ -296,7 +295,8 @@ const ClusterStatus: FC = () => {
             </Typography>
             <ClusterUsage showIframe={showIframe} iframeUrl={iframeUrl}/>
           </DLTSTabPanel>
-          <DLTSTabPanel value={value} index={3} dir={theme.direction} title={ClusterStatusTitles[value]}>
+          <DLTSTabPanel className="pcns" value={value} index={3} dir={theme.direction} 
+            title={<>{ClusterStatusTitles[value]}<RefreshIcon onClick={() => fetchClusterStatus(true)} titleAccess="Refresh" /></>}>
             <PhysicalClusterNodeStatus nodeStatus={  nodeStatus }/>
           </DLTSTabPanel>
         </SwipeableViews>

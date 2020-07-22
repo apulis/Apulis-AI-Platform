@@ -1,4 +1,4 @@
-鏊立人工智能开放平台部署指导
+依瞳人工智能开放平台部署指导
 =================================================================================
 
 ### 版本更新记录
@@ -10,7 +10,7 @@
 
 ### 商标和版权 
 
-  "Apulis Platform",“鏊立人工智能开放平台”及图标是依瞳科技有限公司的商标或注册商标。
+  "Apulis Platform",“依瞳人工智能开放平台”及图标是依瞳科技有限公司的商标或注册商标。
 
   在本用户手册中描述的随机软件，是基于最终用户许可协议的条款和条件提供的，只能按照该最终用户许可协议的规定使用和复制。 
   本手册受到著作权法律法规保护，未经依瞳科技有限公司事先书面授权，任何人士不得以任何方式对本手册的全部或任何部分进行复制、抄录、删减或将其编译为机读格式，以任何形式在可检索系统中存储，在有线或无线网络中传输，或以任何形式翻译为任何文字。 
@@ -863,14 +863,16 @@
     - master为AMD64架构
         ```
         ./deploy.py --verbose nginx webui3
-        ./deploy.py --verbose kubernetes start webui3
-        ./deploy.py kubernetes start custom-user-dashboard
+        ./deploy.py --verbose kubernetes stop/start webui3
+        ./deploy.py kubernetes stop/start custom-user-dashboard
         ```
     - master为ARM64架构
         ```
         ./deploy.py --verbose --archtype arm64 nginx webui3
-        ./deploy.py --verbose kubernetes start webui3
-        ./deploy.py kubernetes start custom-user-dashboard
+        ./deploy.py --verbose kubernetes stop/start webui3
+        ./deploy.py kubernetes stop/start custom-user-dashboard
+        # 需要注意等待相关组件grafana,openstry,jobmanager 的 pod已经terminal后再启用
+        kubectl wait --for=delete pod/openstry** --timeout=60s
         ```
 
 备份和恢复配置

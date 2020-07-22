@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     ## non distributed job
     if "DLWS_WORKER_NUM" not in os.environ:
-        os.environ['DLWS_WORKER_NUM'] = 1
+        os.environ['DLWS_WORKER_NUM'] = "1"
     else:
         pass
 

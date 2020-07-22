@@ -103,12 +103,12 @@ then
 	python ${SCRIPT_DIR}/setup_npu.py master
 
 ## not distributed job
-elif [ "$DLWS_ROLE_NAME" = "master" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
+elif [ "$DLWS_ROLE_NAME" = "master" ] && [ ! -z "$NPU_IPS" ];
 then
     ## worker pod
-	echo "ip=${NPU_IPS}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
+	echo "ip=${NPU_IPS}" >> ${npu_info_dir}/npu_0.info
 	host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
-	echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
+	echo "host=${host_ip}" >> ${npu_info_dir}/npu_0.info
 
 	python ${SCRIPT_DIR}/setup_npu.py master	
 fi

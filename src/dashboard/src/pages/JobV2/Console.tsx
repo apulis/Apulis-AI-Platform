@@ -1,16 +1,21 @@
 import React, {
   FunctionComponent,
   useEffect,
-  useMemo
+  useMemo,
+  useState
 } from 'react';
 import {
-  Box
+  Box,
 } from '@material-ui/core';
 import { useParams } from 'react-router-dom';
 import useFetch from 'use-http-2';
 import { useSnackbar } from 'notistack';
-
 import Loading from '../../components/Loading';
+import { Pagination } from '@material-ui/lab';
+import { pollInterval } from '../../const';
+import useInterval from '../../hooks/useInterval';
+import message from '../../utils/message';
+import axios from 'axios';
 
 interface RouteParams {
   clusterId: string;
@@ -19,55 +24,32 @@ interface RouteParams {
 
 const Console: FunctionComponent = () => {
   const { clusterId, jobId } = useParams<RouteParams>();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { error, data, get, response } = useFetch(
-    `/api/clusters/${clusterId}/jobs/${jobId}/log`, {
-      onNewData (currentData, newData) {
-        if (currentData === undefined || currentData.cursor == null) {
-          return newData;
-        }
-        return {
-          log: currentData.log + newData.log,
-          cursor: newData.cursor
-        };
-      }
-    }, [clusterId, jobId]);
-
-  const log = useMemo<string | undefined>(() => {
-    if (data !== undefined) {
-      return data.log;
-    } else {
-      return undefined;
-    }
-  }, [data]);
+  const [data, setData] = useState("");
+  const [status, setStatus] = useState(0);
+  const [count, setCount] = useState(0);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    if (data === undefined) return;
+    getData();
+  }, [clusterId, jobId, page]);
 
-    const cursor = data.cursor;
-    const timeout = setTimeout(get, 1500,
-      cursor ? `?cursor=${encodeURIComponent(cursor)}` : '');
-    return () => {
-      clearTimeout(timeout);
-    }
-  }, [data, get]);
+  useInterval(() => {
+    getData();
+  }, pollInterval);
 
-  useEffect(() => {
-    if (error === undefined) return;
-    if (response.status === 404) return;
-    const key = enqueueSnackbar(`Failed to fetch job log: ${clusterId}/${jobId}`, {
-      variant: 'error',
-      persist: true,
-      autoHideDuration: 3000,
-    });
-    return () => {
-      if (key !== null) closeSnackbar(key);
-    }
-  }, [error, enqueueSnackbar, closeSnackbar, clusterId, jobId]);
-  if (log === undefined && !error) {
-    return <Loading/>;
+  const getData = () => {
+    axios.get(`/clusters/${clusterId}/jobs/${jobId}/log?page=${page}`)
+      .then((res: any) => {
+        const { log, max_page } = res.data;
+        max_page !== count && setCount(max_page);
+        log !== data && setData(log);
+        setStatus(res.status);
+      }, () => {
+        message('error', `Failed to fetch job log: ${clusterId}/${jobId}`);
+      })
   }
-  if (error && response.status === 404) {
+
+  if (status === 404) {
     return (
       <Box p={1} style={{ overflow: 'auto' }}>
         <Box m={0} component="pre">
@@ -77,10 +59,19 @@ const Console: FunctionComponent = () => {
     )
   }
 
+  if (!data) return <Loading/>;
+
   return (
-    <Box p={1} style={{ overflow: 'auto' }}>
+    <Box p={1} style={{ overflow: 'auto', padding: 20 }}>
       <Box m={0} component="pre">
-        {log}
+        {data}
+        <Pagination
+          color="primary"
+          count={count}
+          page={page}
+          style={{ float: 'right' }}
+          onChange={(e: any, page: number) => setPage(page)}
+        />
       </Box>
     </Box>
   );

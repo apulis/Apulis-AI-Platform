@@ -159,6 +159,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [selectDelTPName, setSelectDelTPName] = useState('');
   const [tplDatabase, setTplDatabase] = useState("user");
   const [iconInfoShow, setIconInfoShow] = useState(false);
+  const [isSave, setIsSave] = useState(false);
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
   const onSaveTemplateClick = async () => {
@@ -391,62 +392,66 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   } = useFetch('/api');
   const [open, setOpen] = useState(false);
   const onSubmit = (data: any) => {
-    let plugins: any = {};
-    plugins['blobfuse'] = [];
-    let blobfuseObj: any = {};
-    blobfuseObj['accountName'] = accountName || '';
-    blobfuseObj['accountKey'] = accountKey || '';
-    blobfuseObj['containerName'] = containerName || '';
-    blobfuseObj['mountPath'] = mountPath || '';
-    blobfuseObj['mountOptions'] = mountOptions || '';
-    plugins['blobfuse'].push(blobfuseObj);
-    plugins['imagePull'] = [];
-    let imagePullObj: any = {};
-    imagePullObj['registry'] = dockerRegistry;
-    imagePullObj['username'] = dockerUsername;
-    imagePullObj['password'] = dockerPassword;
-    plugins['imagePull'].push(imagePullObj);
-    const job: any = {
-      userName: userName,
-      userId: uid,
-      jobType: 'training',
-      gpuType: gpuType,
-      vcName: selectedTeam,
-      containerUserId: 0,
-      jobName: name,
-      jobtrainingtype: type,
-      preemptionAllowed: preemptible ? 'True' : 'False',
-      image,
-      cmd: command,
-      workPath: sanitizePath(enableWorkPath ? workPath : ''),
-      enableworkpath: enableWorkPath,
-      dataPath: sanitizePath(enableDataPath ? dataPath : ''),
-      enabledatapath: enableDataPath,
-      jobPath: sanitizePath(enableJobPath ? jobPath : ''),
-      enablejobpath: enableJobPath,
-      env: environmentVariables,
-      hostNetwork : type === 'PSDistJob',
-      isPrivileged : type === 'PSDistJob',
-      interactivePorts: interactivePorts,
-      plugins: plugins,
-    };
-    let totalGpus = gpus;
-    if (type === 'PSDistJob') {
-      job.numps = 1;
-      job.resourcegpu = gpuNumPerDevice;  //gpusPerNode
-      job.numpsworker = workers;
-      totalGpus = gpuNumPerDevice * workers;  //gpusPerNode
+    if (isSave) {
+      onSaveTemplateClick();
     } else {
-      job.resourcegpu = gpus;
-    }
-    if (type === 'PSDistJob') {
-      if (workers * 8 > gpuAvailable) {
-        if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
-          return;
+      let plugins: any = {};
+      plugins['blobfuse'] = [];
+      let blobfuseObj: any = {};
+      blobfuseObj['accountName'] = accountName || '';
+      blobfuseObj['accountKey'] = accountKey || '';
+      blobfuseObj['containerName'] = containerName || '';
+      blobfuseObj['mountPath'] = mountPath || '';
+      blobfuseObj['mountOptions'] = mountOptions || '';
+      plugins['blobfuse'].push(blobfuseObj);
+      plugins['imagePull'] = [];
+      let imagePullObj: any = {};
+      imagePullObj['registry'] = dockerRegistry;
+      imagePullObj['username'] = dockerUsername;
+      imagePullObj['password'] = dockerPassword;
+      plugins['imagePull'].push(imagePullObj);
+      const job: any = {
+        userName: userName,
+        userId: uid,
+        jobType: 'training',
+        gpuType: gpuType,
+        vcName: selectedTeam,
+        containerUserId: 0,
+        jobName: name,
+        jobtrainingtype: type,
+        preemptionAllowed: preemptible ? 'True' : 'False',
+        image,
+        cmd: command,
+        workPath: sanitizePath(enableWorkPath ? workPath : ''),
+        enableworkpath: enableWorkPath,
+        dataPath: sanitizePath(enableDataPath ? dataPath : ''),
+        enabledatapath: enableDataPath,
+        jobPath: sanitizePath(enableJobPath ? jobPath : ''),
+        enablejobpath: enableJobPath,
+        env: environmentVariables,
+        hostNetwork : type === 'PSDistJob',
+        isPrivileged : type === 'PSDistJob',
+        interactivePorts: interactivePorts,
+        plugins: plugins,
+      };
+      let totalGpus = gpus;
+      if (type === 'PSDistJob') {
+        job.numps = 1;
+        job.resourcegpu = gpuNumPerDevice;  //gpusPerNode
+        job.numpsworker = workers;
+        totalGpus = gpuNumPerDevice * workers;  //gpusPerNode
+      } else {
+        job.resourcegpu = gpus;
+      }
+      if (type === 'PSDistJob') {
+        if (workers * 8 > gpuAvailable) {
+          if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
+            return;
+          }
         }
       }
+      postJob(`/clusters/${selectedCluster}/jobs`, job);
     }
-    postJob(`/clusters/${selectedCluster}/jobs`, job);
   };
   const jobId = React.useRef<string>();
   const fetchGrafanaUrl = `/api/clusters`;
@@ -532,8 +537,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       if (allDevice[gpuType]) {
         const { deviceStr } = allDevice[gpuType];
         if (deviceStr === 'npu.huawei.com/NPU') {
-          if (_val !== 1 &&_val !== 2 && _val !== 4 && _val !== 8) {
-            setNpuNumMsg(`Must be a positive integer from 1 to ${gpusPerNode > 8 ? 8 : gpusPerNode}，and can only be one of 1, 2, 4, 8`);
+          if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8) {
+            setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode > 8 ? 8 : gpusPerNode}，and can only be one of 0, 1, 2, 4, 8`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
@@ -1139,12 +1144,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                             error={Boolean(errors[`environmentVariables${time}`])}
                             helperText={errors[`environmentVariables${time}`] ? errors[`environmentVariables${time}`].message : ''}
                             InputLabelProps={{ shrink: true }}
-                            // inputRef={register({
-                            //   pattern: {
-                            //     value: NoNumberReg,
-                            //     message: NoNumberText
-                            //   }
-                            // })}
                             inputRef={register({
                               validate: val => validateEVName(val, index, time)
                             })}
@@ -1217,7 +1216,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       <MenuItem value="team">team</MenuItem>
                     </TextField>
                   </Grid>
-                  <Button type="button" color="primary" onClick={onSaveTemplateClick}>Save</Button>
+                  <Button type="submit" color="primary" onClick={() => setIsSave(true)}>Save</Button>
                   {templates.length > 0 && <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>Delete</Button>}
                 </Grid>
               </CardContent>
@@ -1229,7 +1228,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <Button type="button" color="secondary" onClick={() => setAdvanced(!advanced)}>Advanced</Button>
                   <Button type="button" color="secondary" onClick={() => setDatabase(!database)}>Template</Button>
                 </Grid>
-                <Button type="submit" color="primary" variant="contained" disabled={postJobLoading || postEndpointsLoading || open }>Submit</Button>
+                <Button type="submit" color="primary" variant="contained" onClick={() => setIsSave(false)} disabled={postJobLoading || postEndpointsLoading || open }>Submit</Button>
               </Grid>
             </CardActions>
           </Card>
@@ -1257,7 +1256,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               Cancel
             </Button>
             <Button onClick={onDeleteTemplateClick} color="secondary">
-            Delete
+              Delete
             </Button>
           </DialogActions>
         </Dialog>}

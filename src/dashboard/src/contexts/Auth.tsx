@@ -39,7 +39,12 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
     }
 
   }, [])
+  const href = window.location.href;
   if (!isLogin) {
+    if (!/localhost/.test(href)) {
+      onClick('/user/login');
+      // return null;
+    }
     chidComponent = (<Box display="flex">
       <Dialog open>
         <DialogTitle style={{ color: 'red' }}>
@@ -65,6 +70,10 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
     );
   }
   if (!isRegister) {
+    if (!/localhost/.test(href)) {
+      onClick('/user/register');
+      // return null;
+    }
     chidComponent = (<Box display="flex">
       <Dialog open>
         <DialogTitle style={{ color: 'red' }}>

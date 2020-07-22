@@ -46,7 +46,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
       render: renderGPU, customSort: sortGPU },
     { title: 'User', type: 'string', render: renderUser},
     { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},
-    { title: 'Priority', type: 'numeric',
+    { title: 'Priority', type: 'numeric', sorting: false,
       render: (job: any) => (<PriorityField job={job} key={job.jobId} />), disableClick: true },
     { title: 'Submitted', type: 'datetime',
       render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },

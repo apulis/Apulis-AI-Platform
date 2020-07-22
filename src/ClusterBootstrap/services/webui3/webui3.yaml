@@ -45,7 +45,6 @@ spec:
           - name: webui3
             containerPort: {{cnf["webuiport"]}}
         {% endif %}
-        imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /WebUI
           name: webuiconfig

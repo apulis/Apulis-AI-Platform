@@ -591,14 +591,28 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListVCs(self):
+    def ListVCs(self,page=None,size=None):
         ret = []
         try:
-            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+            if page and size:
+                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s` limit %d offset %d" % (self.vctablename,int(size),(int(page)-1)*int(size))
+            else:
+                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
+        except Exception as e:
+            logger.exception('ListVCs Exception: %s', str(e))
+        return ret
+
+    @record
+    def CountVCs(self):
+        ret = None
+        try:
+            query = "SELECT count(1) FROM `%s`" % (self.vctablename)
+            with MysqlConn() as conn:
+                ret = conn.select_one_value(query)
         except Exception as e:
             logger.exception('ListVCs Exception: %s', str(e))
         return ret
@@ -1183,7 +1197,7 @@ class DataHandler(object):
 
     @record
     def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, pageSize, status=None, op=("=", "or")):
-        
+
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1198,17 +1212,17 @@ class DataHandler(object):
 
             query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
                         jobType, jobTime, jobParams, priority FROM {} left join {} 
-                        on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename, 
-                        self.jobtablename, self.jobprioritytablename, 
-                        self.jobtablename, self.jobprioritytablename, 
+                        on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename,
+                        self.jobtablename, self.jobprioritytablename,
+                        self.jobtablename, self.jobprioritytablename,
                         jobType)
 
             ## all jobs
             if jobStatus.lower() != "all":
-                query += " and jobStatus = '%s'" % jobStatus 
+                query += " and jobStatus = '%s'" % jobStatus
             else:
-                pass 
-            
+                pass
+
             query += " and userName = '%s'" % userName
             query += " and vcName = '%s'" % vcName
 
@@ -1241,7 +1255,7 @@ class DataHandler(object):
 
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
-                
+
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
@@ -1279,8 +1293,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
-
+    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None):
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1302,6 +1315,9 @@ class DataHandler(object):
 
             if vcName != "all":
                 query += " and vcName = '%s'" % vcName
+
+            if jobName:
+                query += " and jobName like '%%%s%%'" % jobName
 
             if status is not None:
                 if "," not in status:
@@ -1665,7 +1681,7 @@ class DataHandler(object):
     def GetPendingEndpoints(self):
         ret = {}
         try:
-            query = "SELECT `endpoints` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
+            query = "SELECT `endpoints`,`jobId` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
             self.jobtablename, "running")
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -1673,7 +1689,11 @@ class DataHandler(object):
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
             # {endpoint1: {}, endpoint2: {}, ... }
             # endpoint["status"] == "pending"
-            ret = {k: v for d in endpoints for k, v in d.items() if v["status"] == "pending"}
+            for one in endpoints:
+                for k,v in one.items():
+                    if v["status"] == "pending":
+                        ret.setdefault(v["jobId"],{})
+                        ret[v["jobId"]][k] = v
         except Exception as e:
            logger.exception("Query pending endpoints failed!")
         return ret

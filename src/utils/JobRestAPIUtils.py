@@ -646,11 +646,11 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSi
         dataHandler = DataHandler()
         hasAccessOnAllJobs = False
 
-        # if user needs to access all jobs, and has been authorized, 
-        # he could get all pending jobs; otherwise, he could get his 
+        # if user needs to access all jobs, and has been authorized,
+        # he could get all pending jobs; otherwise, he could get his
         # own jobs with all status
         jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus, pageNum, pageSize)
-            
+
     except Exception as e:
         logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
 
@@ -662,16 +662,15 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSi
 
     return jobs
 
-
-def ListInferenceJob(jobOwner,vcName,num):
+def ListInferenceJob(jobOwner,vcName,num,search=None):
     jobs = {}
     dataHandler = None
     try:
         dataHandler = DataHandler()
         if jobOwner == "all":
-            jobs = dataHandler.ListInferenceJob("all", vcName, num, pendingStatus, ("=", "or"))
+            jobs = dataHandler.ListInferenceJob("all", vcName, num, pendingStatus, ("=", "or"),jobName=search)
         else:
-            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num)
+            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num,jobName=search)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:
@@ -861,28 +860,42 @@ def GetJobStatus(jobId):
     dataHandler.Close()
     return result
 
-def GetJobLog(userName, jobId):
+def GetJobLog(userName, jobId,page=1):
     dataHandler = DataHandler()
     jobs =  dataHandler.GetJob(jobId=jobId)
     if len(jobs) == 1:
         if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
             try:
-                log = dataHandler.GetJobTextField(jobId,"jobLog")
-                try:
-                    if isBase64(log):
-                        log = base64.b64decode(log)
-                except Exception:
-                    pass
-                if log is not None:
-                    return {
-                        "log": log,
-                        "cursor": None,
-                    }
-            except:
+                # log = dataHandler.GetJobTextField(jobId,"jobLog")
+                jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
+                jobPath = "work/"+jobParams["jobPath"]
+                localJobPath = os.path.join(config["storage-mount-path"], jobPath)
+                logPath = os.path.join(localJobPath, "logs")
+                max_page = 1
+                if not page:
+                    page = 1
+                page = int(page)
+                if os.path.exists(os.path.join(logPath,"max_page")):
+                    with open(os.path.join(logPath,"max_page"),"r") as f:
+                        max_page = int(f.read())
+                if max_page<page:
+                    page = max_page
+                if os.path.exists(os.path.join(logPath,"log-container-" +jobId + ".txt"+"."+str(page))):
+                    with open(os.path.join(logPath,"log-container-" + jobId + ".txt"+"."+str(page)), "r") as f:
+                        log = f.read()
+                    if log is not None:
+                        return {
+                            "log": log,
+                            "cursor": None,
+                            "max_page":max_page
+                        }
+            except Exception as e:
+                logger.exception(e)
                 pass
     return {
         "log": {},
         "cursor": None,
+        "max_page":0
     }
 
 def GetClusterStatus():
@@ -1107,36 +1120,52 @@ def AddVC(userName, vcName, quota, metadata):
                 "metadata": metadata
             }
             with vc_cache_lock:
-                vc_cache[vcName] = cacheItem
+                # vc_cache[vcName] = cacheItem
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
     return ret
 
-def getClusterVCs():
+def getClusterVCs(page=None,size=None):
     vcList = None
     try:
-        with vc_cache_lock:
-            vcList = copy.deepcopy(vc_cache.values())
+        if page and size:
+            with vc_cache_lock:
+                if str(page)+str(size) in vc_cache:
+                    vcList = copy.deepcopy(vc_cache[str(page)+str(size)].values())
+        else:
+            if "all" in vc_cache:
+                with vc_cache_lock:
+                    vcList = copy.deepcopy(vc_cache["all"].values())
     except Exception:
         pass
 
     if not vcList:
-        vcList = DataManager.ListVCs()
-        with vc_cache_lock:
-            for vc in vcList:
-                vc_cache[vc["vcName"]] = vc
+        vcList = DataManager.ListVCs(page,size)
+        tmp = {}
+        for vc in vcList:
+            tmp[vc["vcName"]] = vc
+
+        if page and size:
+            with vc_cache_lock:
+                vc_cache[str(page)+str(size)] = tmp
+        else:
+            with vc_cache_lock:
+                vc_cache["all"] = tmp
 
     return vcList
 
-def ListVCs(userName):
-    ret = []
-    vcList = getClusterVCs()
+def ListVCs(userName,page=None,size=None):
+    ret = {"result":[]}
+    vcList = getClusterVCs(page,size)
 
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
-            ret.append(vc)
+            ret["result"].append(vc)
+
+    ret["totalNum"] = DataHandler().CountVCs()
     # web portal (client) can filter out Default VC
     return ret
 
@@ -1252,7 +1281,8 @@ def DeleteVC(userName, vcName):
         ret =  dataHandler.DeleteVC(vcName)
         if ret:
             with vc_cache_lock:
-                vc_cache.pop(vcName, None)
+                # vc_cache.pop(vcName, None)
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
@@ -1271,7 +1301,8 @@ def UpdateVC(userName, vcName, quota, metadata):
                 "metadata": metadata
             }
             with vc_cache_lock:
-                vc_cache[vcName] = cacheItem
+                # vc_cache[vcName] = cacheItem
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()

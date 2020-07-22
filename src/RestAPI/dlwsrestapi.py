@@ -656,10 +656,11 @@ class ListInferenceJobV2(Resource):
         parser.add_argument('jobOwner')
         parser.add_argument('page')
         parser.add_argument('jobOwner')
+        parser.add_argument('name')
         args = parser.parse_args()
         page = args["page"]
         size = args["size"]
-        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None)
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"])
         jobs.pop("meta")
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
@@ -984,10 +985,12 @@ class GetJobLog(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId', required=True)
         parser.add_argument('userName', required=True)
+        parser.add_argument('page', required=False)
         args = parser.parse_args()
         jobId = args["jobId"]
         userName = args["userName"]
-        return JobRestAPIUtils.GetJobLog(userName, jobId)
+        page = args["page"]
+        return JobRestAPIUtils.GetJobLog(userName, jobId,page)
 ##
 ## Actually setup the Api resource routing here
 ##
@@ -1564,10 +1567,13 @@ class ListVCs(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
+        parser.add_argument('page')
+        parser.add_argument('size')
         args = parser.parse_args()
         userName = args["userName"]
-        ret = {}
-        ret["result"] = JobRestAPIUtils.ListVCs(userName)
+        page = args["page"]
+        size = args["size"]
+        ret = JobRestAPIUtils.ListVCs(userName,page,size)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"

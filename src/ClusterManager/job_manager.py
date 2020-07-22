@@ -620,7 +620,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             continue
         vc_resource = vc_resources[vc_name]
 
-        if (not sji["preemptionAllowed"]) and (vc_resource.CanSatisfy(sji["globalResInfo"])) and max(detail_resources[sji["deviceType"]])>= (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+        if (not sji["preemptionAllowed"]) and (vc_resource.CanSatisfy(sji["globalResInfo"])):
+            if sji["deviceType"] in detail_resources and max(detail_resources[sji["deviceType"]])< (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                continue
             vc_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
             sji["allowed"] = True
@@ -630,7 +632,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         if sji["preemptionAllowed"] and (sji["allowed"] is False):
             vc_name = sji["job"]["vcName"]
             vc_resource = vc_resources[vc_name]
-            if vc_resource.CanSatisfy(sji["globalResInfo"]) and max(detail_resources[sji["deviceType"]])>= (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+            if vc_resource.CanSatisfy(sji["globalResInfo"]):
+                if sji["deviceType"] in detail_resources and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                    continue
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
                 vc_resource.Subtract(sji["globalResInfo"])

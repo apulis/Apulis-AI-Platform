@@ -1196,7 +1196,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
+    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None):
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1217,6 +1217,9 @@ class DataHandler(object):
 
             if vcName != "all":
                 query += " and vcName = '%s'" % vcName
+
+            if jobName:
+                query += " and jobName like '%%%s%%'" % jobName
 
             if status is not None:
                 if "," not in status:
@@ -1580,7 +1583,7 @@ class DataHandler(object):
     def GetPendingEndpoints(self):
         ret = {}
         try:
-            query = "SELECT `endpoints` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
+            query = "SELECT `endpoints`,`jobId` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
             self.jobtablename, "running")
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -1588,7 +1591,11 @@ class DataHandler(object):
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
             # {endpoint1: {}, endpoint2: {}, ... }
             # endpoint["status"] == "pending"
-            ret = {k: v for d in endpoints for k, v in d.items() if v["status"] == "pending"}
+            for one in endpoints:
+                for k,v in one.items():
+                    if v["status"] == "pending":
+                        ret.setdefault(v["jobId"],{})
+                        ret[v["jobId"]][k] = v
         except Exception as e:
            logger.exception("Query pending endpoints failed!")
         return ret

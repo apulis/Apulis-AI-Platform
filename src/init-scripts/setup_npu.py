@@ -113,7 +113,7 @@ def generate_mindspore():
     hccl_data["group_list"].append(group)
 
     # dump to json file
-    with open(npu_dir + '/hccl.json', 'w') as fp:
+    with open(npu_dir + '/hccl_ms.json', 'w') as fp:
         json.dump(hccl_data, fp)
 
     return
@@ -197,7 +197,7 @@ def generate_tensorflow():
                 group["instance_list"].append(instance_item)
                 f.close()
                 done = done + 1
-                
+
         else:
             pass
 
@@ -215,7 +215,7 @@ def generate_tensorflow():
     print("succ!")
 
     # dump to json file
-    with open(npu_dir + '/hccl.json', 'w') as fp:
+    with open(npu_dir + '/hccl_tf.json', 'w') as fp:
         json.dump(hccl_data, fp)
 
     return

@@ -19,6 +19,12 @@ if __name__ == "__main__":
     #os.environ['DLWS_USER_NAME'] = "bifeng.peng"
     #
 
+    ## non distributed job
+    if "DLWS_WORKER_NUM" not in os.environ:
+        os.environ['DLWS_WORKER_NUM'] = 1
+    else:
+        pass
+
     worker_num = int(os.environ['DLWS_WORKER_NUM'])
     job_id = os.environ['DLWS_JOB_ID']
     user_name =  os.environ['DLWS_USER_NAME']

@@ -1226,7 +1226,7 @@ class DataHandler(object):
 
             query += " order by jobTime Desc"
             if pageNum is not None and pageSize is not None:
-                query += " limit %d, %d " % ((int(pageNum) - 1) * pageSize, int(pageSize))
+                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
             else:
                 pass
 

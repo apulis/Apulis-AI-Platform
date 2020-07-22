@@ -150,7 +150,6 @@ def generate_tensorflow():
     #group["device_count"] = worker_num * 8
     group["instance_count"] = worker_num
     group["group_name"] = "test"
-    group["instance_count"] = group["device_num"] 
     group["instance_list"] = []
 
     while True:

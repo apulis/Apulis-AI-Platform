@@ -1182,8 +1182,8 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, num=None, status=None, op=("=", "or")):
-    
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, pageSize, status=None, op=("=", "or")):
+        
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1197,11 +1197,11 @@ class DataHandler(object):
             cursor = conn.cursor()
 
             query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
-                    jobType, jobTime, jobParams, priority FROM {} left join {} 
-                    on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename, 
-                    self.jobtablename, self.jobprioritytablename, 
-                    self.jobtablename, self.jobprioritytablename, 
-                    jobType)
+                        jobType, jobTime, jobParams, priority FROM {} left join {} 
+                        on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename, 
+                        self.jobtablename, self.jobprioritytablename, 
+                        self.jobtablename, self.jobprioritytablename, 
+                        jobType)
 
             ## all jobs
             if jobStatus.lower() != "all":
@@ -1213,6 +1213,7 @@ class DataHandler(object):
             query += " and vcName = '%s'" % vcName
 
             if status is not None:
+
                 if "," not in status:
                     query += " and jobStatus %s '%s'" % (op[0], status)
                 else:
@@ -1224,9 +1225,8 @@ class DataHandler(object):
                 pass
 
             query += " order by jobTime Desc"
-
-            if num is not None:
-                query += " limit %s " % str(num)
+            if pageNum is not None and pageSize is not None:
+                query += " limit %d, %d " % ((int(pageNum) - 1) * pageSize, int(pageSize))
             else:
                 pass
 
@@ -1280,6 +1280,7 @@ class DataHandler(object):
 
     @record
     def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
+
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1288,6 +1289,7 @@ class DataHandler(object):
 
         conn = None
         cursor = None
+
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()

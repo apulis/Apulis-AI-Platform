@@ -602,22 +602,16 @@ class ListJobsV3(Resource):
         parser = reqparse.RequestParser()
 
         parser.add_argument('userName')
-        parser.add_argument('num')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
         parser.add_argument('jobType')
         parser.add_argument('jobStatus')
+        parser.add_argument('pageNum')
+        parser.add_argument('pageSize')
 
         args = parser.parse_args()
-        num = None
-
-        if args["num"] is not None:
-            try:
-                num = int(args["num"])
-            except:
-                pass
-
-        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], args["jobType"], args["jobStatus"], num)
+        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], 
+                args["jobType"], args["jobStatus"], args["pageNum"], args["pageSize"])
 
         for _, joblist in jobs.items():
             if isinstance(joblist, list):

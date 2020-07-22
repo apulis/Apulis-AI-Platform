@@ -637,7 +637,7 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             dataHandler.Close()
     return jobs
 
-def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, num=None):
+def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSize):
 
     jobs = {}
     dataHandler = None
@@ -649,7 +649,7 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, num=None):
         # if user needs to access all jobs, and has been authorized, 
         # he could get all pending jobs; otherwise, he could get his 
         # own jobs with all status
-        jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus, num)
+        jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus, pageNum, pageSize)
             
     except Exception as e:
         logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))

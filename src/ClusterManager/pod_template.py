@@ -168,14 +168,26 @@ class PodTemplate():
             pod["numps"] = 0
             pod["numworker"] = 1
             pod["fragmentGpuJob"] = True
+
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
+
             if "gpuStr" not in pod and "gpuType" in pod and pod["gpuType"]:
                 deviceDict = gpuMapping.get(pod["gpuType"])
                 if deviceDict is None:
                     return None,"wrong device type"
                 else:
                     pod["gpuStr"] = deviceDict.get("deviceStr")
+
+            elif "gpuStr" in pod:
+
+                if pod["gpuStr"] == "npu.huawei.com/NPU":
+                    pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"true"})
+                else:
+                    pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"false"})
+
+            else:
+                pass
 
             if params["jobtrainingtype"] == "InferenceJob":
                 pod["gpuLimit"] = 0

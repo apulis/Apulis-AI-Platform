@@ -1221,7 +1221,7 @@ class DataHandler(object):
             if jobName:
                 query += " and jobName like '%%%s%%'" % jobName
 
-            if status is not None:
+            if status:
                 if "," not in status:
                     query += " and jobStatus %s '%s'" % (op[0], status)
                 else:

@@ -72,6 +72,8 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
     categories = {}
     for ImgID in ImgIDs:
         new_image_id = ImgID
+        if not os.path.exists(os.path.join(json_path, 'images', "{}.json".format(ImgID))):
+            continue
         with open(os.path.join(json_path, 'images', "{}.json".format(ImgID)), "r") as f:
             json_dict = json.load(f)
         json_dict["images"][0]["file_name"] = "{}.jpg".format(new_image_id)

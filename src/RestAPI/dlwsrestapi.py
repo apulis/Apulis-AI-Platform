@@ -655,13 +655,13 @@ class ListInferenceJobV2(Resource):
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
         parser.add_argument('page')
-        parser.add_argument('jobOwner')
         parser.add_argument('name')
+        parser.add_argument('status')
         args = parser.parse_args()
         page = args["page"]
         size = args["size"]
-        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"])
-        jobs.pop("meta")
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"])
+        jobs.pop("meta",None)
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:

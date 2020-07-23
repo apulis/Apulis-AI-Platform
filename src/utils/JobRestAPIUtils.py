@@ -662,15 +662,15 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSi
 
     return jobs
 
-def ListInferenceJob(jobOwner,vcName,num,search=None):
+def ListInferenceJob(jobOwner,vcName,num,search=None,status=None):
     jobs = {}
     dataHandler = None
     try:
         dataHandler = DataHandler()
         if jobOwner == "all":
-            jobs = dataHandler.ListInferenceJob("all", vcName, num, pendingStatus, ("=", "or"),jobName=search)
+            jobs = dataHandler.ListInferenceJob("all", vcName, num, status, ("=", "or"),jobName=search)
         else:
-            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num,jobName=search)
+            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num,status,jobName=search)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:

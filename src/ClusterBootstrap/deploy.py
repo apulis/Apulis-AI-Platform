@@ -1028,6 +1028,12 @@ def get_hyperkube_docker(force = False) :
     ## not need anymore
     return
 
+def set_mirror():
+    cmd = "sed -i 's/{apt_mirror_url}/%s/' ../init-scripts/bootstrap.sh " % (config["apt_mirror_url"])
+    print(cmd)
+    utils.exec_cmd_local(cmd)
+    return
+
 def deploy_masters(force = False):
     print "==============================================="
     print "Prepare to deploy kubernetes master"
@@ -4226,6 +4232,10 @@ def run_command( args, command, nargs, parser ):
         bForce = args.force if args.force is not None else False
         get_kubectl_binary(force=args.force)
         exit()
+
+    elif command == "set_mirror":
+        set_mirror()
+        return
 
     elif command =="clean":
         clean_deployment()

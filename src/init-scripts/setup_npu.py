@@ -76,6 +76,8 @@ def generate_mindspore():
 
                 # parse string to get all device ips
                 ip_list = ips.split(",")
+                ip_list = sorted(ip_list)
+                
                 for ip_elem in ip_list:
 
                     # one device
@@ -177,6 +179,8 @@ def generate_tensorflow():
 
                 # parse string to get all device ips
                 ip_list = ips.split(",")
+                ip_list = sorted(ip_list)
+
                 for ip_elem in ip_list:
 
                     # one device

@@ -50,8 +50,8 @@ def generate_mindspore():
     hccl_data["group_list"] = []
 
     group = {}
-    group["device_num"] = worker_num * 8
-    group["server_num"] = worker_num
+    group["device_num"] = str(worker_num * 8)
+    group["server_num"] = str(worker_num)
     group["group_name"] = "test"
     group["instance_count"] = group["device_num"] 
     group["instance_list"] = []
@@ -88,8 +88,8 @@ def generate_mindspore():
                         "device_ip" : device_ip
                     }
 
-                    device_item["rank_id"] = rank_id
-                    device_item["server_id"] = host_ip
+                    device_item["rank_id"] = str(rank_id)
+                    device_item["server_id"] = str(host_ip)
 
                     # append to instance list
                     rank_id = rank_id + 1
@@ -108,7 +108,7 @@ def generate_mindspore():
 
         time.sleep(1)
 
-    group["instance_count"] = group["device_num"] = len(group["instance_list"])
+    group["instance_count"] = group["device_num"] = str(len(group["instance_list"]))
     print("succ!")
     hccl_data["group_list"].append(group)
 
@@ -148,7 +148,7 @@ def generate_tensorflow():
 
     group = {}
     #group["device_count"] = worker_num * 8
-    group["instance_count"] = worker_num
+    group["instance_count"] = str(worker_num)
     group["group_name"] = "test"
     group["instance_list"] = []
 
@@ -207,8 +207,8 @@ def generate_tensorflow():
 
         time.sleep(1)
 
-    group["device_count"] = rank_id
-    group["instance_count"] = len(group["instance_list"])
+    group["device_count"] = str(rank_id)
+    group["instance_count"] = str(len(group["instance_list"]))
     hccl_data["group_list"].append(group)
 
     print("succ!")

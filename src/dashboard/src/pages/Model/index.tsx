@@ -97,7 +97,7 @@ const Model: React.FC = () => {
       setPushId(jobId);
       axios.post(`/${selectedCluster}/pushModelToFD`, { jobId: jobId }).then((res: any) => {
         getData();
-        message('success', `Push Inference successfully！`);
+        message('success', `Submitted successfully！`);
       }).catch(err => {
         console.log(err);
         setPushId('');
@@ -132,10 +132,10 @@ const Model: React.FC = () => {
       conversionType: type
     }).then((res: any) => {
       getData();
-      message('success', `Edge Inference successfully！`);
+      message('success', `Submitted successfully！`);
       setModalFlag1(false);
     },  () => {
-      message('error', `Edge Inference failed！`);
+      message('error', `Submitted failed！`);
     })
     setBtnLoading(false);
   }

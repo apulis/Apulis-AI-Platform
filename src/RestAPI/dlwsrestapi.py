@@ -11,6 +11,7 @@ import timeit
 import thread
 import time
 import sys
+import math
 import traceback
 import threading
 from logging.config import dictConfig
@@ -619,6 +620,42 @@ class GetAllSupportInference(Resource):
         return resp
 api.add_resource(GetAllSupportInference, '/GetAllSupportInference')
 
+class ListInferenceJobV2(Resource):
+    @api.doc(params=model.ListInferenceJob.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('size')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        parser.add_argument('page')
+        parser.add_argument('jobOwner')
+        parser.add_argument('name')
+        parser.add_argument('status')
+        args = parser.parse_args()
+        page = args["page"]
+        size = args["size"]
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"])
+        jobs.pop("meta",None)
+        for _, joblist in jobs.items():
+            if isinstance(joblist, list):
+                for job in joblist:
+                    remove_creds(job)
+        tmp = []
+        for k,v in jobs.items():
+            for one in v:
+                one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
+                tmp.append(one)
+        tmp.sort(key=lambda x: x["jobTime"])
+        if not page:
+            page = 1
+        if not size:
+            size = 5
+        a = slice(max((int(page)-1),0)*int(size),int(size)*int(page))
+        ret = {"inferences":tmp[a],"total":len(tmp),"totalPage":math.ceil(float(len(tmp))/int(size))}
+        resp = generate_response(ret)
+        return resp
+api.add_resource(ListInferenceJobV2, '/ListInferenceJobV2')
+
 class ListInferenceJob(Resource):
     @api.doc(params=model.ListInferenceJob.params)
     def get(self):
@@ -626,8 +663,11 @@ class ListInferenceJob(Resource):
         parser.add_argument('num')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
+        parser.add_argument('page')
+        parser.add_argument('jobOwner')
         args = parser.parse_args()
         jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],args["num"])
+        jobs.pop("meta")
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:
@@ -894,6 +934,24 @@ class GetJobDetailV2(Resource):
 ##
 api.add_resource(GetJobDetailV2, '/GetJobDetailV2')
 
+class GetInferenceJobDetail(Resource):
+    @api.doc(params=model.GetInferenceJobDetail.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        parser.add_argument('userName')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        userName = args["userName"]
+        job = JobRestAPIUtils.GetInferenceJobDetail(userName, jobId)
+        remove_creds(job)
+        resp = generate_response(job)
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetInferenceJobDetail, '/GetInferenceJobDetail')
+
 
 class GetJobLog(Resource):
     @api.doc(params=model.GetJobLog.params)
@@ -901,10 +959,12 @@ class GetJobLog(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId', required=True)
         parser.add_argument('userName', required=True)
+        parser.add_argument('page', required=False)
         args = parser.parse_args()
         jobId = args["jobId"]
         userName = args["userName"]
-        return JobRestAPIUtils.GetJobLog(userName, jobId)
+        page = args["page"]
+        return JobRestAPIUtils.GetJobLog(userName, jobId,page)
 ##
 ## Actually setup the Api resource routing here
 ##
@@ -1481,10 +1541,13 @@ class ListVCs(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
+        parser.add_argument('page')
+        parser.add_argument('size')
         args = parser.parse_args()
         userName = args["userName"]
-        ret = {}
-        ret["result"] = JobRestAPIUtils.ListVCs(userName)
+        page = args["page"]
+        size = args["size"]
+        ret = JobRestAPIUtils.ListVCs(userName,page,size)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -1919,6 +1982,66 @@ def dumpstacks(signal, frame):
 @app.route("/metrics")
 def metrics():
     return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+
+
+class Infer(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        parser.add_argument('signature_name')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        signature_name = args["signature_name"]
+        image = request.files.get("file").read()
+        ret = JobRestAPIUtils.Infer(jobId,image,signature_name)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(Infer, '/Infer')
+
+class ConvertDataFormat(Resource):
+    @api.doc(params=model.ConvertDataFormat.params)
+    def post(self):
+        params = request.get_json(force=True)
+        ret = JobRestAPIUtils.ConvertDataFormat(params["projectId"], params["datasetId"],params["type"],params["target"])
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(ConvertDataFormat, '/ConvertDataFormat')
+
+class GetConvertList(Resource):
+    @api.doc(params=model.GetConvertList.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('targetStatus')
+        args = parser.parse_args()
+        target = args["targetStatus"]
+        ret = JobRestAPIUtils.GetConvertList(target)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+api.add_resource(GetConvertList, '/GetConvertList')
+
+class GetConvertDetail(Resource):
+    @api.doc(params=model.GetConvertDetail.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('datasetId')
+        parser.add_argument('projectId')
+        args = parser.parse_args()
+        datasetId = args["datasetId"]
+        projectId = args["projectId"]
+        ret = JobRestAPIUtils.GetConvertDetail(projectId,datasetId)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetConvertDetail, '/GetConvertDetail')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

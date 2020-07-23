@@ -40,12 +40,10 @@ spec:
       - name: webui3
         image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}webui3:{{cnf["dockertag"]}}-arm64
         imagePullPolicy: Always
-        {% if false %}
         ports:
-          - name: webui3
-            containerPort: {{cnf["webuiport"]}}
-        {% endif %}
-        imagePullPolicy: Always
+        - name: webui3
+          containerPort: {{cnf["webuiport"]}}
+          hostPort: {{cnf["webuiport"]}}
         volumeMounts:
         - mountPath: /WebUI
           name: webuiconfig

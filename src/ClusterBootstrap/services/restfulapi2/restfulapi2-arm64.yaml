@@ -42,6 +42,8 @@ spec:
           name: resolv
         - mountPath: /RestfulAPI
           name: apiconfig
+        - mountPath: {{cnf["storage-mount-path"]}}/work
+          name: dlwsdatawork
         - mountPath: /var/log/apache2
           name: log
         - mountPath: /data
@@ -73,6 +75,9 @@ spec:
       - name: resolv
         hostPath:
           path: /etc/resolv.conf
+      - name: dlwsdatawork
+        hostPath:
+          path: {{cnf["storage-mount-path"]}}/work
       - name: apiconfig
         hostPath:
           path: /etc/RestfulAPI

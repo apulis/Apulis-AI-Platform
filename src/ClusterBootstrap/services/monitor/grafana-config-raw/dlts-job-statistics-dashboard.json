@@ -2191,7 +2191,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "avg(task_cpu_percent{job_name=\"$job_name\"}) by (instance) / 100",
+          "expr": "avg(task_cpu_percent{job_name=\"$job_name\"}) by (instance)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": " {{'{{'}}instance{{'}}'}}",
@@ -2217,11 +2217,11 @@
       },
       "yaxes": [
         {
-          "format": "short",
-          "label": "Core",
+          "format": "percent",
+          "label": null,
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": 0,
           "show": true
         },
         {

@@ -55,7 +55,7 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
       return firstDetailMessage;
     };
     if (typeof firstDetailMessage === 'object') return (
-      <pre>{JSON.stringify(firstDetailMessage, null, 2)}</pre>
+      <pre style={{ maxHeight: '400px', overflow: 'auto'}}>{JSON.stringify(firstDetailMessage, null, 2)}</pre>
     );
     return <pre>{JSON.stringify(firstDetail, null, 2)}</pre>;
   }, [detail]);

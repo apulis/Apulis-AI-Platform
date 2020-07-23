@@ -22,6 +22,9 @@ def PushModelToFD(params):
     ret = {}
     jobId = params['jobId']
     fdinfo = GetFDInfo()
+    if fdinfo is None:
+        ret["err"] = "FD server not set"
+        return ret
     modconvertInfo = GetModelConversionInfo(jobId)
     if modconvertInfo is None:
         ret["err"] = "Job not exists"

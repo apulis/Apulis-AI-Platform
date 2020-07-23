@@ -3,7 +3,7 @@ import {
   Table, TableHead, TableRow, TableCell, TableBody, 
   Button, TextField, Container,
   Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText,
-  CircularProgress, MenuItem, TablePagination
+  CircularProgress, MenuItem, Select
 } from "@material-ui/core";
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
@@ -12,6 +12,7 @@ import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 import './index.less';
 import _ from 'lodash';
 import AuthzHOC from '../../components/AuthzHOC';
+import { Pagination } from '@material-ui/lab';
 
 const empty = {
   text: '',
@@ -34,7 +35,10 @@ export default class Vc extends React.Component {
       allDevice: {},
       qSelectData: {},
       mSelectData: {},
-      clickItem: {}
+      clickItem: {},
+      page: 1,
+      size: 10,
+      count: 0
     }
   }
 
@@ -55,10 +59,13 @@ export default class Vc extends React.Component {
   }
 
   getVcList = () => {
-    axios.get(`/${this.context.selectedCluster}/listVc`)
+    const { page, size } = this.state;
+    axios.get(`/${this.context.selectedCluster}/listVc?page=${page}&size=${size}`)
       .then((res) => {
+        const { totalNum, result } = res.data;
         this.setState({
-          vcList: res.data.result
+          vcList: result,
+          count: Math.ceil(totalNum / size)
         })
       })
   }
@@ -292,17 +299,31 @@ export default class Vc extends React.Component {
       qSelectData,
     })
   }
+
+  onPageChange = (e, page) => {
+    this.setState({ page }, () => {
+      this.getVcList();
+    });
+  }
+
+  onSizeChange = (e) => {
+    this.setState({ size: Number(e.target.value) }, () => {
+      this.getVcList();
+    });
+  }
+
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice, vcNameValidateObj } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, 
+      allDevice, vcNameValidateObj, page, count, size } = this.state;
     return (
       <Container fixed maxWidth="xl">
         <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
           <AuthzHOC needPermission={'MANAGE_VC'}>
             <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button></div>
           </AuthzHOC>
-          <Table style={{ width: '80%', marginTop: 20 }}>
+          <Table style={{ margin: '20px 0' }}>
             <TableHead> 
-              <TableRow style={{ backgroundColor: '#7583d1' }}>
+              <TableRow style={{ backgroundColor: '#3f51b5' }}>
                 <TableCell style={{ color: '#fff' }}>VcName</TableCell>
                 <TableCell style={{ color: '#fff' }}>quota</TableCell>
                 {/* <TableCell style={{ color: '#fff' }}>metadata</TableCell> */}
@@ -328,13 +349,25 @@ export default class Vc extends React.Component {
               ))}
             </TableBody>
           </Table>
-          {/* <TablePagination
-            count={vcList.length}
-            rowsPerPage={rowsPerPage}
+          <Pagination
+            color="primary"
+            count={count}
             page={page}
-            onChangePage={handleChangePage}
-            onChangeRowsPerPage={handleChangeRowsPerPage}
-          /> */}
+            style={{ float: 'right', marginLeft: 20 }}
+            onChange={this.onPageChange}
+          />
+          <Select
+            value={size}
+            style={{ float: 'right' }}
+            onChange={this.onSizeChange}
+            displayEmpty
+          >
+            <MenuItem value={10}>10 rows</MenuItem>
+            <MenuItem value={20}>20 rows</MenuItem>
+            <MenuItem value={30}>30 rows</MenuItem>
+            <MenuItem value={40}>40 rows</MenuItem>
+            <MenuItem value={50}>50 rows</MenuItem>
+          </Select>
           {modifyFlag && 
           <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth>
             <DialogTitle>{isEdit ? 'Modify' : 'ADD'}</DialogTitle>

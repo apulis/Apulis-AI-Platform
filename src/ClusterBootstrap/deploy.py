@@ -1024,25 +1024,8 @@ def get_kubectl_binary(force = False):
     get_other_binary()
 
 def get_hyperkube_docker(force = False) :
-    os.system("mkdir -p ./deploy/bin")
-    print( "Use docker container %s" % config["dockers"]["container"]["hyperkube"]["fullname"])
-
-    if force or not os.path.exists("./deploy/bin/hyperkube"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/hyperkube", "./deploy/bin/hyperkube")
-
-    if force or not os.path.exists("./deploy/bin/kubelet"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubelet", "./deploy/bin/kubelet")
-
-    if force or not os.path.exists("./deploy/bin/kubectl"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubectl", "./deploy/bin/kubectl")
-
-    if config['kube_custom_cri']:
-        if force or not os.path.exists("./deploy/bin/crishim"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/crishim", "./deploy/bin/crishim")
-
-        if force or not os.path.exists("./deploy/bin/nvidiagpuplugin.so"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/nvidiagpuplugin.so", "./deploy/bin/nvidiagpuplugin.so")
-
+    
+    ## not need anymore
     return
 
 def deploy_masters(force = False):
@@ -1816,6 +1799,7 @@ def deploy_webUI_on_node(ipAddress):
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/config.yaml","/etc/RestfulAPI/config.yaml", sshUser, webUIIP )
+    utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/appsettings.json","/etc/RestfulAPI/appsettings.json", sshUser, webUIIP )
     utils.sudo_scp(config["ssh_cert"],"./deploy/UserDashboard/local.config","/etc/UserDashboard/local.config", sshUser, webUIIP )
 
     utils.render_template_directory("./template/dashboard", "./deploy/dashboard",config)
@@ -3616,6 +3600,12 @@ def kubernetes_label_worker_2(nodename, nodeInfo):
 
     return
 
+def kubernetes_setup_worker_infiniband_ip():
+    for nodename,nodeInfo in config["machines"].items():
+        if "ib_ip" in nodeInfo:
+            utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], nodename, "ifconfig ib0 "+nodeInfo["ib_ip"]+"/24")
+
+
 def kubernetes_label_cpuworker():
     """Label kubernetes nodes with cpuworker=active."""
     label = "cpuworker=active"
@@ -4894,6 +4884,9 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "labelworker":
         kubernetes_label_worker()
+
+    elif command == "setupib":
+        kubernetes_setup_worker_infiniband_ip()
 
     elif command == "gpulabel":
         kubernetes_label_GpuTypes()

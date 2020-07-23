@@ -89,26 +89,27 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   //         </DialogTitle>
   //         <DialogContent>
   //           <DialogContentText>
-  //             {"You are not an authorized user for this cluster. Please request to join a security group by following the button below."}
+  //             {"There are no virtual cluster available for the current cluster, please contact the administrator"}
   //           </DialogContentText>
   //         </DialogContent>
-  //         <DialogActions>
-  //           <Button onClick={onClick} color="primary">
-  //             JOIN SG
-  //           </Button>
-  //         </DialogActions>
   //       </Dialog>
   //     </Box>
   //   )
   // };
-  if (teams !== undefined && teams.length === 0) {
-    return (
+  // if (teams === undefined) {
+  //   return (
 
-      <Context.Provider
-        value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
-        children={<Loading />}
-      />
-    )
+  //     <Context.Provider
+  //       value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
+  //       children={<Loading />}
+  //     />
+  //   )
+  // }
+  if (teams !== undefined && teams.length === 0) {
+    return <Context.Provider
+      value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
+      children={<Loading />}
+    />;
   }
   return (
     <Context.Provider

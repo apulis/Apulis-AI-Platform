@@ -11,7 +11,9 @@ import re
 import logging
 import yaml
 import logging.config
-
+from concurrent.futures import ThreadPoolExecutor
+from threading import Lock
+import subprocess32
 import argparse
 from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time
 
@@ -117,19 +119,29 @@ def setup_ssh_server(user_name, pod_name, host_network=False):
     logger.info("Ssh server is ready for pod: %s. Ssh listen on %s", pod_name, ssh_port)
     return ssh_port
 
+def kubectl_exec(params, timeout=None):
+    """As defalut, never timeout."""
+    try:
+        #print ("bash -c %s %s" % (config["kubelet-path"], params))
+        # TODO set the timeout
+        output = subprocess32.check_output(["bash", "-c", config["kubelet-path"] + " " + params], timeout=timeout)
+    except Exception as e:
+        logger.exception("kubectl exec")
+        return str(e)
+    return ""
 
 def setup_jupyter_server(user_name, pod_name,jupyter_port,nodePort):
     bash_script = "sudo bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && cd /home/" + user_name + " && chmod 777 /job/ &&  runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+str(nodePort)+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
-    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
+    output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
-        raise Exception("Failed to start jupyter server in container. JobId: %s " % pod_name)
+        raise Exception("Failed to start jupyter server in container. JobId: %s ,output: %s" % (pod_name,output))
 
 
 def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
     bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v tensorboard)\" ];then apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard;fi && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
-    output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
+    output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
-        raise Exception("Failed to start tensorboard in container. JobId: %s " % pod_name)
+        raise Exception("Failed to start tensorboard in container. JobId: %s ,output: %s" % (pod_name,output))
 
 def is_server_ready(endpoint):
     pod_name = endpoint["podName"]
@@ -148,7 +160,7 @@ def is_server_ready(endpoint):
 
 def start_endpoint(endpoint):
     # pending, running, stopped
-    logger.info("Starting endpoint: %s", endpoint)
+    logger.debug("Starting endpoint: %s", endpoint)
 
     pod_name = endpoint["podName"]
     podPort = endpoint["podPort"]
@@ -192,43 +204,53 @@ def create_node_port(endpoint):
 
     logger.info("Submitted endpoint %s to k8s, returned with status %s", endpoint["jobId"], result)
 
+def start_endpoints_by_thread(pending_endpoints,data_handler):
+    for endpoint_id, endpoint in pending_endpoints.items():
+        try:
+            with sql_lock:
+                job = data_handler.GetJob(jobId=endpoint["jobId"])[0]
+            if job["jobStatus"] != "running":
+                continue
+
+            # get endpointDescriptionPath
+            # job["jobDescriptionPath"] = "jobfiles/" + time.strftime("%y%m%d") + "/" + jobParams["jobId"] + "/" + jobParams["jobId"] + ".yaml"
+            endpoint_description_dir = re.search("(.*/)[^/\.]+.yaml", job["jobDescriptionPath"]).group(1)
+            endpoint["endpointDescriptionPath"] = os.path.join(endpoint_description_dir, endpoint_id + ".yaml")
+
+            logger.info("\n\n\n\n\n\n----------------Begin to start endpoint %s", endpoint["id"])
+            output = get_k8s_endpoint(endpoint["endpointDescriptionPath"])
+            if (output != ""):
+                endpoint_description = json.loads(output)
+                endpoint["endpointDescription"] = endpoint_description
+                endpoint["port"] = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
+                start_endpoint(endpoint)
+                logging.info("\n----------------done for start endpoint %s", endpoint["id"])
+                if is_server_ready(endpoint):
+                    endpoint["status"] = "running"
+                pod = k8sUtils.GetPod("podName=" + endpoint["podName"])
+                if "items" in pod and len(pod["items"]) > 0:
+                    endpoint["nodeName"] = pod["items"][0]["spec"]["nodeName"]
+            else:
+                # create NodePort
+                create_node_port(endpoint)
+
+            endpoint["lastUpdated"] = datetime.datetime.now().isoformat()
+            with sql_lock:
+                data_handler.UpdateEndpoint(endpoint)
+        except Exception as e:
+            logger.warning("Process endpoint failed {}".format(endpoint), exc_info=True)
+
 def start_endpoints():
     try:
         data_handler = DataHandler()
         try:
             pending_endpoints = data_handler.GetPendingEndpoints()
-
-            for endpoint_id, endpoint in pending_endpoints.items():
-                try:
-                    job = data_handler.GetJob(jobId=endpoint["jobId"])[0]
-                    if job["jobStatus"] != "running":
-                        continue
-
-                    # get endpointDescriptionPath
-                    # job["jobDescriptionPath"] = "jobfiles/" + time.strftime("%y%m%d") + "/" + jobParams["jobId"] + "/" + jobParams["jobId"] + ".yaml"
-                    endpoint_description_dir = re.search("(.*/)[^/\.]+.yaml", job["jobDescriptionPath"]).group(1)
-                    endpoint["endpointDescriptionPath"] = os.path.join(endpoint_description_dir, endpoint_id + ".yaml")
-
-                    logger.info("\n\n\n\n\n\n----------------Begin to start endpoint %s", endpoint["id"])
-                    output = get_k8s_endpoint(endpoint["endpointDescriptionPath"])
-                    if(output != ""):
-                        endpoint_description = json.loads(output)
-                        endpoint["endpointDescription"] = endpoint_description
-                        endpoint["port"] = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
-                        start_endpoint(endpoint)
-                        if is_server_ready(endpoint):
-                            endpoint["status"] = "running"
-                        pod = k8sUtils.GetPod("podName=" + endpoint["podName"])
-                        if "items" in pod and len(pod["items"]) > 0:
-                            endpoint["nodeName"] = pod["items"][0]["spec"]["nodeName"]
-                    else:
-                        # create NodePort
-                        create_node_port(endpoint)
-
-                    endpoint["lastUpdated"] = datetime.datetime.now().isoformat()
-                    data_handler.UpdateEndpoint(endpoint)
-                except Exception as e:
-                    logger.warning("Process endpoint failed {}".format(endpoint), exc_info=True)
+            for jobId,pending_endpoint in pending_endpoints.items():
+                if jobId not in global_thread_dict:
+                    logging.info("begin to start endpoint for %s " % jobId)
+                    t =pool.submit(start_endpoints_by_thread,pending_endpoint,data_handler)
+                    global_thread_dict[jobId] = t
+                    t.add_done_callback(lambda x:global_thread_dict.pop(jobId,None))
         except Exception as e:
             logger.exception("start endpoint failed")
         finally:
@@ -300,12 +322,14 @@ def Run():
 
             # clean up endpoints for jobs which is NOT running
             cleanup_endpoints()
-        time.sleep(1)
+        time.sleep(3)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", "-p", help="port of exporter", type=int, default=9205)
     args = parser.parse_args()
     setup_exporter_thread(args.port)
-
+    pool = ThreadPoolExecutor(max_workers=20)
+    sql_lock = Lock()
+    global_thread_dict = {}
     Run()

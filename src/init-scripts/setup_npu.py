@@ -45,7 +45,7 @@ def generate_mindspore():
                                         "eth6",
                                         "eth7"
                                     ]
-    hccl_data["para_plane_nic_num"] = 8
+    hccl_data["para_plane_nic_num"] = "8"
     hccl_data["status"] = "completed"
     hccl_data["group_list"] = []
 
@@ -77,7 +77,7 @@ def generate_mindspore():
                 # parse string to get all device ips
                 ip_list = ips.split(",")
                 ip_list = sorted(ip_list)
-                
+
                 for ip_elem in ip_list:
 
                     # one device
@@ -85,10 +85,10 @@ def generate_mindspore():
 
                     ## set up group list
                     device_item = {}  # item of instance list
-                    device_item["devices"] = {
+                    device_item["devices"] = [{
                         "device_id" : device_id,
                         "device_ip" : device_ip
-                    }
+                    }]
 
                     device_item["rank_id"] = str(rank_id)
                     device_item["server_id"] = str(host_ip)

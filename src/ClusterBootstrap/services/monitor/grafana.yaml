@@ -28,6 +28,8 @@ spec:
         - containerPort: {{cnf["grafana"]["port"]}}
           protocol: TCP
         volumeMounts:
+        - mountPath: /etc/grafana/grafana.ini
+          name: grafana-ini-conf
         - mountPath: /grafana-configuration
           name: grafana-confg-volume
         - mountPath: /etc/ssl/certs
@@ -65,6 +67,9 @@ spec:
         - name: GF_SECURITY_ALLOW_EMBEDDING
           value: "true"
       volumes:
+      - name: grafana-ini-conf
+        configMap:
+          name: grafana-ini
       - name: grafana-confg-volume
         configMap:
           name: grafana-configuration

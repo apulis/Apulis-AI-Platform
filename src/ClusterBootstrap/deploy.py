@@ -1024,25 +1024,8 @@ def get_kubectl_binary(force = False):
     get_other_binary()
 
 def get_hyperkube_docker(force = False) :
-    os.system("mkdir -p ./deploy/bin")
-    print( "Use docker container %s" % config["dockers"]["container"]["hyperkube"]["fullname"])
-
-    if force or not os.path.exists("./deploy/bin/hyperkube"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/hyperkube", "./deploy/bin/hyperkube")
-
-    if force or not os.path.exists("./deploy/bin/kubelet"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubelet", "./deploy/bin/kubelet")
-
-    if force or not os.path.exists("./deploy/bin/kubectl"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubectl", "./deploy/bin/kubectl")
-
-    if config['kube_custom_cri']:
-        if force or not os.path.exists("./deploy/bin/crishim"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/crishim", "./deploy/bin/crishim")
-
-        if force or not os.path.exists("./deploy/bin/nvidiagpuplugin.so"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/nvidiagpuplugin.so", "./deploy/bin/nvidiagpuplugin.so")
-
+    
+    ## not need anymore
     return
 
 def deploy_masters(force = False):

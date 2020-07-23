@@ -11,5 +11,3 @@ RUN dotnet publish --configuration Release
 FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
 WORKDIR /app
 COPY --from=build-env /RemoteSensing-UI/src/projects/WebUI/WebUI/bin/Release/netcoreapp2.2/publish .
-
-ENTRYPOINT ["dotnet","WebUI","--urls=http://*:3080"]

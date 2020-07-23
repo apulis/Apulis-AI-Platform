@@ -96,6 +96,22 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
     with open(coco_file_path, "w") as f:
         f.write(json.dumps(coco, indent=4, separators=(',', ':')))
 
+def judge_datasets_is_private(projectId,datasetId):
+    ret = False
+    path = os.path.join(config["data_platform_path"], "private/account/%s/membership.json" % (projectId))
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            infos = json.loads(f.read())
+        ret = infos["dataSets"][datasetId]["isPrivate"]
+    return ret
+
+def find_dataset_creator(projectId):
+    path = os.path.join(config["data_platform_path"], "private/account/index.json")
+    with open(path, "r") as f:
+        infos = json.loads(f.read())
+    creator = infos[projectId]["creator"]
+    return creator
+
 def DoDataConvert():
     dataHandler = DataHandler()
     jobs = dataHandler.getConvertList(targetStatus="queued")
@@ -104,11 +120,17 @@ def DoDataConvert():
             try:
                 list_path = os.path.join(config["data_platform_path"], "public/tasks/%s" % (oneJob["datasetId"]))
                 json_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s" % (oneJob["datasetId"], oneJob["projectId"]))
-                coco_file_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s/convert_coco.json" % (oneJob["datasetId"], oneJob["projectId"]))
+                if judge_datasets_is_private(oneJob["projectId"],oneJob["datasetId"]):
+                    username =find_dataset_creator(oneJob["projectId"])
+                    coco_file_path = os.path.join(config["storage-mount-path"], "work/%s/ata_platform/%s/%s/convert_coco.json" % (username,oneJob["projectId"],oneJob["datasetId"]))
+                    show_coco_file_path = "/home/%s/ata_platform/%s/%s/convert_coco.json" % (username,oneJob["projectId"],oneJob["datasetId"])
+                else:
+                    coco_file_path = os.path.join(config["storage-mount-path"],"storage/data_platform/%s/%s/convert_coco.json" % (oneJob["projectId"],oneJob["datasetId"]))
+                    show_coco_file_path = "/data/data_platform/%s/%s/convert_coco.json" % (oneJob["projectId"],oneJob["datasetId"])
                 logging.info("=============start convert to format %s" % (oneJob["targetFormat"]))
                 merge_json_to_coco_dataset(list_path,json_path,coco_file_path)
                 dataHandler.updateConvertStatus("finished",oneJob["id"],coco_file_path)
-                insert_status_to_dataset(oneJob["datasetId"], oneJob["projectId"],"finished",coco_file_path)
+                insert_status_to_dataset(oneJob["datasetId"], oneJob["projectId"],"finished",show_coco_file_path)
                 logging.info("=============convert to format %s done" % (oneJob["targetFormat"]))
             except Exception as e:
                 logging.exception(e)

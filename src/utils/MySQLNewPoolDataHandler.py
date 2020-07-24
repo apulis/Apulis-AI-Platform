@@ -1206,11 +1206,12 @@ class DataHandler(object):
 
         conn = None
         cursor = None
+
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
+            query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
                         jobType, jobTime, jobParams, priority FROM {} left join {} 
                         on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename,
                         self.jobtablename, self.jobprioritytablename,
@@ -1255,6 +1256,7 @@ class DataHandler(object):
             cursor.execute(query)
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
+            total = None
 
             for item in data:
 
@@ -1280,12 +1282,14 @@ class DataHandler(object):
                 else:
                     ret["finishedJobs"].append(record)
 
-                #if record["jobStatusDetail"] is not None:
-                #    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
-                #if record["jobParams"] is not None:
-                #    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+                ## get total count
+                if total is None and record["total"] is not None:
+                    total = record["total"]
+                else:
+                    pass
 
             conn.commit()
+
         except Exception as e:
             logger.exception('GetJobListV2 Exception: %s', str(e))
 
@@ -1295,8 +1299,12 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
-                       "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), 
+                       "runningJobs": len(ret["runningJobs"]),
+                       "finishedJobs": len(ret["finishedJobs"]), 
+                       "visualizationJobs": len(ret["visualizationJobs"]),
+                       "totalJobs": int(total)}
+                       
         return ret
 
     @record

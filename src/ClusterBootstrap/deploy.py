@@ -1024,7 +1024,7 @@ def get_kubectl_binary(force = False):
     get_other_binary()
 
 def get_hyperkube_docker(force = False) :
-    
+
     ## not need anymore
     return
 
@@ -2964,7 +2964,7 @@ def run_script(node, args, sudo = False, supressWarning = False, background=Fals
             fullcmd += " " + args[i]
 
     srcdir = os.path.dirname(args[0])
-    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning, 
+    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning,
             background=background)
 
 
@@ -3172,11 +3172,20 @@ def set_zookeeper_cluster():
     config["zookeepernodes"] = ";".join(nodes)
     config["zookeepernumberofnodes"] = str(len(nodes))
 
+def update_grafana_alert_config():
+    if "grafana_alert" in config:
+        if "smtp" in config["grafana_alert"]:
+            config["grafana_alert"]["enabled"] = "true"
+    else:
+        config["grafana_alert"] = ""
+        config["grafana_alert"]["enabled"] = "false"
+
 def render_service_templates():
     allnodes = get_nodes(config["clusterId"])
     # Additional parameter calculation
     set_zookeeper_cluster()
     generate_hdfs_containermounts()
+    update_grafana_alert_config()
     # Multiple call of render_template will only render the directory once during execution.
     utils.render_template_directory( "./services/", "./deploy/services/", config)
     add_service_config()
@@ -4019,7 +4028,7 @@ def scale_up(config):
         print("waiting for 2 seconds...")
         time.sleep(2)
 
-        while True: 
+        while True:
             cmd = "ping -c 1 node &> /dev/null; echo $?"
             output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
             output = output.strip()
@@ -4041,7 +4050,7 @@ def scale_up(config):
         #        sleep 10
         #        break
         #    else
-        #        echo "wating for $node to start!" 
+        #        echo "wating for $node to start!"
         #    fi
 
         #    sleep 1;
@@ -4063,7 +4072,7 @@ def scale_up(config):
 
         ## join worker
         update_worker_nodes_by_kubeadm_2([node])
-        
+
         ## label service
         kubernetes_label_nodes_2(node_name, "active", [], False)
 

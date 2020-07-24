@@ -58,8 +58,8 @@ spec:
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-        #  value: Admin
-          value: Viewer
+          value: Admin
+          #value: Viewer
         - name: GF_SERVER_ROOT_URL
           # If you're only using the API Server proxy, set this value instead:
           #value: /api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/

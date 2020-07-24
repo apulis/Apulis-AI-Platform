@@ -468,7 +468,7 @@ data:
 
     #################################### SMTP / Emailing ##########################
     [smtp]
-    enabled = true
+    enabled = {{cnf["grafana_alert"]["enabled"]}}
     host = {{cnf["grafana_alert"]["smtp"]["host"]}}
     user = {{cnf["grafana_alert"]["smtp"]["user"]}}
     # If the password contains # or ; you have to wrap it with triple quotes. Ex """#password;"""

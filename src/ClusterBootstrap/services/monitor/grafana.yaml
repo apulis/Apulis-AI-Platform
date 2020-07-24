@@ -30,6 +30,7 @@ spec:
         volumeMounts:
         - mountPath: /etc/grafana/grafana.ini
           name: grafana-ini-conf
+          subPath: grafana.ini
         - mountPath: /grafana-configuration
           name: grafana-confg-volume
         - mountPath: /etc/ssl/certs

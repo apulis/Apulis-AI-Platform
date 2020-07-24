@@ -18,7 +18,7 @@ sh -x ${RUN_TIME_DIR}/install.sh
 # example: sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list
 # mirror url must be configed in config.yaml like below:
 # apt_mirror_url: http:\/\/mirrors.aliyun.com
-sed -i 's|https\?://[^/]\+/|{apt_mirror_url}/|' /etc/apt/sources.list
+# sed -i 's|https\?://[^/]\+/|{apt_mirror_url}/|' /etc/apt/sources.list
 
 # to avoid apt-get update error:
 # download.nvidia.cn: connection timeout

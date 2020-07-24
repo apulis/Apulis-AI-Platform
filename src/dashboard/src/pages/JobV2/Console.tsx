@@ -10,7 +10,6 @@ import {
 import { useParams } from 'react-router-dom';
 import useFetch from 'use-http-2';
 import { useSnackbar } from 'notistack';
-import Loading from '../../components/Loading';
 import { Pagination } from '@material-ui/lab';
 import { pollInterval } from '../../const';
 import useInterval from '../../hooks/useInterval';
@@ -24,8 +23,7 @@ interface RouteParams {
 
 const Console: FunctionComponent = () => {
   const { clusterId, jobId } = useParams<RouteParams>();
-  const [data, setData] = useState("");
-  const [status, setStatus] = useState(0);
+  const [data, setData] = useState({});
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
 
@@ -43,13 +41,12 @@ const Console: FunctionComponent = () => {
         const { log, max_page } = res.data;
         max_page !== count && setCount(max_page);
         log !== data && setData(log);
-        setStatus(res.status);
       }, () => {
         message('error', `Failed to fetch job log: ${clusterId}/${jobId}`);
       })
   }
 
-  if (status === 404) {
+  if (Object.keys(data).length === 0) {
     return (
       <Box p={1} style={{ overflow: 'auto' }}>
         <Box m={0} component="pre">
@@ -59,19 +56,17 @@ const Console: FunctionComponent = () => {
     )
   }
 
-  if (!data) return <Loading/>;
-
   return (
     <Box p={1} style={{ overflow: 'auto', padding: 20 }}>
       <Box m={0} component="pre">
         {data}
-        <Pagination
+        {count && <Pagination
           color="primary"
           count={count}
           page={page}
           style={{ float: 'right' }}
           onChange={(e: any, page: number) => setPage(page)}
-        />
+        />}
       </Box>
     </Box>
   );

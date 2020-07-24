@@ -205,7 +205,6 @@ class Cluster extends Service {
     }
     const response = await this.fetch('/GetJobLog?' + params)
     const res = await response.json()
-    this.context.assert(Object.keys(res.log).length > 0, 404)
     return res
   }
 

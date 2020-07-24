@@ -13,8 +13,12 @@ mkdir -p ${LOG_DIR}
 sh -x ${RUN_TIME_DIR}/install.sh
 
 # set apt mirrors for foreign sources
-#sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-#sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list
+# sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+
+# example: sed -i 's|https\?://[^/]\+/|http://mirrors.aliyun.com/|' /etc/apt/sources.list
+# mirror url must be configed in config.yaml like below:
+# apt_mirror_url: http:\/\/mirrors.aliyun.com
+# sed -i 's|https\?://[^/]\+/|{apt_mirror_url}/|' /etc/apt/sources.list
 
 # to avoid apt-get update error:
 # download.nvidia.cn: connection timeout

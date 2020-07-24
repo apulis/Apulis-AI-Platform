@@ -608,10 +608,13 @@ class ListJobsV3(Resource):
         parser.add_argument('jobStatus')
         parser.add_argument('pageNum')
         parser.add_argument('pageSize')
+        parser.add_argument('searchWord')
 
         args = parser.parse_args()
         jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], 
-                args["jobType"], args["jobStatus"], args["pageNum"], args["pageSize"])
+                args["jobType"], args["jobStatus"], 
+                args["pageNum"], args["pageSize"],
+                args["searchWord"])
 
         for _, joblist in jobs.items():
             if isinstance(joblist, list):

@@ -1196,7 +1196,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, pageSize, status=None, op=("=", "or")):
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, pageSize, searchWord, status=None, op=("=", "or")):
 
         ret = {}
         ret["queuedJobs"] = []
@@ -1225,6 +1225,13 @@ class DataHandler(object):
 
             query += " and userName = '%s'" % userName
             query += " and vcName = '%s'" % vcName
+
+            if searchWord is not None:
+                query += " and jobName like %"
+                query += "%s" % (searchWord)
+                query += "%"
+            else:
+                pass
 
             if status is not None:
 

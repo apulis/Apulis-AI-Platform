@@ -596,7 +596,7 @@ api.add_resource(ListJobsV2, '/ListJobsV2')
 
 # shows a list of all jobs, and lets you POST to add new tasks
 class ListJobsV3(Resource):
-    @api.doc(params=model.ListJobsV2.params)
+    @api.doc(params=model.ListJobsV3.params)
     def get(self):
 
         parser = reqparse.RequestParser()
@@ -2073,6 +2073,29 @@ class GetConvertDetail(Resource):
         return resp
 
 api.add_resource(GetConvertDetail, '/GetConvertDetail')
+
+
+class GetJobSummary(Resource):
+
+    @api.doc(params=model.GetJobSummary.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('projectId')
+
+        args = parser.parse_args()
+        userName = args["userName"]
+        jobType = args["jobType"]
+
+        ret = JobRestAPIUtils.GetJobSummary(userName, jobType)
+        resp = jsonify(ret)
+
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetConvertDetail, '/GetJobSummary')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

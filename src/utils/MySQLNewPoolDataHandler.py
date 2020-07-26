@@ -1304,7 +1304,7 @@ class DataHandler(object):
                        "finishedJobs": len(ret["finishedJobs"]), 
                        "visualizationJobs": len(ret["visualizationJobs"]),
                        "totalJobs": int(total)}
-                       
+
         return ret
 
     @record
@@ -2169,6 +2169,23 @@ class DataHandler(object):
                 conn.commit()
         except Exception as e:
             logger.exception('add ConvertDataFormat Exception: %s', str(e))
+        return ret
+
+    @record
+    def get_job_summary(self, userName, jobType):
+        ret = {}
+
+        try:
+            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' group by jobStatus;" % (self.jobtablename, userName, jobType)
+            with MysqlConn() as conn:
+                records = conn.select_many(query)
+
+            for one in records:
+                ret[one["jobStatus"]] = one["count"]
+
+        except Exception as e:
+            logger.exception('get_job_priority Exception: %s', str(e))
+
         return ret
 
     def __del__(self):

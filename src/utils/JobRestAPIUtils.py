@@ -1647,6 +1647,32 @@ def GetConvertDetail(projectId,datasetId):
             data_handler.Close()
     return None
 
+
+def GetConvertDetail(userName, jobType):
+    data_handler = None
+
+    try:
+        data_handler = DataHandler()
+        summary = data_handler.GetConvertDetail(userName, jobType)
+        return summary
+
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+        else:
+            pass
+
+    return None
+
+
+
+
+
+
+
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False
     TEST_JOB_STATUS = True

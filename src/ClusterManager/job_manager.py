@@ -574,7 +574,8 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 jobGpuType = job_params["gpuType"]
             singleJobInfo["deviceType"] = jobGpuType
             singleJobInfo["globalResInfo"] = ResourceInfo({jobGpuType : GetJobTotalGpu(job_params)})
-
+            singleJobInfo["jobtrainingtype"] = job_params["jobtrainingtype"]
+            singleJobInfo["resourcegpu"] = job_params["resourcegpu"]
             # Job lists will be sorted based on and in the order of below
             # 1. non-preemptible precedes preemptible
             # 2. running precedes scheduling, precedes queued
@@ -621,8 +622,12 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         vc_resource = vc_resources[vc_name]
 
         if (not sji["preemptionAllowed"]) and (vc_resource.CanSatisfy(sji["globalResInfo"])):
-            if sji["deviceType"] in detail_resources and max(detail_resources[sji["deviceType"]])< (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
-                continue
+            if sji["deviceType"] in detail_resources:
+                if sji["jobtrainingtype"]=="PSDistJob" and max(detail_resources[sji["deviceType"]])< sji["resourcegpu"]:
+                    continue
+                else:
+                    if max(detail_resources[sji["deviceType"]])< (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                        continue
             vc_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
             sji["allowed"] = True
@@ -633,8 +638,11 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             vc_name = sji["job"]["vcName"]
             vc_resource = vc_resources[vc_name]
             if vc_resource.CanSatisfy(sji["globalResInfo"]):
-                if sji["deviceType"] in detail_resources and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
                     continue
+                else:
+                    if max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                        continue
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
                 vc_resource.Subtract(sji["globalResInfo"])

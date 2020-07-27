@@ -1211,8 +1211,8 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
-                        jobType, jobTime, jobParams, priority FROM {} left join {} 
+            query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
+                        jobType, jobTime, jobParams, priority FROM {} left join {}
                         on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename,
                         self.jobtablename, self.jobprioritytablename,
                         self.jobtablename, self.jobprioritytablename,
@@ -1299,9 +1299,9 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), 
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]),
                        "runningJobs": len(ret["runningJobs"]),
-                       "finishedJobs": len(ret["finishedJobs"]), 
+                       "finishedJobs": len(ret["finishedJobs"]),
                        "visualizationJobs": len(ret["visualizationJobs"]),
                        "totalJobs": int(total)}
 
@@ -1394,7 +1394,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListModelConversionJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
+    def ListModelConversionJob(self, userName, vcName, status=None, op=("=", "or"), pageNum=None, pageSize=None):
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1425,8 +1425,10 @@ class DataHandler(object):
 
             query += " order by jobTime Desc"
 
-            if num is not None:
-                query += " limit %s " % str(num)
+            if pageNum is not None and pageSize is not None:
+                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+            if pageNum is not None and pageSize is None:
+                query += " limit %s " % pageNum
             cursor.execute(query)
 
             columns = [column[0] for column in cursor.description]
@@ -2178,7 +2180,7 @@ class DataHandler(object):
         try:
             query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' group by jobStatus;" % (self.jobtablename, userName, jobType)
             print(query)
-            
+
             with MysqlConn() as conn:
                 records = conn.select_many(query)
 

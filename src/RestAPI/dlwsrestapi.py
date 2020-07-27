@@ -610,8 +610,8 @@ class ListJobsV3(Resource):
         parser.add_argument('searchWord')
 
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], 
-                args["jobType"], args["jobStatus"], 
+        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"],
+                args["jobType"], args["jobStatus"],
                 args["pageNum"], args["pageSize"],
                 args["searchWord"])
 
@@ -710,10 +710,11 @@ class ListModelConversionJob(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('num')
+        parser.add_argument('size')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], args["num"])
+        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], pageNum=args["num"], pageSize=args["size"])
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:
@@ -1818,7 +1819,7 @@ class Endpoint(Resource):
     @api.doc(params=model.EndpointPost.params)
     @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
-        
+
         '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
         parser = reqparse.RequestParser()
         parser.add_argument('userName')

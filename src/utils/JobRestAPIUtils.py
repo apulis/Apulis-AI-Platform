@@ -678,15 +678,15 @@ def ListInferenceJob(jobOwner,vcName,num,search=None,status=None):
             dataHandler.Close()
     return jobs
 
-def ListModelConversionJob(jobOwner,vcName,num):
+def ListModelConversionJob(jobOwner,vcName,pageNum=None, pageSize=None):
     jobs = {}
     dataHandler = None
     try:
         dataHandler = DataHandler()
         if jobOwner == "all":
-            jobs = dataHandler.ListModelConversionJob("all", vcName, num, pendingStatus, ("=", "or"))
+            jobs = dataHandler.ListModelConversionJob("all", vcName, pendingStatus, ("=", "or"), pageNum=pageNum, pageSize=pageSize)
         else:
-            jobs = dataHandler.ListModelConversionJob(jobOwner, vcName, num)
+            jobs = dataHandler.ListModelConversionJob(jobOwner, vcName, pageNum=pageNum, pageSize=pageSize)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:

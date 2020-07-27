@@ -198,7 +198,7 @@ export default class Vc extends React.Component {
       }
       vcList.forEach(n => {
         const useNum = JSON.parse(n.quota)[m];
-        num = useNum ? Math.abs(num - useNum) : num;
+        num = useNum ? (num - useNum < 0 ? 0 : num - useNum) : num;
       })
       options[m] = Number(num);
       const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'quota' : 'metadata'])[m] : null;

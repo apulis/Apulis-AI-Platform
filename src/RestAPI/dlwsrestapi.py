@@ -2076,7 +2076,6 @@ api.add_resource(GetConvertDetail, '/GetConvertDetail')
 
 class GetJobSummary(Resource):
 
-    @api.doc(params=model.GetJobSummary.params)
     def get(self):
         parser = reqparse.RequestParser()
 

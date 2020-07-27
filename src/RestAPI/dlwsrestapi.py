@@ -716,8 +716,21 @@ class ListModelConversionJob(Resource):
         parser.add_argument('size')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
+        parser.add_argument('jobName')
+        parser.add_argument('convType')
+        parser.add_argument('order')
+        parser.add_argument('orderBy')
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], pageNum=args["num"], pageSize=args["size"])
+        jobs = JobRestAPIUtils.ListModelConversionJob(
+            args["jobOwner"],
+            args["vcName"],
+            pageNum=args["num"],
+            pageSize=args["size"],
+            name=args["name"],
+            type=args["type"],
+            order=args["order"],
+            orderBy=args["orderBy"]
+        )
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:

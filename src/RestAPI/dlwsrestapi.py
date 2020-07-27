@@ -596,7 +596,6 @@ api.add_resource(ListJobsV2, '/ListJobsV2')
 
 # shows a list of all jobs, and lets you POST to add new tasks
 class ListJobsV3(Resource):
-    @api.doc(params=model.ListJobsV3.params)
     def get(self):
 
         parser = reqparse.RequestParser()

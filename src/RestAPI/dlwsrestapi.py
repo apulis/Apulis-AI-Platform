@@ -615,10 +615,13 @@ class ListJobsV3(Resource):
                 args["pageNum"], args["pageSize"],
                 args["searchWord"])
 
-        for _, joblist in jobs.items():
-            if isinstance(joblist, list):
-                for job in joblist:
-                    remove_creds(job)
+        if jobs is not None:
+            for _, joblist in jobs.items():
+                if isinstance(joblist, list):
+                    for job in joblist:
+                        remove_creds(job)
+        else:
+            pass
 
         resp = generate_response(jobs)
         return resp

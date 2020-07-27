@@ -1028,6 +1028,12 @@ def get_hyperkube_docker(force = False) :
     ## not need anymore
     return
 
+def set_mirror():
+    cmd = "sed -i 's/{apt_mirror_url}/%s/' ../init-scripts/bootstrap.sh " % (config["apt_mirror_url"])
+    print(cmd)
+    utils.exec_cmd_local(cmd)
+    return
+
 def deploy_masters(force = False):
     print "==============================================="
     print "Prepare to deploy kubernetes master"
@@ -3144,6 +3150,33 @@ def run_kubectl( commands ):
     else:
         run_kube( "./deploy/bin/kubectl", commands)
 
+def run_kubectl_with_output( command ):
+    if os.path.exists("./deploy/sshkey/admin.conf"):
+
+        kube_command = "kubectl --kubeconfig=./deploy/sshkey/admin.conf %s" % command
+        if verbose:
+            print(kube_command)
+        else:
+            pass
+
+        return utils.exec_cmd_local(kube_command)
+    else:
+        pass
+
+    return
+
+def get_cluster_k8s_node_list():
+
+    nodes = []
+    k8s_nodes = run_kubectl_with_output("get nodes --no-headers | awk '{print $1}'")
+
+    if k8s_nodes is not None:
+        nodes = k8s_nodes.strip().split()
+    else:
+        pass
+
+    return nodes
+
 # node can be either of fqdn or private-ip
 def kubernetes_get_node_name(node):
 
@@ -4001,6 +4034,7 @@ def scale_up(config):
     all_nodes = get_scale_nodes(config, "scale_up")
     install_ssh_key_by_nodes(all_nodes)
     domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
 
     ## scaling up
     for node_name in config["scale_up"]:
@@ -4013,6 +4047,12 @@ def scale_up(config):
         device_type = node_info["type"].lower()
         vendor = node_info["vendor"].lower()
         archtype = node_info["archtype"].lower()
+
+        if node_name in k8s_nodes:
+            print("%s is in the cluster, skip it" % (node))
+            continue
+        else:
+            pass
 
         if os != "ubuntu":
             print("os %s not supported" % (os))
@@ -4091,12 +4131,19 @@ def scale_down(config):
         pass
 
     domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
 
     for node_name in config["scale_down"]:
         node_info = config["scale_down"][node_name]
 
         print(node_info)
         node = node_name + domain
+
+        if node_name not in k8s_nodes:
+            print("%s is not in the cluster, skip it" % (node))
+            continue
+        else:
+            pass
 
         ## drain
         cmd = "drain %s --ignore-daemonsets" % (node_name)
@@ -4235,6 +4282,10 @@ def run_command( args, command, nargs, parser ):
         bForce = args.force if args.force is not None else False
         get_kubectl_binary(force=args.force)
         exit()
+
+    elif command == "set_mirror":
+        set_mirror()
+        return
 
     elif command =="clean":
         clean_deployment()

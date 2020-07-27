@@ -641,7 +641,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
                     continue
                 else:
-                    if max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                    if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
                         continue
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.

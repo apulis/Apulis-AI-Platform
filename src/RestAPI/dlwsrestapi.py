@@ -2080,7 +2080,7 @@ class GetJobSummary(Resource):
         parser = reqparse.RequestParser()
 
         parser.add_argument('userName')
-        parser.add_argument('projectId')
+        parser.add_argument('jobType')
 
         args = parser.parse_args()
         userName = args["userName"]
@@ -2093,7 +2093,7 @@ class GetJobSummary(Resource):
         resp.headers["dataType"] = "json"
         return resp
 
-api.add_resource(GetConvertDetail, '/GetJobSummary')
+api.add_resource(GetJobSummary, '/GetJobSummary')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

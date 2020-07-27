@@ -468,7 +468,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "nvidiasmi_utilization_gpu{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "avg by (instance,minor_number) (nvidiasmi_utilization_gpu{instance=~\"$node(:[0-9]*)?$\"})",
               "format": "time_series",
               "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "interval": "",
@@ -551,7 +551,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "nvidiasmi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "avg by (instance,minor_number) (nvidiasmi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"})",
               "format": "time_series",
               "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "intervalFactor": 2,
@@ -642,7 +642,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "huaweismi_utilization_npu{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "avg by (instance,minor_number) (huaweismi_utilization_npu{instance=~\"$node(:[0-9]*)?$\"})",
               "format": "time_series",
               "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "interval": "",
@@ -725,7 +725,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "huaweismi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "avg by (instance,minor_number) (huaweismi_utilization_memory{instance=~\"$node(:[0-9]*)?$\"})",
               "format": "time_series",
               "legendFormat": "{{'{{'}}minor_number{{'}}'}}",
               "intervalFactor": 2,

@@ -2177,6 +2177,8 @@ class DataHandler(object):
 
         try:
             query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' group by jobStatus;" % (self.jobtablename, userName, jobType)
+            print(query)
+            
             with MysqlConn() as conn:
                 records = conn.select_many(query)
 

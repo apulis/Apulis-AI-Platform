@@ -629,15 +629,15 @@ userGroup:
         ```
         ./deploy.py --verbose docker push restfulapi2
         ./deploy.py --verbose docker push webui3
-        ./deploy.py --nocache docker push custom-user-dashboard-frontend
-        ./deploy.py --nocache docker push custom-user-dashboard-backend
+        ./deploy.py docker push custom-user-dashboard-frontend
+        ./deploy.py docker push custom-user-dashboard-backend
         ```
     - master为ARM64架构
         ```
         ./deploy.py --verbose --archtype arm64 docker push restfulapi2
         ./deploy.py --verbose --archtype arm64 docker push webui3
-        ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-frontend
-        ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-backend
+        ./deploy.py --archtype arm64 docker push custom-user-dashboard-frontend
+        ./deploy.py --archtype arm64 docker push custom-user-dashboard-backend
         ```
 
 4. ##### 编译对请求加密组件openresty

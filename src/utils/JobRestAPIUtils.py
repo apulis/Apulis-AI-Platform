@@ -1348,7 +1348,10 @@ def GetEndpoints(userName, jobId):
                         port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
                         epItem["port"] = port
                         if "nodeName" in endpoint:
-                            epItem["nodeName"],epItem["domain"] = config["master_private_ip"].split(".",1)
+                            if "master_private_ip" in config:
+                                epItem["nodeName"], epItem["domain"] = config["master_private_ip"].split(".", 1)
+                            else:
+                                epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
                         if epItem["name"] == "ssh":
                             try:
                                 desc = list(yaml.full_load_all(base64.b64decode(job["jobDescription"])))

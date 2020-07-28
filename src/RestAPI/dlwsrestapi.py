@@ -679,7 +679,6 @@ class ListInferenceJobV2(Resource):
                 one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
                 one["duration"] = time.time()*1000 - one["jobTime"]
                 tmp.append(one)
-        tmp.sort(key=lambda x: x["jobTime"])
         if not page:
             page = 1
         if not size:

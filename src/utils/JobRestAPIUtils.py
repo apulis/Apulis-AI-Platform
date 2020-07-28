@@ -619,7 +619,7 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             dataHandler.Close()
     return jobs
 
-def ListInferenceJob(jobOwner,vcName,num,search=None,status=None):
+def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orderBy=None):
     jobs = {}
     dataHandler = None
     try:
@@ -627,7 +627,7 @@ def ListInferenceJob(jobOwner,vcName,num,search=None,status=None):
         if jobOwner == "all":
             jobs = dataHandler.ListInferenceJob("all", vcName, num, status, ("=", "or"),jobName=search)
         else:
-            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num,status,jobName=search)
+            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num,status,jobName=search,order=order,orderBy=orderBy)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:

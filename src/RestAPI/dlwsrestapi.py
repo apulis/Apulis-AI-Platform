@@ -630,10 +630,12 @@ class ListInferenceJobV2(Resource):
         parser.add_argument('jobOwner')
         parser.add_argument('name')
         parser.add_argument('status')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
         args = parser.parse_args()
         page = args["page"]
         size = args["size"]
-        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"])
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"],args["order"],args["orderBy"])
         jobs.pop("meta",None)
         for _, joblist in jobs.items():
             if isinstance(joblist, list):

@@ -627,7 +627,7 @@ def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orde
         if jobOwner == "all":
             jobs = dataHandler.ListInferenceJob("all", vcName, num, status, ("=", "or"),jobName=search)
         else:
-            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num,status,jobName=search,order=order,orderBy=orderBy)
+            jobs = dataHandler.ListInferenceJobV2(jobOwner, vcName, num,status,jobName=search,order=order,orderBy=orderBy)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:

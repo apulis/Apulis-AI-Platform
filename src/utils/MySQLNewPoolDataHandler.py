@@ -1401,6 +1401,82 @@ class DataHandler(object):
         return ret
 
     @record
+    def ListInferenceJobV2(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None,order=None,orderBy=None):
+        ret = []
+
+        conn = None
+        cursor = None
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
+                self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
+                self.jobprioritytablename)
+            if userName != "all":
+                query += " and userName = '%s'" % userName
+
+            if vcName != "all":
+                query += " and vcName = '%s'" % vcName
+
+            if jobName:
+                query += " and jobName like '%%%s%%'" % jobName
+
+            if status:
+                if "," not in status:
+                    query += " and jobStatus %s '%s'" % (op[0], status)
+                else:
+                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_statement = (" " + op[1] + " ").join(status_list)
+                    query += " and ( %s ) " % status_statement
+
+            if not orderBy:
+                orderBy = "jobTime"
+            if order:
+                if order not in ["desc", "asc"]:
+                    order = "desc"
+            else:
+                order = "desc"
+            if orderBy:
+                query += " order by %s %s" %(orderBy,order)
+
+            if num is not None:
+                query += " limit %s " % str(num)
+            cursor.execute(query)
+
+            columns = [column[0] for column in cursor.description]
+            data = cursor.fetchall()
+            for item in data:
+                record = dict(zip(columns, item))
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
+                endpoints = record["endpoints"]
+                if endpoints:
+                    endpoints = json.loads(record["endpoints"]).values()
+                    if len(endpoints)==1:
+                        endpoint = endpoints[0]
+                        if endpoint["status"]=="running":
+                            if "master_private_ip" in config:
+                                domain = config["master_private_ip"]
+                            else:
+                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
+                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
+                                                          base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                ret.append(record)
+            conn.commit()
+        except Exception as e:
+            logger.exception('GetJobListV2 Exception: %s', str(e))
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+        return ret
+
+    @record
     def ListModelConversionJob(self, userName, vcName, status=None, op=("=", "or"), pageNum=None, pageSize=None, name=None, type=None, order=None, orderBy=None):
         ret = {}
         ret["queuedJobs"] = []

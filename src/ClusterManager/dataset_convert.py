@@ -118,12 +118,12 @@ def find_dataset_creator(projectId):
     creator = infos[projectId]["creator"]
     return creator
 
-def find_dataset_bind_path(projectId,datasetId):
+def find_dataset_bind_path(projectId,datasetId,isPrivate=False):
     path = os.path.join(config["data_platform_path"], "private/account/%s/membership.json" % (projectId))
     with open(path, "r") as f:
         infos = json.loads(f.read())
     ret = infos["dataSets"][datasetId]["dataSetPath"]
-    return ret
+    return ret.replace("/data","/dlwsdata/storage") if not isPrivate else ret.replace("/home","/dlwsdata/work")
 
 def DoDataConvert():
     dataHandler = DataHandler()

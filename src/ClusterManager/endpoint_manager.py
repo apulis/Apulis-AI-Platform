@@ -124,7 +124,7 @@ def kubectl_exec(params, timeout=None):
     try:
         #print ("bash -c %s %s" % (config["kubelet-path"], params))
         # TODO set the timeout
-        output = subprocess32.check_output(["bash", "-c", config["kubelet-path"] + " " + params], timeout=timeout)
+        output = subprocess32.call(["bash", "-c", config["kubelet-path"] + " " + params], timeout=timeout)
     except Exception as e:
         logger.exception("kubectl exec")
         return str(e)

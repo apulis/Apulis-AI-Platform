@@ -3214,7 +3214,7 @@ def update_grafana_alert_config():
         if "smtp" in config["grafana_alert"]:
             config["grafana_alert"]["enabled"] = "true"
     else:
-        config["grafana_alert"] = ""
+        config["grafana_alert"] = {}
         config["grafana_alert"]["enabled"] = "false"
 
 def render_service_templates():
@@ -5410,7 +5410,7 @@ Command:
   rendertemplate template_file target_file
   renderservice
   renderimage
-  
+
   upgrade_masters Upgrade the master nodes.
   upgrade_workers [nodes] Upgrade the worker nodes. If no additional node is specified, all nodes will be updated.
   upgrade [nodes] Upgrade the cluster and nodes. If no additional node is specified, all nodes will be updated.

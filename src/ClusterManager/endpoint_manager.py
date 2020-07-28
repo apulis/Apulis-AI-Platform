@@ -152,7 +152,7 @@ def is_server_ready(endpoint):
     elif port_name == "tensorboard":
         cmd = "ps -ef|grep tensorboard"
     if cmd:
-        output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
+        output = kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
         if output == "":
             return False
     return True

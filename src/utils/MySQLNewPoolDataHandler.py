@@ -312,7 +312,7 @@ class DataHandler(object):
                     PRIMARY KEY (`id`)
                 )
                 AS SELECT \'%s\' AS vcName, NULL AS parent, '%s' AS quota, '{}' AS metadata;
-                """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'],default_type)
+                """ % (self.vctablename, config['defalt_virtual_cluster_name'],default_type)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)

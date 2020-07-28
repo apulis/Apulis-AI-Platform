@@ -443,13 +443,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       } else {
         job.resourcegpu = gpus;
       }
-      // if (type === 'PSDistJob') {
-      //   if (workers * 8 > gpuAvailable) {
-      //     if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
-      //       return;
-      //     }
-      //   }
-      // }
+      if (type === 'PSDistJob') {
+        if (workers * gpuNumPerDevice > gpuAvailable) {
+          if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
+            return;
+          }
+        }
+      }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
     }
   };

@@ -153,7 +153,7 @@ def is_server_ready(endpoint):
         cmd = "ps -ef|grep tensorboard"
     if cmd:
         output = kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
-        if output == "":
+        if output != "":
             return False
     return True
 

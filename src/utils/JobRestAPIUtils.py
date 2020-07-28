@@ -619,7 +619,7 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             dataHandler.Close()
     return jobs
 
-def ListInferenceJob(jobOwner,vcName,num,search=None,status=None):
+def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orderBy=None):
     jobs = {}
     dataHandler = None
     try:
@@ -627,7 +627,7 @@ def ListInferenceJob(jobOwner,vcName,num,search=None,status=None):
         if jobOwner == "all":
             jobs = dataHandler.ListInferenceJob("all", vcName, num, status, ("=", "or"),jobName=search)
         else:
-            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num,status,jobName=search)
+            jobs = dataHandler.ListInferenceJobV2(jobOwner, vcName, num,status,jobName=search,order=order,orderBy=orderBy)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:
@@ -1305,7 +1305,10 @@ def GetEndpoints(userName, jobId):
                         port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
                         epItem["port"] = port
                         if "nodeName" in endpoint:
-                            epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
+                            if "master_private_ip" in config:
+                                epItem["nodeName"], epItem["domain"] = config["master_private_ip"].split(".", 1)
+                            else:
+                                epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
                         if epItem["name"] == "ssh":
                             try:
                                 desc = list(yaml.full_load_all(base64.b64decode(job["jobDescription"])))

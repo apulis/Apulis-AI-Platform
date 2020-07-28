@@ -124,7 +124,7 @@ def kubectl_exec(params, timeout=None):
     try:
         #print ("bash -c %s %s" % (config["kubelet-path"], params))
         # TODO set the timeout
-        output = subprocess32.call(["bash", "-c", config["kubelet-path"] + " " + params], timeout=timeout)
+        output = subprocess32.check_output(["bash", "-c", config["kubelet-path"] + " " + params], timeout=timeout)
         logger.info(["bash", "-c", config["kubelet-path"] + " " + params,output])
     except Exception as e:
         logger.exception("kubectl exec")
@@ -153,8 +153,8 @@ def is_server_ready(endpoint):
     elif port_name == "tensorboard":
         cmd = "ps -ef|grep tensorboard"
     if cmd:
-        output = kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
-        if output != "":
+        output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
+        if output == "":
             return False
     return True
 

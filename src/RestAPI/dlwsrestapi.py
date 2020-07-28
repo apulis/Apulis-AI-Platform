@@ -726,8 +726,8 @@ class ListModelConversionJob(Resource):
             args["vcName"],
             pageNum=args["num"],
             pageSize=args["size"],
-            name=args["name"],
-            type=args["type"],
+            name=args["jobName"],
+            type=args["convType"],
             order=args["order"],
             orderBy=args["orderBy"]
         )

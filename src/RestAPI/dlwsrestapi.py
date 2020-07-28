@@ -668,17 +668,14 @@ class ListInferenceJobV2(Resource):
         page = args["page"]
         size = args["size"]
         jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"],args["order"],args["orderBy"])
-        jobs.pop("meta",None)
-        for _, joblist in jobs.items():
-            if isinstance(joblist, list):
-                for job in joblist:
-                    remove_creds(job)
+        for job in jobs:
+            remove_creds(job)
+
         tmp = []
-        for k,v in jobs.items():
-            for one in v:
-                one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
-                one["duration"] = time.time()*1000 - one["jobTime"]
-                tmp.append(one)
+        for one in jobs:
+            one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
+            one["duration"] = time.time()*1000 - one["jobTime"]
+            tmp.append(one)
         if not page:
             page = 1
         if not size:

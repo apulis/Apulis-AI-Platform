@@ -309,8 +309,7 @@ class DataHandler(object):
                     `quota`     varchar(255) NOT NULL,
                     `metadata`  TEXT NOT NULL,
                     `time`      DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    CONSTRAINT `hierarchy` FOREIGN KEY (`parent`) REFERENCES `%s` (`vcName`)
+                    PRIMARY KEY (`id`)
                 )
                 AS SELECT \'%s\' AS vcName, NULL AS parent, '%s' AS quota, '{}' AS metadata;
                 """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'],default_type)
@@ -1299,16 +1298,16 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), 
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]),
                        "runningJobs": len(ret["runningJobs"]),
-                       "finishedJobs": len(ret["finishedJobs"]), 
+                       "finishedJobs": len(ret["finishedJobs"]),
                        "visualizationJobs": len(ret["visualizationJobs"]),
                        "totalJobs": int(total)}
 
         return ret
 
     @record
-    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None):
+    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None,order=None,orderBy=None):
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1342,7 +1341,18 @@ class DataHandler(object):
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            query += " order by jobTime Desc"
+            if orderBy:
+                if orderBy not in ["name","jobTime"]:
+                    orderBy = "jobTime"
+            else:
+                orderBy = "jobTime"
+            if order:
+                if order not in ["desc", "asc"]:
+                    order = "desc"
+            else:
+                order = "desc"
+            if orderBy:
+                query += " order by %s %s" %(orderBy,order)
 
             if num is not None:
                 query += " limit %s " % str(num)
@@ -2178,7 +2188,7 @@ class DataHandler(object):
         try:
             query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' group by jobStatus;" % (self.jobtablename, userName, jobType)
             print(query)
-            
+
             with MysqlConn() as conn:
                 records = conn.select_many(query)
 

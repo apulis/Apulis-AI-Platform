@@ -1253,7 +1253,7 @@ class DataHandler(object):
                 query += " order by jobTime Desc"
             else:
                 query += "order by %s %s" % (orderBy, order)
-                
+
             #query += " order by jobTime Desc"
             if pageNum is not None and pageSize is not None:
                 query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
@@ -1264,7 +1264,7 @@ class DataHandler(object):
             cursor.execute(query)
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
-            total = None
+            total = 0
 
             for item in data:
 
@@ -1272,23 +1272,24 @@ class DataHandler(object):
 
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                else:
+                    pass
 
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == jobType:
-                        ret["runningJobs"].append(record)
 
-                    elif record["jobType"] == "visualization":
+                    if record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)
+                    else:
+                        pass
 
-                elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
-                    "jobStatus"] == "unapproved":
-                    ret["queuedJobs"].append(record)
+                    ret["allJobs"].append(record)
 
                 else:
                     ret["finishedJobs"].append(record)
+                    ret["allJobs"].append(record)
 
                 ## get total count
                 if total is None and record["total"] is not None:

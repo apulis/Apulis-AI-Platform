@@ -25,6 +25,9 @@ spec:
         env:
         - name: ASPNETCORE_ENVIRONMENT
           value: Development
+        ports:
+        - containerPort: 3088
+          name: main
         readinessProbe:
           failureThreshold: 3
           initialDelaySeconds: 3

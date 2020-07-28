@@ -312,7 +312,7 @@ class DataHandler(object):
                     PRIMARY KEY (`id`)
                 )
                 AS SELECT \'%s\' AS vcName, NULL AS parent, '%s' AS quota, '{}' AS metadata;
-                """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'],default_type)
+                """ % (self.vctablename, config['defalt_virtual_cluster_name'],default_type)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)
@@ -1341,10 +1341,7 @@ class DataHandler(object):
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            if orderBy:
-                if orderBy not in ["name","jobTime"]:
-                    orderBy = "jobTime"
-            else:
+            if not orderBy:
                 orderBy = "jobTime"
             if order:
                 if order not in ["desc", "asc"]:

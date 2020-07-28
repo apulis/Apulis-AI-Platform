@@ -1,0 +1,11 @@
+{
+  "uid": "default-email-notification",
+  "name": "default email notification",
+  "type": "email",
+  "isDefault": true,
+  "sendReminder": true,
+  "frequency": "15m",
+  "settings": {
+    "addresses": "{{cnf["grafana_alert"]["receiver"]}}"
+  }
+}

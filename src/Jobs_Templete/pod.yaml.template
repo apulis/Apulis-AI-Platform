@@ -65,7 +65,7 @@ spec:
         topologyKey: "kubernetes.io/hostname"
       {% else %}
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 50 # For regular jobs, distributed jobs will consume all gpus in node
+      - weight: 50   # For regular jobs, distributed jobs will consume all gpus in node
         podAffinityTerm:
           labelSelector:
             matchExpressions:
@@ -85,7 +85,7 @@ spec:
           topologyKey: "failure-domain.beta.kubernetes.io/region"
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: 50
+      - weight: {% if jobRole == "worker" %}100{% else %}50{% endif %}
         podAffinityTerm:
           labelSelector:
             matchExpressions:
@@ -93,7 +93,7 @@ spec:
               operator: In
               values:
               - "{{ job["jobId"] }}"
-          topologyKey: "failure-domain.beta.kubernetes.io/zone"
+          topologyKey: {% if jobRole == "worker" %}"kubernetes.io/hostname"{% else %}"failure-domain.beta.kubernetes.io/zone"{% endif %}
       {% endif %}
   {% endif %}
   {% if job["dnsPolicy"] %}

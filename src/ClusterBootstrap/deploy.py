@@ -1024,7 +1024,7 @@ def get_kubectl_binary(force = False):
     get_other_binary()
 
 def get_hyperkube_docker(force = False) :
-    
+
     ## not need anymore
     return
 
@@ -3209,11 +3209,20 @@ def set_zookeeper_cluster():
     config["zookeepernodes"] = ";".join(nodes)
     config["zookeepernumberofnodes"] = str(len(nodes))
 
+def update_grafana_alert_config():
+    if "grafana_alert" in config:
+        if "smtp" in config["grafana_alert"]:
+            config["grafana_alert"]["enabled"] = "true"
+    else:
+        config["grafana_alert"] = ""
+        config["grafana_alert"]["enabled"] = "false"
+
 def render_service_templates():
     allnodes = get_nodes(config["clusterId"])
     # Additional parameter calculation
     set_zookeeper_cluster()
     generate_hdfs_containermounts()
+    update_grafana_alert_config()
     # Multiple call of render_template will only render the directory once during execution.
     utils.render_template_directory( "./services/", "./deploy/services/", config)
     add_service_config()

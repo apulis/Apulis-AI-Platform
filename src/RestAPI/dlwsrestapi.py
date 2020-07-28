@@ -610,15 +610,18 @@ class ListJobsV3(Resource):
         parser.add_argument('searchWord')
 
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], 
-                args["jobType"], args["jobStatus"], 
+        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"],
+                args["jobType"], args["jobStatus"],
                 args["pageNum"], args["pageSize"],
                 args["searchWord"])
 
-        for _, joblist in jobs.items():
-            if isinstance(joblist, list):
-                for job in joblist:
-                    remove_creds(job)
+        if jobs is not None:
+            for _, joblist in jobs.items():
+                if isinstance(joblist, list):
+                    for job in joblist:
+                        remove_creds(job)
+        else:
+            pass
 
         resp = generate_response(jobs)
         return resp
@@ -712,10 +715,24 @@ class ListModelConversionJob(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('num')
+        parser.add_argument('size')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
+        parser.add_argument('jobName')
+        parser.add_argument('convType')
+        parser.add_argument('order')
+        parser.add_argument('orderBy')
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], args["num"])
+        jobs = JobRestAPIUtils.ListModelConversionJob(
+            args["jobOwner"],
+            args["vcName"],
+            pageNum=args["num"],
+            pageSize=args["size"],
+            name=args["jobName"],
+            type=args["convType"],
+            order=args["order"],
+            orderBy=args["orderBy"]
+        )
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:
@@ -1820,7 +1837,7 @@ class Endpoint(Resource):
     @api.doc(params=model.EndpointPost.params)
     @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
-        
+
         '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -2078,12 +2095,11 @@ api.add_resource(GetConvertDetail, '/GetConvertDetail')
 
 class GetJobSummary(Resource):
 
-    @api.doc(params=model.GetJobSummary.params)
     def get(self):
         parser = reqparse.RequestParser()
 
         parser.add_argument('userName')
-        parser.add_argument('projectId')
+        parser.add_argument('jobType')
 
         args = parser.parse_args()
         userName = args["userName"]
@@ -2096,7 +2112,7 @@ class GetJobSummary(Resource):
         resp.headers["dataType"] = "json"
         return resp
 
-api.add_resource(GetConvertDetail, '/GetJobSummary')
+api.add_resource(GetJobSummary, '/GetJobSummary')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

@@ -1210,8 +1210,8 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
-                        jobType, jobTime, jobParams, priority FROM {} left join {} 
+            query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
+                        jobType, jobTime, jobParams, priority FROM {} left join {}
                         on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename,
                         self.jobtablename, self.jobprioritytablename,
                         self.jobtablename, self.jobprioritytablename,
@@ -1404,12 +1404,13 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListModelConversionJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
+    def ListModelConversionJob(self, userName, vcName, status=None, op=("=", "or"), pageNum=None, pageSize=None, name=None, type=None, order=None, orderBy=None):
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
+        total = None
 
         conn = None
         cursor = None
@@ -1417,13 +1418,19 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1".format(
+            query = "SELECT count(*) OVER() as total, j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1".format(
                 self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
 
             if vcName != "all":
                 query += " and vcName = '%s'" % vcName
+
+            if name is not None:
+                query += " and jobName like '%s'" % name
+
+            if type is not None:
+                query += " and modelconversionType = '%s'" % type
 
             if status is not None:
                 if "," not in status:
@@ -1433,14 +1440,23 @@ class DataHandler(object):
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            query += " order by jobTime Desc"
+            if order != "asc":
+                order = "desc"
 
-            if num is not None:
-                query += " limit %s " % str(num)
+            if orderBy is None or orderBy == "":
+                query += " order by jobTime Desc"
+            else:
+                query += "order by %s %s" % (orderBy, order)
+
+            if pageNum is not None and pageSize is not None:
+                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+            if pageNum is not None and pageSize is None:
+                query += " limit %s " % pageNum
             cursor.execute(query)
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
+
             for item in data:
                 record = dict(zip(columns, item))
                 if record["jobStatusDetail"] is not None:
@@ -1458,6 +1474,11 @@ class DataHandler(object):
                     ret["queuedJobs"].append(record)
                 else:
                     ret["finishedJobs"].append(record)
+
+                if total is None and record["total"] is not None:
+                    total = record["total"]
+                else:
+                    pass
             conn.commit()
         except Exception as e:
             logger.exception('GetModelConversionJobs Exception: %s', str(e))
@@ -1469,6 +1490,7 @@ class DataHandler(object):
 
         ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
+        ret["total"] = total
         return ret
 
     @record

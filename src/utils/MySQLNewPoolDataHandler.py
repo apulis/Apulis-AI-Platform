@@ -1228,10 +1228,7 @@ class DataHandler(object):
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            if orderBy:
-                if orderBy not in ["name","jobTime"]:
-                    orderBy = "jobTime"
-            else:
+            if not orderBy:
                 orderBy = "jobTime"
             if order:
                 if order not in ["desc", "asc"]:

@@ -1478,8 +1478,9 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"total": total, "queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
+        ret["total"] = total
         return ret
 
     @record

@@ -1195,7 +1195,8 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, pageSize, searchWord, status=None, op=("=", "or")):
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, 
+            pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
 
         ret = {}
         ret["queuedJobs"] = []
@@ -1245,7 +1246,15 @@ class DataHandler(object):
             else:
                 pass
 
-            query += " order by jobTime Desc"
+            if order != "asc":
+                order = "desc"
+
+            if orderBy is None or orderBy == "":
+                query += " order by jobTime Desc"
+            else:
+                query += "order by %s %s" % (orderBy, order)
+                
+            #query += " order by jobTime Desc"
             if pageNum is not None and pageSize is not None:
                 query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
             else:

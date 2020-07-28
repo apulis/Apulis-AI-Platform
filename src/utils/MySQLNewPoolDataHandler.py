@@ -1400,6 +1400,7 @@ class DataHandler(object):
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
+        total = None
 
         conn = None
         cursor = None
@@ -1445,7 +1446,6 @@ class DataHandler(object):
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
-            total = None
 
             for item in data:
                 record = dict(zip(columns, item))

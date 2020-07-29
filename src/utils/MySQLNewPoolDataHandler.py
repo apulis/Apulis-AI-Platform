@@ -1195,7 +1195,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, 
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum,
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
 
         ret = {}
@@ -1514,7 +1514,7 @@ class DataHandler(object):
                 query += " and jobName like '%s'" % name
 
             if type is not None:
-                query += " and modelconversionType = '%s'" % type
+                query += " and m.type = '%s'" % type
 
             if status is not None:
                 if "," not in status:

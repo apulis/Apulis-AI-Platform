@@ -608,12 +608,14 @@ class ListJobsV3(Resource):
         parser.add_argument('pageNum')
         parser.add_argument('pageSize')
         parser.add_argument('searchWord')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
 
         args = parser.parse_args()
         jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"],
                 args["jobType"], args["jobStatus"],
                 args["pageNum"], args["pageSize"],
-                args["searchWord"])
+                args["searchWord"], args["orderBy"], args["order"])
 
         if jobs is not None:
             for _, joblist in jobs.items():

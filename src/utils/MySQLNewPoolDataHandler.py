@@ -1195,13 +1195,15 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum, pageSize, searchWord, status=None, op=("=", "or")):
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum,
+            pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
 
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
+        ret["allJobs"] = []
 
         conn = None
         cursor = None
@@ -1245,7 +1247,15 @@ class DataHandler(object):
             else:
                 pass
 
-            query += " order by jobTime Desc"
+            if order != "asc":
+                order = "desc"
+
+            if orderBy is None or orderBy == "":
+                query += " order by jobTime Desc"
+            else:
+                query += "order by %s %s" % (orderBy, order)
+
+            #query += " order by jobTime Desc"
             if pageNum is not None and pageSize is not None:
                 query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
             else:
@@ -1255,7 +1265,7 @@ class DataHandler(object):
             cursor.execute(query)
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
-            total = None
+            total = 0
 
             for item in data:
 
@@ -1263,26 +1273,27 @@ class DataHandler(object):
 
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                else:
+                    pass
 
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == jobType:
-                        ret["runningJobs"].append(record)
 
-                    elif record["jobType"] == "visualization":
+                    if record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)
+                    else:
+                        pass
 
-                elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
-                    "jobStatus"] == "unapproved":
-                    ret["queuedJobs"].append(record)
+                    ret["allJobs"].append(record)
 
                 else:
                     ret["finishedJobs"].append(record)
+                    ret["allJobs"].append(record)
 
                 ## get total count
-                if total is None and record["total"] is not None:
+                if total == 0 and record["total"] is not None:
                     total = record["total"]
                 else:
                     pass
@@ -1505,7 +1516,7 @@ class DataHandler(object):
                 query += " and jobName like '%s'" % name
 
             if type is not None:
-                query += " and modelconversionType = '%s'" % type
+                query += " and m.type = '%s'" % type
 
             if status is not None:
                 if "," not in status:

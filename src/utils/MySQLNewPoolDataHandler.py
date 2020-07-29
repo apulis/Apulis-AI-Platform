@@ -1203,6 +1203,7 @@ class DataHandler(object):
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
+        ret["allJobs"] = []
 
         conn = None
         cursor = None
@@ -1292,7 +1293,7 @@ class DataHandler(object):
                     ret["allJobs"].append(record)
 
                 ## get total count
-                if total is None and record["total"] is not None:
+                if total == 0 and record["total"] is not None:
                     total = record["total"]
                 else:
                     pass

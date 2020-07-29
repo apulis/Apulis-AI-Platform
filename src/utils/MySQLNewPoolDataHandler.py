@@ -1372,6 +1372,8 @@ class DataHandler(object):
                         if endpoint["status"]=="running":
                             if "master_private_ip" in config:
                                 domain = config["master_private_ip"]
+                                if "extranet_port" in config:
+                                    domain += ":"+ str(config["extranet_port"])
                             else:
                                 domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
                             record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
@@ -1685,6 +1687,8 @@ class DataHandler(object):
                         if endpoint["status"]=="running":
                             if "master_private_ip" in config:
                                 domain = config["master_private_ip"]
+                                if "extranet_port" in config:
+                                    domain += ":"+ str(config["extranet_port"])
                             else:
                                 domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
                             record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \

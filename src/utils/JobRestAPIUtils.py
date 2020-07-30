@@ -729,6 +729,15 @@ def KillJob(userName, jobId):
     dataHandler.Close()
     return ret
 
+def DeleteJob(jobId):
+    CanDeleteJobStatus = ["failed","error","unapproved","finished","killed","paused"]
+    ret = False
+    dataHandler = DataHandler()
+    job = dataHandler.GetJobTextFields(jobId, ["jobStatus"])
+    if job is not None and job["jobStatus"] in CanDeleteJobStatus:
+        ret = dataHandler.DeleteJob(jobId)
+    dataHandler.Close()
+    return ret
 
 def InvalidateJobListCache(vcName):
     CacheManager.Invalidate("GetAllPendingJobs", vcName)

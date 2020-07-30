@@ -786,7 +786,25 @@ class KillJob(Resource):
 ##
 api.add_resource(KillJob, '/KillJob')
 
+class DeleteJob(Resource):
+    def delete(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        result = JobRestAPIUtils.DeleteJob(jobId)
+        ret = {}
+        if result:
+            ret["result"] = "Success, the job record is deleted."
+        else:
+            ret["result"] = "Cannot delete the job. Job ID:" + jobId
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
 
+        return resp
+
+api.add_resource(DeleteJob, '/DeleteJob')
 
 class PauseJob(Resource):
     @api.doc(params=model.PauseJob.params)

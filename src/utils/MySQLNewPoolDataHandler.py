@@ -2293,6 +2293,20 @@ class DataHandler(object):
 
         return ret
 
+    @record
+    def DeleteJob(self,jobId):
+        ret = False
+        try:
+            query = "DELETE FROM `%s` where jobId=%s " % (self.jobtablename, "%s")
+            with MysqlConn() as conn:
+                conn.insert_one(query,[jobId])
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('DeleteJob Exception: %s', str(e))
+        return ret
+
+
     def __del__(self):
         logger.debug("********************** deleted a DataHandler instance *******************")
         self.Close()

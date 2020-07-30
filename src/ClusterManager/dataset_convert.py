@@ -118,6 +118,13 @@ def find_dataset_creator(projectId):
     creator = infos[projectId]["creator"]
     return creator
 
+def find_dataset_bind_path(projectId,datasetId,isPrivate=False):
+    path = os.path.join(config["data_platform_path"], "private/account/%s/membership.json" % (projectId))
+    with open(path, "r") as f:
+        infos = json.loads(f.read())
+    ret = infos["dataSets"][datasetId]["dataSetPath"]
+    return ret.replace("/data","/dlwsdata/storage") if not isPrivate else ret.replace("/home","/dlwsdata/work")
+
 def DoDataConvert():
     dataHandler = DataHandler()
     jobs = dataHandler.getConvertList(targetStatus="queued")
@@ -129,12 +136,14 @@ def DoDataConvert():
                 if judge_datasets_is_private(oneJob["projectId"],oneJob["datasetId"]):
                     username =find_dataset_creator(oneJob["projectId"])
                     coco_file_path = os.path.join(config["storage-mount-path"], "work/%s/data_platform/%s/%s/convert_coco.json" % (username,oneJob["projectId"],oneJob["datasetId"]))
-                    show_coco_file_path = "/home/%s/ata_platform/%s/%s/convert_coco.json" % (username,oneJob["projectId"],oneJob["datasetId"])
+                    show_coco_file_path = "/home/%s/data_platform/%s/%s" % (username,oneJob["projectId"],oneJob["datasetId"])
                     mkdirs(os.path.dirname(coco_file_path))
+                    os.system("ln -s %s %s" %(find_dataset_bind_path(oneJob["projectId"],oneJob["datasetId"]),os.path.join(os.path.dirname(coco_file_path),"images")))
                 else:
                     coco_file_path = os.path.join(config["storage-mount-path"],"storage/data_platform/%s/%s/convert_coco.json" % (oneJob["projectId"],oneJob["datasetId"]))
-                    show_coco_file_path = "/data/data_platform/%s/%s/convert_coco.json" % (oneJob["projectId"],oneJob["datasetId"])
+                    show_coco_file_path = "/data/data_platform/%s/%s" % (oneJob["projectId"],oneJob["datasetId"])
                     mkdirs(os.path.dirname(coco_file_path))
+                    os.system("ln -s %s %s" % (find_dataset_bind_path(oneJob["projectId"],oneJob["datasetId"]), os.path.join(os.path.dirname(coco_file_path),"images")))
                 logging.info("=============start convert to format %s" % (oneJob["targetFormat"]))
                 merge_json_to_coco_dataset(list_path,json_path,coco_file_path)
                 dataHandler.updateConvertStatus("finished",oneJob["id"],coco_file_path)

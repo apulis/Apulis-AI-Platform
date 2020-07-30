@@ -25,6 +25,9 @@ spec:
         env:
         - name: ASPNETCORE_ENVIRONMENT
           value: Development
+        ports:
+        - containerPort: 3088
+          name: main
         readinessProbe:
           failureThreshold: 3
           initialDelaySeconds: 3
@@ -42,6 +45,8 @@ spec:
           name: data
         - mountPath: /data
           name: dataset
+        - mountPath: /home
+          name: home
       volumes:
       - name: dotnet-log
         hostPath:
@@ -55,6 +60,9 @@ spec:
       - name: dataset
         hostPath:
           path: /mntdlws/storage
+      - name: home
+        hostPath:
+          path: /mntdlws/work
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

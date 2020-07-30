@@ -44,7 +44,7 @@ def parse_endpoint(endpoint,job=None):
             epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
         elif epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
             epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
-    if epItem["name"] in ["ipython","tensorboard","inference-ur"]:
+    if epItem["name"] in ["ipython","tensorboard","inference-url"]:
         if "extranet_port" in config and config["extranet_port"]:
             epItem["domain"] = epItem["domain"] + ":" + str(config["extranet_port"])
     return epItem

@@ -39,7 +39,8 @@ def parse_endpoints(endpoints):
     if len(endpoints) == 1:
         endpoint = endpoints[0]
         ep = EndpointUtils.parse_endpoint(endpoint)
-        return "http://%s%s/endpoints/v2/%s/v1/models/%s:predict" % (ep["nodeName"],ep["domain"],base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8")),endpoint["modelname"])
+        if ep["status"]=="running":
+            return "http://%s.%s/endpoints/v2/%s/v1/models/%s:predict" % (ep["nodeName"],ep["domain"],ep["port"],ep["modelname"])
 
 class SingletonDBPool(object):
     __instance_lock = threading.Lock()

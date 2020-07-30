@@ -33,6 +33,19 @@ data_handler_fn_histogram = Histogram("datahandler_fn_latency_seconds",
 #                                  buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))
 
 
+def parse_endpoints(endpoints):
+    if len(endpoints) == 1:
+        endpoint = endpoints[0]
+        if endpoint["status"] == "running":
+            if "master_private_ip" in config:
+                domain = config["master_private_ip"]
+                if "extranet_port" in config:
+                    domain += ":" + str(config["extranet_port"])
+            else:
+                domain = config["webportal_node"].split(config["domain"])[0] + config["domain"]
+            return "http://" + domain + "/endpoints/v2/" + \
+                   base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8")) + "/v1/models/" + endpoint["modelname"] + ":predict"
+
 class SingletonDBPool(object):
     __instance_lock = threading.Lock()
 
@@ -1378,17 +1391,7 @@ class DataHandler(object):
                 endpoints = record["endpoints"]
                 if endpoints:
                     endpoints = json.loads(record["endpoints"]).values()
-                    if len(endpoints)==1:
-                        endpoint = endpoints[0]
-                        if endpoint["status"]=="running":
-                            if "master_private_ip" in config:
-                                domain = config["master_private_ip"]
-                                if "extranet_port" in config:
-                                    domain += ":"+ str(config["extranet_port"])
-                            else:
-                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
-                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
-                                                          base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                    record["inference-url"] = parse_endpoints(endpoints)
 
                 if record["jobStatus"] == "running":
                     if record["jobType"] == "InferenceJob":
@@ -1469,17 +1472,8 @@ class DataHandler(object):
                 endpoints = record["endpoints"]
                 if endpoints:
                     endpoints = json.loads(record["endpoints"]).values()
-                    if len(endpoints)==1:
-                        endpoint = endpoints[0]
-                        if endpoint["status"]=="running":
-                            if "master_private_ip" in config:
-                                domain = config["master_private_ip"]
-                                if "extranet_port" in config:
-                                    domain += ":"+ str(config["extranet_port"])
-                            else:
-                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
-                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
-                                                          base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                    record["inference-url"] = parse_endpoints(endpoints)
+
                 ret.append(record)
             conn.commit()
         except Exception as e:
@@ -1695,17 +1689,8 @@ class DataHandler(object):
                 endpoints = record["endpoints"]
                 if endpoints:
                     endpoints = json.loads(record["endpoints"]).values()
-                    if len(endpoints)==1:
-                        endpoint = endpoints[0]
-                        if endpoint["status"]=="running":
-                            if "master_private_ip" in config:
-                                domain = config["master_private_ip"]
-                                if "extranet_port" in config:
-                                    domain += ":"+ str(config["extranet_port"])
-                            else:
-                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
-                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
-                                                      base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                    record["inference-url"] = parse_endpoints(endpoints)
+
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
                 if record["jobParams"] is not None:

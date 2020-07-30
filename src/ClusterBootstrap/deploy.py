@@ -1563,6 +1563,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
     # step 1: acquire vip
     # step 2: init with vip
     # step 3: run kubevip pod
+    return
 
 def update_worker_nodes_by_kubeadm_2(workerNodes):
 

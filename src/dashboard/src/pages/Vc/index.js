@@ -307,7 +307,10 @@ export default class Vc extends React.Component {
   }
 
   onSizeChange = (e) => {
-    this.setState({ size: Number(e.target.value) }, () => {
+    this.setState({
+      size: Number(e.target.value),
+      page: 1
+    }, () => {
       this.getVcList();
     });
   }

@@ -18,6 +18,8 @@ from prometheus_client import Histogram
 import threading
 
 from mysql_conn_pool import MysqlConn,db_connect_histogram
+import EndpointUtils
+
 MysqlConn.config_pool(risk_config={"max_connections":5})
 
 logger = logging.getLogger(__name__)
@@ -36,15 +38,8 @@ data_handler_fn_histogram = Histogram("datahandler_fn_latency_seconds",
 def parse_endpoints(endpoints):
     if len(endpoints) == 1:
         endpoint = endpoints[0]
-        if endpoint["status"] == "running":
-            if "master_private_ip" in config:
-                domain = config["master_private_ip"]
-                if "extranet_port" in config:
-                    domain += ":" + str(config["extranet_port"])
-            else:
-                domain = config["webportal_node"].split(config["domain"])[0] + config["domain"]
-            return "http://" + domain + "/endpoints/v2/" + \
-                   base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8")) + "/v1/models/" + endpoint["modelname"] + ":predict"
+        ep = EndpointUtils.parse_endpoint(endpoint)
+        return "http://%s%s/endpoints/v2/%s/v1/models/%s:predict" % (ep["nodeName"],ep["domain"],base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8")),endpoint["modelname"])
 
 class SingletonDBPool(object):
     __instance_lock = threading.Lock()

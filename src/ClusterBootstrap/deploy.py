@@ -1561,9 +1561,63 @@ def update_worker_nodes_by_kubeadm( nargs ):
 
 def update_HA_master_nodes_by_kubeadm( nargs ):
     # step 1: acquire vip
+    kube_vip = config["kube-vip"]
+    if verbose:
+        print("kube-vip : "+kube_vip)
+
     # step 2: init with vip
+    # *acquire info of primary master
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+    k8sAPIport = config["k8sAPIport"]
+    # *generate certificate key
+    certcmd = "sudo kubeadm init phase upload-certs --upload-certs"
+    certresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,certcmd)
+    cert = certresult.split('\n')[2]
+    # *generate token
+    tokencmd = "sudo kubeadm token create"
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    token = tokenresult.split("\n")[0]
+    hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+    # *print info
+    if verbose:
+        print("Token === %s, hash == %s\ncertificate key == %s" % (token, hash, cert) )
+    # *join all remain master into cluster
+    join_list = get_master_node_host_except_primary()
+    for nodename in join_list:
+        print(nodename)
+        nodeInfo = config["machines"][nodename]
+        print nodeInfo
+        join_cmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kubernetes_master0, k8sAPIport, hash,cert)
+        if verbose:
+            print(join_cmd)
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, join_cmd)
+
     # step 3: run kubevip pod
+    for nodename in join_list:
+        # search device bind with ip
+        search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
+        device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command)
+        if verbose:
+            print ("select device: "+device_name)
+        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"])
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
+
     return
+
+# serve update_HA_master_nodes_by_kubeadm function
+def get_master_node_host_except_primary():
+    remain_master_node_array = []
+    kubernetes_masters_admin = config["kubernetes_master_node"]
+    primary_master_admin = kubernetes_masters_admin[0]
+    for master_admin in kubernetes_masters_admin:
+        if master_admin != primary_master_admin:
+            master_host = master_admin.split('.')[0]
+            remain_master_node_array.append(master_host)
+    return remain_master_node_array
+
 
 def update_worker_nodes_by_kubeadm_2(workerNodes):
 
@@ -3161,7 +3215,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     device_name = os.popen(search_device_command).readlines()[0].strip()
     print (device_name)
 
-    os.system("sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --startAsLeader=true | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip))
+    os.system("sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip))
     print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
     print "The current deployment has:\n"
 

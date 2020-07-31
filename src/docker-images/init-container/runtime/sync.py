@@ -195,7 +195,7 @@ def get_role_idx():
         return "0"
 
 def get_ssh_port():
-    with open("../ssh_config/sshd/sshd_config") as f:
+    with open("../dlts-runtime/ssh_config/sshd/sshd_config") as f:
         for line in f:
 
             stripped_line = line.strip()

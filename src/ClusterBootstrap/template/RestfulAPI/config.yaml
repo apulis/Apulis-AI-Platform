@@ -93,7 +93,7 @@ administrators:
 {% endfor %}
 
 inference:
-  {% for framework,items in cnf["inference"].items() %}{% for one in items %}{{framework}}:
+  {% for framework,items in cnf["inference"].items() %}{{framework}}:{% for one in items %}
     - version: {{one["version"]}}
       support: {% for one_support in one["support"] %}
       - image: {{one_support["image"]}}

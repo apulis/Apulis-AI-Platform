@@ -11,7 +11,7 @@ interface Context {
   email?: string;
   familyName?: string;
   givenName?: string;
-  administrators?: Array<[]>;
+  administrators?: string[];
   permissionList?: string[];
   currentRole?: string[];
   userGroupPath?: string;
@@ -29,7 +29,7 @@ interface ProviderProps {
   userName?: string;
   isAdmin?: boolean;
   isAuthorized?: boolean;
-  administrators?: Array<[]>;
+  administrators?: string[];
   permissionList?: string[];
   currentRole?: string[];
   userGroupPath?: string;

@@ -145,9 +145,9 @@ def SSH_exec_cmd(identity_file, user,host,cmd,showCmd=True):
         return;
 
     if showCmd or verbose:
-        print ("""ssh -f -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
+        print ("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
 
-    os.system("""ssh -f -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
+    os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
 
     return
 

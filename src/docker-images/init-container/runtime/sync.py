@@ -194,6 +194,23 @@ def get_role_idx():
                      os.environ)
         return "0"
 
+def get_ssh_port():
+    with open("../ssh_config/sshd/sshd_config") as f:
+        for line in f:
+
+            stripped_line = line.strip()
+            if stripped_line.startswith("Port "):
+                ports = stripped_line.split()
+                if len(ports) >= 2:
+                    return int(ports[1])
+                else:
+                    pass
+            else:
+                continue
+                
+
+    return 22
+
 def main(args):
 
     pod_name = get_pod_name()
@@ -216,7 +233,7 @@ def main(args):
     if os.environ.get("DLWS_HOST_NETWORK") == "enable":
         ssh_port = find_free_port()
     else:
-        ssh_port = 22
+        ssh_port = get_ssh_port()
 
     ps_num = get_ps_number()
     worker_num = get_worker_number()

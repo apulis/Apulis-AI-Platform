@@ -235,7 +235,7 @@
 
 3. 初始化部署环境
 
-   # 执行环境配置脚本
+   执行环境配置脚本
    ./scripts/prepare_ubuntu_dev.sh
 
    ```

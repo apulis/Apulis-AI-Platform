@@ -444,7 +444,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         job.resourcegpu = gpus;
       }
       if (type === 'PSDistJob') {
-        if (workers * 8 > gpuAvailable) {
+        if (workers * gpuNumPerDevice > gpuAvailable) {
           if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
             return;
           }

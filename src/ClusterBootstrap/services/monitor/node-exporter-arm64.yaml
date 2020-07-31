@@ -18,10 +18,10 @@ spec:
       name: node-exporter
     spec:
       nodeSelector:
-        archType: amd64
+        archType: arm64
       containers:
           #- image: prom/node-exporter:v0.16.0
-      - image: {{cnf["dockers"]["container"]["node-exporter"]["fullname"]}}
+      - image: {{cnf["dockers"]["container"]["node-exporter"]["fullname"]}}-arm64
         imagePullPolicy: IfNotPresent
         readinessProbe:
           tcpSocket:

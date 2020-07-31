@@ -44,6 +44,8 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
     if (!/localhost/.test(href)) {
       onClick('/user/login');
       // return null;
+    } else {
+      alert('TO LOGIN！')
     }
     return (
       <AuthContext.Provider
@@ -56,6 +58,8 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
     if (!/localhost/.test(href)) {
       onClick('/user/register');
       // return null;
+    } else {
+      alert('TO LOGIN！')
     }
     return (
       <AuthContext.Provider

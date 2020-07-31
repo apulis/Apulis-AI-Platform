@@ -59,7 +59,7 @@ axios.interceptors.response.use((response: AxiosResponse) => {
       message('error', codeMessage[status]);
     }
   } else {
-    message('error', 'unexpected error')
+    message('error', 'Network Error')
   }
   
   return Promise.reject(error)

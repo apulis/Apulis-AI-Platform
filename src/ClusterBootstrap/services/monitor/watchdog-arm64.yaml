@@ -50,7 +50,7 @@ spec:
           name: kubeconfig
           readOnly: true    
         image: {{cnf["dockers"]["container"]["watchdog"]["fullname"]}}-arm64
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         name: watchdog
         readinessProbe:
           httpGet:

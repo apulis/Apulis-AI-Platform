@@ -24,7 +24,7 @@ spec:
       containers:
       - name: openresty
         image: {{cnf["dockers"]["container"]["openresty"]["fullname"]}}
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["/start.sh"]
         ports:
         - containerPort: 5080

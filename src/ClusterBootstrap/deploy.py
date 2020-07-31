@@ -880,7 +880,7 @@ def gen_configs():
     config["nfs_user"] = config["admin_username"]
     config["kubernetes_master_ssh_user"] = config["admin_username"]
 
-    config["api_servers"] = "https://"+config["kubernetes_master_node"][0]+":"+str(config["k8sAPIport"])
+    config["api_servers"] = "https://"+config["kube-vip"]+":"+str(config["k8sAPIport"])
     config["etcd_endpoints"] = ",".join(["https://"+x+":"+config["etcd3port1"] for x in config["etcd_node"]])
 
 

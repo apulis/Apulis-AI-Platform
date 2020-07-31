@@ -568,26 +568,30 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (type === 'PSDistJob') {
-      setGpuNumPerDevice(allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
+      setGpuNumPerDevice(allDevice[gpuType] && allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
     }
   }, [gpuType]);
 
   useEffect(() => {
-    if (type === 'PSDistJob' && allDevice[gpuType]) {
-      const data = allDevice[gpuType];
-      if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
-      let temp1: any[] = [], temp2: any[] = []; 
-      data.detail.forEach((i: any, index) => {
-        temp1.push(i.capacity);
-        temp2.push(index + 1);
-      });
-      const maxNum = Math.max(...temp1);
-      let options = [1];
-      for (let n = 2; n <= maxNum; n = n * 2) {
-        options.push(n);
+    if (type === 'PSDistJob') {
+      if (allDevice[gpuType]) {
+        const data = allDevice[gpuType];
+        if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
+        let temp1: any[] = [], temp2: any[] = []; 
+        data.detail.forEach((i: any, index) => {
+          temp1.push(i.capacity);
+          temp2.push(index + 1);
+        });
+        const maxNum = Math.max(...temp1);
+        let options = [1];
+        for (let n = 2; n <= maxNum; n = n * 2) {
+          options.push(n);
+        }
+        setGpuNumPerDeviceOptions(options);
+        setNumNodesOptions(temp2);
+      } else {
+        message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
       }
-      setGpuNumPerDeviceOptions(options);
-      setNumNodesOptions(temp2);
     }
   }, [type]);
 
@@ -863,7 +867,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
-                      disabled={allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU'}
+                      disabled={allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU'}
                       label="Number of Devices Per Node"
                       fullWidth
                       variant="filled"

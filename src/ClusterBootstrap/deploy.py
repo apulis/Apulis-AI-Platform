@@ -240,10 +240,12 @@ def update_docker_image_config():
         # config["dockers"]["container"]["hyperkube"]["fullname"] = config["worker-dockerregistry"] + config["dockerprefix"] + "kubernetes:" + config["dockertag"]
 
 def update_config():
+
     apply_config_mapping(config, default_config_mapping)
     update_one_config(config, "coreosversion",["coreos","version"], basestring, coreosversion)
     update_one_config(config, "coreoschannel",["coreos","channel"], basestring, coreoschannel)
     update_one_config(config, "coreosbaseurl",["coreos","baseurl"], basestring, coreosbaseurl)
+
     if config["coreosbaseurl"] == "":
         config["coreosusebaseurl"] = ""
     else:
@@ -253,18 +255,24 @@ def update_config():
         exec("config[\"%s_predeploy\"] = os.path.join(\"./deploy/%s\", config[\"pre%sdeploymentscript\"])" % (cf, loc, cf))
         exec("config[\"%s_filesdeploy\"] = os.path.join(\"./deploy/%s\", config[\"%sdeploymentlist\"])" % (cf, loc, cf))
         exec("config[\"%s_postdeploy\"] = os.path.join(\"./deploy/%s\", config[\"post%sdeploymentscript\"])" % (cf, loc, cf))
-    config["webportal_node"] = None if len(get_node_lists_for_service("webportal"))==0 else get_node_lists_for_service("webportal")[0]
+
+    config["webportal_node"] = get_api_server(config)
 
     if ("influxdb_node" not in config):
         config["influxdb_node"] = config["webportal_node"]
+
     if ("elasticsearch_node" not in config):
         config["elasticsearch_node"] = config["webportal_node"]
+
     if ("mysql_node" not in config):
         config["mysql_node"] = None if len(get_node_lists_for_service("mysql"))==0 else get_node_lists_for_service("mysql")[0]
+
     if ("host" not in config["prometheus"]):
-        config["prometheus"]["host"] = None if len(get_node_lists_for_service("prometheus"))==0 else get_node_lists_for_service("prometheus")[0]
+        config["prometheus"]["host"] = get_api_server(config)
 
     update_docker_image_config()
+    return
+
 
 def add_ssh_key():
     keys = fetch_config(config, ["sshKeys"])
@@ -843,6 +851,20 @@ def gen_platform_wise_config():
 
     return
 
+def get_api_server(config):
+
+    if "kube-vip" in config and config["kube-vip"] is not None:
+        return config["kube-vip"]
+    else:
+        pass
+
+    if len(config["kubernetes_master_node"]) > 0:
+        return config["kubernetes_master_node"][0]
+    else: 
+        return ""
+
+    return ""
+
 def gen_configs():
     print "==============================================="
     print "generating configuration files..."
@@ -879,11 +901,8 @@ def gen_configs():
     config["nfs_user"] = config["admin_username"]
     config["kubernetes_master_ssh_user"] = config["admin_username"]
 
-    config["api_servers"] = "https://"+config["kubernetes_master_node"][0]+":"+str(config["k8sAPIport"])
+    config["api_servers"] = "https://"+ get_api_server(config) +":"+str(config["k8sAPIport"])
     config["etcd_endpoints"] = ",".join(["https://"+x+":"+config["etcd3port1"] for x in config["etcd_node"]])
-
-
-
 
     if os.path.isfile(config["ssh_cert"]+".pub"):
         f = open(config["ssh_cert"]+".pub")
@@ -891,6 +910,9 @@ def gen_configs():
         f.close()
 
         config["sshkey"] = sshkey_public
+    else:
+        pass
+
     add_ssh_key()
 
     check_config(config)
@@ -1749,6 +1771,8 @@ def deploy_restful_API_on_node(ipAddress):
 
 def deploy_webUI_on_node(ipAddress):
 
+    
+    #pdb.set_trace()
     sshUser = config["admin_username"]
     webUIIP = ipAddress
     dockername = "%s/dlws-webui" %  (config["dockerregistry"])
@@ -2420,6 +2444,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
                     break
 
 def deploy_webUI():
+
     nodes = get_node_lists_for_service("restfulapi")
     for node in nodes:
         deploy_restful_API_on_node(node)
@@ -2427,11 +2452,15 @@ def deploy_webUI():
     # masterIP = config["kubernetes_master_node"][0]
     nodes = get_node_lists_for_service("webportal")
     nodes_restfulapi = get_node_lists_for_service("restfulapi")
+
     for i, node in enumerate(nodes):
-        node_restfulapi = nodes_restfulapi[i] if i < len(nodes_restfulapi) else nodes_restfulapi[0]
-        config["webportal_node"] = node
-        config["restfulapi_node"] = node
+        node_restfulapi = get_api_server(config)
+        config["webportal_node"] = node_restfulapi
+        config["restfulapi_node"] = node_restfulapi
         deploy_webUI_on_node(node)
+
+    return 
+
 
 def ufw_default_firewall_rule(node):
     cmd = "sudo ufw enable 22/tcp\n"

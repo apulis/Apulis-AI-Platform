@@ -3214,14 +3214,24 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
     selected_ip = find_ip(ip_prefix)
     print ("Select vip: "+ selected_ip)
-    config_file = open("config.yaml",'a+')
-    vipExist = False
-    for line in config_file.readlines():
-        if "kube-vip" in line:
-            vipExist = True
-    if not vipExist:
-        config_file.write("\nkube-vip: " + selected_ip+'\n')
+    kubevip_in_config = False
+    try:
+        config_file = open("config.yaml",'a+')
+        all_lines = config_file.readlines()
+        config_file.seek(0)
+        config_file.truncate()
+        for line in all_lines:
+            if "kube-vip" in line:
+                config_file.write("kube-vip: "+ selected_ip)
+                kubevip_in_config = True
+            else:
+                config_file.write(line)
+    except Exception,e:
+        print e
+    if not kubevip_in_config:
+        config_file.write("\nkube-vip: "+ selected_ip+'\n')
     config_file.close()
+
 
     # search device bind with ip
     search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """

@@ -256,9 +256,6 @@ default_config_parameters = {
         "namenode2": "etcd_node_2",
 
         "datanode": "all",
-        "webportal": "etcd_node_1",
-        "restfulapi": "etcd_node_1",
-        "jobmanager": "etcd_node_1",
         "repairmanager": "etcd_node_1",
         "grafana": "etcd_node_1",
         "prometheus": "etcd_node_1",
@@ -266,7 +263,7 @@ default_config_parameters = {
         "watchdog": "etcd_node_1",
         "elasticsearch": "elasticsearch_node",
         "kibana": "etcd_node_1",
-        "mysql": "etcd_node_1",
+        "mysql": "worker_node",
         "mysql-server": "mysqlserver_node",
         "storagemanager": "nfs_node",
         "user-synchronizer": "etcd_node_1",
@@ -279,13 +276,13 @@ default_config_parameters = {
 
         ## applications
         "nginx": "all",
-        "webportal": "etcd_node_1",
-        "restfulapi": "etcd_node_1",
+        "webportal": "etcd_node",
+        "restfulapi": "etcd_node",
         "jobmanager": "etcd_node_1",
         "repairmanager": "etcd_node_1",
 
         "webui3": "etcd_node_1",
-        "restfulapi2": "etcd_node_1",
+        "restfulapi2": "etcd_node",
         "jobmanager2": "etcd_node_1",
 
         ## default labels

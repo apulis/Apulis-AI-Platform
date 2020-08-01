@@ -1610,7 +1610,7 @@ def get_master_node_host_except_primary():
 
 def update_HA_worker_nodes_by_kubeadm( nargs):
     vip = config["kube-vip"]
-    update_worker_nodes_by_kubeadm(kubernetes_master0 = vip)
+    update_worker_nodes_by_kubeadm(control_plane_address = vip)
     return
 
 def update_worker_nodes_by_kubeadm_2(workerNodes):

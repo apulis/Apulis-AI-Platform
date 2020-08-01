@@ -46,6 +46,7 @@ def query_ssh_port(pod_name):
     #     raise RuntimeError("Query ssh port failed: {}".format(pod_name))
     if not output:
         return 22
+        
     return int(output)
 
 

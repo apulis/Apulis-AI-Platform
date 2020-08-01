@@ -25,6 +25,7 @@ import requests
 from config import global_vars
 from authorization import ResourceType, Permission, AuthorizationManager, IdentityManager, ACLManager
 import authorization
+import EndpointUtils
 from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
@@ -637,7 +638,7 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             dataHandler.Close()
     return jobs
 
-def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, num=None):
+def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order):
 
     jobs = {}
     dataHandler = None
@@ -646,11 +647,11 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, num=None):
         dataHandler = DataHandler()
         hasAccessOnAllJobs = False
 
-        # if user needs to access all jobs, and has been authorized, 
-        # he could get all pending jobs; otherwise, he could get his 
+        # if user needs to access all jobs, and has been authorized,
+        # he could get all pending jobs; otherwise, he could get his
         # own jobs with all status
-        jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus, num)
-            
+        jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order)
+
     except Exception as e:
         logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
 
@@ -662,16 +663,15 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, num=None):
 
     return jobs
 
-
-def ListInferenceJob(jobOwner,vcName,num):
+def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orderBy=None):
     jobs = {}
     dataHandler = None
     try:
         dataHandler = DataHandler()
         if jobOwner == "all":
-            jobs = dataHandler.ListInferenceJob("all", vcName, num, pendingStatus, ("=", "or"))
+            jobs = dataHandler.ListInferenceJob("all", vcName, num, status, ("=", "or"),jobName=search)
         else:
-            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num)
+            jobs = dataHandler.ListInferenceJobV2(jobOwner, vcName, num,status,jobName=search,order=order,orderBy=orderBy)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:
@@ -679,15 +679,15 @@ def ListInferenceJob(jobOwner,vcName,num):
             dataHandler.Close()
     return jobs
 
-def ListModelConversionJob(jobOwner,vcName,num):
+def ListModelConversionJob(jobOwner,vcName,pageNum=None, pageSize=None, name=None, type=None, order=None, orderBy=None):
     jobs = {}
     dataHandler = None
     try:
         dataHandler = DataHandler()
         if jobOwner == "all":
-            jobs = dataHandler.ListModelConversionJob("all", vcName, num, pendingStatus, ("=", "or"))
+            jobs = dataHandler.ListModelConversionJob("all", vcName, pendingStatus, ("=", "or"), pageNum=pageNum, pageSize=pageSize, name=name, type=type, order=order, orderBy=orderBy)
         else:
-            jobs = dataHandler.ListModelConversionJob(jobOwner, vcName, num)
+            jobs = dataHandler.ListModelConversionJob(jobOwner, vcName, pageNum=pageNum, pageSize=pageSize, name=name, type=type, order=order, orderBy=orderBy)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:
@@ -729,6 +729,15 @@ def KillJob(userName, jobId):
     dataHandler.Close()
     return ret
 
+def DeleteJob(jobId):
+    CanDeleteJobStatus = ["failed","error","unapproved","finished","killed","paused"]
+    ret = False
+    dataHandler = DataHandler()
+    job = dataHandler.GetJobTextFields(jobId, ["jobStatus"])
+    if job is not None and job["jobStatus"] in CanDeleteJobStatus:
+        ret = dataHandler.DeleteJob(jobId)
+    dataHandler.Close()
+    return ret
 
 def InvalidateJobListCache(vcName):
     CacheManager.Invalidate("GetAllPendingJobs", vcName)
@@ -861,28 +870,42 @@ def GetJobStatus(jobId):
     dataHandler.Close()
     return result
 
-def GetJobLog(userName, jobId):
+def GetJobLog(userName, jobId,page=1):
     dataHandler = DataHandler()
     jobs =  dataHandler.GetJob(jobId=jobId)
     if len(jobs) == 1:
         if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
             try:
-                log = dataHandler.GetJobTextField(jobId,"jobLog")
-                try:
-                    if isBase64(log):
-                        log = base64.b64decode(log)
-                except Exception:
-                    pass
-                if log is not None:
-                    return {
-                        "log": log,
-                        "cursor": None,
-                    }
-            except:
+                # log = dataHandler.GetJobTextField(jobId,"jobLog")
+                jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
+                jobPath = "work/"+jobParams["jobPath"]
+                localJobPath = os.path.join(config["storage-mount-path"], jobPath)
+                logPath = os.path.join(localJobPath, "logs")
+                max_page = 1
+                if not page:
+                    page = 1
+                page = int(page)
+                if os.path.exists(os.path.join(logPath,"max_page")):
+                    with open(os.path.join(logPath,"max_page"),"r") as f:
+                        max_page = int(f.read())
+                if max_page<page:
+                    page = max_page
+                if os.path.exists(os.path.join(logPath,"log-container-" +jobId + ".txt"+"."+str(page))):
+                    with open(os.path.join(logPath,"log-container-" + jobId + ".txt"+"."+str(page)), "r") as f:
+                        log = f.read()
+                    if log is not None:
+                        return {
+                            "log": log,
+                            "cursor": None,
+                            "max_page":max_page
+                        }
+            except Exception as e:
+                logger.exception(e)
                 pass
     return {
         "log": {},
         "cursor": None,
+        "max_page":0
     }
 
 def GetClusterStatus():
@@ -1107,36 +1130,52 @@ def AddVC(userName, vcName, quota, metadata):
                 "metadata": metadata
             }
             with vc_cache_lock:
-                vc_cache[vcName] = cacheItem
+                # vc_cache[vcName] = cacheItem
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
     return ret
 
-def getClusterVCs():
+def getClusterVCs(page=None,size=None):
     vcList = None
     try:
-        with vc_cache_lock:
-            vcList = copy.deepcopy(vc_cache.values())
+        if page and size:
+            with vc_cache_lock:
+                if str(page)+str(size) in vc_cache:
+                    vcList = copy.deepcopy(vc_cache[str(page)+str(size)].values())
+        else:
+            if "all" in vc_cache:
+                with vc_cache_lock:
+                    vcList = copy.deepcopy(vc_cache["all"].values())
     except Exception:
         pass
 
     if not vcList:
-        vcList = DataManager.ListVCs()
-        with vc_cache_lock:
-            for vc in vcList:
-                vc_cache[vc["vcName"]] = vc
+        vcList = DataManager.ListVCs(page,size)
+        tmp = {}
+        for vc in vcList:
+            tmp[vc["vcName"]] = vc
+
+        if page and size:
+            with vc_cache_lock:
+                vc_cache[str(page)+str(size)] = tmp
+        else:
+            with vc_cache_lock:
+                vc_cache["all"] = tmp
 
     return vcList
 
-def ListVCs(userName):
-    ret = []
-    vcList = getClusterVCs()
+def ListVCs(userName,page=None,size=None):
+    ret = {"result":[]}
+    vcList = getClusterVCs(page,size)
 
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
-            ret.append(vc)
+            ret["result"].append(vc)
+
+    ret["totalNum"] = DataHandler().CountVCs()
     # web portal (client) can filter out Default VC
     return ret
 
@@ -1252,7 +1291,8 @@ def DeleteVC(userName, vcName):
         ret =  dataHandler.DeleteVC(vcName)
         if ret:
             with vc_cache_lock:
-                vc_cache.pop(vcName, None)
+                # vc_cache.pop(vcName, None)
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
@@ -1271,7 +1311,8 @@ def UpdateVC(userName, vcName, quota, metadata):
                 "metadata": metadata
             }
             with vc_cache_lock:
-                vc_cache[vcName] = cacheItem
+                # vc_cache[vcName] = cacheItem
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
@@ -1302,44 +1343,7 @@ def GetEndpoints(userName, jobId):
                 if job["endpoints"] is not None:
                     endpoints = json.loads(job["endpoints"])
                 for [_, endpoint] in endpoints.items():
-                    epItem = {
-                        "id": endpoint["id"],
-                        "name": endpoint["name"],
-                        "username": endpoint["username"],
-                        "status": endpoint["status"],
-                        "hostNetwork": endpoint["hostNetwork"],
-                        "podName": endpoint["podName"],
-                        "domain": config["domain"],
-                    }
-                    if "podPort" in endpoint:
-                        epItem["podPort"] = endpoint["podPort"]
-                    if endpoint["status"] == "running":
-                        port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
-                        epItem["port"] = port
-                        if "nodeName" in endpoint:
-                            epItem["nodeName"],epItem["domain"] = config["master_private_ip"].split(".",1)
-                        if epItem["name"] == "ssh":
-                            try:
-                                desc = list(yaml.full_load_all(base64.b64decode(job["jobDescription"])))
-                                if epItem["id"].find("worker")!=-1:
-                                    desc = desc[int(re.match(".*worker(\d+)-ssh",epItem["id"]).groups()[0])+1]
-                                elif epItem["id"].find("ps0")!=-1:
-                                    desc = desc[0]
-                                else:
-                                    desc = desc[0]
-                                for i in desc["spec"]["containers"][0]["env"]:
-                                    if i["name"] == "DLTS_JOB_TOKEN":
-                                        epItem["password"] = i["value"]
-                            except Exception as e:
-                                logger.error(e)
-                        elif epItem["name"] == "inference-url":
-                            epItem["modelname"] = endpoint["modelname"]
-                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
-                        elif epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
-                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
-                    if epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
-                        if "extranet_port" in config and config["extranet_port"]:
-                            epItem["domain"] = epItem["domain"] + ":"+ str(config["extranet_port"])
+                    epItem = EndpointUtils.parse_endpoint(endpoint,job)
                     ret.append(epItem)
     except Exception as e:
         logger.error("Get endpoint exception, ex: %s", str(e))
@@ -1615,6 +1619,32 @@ def GetConvertDetail(projectId,datasetId):
         if data_handler is not None:
             data_handler.Close()
     return None
+
+
+def GetJobSummary(userName, jobType):
+    data_handler = None
+
+    try:
+        data_handler = DataHandler()
+        summary = data_handler.get_job_summary(userName, jobType)
+        return summary
+
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+        else:
+            pass
+
+    return None
+
+
+
+
+
+
 
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False

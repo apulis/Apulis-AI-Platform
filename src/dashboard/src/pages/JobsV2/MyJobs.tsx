@@ -35,7 +35,6 @@ interface JobsTableProps {
 
 const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }) => {
   const { cluster } = useContext(ClusterContext);
-  console.log('cluster',cluster)
 
   const [pageSize, setPageSize] = useState(10);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
@@ -59,7 +58,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
     { title: 'Number of Device', type: 'numeric',
       render: renderGPU, customSort: sortGPU },
     { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},
-    { title: 'Priority', type: 'numeric',
+    { title: 'Priority', type: 'numeric', sorting: false,
       render: renderPrioirty, disableClick: true },
     { title: 'Submitted', type: 'datetime',
       render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },

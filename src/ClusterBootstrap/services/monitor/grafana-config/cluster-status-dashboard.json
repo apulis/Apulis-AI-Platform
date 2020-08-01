@@ -717,7 +717,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "count(task_cpu_percent) OR on() vector(0)",
+                "expr": "sum(avg by (job_id) (job_pod_count{phase='running'})) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,
@@ -726,7 +726,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Active Jobs",
+            "title": "Running Jobs",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [

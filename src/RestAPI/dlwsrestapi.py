@@ -596,33 +596,34 @@ api.add_resource(ListJobsV2, '/ListJobsV2')
 
 # shows a list of all jobs, and lets you POST to add new tasks
 class ListJobsV3(Resource):
-    @api.doc(params=model.ListJobsV2.params)
     def get(self):
 
         parser = reqparse.RequestParser()
 
         parser.add_argument('userName')
-        parser.add_argument('num')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
         parser.add_argument('jobType')
         parser.add_argument('jobStatus')
+        parser.add_argument('pageNum')
+        parser.add_argument('pageSize')
+        parser.add_argument('searchWord')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
 
         args = parser.parse_args()
-        num = None
+        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"],
+                args["jobType"], args["jobStatus"],
+                args["pageNum"], args["pageSize"],
+                args["searchWord"], args["orderBy"], args["order"])
 
-        if args["num"] is not None:
-            try:
-                num = int(args["num"])
-            except:
-                pass
-
-        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"], args["jobType"], args["jobStatus"], num)
-
-        for _, joblist in jobs.items():
-            if isinstance(joblist, list):
-                for job in joblist:
-                    remove_creds(job)
+        if jobs is not None:
+            for _, joblist in jobs.items():
+                if isinstance(joblist, list):
+                    for job in joblist:
+                        remove_creds(job)
+        else:
+            pass
 
         resp = generate_response(jobs)
         return resp
@@ -661,22 +662,22 @@ class ListInferenceJobV2(Resource):
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
         parser.add_argument('page')
-        parser.add_argument('jobOwner')
+        parser.add_argument('name')
+        parser.add_argument('status')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
         args = parser.parse_args()
         page = args["page"]
         size = args["size"]
-        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None)
-        jobs.pop("meta")
-        for _, joblist in jobs.items():
-            if isinstance(joblist, list):
-                for job in joblist:
-                    remove_creds(job)
+        jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"],args["order"],args["orderBy"])
+        for job in jobs:
+            remove_creds(job)
+
         tmp = []
-        for k,v in jobs.items():
-            for one in v:
-                one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
-                tmp.append(one)
-        tmp.sort(key=lambda x: x["jobTime"])
+        for one in jobs:
+            one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
+            one["duration"] = time.time()*1000 - one["jobTime"]
+            tmp.append(one)
         if not page:
             page = 1
         if not size:
@@ -712,10 +713,24 @@ class ListModelConversionJob(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('num')
+        parser.add_argument('size')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
+        parser.add_argument('jobName')
+        parser.add_argument('convType')
+        parser.add_argument('order')
+        parser.add_argument('orderBy')
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], args["num"])
+        jobs = JobRestAPIUtils.ListModelConversionJob(
+            args["jobOwner"],
+            args["vcName"],
+            pageNum=args["num"],
+            pageSize=args["size"],
+            name=args["jobName"],
+            type=args["convType"],
+            order=args["order"],
+            orderBy=args["orderBy"]
+        )
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:
@@ -771,7 +786,25 @@ class KillJob(Resource):
 ##
 api.add_resource(KillJob, '/KillJob')
 
+class DeleteJob(Resource):
+    def delete(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        result = JobRestAPIUtils.DeleteJob(jobId)
+        ret = {}
+        if result:
+            ret["result"] = "Success, the job record is deleted."
+        else:
+            ret["result"] = "Cannot delete the job. Job ID:" + jobId
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
 
+        return resp
+
+api.add_resource(DeleteJob, '/DeleteJob')
 
 class PauseJob(Resource):
     @api.doc(params=model.PauseJob.params)
@@ -990,10 +1023,12 @@ class GetJobLog(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('jobId', required=True)
         parser.add_argument('userName', required=True)
+        parser.add_argument('page', required=False)
         args = parser.parse_args()
         jobId = args["jobId"]
         userName = args["userName"]
-        return JobRestAPIUtils.GetJobLog(userName, jobId)
+        page = args["page"]
+        return JobRestAPIUtils.GetJobLog(userName, jobId,page)
 ##
 ## Actually setup the Api resource routing here
 ##
@@ -1570,10 +1605,13 @@ class ListVCs(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
+        parser.add_argument('page')
+        parser.add_argument('size')
         args = parser.parse_args()
         userName = args["userName"]
-        ret = {}
-        ret["result"] = JobRestAPIUtils.ListVCs(userName)
+        page = args["page"]
+        size = args["size"]
+        ret = JobRestAPIUtils.ListVCs(userName,page,size)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -1815,7 +1853,7 @@ class Endpoint(Resource):
     @api.doc(params=model.EndpointPost.params)
     @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
-        
+
         '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
@@ -2031,17 +2069,8 @@ api.add_resource(Infer, '/Infer')
 class ConvertDataFormat(Resource):
     @api.doc(params=model.ConvertDataFormat.params)
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('datasetId')
-        parser.add_argument('projectId')
-        parser.add_argument('type')
-        parser.add_argument('target')
-        args = parser.parse_args()
-        datasetId = args["datasetId"]
-        projectId = args["projectId"]
-        type = args["type"]
-        target = args["target"]
-        ret = JobRestAPIUtils.ConvertDataFormat(projectId, datasetId,type,target)
+        params = request.get_json(force=True)
+        ret = JobRestAPIUtils.ConvertDataFormat(params["projectId"], params["datasetId"],params["type"],params["target"])
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
@@ -2078,6 +2107,28 @@ class GetConvertDetail(Resource):
         return resp
 
 api.add_resource(GetConvertDetail, '/GetConvertDetail')
+
+
+class GetJobSummary(Resource):
+
+    def get(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('jobType')
+
+        args = parser.parse_args()
+        userName = args["userName"]
+        jobType = args["jobType"]
+
+        ret = JobRestAPIUtils.GetJobSummary(userName, jobType)
+        resp = jsonify(ret)
+
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetJobSummary, '/GetJobSummary')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

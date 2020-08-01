@@ -34,7 +34,7 @@ interface BootstrapProps {
   isAuthorized?: boolean;
   config: ConfigContext;
   user: UserContext;
-  administrators?: Array<[]>;
+  administrators?: string[];
   permissionList?: string[];
   currentRole?: string[];
   userGroupPath?: string;
@@ -55,14 +55,13 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
       variant: type,
     });
   }, userGroupPath || '');
-  console.log('permissionList',permissionList)
   return(
     <BrowserRouter>
       <ConfigProvider>
         <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
           <ConfirmProvider>
             <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
-              <TeamProvider permissionList={permissionList}>
+              <TeamProvider permissionList={permissionList} administrators={administrators}>
                 <ClustersProvider>
                   <ThemeProvider theme={theme}>
                     {children}

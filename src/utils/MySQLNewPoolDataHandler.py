@@ -18,6 +18,8 @@ from prometheus_client import Histogram
 import threading
 
 from mysql_conn_pool import MysqlConn,db_connect_histogram
+import EndpointUtils
+
 MysqlConn.config_pool(risk_config={"max_connections":5})
 
 logger = logging.getLogger(__name__)
@@ -32,6 +34,13 @@ data_handler_fn_histogram = Histogram("datahandler_fn_latency_seconds",
 #                                  "latency for connecting to db (seconds)",
 #                                  buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))
 
+
+def parse_endpoints(endpoints):
+    if len(endpoints) == 1:
+        endpoint = endpoints[0]
+        ep = EndpointUtils.parse_endpoint(endpoint)
+        if ep["status"]=="running":
+            return "http://%s.%s/endpoints/v2/%s/v1/models/%s:predict" % (ep["nodeName"],ep["domain"],ep["port"],ep["modelname"])
 
 class SingletonDBPool(object):
     __instance_lock = threading.Lock()
@@ -299,7 +308,7 @@ class DataHandler(object):
             worker_node_num = config["worker_node_num"]
             gpu_type = config["gpu_type"]
             default_type = json.dumps({one:0 for one in config["defalt_virtual_cluster_device_type_list"] })
-
+            logging.info([config['defalt_virtual_cluster_name'],default_type])
             sql = """
                 CREATE TABLE IF NOT EXISTS  `%s`
                 (
@@ -309,11 +318,10 @@ class DataHandler(object):
                     `quota`     varchar(255) NOT NULL,
                     `metadata`  TEXT NOT NULL,
                     `time`      DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    CONSTRAINT `hierarchy` FOREIGN KEY (`parent`) REFERENCES `%s` (`vcName`)
+                    PRIMARY KEY (`id`)
                 )
                 AS SELECT \'%s\' AS vcName, NULL AS parent, '%s' AS quota, '{}' AS metadata;
-                """ % (self.vctablename, self.vctablename, config['defalt_virtual_cluster_name'],default_type)
+                """ % (self.vctablename, config['defalt_virtual_cluster_name'],default_type)
 
             with MysqlConn() as conn:
                 conn.insert_one(sql)
@@ -591,14 +599,28 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListVCs(self):
+    def ListVCs(self,page=None,size=None):
         ret = []
         try:
-            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+            if page and size:
+                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s` limit %d offset %d" % (self.vctablename,int(size),(int(page)-1)*int(size))
+            else:
+                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
+        except Exception as e:
+            logger.exception('ListVCs Exception: %s', str(e))
+        return ret
+
+    @record
+    def CountVCs(self):
+        ret = None
+        try:
+            query = "SELECT count(1) FROM `%s`" % (self.vctablename)
+            with MysqlConn() as conn:
+                ret = conn.select_one_value(query)
         except Exception as e:
             logger.exception('ListVCs Exception: %s', str(e))
         return ret
@@ -1182,37 +1204,48 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, num=None, status=None, op=("=", "or")):
-    
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum,
+            pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
+
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
+        ret["allJobs"] = []
 
         conn = None
         cursor = None
+
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, 
-                    jobType, jobTime, jobParams, priority FROM {} left join {} 
-                    on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename, 
-                    self.jobtablename, self.jobprioritytablename, 
-                    self.jobtablename, self.jobprioritytablename, 
-                    jobType)
+            query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
+                        jobType, jobTime, jobParams, priority FROM {} left join {}
+                        on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename,
+                        self.jobtablename, self.jobprioritytablename,
+                        self.jobtablename, self.jobprioritytablename,
+                        jobType)
 
             ## all jobs
             if jobStatus.lower() != "all":
-                query += " and jobStatus = '%s'" % jobStatus 
+                query += " and jobStatus = '%s'" % jobStatus
             else:
-                pass 
-            
+                pass
+
             query += " and userName = '%s'" % userName
             query += " and vcName = '%s'" % vcName
 
+            if searchWord is not None and len(searchWord) > 0:
+                query += " and jobName like '%"
+                query += "%s" % (searchWord)
+                query += "%'"
+            else:
+                pass
+
             if status is not None:
+
                 if "," not in status:
                     query += " and jobStatus %s '%s'" % (op[0], status)
                 else:
@@ -1223,10 +1256,17 @@ class DataHandler(object):
             else:
                 pass
 
-            query += " order by jobTime Desc"
+            if order != "asc":
+                order = "desc"
 
-            if num is not None:
-                query += " limit %s " % str(num)
+            if orderBy is None or orderBy == "":
+                query += " order by jobTime Desc"
+            else:
+                query += "order by %s %s" % (orderBy, order)
+
+            #query += " order by jobTime Desc"
+            if pageNum is not None and pageSize is not None:
+                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
             else:
                 pass
 
@@ -1234,6 +1274,7 @@ class DataHandler(object):
             cursor.execute(query)
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
+            total = 0
 
             for item in data:
 
@@ -1241,30 +1282,33 @@ class DataHandler(object):
 
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
-                
+                else:
+                    pass
+
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == jobType:
-                        ret["runningJobs"].append(record)
 
-                    elif record["jobType"] == "visualization":
+                    if record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)
+                    else:
+                        pass
 
-                elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
-                    "jobStatus"] == "unapproved":
-                    ret["queuedJobs"].append(record)
+                    ret["allJobs"].append(record)
 
                 else:
                     ret["finishedJobs"].append(record)
+                    ret["allJobs"].append(record)
 
-                #if record["jobStatusDetail"] is not None:
-                #    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
-                #if record["jobParams"] is not None:
-                #    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+                ## get total count
+                if total == 0 and record["total"] is not None:
+                    total = record["total"]
+                else:
+                    pass
 
             conn.commit()
+
         except Exception as e:
             logger.exception('GetJobListV2 Exception: %s', str(e))
 
@@ -1274,12 +1318,16 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
-                       "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]),
+                       "runningJobs": len(ret["runningJobs"]),
+                       "finishedJobs": len(ret["finishedJobs"]),
+                       "visualizationJobs": len(ret["visualizationJobs"]),
+                       "totalJobs": int(total)}
+
         return ret
 
     @record
-    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
+    def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None,order=None,orderBy=None):
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1288,6 +1336,7 @@ class DataHandler(object):
 
         conn = None
         cursor = None
+
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()
@@ -1301,7 +1350,10 @@ class DataHandler(object):
             if vcName != "all":
                 query += " and vcName = '%s'" % vcName
 
-            if status is not None:
+            if jobName:
+                query += " and jobName like '%%%s%%'" % jobName
+
+            if status:
                 if "," not in status:
                     query += " and jobStatus %s '%s'" % (op[0], status)
                 else:
@@ -1309,7 +1361,15 @@ class DataHandler(object):
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            query += " order by jobTime Desc"
+            if not orderBy:
+                orderBy = "jobTime"
+            if order:
+                if order not in ["desc", "asc"]:
+                    order = "desc"
+            else:
+                order = "desc"
+            if orderBy:
+                query += " order by %s %s" %(orderBy,order)
 
             if num is not None:
                 query += " limit %s " % str(num)
@@ -1327,15 +1387,7 @@ class DataHandler(object):
                 endpoints = record["endpoints"]
                 if endpoints:
                     endpoints = json.loads(record["endpoints"]).values()
-                    if len(endpoints)==1:
-                        endpoint = endpoints[0]
-                        if endpoint["status"]=="running":
-                            if "master_private_ip" in config:
-                                domain = config["master_private_ip"]
-                            else:
-                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
-                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
-                                                          base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                    record["inference-url"] = parse_endpoints(endpoints)
 
                 if record["jobStatus"] == "running":
                     if record["jobType"] == "InferenceJob":
@@ -1361,12 +1413,8 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListModelConversionJob(self, userName, vcName, num=None, status=None, op=("=", "or")):
-        ret = {}
-        ret["queuedJobs"] = []
-        ret["runningJobs"] = []
-        ret["finishedJobs"] = []
-        ret["visualizationJobs"] = []
+    def ListInferenceJobV2(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None,order=None,orderBy=None):
+        ret = []
 
         conn = None
         cursor = None
@@ -1374,13 +1422,93 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1".format(
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
+                self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
+                self.jobprioritytablename)
+            if userName != "all":
+                query += " and userName = '%s'" % userName
+
+            if vcName != "all":
+                query += " and vcName = '%s'" % vcName
+
+            if jobName:
+                query += " and jobName like '%%%s%%'" % jobName
+
+            if status:
+                if "," not in status:
+                    query += " and jobStatus %s '%s'" % (op[0], status)
+                else:
+                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_statement = (" " + op[1] + " ").join(status_list)
+                    query += " and ( %s ) " % status_statement
+
+            if not orderBy:
+                orderBy = "jobTime"
+            if order:
+                if order not in ["desc", "asc"]:
+                    order = "desc"
+            else:
+                order = "desc"
+            if orderBy:
+                query += " order by %s %s" %(orderBy,order)
+
+            if num is not None:
+                query += " limit %s " % str(num)
+            cursor.execute(query)
+
+            columns = [column[0] for column in cursor.description]
+            data = cursor.fetchall()
+            for item in data:
+                record = dict(zip(columns, item))
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
+                endpoints = record["endpoints"]
+                if endpoints:
+                    endpoints = json.loads(record["endpoints"]).values()
+                    record["inference-url"] = parse_endpoints(endpoints)
+
+                ret.append(record)
+            conn.commit()
+        except Exception as e:
+            logger.exception('GetJobListV2 Exception: %s', str(e))
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+        return ret
+
+    @record
+    def ListModelConversionJob(self, userName, vcName, status=None, op=("=", "or"), pageNum=None, pageSize=None, name=None, type=None, order=None, orderBy=None):
+        ret = {}
+        ret["queuedJobs"] = []
+        ret["runningJobs"] = []
+        ret["finishedJobs"] = []
+        ret["visualizationJobs"] = []
+        total = None
+
+        conn = None
+        cursor = None
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = "SELECT count(*) OVER() as total, j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1".format(
                 self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
 
             if vcName != "all":
                 query += " and vcName = '%s'" % vcName
+
+            if name is not None:
+                query += " and jobName like '%s'" % name
+
+            if type is not None:
+                query += " and m.type = '%s'" % type
 
             if status is not None:
                 if "," not in status:
@@ -1390,14 +1518,23 @@ class DataHandler(object):
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            query += " order by jobTime Desc"
+            if order != "asc":
+                order = "desc"
 
-            if num is not None:
-                query += " limit %s " % str(num)
+            if orderBy is None or orderBy == "":
+                query += " order by jobTime Desc"
+            else:
+                query += "order by %s %s" % (orderBy, order)
+
+            if pageNum is not None and pageSize is not None:
+                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+            if pageNum is not None and pageSize is None:
+                query += " limit %s " % pageNum
             cursor.execute(query)
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
+
             for item in data:
                 record = dict(zip(columns, item))
                 if record["jobStatusDetail"] is not None:
@@ -1415,6 +1552,11 @@ class DataHandler(object):
                     ret["queuedJobs"].append(record)
                 else:
                     ret["finishedJobs"].append(record)
+
+                if total is None and record["total"] is not None:
+                    total = record["total"]
+                else:
+                    pass
             conn.commit()
         except Exception as e:
             logger.exception('GetModelConversionJobs Exception: %s', str(e))
@@ -1426,6 +1568,7 @@ class DataHandler(object):
 
         ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
+        ret["total"] = total
         return ret
 
     @record
@@ -1542,15 +1685,8 @@ class DataHandler(object):
                 endpoints = record["endpoints"]
                 if endpoints:
                     endpoints = json.loads(record["endpoints"]).values()
-                    if len(endpoints)==1:
-                        endpoint = endpoints[0]
-                        if endpoint["status"]=="running":
-                            if "master_private_ip" in config:
-                                domain = config["master_private_ip"]
-                            else:
-                                domain = config["webportal_node"].split(config["domain"])[0]+config["domain"]
-                            record["inference-url"] = "http://"+domain+"/endpoints/v2/"+ \
-                                                      base64.b64encode(str(str(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])).encode("utf-8"))+"/v1/models/"+endpoint["modelname"]+":predict"
+                    record["inference-url"] = parse_endpoints(endpoints)
+
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
                 if record["jobParams"] is not None:
@@ -1663,7 +1799,7 @@ class DataHandler(object):
     def GetPendingEndpoints(self):
         ret = {}
         try:
-            query = "SELECT `endpoints` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
+            query = "SELECT `endpoints`,`jobId` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
             self.jobtablename, "running")
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -1671,7 +1807,11 @@ class DataHandler(object):
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
             # {endpoint1: {}, endpoint2: {}, ... }
             # endpoint["status"] == "pending"
-            ret = {k: v for d in endpoints for k, v in d.items() if v["status"] == "pending"}
+            for one in endpoints:
+                for k,v in one.items():
+                    if v["status"] == "pending":
+                        ret.setdefault(v["jobId"],{})
+                        ret[v["jobId"]][k] = v
         except Exception as e:
            logger.exception("Query pending endpoints failed!")
         return ret
@@ -2133,6 +2273,39 @@ class DataHandler(object):
         except Exception as e:
             logger.exception('add ConvertDataFormat Exception: %s', str(e))
         return ret
+
+    @record
+    def get_job_summary(self, userName, jobType):
+        ret = {}
+
+        try:
+            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' group by jobStatus;" % (self.jobtablename, userName, jobType)
+            print(query)
+
+            with MysqlConn() as conn:
+                records = conn.select_many(query)
+
+            for one in records:
+                ret[one["jobStatus"]] = one["count"]
+
+        except Exception as e:
+            logger.exception('get_job_priority Exception: %s', str(e))
+
+        return ret
+
+    @record
+    def DeleteJob(self,jobId):
+        ret = False
+        try:
+            query = "DELETE FROM `%s` where jobId=%s " % (self.jobtablename, "%s")
+            with MysqlConn() as conn:
+                conn.insert_one(query,[jobId])
+                conn.commit()
+            ret = True
+        except Exception as e:
+            logger.exception('DeleteJob Exception: %s', str(e))
+        return ret
+
 
     def __del__(self):
         logger.debug("********************** deleted a DataHandler instance *******************")

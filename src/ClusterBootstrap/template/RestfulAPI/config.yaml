@@ -93,7 +93,7 @@ administrators:
 {% endfor %}
 
 inference:
-  {% for framework,items in cnf["inference"].items() %}{% for one in items %}{{framework}}:
+  {% for framework,items in cnf["inference"].items() %}{{framework}}:{% for one in items %}
     - version: {{one["version"]}}
       support: {% for one_support in one["support"] %}
       - image: {{one_support["image"]}}
@@ -114,6 +114,8 @@ defalt_virtual_cluster_device_type_list:
   - {{ one }}
 {%endfor%}
 
-master_private_ip: {{cnf["etcd_private_ip"}}
+{% if "endpoint_use_private_ip" in cnf and cnf["endpoint_use_private_ip"] %}
+master_private_ip: {% if "master_private_ip" in cnf %} {{ cnf["master_private_ip"] }} {{ else }} {{cnf["etcd_private_ip"]}} {% endif %}
+{% endif %}
 
 data_platform_path: {{cnf["data_platform_path"]}}

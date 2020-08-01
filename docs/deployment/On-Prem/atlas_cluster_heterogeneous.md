@@ -346,6 +346,7 @@ repair-manager:
     sender: 1023950387@qq.com
     receiver: ["1023950387@qq.com"]
 
+apt_mirror_url: http:\/\/mirrors.aliyun.com
 enable_custom_registry_secrets: True
 ```
 
@@ -619,6 +620,7 @@ userGroup:
 
 2. ##### 生成dashboard, jobmanager等服务的配置文件
     ```
+    ./deploy.py --verbose set_mirror
     ./deploy.py --verbose webui         
     ```
 

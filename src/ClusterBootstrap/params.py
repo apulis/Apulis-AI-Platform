@@ -670,13 +670,22 @@ default_config_parameters = {
 
     # inferenceJob config
     "inference":{
-      "tensorflow":[{"version":"1.15",
+      "tensorflow":[
+            {"version":"1.15.0",
                      "support":
                          [
                              {"image":"emacski/tensorflow-serving:1.15.0","device":"CPU"},
                              {"image":"tensorflow/serving:1.15.0-gpu","device":"GPU"}
                           ]
-                     }]
+            },
+            {"version":"2.2.0",
+                     "support":
+                         [
+                             {"image":"emacski/tensorflow-serving:2.2.0","device":"CPU"},
+                             {"image":"tensorflow/serving:2.2.0-gpu","device":"GPU"}
+                          ]
+            }
+      ]
     },
 
     # System dockers.
@@ -747,7 +756,7 @@ default_config_parameters = {
             "node-exporter": {"fullname": "prom/node-exporter:v0.18.1"},
             "bash": {"fullname": "bash:5"},
             "prometheus": {"fullname": "prom/prometheus:v2.18.0"},
-            "grafana": {"fullname": "apulistech/grafana:6.7.3"},
+            "grafana": {"fullname": "apulistech/grafana:6.7.4"},
             "alertmanager": {"fullname": "prom/alertmanager:v0.20.0"},
             "prometheus-operator": {"fullname": "jessestuart/prometheus-operator:v0.38.0"},
             "k8s-prometheus-adapter": {"fullname": "directxman12/k8s-prometheus-adapter:v0.7.0"},

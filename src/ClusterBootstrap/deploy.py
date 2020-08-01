@@ -1025,25 +1025,14 @@ def get_kubectl_binary(force = False):
     get_other_binary()
 
 def get_hyperkube_docker(force = False) :
-    os.system("mkdir -p ./deploy/bin")
-    print( "Use docker container %s" % config["dockers"]["container"]["hyperkube"]["fullname"])
 
-    if force or not os.path.exists("./deploy/bin/hyperkube"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/hyperkube", "./deploy/bin/hyperkube")
+    ## not need anymore
+    return
 
-    if force or not os.path.exists("./deploy/bin/kubelet"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubelet", "./deploy/bin/kubelet")
-
-    if force or not os.path.exists("./deploy/bin/kubectl"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubectl", "./deploy/bin/kubectl")
-
-    if config['kube_custom_cri']:
-        if force or not os.path.exists("./deploy/bin/crishim"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/crishim", "./deploy/bin/crishim")
-
-        if force or not os.path.exists("./deploy/bin/nvidiagpuplugin.so"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/nvidiagpuplugin.so", "./deploy/bin/nvidiagpuplugin.so")
-
+def set_mirror():
+    cmd = "sed -i 's/{apt_mirror_url}/%s/' ../init-scripts/bootstrap.sh " % (config["apt_mirror_url"])
+    print(cmd)
+    utils.exec_cmd_local(cmd)
     return
 
 def deploy_masters(force = False):
@@ -3297,6 +3286,33 @@ def run_kubectl( commands ):
     else:
         run_kube( "./deploy/bin/kubectl", commands)
 
+def run_kubectl_with_output( command ):
+    if os.path.exists("./deploy/sshkey/admin.conf"):
+
+        kube_command = "kubectl --kubeconfig=./deploy/sshkey/admin.conf %s" % command
+        if verbose:
+            print(kube_command)
+        else:
+            pass
+
+        return utils.exec_cmd_local(kube_command)
+    else:
+        pass
+
+    return
+
+def get_cluster_k8s_node_list():
+
+    nodes = []
+    k8s_nodes = run_kubectl_with_output("get nodes --no-headers | awk '{print $1}'")
+
+    if k8s_nodes is not None:
+        nodes = k8s_nodes.strip().split()
+    else:
+        pass
+
+    return nodes
+
 # node can be either of fqdn or private-ip
 def kubernetes_get_node_name(node):
 
@@ -3325,11 +3341,20 @@ def set_zookeeper_cluster():
     config["zookeepernodes"] = ";".join(nodes)
     config["zookeepernumberofnodes"] = str(len(nodes))
 
+def update_grafana_alert_config():
+    if "grafana_alert" in config:
+        if "smtp" in config["grafana_alert"]:
+            config["grafana_alert"]["enabled"] = "true"
+    else:
+        config["grafana_alert"] = {}
+        config["grafana_alert"]["enabled"] = "false"
+
 def render_service_templates():
     allnodes = get_nodes(config["clusterId"])
     # Additional parameter calculation
     set_zookeeper_cluster()
     generate_hdfs_containermounts()
+    update_grafana_alert_config()
     # Multiple call of render_template will only render the directory once during execution.
     utils.render_template_directory( "./services/", "./deploy/services/", config)
     add_service_config()
@@ -3758,6 +3783,12 @@ def kubernetes_label_worker_2(nodename, nodeInfo):
 
     return
 
+def kubernetes_setup_worker_infiniband_ip():
+    for nodename,nodeInfo in config["machines"].items():
+        if "ib_ip" in nodeInfo:
+            utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], nodename, "sudo ifconfig ib0 "+nodeInfo["ib_ip"]+"/24")
+
+
 def kubernetes_label_cpuworker():
     """Label kubernetes nodes with cpuworker=active."""
     label = "cpuworker=active"
@@ -4144,6 +4175,7 @@ def scale_up(config):
     all_nodes = get_scale_nodes(config, "scale_up")
     install_ssh_key_by_nodes(all_nodes)
     domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
 
     ## scaling up
     for node_name in config["scale_up"]:
@@ -4156,6 +4188,12 @@ def scale_up(config):
         device_type = node_info["type"].lower()
         vendor = node_info["vendor"].lower()
         archtype = node_info["archtype"].lower()
+
+        if node_name in k8s_nodes:
+            print("%s is in the cluster, skip it" % (node))
+            continue
+        else:
+            pass
 
         if os != "ubuntu":
             print("os %s not supported" % (os))
@@ -4238,12 +4276,19 @@ def scale_down(config):
         pass
 
     domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
 
     for node_name in config["scale_down"]:
         node_info = config["scale_down"][node_name]
 
         print(node_info)
         node = node_name + domain
+
+        if node_name not in k8s_nodes:
+            print("%s is not in the cluster, skip it" % (node))
+            continue
+        else:
+            pass
 
         ## drain
         cmd = "drain %s --ignore-daemonsets" % (node_name)
@@ -4382,6 +4427,10 @@ def run_command( args, command, nargs, parser ):
         bForce = args.force if args.force is not None else False
         get_kubectl_binary(force=args.force)
         exit()
+
+    elif command == "set_mirror":
+        set_mirror()
+        return
 
     elif command =="clean":
         clean_deployment()
@@ -5062,6 +5111,9 @@ def run_command( args, command, nargs, parser ):
     elif command == "labelworker":
         kubernetes_label_worker()
 
+    elif command == "setupib":
+        kubernetes_setup_worker_infiniband_ip()
+
     elif command == "gpulabel":
         kubernetes_label_GpuTypes()
 
@@ -5521,7 +5573,7 @@ Command:
   rendertemplate template_file target_file
   renderservice
   renderimage
-  
+
   upgrade_masters Upgrade the master nodes.
   upgrade_workers [nodes] Upgrade the worker nodes. If no additional node is specified, all nodes will be updated.
   upgrade [nodes] Upgrade the cluster and nodes. If no additional node is specified, all nodes will be updated.

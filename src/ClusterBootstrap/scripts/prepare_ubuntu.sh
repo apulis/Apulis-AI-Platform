@@ -381,6 +381,16 @@ show_continue_msg() {
     echo "please re-execute the command ending with \"continue\"!!!!!"
 }
 
+setup_infiniband_network(){
+    if [ `command -v ibstat` ];
+    then
+        service openibd start
+        systemctl enable openibd.service
+        service opensmd start
+        systemctl enable opensmd.service
+    fi
+}
+
 main () {
 
     exec_mode=$1
@@ -400,6 +410,7 @@ main () {
     set_network
     install_gpu_utils
     set_kubernetes
+    setup_infiniband_network
     #set_azure
 }
 

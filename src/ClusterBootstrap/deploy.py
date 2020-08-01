@@ -3231,6 +3231,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     if not kubevip_in_config:
         config_file.write("\nkube-vip: "+ selected_ip+'\n')
     config_file.close()
+    config["kube-vip"] = selected_ip
 
 
     # search device bind with ip

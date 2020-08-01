@@ -59,7 +59,7 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
         if (res.data.length === 0) {
           console.error('没有可用的虚拟集群，请联系管理员添加')
         }
-        setTeams([]);
+        setTeams(res.data);
       }
     })
   }

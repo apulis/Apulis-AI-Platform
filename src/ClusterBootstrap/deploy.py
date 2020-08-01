@@ -1620,8 +1620,8 @@ def get_master_node_host_except_primary():
     return remain_master_node_array
 
 def update_HA_worker_nodes_by_kubeadm( nargs):
-    vip = config["kube-vip"]
-    update_worker_nodes_by_kubeadm(control_plane_address = vip)
+    control_plane_address = config["kube-vip"]
+    update_worker_nodes_by_kubeadm(nargs,control_plane_address)
     return
 
 def update_worker_nodes_by_kubeadm_2(workerNodes):
@@ -4472,7 +4472,7 @@ def run_command( args, command, nargs, parser ):
             elif nargs[0] == "join":
                 if len(nargs) > 1:
                     if nargs[1] == "ha":
-                        update_HA_master_nodes_by_kubeadm( nargs[1:])
+                        # update_HA_master_nodes_by_kubeadm( nargs[1:])
                         update_HA_worker_nodes_by_kubeadm( nargs[1:])
                         print("#################################")
                         print("#### HA master join finish ######")

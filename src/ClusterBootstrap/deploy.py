@@ -3198,6 +3198,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
     selected_ip = find_ip(ip_prefix)
     print ("Select vip: "+ selected_ip)
+    config["kube-vip"] = selected_ip
 
     # search device bind with ip
     search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """

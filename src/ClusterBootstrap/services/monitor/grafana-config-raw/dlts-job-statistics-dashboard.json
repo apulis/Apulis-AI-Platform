@@ -131,7 +131,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
+          "expr": "count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'})) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -214,7 +214,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
+          "expr": "count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -298,7 +298,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)) - (count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0))",
+          "expr": "(count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'})) OR on() vector(0)) - (count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0))",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -397,7 +397,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
+          "expr": "count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -480,7 +480,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
+          "expr": "count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -564,7 +564,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(count(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)) - (count(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0))",
+          "expr": "(count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'})) OR on() vector(0)) - (count(avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0))",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1358,7 +1358,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum((task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'} > bool 0) * task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}) / count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
+          "expr": "(sum(avg by (uuid) ((task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'} > bool 0) * task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'})) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1442,7 +1442,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum((task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'} > bool 0) * task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}) / count(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
+          "expr": "(sum( avg by (uuid) ((task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'} > bool 0) * task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'})) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}>0))) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1526,7 +1526,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(task_cpu_percent{job_name=\"$job_name\"}) / count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0) / 100) OR on() vector(0)",
+          "expr": "(sum(task_cpu_percent{job_name=\"$job_name\"}) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)) / 100) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1610,7 +1610,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(task_mem_usage_byte{job_name=\"$job_name\"}) / count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0))OR on() vector(0)",
+          "expr": "(sum(task_mem_usage_byte{job_name=\"$job_name\"}) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1693,7 +1693,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_block_in_byte{job_name=\"$job_name\"}[5m])) / count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_block_in_byte{job_name=\"$job_name\"}[5m])) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1776,7 +1776,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_block_out_byte{job_name=\"$job_name\"}[5m])) / count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0))OR on() vector(0)",
+          "expr": "(sum(rate(task_block_out_byte{job_name=\"$job_name\"}[5m])) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)))OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1859,7 +1859,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_net_in_byte{job_name=\"$job_name\"}[5m])) / count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_in_byte{job_name=\"$job_name\"}[5m])) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
@@ -1942,7 +1942,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "(sum(rate(task_net_out_byte{job_name=\"$job_name\"}[5m])) / count(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
+          "expr": "(sum(rate(task_net_out_byte{job_name=\"$job_name\"}[5m])) / count( avg by (uuid) (task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,

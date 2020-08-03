@@ -1,0 +1,36 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: restfulapi
+  namespace: default
+  labels:
+     run: dlwsrestfulapi
+spec:
+  selector:
+    matchLabels:
+      restfulapi-node: pod
+  template:
+    metadata:
+      name: restfulapi
+      labels:
+        restfulapi-node: pod
+        app: restfulapi
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
+      containers:
+      - name: aiarts_frontend
+        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}ai-arts-frontend:{{cnf["dockertag"]}}-arm64
+        imagePullPolicy: IfNotPresent
+        - containerPort: 3085
+          hostPort: 3085
+          name: main
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

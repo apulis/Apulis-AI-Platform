@@ -1299,6 +1299,7 @@ def set_nfs_disk():
     etcd_server_user = config["nfs_user"]
     nfs_servers = config["nfs_node"] if len(config["nfs_node"]) > 0 else config["etcd_node"]
     machine_name_2_full = {nm.split('.')[0]:nm for nm in nfs_servers}
+
     for srvr_nm, nfs_cnf in config["nfs_disk_mnt"].items():
         nfs_cnf["cloud_config"] = {}
         for key in ["vnet_range", "samba_range"]:
@@ -2550,10 +2551,13 @@ def ufw_default_firewall_rule(node):
     cmd += "sudo ufw enable\n"
 
 def deploy_nfs_config():
+
     nfs_nodes = get_nodes_by_roles(["nfs"])
+
     for node in nfs_nodes:
         utils.clean_rendered_target_directory()
         config["cur_nfs_node"] = node.split(".")[0]
+
         utils.render_template_directory("./template/StorageManager", "./deploy/StorageManager", config)
         utils.sudo_scp(config["ssh_cert"], "./deploy/StorageManager/config.yaml", "/etc/StorageManager/config.yaml", config["admin_username"], node)
         del config["cur_nfs_node"]
@@ -3520,7 +3524,6 @@ def get_node_lists_for_service(service):
         elif nodetype.find( "etcd_node_" )>=0:
 
             nodenumber = int(nodetype[nodetype.find( "etcd_node_" )+len("etcd_node_"):])
-
             if len(config["etcd_node"])>=nodenumber:
                 nodes = [ config["etcd_node"][nodenumber-1] ]
             else:

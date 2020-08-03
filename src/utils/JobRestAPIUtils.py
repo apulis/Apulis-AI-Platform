@@ -851,7 +851,7 @@ def GetJobLog(userName, jobId,page=1):
                 logger.exception(e)
                 pass
     return {
-        "log": {},
+        "log": "",
         "cursor": None,
         "max_page":0
     }

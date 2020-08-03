@@ -1570,7 +1570,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
     tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
     token = tokenresult.split("\n")[0]
     hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
-    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd).strip()
     # *print info
     if verbose:
         print("Token === %s, hash == %s\ncertificate key == %s" % (token, hash, cert) )
@@ -1580,7 +1580,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         print(nodename)
         nodeInfo = config["machines"][nodename]
         print nodeInfo
-        join_cmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kubernetes_master0, k8sAPIport, hash,cert)
+        join_cmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kube_vip, k8sAPIport, hash,cert)
         if verbose:
             print(join_cmd)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, join_cmd)
@@ -1588,8 +1588,11 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
     # step 3: run kubevip pod
     for nodename in join_list:
         # search device bind with ip
-        search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
-        device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command)
+        # @remind: here unlike in function "deploy_cluster_with_kubevip_by_kubeadm" I split one shell command ""
+        get_ip_cmd = " cat /etc/hosts | grep "+ nodename +" | grep -v \""+ nodename+"\.\" | awk '{print $1}' "
+        node_ip = os.popen(get_ip_cmd).readlines()[0].strip()
+        search_device_command="ifconfig | grep "+ node_ip +" -B 1 | grep :\ | sed 's/\:.*//'"
+        device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
         if verbose:
             print ("select device: "+device_name)
         run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"])
@@ -5302,9 +5305,6 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "renderimage":
         render_docker_images()
-    elif command == "test":
-        print("hahhahahahha")
-        update_HA_master_nodes_by_kubeadm( nargs[1:])
     else:
         parser.print_help()
         print "Error: Unknown command " + command

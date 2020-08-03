@@ -214,7 +214,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(avg by (instance) (k8s_node_device_available{device_str='nvidia.com/gpu'}))  OR on() vector(0)",
+          "expr": "sum(avg by (host_ip) (k8s_node_device_available{device_str='nvidia.com/gpu'}))  OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "",
@@ -722,7 +722,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(avg by (instance) (k8s_node_device_available{device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
+          "expr": "sum(avg by (host_ip) (k8s_node_device_available{device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "",
@@ -1129,7 +1129,7 @@
           "refId": "A"
         },
         {
-          "expr": "sum(avg by (instance) (k8s_node_device_available{device_str='nvidia.com/gpu'}))",
+          "expr": "sum(avg by (host_ip) (k8s_node_device_available{device_str='nvidia.com/gpu'}))",
           "format": "time_series",
           "intervalFactor": 2,
           "legendFormat": "Assignable GPU",

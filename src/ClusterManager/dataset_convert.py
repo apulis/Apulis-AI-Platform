@@ -135,12 +135,12 @@ def DoDataConvert():
                 json_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s" % (oneJob["datasetId"], oneJob["projectId"]))
                 if judge_datasets_is_private(oneJob["projectId"],oneJob["datasetId"]):
                     username =find_dataset_creator(oneJob["projectId"])
-                    coco_file_path = os.path.join(config["storage-mount-path"], "work/%s/data_platform/%s/%s/convert_coco.json" % (username,oneJob["projectId"],oneJob["datasetId"]))
+                    coco_file_path = os.path.join(config["storage-mount-path"], "work/%s/data_platform/%s/%s/annotations/instance.json" % (username,oneJob["projectId"],oneJob["datasetId"]))
                     show_coco_file_path = "/home/%s/data_platform/%s/%s" % (username,oneJob["projectId"],oneJob["datasetId"])
                     mkdirs(os.path.dirname(coco_file_path))
                     os.system("ln -s %s %s" %(find_dataset_bind_path(oneJob["projectId"],oneJob["datasetId"]),os.path.join(os.path.dirname(coco_file_path),"images")))
                 else:
-                    coco_file_path = os.path.join(config["storage-mount-path"],"storage/data_platform/%s/%s/convert_coco.json" % (oneJob["projectId"],oneJob["datasetId"]))
+                    coco_file_path = os.path.join(config["storage-mount-path"],"storage/data_platform/%s/%s/annotations/instance.json" % (oneJob["projectId"],oneJob["datasetId"]))
                     show_coco_file_path = "/data/data_platform/%s/%s" % (oneJob["projectId"],oneJob["datasetId"])
                     mkdirs(os.path.dirname(coco_file_path))
                     os.system("ln -s %s %s" % (find_dataset_bind_path(oneJob["projectId"],oneJob["datasetId"]), os.path.join(os.path.dirname(coco_file_path),"images")))

@@ -243,6 +243,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
     global system_docker_dic
     global infra_docker_registry
     global worker_docker_registry
+    global private_docker_registry
 
     archtag = ""
     if archtype != None or archtype == "amd64":
@@ -250,10 +251,12 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
 
     if system_docker_registry is None:
 
+        private_docker_registry = config["private_docker_registry"] if "private_docker_registry" in config else ""
+
         infra_dockers = config["infrastructure-dockers"] if "infrastructure-dockers" in config else {}
-        infra_docker_registry = config["infrastructure-dockerregistry"] if "infrastructure-dockerregistry" in config else config["dockerregistry"]
-        worker_docker_registry = config["worker-dockerregistry"] if "worker-dockerregistry" in config else config["dockerregistry"]
-        system_docker_registry = config["dockers"]["hub"]
+        infra_docker_registry = private_docker_registry + config["infrastructure-dockerregistry"] if "infrastructure-dockerregistry" in config else config["dockerregistry"]
+        worker_docker_registry = private_docker_registry + config["worker-dockerregistry"] if "worker-dockerregistry" in config else config["dockerregistry"]
+        system_docker_registry = private_docker_registry + config["dockers"]["hub"]
         system_docker_tag = config["dockers"]["tag"]
         system_docker_dic = config["dockers"]["system"]
         customize_docker_dic = config["dockers"]["customize"]
@@ -305,7 +308,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
             usedockername = dockername.lower()
             config["dockers"]["container"][dockername] = {}
             if "fullname" in config["dockers"]["external"][dockername]:
-                config["dockers"]["container"][dockername]["fullname"] = config["dockers"]["external"][dockername]["fullname"]
+                config["dockers"]["container"][dockername]["fullname"] = private_docker_registry + config["dockers"]["external"][dockername]["fullname"]
             else:
                 config["dockers"]["container"][dockername]["fullname"] = system_docker_registry + usedockername + ":" + system_docker_tag
 
@@ -319,11 +322,11 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
         if "job-exporter" in config["dockers"]["container"]:
 
             dockername = "job-exporter"
-            dockertag = "1.9" + archtag
+            dockertag = system_docker_tag + archtag
 
             config["dockers"]["container"][dockername] = {
                 "dirname": os.path.join("./deploy/docker-images", dockername ),
-                "fullname": config["worker-dockerregistry"] + dockername + ":" + dockertag,
+                "fullname": private_docker_registry + config["worker-dockerregistry"] + dockername + ":" + dockertag,
                 "name":  dockername + ":" + dockertag,
                 }
 
@@ -334,19 +337,17 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
         if "watchdog" in config["dockers"]["container"]:
 
             dockername = "watchdog"
-            dockertag = "1.9" + archtag
+            dockertag = system_docker_tag + archtag
 
             config["dockers"]["container"][dockername] = {
                 "dirname": os.path.join("./deploy/docker-images", dockername ),
-                "fullname": config["worker-dockerregistry"] + dockername + ":" + dockertag,
+                "fullname": private_docker_registry + config["worker-dockerregistry"] + dockername + ":" + dockertag,
                 "name":  dockername + ":" + dockertag,
                 }
 
         else:
             pass
-
         # print config["dockers"]
-
     return
 
 

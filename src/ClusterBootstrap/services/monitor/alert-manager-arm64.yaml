@@ -21,12 +21,12 @@ spec:
     spec:
       nodeSelector:
         alert-manager: active
-        archType: amd64
+        archType: arm64
       hostNetwork: true
       containers:
       - name: alert-manager
         #image: prom/alertmanager:v0.18.0
-        image: {{cnf["dockers"]["container"]["alertmanager"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["alertmanager"]["fullname"]}}-arm64
         args:
           - '--config.file=/etc/alertmanager/config.yml'
           - '--storage.path=/alertmanager'

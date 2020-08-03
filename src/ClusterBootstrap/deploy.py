@@ -1515,10 +1515,11 @@ def update_worker_nodes( nargs ):
     os.system("rm ./deploy/kubelet/kubelet.service")
     os.system("rm ./deploy/kubelet/worker-kubeconfig.yaml")
 
-def update_worker_nodes_by_kubeadm( nargs ):
+def update_worker_nodes_by_kubeadm( nargs, control_plane_address = ""):
     write_nodelist_yaml()
     kubernetes_masters = config["kubernetes_master_node"]
-    kubernetes_master0 = kubernetes_masters[0]
+    if control_plane_address == "":
+        control_plane_address = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
 
     workerNodes = get_worker_nodes(config["clusterId"], False)
@@ -1527,16 +1528,16 @@ def update_worker_nodes_by_kubeadm( nargs ):
     k8sAPIport = config["k8sAPIport"]
 
     tokencmd = "sudo kubeadm token create"
-    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,control_plane_address,tokencmd)
     token = tokenresult.split("\n")[0]
     hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
-    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,control_plane_address,hashcmd)
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
 
         if in_list(node, nargs):
-            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, control_plane_address, k8sAPIport, hash)
             if verbose:
                 print(workercmd)
             else:
@@ -1607,6 +1608,10 @@ def get_master_node_host_except_primary():
             remain_master_node_array.append(master_host)
     return remain_master_node_array
 
+def update_HA_worker_nodes_by_kubeadm( nargs):
+    control_plane_address = config["kube-vip"]
+    update_worker_nodes_by_kubeadm(nargs[1:],control_plane_address)
+    return
 
 def update_worker_nodes_by_kubeadm_2(workerNodes):
 
@@ -3198,7 +3203,25 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
     selected_ip = find_ip(ip_prefix)
     print ("Select vip: "+ selected_ip)
+    kubevip_in_config = False
+    try:
+        config_file = open("config.yaml",'a+')
+        all_lines = config_file.readlines()
+        config_file.seek(0)
+        config_file.truncate()
+        for line in all_lines:
+            if "kube-vip" in line:
+                config_file.write("kube-vip: "+ selected_ip)
+                kubevip_in_config = True
+            else:
+                config_file.write(line)
+    except Exception,e:
+        print e
+    if not kubevip_in_config:
+        config_file.write("\nkube-vip: "+ selected_ip+'\n')
+    config_file.close()
     config["kube-vip"] = selected_ip
+
 
     # search device bind with ip
     search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
@@ -4498,7 +4521,8 @@ def run_command( args, command, nargs, parser ):
             elif nargs[0] == "join":
                 if len(nargs) > 1:
                     if nargs[1] == "ha":
-                        update_HA_master_nodes_by_kubeadm( nargs[1:])
+                        # update_HA_master_nodes_by_kubeadm( nargs[1:])
+                        update_HA_worker_nodes_by_kubeadm( nargs[1:])
                         print("#################################")
                         print("#### HA master join finish ######")
                         print("#################################")

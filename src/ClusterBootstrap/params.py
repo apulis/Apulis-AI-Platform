@@ -245,6 +245,12 @@ default_config_parameters = {
     #   - label : etcd_node <tag to be applied to etcd node only >
     #   - label : worker_node <tag to be applied to worker node only >
     #   - label : all <tag to be applied to all nodes
+    # Types of node include:
+    #   - etcd_node, etcd_node_1, etcd_node_2 ...
+    #   - worker_node
+    #   - elasticsearch_node
+    #   - mysqlserver_node
+    #   - nfs_node
     "kubelabels": {
         "infrastructure": "etcd_node",
 
@@ -256,14 +262,17 @@ default_config_parameters = {
         "namenode2": "etcd_node_2",
 
         "datanode": "all",
-        "repairmanager": "etcd_node_1",
-        "grafana": "etcd_node_1",
-        "prometheus": "etcd_node_1",
-        "alert-manager": "etcd_node_1",
-        "watchdog": "etcd_node_1",
+        
+        "grafana": "nfs_node",
+        "prometheus": "nfs_node",
+        "alert-manager": "nfs_node",
+        "watchdog": "etcd_node",
+
         "elasticsearch": "elasticsearch_node",
         "kibana": "etcd_node_1",
-        "mysql": "worker_node",
+
+        ## storage server
+        "mysql": "nfs_node",
         "mysql-server": "mysqlserver_node",
         "storagemanager": "nfs_node",
         "user-synchronizer": "etcd_node_1",
@@ -278,12 +287,12 @@ default_config_parameters = {
         "nginx": "all",
         "webportal": "etcd_node",
         "restfulapi": "etcd_node",
-        "jobmanager": "etcd_node_1",
-        "repairmanager": "etcd_node_1",
+        "jobmanager": "etcd_node",
+        "repairmanager": "etcd_node",
 
-        "webui3": "etcd_node_1",
+        "webui3": "etcd_node",
         "restfulapi2": "etcd_node",
-        "jobmanager2": "etcd_node_1",
+        "jobmanager2": "etcd_node",
 
         ## default labels
         "all": "all",

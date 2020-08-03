@@ -4521,7 +4521,7 @@ def run_command( args, command, nargs, parser ):
             elif nargs[0] == "join":
                 if len(nargs) > 1:
                     if nargs[1] == "ha":
-                        # update_HA_master_nodes_by_kubeadm( nargs[1:])
+                        update_HA_master_nodes_by_kubeadm( nargs[1:])
                         update_HA_worker_nodes_by_kubeadm( nargs[1:])
                         print("#################################")
                         print("#### HA master join finish ######")
@@ -5302,7 +5302,9 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "renderimage":
         render_docker_images()
-
+    elif command == "test":
+        print("hahhahahahha")
+        update_HA_master_nodes_by_kubeadm( nargs[1:])
     else:
         parser.print_help()
         print "Error: Unknown command " + command

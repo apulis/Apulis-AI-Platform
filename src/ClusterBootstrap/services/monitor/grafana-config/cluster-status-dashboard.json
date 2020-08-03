@@ -794,7 +794,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "count(pai_node_count{ready=\"true\", unschedulable=\"false\"}) OR on() vector(0)",
+                "expr": "count(avg by (name) (pai_node_count{ready=\"true\", unschedulable=\"false\"})) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,
@@ -871,7 +871,7 @@
             "tableColumn": "",
             "targets": [
               {
-                "expr": "count(pai_node_count) OR on() vector(0)",
+                "expr": "count(avg by (name) (pai_node_count)) OR on() vector(0)",
                 "format": "time_series",
                 "hide": false,
                 "instant": true,

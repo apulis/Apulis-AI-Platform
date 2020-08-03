@@ -913,7 +913,10 @@ def gen_device_type_config(config):
             archtype = nodeInfo["archtype"]
         if nodeInfo["role"] == "worker":
             if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+                if "series" in nodeInfo:
+                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+                else:
+                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
     config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
@@ -3752,7 +3755,10 @@ def kubernetes_label_worker(uncordon=False):
 
             # gpuType=nvidia/huawei for compatibility
             if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+                if "series" in nodeInfo:
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+                else:
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
             else:
                 pass
 
@@ -3798,7 +3804,10 @@ def kubernetes_label_worker_2(nodename, nodeInfo):
 
         # gpuType=nvidia/huawei for compatibility
         if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-            kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+            if "series" in nodeInfo:
+                kubernetes_label_node("--overwrite", nodename,"gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" +nodeInfo["series"])
+            else:
+                kubernetes_label_node("--overwrite", nodename,"gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
         else:
             pass
 

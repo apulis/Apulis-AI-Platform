@@ -58,7 +58,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_gpu_util{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_gpu_util{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -134,7 +134,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_memory_clock{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_memory_clock{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -222,7 +222,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_gpu_temp{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_gpu_temp{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -298,7 +298,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_memory_temp{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_memory_temp{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -386,7 +386,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_sm_clock{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_sm_clock{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -462,7 +462,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_power_usage{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_power_usage{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -550,7 +550,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_total_energy_consumption{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_total_energy_consumption{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -626,7 +626,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_pcie_tx_throughput{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_pcie_tx_throughput{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -714,7 +714,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_pcie_rx_throughput{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_pcie_rx_throughput{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -790,7 +790,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_pcie_replay_counter{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_pcie_replay_counter{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -878,7 +878,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_mem_copy_util{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_mem_copy_util{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -954,7 +954,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_enc_util{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_enc_util{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1042,7 +1042,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_dec_util{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_dec_util{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1118,7 +1118,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_xid_errors{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_xid_errors{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1206,7 +1206,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_power_violation{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_power_violation{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1282,7 +1282,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_thermal_violation{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_thermal_violation{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1370,7 +1370,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_sync_boost_violation{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_sync_boost_violation{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1446,7 +1446,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_board_limit_violation{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_board_limit_violation{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1534,7 +1534,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_low_util_violation{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_low_util_violation{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1610,7 +1610,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_reliability_violation{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_reliability_violation{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1698,7 +1698,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_app_clock_violation{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_app_clock_violation{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1774,7 +1774,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_fb_free{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_fb_free{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1862,7 +1862,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_fb_used{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_fb_used{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -1938,7 +1938,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_ecc_sbe_volatile_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_ecc_sbe_volatile_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2026,7 +2026,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_ecc_dbe_volatile_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_ecc_dbe_volatile_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2102,7 +2102,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_ecc_sbe_aggregate_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_ecc_sbe_aggregate_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2190,7 +2190,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_ecc_dbe_aggregate_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_ecc_dbe_aggregate_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2266,7 +2266,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_retired_pages_sbe{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_retired_pages_sbe{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2354,7 +2354,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_retired_pages_dbe{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_retired_pages_dbe{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2430,7 +2430,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_retired_pages_pending{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_retired_pages_pending{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2518,7 +2518,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_nvlink_flit_crc_error_count_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_nvlink_flit_crc_error_count_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2594,7 +2594,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_nvlink_data_crc_error_count_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_nvlink_data_crc_error_count_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2682,7 +2682,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_nvlink_replay_error_count_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_nvlink_replay_error_count_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2758,7 +2758,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_nvlink_recovery_error_count_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_nvlink_recovery_error_count_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
@@ -2846,7 +2846,7 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "task_dcgm_nvlink_bandwidth_total{job_name=\"$job_name\"}",
+                "expr": "avg by (instance,minor_number) (task_dcgm_nvlink_bandwidth_total{job_name=\"$job_name\"})",
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,

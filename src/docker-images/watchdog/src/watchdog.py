@@ -618,7 +618,8 @@ def parse_node_item(node,
                 cluster_gpu_info.available += available
                 cluster_gpu_info.preemptable_available += preemptable_available
                 cluster_gpu_info.allocatable += device_allocatable
-            
+                cluster_gpu_info.reserved += reserved
+
                 logger.debug("dispatch gauge info. found gpu: ip[%s], device_capacity[%d], preemptable_available[%d], device_allocatable[%d]" % 
                                (ip, device_capacity, preemptable_available, device_allocatable))
 
@@ -627,6 +628,7 @@ def parse_node_item(node,
                 cluster_npu_info.available += available
                 cluster_npu_info.preemptable_available += preemptable_available
                 cluster_npu_info.allocatable += device_allocatable
+                cluster_npu_info.reserved += reserved
 
                 logger.debug("dispatch gauge info. found npu: ip[%s], device_capacity[%d], available[%d], total_used_processor[%d]" % 
                                 (ip, device_capacity, available, total_used_processor))
@@ -821,14 +823,16 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                     else:
                         if deviceStr == "npu.huawei.com/NPU":
                             available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                            reserved = int(math.floor(cluster_npu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                             preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                         else:
                             available = int(math.floor(cluster_gpu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                            reserved = int(math.floor(cluster_gpu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                             preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                     quota = vc_info[vc_name][gpu_type]
                     vc_avail_gauge.add_metric(labels, available)
                     vc_preemptive_avail_gauge.add_metric(labels, preemptive_available)
-                    vc_unschedulable_gauge.add_metric(labels, max(0, quota - available))
+                    vc_unschedulable_gauge.add_metric(labels, max(0, reserved))
 
         for vc_name, vc_usage_info in vc_usage.map.items():
             for gpu_type, vc_used in vc_usage_info.items():
@@ -852,14 +856,16 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                 else:
                     if deviceStr == "npu.huawei.com/NPU":
                         available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                        reserved = int(math.floor(cluster_npu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                         preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0])) if ratio_sum[deviceStr][0]!=0 else 0
                     else:
                         available = int(math.floor(cluster_gpu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                        reserved = int(math.floor(cluster_gpu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                         preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0])) if ratio_sum[deviceStr][0]!=0 else 0
                 total_used, non_preemptable_used = vc_used
                 vc_avail_gauge.add_metric(labels, available)
                 vc_preemptive_avail_gauge.add_metric(labels, preemptive_available)
-                vc_unschedulable_gauge.add_metric(labels, max(0, quota - available))
+                vc_unschedulable_gauge.add_metric(labels, max(0, reserved))
     except Exception as e:
         error_counter.labels(type="vc_quota").inc()
         logger.exception("failed to process vc info")
@@ -1067,13 +1073,15 @@ class ClusterGPUInfo(object):
         self.available = 0
         self.preemptable_available = 0 # gpu available for preemptable job
         self.allocatable = 0
+        self.reserved = 0
 
     def __repr__(self):
-        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d" % (
+        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d,reserved %d" % (
                 self.capacity,
                 self.available,
                 self.preemptable_available,
                 self.allocatable,
+                self.reserved,
                 )
 
 class ClusterNPUInfo(object):
@@ -1082,13 +1090,15 @@ class ClusterNPUInfo(object):
         self.available = 0
         self.preemptable_available = 0 # npu available for preemptable job
         self.allocatable = 0
+        self.reserved = 0
 
     def __repr__(self):
-        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d" % (
+        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d,reserved %d" % (
                 self.capacity,
                 self.available,
                 self.preemptable_available,
                 self.allocatable,
+                self.reserved,
                 )
 
 

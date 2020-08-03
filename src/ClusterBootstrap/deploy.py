@@ -667,6 +667,7 @@ def get_worker_nodes(clusterId, isScaledOnly):
     else:
         return nodes
 
+
 def limit_nodes(nodes):
     if limitnodes is not None:
         matchFunc = re.compile(limitnodes, re.IGNORECASE)
@@ -879,7 +880,7 @@ def gen_configs():
     config["nfs_user"] = config["admin_username"]
     config["kubernetes_master_ssh_user"] = config["admin_username"]
 
-    config["api_servers"] = "https://"+config["kubernetes_master_node"][0]+":"+str(config["k8sAPIport"])
+    config["api_servers"] = "https://"+config["kube-vip"]+":"+str(config["k8sAPIport"])
     config["etcd_endpoints"] = ",".join(["https://"+x+":"+config["etcd3port1"] for x in config["etcd_node"]])
 
 
@@ -912,7 +913,10 @@ def gen_device_type_config(config):
             archtype = nodeInfo["archtype"]
         if nodeInfo["role"] == "worker":
             if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+                if "series" in nodeInfo:
+                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+                else:
+                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
     config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
@@ -1095,7 +1099,7 @@ def deploy_masters(force = False):
     """
     utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_masters[0], deploycmd , False)
 
-def deploy_masters_by_kubeadm(force = False):
+def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_master0 = ""):
     print "==============================================="
     print "Prepare to deploy kubernetes master"
     print "==============================================="
@@ -1103,8 +1107,9 @@ def deploy_masters_by_kubeadm(force = False):
     kubernetes_masters = config["kubernetes_master_node"]
     kubernetes_version = config["k8s-gitbranch"]
     kubernetes_ip_range = config["network"]["container-network-iprange"]
-
-    kubernetes_master0 = kubernetes_masters[0]
+    
+    if kubernetes_master0 == "" :
+        kubernetes_master0 = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
 
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
@@ -1126,8 +1131,10 @@ def deploy_masters_by_kubeadm(force = False):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
-        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s""" % (kubernetes_master0, kubernetes_version)
+        print(kubernetes_master)
+        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s %s""" % (kubernetes_master0, kubernetes_version, init_arguments)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
+        time.sleep(30)
 
         if i==0:
             utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
@@ -1511,10 +1518,11 @@ def update_worker_nodes( nargs ):
     os.system("rm ./deploy/kubelet/kubelet.service")
     os.system("rm ./deploy/kubelet/worker-kubeconfig.yaml")
 
-def update_worker_nodes_by_kubeadm( nargs ):
+def update_worker_nodes_by_kubeadm( nargs, control_plane_address = ""):
     write_nodelist_yaml()
     kubernetes_masters = config["kubernetes_master_node"]
-    kubernetes_master0 = kubernetes_masters[0]
+    if control_plane_address == "":
+        control_plane_address = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
 
     workerNodes = get_worker_nodes(config["clusterId"], False)
@@ -1523,16 +1531,16 @@ def update_worker_nodes_by_kubeadm( nargs ):
     k8sAPIport = config["k8sAPIport"]
 
     tokencmd = "sudo kubeadm token create"
-    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,control_plane_address,tokencmd)
     token = tokenresult.split("\n")[0]
     hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
-    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,control_plane_address,hashcmd)
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
 
         if in_list(node, nargs):
-            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, control_plane_address, k8sAPIport, hash)
             if verbose:
                 print(workercmd)
             else:
@@ -1542,6 +1550,70 @@ def update_worker_nodes_by_kubeadm( nargs ):
         else:
             pass
 
+    return
+
+def update_HA_master_nodes_by_kubeadm( nargs ):
+    # step 1: acquire vip
+    kube_vip = config["kube-vip"]
+    if verbose:
+        print("kube-vip : "+kube_vip)
+
+    # step 2: init with vip
+    # *acquire info of primary master
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+    k8sAPIport = config["k8sAPIport"]
+    # *generate certificate key
+    certcmd = "sudo kubeadm init phase upload-certs --upload-certs"
+    certresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,certcmd)
+    cert = certresult.split('\n')[2]
+    # *generate token
+    tokencmd = "sudo kubeadm token create"
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    token = tokenresult.split("\n")[0]
+    hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+    # *print info
+    if verbose:
+        print("Token === %s, hash == %s\ncertificate key == %s" % (token, hash, cert) )
+    # *join all remain master into cluster
+    join_list = get_master_node_host_except_primary()
+    for nodename in join_list:
+        print(nodename)
+        nodeInfo = config["machines"][nodename]
+        print nodeInfo
+        join_cmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kubernetes_master0, k8sAPIport, hash,cert)
+        if verbose:
+            print(join_cmd)
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, join_cmd)
+
+    # step 3: run kubevip pod
+    for nodename in join_list:
+        # search device bind with ip
+        search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
+        device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command)
+        if verbose:
+            print ("select device: "+device_name)
+        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"])
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
+
+    return
+
+# serve update_HA_master_nodes_by_kubeadm function
+def get_master_node_host_except_primary():
+    remain_master_node_array = []
+    kubernetes_masters_admin = config["kubernetes_master_node"]
+    primary_master_admin = kubernetes_masters_admin[0]
+    for master_admin in kubernetes_masters_admin:
+        if master_admin != primary_master_admin:
+            master_host = master_admin.split('.')[0]
+            remain_master_node_array.append(master_host)
+    return remain_master_node_array
+
+def update_HA_worker_nodes_by_kubeadm( nargs):
+    control_plane_address = config["kube-vip"]
+    update_worker_nodes_by_kubeadm(nargs[1:],control_plane_address)
     return
 
 def update_worker_nodes_by_kubeadm_2(workerNodes):
@@ -1689,26 +1761,30 @@ def update_mysqlserver_nodes(nargs):
     # This is to temporarily replace gpu_type with None to disallow nvidia runtime config to appear in /etc/docker/daemon.json
     prev_gpu_type = config["gpu_type"]
     config["gpu_type"] = "None"
+
     utils.render_template_directory("./template/kubelet", "./deploy/kubelet", config)
     config["gpu_type"] = prev_gpu_type
 
     write_nodelist_yaml()
 
-    os.system('sed "s/##etcd_endpoints##/%s/" "./deploy/kubelet/options.env.template" > "./deploy/kubelet/options.env"' % config["etcd_endpoints"].replace("/", "\\/"))
-    os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/kubelet.service.template > ./deploy/kubelet/kubelet.service' % config["api_servers"].replace("/", "\\/"))
-    os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/worker-kubeconfig.yaml.template > ./deploy/kubelet/worker-kubeconfig.yaml' % config["api_servers"].replace("/", "\\/"))
-
-    get_hyperkube_docker()
+    #os.system('sed "s/##etcd_endpoints##/%s/" "./deploy/kubelet/options.env.template" > "./deploy/kubelet/options.env"' % config["etcd_endpoints"].replace("/", "\\/"))
+    #os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/kubelet.service.template > ./deploy/kubelet/kubelet.service' % config["api_servers"].replace("/", "\\/"))
+    #os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/worker-kubeconfig.yaml.template > ./deploy/kubelet/worker-kubeconfig.yaml' % config["api_servers"].replace("/", "\\/"))
 
     mysqlserver_nodes = get_nodes_by_roles(["mysqlserver"])
     mysqlserver_nodes = limit_nodes(mysqlserver_nodes)
+
     for node in mysqlserver_nodes:
         if in_list(node, nargs):
             update_worker_node(node)
+        else:
+            pass
 
     os.system("rm ./deploy/kubelet/options.env")
     os.system("rm ./deploy/kubelet/kubelet.service")
     os.system("rm ./deploy/kubelet/worker-kubeconfig.yaml")
+
+    return
 
 
 def create_MYSQL_for_WebUI():
@@ -3121,6 +3197,89 @@ def deploy_ETCD_master_by_kubeadm(force = False):
             print "Cannot deploy cluster since there are insufficient number of etcd server or master server. \n To continue deploy the cluster we need at least %d etcd server(s)" % (int(config["etcd_node_num"]))
             return False
 
+def deploy_cluster_with_kubevip_by_kubeadm(force = False):
+    print ("#############################")
+    print ("###### kubevip process ######")
+    print ("#############################")
+    print ("searching for a available ip ......")
+    prepare_kubevip_yaml_command = """ master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;ip_section=`echo $master_ip | sed "s|\.[0-9]*$||"`;echo $ip_section """
+    ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
+    selected_ip = find_ip(ip_prefix)
+    print ("Select vip: "+ selected_ip)
+    kubevip_in_config = False
+    try:
+        config_file = open("config.yaml",'a+')
+        all_lines = config_file.readlines()
+        config_file.seek(0)
+        config_file.truncate()
+        for line in all_lines:
+            if "kube-vip" in line:
+                config_file.write("kube-vip: "+ selected_ip)
+                kubevip_in_config = True
+            else:
+                config_file.write(line)
+    except Exception,e:
+        print e
+    if not kubevip_in_config:
+        config_file.write("\nkube-vip: "+ selected_ip+'\n')
+    config_file.close()
+    config["kube-vip"] = selected_ip
+
+
+    # search device bind with ip
+    search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
+    device_name = os.popen(search_device_command).readlines()[0].strip()
+    print (device_name)
+
+    os.system("sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip))
+    print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
+    print "The current deployment has:\n"
+
+    check_master_ETCD_status()
+
+    if "etcd_node" in config and len(config["etcd_node"]) >= int(config["etcd_node_num"]) and "kubernetes_master_node" in config and len(config["kubernetes_master_node"]) >= 1:
+        print ("Ready to deploy kubernetes master/etcd on %s.  " % (",".join(config["kubernetes_master_node"])))
+
+        gen_configs()
+        deploy_masters_by_kubeadm(force,kubernetes_master0=selected_ip ,init_arguments="--upload-certs")
+
+        return True
+    else:
+        print "Cannot deploy cluster since there are insufficient number of etcd server or master server. \n To continue deploy the cluster we need at least %d etcd server(s)" % (int(config["etcd_node_num"]))
+        return False
+
+# serve find_ip function
+def ping_ip(ip_str, available_ip_list, occupied_ip_list):
+    cmd = ["ping", "-c",
+        "1", ip_str]
+    output = os.popen(" ".join(cmd)).readlines()
+    flag = False
+    for line in list(output):
+        if not line:
+            continue
+        if str(line).upper().find("TTL") >=0:
+            flag = True
+            break
+    if flag:
+        occupied_ip_list.append(ip_str)
+    else:
+        available_ip_list.append(ip_str)
+
+# serve deploy_cluster_with_kubevip_by_kubeadm function
+def find_ip(ip_prefix):
+    import threading
+    thread_list = []
+    available_ip_list = []
+    occupied_ip_list = []
+    for i in range(2,254):
+        ip = ('%s.%s'%(ip_prefix,i))
+        new_thread = threading.Thread(target=ping_ip, args=(ip, available_ip_list, occupied_ip_list,))
+        new_thread.start()
+        thread_list.append(new_thread)
+    for single_thread in thread_list:
+        single_thread.join()
+    return available_ip_list[0]
+
 
 def update_config_node( node ):
     role = SSH_exec_cmd_with_output( )
@@ -3556,6 +3715,11 @@ def kubernetes_label_GpuTypes():
         if nodeInfo["role"] == "worker":
             kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
 
+def kubernetes_label_storage():
+    for nodename in config["mysqlserver"]:
+        print(nodename)
+        kubernetes_label_node("--overwrite", nodename, "mysql=active")
+
 # Label kubernetes worker nodes
 def kubernetes_label_worker(uncordon=False):
 
@@ -3591,7 +3755,10 @@ def kubernetes_label_worker(uncordon=False):
 
             # gpuType=nvidia/huawei for compatibility
             if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+                if "series" in nodeInfo:
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+                else:
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
             else:
                 pass
 
@@ -3637,7 +3804,10 @@ def kubernetes_label_worker_2(nodename, nodeInfo):
 
         # gpuType=nvidia/huawei for compatibility
         if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-            kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+            if "series" in nodeInfo:
+                kubernetes_label_node("--overwrite", nodename,"gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" +nodeInfo["series"])
+            else:
+                kubernetes_label_node("--overwrite", nodename,"gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
         else:
             pass
 
@@ -4345,9 +4515,30 @@ def run_command( args, command, nargs, parser ):
     elif command == "kubeadm":
         if len(nargs) > 0:
             if nargs[0] == "init":
+                if len(nargs) > 1:
+                    if nargs[1] == "ha":
+                        deploy_cluster_with_kubevip_by_kubeadm(force=args.force)
+                        print("##########################")
+                        print("#### HA init finish ######")
+                        print("##########################")
+                        exit()
+                    else:
+                        print ("Error: too much arguments!")
+                        exit()
                 # Setup cluster by kubeadm
                 deploy_ETCD_master_by_kubeadm(force=args.force)
             elif nargs[0] == "join":
+                if len(nargs) > 1:
+                    if nargs[1] == "ha":
+                        # update_HA_master_nodes_by_kubeadm( nargs[1:])
+                        update_HA_worker_nodes_by_kubeadm( nargs[1:])
+                        print("#################################")
+                        print("#### HA master join finish ######")
+                        print("#################################")
+                        exit()
+                    else:
+                        print ("Error: too much arguments!")
+                        exit()
                 # Join worker nodes by kubeadm
                 update_worker_nodes_by_kubeadm( nargs[1:] )
             elif nargs[0] == "reset":
@@ -4526,6 +4717,7 @@ def run_command( args, command, nargs, parser ):
             check_master_ETCD_status()
             gen_configs()
             update_mysqlserver_nodes(nargs)
+
 
     elif command == "updatenfs":
         response = raw_input_with_default("Deploy NFS Node(s) (y/n)?")
@@ -4967,6 +5159,11 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "labelvc":
         kubernetes_label_vc()
+
+    elif command == "labelstorage":
+        check_master_ETCD_status()
+        gen_configs()
+        kubernetes_label_storage()
 
     elif command == "genscripts":
         gen_platform_wise_config()

@@ -288,7 +288,10 @@ default_config_parameters = {
         "webportal": "etcd_node",
         "restfulapi": "etcd_node",
         "jobmanager": "etcd_node",
-        "repairmanager": "etcd_node",
+
+        "image_label": "etcd_node_1",
+        "aiarts_frontend": "etcd_node_1",
+        "aiarts_backend": "etcd_node_1",
 
         "webui3": "etcd_node",
         "restfulapi2": "etcd_node",
@@ -767,6 +770,8 @@ default_config_parameters = {
             "prometheus-operator": {"fullname": "jessestuart/prometheus-operator:v0.38.0"},
             "k8s-prometheus-adapter": {"fullname": "directxman12/k8s-prometheus-adapter:v0.7.0"},
             "nvidia-device-plugin": {"fullname": "nvidia/k8s-device-plugin:1.11"},
+            "aiarts-frontend": {"fullname": "apulistech/dlworkspace_aiarts-frontend:1.0.0"},
+            "aiarts-backend": {"fullname": "apulistech/dlworkspace_aiarts-backend:1.0.0"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

@@ -1,33 +1,33 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: restfulapi
+  name: aiarts-frontend
   namespace: default
   labels:
-     run: dlwsrestfulapi
+     run: dlwsaiarts-frontend
 spec:
   selector:
     matchLabels:
-      restfulapi-node: pod
+      aiarts-frontend-node: pod
   template:
     metadata:
-      name: restfulapi
+      name: aiarts-frontend
       labels:
-        restfulapi-node: pod
-        app: restfulapi
+        aiarts-frontend-node: pod
+        app: aiarts-frontend
     spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
-        restfulapi: active
+        aiarts-frontend: active
         archType: amd64
       containers:
-      - name: aiarts_frontend
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}ai-arts-frontend:{{cnf["dockertag"]}}-arm64
-        imagePullPolicy: IfNotPresent
-        - containerPort: 3085
-          hostPort: 3085
+      - name: aiarts-frontend
+        image: {{cnf["dockers"]["container"]["aiarts-frontend"]["fullname"]}}-arm64
+        ports:
+        - containerPort: 3084
+          hostPort: 3084 
           name: main
       tolerations:
       - key: CriticalAddonsOnly

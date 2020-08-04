@@ -1,0 +1,51 @@
+apiVersion: v1
+data:
+  config.yaml: |+
+    port: 9000
+
+    log:
+      writefile: true
+      filedir: logs
+      filename: ai_arts_backend.log
+
+    db:
+      username: root
+      password: apulis#2019#wednesday
+      host: 10.107.77.100
+      port: 3306
+      database: ai_arts
+      maxopenconns: 10
+      maxidleconns: 2
+
+    file:
+      datasetdir: /data/dataset
+      modeldir: /data/model
+      sizelimit: 1000000000
+
+    Anno:
+      backendUrl: http://localhost/data-platform-backend
+
+    Infer:
+      backendUrl: http://localhost
+
+    auth:
+      url: "http://localhost:52080/custom-user-dashboard-backend/auth/currentUser"
+      key: "Sign key for JWT"
+
+    DltsUrl: http://localhost:80/apis
+    image:
+      tensorflow:
+        - apulistech/tensorflow:2.2.0-gpu
+        - apulistech/ubuntu:18.04-amd64
+        - apulistech/tensorflow:2.2.0-gpu-py3
+        - apulistech/tensorflow:1.14.0-gpu-py3
+      pytorch:
+        - apulistech/pytorch:2.0
+
+    InteractiveModeJob: false
+
+
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: aiarts-cm

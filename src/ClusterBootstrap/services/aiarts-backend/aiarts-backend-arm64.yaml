@@ -4,30 +4,30 @@ metadata:
   name: aiarts-backend
   namespace: default
   labels:
-     run: dlwsrestfulapi
+     run: dlwsaiarts-backend
 spec:
   selector:
     matchLabels:
-      restfulapi-node: pod
+      aiarts-backend-node: pod
   template:
     metadata:
-      name: restfulapi
+      name: aiarts-backend
       labels:
-        restfulapi-node: pod
-        app: restfulapi
+        aiarts-backend-node: pod
+        app: 
     spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
-        restfulapi: active
+        aiarts-backend: active
         archType: amd64
       containers:
       - name: aiarts-backend
         image: {{cnf["dockers"]["container"]["aiarts-backend"]["fullname"]}}-arm64
         ports:
-        - containerPort: 3084
-          hostPort: 3084 
+        - containerPort: 9000
+          hostPort: 9000
           name: main
       tolerations:
       - key: CriticalAddonsOnly

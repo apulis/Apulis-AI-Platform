@@ -4,23 +4,23 @@ metadata:
   name: image-label
   namespace: default
   labels:
-     run: dlwsrestfulapi
+     run: dlwsimage-label
 spec:
   selector:
     matchLabels:
-      restfulapi-node: pod
+      image-label-node: pod
   template:
     metadata:
-      name: restfulapi
+      name: image-label
       labels:
-        restfulapi-node: pod
-        app: restfulapi
+        image-label-node: pod
+        app: image-label
     spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
-        restfulapi: active
+        image-label: active
         archType: amd64
       containers:
       - name: image-label

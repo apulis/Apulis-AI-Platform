@@ -4,31 +4,50 @@ metadata:
   name: aiarts-backend
   namespace: default
   labels:
-     run: dlwsrestfulapi
+     run: dlwsaiarts-backend
 spec:
   selector:
     matchLabels:
-      restfulapi-node: pod
+      aiarts-backend-node: pod
   template:
     metadata:
-      name: restfulapi
+      name: aiarts-backend
       labels:
-        restfulapi-node: pod
-        app: restfulapi
+        aiarts-backend-node: pod
+        app: aiarts-backend
     spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
-        restfulapi: active
+        aiarts-backend: active
         archType: amd64
       containers:
       - name: aiarts-backend
         image: {{cnf["dockers"]["container"]["aiarts-backend"]["fullname"]}}
         ports:
-        - containerPort: 3084
-          hostPort: 3084 
+        - containerPort: 9000
+          hostPort: 9000
           name: main
+        volumeMounts:
+        - mountPath: /root/config.yaml
+          name: appconfig
+          subPath: config.yaml
+        - mountPath: {{cnf["storage-mount-path"]}}/work
+          name: dlwsdatawork
+        - mountPath: {{cnf["storage-mount-path"]}}/storage
+          name: dlwsdatadata
+      
+      volumes:
+      - name: appconfig
+        configMap:
+          name: aiarts-cm
+      - name: dlwsdatawork
+        hostPath:
+          path: {{cnf["storage-mount-path"]}}/work
+      - name: dlwsdatadata
+        hostPath:
+          path: {{cnf["storage-mount-path"]}}/storage      
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

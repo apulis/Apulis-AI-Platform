@@ -26,8 +26,7 @@ spec:
         archType: amd64
       containers:
       - name: jobmanager
-        #image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}
-        image: {{cnf["dockers"]["container"]["jobmanager2"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["restfulapi2"]["fullname"]}}
         command: ["/runScheduler.sh"]
         imagePullPolicy: Always
         env:

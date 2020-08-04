@@ -262,7 +262,7 @@ default_config_parameters = {
         "namenode2": "etcd_node_2",
 
         "datanode": "all",
-        
+
         "grafana": "etcd_node_1",
         "prometheus": "etcd_node_1",
         "watchdog": "etcd_node_1",
@@ -766,6 +766,7 @@ default_config_parameters = {
             "alertmanager": {"fullname": "prom/alertmanager:v0.20.0"},
             "prometheus-operator": {"fullname": "jessestuart/prometheus-operator:v0.38.0"},
             "k8s-prometheus-adapter": {"fullname": "directxman12/k8s-prometheus-adapter:v0.7.0"},
+            "nvidia-device-plugin": {"fullname": "nvidia/k8s-device-plugin:1.11"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

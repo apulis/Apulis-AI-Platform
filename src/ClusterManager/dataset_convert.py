@@ -6,7 +6,8 @@ import uuid
 import subprocess
 import sys
 import datetime
-
+reload(sys)
+sys.setdefaultencoding('utf8')
 import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 import base64

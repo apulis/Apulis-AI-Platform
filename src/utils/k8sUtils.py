@@ -36,6 +36,12 @@ def localize_time(date):
         date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
     return pytz.utc.localize(date).isoformat()
 
+def string_to_datetime(string_date):
+    return datetime.strptime(string_date,"%Y-%m-%dT%H:%M:%S.%f%z")
+
+def string_to_timestamp(string_date):
+    return string_to_datetime(string_date).timestamp()
+
 def curl_get(url):
     curl = pycurl.Curl()
     curl.setopt(pycurl.URL, url)

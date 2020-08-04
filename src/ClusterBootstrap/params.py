@@ -265,8 +265,8 @@ default_config_parameters = {
         
         "grafana": "etcd_node_1",
         "prometheus": "etcd_node_1",
-        "alert-manager": "nfs_node",
         "watchdog": "etcd_node_1",
+        "alert-manager": "etcd_node_1",
 
         "elasticsearch": "elasticsearch_node",
         "kibana": "etcd_node_1",

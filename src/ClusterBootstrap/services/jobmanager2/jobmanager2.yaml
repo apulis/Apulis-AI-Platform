@@ -26,12 +26,14 @@ spec:
         archType: amd64
       containers:
       - name: jobmanager
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}
+        #image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}restfulapi2:{{cnf["dockertag"]}}
+        image: {{cnf["dockers"]["container"]["jobmanager2"]["fullname"]}}
         command: ["/runScheduler.sh"]
         imagePullPolicy: Always
         env:
         - name: INIT_CONTAINER_IMAGE
-          value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}
+          #value: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}init-container:{{cnf["dockertag"]}}
+          value: {{cnf["dockers"]["container"]["init-container"]["fullname"]}}
         volumeMounts:
         - mountPath: /usr/bin/kubectl
           name: kubectl-binary

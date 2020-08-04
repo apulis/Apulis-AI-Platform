@@ -854,6 +854,7 @@ def gen_platform_wise_config():
 
 def get_api_server(config):
 
+    get_nodes_by_roles(["infra"])
     if "kube-vip" in config and config["kube-vip"] is not None:
         return config["kube-vip"]
     else:
@@ -1158,13 +1159,12 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
         time.sleep(30)
 
-        if i==0:
-            utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
-            #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
-            kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
-            run_kubectl( ['apply -f "/home/dlwsadmin/DLWorkspace/temp-config/weave-net.yaml"'] )
-        else:
-            pass
+        utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
+        #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
+        kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
+        run_kubectl( ['apply -f "/home/dlwsadmin/DLWorkspace/temp-config/weave-net.yaml"'] )
+        break
+
 
     if not os.path.exists("./deploy/bin/kubectl") and os.path.exists("/usr/bin/kubectl"):
         utils.exec_cmd_local("mkdir -p  ./deploy/bin; ln -s /usr/bin/kubectl ./deploy/bin/kubectl" )
@@ -3230,15 +3230,19 @@ def deploy_ETCD_master_by_kubeadm(force = False):
             return False
 
 def deploy_cluster_with_kubevip_by_kubeadm(force = False):
+
     print ("#############################")
     print ("###### kubevip process ######")
     print ("#############################")
     print ("searching for a available ip ......")
+
     prepare_kubevip_yaml_command = """ master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;ip_section=`echo $master_ip | sed "s|\.[0-9]*$||"`;echo $ip_section """
     ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
     selected_ip = find_ip(ip_prefix)
+
     print ("Select vip: "+ selected_ip)
     kubevip_in_config = False
+
     try:
         config_file = open("config.yaml",'a+')
         all_lines = config_file.readlines()
@@ -3252,8 +3256,12 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
                 config_file.write(line)
     except Exception,e:
         print e
+
     if not kubevip_in_config:
         config_file.write("\nkube-vip: "+ selected_ip+'\n')
+    else:
+        pass
+
     config_file.close()
     config["kube-vip"] = selected_ip
 

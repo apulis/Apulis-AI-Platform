@@ -263,16 +263,16 @@ default_config_parameters = {
 
         "datanode": "all",
         
-        "grafana": "nfs_node",
-        "prometheus": "nfs_node",
-        "alert-manager": "nfs_node",
+        "grafana": "etcd_node_1",
+        "prometheus": "etcd_node_1",
+        "alert-manager": "etcd_node_1",
         "watchdog": "etcd_node",
 
         "elasticsearch": "elasticsearch_node",
         "kibana": "etcd_node_1",
 
         ## storage server
-        "mysql": "nfs_node",
+        "mysql": "etcd_node_1",
         "mysql-server": "mysqlserver_node",
         "storagemanager": "nfs_node",
         "user-synchronizer": "etcd_node_1",

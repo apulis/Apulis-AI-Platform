@@ -26,6 +26,7 @@ from flask_jwt_extended import (
 import prometheus_client
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
+import k8sUtils
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
 import JobRestAPIUtils
@@ -654,6 +655,7 @@ class GetAllSupportInference(Resource):
         return resp
 api.add_resource(GetAllSupportInference, '/GetAllSupportInference')
 
+
 class ListInferenceJobV2(Resource):
     @api.doc(params=model.ListInferenceJob.params)
     def get(self):
@@ -677,9 +679,9 @@ class ListInferenceJobV2(Resource):
             one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
             if one["jobStatus"]=="running":
                 if "startedAt" in one["jobStatusDetail"][0]:
-                    one["duration"] = time.time()*1000 - time.mktime(one["jobStatusDetail"][0]["startedAt"].timetuple())*1000
+                    one["duration"] = time.time()*1000 - k8sUtils.string_to_timestamp(one["jobStatusDetail"][0]["startedAt"])*1000
             elif one["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in one["jobStatusDetail"][0] and "startedAt" in one["jobStatusDetail"][0]:
-                one["duration"] = time.mktime(one["jobStatusDetail"][0]["finishedAt"].timetuple())*1000 - time.mktime(one["jobStatusDetail"][0]["startedAt"].timetuple())*1000
+                one["duration"] = k8sUtils.string_to_timestamp(one["jobStatusDetail"][0]["finishedAt"])*1000 - k8sUtils.string_to_timestamp(one["jobStatusDetail"][0]["startedAt"])*1000
             tmp.append(one)
         if not page:
             page = 1

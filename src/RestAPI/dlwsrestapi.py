@@ -679,9 +679,9 @@ class ListInferenceJobV2(Resource):
             one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
             if one["jobStatus"]=="running":
                 if "startedAt" in one["jobStatusDetail"][0]:
-                    one["duration"] = time.time()*1000 - k8sUtils.string_to_timestamp(one["jobStatusDetail"][0]["startedAt"])*1000
+                    one["duration"] = time.time()*1000 - time.mktime(time.strptime(one["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S"))*1000
             elif one["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in one["jobStatusDetail"][0] and "startedAt" in one["jobStatusDetail"][0]:
-                one["duration"] = k8sUtils.string_to_timestamp(one["jobStatusDetail"][0]["finishedAt"])*1000 - k8sUtils.string_to_timestamp(one["jobStatusDetail"][0]["startedAt"])*1000
+                one["duration"] = time.mktime(time.strptime(one["jobStatusDetail"][0]["finishedAt"][:19],"%Y-%m-%dT%H:%M:%S"))*1000 - time.mktime(time.strptime(one["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S"))*1000
             tmp.append(one)
         if not page:
             page = 1

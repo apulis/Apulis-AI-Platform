@@ -24,7 +24,7 @@ spec:
         archType: amd64
       containers:
       - name: image-label
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}image-label:{{cnf["dockertag"]}}
+        image: {{cnf["dockers"]["container"]["image-label"]["fullname"]}}
         ports:
         - containerPort: 3084
           hostPort: 3084 

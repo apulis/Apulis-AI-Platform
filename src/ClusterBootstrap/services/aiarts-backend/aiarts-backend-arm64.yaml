@@ -1,7 +1,7 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: restfulapi
+  name: aiarts-backend
   namespace: default
   labels:
      run: dlwsrestfulapi
@@ -23,11 +23,11 @@ spec:
         restfulapi: active
         archType: amd64
       containers:
-      - name: image_label
-        image: {{cnf["dockers"]["container"]["image-label"]["fullname"]}}-arm64
-        imagePullPolicy: IfNotPresent
-        - containerPort: 3085
-          hostPort: 3085
+      - name: aiarts-backend
+        image: {{cnf["dockers"]["container"]["aiarts-backend"]["fullname"]}}-arm64
+        ports:
+        - containerPort: 3084
+          hostPort: 3084 
           name: main
       tolerations:
       - key: CriticalAddonsOnly

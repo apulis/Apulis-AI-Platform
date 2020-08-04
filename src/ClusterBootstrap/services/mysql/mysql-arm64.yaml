@@ -29,10 +29,10 @@ spec:
       {% else %}
         mysql: active
       {% endif %}
-        archType: amd64
+        archType: arm64
       hostNetwork: true    
       containers:
-      - image: {{cnf["dockers"]["container"]["mysql"]["fullname"]}}
+      - image: {{cnf["dockers"]["container"]["mysql"]["fullname"]}}-arm64
         name: mysql
         env:
           # Use secret in real usage

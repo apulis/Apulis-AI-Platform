@@ -672,11 +672,13 @@ class ListInferenceJobV2(Resource):
         jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"],args["order"],args["orderBy"])
         for job in jobs:
             remove_creds(job)
-
         tmp = []
         for one in jobs:
             one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
-            one["duration"] = time.time()*1000 - one["jobTime"]
+            if one["jobStatus"]=="running":
+                one["duration"] = time.time()*1000 - one["jobTime"]
+            elif one["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in one["jobStatusDetail"][0]:
+                one["duration"] = time.mktime(one["finishedAt"].timetuple())*1000 - one["jobTime"]
             tmp.append(one)
         if not page:
             page = 1

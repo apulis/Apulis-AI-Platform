@@ -31,7 +31,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           image: {{cnf["worker-dockerregistry"]}}a910-device-plugin:devel3
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           securityContext:
             # readOnlyRootFilesystem: true
             privileged: true

@@ -676,9 +676,10 @@ class ListInferenceJobV2(Resource):
         for one in jobs:
             one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
             if one["jobStatus"]=="running":
-                one["duration"] = time.time()*1000 - one["jobTime"]
-            elif one["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in one["jobStatusDetail"][0]:
-                one["duration"] = time.mktime(one["finishedAt"].timetuple())*1000 - one["jobTime"]
+                if "startedAt" in one["jobStatusDetail"][0]:
+                    one["duration"] = time.time()*1000 - time.mktime(one["startedAt"].timetuple())*1000
+            elif one["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in one["jobStatusDetail"][0] and "startedAt" in one["jobStatusDetail"][0]:
+                one["duration"] = time.mktime(one["finishedAt"].timetuple())*1000 - time.mktime(one["startedAt"].timetuple())*1000
             tmp.append(one)
         if not page:
             page = 1

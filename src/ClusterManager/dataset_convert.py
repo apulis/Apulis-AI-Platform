@@ -6,7 +6,8 @@ import uuid
 import subprocess
 import sys
 import datetime
-
+reload(sys)
+sys.setdefaultencoding('utf8')
 import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 import base64
@@ -76,7 +77,6 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
     categories = {}
     for ImgID in ImgIDs:
         new_image_id = ImgID
-        logging.info(json_path,"{}.json".format(ImgID),ImgID,os.path.join(json_path, 'images', "{}.json".format(ImgID)))
         if not os.path.exists(os.path.join(json_path, 'images', "{}.json".format(ImgID))):
             continue
         with open(os.path.join(json_path, 'images', "{}.json".format(ImgID)), "r") as f:

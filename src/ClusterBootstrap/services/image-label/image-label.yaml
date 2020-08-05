@@ -26,8 +26,8 @@ spec:
       - name: image-label
         image: {{cnf["dockers"]["container"]["image-label"]["fullname"]}}
         ports:
-        - containerPort: 3084
-          hostPort: 3084 
+        - containerPort: 3085
+          hostPort: 3085
           name: main
       tolerations:
       - key: CriticalAddonsOnly

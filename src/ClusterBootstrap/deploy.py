@@ -4381,31 +4381,31 @@ def scale_down(config):
     return
 
 def set_jupyter_endpoint_private():
-        print("Not prepare for no high available cluster")
+    print("Not prepare for no high available cluster")
     return
 
 def set_jupyter_endpoint_private_in_ha_cluster():
-        vip = config["kube-vip"]
-        if vip == "":
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!  ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print("!!!!!!!!!! Can't find kube-vip in jupyter private endpoint setting !!!!!!")
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!  ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            return
-        is_use_private_ip = config["endpoint_use_private_ip"]
-        master_private_ip = config["master_private_ip"]
-        extranet_port = config["extranet_port"]
-        if is_use_private_ip != "" or master_private_ip != "" or extranet_port != "":
-            print("private endpoint seems to be set already")
-            print("please checkout if the below attributes in config.yaml:")
-            print("* endpoint_use_private_ip")
-            print("* master_private_ip")
-            print("* extranet_port")
-            print("if yes, please remove them")
-        config_file = open("config.yaml",'w')
-        config_file.write("\nendpoint_use_private_ip: true\n")
-        config_file.write("master_private_ip: " + vip+ "\n")
-        config_file.write("extranet_port: 80\n")
-        config_file.close()
+    vip = config["kube-vip"]
+    if vip == "":
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!  ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print("!!!!!!!!!! Can't find kube-vip in jupyter private endpoint setting !!!!!!")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!  ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        return
+    # is_use_private_ip = config["endpoint_use_private_ip"]
+    # master_private_ip = config["master_private_ip"]
+    # extranet_port = config["extranet_port"]
+    # if is_use_private_ip != "" or master_private_ip != "" or extranet_port != "":
+    #     print("private endpoint seems to be set already")
+    #     print("please checkout if the below attributes in config.yaml:")
+    #     print("* endpoint_use_private_ip")
+    #     print("* master_private_ip")
+    #     print("* extranet_port")
+    #     print("if yes, please remove them")
+    config_file = open("config.yaml",'w+')
+    config_file.write("\nendpoint_use_private_ip: true\n")
+    config_file.write("master_private_ip: " + vip+ "\n")
+    config_file.write("extranet_port: 80\n")
+    config_file.close()
 
     return
     

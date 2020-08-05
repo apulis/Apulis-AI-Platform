@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#!/usr/bin/env python
 # Automatic monitoring mount process
 # The program will run as root, as service started by systemd
 import time

@@ -18,13 +18,14 @@
 
 # If you only have http access, you can use certbot certonly --webroot -w /usr/share/nginx/ -d $fqdn to obtain certificate
 # 
-fqdn=`cat /etc/hostname-fqdn`
+#fqdn=`cat /etc/hostname-fqdn`
+fqdn="DLWorkspace"
 command='s/hostname-fqdn/'$fqdn'/g'
 sed $command -i /etc/nginx/conf.d/default.conf
 echo sed $command -i /etc/nginx/conf.d/default.conf
 # cp /etc/nginx/nginx.before_cert.conf /etc/nginx/nginx.conf
 # nginx "$@"
-certbot --installer nginx --authenticator standalone -n --agree-tos -m dlworkspace@gmail.com --domain $fqdn --pre-hook "nginx -s stop" --post-hook "nginx"
+# certbot --installer nginx --authenticator standalone -n --agree-tos -m dlworkspace@gmail.com --domain $fqdn --pre-hook "nginx -s stop" --post-hook "nginx"
 # ./certbot-auto run --nginx -n --agree-tos -m dlworkspace@gmail.com --domain $fqdn
 # cp /etc/nginx/nginx.after_cert.conf /etc/nginx/nginx.conf
 # nginx "$@"

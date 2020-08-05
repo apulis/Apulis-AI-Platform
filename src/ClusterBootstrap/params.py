@@ -289,9 +289,9 @@ default_config_parameters = {
         "restfulapi": "etcd_node",
         "jobmanager": "etcd_node",
 
-        "image_label": "etcd_node_1",
-        "aiarts_frontend": "etcd_node_1",
-        "aiarts_backend": "etcd_node_1",
+        "image-label": "etcd_node_1",
+        "aiarts-frontend": "etcd_node_1",
+        "aiarts-backend": "etcd_node_1",
 
         "webui3": "etcd_node",
         "restfulapi2": "etcd_node",

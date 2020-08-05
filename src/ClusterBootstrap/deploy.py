@@ -1623,6 +1623,9 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
             print ("select device: "+device_name)
         run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"])
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
+        # change images to docker harbor format
+        reset_vip_yaml_cmd = " sed -i 's?image: .*?image: harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7?g' /etc/kubernetes/manifests/vip.yaml"
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, reset_vip_yaml_cmd)
 
     return
 
@@ -3276,6 +3279,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     print (device_name)
 
     os.system("sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip))
+    os.system(" sed -i 's?image: .*?image: harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7?g' /etc/kubernetes/manifests/vip.yaml")
     print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
     print "The current deployment has:\n"
 
@@ -4380,34 +4384,6 @@ def scale_down(config):
 
     return
 
-def set_jupyter_endpoint_private():
-    print("Not prepare for no high available cluster")
-    return
-
-def set_jupyter_endpoint_private_in_ha_cluster():
-    vip = config["kube-vip"]
-    if vip == "":
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!  ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print("!!!!!!!!!! Can't find kube-vip in jupyter private endpoint setting !!!!!!")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!  ERROR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        return
-    # is_use_private_ip = config["endpoint_use_private_ip"]
-    # master_private_ip = config["master_private_ip"]
-    # extranet_port = config["extranet_port"]
-    # if is_use_private_ip != "" or master_private_ip != "" or extranet_port != "":
-    #     print("private endpoint seems to be set already")
-    #     print("please checkout if the below attributes in config.yaml:")
-    #     print("* endpoint_use_private_ip")
-    #     print("* master_private_ip")
-    #     print("* extranet_port")
-    #     print("if yes, please remove them")
-    config_file = open("config.yaml",'w+')
-    config_file.write("\nendpoint_use_private_ip: true\n")
-    config_file.write("master_private_ip: " + vip+ "\n")
-    config_file.write("extranet_port: 80\n")
-    config_file.close()
-
-    return
     
 def run_command( args, command, nargs, parser ):
 
@@ -5383,18 +5359,6 @@ def run_command( args, command, nargs, parser ):
     elif command == "renderimage":
         render_docker_images()
     
-    elif command == "jupyter":
-        if len(nargs) > 0:
-            if nargs[0] == "set_endpoint_private":
-                if len(nargs) > 1 :
-                    if nargs[1] == "in_ha":
-                        set_jupyter_endpoint_private_in_ha_cluster()
-                else:
-                    set_jupyter_endpoint_private()
-            else:
-                print("wrong arguments for jupyter command")
-        else:
-            print("jupyter command needs more arguments")
     else:
         parser.print_help()
         print "Error: Unknown command " + command

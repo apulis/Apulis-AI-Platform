@@ -107,14 +107,20 @@ usermanagerapitoken: {{cnf["usermanagerapitoken"]}}
 
 enable_jobmanager_debug_mode: {{cnf["enable_jobmanager_debug_mode"]}}
 
+{% if "kube-vip" in cnf and cnf["kube-vip"] %}
+extranet_port: 80
+{% else %}
 extranet_port: {{cnf["extranet_port"]}}
+{% endif %}
 
 defalt_virtual_cluster_device_type_list:
 {% for one in cnf["defalt_virtual_cluster_device_type_list"] %}
   - {{ one }}
 {%endfor%}
 
-{% if "endpoint_use_private_ip" in cnf and cnf["endpoint_use_private_ip"] %}
+{% if "kube-vip" in cnf and cnf["kube-vip"] %}
+master_private_ip: {{cnf["kube-vip"]}}
+{% elif "endpoint_use_private_ip" in cnf and cnf["endpoint_use_private_ip"] %}
 master_private_ip: {% if "master_private_ip" in cnf %} {{ cnf["master_private_ip"] }} {% else %} {{cnf["etcd_private_ip"]}} {% endif %}
 {% else if "kube-vip" in cnf and cnf["kube-vip"] %}
 master_private_ip: {{cnf["kube-vip"]}} 

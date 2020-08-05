@@ -1623,6 +1623,9 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
             print ("select device: "+device_name)
         run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"])
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
+        # change images to docker harbor format
+        reset_vip_yaml_cmd = " sed -i 's?image: .*?image: harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7?g' /etc/kubernetes/manifests/vip.yaml"
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, reset_vip_yaml_cmd)
 
     return
 
@@ -3276,6 +3279,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     print (device_name)
 
     os.system("sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip))
+    os.system(" sed -i 's?image: .*?image: harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7?g' /etc/kubernetes/manifests/vip.yaml")
     print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
     print "The current deployment has:\n"
 

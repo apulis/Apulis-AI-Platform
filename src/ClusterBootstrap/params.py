@@ -772,6 +772,7 @@ default_config_parameters = {
             "nvidia-device-plugin": {"fullname": "nvidia/k8s-device-plugin:1.11"},
             "aiarts-frontend": {"fullname": "apulistech/dlworkspace_aiarts-frontend:1.0.0"},
             "aiarts-backend": {"fullname": "apulistech/dlworkspace_aiarts-backend:1.0"},
+            "data-platform": {"fullname": "apulistech/dlworkspace_data-platform-backend:latest"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

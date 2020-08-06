@@ -725,6 +725,8 @@ class ListModelConversionJob(Resource):
         parser.add_argument('convType')
         parser.add_argument('order')
         parser.add_argument('orderBy')
+        parser.add_argument('jobStatus')
+        parser.add_argument('convStatus')
         args = parser.parse_args()
         jobs = JobRestAPIUtils.ListModelConversionJob(
             args["jobOwner"],
@@ -734,7 +736,9 @@ class ListModelConversionJob(Resource):
             name=args["jobName"],
             type=args["convType"],
             order=args["order"],
-            orderBy=args["orderBy"]
+            orderBy=args["orderBy"],
+            jobStatus=args["jobStatus"],
+            convStatus=args["convStatus"]
         )
         for _, joblist in jobs.items():
             if isinstance(joblist, list):

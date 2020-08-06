@@ -27,7 +27,7 @@ def object_detaction_infer(inference_url,imageFile,signature_name):
     headers = {"Content-type": "application/json"}
     inference_url = "http://127.0.0.1/endpoints/"+inference_url.split("/endpoints/")[1]
     r = requests.post(inference_url,headers=headers,
-                      data=json.dumps({"signature_name": "serving_default","instances":image_data_yolo_list}))
+                      data=json.dumps({"signature_name": signature_name,"instances":image_data_yolo_list}))
     r = r.json()
     output = np.array(r['predictions'])
     output = np.reshape(output, (-1, 85))
@@ -59,14 +59,14 @@ def object_detaction_infer2(inference_url,imageFile,signature_name):
     headers = {"Content-type": "application/json"}
     inference_url = "http://127.0.0.1/endpoints/"+inference_url.split("/endpoints/")[1]
     r = requests.post(inference_url,headers=headers,
-                      data=json.dumps({"signature_name": signature_name,"instances":image_data_yolo_list}))
+                      data=json.dumps({"signature_name": "serving_default","instances":image_data_yolo_list}))
     r = r.json()
     output_dict = r['predictions'][0]
     output_dict['num_detections'] = int(output_dict['num_detections'])
     output_dict['detection_classes'] = np.array([int(class_id) for class_id in output_dict['detection_classes']])
     output_dict['detection_boxes'] = np.array(output_dict['detection_boxes'])
     output_dict['detection_scores'] = np.array(output_dict['detection_scores'])
-    category_index = read_class_names2("coco.names")
+    category_index = read_class_names2("/DLWorkspace/src/utils/coco.names")
     visualization_utils.visualize_boxes_and_labels_on_image_array(
         image_data,
         output_dict['detection_boxes'],

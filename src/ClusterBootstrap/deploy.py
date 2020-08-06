@@ -1635,6 +1635,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
                 pass
 
             kubevip_image = registry + "plndr/kube-vip:0.1.7"
+
         else:
             kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
 

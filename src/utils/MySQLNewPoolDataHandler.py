@@ -1482,7 +1482,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListModelConversionJob(self, userName, vcName, status=None, op=("=", "or"), pageNum=None, pageSize=None, name=None, type=None, order=None, orderBy=None):
+    def ListModelConversionJob(self, userName, vcName, status=None, op=("=", "or"), pageNum=None, pageSize=None, name=None, type=None, order=None, orderBy=None, convStatus=None):
         ret = {}
         ret["queuedJobs"] = []
         ret["runningJobs"] = []
@@ -1517,6 +1517,9 @@ class DataHandler(object):
                     status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
+
+            if convStatus is not None:
+                query += " and m.status = '%s'" % convStatus
 
             if order != "asc":
                 order = "desc"

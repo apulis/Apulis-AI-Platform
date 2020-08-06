@@ -11,7 +11,7 @@ data:
     db:
       username: root
       password: apulis#2019#wednesday
-      host: 10.107.77.100
+      host: mysql.kube-system
       port: 3306
       database: ai_arts
       maxopenconns: 10
@@ -23,16 +23,16 @@ data:
       sizelimit: 1000000000
 
     Anno:
-      backendUrl: http://localhost/data-platform-backend
+      backendUrl: http://{{cnf["kube-vip"]}}/data-platform-backend
 
     Infer:
-      backendUrl: http://localhost
+      backendUrl: http://{{cnf["kube-vip"]}}
 
     auth:
-      url: "http://localhost:52080/custom-user-dashboard-backend/auth/currentUser"
+      url: "http://{{cnf["kube-vip"]}}:52080/custom-user-dashboard-backend/auth/currentUser"
       key: "Sign key for JWT"
 
-    DltsUrl: http://localhost:80/apis
+    DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
     image:
       tensorflow:
         - apulistech/tensorflow:2.2.0-gpu

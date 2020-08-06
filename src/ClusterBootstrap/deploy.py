@@ -1621,7 +1621,8 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
         if verbose:
             print ("select device: "+device_name)
-        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"])
+        kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"],kubevip_image)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
 
     return
@@ -3275,7 +3276,9 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     device_name = os.popen(search_device_command).readlines()[0].strip()
     print (device_name)
 
-    os.system("sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip))
+    kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+    run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip,kubevip_image)
+    os.system(run_kubevip_docker_cmd)
     print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
     print "The current deployment has:\n"
 
@@ -4380,7 +4383,7 @@ def scale_down(config):
 
     return
 
-
+    
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -5354,6 +5357,7 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "renderimage":
         render_docker_images()
+    
     else:
         parser.print_help()
         print "Error: Unknown command " + command

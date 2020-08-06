@@ -1619,9 +1619,25 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         node_ip = os.popen(get_ip_cmd).readlines()[0].strip()
         search_device_command="ifconfig | grep "+ node_ip +" -B 1 | grep :\ | sed 's/\:.*//'"
         device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
+        
         if verbose:
             print ("select device: "+device_name)
-        kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+        else:
+            pass
+
+        if "private_docker_registry" in config:
+
+            registry = config["private_docker_registry"].strip()
+
+            if not registry.endswith("/"):
+                registry = registry + "/"
+            else:
+                pass
+
+            kubevip_image = registry + "plndr/kube-vip:0.1.7"
+        else:
+            kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+
         run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"],kubevip_image)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
 

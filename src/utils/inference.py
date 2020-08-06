@@ -27,7 +27,7 @@ def object_detaction_infer(inference_url,imageFile,signature_name):
     headers = {"Content-type": "application/json"}
     inference_url = "http://127.0.0.1/endpoints/"+inference_url.split("/endpoints/")[1]
     r = requests.post(inference_url,headers=headers,
-                      data=json.dumps({"signature_name": signature_name,"instances":image_data_yolo_list}))
+                      data=json.dumps({"signature_name": "serving_default","instances":image_data_yolo_list}))
     r = r.json()
     output = np.array(r['predictions'])
     output = np.reshape(output, (-1, 85))

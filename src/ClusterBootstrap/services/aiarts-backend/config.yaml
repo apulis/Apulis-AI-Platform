@@ -40,4 +40,5 @@ image:
     - apulistech/pytorch:2.0
 
 InteractiveModeJob: false
+PrivateRegistry: {{cnf['private_docker_registry']}}
 

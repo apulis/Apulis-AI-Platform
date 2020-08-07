@@ -471,6 +471,12 @@ def PostModelConversionJob(jobParamsJsonStr):
         ret["error"] = "ERROR: .. convert type " + jobParams["conversionType"] + " not supported"
         return ret
 
+    private_docker_registry = ""
+    if "private_docker_registry" in config:
+        private_docker_registry = config["private_docker_registry"]
+
+    jobParams["image"] = private_docker_registry + jobParams["image"]
+
     # env
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:

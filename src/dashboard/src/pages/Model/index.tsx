@@ -281,7 +281,8 @@ const Model: React.FC = () => {
               fullWidth
               variant="filled"
               error={Boolean(errors.url)}
-              defaultValue={fdInfo.url}
+              value={fdInfo.url}
+              onChange={e => setFdInfo({ ...fdInfo, url: e.target.value })}
               helperText={errors.url ? errors.url.message : ''}
               InputLabelProps={{ shrink: true }}
               inputRef={register({
@@ -293,7 +294,8 @@ const Model: React.FC = () => {
               name="username"
               fullWidth
               variant="filled"
-              defaultValue={fdInfo.username}
+              value={fdInfo.username}
+              onChange={e => setFdInfo({ ...fdInfo, username: e.target.value })}
               error={Boolean(errors.username)}
               helperText={errors.username ? errors.username.message : ''}
               InputLabelProps={{ shrink: true }}
@@ -307,7 +309,8 @@ const Model: React.FC = () => {
               name="password"
               fullWidth
               variant="filled"
-              defaultValue={fdInfo.password}
+              value={fdInfo.password}
+              onChange={e => setFdInfo({ ...fdInfo, password: e.target.value })}
               error={Boolean(errors.password)}
               helperText={errors.password ? errors.password.message : ''}
               InputLabelProps={{ shrink: true }}

@@ -348,6 +348,7 @@ repair-manager:
 
 apt_mirror_url: http:\/\/mirrors.aliyun.com
 enable_custom_registry_secrets: True
+ssh_port: 22
 ```
 
 #### 3.3 设置**DEV**执行环境
@@ -627,6 +628,7 @@ userGroup:
 3. ##### 编译restfulapi和webui3服务
     - master为AMD64架构
         ```
+        
         ./deploy.py --verbose docker push restfulapi2
         ./deploy.py --verbose docker push webui3
         ./deploy.py --nocache docker push custom-user-dashboard-frontend
@@ -638,8 +640,8 @@ userGroup:
         ./deploy.py --verbose --archtype arm64 docker push webui3
         ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-frontend
         ./deploy.py --nocache --archtype arm64 docker push custom-user-dashboard-backend
-        ```
-
+    ```
+    
 4. ##### 编译对请求加密组件openresty
     - master为AMD64架构
         ```shell script
@@ -652,21 +654,27 @@ userGroup:
     
 5. ##### 编译Job容器的依赖容器（请参考DLWorkspace/src/ClusterBootstrap/step_by_step.sh）：
     - master为AMD64架构
+        
+        如果需要指定POD运行时的SSH端口，请在config.yaml配置ssh_port参数，并执行
+        
+        > ./deploy.py --verbose rendertemplate ../docker-images/init-container/ssh_config/sshd/sshd_config.template ../docker-images/init-container/ssh_config/sshd/sshd_config 
+        
         ```
         ./deploy.py --verbose docker push init-container
-        ```
-        如果集群有arm64架构的worker机器，在其中一台arm64的worker机器上执行  
-        ```
-        ./deploy.py --verbose --archtype arm64 docker push init-container
-        ```
+       ```
+       如果集群有arm64架构的worker机器，在其中一台arm64的worker机器上执行  
+       ```
+       ./deploy.py --verbose --archtype arm64 docker push init-container
+       ```
+       
    - master为ARM64架构
         ```
-        ./deploy.py --verbose --archtype arm64 docker push init-container
-        ```
-        如果集群有amd64架构的worker机器，在其中一台amd64的worker机器上执行  
-        ```
-        ./deploy.py --verbose docker push init-container
-        ```
+       ./deploy.py --verbose --archtype arm64 docker push init-container
+       ```
+       如果集群有amd64架构的worker机器，在其中一台amd64的worker机器上执行  
+       ```
+       ./deploy.py --verbose docker push init-container
+       ```
   
 6. ##### 编译监控相关的镜像
     - master为AMD64架构
@@ -722,6 +730,7 @@ userGroup:
     ```
     1. ./deploy.py --verbose kubernetes start jobmanager2 restfulapi2 monitor nginx custommetrics repairmanager2 openresty
     2. ./deploy.py --background --sudo runscriptonall scripts/npu/npu_info_gen.py
+    ```
 3. ./deploy.py --verbose kubernetes start monitor
     ```
     
@@ -731,6 +740,7 @@ userGroup:
     - node重启后 需重新执行指令2 (华为发布NPU-SMI指令后, 可自动兼容)
     
     
+    ```
     
 10. ##### 启动dashboard
 

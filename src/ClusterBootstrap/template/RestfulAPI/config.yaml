@@ -122,7 +122,7 @@ defalt_virtual_cluster_device_type_list:
 master_private_ip: {{cnf["kube-vip"]}}
 {% elif "endpoint_use_private_ip" in cnf and cnf["endpoint_use_private_ip"] %}
 master_private_ip: {% if "master_private_ip" in cnf %} {{ cnf["master_private_ip"] }} {% else %} {{cnf["etcd_private_ip"]}} {% endif %}
-{% else if "kube-vip" in cnf and cnf["kube-vip"] %}
+{% elif "kube-vip" in cnf and cnf["kube-vip"] %}
 master_private_ip: {{cnf["kube-vip"]}} 
 {% endif %}
 

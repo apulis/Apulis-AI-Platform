@@ -96,7 +96,7 @@ inference:
   {% for framework,items in cnf["inference"].items() %}{{framework}}:{% for one in items %}
     - version: {{one["version"]}}
       support: {% for one_support in one["support"] %}
-      - image: {{one_support["image"]}}
+      - image: {{cnf["private_docker_registry"]}}{{one_support["image"]}}
         device: {{one_support["device"]}}
       {% endfor %}
     {% endfor %}

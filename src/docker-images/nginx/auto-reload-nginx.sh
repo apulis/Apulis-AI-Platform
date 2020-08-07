@@ -30,6 +30,7 @@ echo sed $command -i /etc/nginx/conf.d/default.conf
 # cp /etc/nginx/nginx.after_cert.conf /etc/nginx/nginx.conf
 # nginx "$@"
 
+/etc/init.d/nginx start
 oldcksum=`cksum /etc/nginx/conf.other/default.conf`
 
 inotifywait -e modify,move,create,delete -mr --timefmt '%d/%m/%y %H:%M' --format '%T' \

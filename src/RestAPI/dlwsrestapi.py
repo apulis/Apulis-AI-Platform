@@ -677,7 +677,7 @@ class ListInferenceJobV2(Resource):
         tmp = []
         for one in jobs:
             one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
-            if one["jobStatus"]=="running":
+            if one["jobStatus"] in ["running","killing","pausing"]:
                 if "startedAt" in one["jobStatusDetail"][0]:
                     one["duration"] = time.time()*1000 - time.mktime(time.strptime(one["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S"))*1000
             elif one["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in one["jobStatusDetail"][0] and "startedAt" in one["jobStatusDetail"][0]:

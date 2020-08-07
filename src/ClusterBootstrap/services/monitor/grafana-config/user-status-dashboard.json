@@ -93,7 +93,7 @@
             ],
             "targets": [
               {
-                "expr": "count by (username) (task_device_percent{device_str='nvidia.com/gpu'})",
+                "expr": "count by (username) (avg by (uuid,username) (task_device_percent{device_str='nvidia.com/gpu'}))",
                 "format": "table",
                 "hide": false,
                 "instant": true,
@@ -174,7 +174,7 @@
             ],
             "targets": [
               {
-                "expr": "count by (username) (task_device_percent{device_str='npu.huawei.com/NPU'})",
+                "expr": "count by (username) (avg by (uuid,username) (task_device_percent{device_str='npu.huawei.com/NPU'}))",
                 "format": "table",
                 "hide": false,
                 "instant": true,

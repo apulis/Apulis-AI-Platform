@@ -47,7 +47,7 @@ import {
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg, 
+import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg,
   NoNumberReg, NoNumberText } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
@@ -90,7 +90,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
   const [gpusPerNode, setGpusPerNode] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
-  const [npuNumMsg, setNpuNumMsg] = useState(''); 
+  const [npuNumMsg, setNpuNumMsg] = useState('');
   const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
@@ -125,7 +125,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuNumPerDevice, setGpuNumPerDevice] = useState(1);
   const [gpuNumPerDeviceOptions, setGpuNumPerDeviceOptions] = useState<number[]>([]);
   const [numNodesOptions, setNumNodesOptions] = useState<number[]>([]);
-  
+
   const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const val = event.target.value;
@@ -444,7 +444,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         job.resourcegpu = gpus;
       }
       if (type === 'PSDistJob') {
-        if (workers * 8 > gpuAvailable) {
+        if (workers * gpuNumPerDevice > gpuAvailable) {
           if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
             return;
           }
@@ -568,26 +568,30 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (type === 'PSDistJob') {
-      setGpuNumPerDevice(allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
+      setGpuNumPerDevice(allDevice[gpuType] && allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
     }
   }, [gpuType]);
 
   useEffect(() => {
-    if (type === 'PSDistJob' && allDevice[gpuType]) {
-      const data = allDevice[gpuType];
-      if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
-      let temp1: any[] = [], temp2: any[] = []; 
-      data.detail.forEach((i: any, index) => {
-        temp1.push(i.capacity);
-        temp2.push(index + 1);
-      });
-      const maxNum = Math.max(...temp1);
-      let options = [1];
-      for (let n = 2; n <= maxNum; n = n * 2) {
-        options.push(n);
+    if (type === 'PSDistJob') {
+      if (allDevice[gpuType]) {
+        const data = allDevice[gpuType];
+        if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
+        let temp1: any[] = [], temp2: any[] = [];
+        data.detail.forEach((i: any, index) => {
+          temp1.push(i.capacity);
+          temp2.push(index + 1);
+        });
+        const maxNum = Math.max(...temp1);
+        let options = [1];
+        for (let n = 2; n <= maxNum; n = n * 2) {
+          options.push(n);
+        }
+        setGpuNumPerDeviceOptions(options);
+        setNumNodesOptions(temp2);
+      } else {
+        message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
       }
-      setGpuNumPerDeviceOptions(options);
-      setNumNodesOptions(temp2);
     }
   }, [type]);
 
@@ -642,14 +646,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (!grafanaUrl) return;
     let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params1 = new URLSearchParams({
-      query: `count_values("device_available",k8s_node_device_available{device_type="${gpuType}"})`
+      query: `count_values("device_available",avg by (host_ip) (k8s_node_device_available{device_type="${gpuType}"}))`
     });
     const params2 = new URLSearchParams({
       query: `sum(pai_node_count{deviceType!="${gpuType}"})`
     });
     fetch(getNodeGpuAva+params1).then(async (res1: any) => {
       fetch(getNodeGpuAva+params2).then(async (res2: any) => {
-        let data1 = await res1.json(); 
+        let data1 = await res1.json();
         let data2 = await res2.json();
         let result1 = data1.data.result, result2 = data2.data.result;
         if (result2.length) {
@@ -670,7 +674,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       })
     })
   }, [grafanaUrl, gpuType])
- 
+
   const isDesktop = useMediaQuery(theme.breakpoints.up("sm"));
   const showMessage = (open: boolean,showDeleteTemplate: boolean,showSaveTemplate: boolean) => {
     let message = '';
@@ -863,7 +867,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
-                      disabled={allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU'}
+                      disabled={allDevice[gpuType] && allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU'}
                       label="Number of Devices Per Node"
                       fullWidth
                       variant="filled"

@@ -235,6 +235,9 @@
 
 3. 初始化部署环境
 
+   执行环境配置脚本
+   ./scripts/prepare_ubuntu_dev.sh
+
    ```
    ./deploy.py --verbose -y build 
    ```

@@ -95,7 +95,7 @@ spec:
           path: /etc/hostname-fqdn
       - name: grafana-storage
         hostPath:
-          path: /dlwsdata/grafana
+          path: /data/grafana
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

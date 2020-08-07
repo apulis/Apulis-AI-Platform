@@ -45,7 +45,7 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
       onClick('/user/login');
       // return null;
     } else {
-      alert('TO LOGIN£°')
+      alert('TO LOGINÔºÅ')
     }
     return (
       <AuthContext.Provider
@@ -59,7 +59,7 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
       onClick('/user/register');
       // return null;
     } else {
-      alert('TO LOGIN£°')
+      alert('TO LOGINÔºÅ')
     }
     return (
       <AuthContext.Provider

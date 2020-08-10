@@ -33,9 +33,9 @@ spec:
         - mountPath: /root/config.yaml
           name: appconfig
           subPath: config.yaml
-        - mountPath: {{cnf["storage-mount-path"]}}/work
+        - mountPath: /home
           name: dlwsdatawork
-        - mountPath: {{cnf["storage-mount-path"]}}/storage
+        - mountPath: /data
           name: dlwsdatadata
       
       volumes:

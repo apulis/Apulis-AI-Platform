@@ -639,11 +639,12 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             vc_resource = vc_resources[vc_name]
             if vc_resource.CanSatisfy(sji["globalResInfo"]):
                 logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]])
-                if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
-                    continue
-                else:
-                    if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                if sji["deviceType"] in detail_resources:
+                    if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
                         continue
+                    else:
+                        if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                            continue
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
                 vc_resource.Subtract(sji["globalResInfo"])

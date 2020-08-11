@@ -1114,9 +1114,12 @@ def getClusterVCs(page=None,size=None):
 
     return vcList
 
-def GetVcUserNum():
-
-    return 0
+def GetVcUserNum(vcName):
+    ret = 0
+    res = requests.get(url=config["usermanagerapi"] + "/vc/%s/user/count" % (vcName,),headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()["count"]
+    return ret
 
 def ListVCs(userName,page=None,size=None):
     ret = {"result":[]}
@@ -1125,7 +1128,7 @@ def ListVCs(userName,page=None,size=None):
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
-            vc["userNum"] = GetVcUserNum()
+            vc["userNum"] = GetVcUserNum(vc["vcName"])
             ret["result"].append(vc)
 
     ret["totalNum"] = DataHandler().CountVCs()
@@ -1230,12 +1233,22 @@ def GetJobTotalGpu(jobParams):
         numWorkers = int(jobParams["numpsworker"])
     return int(jobParams["resourcegpu"]) * numWorkers
 
+def DeleteVcRelate(vcName):
+    ret = False
+    res = requests.delete(url=config["usermanagerapi"] + "/open/vc/%s" %(vcName,),headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = True
+    return ret
+
 
 def DeleteVC(userName, vcName):
     dataHandler = DataHandler()
     if len(dataHandler.ListVCs())==1:
         return False
     if AuthorizationManager.IsClusterAdmin(userName):
+        ret = DeleteVcRelate(vcName)
+        if not ret:
+            return "Delete relation error"
         jobs = dataHandler.GetJobList("all", vcName, num=None,status="running,scheduling,pausing")
         for job in jobs:
             dataHandler.UpdateJobTextFields({"jobId": job["jobId"],"vcName":vcName},{"jobStatus": "killing"})

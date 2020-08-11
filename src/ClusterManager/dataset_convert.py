@@ -150,7 +150,7 @@ def DoDataConvert():
             try:
                 list_path = os.path.join(config["data_platform_path"], "public/tasks/%s" % (oneJob["datasetId"]))
                 json_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s" % (oneJob["datasetId"], oneJob["projectId"]))
-                category_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s/category.json" % (oneJob["projectId"], oneJob["datasetId"]))
+                category_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s/category.json" % (oneJob["datasetId"],oneJob["projectId"]))
                 if judge_datasets_is_private(oneJob["projectId"],oneJob["datasetId"]):
                     username =find_dataset_creator(oneJob["projectId"])
                     coco_base_path = os.path.join(config["storage-mount-path"], "work/%s/data_platform/%s/%s/format_coco" % (username,oneJob["projectId"],oneJob["datasetId"]))

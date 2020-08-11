@@ -67,7 +67,7 @@ def mkdirs(path):
         os.makedirs(path)
 
 index = 0
-def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",args=None):
+def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",args=None,category_path=None):
     coco = {}
     coco["images"] = []
     coco["categories"] = []
@@ -75,6 +75,10 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
     with open(os.path.join(list_ppath, "list.json"), "r") as f:
         ImgIDs = json.load(f)["ImgIDs"]
     categories = {}
+    categories_total = None
+    if os.path.exists(category_path):
+        with open(category_path, "r") as f2:
+            categories_total = json.load(f2)["categories"]
     for ImgID in ImgIDs:
         new_image_id = ImgID
         if not os.path.exists(os.path.join(json_path, 'images', "{}.json".format(ImgID))):
@@ -83,6 +87,8 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
             json_dict = json.load(f)
         json_dict["images"][0]["file_name"] = "{}.jpg".format(new_image_id)
         json_dict["images"][0]["id"] = new_image_id
+        if json_dict.get("categories"):
+            categories_total = json_dict.get("categories")
         for i in json_dict["annotations"]:
             i["image_id"] = new_image_id
             global index
@@ -94,6 +100,9 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
                     categories[i["category_id"]]["name"] = i["category_name"]
                 if "supercategory" in i:
                     categories[i["category_id"]]["supercategory"] = i["supercategory"]
+            if categories_total:
+                categories[i["category_id"]]["name"] = categories_total[i["category_id"]]["name"]
+                categories[i["category_id"]]["supercategory"] = categories_total[i["category_id"]]["supercategory"]
             if "area" not in i:
                 if i["segmentation"]:
                     i["area"] = int(mask.area(i["segmentation"]))
@@ -141,13 +150,14 @@ def DoDataConvert():
             try:
                 list_path = os.path.join(config["data_platform_path"], "public/tasks/%s" % (oneJob["datasetId"]))
                 json_path = os.path.join(config["data_platform_path"], "private/tasks/%s/%s" % (oneJob["datasetId"], oneJob["projectId"]))
+                category_path = os.path.join(config["data_platform_path"], "private/account/%s/%s/category.json" % (oneJob["projectId"], oneJob["datasetId"]))
                 if judge_datasets_is_private(oneJob["projectId"],oneJob["datasetId"]):
                     username =find_dataset_creator(oneJob["projectId"])
                     coco_base_path = os.path.join(config["storage-mount-path"], "work/%s/data_platform/%s/%s/format_coco" % (username,oneJob["projectId"],oneJob["datasetId"]))
                     coco_file_path = os.path.join(coco_base_path, "annotations/instance.json")
                     show_coco_file_path = "/home/%s/data_platform/%s/%s" % (username,oneJob["projectId"],oneJob["datasetId"])
                     mkdirs(os.path.dirname(coco_file_path))
-                    os.system("ln -s %s %s" %(find_dataset_bind_path(oneJob["projectId"],oneJob["datasetId"]),os.path.join(coco_base_path,"images")))
+                    os.system("ln -s %s %s" %(find_dataset_bind_path(oneJob["projectId"],oneJob["datasetId"],isPrivate=True),os.path.join(coco_base_path,"images")))
                 else:
                     coco_base_path = os.path.join(config["storage-mount-path"],"storage/data_platform/%s/%s/format_coco" % (oneJob["projectId"],oneJob["datasetId"]))
                     coco_file_path = os.path.join(coco_base_path,"annotations/instance.json")
@@ -155,7 +165,7 @@ def DoDataConvert():
                     mkdirs(os.path.dirname(coco_file_path))
                     os.system("ln -s %s %s" % (find_dataset_bind_path(oneJob["projectId"],oneJob["datasetId"]), os.path.join(coco_base_path,"images")))
                 logging.info("=============start convert to format %s" % (oneJob["targetFormat"]))
-                merge_json_to_coco_dataset(list_path,json_path,coco_file_path)
+                merge_json_to_coco_dataset(list_path,json_path,coco_file_path,category_path=category_path)
                 dataHandler.updateConvertStatus("finished",oneJob["id"],coco_file_path)
                 insert_status_to_dataset(oneJob["datasetId"], oneJob["projectId"],"finished",show_coco_file_path)
                 logging.info("=============convert to format %s done" % (oneJob["targetFormat"]))

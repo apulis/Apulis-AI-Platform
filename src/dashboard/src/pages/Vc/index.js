@@ -47,9 +47,9 @@ export default class Vc extends React.Component {
   }
 
   componentDidMount() {
-    const { selectedCluster, userName } = this.context;
+    const { selectedCluster } = this.context;
     this.getVcList();
-    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
+    axios.get(`/${selectedCluster}/getAllDevice`)
       .then((res) => {
         const allDevice = res.data;
         let qSelectData = {}, mSelectData = {}, quotaValidateObj = {}, metadataValidateObj = {};
@@ -293,7 +293,7 @@ export default class Vc extends React.Component {
   }
 
   checkCountJobByStatus = (vcName, callback) => {
-    const { selectedCluster, userName } = this.context;
+    const { selectedCluster } = this.context;
     const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
     axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
@@ -378,6 +378,7 @@ export default class Vc extends React.Component {
                 <TableRow key={item.vcName}>
                   <TableCell>{item.vcName} </TableCell>
                   <TableCell>{111}</TableCell>
+                  {/* <TableCell>{item.userNum}</TableCell> */}
                   <TableCell>{this.getDeviceTypeContent(item.quota)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.quota, true)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.metadata, true, true)}</TableCell>

@@ -4,6 +4,7 @@ const fetch = require('node-fetch')
 const Service = require('./service')
 
 const clustersConfig = config.get('clusters')
+const userGroup = config.get('userGroup')
 
 /**
  * @typedef {Object} State

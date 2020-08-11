@@ -54,13 +54,17 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
   }
 
   const getTeams = () => {
-    axios.get('/teams').then(res => {
-      if (res && res.data && JSON.stringify(res.data) !== JSON.stringify(teams)) {
-        if (res.data.length === 0) {
-          console.error('没有可用的虚拟集群，请联系管理员添加')
-        }
-        setTeams(res.data);
-      }
+    // axios.get('/teams').then(res => {
+    //   if (res && res.data && JSON.stringify(res.data) !== JSON.stringify(teams)) {
+    //     if (res.data.length === 0) {
+    //       console.error('没有可用的虚拟集群，请联系管理员添加')
+    //     }
+    //     setTeams(res.data);
+    //   }
+    // })
+    axios.get<{vcList: []}>(`/vc/user`).then(res => {
+      const { vcList } = res.data;
+      if (JSON.stringify(vcList) !== JSON.stringify(teams)) setTeams(vcList);
     })
   }
 

@@ -42,6 +42,7 @@ class InspectResult(object):
         self.gpu_type = gpu_type # None on no value
         self.is_host_network = is_host_network  # boolean
         self.npu_ids = npu_ids
+        self.node_name = None
 
     def __repr__(self):
         return "username %s, job_name %s, role_name %s, task_index %s, pod_name %s, gpu_ids %s, pid %s, email %s, vc %s" % \
@@ -132,7 +133,10 @@ def inspect(container_id, histogram, timeout):
         result = utils.exec_cmd(["docker", "inspect", container_id],
                                 histogram=histogram,
                                 timeout=timeout)
-        return parse_docker_inspect(result)
+        hostname = utils.exec_cmd(["hostname"],histogram=histogram,timeout=timeout)
+        res = parse_docker_inspect(result)
+        res.node_name = hostname
+        return res
     except subprocess.CalledProcessError as e:
         logger.exception("command '%s' return with error (code %d): %s", e.cmd,
                          e.returncode, e.output)

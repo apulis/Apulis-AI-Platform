@@ -599,13 +599,14 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListVCs(self,page=None,size=None):
+    def ListVCs(self,page=None,size=None,name=None):
         ret = []
         try:
+            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+            if name:
+                query += " WHERE vcName like '%%%s%%'" %(name)
             if page and size:
-                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s` limit %d offset %d" % (self.vctablename,int(size),(int(page)-1)*int(size))
-            else:
-                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+                query += " limit %d offset %d" % (int(size),(int(page)-1)*int(size))
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for one in rets:

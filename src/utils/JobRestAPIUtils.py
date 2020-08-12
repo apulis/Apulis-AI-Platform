@@ -1085,13 +1085,16 @@ def AddVC(userName, vcName, quota, metadata):
     dataHandler.Close()
     return ret
 
-def getClusterVCs(page=None,size=None):
+def getClusterVCs(page=None,size=None,name=None):
     vcList = None
     try:
         if page and size:
             with vc_cache_lock:
-                if str(page)+str(size) in vc_cache:
-                    vcList = copy.deepcopy(vc_cache[str(page)+str(size)].values())
+                query_index = str(page)+str(size)
+                if name:
+                    query_index += name
+                if query_index in vc_cache:
+                    vcList = copy.deepcopy(vc_cache[query_index].values())
         else:
             if "all" in vc_cache:
                 with vc_cache_lock:
@@ -1100,14 +1103,17 @@ def getClusterVCs(page=None,size=None):
         pass
 
     if not vcList:
-        vcList = DataManager.ListVCs(page,size)
+        vcList = DataManager.ListVCs(page,size,name)
         tmp = {}
         for vc in vcList:
             tmp[vc["vcName"]] = vc
 
         if page and size:
+            query_index = str(page) + str(size)
+            if name:
+                query_index += name
             with vc_cache_lock:
-                vc_cache[str(page)+str(size)] = tmp
+                vc_cache[query_index] = tmp
         else:
             with vc_cache_lock:
                 vc_cache["all"] = tmp
@@ -1121,9 +1127,9 @@ def GetVcUserNum(vcName):
         ret = res.json()["count"]
     return ret
 
-def ListVCs(userName,page=None,size=None):
+def ListVCs(userName,page=None,size=None,name=None):
     ret = {"result":[]}
-    vcList = getClusterVCs(page,size)
+    vcList = getClusterVCs(page,size,name)
 
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):

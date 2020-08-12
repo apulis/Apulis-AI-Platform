@@ -4160,6 +4160,11 @@ def scale_down(config):
     return
 
 
+def create_job_service_account():
+    nodes = get_node_lists_for_service("restfulapi")
+    if len(nodes)>=1:
+        run_script(nodes[0], ["./scripts/prepare_ubuntu.sh"], True)
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -5100,6 +5105,9 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "upload_dns_config_to_unifi":
         upload_dns_config_to_unifi()
+
+    elif command == "create_job_service_account":
+        create_job_service_account()
 
     else:
         parser.print_help()

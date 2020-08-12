@@ -3260,7 +3260,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     #ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
     #selected_ip = find_ip(ip_prefix)
 
-
+    selected_ip = config["kube-vip"]
     print ("kube vip: "+ selected_ip)
     kubevip_in_config = False
 

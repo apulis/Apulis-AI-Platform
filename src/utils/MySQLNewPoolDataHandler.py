@@ -616,10 +616,12 @@ class DataHandler(object):
         return ret
 
     @record
-    def CountVCs(self):
+    def CountVCs(self,name=None):
         ret = None
         try:
             query = "SELECT count(1) FROM `%s`" % (self.vctablename)
+            if name:
+                query += " WHERE name like '%%%s%%'" %(name)
             with MysqlConn() as conn:
                 ret = conn.select_one_value(query)
         except Exception as e:

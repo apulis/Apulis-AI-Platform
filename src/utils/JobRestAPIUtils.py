@@ -1145,7 +1145,7 @@ def ListVCs(userName,page=None,size=None,name=None):
             vc["userNum"] = vcCounts.get(vc["vcName"],0)
             ret["result"].append(vc)
 
-    ret["totalNum"] = DataHandler().CountVCs()
+    ret["totalNum"] = DataHandler().CountVCs(name)
     # web portal (client) can filter out Default VC
     return ret
 

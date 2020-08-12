@@ -32,12 +32,13 @@ auth:
 DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
 image:
   tensorflow:
-    - apulistech/tensorflow:2.2.0-gpu
     - apulistech/ubuntu:18.04-amd64
-    - apulistech/tensorflow:2.2.0-gpu-py3
+    - apulistech/tensorflow:2.3.0-gpu-py3
     - apulistech/tensorflow:1.14.0-gpu-py3
   pytorch:
-    - apulistech/pytorch:2.0
+    - apulistech/pytorch:1.5-with-tools
+  mxnet:
+    - apulistech/mxnet:2.0.0-gpu-py3
 
 InteractiveModeJob: false
 PrivateRegistry: {{cnf['private_docker_registry']}}

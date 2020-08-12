@@ -621,7 +621,7 @@ class DataHandler(object):
         try:
             query = "SELECT count(1) FROM `%s`" % (self.vctablename)
             if name:
-                query += " WHERE name like '%%%s%%'" %(name)
+                query += " WHERE vcName like '%%%s%%'" %(name)
             with MysqlConn() as conn:
                 ret = conn.select_one_value(query)
         except Exception as e:

@@ -1129,7 +1129,7 @@ def GetVcUserNum(vcName):
 
 def GetVcsUserCount():
     ret = {}
-    res = requests.get(url=config["usermanagerapi"] + "/vc/user/count",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    res = requests.get(url=config["usermanagerapi"] + "/open/vc/user/count",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
     if res.status_code == 200:
         ret = res.json()["vcUserCount"]
     return ret

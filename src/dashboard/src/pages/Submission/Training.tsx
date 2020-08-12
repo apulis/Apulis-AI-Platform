@@ -22,7 +22,7 @@ import {
   Switch,
   MenuItem,
   SvgIcon, useMediaQuery,
-  Dialog, DialogActions, DialogContent, DialogTitle
+  Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText
 } from "@material-ui/core";
 import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -118,6 +118,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [enableJobPath, setEnableJobPath] = useState(true);
   const [showSaveTemplate, setSaveTemplate] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [checkVCModal, setCheckVCModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
   const [allDevice, setAllDevice] = useState<{
     [name: string]: { deviceStr: string, capacity: number, detail: Array<[]> }
@@ -395,6 +396,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   } = useFetch('/api');
   const [open, setOpen] = useState(false);
   const onSubmit = (data: any) => {
+    const hasThisVC = checkVC();
+    if (!hasThisVC) return;
     if (isSave) {
       onSaveTemplateClick();
     } else {
@@ -464,7 +467,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (result) {
       const { grafana } = result
       setGrafanaUrl(grafana);
-    }
+    } 
+  }
+
+  const checkVC = () => {
+    let result = false;
+    axios.get('/teams').then(res => {
+      if (res.data.length && res.data.findIndex((i: any) => i.id === selectedTeam) > -1) {
+        result = true;
+      } else {
+        setCheckVCModal(true);
+      }
+    });
+    return result;
+  }
+
+  const handleCheckVcClose = () => {
+    setCheckVCModal(false);
+    location.reload();
   }
 
   useEffect(() => {
@@ -1282,6 +1302,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           handleWarnClose={handleClose}
           autoHideDuration={1000}
         />
+
+        {checkVCModal && 
+        <Dialog
+          open={checkVCModal}
+          onClose={handleCheckVcClose}
+        >
+          <DialogTitle>This virtual cluster has been deleted, please switch other virtual cluster！</DialogTitle>
+          <DialogActions>
+            <Button onClick={handleCheckVcClose} color="primary">OK</Button>
+          </DialogActions>
+        </Dialog>}
       </div>
     </Container>
   );

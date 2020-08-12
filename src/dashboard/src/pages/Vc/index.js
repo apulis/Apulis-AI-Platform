@@ -248,7 +248,7 @@ export default class Vc extends React.Component {
             label="Value"
             variant="outlined"
             className="select-value"
-            defaultValue={val}
+            defaultValue={val || 0}
             onChange={e => this.onNumValChange(key, oldVal, m, type, e.target.value, maxData)}
             inputProps={{min: "0", max: maxData, step: "1"}}
             error={_error}
@@ -377,8 +377,7 @@ export default class Vc extends React.Component {
               {vcList.map(item => (
                 <TableRow key={item.vcName}>
                   <TableCell>{item.vcName} </TableCell>
-                  <TableCell>{111}</TableCell>
-                  {/* <TableCell>{item.userNum}</TableCell> */}
+                  <TableCell>{item.userNum}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.quota)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.quota, true)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.metadata, true, true)}</TableCell>

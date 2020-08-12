@@ -214,10 +214,7 @@ class Cluster extends Service {
    */
   async getTeams () {
     const { user } = this.context.state
-    const params = new URLSearchParams({
-      userName: user.userName
-    })
-    const response = await this.fetch('/ListVCs?' + params)
+    const response = await this.fetch(`/ListVCs??userName=${user.userName}&page=1&size=9999`)
     const data = await response.json()
     this.context.log.debug(data, 'Listed VC')
 

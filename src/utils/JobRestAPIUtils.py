@@ -1127,14 +1127,22 @@ def GetVcUserNum(vcName):
         ret = res.json()["count"]
     return ret
 
+def GetVcsUserCount():
+    ret = {}
+    res = requests.get(url=config["usermanagerapi"] + "/vc/user/count",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()["vcUserCount"]
+    return ret
+
 def ListVCs(userName,page=None,size=None,name=None):
     ret = {"result":[]}
     vcList = getClusterVCs(page,size,name)
+    vcCounts = GetVcsUserCount()
 
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
-            vc["userNum"] = GetVcUserNum(vc["vcName"])
+            vc["userNum"] = vcCounts.get(vc["vcName"],0)
             ret["result"].append(vc)
 
     ret["totalNum"] = DataHandler().CountVCs()

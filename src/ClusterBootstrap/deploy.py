@@ -862,7 +862,7 @@ def get_api_server(config):
 
     if len(config["kubernetes_master_node"]) > 0:
         return config["kubernetes_master_node"][0]
-    else: 
+    else:
         return ""
 
     return ""
@@ -934,12 +934,12 @@ def gen_device_type_config(config):
         archtype = "amd64"
         if "archtype" in nodeInfo:
             archtype = nodeInfo["archtype"]
-        if nodeInfo["role"] == "worker":
-            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                if "series" in nodeInfo:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
-                else:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+        if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+            if "series" in nodeInfo:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+            else:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+
     config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
@@ -1130,7 +1130,7 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
     kubernetes_masters = config["kubernetes_master_node"]
     kubernetes_version = config["k8s-gitbranch"]
     kubernetes_ip_range = config["network"]["container-network-iprange"]
-    
+
     if kubernetes_master0 == "" :
         kubernetes_master0 = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
@@ -1155,7 +1155,7 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
         print(kubernetes_master)
-        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s %s""" % (kubernetes_master0, kubernetes_version, init_arguments)
+        deploycmd = """sudo kubeadm init --v=8 --control-plane-endpoint=%s --kubernetes-version=%s %s""" % (kubernetes_master0, kubernetes_version, init_arguments)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
         time.sleep(30)
 
@@ -1563,7 +1563,8 @@ def update_worker_nodes_by_kubeadm( nargs, control_plane_address = ""):
     for node in workerNodes:
 
         if in_list(node, nargs):
-            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, control_plane_address, k8sAPIport, hash)
+            workercmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, control_plane_address, k8sAPIport, hash)
+
             if verbose:
                 print(workercmd)
             else:
@@ -1588,7 +1589,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
     k8sAPIport = config["k8sAPIport"]
     # *generate certificate key
-    certcmd = "sudo kubeadm init phase upload-certs --upload-certs"
+    certcmd = "sudo kubeadm init --v=8 phase upload-certs --upload-certs"
     certresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,certcmd)
     cert = certresult.split('\n')[2]
     # *generate token
@@ -1606,7 +1607,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         print(nodename)
         nodeInfo = config["machines"][nodename]
         print nodeInfo
-        join_cmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kube_vip, k8sAPIport, hash,cert)
+        join_cmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kube_vip, k8sAPIport, hash,cert)
         if verbose:
             print(join_cmd)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, join_cmd)
@@ -1619,7 +1620,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         node_ip = os.popen(get_ip_cmd).readlines()[0].strip()
         search_device_command="ifconfig | grep "+ node_ip +" -B 1 | grep :\ | sed 's/\:.*//'"
         device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
-        
+
         if verbose:
             print ("select device: "+device_name)
         else:
@@ -1677,7 +1678,7 @@ def update_worker_nodes_by_kubeadm_2(workerNodes):
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
-       workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+       workercmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
        if verbose:
            print(workercmd)
        else:
@@ -1868,7 +1869,7 @@ def deploy_restful_API_on_node(ipAddress):
 
 def deploy_webUI_on_node(ipAddress):
 
-    
+
     #pdb.set_trace()
     sshUser = config["admin_username"]
     webUIIP = ipAddress
@@ -2556,7 +2557,7 @@ def deploy_webUI():
         config["restfulapi_node"] = node_restfulapi
         deploy_webUI_on_node(node)
 
-    return 
+    return
 
 
 def ufw_default_firewall_rule(node):
@@ -3264,27 +3265,30 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     print ("kube vip: "+ selected_ip)
     kubevip_in_config = False
 
-    try:
-        config_file = open("config.yaml",'a+')
-        all_lines = config_file.readlines()
-        config_file.seek(0)
-        config_file.truncate()
-        for line in all_lines:
-            if "kube-vip" in line:
-                config_file.write("kube-vip: "+ selected_ip)
-                kubevip_in_config = True
-            else:
-                config_file.write(line)
-    except Exception,e:
-        print e
+    #print ("kube vip: "+ selected_ip)
+    #kubevip_in_config = False
 
-    if not kubevip_in_config:
-        config_file.write("\nkube-vip: "+ selected_ip+'\n')
-    else:
-        pass
+    #try:
+    #    config_file = open("config.yaml",'a+')
+    #    all_lines = config_file.readlines()
+    #    config_file.seek(0)
+    #    config_file.truncate()
+    #    for line in all_lines:
+    #        if "kube-vip" in line:
+    #            config_file.write("kube-vip: "+ selected_ip)
+    #            kubevip_in_config = True
+    #        else:
+    #            config_file.write(line)
+    #except Exception,e:
+    #    print e
 
-    config_file.close()
-    config["kube-vip"] = selected_ip
+    #if not kubevip_in_config:
+    #    config_file.write("\nkube-vip: "+ selected_ip+'\n')
+    #else:
+    #    pass
+
+    #config_file.close()
+    #config["kube-vip"] = selected_ip
 
 
     # search device bind with ip
@@ -4411,7 +4415,12 @@ def scale_down(config):
 
     return
 
-    
+
+def create_job_service_account():
+    nodes = get_node_lists_for_service("restfulapi")
+    if len(nodes)>=1:
+        run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -5385,7 +5394,10 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "renderimage":
         render_docker_images()
-    
+
+    elif command == "create_job_service_account":
+        create_job_service_account()
+
     else:
         parser.print_help()
         print "Error: Unknown command " + command

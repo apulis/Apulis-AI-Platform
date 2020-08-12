@@ -48,7 +48,7 @@ import {
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
 import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg,
-  NoNumberReg, NoNumberText } from '../../const';
+  NoNumberReg, NoNumberText, HttpsErrorText, HttpsReg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
 
@@ -363,7 +363,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
         if (plugins.hasOwnProperty('imagePull') && Array.isArray(plugins['imagePull'])) {
           let imagePullObj = plugins['imagePull'][0];
-          setDockerRegistry(imagePullObj['registry'])
+          if (imagePullObj['registry']) {
+            setDockerRegistry(imagePullObj['registry']);
+            formValSet('registry', imagePullObj['registry']);
+          }
           setDockerUsername(imagePullObj['username'])
           setDockerPassword(imagePullObj['password'])
         }
@@ -997,6 +1000,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       label="Registry"
                       fullWidth
                       variant="filled"
+                      name="registry"
+                      error={Boolean(errors.registry)}
+                      helperText={errors.registry ? errors.registry.message : ''}
+                      inputRef={register({
+                        pattern: {
+                          value: HttpsReg,
+                          message: HttpsErrorText
+                        }
+                      })}
                     />
                   </Grid>
                   <Grid item xs={12}>

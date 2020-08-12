@@ -910,12 +910,12 @@ def gen_device_type_config(config):
         archtype = "amd64"
         if "archtype" in nodeInfo:
             archtype = nodeInfo["archtype"]
-        if nodeInfo["role"] == "worker":
-            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                if "series" in nodeInfo:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
-                else:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+        if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+            if "series" in nodeInfo:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+            else:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+
     config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):

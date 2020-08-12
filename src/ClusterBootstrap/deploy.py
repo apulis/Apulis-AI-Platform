@@ -1564,6 +1564,8 @@ def update_worker_nodes_by_kubeadm( nargs, control_plane_address = ""):
 
         if in_list(node, nargs):
             workercmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, control_plane_address, k8sAPIport, hash)
+            print(workercmd)
+
             if verbose:
                 print(workercmd)
             else:
@@ -3261,30 +3263,32 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     #selected_ip = find_ip(ip_prefix)
 
 
-    print ("kube vip: "+ selected_ip)
-    kubevip_in_config = False
+    selected_ip = config["kube-vip"]
 
-    try:
-        config_file = open("config.yaml",'a+')
-        all_lines = config_file.readlines()
-        config_file.seek(0)
-        config_file.truncate()
-        for line in all_lines:
-            if "kube-vip" in line:
-                config_file.write("kube-vip: "+ selected_ip)
-                kubevip_in_config = True
-            else:
-                config_file.write(line)
-    except Exception,e:
-        print e
+    #print ("kube vip: "+ selected_ip)
+    #kubevip_in_config = False
 
-    if not kubevip_in_config:
-        config_file.write("\nkube-vip: "+ selected_ip+'\n')
-    else:
-        pass
+    #try:
+    #    config_file = open("config.yaml",'a+')
+    #    all_lines = config_file.readlines()
+    #    config_file.seek(0)
+    #    config_file.truncate()
+    #    for line in all_lines:
+    #        if "kube-vip" in line:
+    #            config_file.write("kube-vip: "+ selected_ip)
+    #            kubevip_in_config = True
+    #        else:
+    #            config_file.write(line)
+    #except Exception,e:
+    #    print e
 
-    config_file.close()
-    config["kube-vip"] = selected_ip
+    #if not kubevip_in_config:
+    #    config_file.write("\nkube-vip: "+ selected_ip+'\n')
+    #else:
+    #    pass
+
+    #config_file.close()
+    #config["kube-vip"] = selected_ip
 
 
     # search device bind with ip

@@ -4163,7 +4163,7 @@ def scale_down(config):
 def create_job_service_account():
     nodes = get_node_lists_for_service("restfulapi")
     if len(nodes)>=1:
-        run_script(nodes[0], ["./scripts/prepare_ubuntu.sh"], True)
+        run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
 
 def run_command( args, command, nargs, parser ):
 

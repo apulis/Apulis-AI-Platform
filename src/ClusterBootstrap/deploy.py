@@ -3255,13 +3255,13 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     print ("#############################")
     print ("###### kubevip process ######")
     print ("#############################")
-    print ("searching for a available ip ......")
 
-    prepare_kubevip_yaml_command = """ master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;ip_section=`echo $master_ip | sed "s|\.[0-9]*$||"`;echo $ip_section """
-    ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
-    selected_ip = find_ip(ip_prefix)
+    #prepare_kubevip_yaml_command = """ master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;ip_section=`echo $master_ip | sed "s|\.[0-9]*$||"`;echo $ip_section """
+    #ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
+    #selected_ip = find_ip(ip_prefix)
 
-    print ("Select vip: "+ selected_ip)
+
+    print ("kube vip: "+ selected_ip)
     kubevip_in_config = False
 
     try:

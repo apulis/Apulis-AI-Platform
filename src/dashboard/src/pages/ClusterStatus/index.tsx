@@ -63,8 +63,8 @@ const ClusterStatus: FC = () => {
 
     response['getIdleGPUPerUserUrl'] = getIdleGPUPerUser;
     response['ClusterName'] = cluster;
-    response['GranaUrl'] = `${grafana}dashboard/db/device-usage?refresh=30s&orgId=1&_=${Date.now()}`;
-    response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-device-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}`;
+    response['GranaUrl'] = `${grafana}dashboard/db/device-usage?refresh=30s&orgId=1&_=${Date.now()}&kiosk=tv`;
+    response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-device-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}&kiosk=tv`;
     return response;
   }
   const fetchClusterStatus = (mount: boolean) => {
@@ -295,7 +295,7 @@ const ClusterStatus: FC = () => {
             </Typography>
             <ClusterUsage showIframe={showIframe} iframeUrl={iframeUrl}/>
           </DLTSTabPanel>
-          <DLTSTabPanel className="pcns" value={value} index={3} dir={theme.direction} 
+          <DLTSTabPanel className="pcns" value={value} index={3} dir={theme.direction}
             title={<>{ClusterStatusTitles[value]}<RefreshIcon onClick={() => fetchClusterStatus(true)} titleAccess="Refresh" /></>}>
             <PhysicalClusterNodeStatus nodeStatus={  nodeStatus }/>
           </DLTSTabPanel>

@@ -862,7 +862,7 @@ def get_api_server(config):
 
     if len(config["kubernetes_master_node"]) > 0:
         return config["kubernetes_master_node"][0]
-    else: 
+    else:
         return ""
 
     return ""
@@ -934,12 +934,12 @@ def gen_device_type_config(config):
         archtype = "amd64"
         if "archtype" in nodeInfo:
             archtype = nodeInfo["archtype"]
-        if nodeInfo["role"] == "worker":
-            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                if "series" in nodeInfo:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
-                else:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+        if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+            if "series" in nodeInfo:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+            else:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+
     config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
@@ -1130,7 +1130,7 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
     kubernetes_masters = config["kubernetes_master_node"]
     kubernetes_version = config["k8s-gitbranch"]
     kubernetes_ip_range = config["network"]["container-network-iprange"]
-    
+
     if kubernetes_master0 == "" :
         kubernetes_master0 = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
@@ -1619,7 +1619,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         node_ip = os.popen(get_ip_cmd).readlines()[0].strip()
         search_device_command="ifconfig | grep "+ node_ip +" -B 1 | grep :\ | sed 's/\:.*//'"
         device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
-        
+
         if verbose:
             print ("select device: "+device_name)
         else:
@@ -1868,7 +1868,7 @@ def deploy_restful_API_on_node(ipAddress):
 
 def deploy_webUI_on_node(ipAddress):
 
-    
+
     #pdb.set_trace()
     sshUser = config["admin_username"]
     webUIIP = ipAddress
@@ -2556,7 +2556,7 @@ def deploy_webUI():
         config["restfulapi_node"] = node_restfulapi
         deploy_webUI_on_node(node)
 
-    return 
+    return
 
 
 def ufw_default_firewall_rule(node):
@@ -4411,7 +4411,12 @@ def scale_down(config):
 
     return
 
-    
+
+def create_job_service_account():
+    nodes = get_node_lists_for_service("restfulapi")
+    if len(nodes)>=1:
+        run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -5385,7 +5390,10 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "renderimage":
         render_docker_images()
-    
+
+    elif command == "create_job_service_account":
+        create_job_service_account()
+
     else:
         parser.print_help()
         print "Error: Unknown command " + command

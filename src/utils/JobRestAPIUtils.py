@@ -851,7 +851,7 @@ def GetJobLog(userName, jobId,page=1):
                 logger.exception(e)
                 pass
     return {
-        "log": {},
+        "log": "",
         "cursor": None,
         "max_page":0
     }
@@ -1114,6 +1114,10 @@ def getClusterVCs(page=None,size=None):
 
     return vcList
 
+def GetVcUserNum():
+
+    return 0
+
 def ListVCs(userName,page=None,size=None):
     ret = {"result":[]}
     vcList = getClusterVCs(page,size)
@@ -1121,6 +1125,7 @@ def ListVCs(userName,page=None,size=None):
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
+            vc["userNum"] = GetVcUserNum()
             ret["result"].append(vc)
 
     ret["totalNum"] = DataHandler().CountVCs()

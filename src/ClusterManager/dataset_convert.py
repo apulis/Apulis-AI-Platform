@@ -93,6 +93,8 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
                     categories[i["category_id"]]["name"] = i["category_name"]
                 if "supercategory" in i:
                     categories[i["category_id"]]["supercategory"] = i["supercategory"]
+            if "iscrowd" not in i:
+                i["iscrowd"] = 0
         coco["images"].extend(json_dict["images"])
         coco["annotations"].extend(json_dict["annotations"])
         # source_path = os.path.join(json_path, 'images', "{}.jpg".format(ImgID))

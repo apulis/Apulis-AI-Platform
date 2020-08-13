@@ -7,6 +7,10 @@ export const NoChineseReg = /^[^\u4e00-\u9fa5]+$/;
 
 export const NoNumberReg = /^(?!.*[0-9])/;
 
+export const HttpsReg = /(https):\/\/([\w.]+\/?)\S*/;
+
+export const HttpsErrorText = 'Registry must start with https://';
+
 export const NameErrorText = 'The Name Must be composed of letter, numbers, underscore or horizontal line！';
 
 export const SameNameErrorText = 'Already has the same name!';

@@ -910,12 +910,12 @@ def gen_device_type_config(config):
         archtype = "amd64"
         if "archtype" in nodeInfo:
             archtype = nodeInfo["archtype"]
-        if nodeInfo["role"] == "worker":
-            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                if "series" in nodeInfo:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
-                else:
-                    defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+        if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+            if "series" in nodeInfo:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+            else:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+
     config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
@@ -4160,6 +4160,11 @@ def scale_down(config):
     return
 
 
+def create_job_service_account():
+    nodes = get_node_lists_for_service("restfulapi")
+    if len(nodes)>=1:
+        run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -5100,6 +5105,9 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "upload_dns_config_to_unifi":
         upload_dns_config_to_unifi()
+
+    elif command == "create_job_service_account":
+        create_job_service_account()
 
     else:
         parser.print_help()

@@ -757,7 +757,10 @@ class ContainerCollector(Collector):
                     labels["minor_number"] = id
                     labels["device_type"] = inspect_info.gpu_type or "unknown"
                     labels["device_str"] = "npu.huawei.com/NPU"
+                    ### each npu device should have one unique string
                     labels["uuid"] = id
+                    if inspect_info.node_name:
+                        labels["uuid"] =inspect_info.node_name+ "_" + str(id)
 
                     gauges.add_value("task_device_percent",
                             labels, npu_status.npu_util)

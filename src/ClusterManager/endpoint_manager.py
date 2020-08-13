@@ -229,12 +229,14 @@ def start_endpoints_by_thread(pending_endpoints,data_handler):
                 logging.info("\n----------------done for start endpoint %s", endpoint["id"])
                 if is_server_ready(endpoint):
                     endpoint["status"] = "running"
+                    logging.info("\n----------------endpoint %s is now running", endpoint["id"])
                 pod = k8sUtils.GetPod("podName=" + endpoint["podName"])
                 if "items" in pod and len(pod["items"]) > 0:
                     endpoint["nodeName"] = pod["items"][0]["spec"]["nodeName"]
             else:
                 # create NodePort
                 create_node_port(endpoint)
+                logging.info("\n----------------create service done for %s", endpoint["id"])
 
             endpoint["lastUpdated"] = datetime.datetime.now().isoformat()
             with sql_lock:

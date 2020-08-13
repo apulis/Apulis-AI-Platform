@@ -46,9 +46,9 @@ def read_class_names2(class_file_name):
     '''loads class name from a file'''
     names = {}
     with open(class_file_name, 'r') as data:
-        for ID, name in enumerate(data,1):
-            print(name)
-            names[ID] = {"name":name.strip('\n'),"id":ID}
+        li = json.loads(data.read())
+        for one in li:
+            names[one["id"]] = {"name":one["display_name"],"id":one['id']}
     return names
 
 def object_detaction_infer2(inference_url,imageFile,signature_name):

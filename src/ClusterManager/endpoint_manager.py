@@ -206,7 +206,7 @@ def create_node_port(endpoint):
 
     logger.info("Submitted endpoint %s to k8s, returned with status %s", endpoint["jobId"], result)
 
-def start_endpoints_by_thread(pending_endpoints,data_handler):
+def start_endpoints_by_thread(pending_endpoints,data_handler,jobId):
     for endpoint_id, endpoint in pending_endpoints.items():
         try:
             with sql_lock:
@@ -243,6 +243,10 @@ def start_endpoints_by_thread(pending_endpoints,data_handler):
                 data_handler.UpdateEndpoint(endpoint)
         except Exception as e:
             logger.warning("Process endpoint failed {}".format(endpoint), exc_info=True)
+    return jobId
+
+def clear_done_job_id(ret):
+    global_thread_dict.pop(ret.result(),None)
 
 def start_endpoints():
     try:
@@ -252,9 +256,9 @@ def start_endpoints():
             for jobId,pending_endpoint in pending_endpoints.items():
                 if jobId not in global_thread_dict:
                     logging.info("begin to start endpoint for %s " % jobId)
-                    t =pool.submit(start_endpoints_by_thread,pending_endpoint,data_handler)
+                    t =pool.submit(start_endpoints_by_thread,pending_endpoint,data_handler,jobId)
                     global_thread_dict[jobId] = t
-                    t.add_done_callback(lambda x:global_thread_dict.pop(jobId,None))
+                    t.add_done_callback(clear_done_job_id)
         except Exception as e:
             logger.exception("start endpoint failed")
         finally:

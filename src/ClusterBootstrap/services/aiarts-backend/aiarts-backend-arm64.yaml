@@ -25,6 +25,7 @@ spec:
       containers:
       - name: aiarts-backend
         image: {{cnf["dockers"]["container"]["aiarts-backend"]["fullname"]}}-arm64
+        imagePullPolicy: Always
         ports:
         - containerPort: 9000
           hostPort: 9000

@@ -52,7 +52,7 @@ def read_class_names2(class_file_name):
     return names
 
 def object_detaction_infer2(inference_url,imageFile,signature_name):
-    image = Image.open(BytesIO(imageFile))
+    image = Image.open(BytesIO(imageFile)).convert("RGB")
     (im_width, im_height) = image.size
     image_data = np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
     image_data_yolo_list = image_data[np.newaxis, :].tolist()

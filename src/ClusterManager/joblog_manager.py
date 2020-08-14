@@ -83,7 +83,6 @@ def extract_job_log(jobId,logPath,userId):
         logStr = ""
         trimlogstr = ""
 
-
         for log in logs:
             if "podName" in log and "containerID" in log and "containerLog" in log:
                 logStr += "=========================================================\n"
@@ -103,14 +102,16 @@ def extract_job_log(jobId,logPath,userId):
 
         logLines = logStr.split('\n')
         length = len(logLines)
-        if (length <= 2000):
-            save_log(jobLogDir,str(jobId),userId,logStr)
-        else:
-            with open(os.path.join(jobLogDir,"max_page"), 'w') as f:
-                f.write(str(length//2000+1))
-            for i in range(1,length//2000+2):
-                trimlogstr = "\n".join(logLines[(i-1)*2000:i*2000])
-                save_log(jobLogDir, str(jobId), userId, trimlogstr,i)
+        if len(logStr.strip()) > 0:
+            if (length <= 2000):
+                save_log(jobLogDir,str(jobId),userId,logStr)
+            else:
+                with open(os.path.join(jobLogDir,"max_page"), 'w') as f:
+                    f.write(str(length//2000+1))
+                for i in range(1,length//2000+2):
+                    trimlogstr = "\n".join(logLines[(i-1)*2000:i*2000])
+                    save_log(jobLogDir, str(jobId), userId, trimlogstr,i)
+
     except Exception as e:
         logger.error(e)
 

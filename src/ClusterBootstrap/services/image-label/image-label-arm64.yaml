@@ -25,7 +25,7 @@ spec:
       containers:
       - name: image_label
         image: {{cnf["dockers"]["container"]["image-label"]["fullname"]}}-arm64
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         - containerPort: 3085
           hostPort: 3085
           name: main

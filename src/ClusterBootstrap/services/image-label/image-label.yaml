@@ -25,6 +25,7 @@ spec:
       containers:
       - name: image-label
         image: {{cnf["dockers"]["container"]["image-label"]["fullname"]}}
+        imagePullPolicy: Always
         ports:
         - containerPort: 3085
           hostPort: 3085

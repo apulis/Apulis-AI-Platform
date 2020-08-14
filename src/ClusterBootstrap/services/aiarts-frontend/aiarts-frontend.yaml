@@ -25,6 +25,7 @@ spec:
       containers:
       - name: aiarts-frontend
         image: {{cnf["dockers"]["container"]["aiarts-frontend"]["fullname"]}}
+        imagePullPolicy: Always
         ports:
         - containerPort: 3084
           hostPort: 3084 

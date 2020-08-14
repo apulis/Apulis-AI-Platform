@@ -139,7 +139,7 @@ spec:
   containers:
   - name: {{ job["podName"] }}
     image: {{ job["image"] }}
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
     command: ["bash", "/pod/scripts/bootstrap.sh"]
     readinessProbe:
       exec:

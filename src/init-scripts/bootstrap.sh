@@ -128,7 +128,7 @@ then
 else
     if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
     then
-      DLWS_LAUNCH_CMD=`$DLWS_LAUNCH_CMD + " && sleep infinity"`
+      DLWS_LAUNCH_CMD=`$DLWS_LAUNCH_CMD` + " && sleep infinity"
     fi
     printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
     chmod ugo+rx /pod/job_command.sh

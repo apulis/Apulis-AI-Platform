@@ -37,7 +37,8 @@ spec:
           name: dlwsdatawork
         - mountPath: /data
           name: dlwsdatadata
-      
+        - mountPath: /etc/kubernetes
+          name: cluster-conf
       volumes:
       - name: appconfig
         configMap:
@@ -48,6 +49,10 @@ spec:
       - name: dlwsdatadata
         hostPath:
           path: {{cnf["storage-mount-path"]}}/storage      
+      - name: cluster-conf
+        hostPath:
+          path: /etc/kubernetes
+          type: DirectoryOrCreate
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

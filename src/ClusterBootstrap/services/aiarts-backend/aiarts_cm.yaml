@@ -39,6 +39,7 @@ data:
         - apulistech/ubuntu:18.04-amd64
         - apulistech/tensorflow:2.2.0-gpu-py3
         - apulistech/tensorflow:1.14.0-gpu-py3
+        - apulistech/tensorflow1.15.2-gpu-py3
       pytorch:
         - apulistech/pytorch:2.0
 

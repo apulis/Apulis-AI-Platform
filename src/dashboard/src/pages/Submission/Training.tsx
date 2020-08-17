@@ -222,6 +222,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
+    const hasThisVC = checkVC();
+    if (!hasThisVC) return;
     if (!selectDelTPName) {
       message('error', 'Need select one template')
       return
@@ -561,7 +563,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         const { deviceStr } = allDevice[gpuType];
         if (deviceStr === 'npu.huawei.com/NPU') {
           if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode > 8 ? 8 : gpusPerNode}，and can only be one of 0, 1, 2, 4, 8`);
+            setNpuNumMsg(`Must be a positive integer from 0 to ${gpuAvailable > 8 ? 8 : gpuAvailable}，and can only be one of 0, 1, 2, 4, 8`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
@@ -569,7 +571,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           const allocatableArr = detail.map((i: any) => i.allocatable);
           const capacityArr = detail.map((i: any) => i.capacity);
           const maxAllocatable = Math.max(...allocatableArr);
-          const maxCapacity = Math.max(...capacityArr);
+          const maxCapacity = Math.max(...capacityArr) > gpuAvailable ? gpuAvailable : Math.max(...capacityArr);
 
           if (_val < 0 || !Number.isInteger(_val) || _val > maxCapacity) {
             setNpuNumMsg(`Must be a positive integer from 0 to ${maxCapacity}`);

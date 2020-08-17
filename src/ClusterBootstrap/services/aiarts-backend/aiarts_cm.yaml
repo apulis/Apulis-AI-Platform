@@ -41,7 +41,7 @@ data:
         - apulistech/tensorflow:1.14.0-gpu-py3
         - apulistech/tensorflow:1.15.2-gpu-py3
       pytorch:
-        - apulistech/pytorch:1.15
+        - apulistech/pytorch:1.5
       mxnet:
         - apulistech/mxnet:2.0.0-gpu-py3
 

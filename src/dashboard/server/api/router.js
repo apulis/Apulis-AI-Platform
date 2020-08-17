@@ -21,6 +21,7 @@ router.get('/teams',
   require('./controllers/teams'))
 router.get('/teams/:teamId/clusters/:clusterId',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./controllers/team/cluster'))
 router.get('/clusters/:clusterId',
   require('./middlewares/user')(),
@@ -28,6 +29,7 @@ router.get('/clusters/:clusterId',
 
 router.get('/teams/:teamId/jobs',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./controllers/team/jobs'))
 router.post('/clusters/:clusterId/jobs',
   require('./middlewares/user')(),
@@ -78,14 +80,17 @@ router.get('/user',
 
 router.get('/teams/:teamId/templates',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./controllers/team/templates'))
 router.put('/teams/:teamId/templates/:templateName',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./middlewares/body')('template'),
   require('./middlewares/authorize')('SUBMIT_TRAINING_JOB'),
   require('./controllers/team/template.put'))
 router.delete('/teams/:teamId/templates/:templateName',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./middlewares/authorize')('SUBMIT_TRAINING_JOB'),
   require('./controllers/team/template.delete'))
 
@@ -116,6 +121,7 @@ router.get('/vc/user',
 
 router.get('/clusters/:clusterId/teams/:teamId/inferenceJobs',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./middlewares/authorize')('CLOUD_INFERENCE'),
   require('./controllers/cluster/centralReasoning/getInferenceJobs'))
 router.get('/:clusterId/getAllSupportInference',
@@ -124,6 +130,7 @@ router.get('/:clusterId/getAllSupportInference',
   require('./controllers/cluster/centralReasoning/getAllSupportInference'))
 router.post('/clusters/:clusterId/teams/:teamId/postInferenceJob',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./middlewares/body')('postInferenceJob'),
   require('./middlewares/authorize')('CLOUD_INFERENCE'),
   require('./controllers/cluster/centralReasoning/postInferenceJob'))
@@ -138,10 +145,12 @@ router.get('/:clusterId/getModelConvertionTypes',
   require('./controllers/cluster/model/getModelConvertionTypes'))
 router.get('/:clusterId/teams/:teamId/ListModelConversionJob',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./middlewares/authorize')('EDGE_INFERENCE'),
   require('./controllers/cluster/model/getModelList'))
 router.post('/:clusterId/teams/:teamId/setFDInfo',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./middlewares/body')('setFDInfo'),
   require('./middlewares/authorize')('EDGE_INFERENCE'),
   require('./controllers/cluster/model/setFDInfo'))
@@ -152,6 +161,7 @@ router.post('/:clusterId/pushModelToFD',
   require('./controllers/cluster/model/pushModelToFD'))
 router.post('/:clusterId/teams/:teamId/postModelConversionJob',
   require('./middlewares/user')(),
+  require('./middlewares/vc'),
   require('./middlewares/body')('postModelConversionJob'),
   require('./middlewares/authorize')('EDGE_INFERENCE'),
   require('./controllers/cluster/model/postModelConversionJob'))

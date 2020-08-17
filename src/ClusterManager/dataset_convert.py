@@ -37,7 +37,20 @@ from cluster_manager import setup_exporter_thread, manager_iteration_histogram, 
 
 logger = logging.getLogger(__name__)
 
-
+def PolygonArea(corners):
+    n = len(corners) # of corners
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += corners[i][0] * corners[j][1]
+        area -= corners[j][0] * corners[i][1]
+    area = abs(area) / 2.0
+    return area
+def segmentationToCorner(segmentation):
+    tmp = []
+    for i in range(0,len(segmentation),2):
+        tmp.append([segmentation[i],segmentation[i+1]])
+    return tmp
 
 def create_log(logdir = '/var/log/dlworkspace'):
     if not os.path.exists(logdir):
@@ -105,7 +118,7 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
                 categories[i["category_id"]]["supercategory"] = categories_total[i["category_id"]]["supercategory"]
             if "area" not in i:
                 if i["segmentation"]:
-                    i["area"] = int(mask.area(i["segmentation"]))
+                    i["area"] = int(PolygonArea(segmentationToCorner((i["segmentation"][0]))))
                 if i["bbox"]:
                     i["area"] = i["bbox"][2] * i["bbox"][3]
             if "iscrowd" not in i:

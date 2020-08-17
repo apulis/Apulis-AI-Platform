@@ -293,6 +293,18 @@ class User extends Service {
     return data
   }
 
+  static async getUserVc (context, token) {
+    const getUserVcURL = userGroup.domain + userGroup.backEndPath + `/vc/bytoken`
+    const response = await fetch(getUserVcURL, {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    const data = await response.json()
+    context.assert(data['success'] === true, 502)
+    delete data.success
+    return data
+  }
 }
 
 module.exports = User

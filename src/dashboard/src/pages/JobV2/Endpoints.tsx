@@ -228,7 +228,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>
         <TextField
           fullWidth
-          label="New Interactive Port"
+          label="New Interactive Port（inside Pod）"
           disabled={disabled}
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}

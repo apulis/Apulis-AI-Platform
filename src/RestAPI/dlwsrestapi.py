@@ -810,7 +810,6 @@ class DeleteJob(Resource):
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
-
         return resp
 
 api.add_resource(DeleteJob, '/DeleteJob')

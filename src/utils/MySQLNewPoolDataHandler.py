@@ -179,6 +179,7 @@ class DataHandler(object):
                     `jobMeta` LONGTEXT  NULL,
                     `jobLog` LONGTEXT  NULL,
                     `retries`             int    NULL DEFAULT 0,
+                    `isDeleted`             int    NULL DEFAULT 0,
                     `lastUpdated` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
                     PRIMARY KEY (`id`),
                     UNIQUE(`jobId`),
@@ -1061,7 +1062,7 @@ class DataHandler(object):
     def GetJobList(self, userName, vcName, num=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1" % (
+            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1 and isDeleted=0" % (
                 self.jobtablename)
             params = []
             if userName != "all":
@@ -1149,7 +1150,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority FROM {} left join {} on {}.jobId = {}.jobId where jobType='training'".format(
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority FROM {} left join {} on {}.jobId = {}.jobId where jobType='training' and isDeleted=0".format(
                 self.jobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
@@ -1223,7 +1224,7 @@ class DataHandler(object):
 
             query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
                         jobType, jobTime, jobParams, priority FROM {} left join {}
-                        on {}.jobId =  {}.jobId where jobType='{}'""".format(self.jobtablename,
+                        on {}.jobId =  {}.jobId where jobType='{}' and isDeleted=0""".format(self.jobtablename,
                         self.jobtablename, self.jobprioritytablename,
                         self.jobtablename, self.jobprioritytablename,
                         jobType)
@@ -1341,7 +1342,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1 and isDeleted=0".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             if userName != "all":
@@ -1422,7 +1423,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1".format(
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1 and isDeleted=0".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             if userName != "all":
@@ -1496,7 +1497,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT count(*) OVER() as total, j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1".format(
+            query = "SELECT count(*) OVER() as total, j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1 and isDeleted=0".format(
                 self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
@@ -1578,7 +1579,7 @@ class DataHandler(object):
     def GetActiveJobList(self):
         ret = []
         try:
-            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running'" % (
+            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running' and isDeleted=0" % (
                 self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -1593,7 +1594,7 @@ class DataHandler(object):
     def GetGpuTypeActiveJobCount(self):
         ret = {}
         try:
-            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running'" % (
+            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running' and isDeleted=0" % (
                 self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -1872,7 +1873,7 @@ class DataHandler(object):
     def GetPendingJobs(self):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where `jobStatus` <> 'error' and `jobStatus` <> 'failed' and `jobStatus` <> 'finished' and `jobStatus` <> 'killed' order by `jobTime` DESC" % (
+            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where `jobStatus` <> 'error' and `jobStatus` <> 'failed' and `jobStatus` <> 'finished' and `jobStatus` <> 'killed' and isDeleted=0 order by `jobTime` DESC" % (
                 self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
@@ -2084,7 +2085,7 @@ class DataHandler(object):
     def GetActiveJobsCount(self):
         ret = 0
         try:
-            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running'" % (self.jobtablename)
+            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running' and isDeleted=0" % (self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for c in rets:
@@ -2097,7 +2098,7 @@ class DataHandler(object):
     def GetActiveJobsCount(self):
         ret = 0
         try:
-            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running'" % (self.jobtablename)
+            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running' and isDeleted=0" % (self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for c in rets:
@@ -2110,7 +2111,7 @@ class DataHandler(object):
     def GetALLJobsCount(self):
         ret = 0
         try:
-            query = "SELECT count(ALL id) as c FROM `%s`" % (self.jobtablename)
+            query = "SELECT count(ALL id) as c FROM `%s` where isDeleted=0" % (self.jobtablename)
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for c in rets:
@@ -2150,7 +2151,7 @@ class DataHandler(object):
     def HasCurrentActiveJob(self,name):
         ret = False
         try:
-            query = """SELECT count(1) FROM """ + self.jobtablename + """ WHERE jobStatus in ('queued', 'scheduling', 'running', 'unapproved', 'pausing', 'paused') and userName = %s"""
+            query = """SELECT count(1) FROM """ + self.jobtablename + """ WHERE jobStatus in ('queued', 'scheduling', 'running', 'unapproved', 'pausing', 'paused') and userName = %s  and isDeleted=0"""
             with MysqlConn() as conn:
                 cnt = conn.select_one_value(query,(name,))
                 if int(cnt)>0:
@@ -2300,7 +2301,7 @@ class DataHandler(object):
     def DeleteJob(self,jobId):
         ret = False
         try:
-            query = "DELETE FROM `%s` where jobId=%s " % (self.jobtablename, "%s")
+            query = "UPDATE `%s` set isDeleted=1 where jobId=%s" % (self.jobtablename, "%s")
             with MysqlConn() as conn:
                 conn.insert_one(query,[jobId])
                 conn.commit()

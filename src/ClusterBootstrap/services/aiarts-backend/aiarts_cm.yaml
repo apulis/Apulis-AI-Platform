@@ -29,21 +29,24 @@ data:
       backendUrl: http://{{cnf["kube-vip"]}}
 
     auth:
-      url: "http://{{cnf["kube-vip"]}}:52080/custom-user-dashboard-backend/auth/currentUser"
+      url: http://{{cnf["kube-vip"]}}:52080/custom-user-dashboard-backend/auth/currentUser
       key: "Sign key for JWT"
 
     DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
     image:
       tensorflow:
-        - apulistech/tensorflow:2.2.0-gpu
         - apulistech/ubuntu:18.04-amd64
+        - apulistech/tensorflow:2.2.0-gpu
         - apulistech/tensorflow:2.2.0-gpu-py3
         - apulistech/tensorflow:1.14.0-gpu-py3
-        - apulistech/tensorflow1.15.2-gpu-py3
+        - apulistech/tensorflow:1.15.2-gpu-py3
       pytorch:
-        - apulistech/pytorch:2.0
+        - apulistech/pytorch:1.15
+      mxnet:
+        - apulistech/mxnet:2.0.0-gpu-py3
 
     InteractiveModeJob: false
+    PrivateRegistry: {{cnf["private_docker_registry"]}}
 
 
 kind: ConfigMap

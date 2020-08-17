@@ -114,8 +114,8 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
                 if "supercategory" in i:
                     categories[i["category_id"]]["supercategory"] = i["supercategory"]
             if categories_total:
-                categories[i["category_id"]]["name"] = categories_total[i["category_id"]]["name"]
-                categories[i["category_id"]]["supercategory"] = categories_total[i["category_id"]]["supercategory"]
+                categories[i["category_id"]]["name"] = categories_total[i["category_id"]-1]["name"]
+                categories[i["category_id"]]["supercategory"] = categories_total[i["category_id"]-1]["supercategory"]
             if "area" not in i:
                 if i["segmentation"]:
                     i["area"] = int(PolygonArea(segmentationToCorner((i["segmentation"][0]))))

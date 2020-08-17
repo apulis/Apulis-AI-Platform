@@ -596,7 +596,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
       }
     }
-  }, [type]);
+  }, [type, gpuType]);
 
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)

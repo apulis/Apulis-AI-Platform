@@ -69,11 +69,17 @@ export default class Vc extends React.Component {
     axios.get(`/${this.context.selectedCluster}/listVc?page=${page}&size=${size}`)
       .then((res) => {
         const { totalNum, result } = res.data;
-        this.setState({
-          vcList: result,
-          count: Math.ceil(totalNum / size),
-          loading: false
-        })
+        if (!result.length && totalNum) {
+          this.setState({ page: 1 }, () => {
+            this.getVcList();
+          });
+        } else {
+          this.setState({
+            vcList: result,
+            count: Math.ceil(totalNum / size),
+            loading: false
+          })
+        }
       })
   }
 

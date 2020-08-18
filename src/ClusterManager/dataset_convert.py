@@ -153,7 +153,7 @@ def find_dataset_bind_path(projectId,datasetId,isPrivate=False):
     with open(path, "r") as f:
         infos = json.loads(f.read())
     ret = infos["dataSets"][datasetId]["dataSetPath"]
-    return ret.replace("/data","/dlwsdata/storage") if not isPrivate else ret.replace("/home","/dlwsdata/work")
+    return re.sub("^/data", "/dlwsdata/storage",ret) if not isPrivate else re.sub("^/home", "/dlwsdata/work",ret)
 
 def DoDataConvert():
     dataHandler = DataHandler()

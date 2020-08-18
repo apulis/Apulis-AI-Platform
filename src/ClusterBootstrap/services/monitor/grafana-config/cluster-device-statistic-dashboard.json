@@ -159,14 +159,14 @@
                 "refId": "B"
               },
               {
-                "expr": "avg by (instance) (k8s_vc_device_total)",
+                "expr": "avg by (instance,vc_name) (k8s_vc_device_total)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "{{'{{'}}vc_name{{'}}'}} quota",
                 "refId": "C"
               },
               {
-                "expr": "sum(avg by (instance) (k8s_vc_device_total))",
+                "expr": "sum(avg by (instance,device_str,device_str) (k8s_vc_device_total))",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide quota",
@@ -253,14 +253,14 @@
             "steppedLine": false,
             "targets": [
               {
-                "expr": "count (avg by (uuid,vc_name) (task_device_percent)) by (vc_name) / sum (avg by (instance,vc_name) (k8s_vc_device_total)) by (vc_name)",
+                "expr": "count (avg by (uuid,vc_name) (task_device_percent)) by (vc_name) / sum (avg by (instance,vc_name,device_str) (k8s_vc_device_total)) by (vc_name)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "{{'{{'}}vc_name{{'}}'}}",
                 "refId": "A"
               },
               {
-                "expr": "count (avg by (uuid) (task_device_percent)) / sum (avg by (instance) (k8s_vc_device_total))",
+                "expr": "count (avg by (uuid) (task_device_percent)) / sum (avg by (instance,device_str) (k8s_vc_device_total))",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide",

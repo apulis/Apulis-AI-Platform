@@ -167,7 +167,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "node_memory_MemTotal_bytes{instance=~'$node(:[0-9]*)?$'} - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes",
+              "expr": "avg by (instance)(node_memory_MemTotal_bytes{instance=~'$node(:[0-9]*)?$'} - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes)",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -178,14 +178,14 @@
               "target": ""
             },
             {
-              "expr": "node_memory_Buffers_bytes{instance=~'$node(:[0-9]*)?$'} + node_memory_Cached_bytes",
+              "expr": "avg by (instance)(node_memory_Buffers_bytes{instance=~'$node(:[0-9]*)?$'} + node_memory_Cached_bytes)",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "buff/cache",
               "refId": "B"
             },
             {
-              "expr": "node_memory_MemTotal_bytes{instance=~'$node(:[0-9]*)?$'}",
+              "expr": "avg by (instance)(node_memory_MemTotal_bytes{instance=~'$node(:[0-9]*)?$'})",
               "format": "time_series",
               "hide": false,
               "interval": "",
@@ -974,21 +974,21 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "node_load1{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "avg by (instance)(node_load1{instance=~\"$node(:[0-9]*)?$\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "load1",
               "refId": "A"
             },
             {
-              "expr": "node_load5{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "avg by (instance)(node_load5{instance=~\"$node(:[0-9]*)?$\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "load5",
               "refId": "B"
             },
             {
-              "expr": "node_load15{instance=~\"$node(:[0-9]*)?$\"}",
+              "expr": "avg by (instance)(node_load15{instance=~\"$node(:[0-9]*)?$\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "load15",

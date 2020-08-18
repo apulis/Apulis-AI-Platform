@@ -22,7 +22,7 @@ import {
   Switch,
   MenuItem,
   SvgIcon, useMediaQuery,
-  Dialog, DialogActions, DialogContent, DialogTitle
+  Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText
 } from "@material-ui/core";
 import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -118,6 +118,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [enableJobPath, setEnableJobPath] = useState(true);
   const [showSaveTemplate, setSaveTemplate] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [checkVCModal, setCheckVCModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
   const [allDevice, setAllDevice] = useState<{
     [name: string]: { deviceStr: string, capacity: number, detail: Array<[]> }
@@ -221,6 +222,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
+    const hasThisVC = checkVC();
+    if (!hasThisVC) return;
     if (!selectDelTPName) {
       message('error', 'Need select one template')
       return
@@ -395,6 +398,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   } = useFetch('/api');
   const [open, setOpen] = useState(false);
   const onSubmit = (data: any) => {
+    const hasThisVC = checkVC();
+    if (!hasThisVC) return;
     if (isSave) {
       onSaveTemplateClick();
     } else {
@@ -464,7 +469,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (result) {
       const { grafana } = result
       setGrafanaUrl(grafana);
-    }
+    } 
+  }
+
+  const checkVC = () => {
+    let result = false;
+    axios.get('/teams').then(res => {
+      if (res.data.length && res.data.findIndex((i: any) => i.id === selectedTeam) > -1) {
+        result = true;
+      } else {
+        setCheckVCModal(true);
+      }
+    });
+    return result;
+  }
+
+  const handleCheckVcClose = () => {
+    setCheckVCModal(false);
+    location.reload();
   }
 
   useEffect(() => {
@@ -541,7 +563,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         const { deviceStr } = allDevice[gpuType];
         if (deviceStr === 'npu.huawei.com/NPU') {
           if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode > 8 ? 8 : gpusPerNode}，and can only be one of 0, 1, 2, 4, 8`);
+            setNpuNumMsg(`Must be a positive integer from 0 to ${gpuAvailable > 8 ? 8 : gpuAvailable}，and can only be one of 0, 1, 2, 4, 8`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
@@ -549,7 +571,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           const allocatableArr = detail.map((i: any) => i.allocatable);
           const capacityArr = detail.map((i: any) => i.capacity);
           const maxAllocatable = Math.max(...allocatableArr);
-          const maxCapacity = Math.max(...capacityArr);
+          const maxCapacity = Math.max(...capacityArr) > gpuAvailable ? gpuAvailable : Math.max(...capacityArr);
 
           if (_val < 0 || !Number.isInteger(_val) || _val > maxCapacity) {
             setNpuNumMsg(`Must be a positive integer from 0 to ${maxCapacity}`);
@@ -1282,6 +1304,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           handleWarnClose={handleClose}
           autoHideDuration={1000}
         />
+
+        {checkVCModal && 
+        <Dialog
+          open={checkVCModal}
+          onClose={handleCheckVcClose}
+        >
+          <DialogTitle>This virtual cluster has been deleted, please switch other virtual cluster！</DialogTitle>
+          <DialogActions>
+            <Button onClick={handleCheckVcClose} color="primary">OK</Button>
+          </DialogActions>
+        </Dialog>}
       </div>
     </Container>
   );

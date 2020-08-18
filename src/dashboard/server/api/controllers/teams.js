@@ -2,6 +2,8 @@ const config = require('config')
 const { flatMap, groupBy, map, stubArray } = require('lodash')
 
 const Cluster = require('../services/cluster')
+const User = require('../services/user')
+
 
 const clusterIds = Object.keys(config.get('clusters'))
 
@@ -22,8 +24,15 @@ const tryParseJSON = (json, empty) => {
 module.exports = async context => {
   const getClusterTeams = async id => {
     const cluster = new Cluster(context, id)
+    const userTeams = await User.getUserVc(context, context.cookies.get('token'))
     const teams = await cluster.getTeams()
-    return teams.map(({ vcName, admin, metadata, quota }) => {
+    let teamsData = [];
+    teams.forEach(i => {
+      if (userTeams.vcList.findIndex(m => i.vcName === m) > -1) teamsData.push(i);
+    })
+    return teamsData.map(i => {
+      // @ts-ignore
+      const { vcName, admin, metadata, quota } = i;
       const metadataObject = tryParseJSON(metadata, Object.create(null))
       const quotaObject = tryParseJSON(quota, Object.create(null))
       const gpus = Object.create(null)

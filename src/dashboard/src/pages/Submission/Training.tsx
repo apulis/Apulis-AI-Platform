@@ -222,7 +222,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
-    const hasThisVC = checkVC();
+    const hasThisVC = await checkVC();
     if (!hasThisVC) return;
     if (!selectDelTPName) {
       message('error', 'Need select one template')
@@ -397,8 +397,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     post: postEndpoints,
   } = useFetch('/api');
   const [open, setOpen] = useState(false);
-  const onSubmit = (data: any) => {
-    const hasThisVC = checkVC();
+  const onSubmit = async (data: any) => {
+    const hasThisVC = await checkVC();
     if (!hasThisVC) return;
     if (isSave) {
       onSaveTemplateClick();
@@ -453,9 +453,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       }
       if (type === 'PSDistJob') {
         if (workers * gpuNumPerDevice > gpuAvailable) {
-          if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
-            return;
-          }
+          const msg = window.confirm('There won\'t be enough workers match your request.\nProceed?');
+          if (!msg) return;
         }
       }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
@@ -472,15 +471,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     } 
   }
 
-  const checkVC = () => {
+  const checkVC = async () => {
     let result = false;
-    axios.get('/teams').then(res => {
-      if (res.data.length && res.data.findIndex((i: any) => i.id === selectedTeam) > -1) {
-        result = true;
-      } else {
-        setCheckVCModal(true);
-      }
-    });
+    const res = await axios.get('/teams');
+    if (res.data.length && res.data.findIndex((i: any) => i.id === selectedTeam) > -1) {
+      result = true;
+    } else {
+      setCheckVCModal(true);
+    }
     return result;
   }
 
@@ -578,7 +576,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             return false;
           }
           if (_val > maxAllocatable) {
-            if (!window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')) return false;
+            const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
+            if (!msg) return false;
           }
         }
       }

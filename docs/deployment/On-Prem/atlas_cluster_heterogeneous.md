@@ -178,7 +178,7 @@
 | k8s-gitbranch     | k8s版本号                                                    |
 | Authentications   | 登录方式：<br>       1. 用户名密码（默认登录方式）<BR>       2. 微软登录 <BR>       3. 微信登录 <br> <br> 微软登录：<br> TenantId、ClientId、ClientSecret的获取请参考 [微软官方说明](https://portal.azure.com/#blade/Microsoft_AAD_IAM/ActiveDirectoryMenuBlade/RegisteredApps) <br> <br> 微信登录：<br> TenantId、ClientId、ClientSecret的获取请参考 [微信官方说明](https://open.weixin.qq.com/cgi-bin/frame?t=home/web_tmpl&lang=zh_CN) <br> <BR> 域名说明：<br> 假设cluster_name=atlas，domain=**sigsus.cn** <BR> 那么域名即为：**atlas.sigsus.cn** <BR> 微软登录与微信登录 必须基于此域名申请 |
 
-config.yaml样例，**  注意 jwt 的 secret_key 必须修改为一个复杂的字符串，否则会有安全问题**
+config.yaml样例，**  注意 jwt 的 secret_key 必须修改为一个复杂的字符串，否则会有安全问题 **
 
 ```yaml
 cluster_name: atlas

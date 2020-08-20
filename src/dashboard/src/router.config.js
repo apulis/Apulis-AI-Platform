@@ -10,6 +10,7 @@ const JobsV2 = React.lazy(() => import('./pages/JobsV2'));
 const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
 const Model = React.lazy(() => import('./pages/Model/index'));
+const Help = React.lazy(() => import('./pages/Help/Help'));
 const CentralInference = React.lazy(() => import('./pages/CentralInference/index'));
 
 
@@ -41,7 +42,7 @@ export default [
   {
     path: '/jobs-v2/',
     component: JobsV2,
-    strict: true, 
+    strict: true,
     exact: true,
     needPermission: ['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']
   },
@@ -59,6 +60,10 @@ export default [
     path: '/model',
     component: Model,
     needPermission: ['EDGE_INFERENCE']
+  },
+  {
+    path: '/help',
+    component: Help,
   },
   // {
   //   path: '/centralInference',

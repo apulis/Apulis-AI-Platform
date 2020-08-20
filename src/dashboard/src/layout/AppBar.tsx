@@ -35,7 +35,7 @@ import { TransitionProps } from '@material-ui/core/transitions';
 import DrawerContext from './Drawer/Context';
 import UserContext from '../contexts/User';
 import TeamContext from '../contexts/Teams';
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import _ from 'lodash';
 import copy from 'clipboard-copy'
 import { green, purple } from "@material-ui/core/colors";
@@ -72,9 +72,11 @@ const useStyles = makeStyles((theme: Theme) =>
 
   })
 );
+
 const Transition = React.forwardRef<unknown, TransitionProps>(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props as SlideProps} />;
 });
+
 const OpenDrawerButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
   const onClick = React.useCallback(() => setOpen(!open), [setOpen, open]);
@@ -146,7 +148,9 @@ TeamMenu = () => {
 };
 
 const UserButton: React.FC = () => {
+  const { setOpen, open } = React.useContext(DrawerContext);
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
+  const history = useHistory();
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { nickName, userName, permissionList, currentRole, userGroupPath } = React.useContext(UserContext);
@@ -163,13 +167,21 @@ const UserButton: React.FC = () => {
     setOpenCopyWarn(false);
   }
   const showUserProfile = () => {
+    setAnchorEl(null)
     // setOpenUserProfile(true);
   }
   const showHelp = () => {
-    //TODO: show document.
+    setOpen(false);
+    setAnchorEl(null)
+    history.push('/help');
   }
   const showUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+  }
+  const handleSignOut = () => {
+    setAnchorEl(null);
+    delete localStorage.token;
+    clearAuthInfo(userGroupPath || '');
   }
   const handleCopy = useCallback((value) => {
     copy(value);
@@ -199,9 +211,9 @@ const UserButton: React.FC = () => {
         {/* <MenuItem onClick={showUserProfile}>Profile</MenuItem> */}
         <MenuItem onClick={showHelp}>
           <HelpOutline style={{ marginRight: 8 }} />
-          help
-        </MenuItem>
-        <MenuItem onClick={() => { delete localStorage.token; clearAuthInfo(userGroupPath || '') }} >
+            Help
+          </MenuItem>
+        <MenuItem onClick={handleSignOut} >
           <ExitToApp style={{ marginRight: 8 }} />
           Sign out
         </MenuItem>

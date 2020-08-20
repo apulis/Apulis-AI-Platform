@@ -1,5 +1,4 @@
-import React, {useCallback} from 'react';
-
+import React, { useCallback } from 'react';
 import {
   AppBar,
   Box,
@@ -27,6 +26,7 @@ import {
   Check,
   ExitToApp,
   Group,
+  HelpOutline,
   MenuRounded,
   Dashboard,
 } from '@material-ui/icons';
@@ -38,7 +38,7 @@ import TeamContext from '../contexts/Teams';
 import { Link } from 'react-router-dom';
 import _ from 'lodash';
 import copy from 'clipboard-copy'
-import {green,purple} from "@material-ui/core/colors";
+import { green, purple } from "@material-ui/core/colors";
 import { SlideProps } from '@material-ui/core/Slide';
 import AuthzHOC from '../components/AuthzHOC';
 import axios from 'axios';
@@ -47,7 +47,7 @@ import axios from 'axios';
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     headerStyle: {
-      backgroundColor:theme.palette.background.paper,
+      backgroundColor: theme.palette.background.paper,
     },
     leftIcon: {
       marginRight: theme.spacing(1)
@@ -60,13 +60,13 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     titleLink: {
       textDecoration: 'none',
-      color:purple[50]
+      color: purple[50]
     },
     appBar: {
       zIndex: theme.zIndex.drawer + 1
     },
     userLabel: {
-      whiteSpace:'nowrap',
+      whiteSpace: 'nowrap',
       cursor: 'default'
     }
 
@@ -119,7 +119,13 @@ TeamMenu = () => {
         <Group className={styles.leftIcon} />
         {selectedTeam}
       </Button>
-      <Menu anchorEl={button.current} open={open} onClose={onMenuClose}>
+      <Menu
+        anchorEl={button.current}
+        open={open}
+        onClose={onMenuClose}
+        getContentAnchorEl={null}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}>
         {_.map(teams, 'id').map((team: string) => (
           <MenuItem
             key={team}
@@ -129,8 +135,8 @@ TeamMenu = () => {
             {team === selectedTeam ? (
               <Check className={styles.leftIcon} />
             ) : (
-              <Group className={styles.leftIcon} />
-            )}
+                <Group className={styles.leftIcon} />
+              )}
             <Typography>{team}</Typography>
           </MenuItem>
         ))}
@@ -142,33 +148,64 @@ TeamMenu = () => {
 const UserButton: React.FC = () => {
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const { nickName, userName, permissionList, currentRole, userGroupPath } = React.useContext(UserContext);
   const styles = useStyles({});
   const handleClose = () => {
     setOpenUserProfile(false);
+  };
+  const handleCloseUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    console.log(event.currentTarget)
+    setAnchorEl(null);
   }
+
   const handleWarnClose = () => {
     setOpenCopyWarn(false);
   }
   const showUserProfile = () => {
     // setOpenUserProfile(true);
   }
-
+  const showHelp = () => {
+    //TODO: show document.
+  }
+  const showUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  }
   const handleCopy = useCallback((value) => {
     copy(value);
     setOpenCopyWarn(true)
-  },[])
+  }, [])
   const classes = useStyles({})
   return (
     <main>
       <Button variant="outlined" color="inherit" style={{ marginRight: '10px' }} href={userGroupPath}>
-        <Dashboard className={styles.leftIcon}/>
+        <Dashboard className={styles.leftIcon} />
         User Dashboard
       </Button>
-      <Button variant="outlined" color="inherit" style={{textTransform: 'none'}} onClick={showUserProfile} className={classes.userLabel}>
-        <AccountBox className={styles.leftIcon}/>
+      <Button variant="outlined" color="inherit" style={{ textTransform: 'none' }} onClick={showUserMenu} className={classes.userLabel} aria-controls="user-menu" aria-haspopup="true">
+        <AccountBox className={styles.leftIcon} />
         {nickName || userName}
       </Button>
+      <Menu
+        id="user-menu"
+        anchorEl={anchorEl}
+        keepMounted
+        getContentAnchorEl={null}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        transformOrigin={{ vertical: "top", horizontal: "center" }}
+        open={Boolean(anchorEl)}
+        onClose={handleCloseUserMenu}
+      >
+        {/* <MenuItem onClick={showUserProfile}>Profile</MenuItem> */}
+        <MenuItem onClick={showHelp}>
+          <HelpOutline style={{ marginRight: 8 }} />
+          help
+        </MenuItem>
+        <MenuItem onClick={() => { delete localStorage.token; clearAuthInfo(userGroupPath || '') }} >
+          <ExitToApp style={{ marginRight: 8 }} />
+          Sign out
+        </MenuItem>
+      </Menu>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>
         <AppBar>
           <Toolbar>
@@ -183,16 +220,16 @@ const UserButton: React.FC = () => {
         <Box m={10}>
           <List>
             <ListItem button>
-              <ListItemText primary="NickName" secondary={nickName || '-'}  onClick={()=>handleCopy(nickName)}/>
+              <ListItemText primary="NickName" secondary={nickName || '-'} onClick={() => handleCopy(nickName)} />
             </ListItem>
             <Divider />
             <ListItem button>
-              <ListItemText primary="UserName" secondary={userName}  onClick={()=>handleCopy(userName)}/>
+              <ListItemText primary="UserName" secondary={userName} onClick={() => handleCopy(userName)} />
             </ListItem>
             <Divider />
             <Divider />
             <ListItem button >
-              <ListItemText primary="CurrentRole" secondary={currentRole?.join(', ')}/>
+              <ListItemText primary="CurrentRole" secondary={currentRole?.join(', ')} />
             </ListItem>
             <Divider />
           </List>
@@ -221,16 +258,6 @@ const clearAuthInfo = async (userGroupPath: string) => {
   await axios.get('/authenticate/logout');
   window.location.href = userGroupPath + '/user/login?' + encodeURIComponent(window.location.href);
 }
-const SignOutButton: React.FC = () => {
-  const { userGroupPath } = React.useContext(UserContext);
-  return (
-    <Tooltip title="Sign Out" onClick={() => {delete localStorage.token}}>
-      <IconButton edge="end" color="inherit" onClick={() => clearAuthInfo(userGroupPath || '')}>
-        <ExitToApp />
-      </IconButton>
-    </Tooltip>
-  );
-};
 
 const Title: React.FC = () => {
   const styles = useStyles({});
@@ -272,12 +299,8 @@ const DashboardAppBar: React.FC = () => {
           <Grid item >
             <TeamMenu />
           </Grid>
-          <Grid item style={{ marginLeft:'10px' }}>
+          <Grid item style={{ marginLeft: '10px' }}>
             <UserButton />
-          </Grid>
-          <Grid item>
-            {' '}
-            <SignOutButton />
           </Grid>
         </Grid>
       </Toolbar>

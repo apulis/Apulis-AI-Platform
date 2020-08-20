@@ -222,7 +222,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
-    const hasThisVC = checkVC();
+    const hasThisVC = await checkVC();
     if (!hasThisVC) return;
     if (!selectDelTPName) {
       message('error', 'Need select one template')
@@ -397,8 +397,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     post: postEndpoints,
   } = useFetch('/api');
   const [open, setOpen] = useState(false);
-  const onSubmit = (data: any) => {
-    const hasThisVC = checkVC();
+  const onSubmit = async (data: any) => {
+    const hasThisVC = await checkVC();
     if (!hasThisVC) return;
     if (isSave) {
       onSaveTemplateClick();
@@ -472,15 +472,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     } 
   }
 
-  const checkVC = () => {
+  const checkVC = async () => {
     let result = false;
-    axios.get('/teams').then(res => {
-      if (res.data.length && res.data.findIndex((i: any) => i.id === selectedTeam) > -1) {
-        result = true;
-      } else {
-        setCheckVCModal(true);
-      }
-    });
+    const res = await axios.get('/teams');
+    if (res.data.length && res.data.findIndex((i: any) => i.id === selectedTeam) > -1) {
+      result = true;
+    } else {
+      setCheckVCModal(true);
+    }
     return result;
   }
 

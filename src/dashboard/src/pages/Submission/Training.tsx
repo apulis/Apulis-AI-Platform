@@ -453,9 +453,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       }
       if (type === 'PSDistJob') {
         if (workers * gpuNumPerDevice > gpuAvailable) {
-          if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
-            return;
-          }
+          const msg = window.confirm('There won\'t be enough workers match your request.\nProceed?');
+          if (!msg) return;
         }
       }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
@@ -577,7 +576,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             return false;
           }
           if (_val > maxAllocatable) {
-            if (!window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')) return false;
+            const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
+            if (!msg) return false;
           }
         }
       }

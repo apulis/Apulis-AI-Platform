@@ -1053,7 +1053,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   </Grid>
                 </Grid>
               </CardContent>
-              <CardContent>
+              {/* <CardContent>
                 <Typography component="span" variant="h6">Mount Directories</Typography>
                 <Table size="small">
                   <TableHead>
@@ -1156,7 +1156,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TableRow>
                   </TableBody>
                 </Table>
-              </CardContent>
+              </CardContent> */}
               <CardContent>
                 <Typography component="span" variant="h6">Environment Variables</Typography>
                 <Table size="small">

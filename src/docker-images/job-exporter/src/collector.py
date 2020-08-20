@@ -729,6 +729,9 @@ class ContainerCollector(Collector):
         if pai_service_name is None:
             gpu_ids,npu_ids,container_labels = ContainerCollector.parse_from_labels(inspect_info, gpu_infos)
             logger.info("start to collect metric for jobId: %s",container_labels["job_name"])
+            if container_labels["username"] == "unknown":
+                logger.warn("jobId: %s has none username,pass!" %(container_labels["job_name"]))
+                return
             if gpu_infos:
                 for id in gpu_ids:
                     if gpu_infos.get(id) is None:

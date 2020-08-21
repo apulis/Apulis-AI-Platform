@@ -762,7 +762,7 @@ def process_vc_info(vc_quota_url, device_type_quota_url,vc_usage, cluster_gpu_in
         return []
 
 def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info):
-    logger.debug("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s",
+    logger.info("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s",
             vc_info, vc_usage, cluster_gpu_info,cluster_npu_info)
 
     vc_total_gauge = gen_k8s_vc_device_total()
@@ -853,6 +853,7 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                 if all((x== 0 for x in ratio_sum[deviceStr])):
                     available = 0
                     preemptive_available = 0
+                    reserved = 0
                 else:
                     if deviceStr == "npu.huawei.com/NPU":
                         available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))

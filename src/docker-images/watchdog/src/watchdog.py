@@ -762,8 +762,8 @@ def process_vc_info(vc_quota_url, device_type_quota_url,vc_usage, cluster_gpu_in
         return []
 
 def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info):
-    logger.info("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s",
-            vc_info, vc_usage, cluster_gpu_info,cluster_npu_info)
+    logger.info("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s device_type_info %s",
+            vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info)
 
     vc_total_gauge = gen_k8s_vc_device_total()
     vc_avail_gauge = gen_k8s_vc_device_available()
@@ -808,6 +808,17 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                     continue
                 deviceStr = device_type_info[gpu_type]["deviceStr"]
                 ratio_sum[deviceStr] = list(map(add,ratio_sum[deviceStr],cur_ratio))
+
+        ### if not all devices is allcated to vc,this make sense
+        for deviceStr,resources_list in ratio_sum.items():
+            if deviceStr == "nvidia.com/gpu":
+                cluster_info = cluster_gpu_info
+            else:
+                cluster_info = cluster_npu_info
+            if resources_list[1]<cluster_info.available:
+                resources_list[1] = cluster_info.available
+            if resources_list[0] < cluster_info.preemptable_available:
+                resources_list[0] = cluster_info.preemptable_available
 
         for vc_name, gpu_info in ratio.items():
             for gpu_type, cur_ratio in gpu_info.items():

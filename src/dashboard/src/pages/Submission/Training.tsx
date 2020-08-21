@@ -606,12 +606,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           temp1.push(i.capacity);
           temp2.push(index + 1);
         });
-        const maxNum = Math.max(...temp1);
-        let options = [1];
-        for (let n = 2; n <= maxNum; n = n * 2) {
+        const maxNum = Math.max(...temp1) > gpuAvailable ? gpuAvailable : Math.max(...temp1);
+        let options = [];
+        for (let n = 1; n <= maxNum; n = n * 2) {
           options.push(n);
         }
-        setGpuNumPerDeviceOptions(options);
+        setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         setNumNodesOptions(temp2);
       } else {
         message('warning', 'The device type has been changed, please go to VC to synchronize the modification');

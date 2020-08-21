@@ -36,9 +36,11 @@ module.exports = async context => {
       const metadataObject = tryParseJSON(metadata, Object.create(null))
       const quotaObject = tryParseJSON(quota, Object.create(null))
       const gpus = Object.create(null)
+      let userQuota = {}
       for (const model of Object.keys(metadataObject)) {
         const perNode = metadataObject[model]['num_gpu_per_node']
         gpus[model] = { perNode }
+        userQuota[model] = metadataObject[model]['user_quota']
       }
       for (const model of Object.keys(quotaObject)) {
         const quota = quotaObject[model]
@@ -48,7 +50,6 @@ module.exports = async context => {
           gpus[model] = { quota }
         }
       }
-      const userQuota = metadataObject['user_quota']
       return { id, teamId: vcName, admin, gpus, userQuota }
     })
   }

@@ -1362,7 +1362,7 @@ def GetEndpoints(userName, jobId):
         dataHandler.Close()
     return ret
 
-def UpdateEndpoints(userName, jobId, requested_endpoints, interactive_ports):
+def UpdateEndpoints(userName, jobId, requested_endpoints, arguments, interactive_ports):
     dataHandler = DataHandler()
     try:
         job = dataHandler.GetJobTextFields(jobId, ["userName", "vcName", "jobParams", "endpoints"])
@@ -1422,7 +1422,8 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, interactive_ports):
                     "username": username,
                     "name": "ssh",
                     "status": "pending",
-                    "hostNetwork": host_network
+                    "hostNetwork": host_network,
+                    "arguments": arguments
                 }
                 endpoints[endpoint_id] = endpoint
 
@@ -1448,6 +1449,7 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, interactive_ports):
                     "name": "ipython",
                     "status": "pending",
                     "hostNetwork": host_network
+                    "arguments": arguments
                 }
                 endpoints[endpoint_id] = endpoint
             else:
@@ -1475,6 +1477,7 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, interactive_ports):
                     "name": "tensorboard",
                     "status": "pending",
                     "hostNetwork": host_network
+                    "arguments": arguments
                 }
                 endpoints[endpoint_id] = endpoint
             else:
@@ -1502,6 +1505,7 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, interactive_ports):
                     "podPort": interactive_port["podPort"],
                     "status": "pending",
                     "hostNetwork": host_network
+                    "arguments": arguments
                 }
                 endpoints[endpoint_id] = endpoint
             else:

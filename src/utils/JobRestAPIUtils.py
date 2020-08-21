@@ -410,11 +410,25 @@ def PostInferenceJob(jobParamsJsonStr):
 
 def GetModelConversionTypes():
     return [
-        "arm64-atc-caffe-Ascend310",
-        "arm64-atc-tensorflow-Ascend310",
-        "x8664-omg-caffe-Ascend310",
-        "x8664-omg-tensorflow-Ascend310"
+        "arm64-caffe-Ascend310",
+        "arm64-tensorflow-Ascend310",
+        "x8664-caffe-Ascend310",
+        "x8664-tensorflow-Ascend310"
     ]
+
+def BuildModelConversionArgs(conversionArgs):
+    arg_str = ""
+    string_type_args = [
+        "input_shape", "output_type", "dynamic_batch_size", "dynamic_image_size"
+    ]
+    for key, value in conversionArgs.items():
+        if value is not None or value != "":
+            if key in string_type_args:
+                value = '"' + value + '"'
+            else:
+                value = "".join(value.split())
+            arg_str = arg_str + " --" + key + "=" + value
+    return arg_str
 
 def PostModelConversionJob(jobParamsJsonStr):
     ret = {}
@@ -447,26 +461,28 @@ def PostModelConversionJob(jobParamsJsonStr):
 
     # atc values
     if jobParams["conversionType"] in GetModelConversionTypes():
-        raw_cmd = ""
-        input_path = jobParams["inputPath"]
-        output_path = jobParams["outputPath"]
-        if jobParams["conversionType"] == "arm64-atc-tensorflow-Ascend310":
-            raw_cmd = "atc --framework=3 --model=%s --output=%s --soc_version=Ascend310" % (input_path, output_path)
-        elif jobParams["conversionType"] == "arm64-atc-caffe-Ascend310":
-            raw_cmd = "atc --model=%s --weight=resnet50.caffemodel --framework=0 --mode=1 --output=%s --soc_version=Ascend310" % (input_path, output_path)
-        elif jobParams["conversionType"] == "x8664-omg-tensorflow-Ascend310":
-            raw_cmd = "omg --model=%s --framework=3 --output=%s" % (input_path, output_path)
-        elif jobParams["conversionType"] == "x8664-omg-caffe-Ascend310":
-            raw_cmd = "omg --model=%s --weight=/weights/resnet18.caffemodel --framework=0 --output=%s" % (input_path, output_path)
+        input_path = jobParams["inputPath"] if "inputPath" in jobParams else ""
+        output_path = jobParams["outputPath"] if "outputPath" in jobParams else ""
+
+        raw_cmd = "atc --model=%s --output=%s --soc_version=Ascend310" % (input_path, output_path)
+
+        if "tensorflow" in jobParams["conversionType"]:
+            raw_cmd = raw_cmd + " --framework=3"
+        elif "caffe" in jobParams["conversionType"]:
+            raw_cmd = raw_cmd + " --framework=0"
+
+        if "conversionArgs" in jobParams:
+            raw_cmd = raw_cmd + BuildModelConversionArgs(jobParams["conversionArgs"])
 
         jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s"' % (raw_cmd, jobParams["outputPath"] + ".om")
 
+        baseImageName = "apulistech/atc:0.0.1"
         if jobParams["conversionType"].startswith("arm64"):
             jobParams["gpuType"] = "huawei_npu_arm64"
-            jobParams["image"] = "apulistech/atc:0.0.1"
+            jobParams["image"] = baseImageName + "-arm64"
         else:
             jobParams["gpuType"] = "nvidia_gpu_amd64"
-            jobParams["image"] = "apulistech/omg:0.0.1"
+            jobParams["image"] = baseImageName + "-amd64"
     else:
         ret["error"] = "ERROR: .. convert type " + jobParams["conversionType"] + " not supported"
         return ret

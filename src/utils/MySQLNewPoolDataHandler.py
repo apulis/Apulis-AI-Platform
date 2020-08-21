@@ -1506,7 +1506,7 @@ class DataHandler(object):
                 query += " and vcName = '%s'" % vcName
 
             if name is not None:
-                query += " and jobName like '%s'" % name
+                query += " and jobName like '%%%s%%'" % name
 
             if type is not None:
                 query += " and m.type = '%s'" % type

@@ -24,7 +24,7 @@ import {
   Typography,
   Chip
 } from '@material-ui/core';
-import { Send, Info } from '@material-ui/icons';
+import { Send, Help } from '@material-ui/icons';
 import useFetch from 'use-http-2';
 import { useSnackbar } from 'notistack';
 import Loading from '../../components/Loading';
@@ -219,9 +219,9 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           label="TensorBoard"
           onChange={onChange('Tensorboard')}
         />
-        <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
+        <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
       </FormGroup>
-      {iconInfoShow && <Chip icon={<Info/>}
+      {iconInfoShow && <Chip icon={<Help/>}
         label={<p>TensorBoard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
       />}
       {/* <AuthzHOC needPermission={'"MANAGE_ALL_USERS_JOB"'}></AuthzHOC> */}

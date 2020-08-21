@@ -273,7 +273,7 @@ export default class Vc extends React.Component {
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       const obj = {
         error: true,
-        text: type === 1 ? `Must be a positive integer from 0 to ${max}` : `Cannot be greater than DeviceNumber`
+        text: _val > max ? `Cannot be greater than DeviceNumber` : `Must be a positive integer from 0 to ${max}`
       };
       stateVal = type === 1 ? { ...quotaValidateObj, [m]: obj } : { ...metadataValidateObj, [m]: obj };
       this.setState({
@@ -315,10 +315,12 @@ export default class Vc extends React.Component {
   onCloseDialog = () => {
     let qSelectData = this.state.qSelectData;
     Object.keys(qSelectData).forEach(i => qSelectData[i] = 0);
+    Object.keys(mSelectData).forEach(i => mSelectData[i]['user_quota'] = 0);
     this.setState({
       modifyFlag: false,
       vcNameValidateObj: empty,
       quotaValidateObj: {},
+      metadataValidateObj: {},
       qSelectData,
     })
   }
@@ -364,11 +366,6 @@ export default class Vc extends React.Component {
             <TableHead> 
               <TableRow>
                 <TableCell>VCName</TableCell>
-                <TableCell>
-                  <Tooltip title="The number of users who own this VC resource">
-                    <div className="helpWrap">UserNumber<Help fontSize="small" /></div>
-                  </Tooltip>
-                </TableCell>
                 <TableCell>DeviceType</TableCell>
                 <TableCell>DeviceNumber</TableCell>
                 <TableCell>
@@ -376,6 +373,12 @@ export default class Vc extends React.Component {
                     <div className="helpWrap">MaxAvailable<Help fontSize="small" /></div>
                   </Tooltip>
                 </TableCell>
+                <TableCell>
+                  <Tooltip title="The number of users who own this VC resource">
+                    <div className="helpWrap">UserNumber<Help fontSize="small" /></div>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>Users</TableCell>
                 <AuthzHOC needPermission={'MANAGE_VC'}><TableCell>Actions</TableCell></AuthzHOC>
               </TableRow>
             </TableHead>
@@ -383,10 +386,11 @@ export default class Vc extends React.Component {
               {vcList.map(item => (
                 <TableRow key={item.vcName}>
                   <TableCell>{item.vcName} </TableCell>
-                  <TableCell>{item.userNum}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.quota)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.quota, true)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.metadata, true, true)}</TableCell>
+                  <TableCell>{item.userNum}</TableCell>
+                  <TableCell style={{ maxWidth: 250 }}><div className="textEllipsis" title={item.userNameList || '--'}>{item.userNameList || '--'}</div></TableCell>
                   <AuthzHOC needPermission={'MANAGE_VC'}>
                     <TableCell>
                       <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>

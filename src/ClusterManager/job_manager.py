@@ -457,6 +457,7 @@ def check_job_status(job_id):
 
     # for distribute job(only npu),if all worker is finished,master(for npu,sleep infinity) is also finished.
     if all([job_role.status()=="Succeeded" for job_role in job_roles if job_role.role_name=="worker"]):
+        logger.info("job: {} worker all finished".format(job_id))
         return "Succeeded", []
 
     statuses = [job_role.status() for job_role in job_roles]

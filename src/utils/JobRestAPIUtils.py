@@ -463,6 +463,9 @@ def PostModelConversionJob(jobParamsJsonStr):
     if jobParams["conversionType"] in GetModelConversionTypes():
         input_path = jobParams["inputPath"] if "inputPath" in jobParams else ""
         output_path = jobParams["outputPath"] if "outputPath" in jobParams else ""
+        if output_path.endswith('.om'):
+            output_path = output_path[:-3]
+        output_dir = '/'.join(output_path.split('/')[:-1])
 
         raw_cmd = "atc --model=%s --output=%s --soc_version=Ascend310" % (input_path, output_path)
 
@@ -474,7 +477,7 @@ def PostModelConversionJob(jobParamsJsonStr):
         if "conversionArgs" in jobParams:
             raw_cmd = raw_cmd + BuildModelConversionArgs(jobParams["conversionArgs"])
 
-        jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s"' % (raw_cmd, jobParams["outputPath"] + ".om")
+        jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s && chmod 777 %s"' % (raw_cmd, output_dir, output_path + ".om")
 
         baseImageName = "apulistech/atc:0.0.1"
         if jobParams["conversionType"].startswith("arm64"):

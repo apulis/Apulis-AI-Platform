@@ -26,7 +26,7 @@ import {
 } from "@material-ui/core";
 import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
-import { Info, Delete, Add } from "@material-ui/icons";
+import { Delete, Add, Help } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import { useSnackbar } from 'notistack';
@@ -994,11 +994,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     checked={tensorboard}
                     onChange={(e, checked) => setTensorboard(checked)}
                   />
-                  <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
+                  <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
                 </Grid>
                 {iconInfoShow && <Grid item xs={12} container justify="flex-end">
                   <Chip
-                    icon={<Info/>}
+                    icon={<Help/>}
                     label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
                   />
                 </Grid>}

@@ -88,7 +88,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
-  const [gpusPerNode, setGpusPerNode] = useState(0);
+  const [gpuCapacity, setGpuCapacity] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
   const [npuNumMsg, setNpuNumMsg] = useState('');
   const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
@@ -446,9 +446,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       let totalGpus = gpus;
       if (type === 'PSDistJob') {
         job.numps = 1;
-        job.resourcegpu = gpuNumPerDevice;  //gpusPerNode
+        job.resourcegpu = gpuNumPerDevice;
         job.numpsworker = workers;
-        totalGpus = gpuNumPerDevice * workers;  //gpusPerNode
+        totalGpus = gpuNumPerDevice * workers;
       } else {
         job.resourcegpu = gpus;
       }
@@ -559,24 +559,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (val) {
       const _val = Number(val);
       if (allDevice[gpuType]) {
-        const { deviceStr } = allDevice[gpuType];
+        const { deviceStr, detail } = allDevice[gpuType];
+        const capacityArr = detail.map((i: any) => i.capacity);
+        const maxAllocatable = Math.max(...detail.map((i: any) => i.allocatable));
+        const maxCapacity = Math.max(...detail.map((i: any) => i.capacity));
+        const temp = Math.min(gpuCapacity, maxCapacity);
+
         if (deviceStr === 'npu.huawei.com/NPU') {
-          if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${gpuAvailable > 8 ? 8 : gpuAvailable}，and can only be one of 0, 1, 2, 4, 8`);
+          const valMax = Math.floor(temp / 2) * 2;
+          if (valMax % _val !== 0 && _val < temp) {
+            setNpuNumMsg(`Must be a positive integer from 0 to ${temp}，and can only be integer multiples of 2.`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
-          const { detail } = allDevice[gpuType];
-          const allocatableArr = detail.map((i: any) => i.allocatable);
-          const capacityArr = detail.map((i: any) => i.capacity);
-          const maxAllocatable = Math.max(...allocatableArr);
-          const maxCapacity = Math.max(...capacityArr) > gpuAvailable ? gpuAvailable : Math.max(...capacityArr);
-
-          if (_val < 0 || !Number.isInteger(_val) || _val > maxCapacity) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${maxCapacity}`);
+          if (_val < 0 || !Number.isInteger(_val) || _val > temp) {
+            setNpuNumMsg(`Must be a positive integer from 0 to ${temp}`);
             return false;
           }
-          if (_val > maxAllocatable) {
+          if (_val > maxAllocatable && _val < gpuCapacity) {
             const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
             if (!msg) return false;
           }
@@ -601,7 +601,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (type === 'PSDistJob') {
       if (allDevice[gpuType]) {
         const data = allDevice[gpuType];
-        if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
         let temp1: any[] = [], temp2: any[] = [];
         data.detail.forEach((i: any, index) => {
           temp1.push(i.capacity);
@@ -612,7 +611,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         for (let n = 1; n <= maxNum; n = n * 2) {
           options.push(n);
         }
-        setGpuNumPerDeviceOptions(Array.from(new Set(options)));
+        if (data.deviceStr === 'npu.huawei.com/NPU') {
+          setGpuNumPerDevice(8);
+          setGpuNumPerDeviceOptions([8]);
+        } else {
+          setGpuNumPerDeviceOptions(Array.from(new Set(options)));
+        }
         setNumNodesOptions(temp2);
       } else {
         message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
@@ -766,7 +770,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     cluster={selectedCluster}
                     gpuType={gpuType}
                     onClusterChange={saveSelectedCluster}
-                    onAvailbleGpuNumChange={(val1, val2) => { setGpusPerNode(val1); setGpuAvailable(val2) }}
+                    userName={userName}
+                    onAvailbleGpuNumChange={(val1, val2) => { setGpuCapacity(val1); setGpuAvailable(val2) }}
                   />
                   {/* <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
                     <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">

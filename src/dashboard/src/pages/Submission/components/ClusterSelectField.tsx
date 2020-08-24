@@ -14,10 +14,11 @@ interface ClusterSelectFieldProps {
   onClusterChange(value: string): void;
   gpuType?: string;
   onAvailbleGpuNumChange?(val1: number, val2: number): void;
+  userName?: string | undefined;
 }
 
 const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps> = (
-  { cluster, onClusterChange, variant="standard", ...props }
+  { cluster, onClusterChange, variant="standard", userName, ...props }
 ) => {
   const { clusters,selectedCluster, saveSelectedCluster } = React.useContext(ClustersContext);
   const { selectedTeam } = React.useContext(TeamsContext);
@@ -51,12 +52,19 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
           clusterName = (String)(Object.keys(res['gpu_capacity'])[0]);
         }
       }
-      const gpuCapacity = isEmpty(res) ? 0 : res['gpu_capacity'][clusterName] || 0;
-      const gpuAvailable = isEmpty(res) ? 0 : res['gpu_avaliable'][clusterName] || 0;
-      const maxQuota = isEmpty(res) ? 0 : JSON.parse(res.quota)[clusterName] || 0;
-      const _gpuAvailable = Math.min(gpuAvailable, maxQuota);
-      props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, _gpuAvailable);
-      setHelperText(`${clusterName} (${_gpuAvailable} / ${gpuCapacity} to use)`);
+      // const gpuCapacity = isEmpty(res) ? 0 : res['gpu_capacity'][clusterName] || 0;
+      // const gpuAvailable = isEmpty(res) ? 0 : res['gpu_avaliable'][clusterName] || 0;
+      // const maxQuota = isEmpty(res) ? 0 : JSON.parse(res.quota)[clusterName] || 0;
+      let hasUsed = 0;
+      if (res['user_status'].length) {
+        res['user_status'].forEach((i: any) => {
+          if (i.userName === userName && i['userGPU'][clusterName]) hasUsed = i['userGPU'][clusterName];
+        })
+      }
+      const gpuCapacity = isEmpty(res) ? 0 : JSON.parse(res.quota)[clusterName] || 0;
+      const gpuAvailable = Number(gpuCapacity - hasUsed);
+      props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, gpuAvailable);
+      setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} to use)`);
     })
     if (selectedCluster) {
       onClusterChange(selectedCluster);

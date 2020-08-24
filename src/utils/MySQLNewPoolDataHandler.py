@@ -2283,7 +2283,7 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' group by jobStatus;" % (self.jobtablename, userName, jobType)
+            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' and isDeleted=0 group by jobStatus;" % (self.jobtablename, userName, jobType)
             print(query)
 
             with MysqlConn() as conn:

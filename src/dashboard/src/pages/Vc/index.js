@@ -273,7 +273,7 @@ export default class Vc extends React.Component {
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       const obj = {
         error: true,
-        text: _val > max ? `Cannot be greater than DeviceNumber` : `Must be a positive integer from 0 to ${max}`
+        text: (_val > max && type === 2) ? `Cannot be greater than DeviceNumber` : `Must be a positive integer from 0 to ${max}`
       };
       stateVal = type === 1 ? { ...quotaValidateObj, [m]: obj } : { ...metadataValidateObj, [m]: obj };
       this.setState({
@@ -314,6 +314,7 @@ export default class Vc extends React.Component {
 
   onCloseDialog = () => {
     let qSelectData = this.state.qSelectData;
+    let mSelectData = this.state.mSelectData;
     Object.keys(qSelectData).forEach(i => qSelectData[i] = 0);
     Object.keys(mSelectData).forEach(i => mSelectData[i]['user_quota'] = 0);
     this.setState({

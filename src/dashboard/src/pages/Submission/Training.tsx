@@ -164,6 +164,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [isSave, setIsSave] = useState(false);
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
+  const [canDistributedJob, setCanDistributedJob] = useState(true);
   const onSaveTemplateClick = async () => {
     if (!tplName) {
       setError('templateName', 'required', 'Template Name is required！');
@@ -592,31 +593,19 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (type === 'PSDistJob') {
-      setGpuNumPerDevice(allDevice[gpuType] && allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
-    }
-  }, [gpuType]);
-
-  useEffect(() => {
-    if (type === 'PSDistJob') {
       if (allDevice[gpuType]) {
-        const data = allDevice[gpuType];
-        let temp1: any[] = [], temp2: any[] = [];
-        data.detail.forEach((i: any, index) => {
-          temp1.push(i.capacity);
-          temp2.push(index + 1);
-        });
-        const maxNum = Math.max(...temp1) > gpuAvailable ? gpuAvailable : Math.max(...temp1);
-        let options = [];
-        for (let n = 1; n <= maxNum; n = n * 2) {
-          options.push(n);
-        }
-        if (data.deviceStr === 'npu.huawei.com/NPU') {
+        if (allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
           setGpuNumPerDevice(8);
           setGpuNumPerDeviceOptions([8]);
         } else {
+          let options = [];
+          const _max = Math.max(...nodeCapacityArr);
+          for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
+            options.push(i);
+          }
+          setGpuNumPerDevice(_max);
           setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         }
-        setNumNodesOptions(temp2);
       } else {
         message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
       }
@@ -636,7 +625,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         const { data } = res;
         setAllDevice(data);
         if (data[gpuType] && data[gpuType].detail) {
-          setNodeCapacityArr(data[gpuType].detail.map((i: any) => i.capacity));
+          const { deviceStr } = data[gpuType];
+          const arr = data[gpuType].detail.map((i: any) => i.capacity);
+          setNodeCapacityArr(arr);
+          if (deviceStr === 'npu.huawei.com/NPU') {
+            setCanDistributedJob(!(gpuCapacity < 16));
+          } else {
+            setCanDistributedJob(!(gpuCapacity > Math.max(...arr)));
+          }
         }
       })
   }
@@ -831,7 +827,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={e => setType(e.target.value as string)}
                   >
                     <MenuItem value="RegularJob">Regular Job</MenuItem>
-                    <MenuItem value="PSDistJob">Distributed Job</MenuItem>
+                    {canDistributedJob && <MenuItem value="PSDistJob">Distributed Job</MenuItem>}
                     {/* <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
                   </TextField>
                 </Grid>

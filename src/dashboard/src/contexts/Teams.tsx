@@ -8,9 +8,9 @@ import {
 } from "@material-ui/core";
 import _ from "lodash";
 import ConfigContext from './Config';
-import ClustersContext from '../contexts/Clusters';
 import axios from 'axios';
 import Loading from '../components/Loading';
+import UserContext from '../contexts/User';
 
 interface Context {
   teams: any;
@@ -84,6 +84,13 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
       setSelectedTeam(_.map(teams, 'id')[0]);
     }
   }, [teams]);
+
+  const clearAuthInfo = async () => {
+    delete localStorage.token;
+    const { userGroupPath } = useContext(UserContext);
+    await axios.get('/authenticate/logout');
+    window.location.href = userGroupPath + '/user/login?' + encodeURIComponent(window.location.href);
+  }
   
   const EmptyTeam: FC = () => {
     return (
@@ -98,7 +105,7 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
             </DialogContentText>
             <DialogActions>
               <Button variant="contained" href={`mailto:${administrators[0]}`}>Send Email</Button>
-              <Button variant="contained" onClick={() => {delete localStorage.token}}>Sign Out</Button>
+              <Button variant="contained" onClick={clearAuthInfo}>Sign Out</Button>
             </DialogActions>
           </DialogContent>
         </Dialog>

@@ -141,7 +141,7 @@ export default class Vc extends React.Component {
         }
         if (quota[i] === null) quota[i] = 0;
         if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
-        if (metadata[i].user_quota > quota[i]) {
+        if (metadata[i] && metadata[i].user_quota && metadata[i].user_quota > quota[i]) {
           this.setState({
             metadataValidateObj: {
               ...metadataValidateObj,
@@ -316,13 +316,14 @@ export default class Vc extends React.Component {
     let qSelectData = this.state.qSelectData;
     let mSelectData = this.state.mSelectData;
     Object.keys(qSelectData).forEach(i => qSelectData[i] = 0);
-    Object.keys(mSelectData).forEach(i => mSelectData[i]['user_quota'] = 0);
+    Object.keys(mSelectData).forEach(i => mSelectData[i] = { 'user_quota = 0': 0});
     this.setState({
       modifyFlag: false,
       vcNameValidateObj: empty,
       quotaValidateObj: {},
       metadataValidateObj: {},
       qSelectData,
+      mSelectData
     })
   }
 

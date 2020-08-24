@@ -168,6 +168,8 @@ def draw_bounding_box_on_image(image,
 
   if top > total_display_str_height:
     text_bottom = top
+  elif im_height-bottom<total_display_str_height:
+    text_bottom = bottom
   else:
     text_bottom = bottom + total_display_str_height
   # Reverse list and print from bottom to top.

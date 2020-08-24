@@ -1862,7 +1862,7 @@ class Endpoint(Resource):
     @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
 
-        '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
+        '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'], 'arguments': {'tensorboard_log_dir': '/home'} }"'''
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
         args = parser.parse_args()
@@ -1871,6 +1871,7 @@ class Endpoint(Resource):
         params = request.get_json(force=True)
         job_id = params["jobId"]
         requested_endpoints = params["endpoints"]
+        arguments = params["arguments"]
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]
@@ -1884,7 +1885,7 @@ class Endpoint(Resource):
                 return ("Bad request, interactive port name length shoule be less than 16: %s" % requested_endpoints), 400
             interactive_ports.append(interactive_port)
 
-        msg, statusCode = JobRestAPIUtils.UpdateEndpoints(username, job_id, requested_endpoints, interactive_ports)
+        msg, statusCode = JobRestAPIUtils.UpdateEndpoints(username, job_id, requested_endpoints, arguments, interactive_ports)
         if statusCode != 200:
             return msg, statusCode
 

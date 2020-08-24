@@ -139,8 +139,12 @@ def setup_jupyter_server(user_name, pod_name,jupyter_port,nodePort):
         raise Exception("Failed to start jupyter server in container. JobId: %s ,output: %s" % (pod_name,output))
 
 
-def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v tensorboard)\" ];then apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard;fi && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir=~/tensorboard/\${DLWS_JOB_ID}/logs --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
+def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort, arguments):
+    if 'tensorboard_log_dir' in arguments:
+        log_dir = arguments['tensorboard_log_dir']
+    else:
+        log_dir = "~/tensorboard/\${DLWS_JOB_ID}/logs"
+    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v tensorboard)\" ];then apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard;fi && cd /home/" + user_name + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir="+ log_dir +" --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start tensorboard in container. JobId: %s ,output: %s" % (pod_name,output))
@@ -168,6 +172,7 @@ def start_endpoint(endpoint):
     podPort = endpoint["podPort"]
     port = endpoint["port"]
     user_name = endpoint["username"]
+    arguments = json.loads(endpoint["arguments"])
 
     port_name = endpoint["name"]
     if port_name == "ipython":
@@ -175,7 +180,8 @@ def start_endpoint(endpoint):
         setup_jupyter_server(user_name, pod_name,podPort,port)
     elif port_name == "tensorboard":
         port = base64.b64encode(str(port).encode("utf-8"))
-        setup_tensorboard(user_name, pod_name,podPort,port)
+        # if there is extra log dir(specify as "tensorboard_log_dir") in arguments, tensorboard command can modify log dir
+        setup_tensorboard(user_name, pod_name,podPort,port, arguments)
 
 def create_node_port(endpoint):
     port_name = endpoint["name"]

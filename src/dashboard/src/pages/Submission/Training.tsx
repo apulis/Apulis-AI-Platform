@@ -566,7 +566,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
         if (deviceStr === 'npu.huawei.com/NPU') {
           const valMax = Math.floor(temp / 2) * 2;
-          if (valMax % _val !== 0 && _val < temp) {
+          if (valMax % _val !== 0 || _val > temp) {
             setNpuNumMsg(`Must be a positive integer from 0 to ${temp}，and can only be integer multiples of 2.`);
             return false;
           }

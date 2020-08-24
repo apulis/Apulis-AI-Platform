@@ -160,6 +160,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [selectDelTPName, setSelectDelTPName] = useState('');
   const [tplDatabase, setTplDatabase] = useState("user");
   const [iconInfoShow, setIconInfoShow] = useState(false);
+  const [tpInfoShow, setTPInfoShow] = useState(false);
   const [isSave, setIsSave] = useState(false);
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
@@ -1219,7 +1220,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             <Collapse in={database}>
               <Divider/>
               <CardContent>
-                <Typography component="span" variant="h6">Template Management</Typography>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography component="span" variant="h6">Template Management</Typography>
+                  <Help fontSize="small" onClick={() => setTPInfoShow(!tpInfoShow)} style={{ marginLeft: 4, cursor: 'pointer' }} />
+                </div>
+                {tpInfoShow &&
+                <div style={{ margin: '10px 0'}}>
+                  <Chip
+                    icon={<Help/>}
+                    label={<div style={{ margin: '10px 0'}}><div>Scope user: Only yourself can use this template.</div><div>Scope team: Everyone in the team can use this template.</div></div>}
+                  />
+                </div>}
                 <Grid container wrap="wrap" spacing={1}>
                   <Grid item xs={12} sm={6}>
                     <TextField

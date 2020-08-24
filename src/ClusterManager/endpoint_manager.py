@@ -172,7 +172,10 @@ def start_endpoint(endpoint):
     podPort = endpoint["podPort"]
     port = endpoint["port"]
     user_name = endpoint["username"]
-    arguments = json.loads(endpoint["arguments"])
+    if "arguments" in endpoint:
+        arguments = json.loads(endpoint["arguments"])
+    else:
+        argumetns = {}
 
     port_name = endpoint["name"]
     if port_name == "ipython":

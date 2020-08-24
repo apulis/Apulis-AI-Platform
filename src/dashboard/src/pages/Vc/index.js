@@ -350,6 +350,15 @@ export default class Vc extends React.Component {
     return content;
   }
 
+  getUsrnameList = (list) => {
+    const len = list.length;
+    if (len) {
+      return list.map((i, idx) => `${i}${idx === len - 1 ? '' : '，'}`);
+    } else {
+      return '--';
+    }
+  }
+
   render() {
     const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, 
       allDevice, vcNameValidateObj, page, count, size, loading } = this.state;
@@ -390,7 +399,7 @@ export default class Vc extends React.Component {
                   <TableCell>{this.getDeviceTypeContent(item.quota, true)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.metadata, true, true)}</TableCell>
                   <TableCell>{item.userNum}</TableCell>
-                  <TableCell style={{ maxWidth: 250 }}><div className="textEllipsis" title={item.userNameList || '--'}>{item.userNameList || '--'}</div></TableCell>
+                  <TableCell style={{ maxWidth: 250 }}><div className="textEllipsis" title={item.userNameList}>{this.getUsrnameList(item.userNameList)}</div></TableCell>
                   <AuthzHOC needPermission={'MANAGE_VC'}>
                     <TableCell>
                       <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>

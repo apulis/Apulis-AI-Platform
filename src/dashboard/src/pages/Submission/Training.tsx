@@ -126,7 +126,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuNumPerDevice, setGpuNumPerDevice] = useState(1);
   const [gpuNumPerDeviceOptions, setGpuNumPerDeviceOptions] = useState<number[]>([]);
   const [numNodesOptions, setNumNodesOptions] = useState<number[]>([]);
-
+  const [nodeCapacityArr, setNodeCapacityArr] = useState<number[]>([]);
   const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const val = event.target.value;
@@ -560,9 +560,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       const _val = Number(val);
       if (allDevice[gpuType]) {
         const { deviceStr, detail } = allDevice[gpuType];
-        const capacityArr = detail.map((i: any) => i.capacity);
         const maxAllocatable = Math.max(...detail.map((i: any) => i.allocatable));
-        const maxCapacity = Math.max(...detail.map((i: any) => i.capacity));
+        const maxCapacity = Math.max(...nodeCapacityArr);
         const temp = Math.min(gpuCapacity, maxCapacity);
 
         if (deviceStr === 'npu.huawei.com/NPU') {
@@ -634,7 +633,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const getAllDevice = () => {
     axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
       .then(res => {
-        setAllDevice(res.data);
+        const { data } = res;
+        setAllDevice(data);
+        if (data[gpuType] && data[gpuType].detail) {
+          setNodeCapacityArr(data[gpuType].detail.map((i: any) => i.capacity));
+        }
       })
   }
 

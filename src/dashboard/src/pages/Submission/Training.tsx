@@ -578,7 +578,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           }
           if (_val > maxAllocatable && _val < gpuCapacity) {
             const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
-            if (!msg) return false;
+            if (!msg) return;
           }
         }
       }
@@ -1329,6 +1329,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             <Button onClick={handleCheckVcClose} color="primary">OK</Button>
           </DialogActions>
         </Dialog>}
+
+        {/* {confirmModal && 
+        <Dialog
+          open={confirmModal}
+          onClose={handleCheckVcClose}
+        >
+          <DialogTitle>This virtual cluster has been deleted, please switch other virtual cluster！</DialogTitle>
+          <DialogActions>
+            <Button onClick={handleCheckVcClose} color="primary">OK</Button>
+          </DialogActions>
+        </Dialog>} */}
       </div>
     </Container>
   );

@@ -1422,6 +1422,33 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, interactive_ports):
             else:
                 logger.info("Endpoint %s exists. Skip.", endpoint_id)
 
+        # Only open vscode on the master
+        if 'vscode' in requested_endpoints:
+            if job_type == "RegularJob":
+                pod_name = pod_names[0]
+            else:
+                # For a distributed job, we set up jupyter on first worker node.
+                # PS node does not have GPU access.
+                # TODO: Simplify code logic after removing PS
+                pod_name = pod_names[1]
+
+            endpoint_id = "e-" + jobId + "-vscode"
+
+            if endpoint_id not in job_endpoints:
+                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
+                endpoint = {
+                    "id": endpoint_id,
+                    "jobId": jobId,
+                    "podName": pod_name,
+                    "username": username,
+                    "name": "vscode",
+                    "status": "pending",
+                    "hostNetwork": host_network
+                }
+                endpoints[endpoint_id] = endpoint
+            else:
+                logger.info("Endpoint %s exists. Skip.", endpoint_id)
+
         # interactive port
         for interactive_port in interactive_ports:
             if job_type == "RegularJob":

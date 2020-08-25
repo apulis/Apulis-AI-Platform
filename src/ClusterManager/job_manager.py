@@ -633,7 +633,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             continue
         vc_resource = vc_resources[vc_name]
         vc_user_quota_resource = vc_user_quota_resources[vc_name]
-        logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]])
+        logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource])
         if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
             if sji["deviceType"] in detail_resources:
                 if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:

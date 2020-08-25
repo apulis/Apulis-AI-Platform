@@ -568,7 +568,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         if (deviceStr === 'npu.huawei.com/NPU') {
           const _temp = Math.min(temp, 8);
           if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8  || _val > _temp) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${_temp}，and can only be integer multiples of 2.`);
+            setNpuNumMsg(`Must be a positive integer from 0 to ${_temp}，and can only be one of 0, 1, 2, 4, 8.`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {

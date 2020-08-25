@@ -1467,7 +1467,7 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, arguments, interactive
                     "username": username,
                     "name": "ipython",
                     "status": "pending",
-                    "hostNetwork": host_network
+                    "hostNetwork": host_network,
                     "arguments": arguments
                 }
                 endpoints[endpoint_id] = endpoint
@@ -1495,7 +1495,7 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, arguments, interactive
                     "username": username,
                     "name": "tensorboard",
                     "status": "pending",
-                    "hostNetwork": host_network
+                    "hostNetwork": host_network,
                     "arguments": arguments
                 }
                 endpoints[endpoint_id] = endpoint
@@ -1523,7 +1523,7 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, arguments, interactive
                     "name": interactive_port["name"],
                     "podPort": interactive_port["podPort"],
                     "status": "pending",
-                    "hostNetwork": host_network
+                    "hostNetwork": host_network,
                     "arguments": arguments
                 }
                 endpoints[endpoint_id] = endpoint

@@ -1873,7 +1873,7 @@ class Endpoint(Resource):
         requested_endpoints = params["endpoints"]
         if "arguments" in params:
             arguments = params["arguments"]
-        else
+        else:
             arguments = {}
 
         interactive_ports = []

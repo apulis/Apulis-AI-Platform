@@ -597,12 +597,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         if (allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
           setGpuNumPerDevice(8);
           setGpuNumPerDeviceOptions([8]);
+          setCanDistributedJob(!(gpuCapacity < 16));
         } else {
           let options = [];
           const _max = Math.max(...nodeCapacityArr);
           for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
             options.push(i);
           }
+          setCanDistributedJob(!(gpuCapacity > _max));
           setGpuNumPerDevice(_max);
           setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         }
@@ -628,14 +630,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           const { deviceStr } = data[gpuType];
           const arr = data[gpuType].detail.map((i: any) => i.capacity);
           setNodeCapacityArr(arr);
-          if (deviceStr === 'npu.huawei.com/NPU') {
-            setCanDistributedJob(!(gpuCapacity < 16));
-          } else {
-            setCanDistributedJob(!(gpuCapacity > Math.max(...arr)));
-          }
         }
       })
   }
+
+
 
   useEffect(() => {
     fetchGrafana()
@@ -875,7 +874,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     />
                   </Grid>
                 )}
-                { type === 'PSDistJob'  && (
+                { type === 'PSDistJob' && canDistributedJob && (
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
@@ -892,7 +891,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TextField>
                   </Grid>
                 )}
-                { type === 'PSDistJob' && (
+                { type === 'PSDistJob' && canDistributedJob && (
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
@@ -910,7 +909,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TextField>
                   </Grid>
                 )}
-                { type === 'PSDistJob' && (
+                { type === 'PSDistJob' && canDistributedJob && (
                   <Grid item xs={12} sm={6}>
                     <TextField
                       disabled

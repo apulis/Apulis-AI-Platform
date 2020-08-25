@@ -595,6 +595,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (allDevice[gpuType]) {
+      let options: any = [];
+      const _max = Math.max(...nodeCapacityArr);
+      for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
+        options.push(i);
+      }
+      setNumNodesOptions(Array.from(new Set(options)));
       if (allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
         if (type === 'PSDistJob') {
           setGpuNumPerDevice(8);
@@ -602,19 +608,20 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         }
         setCanDistributedJob(!(gpuCapacity < 16));
       } else {
-        let options = [];
-        const _max = Math.max(...nodeCapacityArr);
-        for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
-          options.push(i);
-        }
         setCanDistributedJob(!(gpuCapacity > _max));
         if (type === 'PSDistJob') {
           setGpuNumPerDevice(_max);
-          setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         }
       }
     }
-  }, [type, gpuType]);
+  }, [type, gpuType, gpuCapacity]);
+
+  useEffect(() => {
+    if (!canDistributedJob) {
+      setType('RegularJob');
+      formValSet('type', 'RegularJob');
+    };
+  }, [canDistributedJob]);
 
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
@@ -847,6 +854,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     label="Job Type"
                     fullWidth
                     variant="filled"
+                    name="type"
                     value={type}
                     onChange={e => setType(e.target.value as string)}
                   >

@@ -619,6 +619,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     logger.info("TakeJobActions : local resources : %s" % (vc_resources))
     logger.info("TakeJobActions : global resources : %s" % (globalResInfo.CategoryToCountMap))
+    logger.info("TakeJobActions : user resources : %s" % (vc_user_quota_resources))
 
     for sji in jobsInfo:
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))

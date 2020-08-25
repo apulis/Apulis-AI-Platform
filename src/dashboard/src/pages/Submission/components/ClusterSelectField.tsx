@@ -1,8 +1,6 @@
 import React from "react";
-
 import { MenuItem, TextField } from "@material-ui/core";
 import { BaseTextFieldProps } from "@material-ui/core/TextField";
-
 import ClustersContext from "../../../contexts/Clusters";
 import TeamsContext from "../../../contexts/Teams";
 import useFetch from "use-http";
@@ -58,7 +56,7 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
       let hasUsed = 0;
       if (res['user_status'].length) {
         res['user_status'].forEach((i: any) => {
-          if (i.userName === userName && i['userGPU'][clusterName]) hasUsed = i['userGPU'][clusterName];
+          if (i['userGPU'][clusterName]) hasUsed = i['userGPU'][clusterName];
         })
       }
       const gpuCapacity = isEmpty(res) ? 0 : JSON.parse(res.metadata)[clusterName].user_quota || 0;

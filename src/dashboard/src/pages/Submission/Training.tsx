@@ -1000,20 +1000,21 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={3} container justify="center" className="icon-grid">
                   <FormControlLabel
                     control={<Checkbox />}
+                    label="Vscode"
+                    checked={vscode}
+                    onChange={(e, checked) => {setVscode(checked)}}
+                  />
+                </Grid>
+                <Grid item xs={3} container justify="center" className="icon-grid">
+                  <FormControlLabel
+                    control={<Checkbox />}
                     label="TensorBoard"
                     checked={tensorboard}
                     onChange={(e, checked) => setTensorboard(checked)}
                   />
                   <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
                 </Grid>
-                <Grid item xs={3} container justify="center" className="icon-grid">
-                  <FormControlLabel
-                    control={<Checkbox />}
-                    label="Vscode"
-                    checked={vscode}
-                    onChange={(e, checked) => {setVscode(checked)}}
-                  />
-                </Grid>
+                
               </Grid>
             </CardContent>
             <Collapse in={advanced}>

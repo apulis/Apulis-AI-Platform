@@ -630,6 +630,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           const { deviceStr } = data[gpuType];
           const arr = data[gpuType].detail.map((i: any) => i.capacity);
           setNodeCapacityArr(arr);
+          if (deviceStr === 'npu.huawei.com/NPU') {
+            setCanDistributedJob(!(gpuCapacity < 16));
+          } else {
+            setCanDistributedJob(!(gpuCapacity > Math.max(...arr)));
+          }
         }
       })
   }

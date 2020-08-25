@@ -273,9 +273,12 @@ export default class Vc extends React.Component {
 
   onNumValChange = (key, oldVal, m, type, val, max) => {
     const _val = Number(val);
-    const { quotaValidateObj, metadataValidateObj } = this.state;
+    const { quotaValidateObj, metadataValidateObj, mSelectData } = this.state;
     const stateKey = type === 1 ? 'quotaValidateObj' : 'metadataValidateObj';
     let stateVal = {};
+    this.setState({
+      [key]: { ...oldVal, [m]: type === 1 ? _val : { user_quota: _val }}
+    })
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       const obj = {
         error: true,
@@ -292,9 +295,15 @@ export default class Vc extends React.Component {
         [stateKey]: stateVal
       });
     }
-    this.setState({
-      [key]: { ...oldVal, [m]: type === 1 ? _val : { user_quota: _val }}
-    })
+    if (type === 1 && !(_val < mSelectData[m].user_quota) &&
+      metadataValidateObj[m] && metadataValidateObj[m].text === 'Cannot be greater than DeviceNumber') {
+      this.setState({
+        metadataValidateObj: {
+          ...metadataValidateObj,
+          [m]: empty
+        }
+      })
+    }
   }
 
   onClickDel = item => {

@@ -453,11 +453,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       } else {
         job.resourcegpu = gpus;
       }
-      if (type === 'PSDistJob') {
-        if (workers * gpuNumPerDevice > gpuAvailable) {
-          const msg = window.confirm('There won\'t be enough workers match your request.\nProceed?');
-          if (!msg) return;
-        }
+      // if (type === 'PSDistJob') {
+      //   if (workers * gpuNumPerDevice > gpuAvailable) {
+      //     const msg = window.confirm('There won\'t be enough workers match your request.\nProceed?');
+      //     if (!msg) return;
+      //   }
+      // }
+      
+      if (gpus > gpuAvailable) {
+        const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
+        if (!msg) return;
       }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
     }
@@ -576,10 +581,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             setNpuNumMsg(`Must be a positive integer from 0 to ${temp}`);
             return false;
           }
-          if (_val > maxAllocatable && _val < gpuCapacity) {
-            const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
-            if (!msg) return;
-          }
+          //this
         }
       }
     }

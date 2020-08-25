@@ -7,7 +7,7 @@ import datetime
 import functools
 import timeit
 import collections
-
+import copy
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../storage"))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 
@@ -621,6 +621,8 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     logger.info("TakeJobActions : global resources : %s" % (globalResInfo.CategoryToCountMap))
     logger.info("TakeJobActions : user resources : %s" % (vc_user_quota_resources))
 
+    vc_pre_user_quota_resources = collections.defaultdict(lambda : copy.deepcopy(vc_user_quota_resources))
+
     for sji in jobsInfo:
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))
         vc_name = sji["job"]["vcName"]
@@ -632,7 +634,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
             continue
         vc_resource = vc_resources[vc_name]
-        vc_user_quota_resource = vc_user_quota_resources[vc_name]
+        vc_user_quota_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
         logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource,vc_name])
         if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
             if sji["job"]["jobStatus"] == "queued":
@@ -680,7 +682,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
                 vc_name = sji["job"]["vcName"]
-                available_resource = vc_user_quota_resources[vc_name]
+                available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
                 requested_resource = sji["globalResInfo"]
                 detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource, available_resource)}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))

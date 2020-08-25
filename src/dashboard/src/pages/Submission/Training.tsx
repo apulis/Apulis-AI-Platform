@@ -101,6 +101,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [ssh, setSsh] = useState(false);
   const [ipython, setIpython] = useState(false);
   const [tensorboard, setTensorboard] = useState(false);
+  const [vscode, setVscode] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountKey, setAccountKey] = useState("");
@@ -206,10 +207,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ssh,
         ipython,
         tensorboard,
+        vscode,
         plugins,
         gpuType,
         preemptible,
-        interactivePorts
+        interactivePorts,
       };
       const url = `/teams/${selectedTeam}/templates/${tplName}?database=${tplDatabase}`;
       await axios.put(url, template);
@@ -270,6 +272,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setSsh(false);
       setIpython(false);
       setTensorboard(false);
+      setVscode(false);
       setGpuType(availbleGpu![0].type || '')
       setPreemptible(false);
       setValue('interactivePorts', '');
@@ -294,6 +297,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ssh,
         ipython,
         tensorboard,
+        vscode,
         plugins,
         gpuType,
         preemptible,
@@ -340,6 +344,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       if (ssh !== undefined) setSsh(ssh);
       if (ipython !== undefined) setIpython(ipython);
       if (tensorboard !== undefined) setTensorboard(tensorboard);
+      if (vscode !== undefined) setVscode(vscode)
       if (gpuType !== undefined) setGpuType(gpuType);
       if (preemptible !== undefined) setPreemptible(preemptible);
       if (interactivePorts !== undefined) {
@@ -512,7 +517,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (ssh) endpoints.push('ssh');
     if (ipython) endpoints.push('ipython');
     if (tensorboard) endpoints.push('tensorboard');
-
+    if (vscode) endpoints.push('vscode');
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
     } else {
@@ -976,7 +981,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     })}
                   />
                 </Grid>
-                <Grid item xs={4} container justify="center">
+                <Grid item xs={3} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
                     label="SSH"
@@ -984,7 +989,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={(e, checked) => setSsh(checked)}
                   />
                 </Grid>
-                <Grid item xs={4} container justify="center">
+                <Grid item xs={3} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
                     label="Jupyter"
@@ -992,7 +997,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={(e, checked) => setIpython(checked)}
                   />
                 </Grid>
-                <Grid item xs={4} container justify="center" className="icon-grid">
+                <Grid item xs={3} container justify="center" className="icon-grid">
                   <FormControlLabel
                     control={<Checkbox />}
                     label="TensorBoard"
@@ -1001,12 +1006,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   />
                   <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
                 </Grid>
-                {iconInfoShow && <Grid item xs={12} container justify="flex-end">
-                  <Chip
-                    icon={<Help/>}
-                    label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
+                <Grid item xs={3} container justify="center" className="icon-grid">
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label="Vscode"
+                    checked={vscode}
+                    onChange={(e, checked) => {setVscode(checked)}}
                   />
-                </Grid>}
+                </Grid>
               </Grid>
             </CardContent>
             <Collapse in={advanced}>

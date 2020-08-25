@@ -260,7 +260,7 @@
                 "refId": "A"
               },
               {
-                "expr": "count (task_device_percent) / sum (8s_vc_device_total)",
+                "expr": "count (task_device_percent) / sum (k8s_vc_device_total)",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide",

@@ -684,7 +684,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 vc_name = sji["job"]["vcName"]
                 available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
                 requested_resource = sji["globalResInfo"]
-                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource, available_resource)}]
+                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,available_resource.GetMinValue(vc_resources[vc_name]))}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)

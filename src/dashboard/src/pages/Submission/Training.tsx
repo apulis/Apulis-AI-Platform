@@ -594,24 +594,24 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [selectedTeam]);
 
   useEffect(() => {
-    if (type === 'PSDistJob') {
-      if (allDevice[gpuType]) {
-        if (allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
+    if (allDevice[gpuType]) {
+      if (allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
+        if (type === 'PSDistJob') {
           setGpuNumPerDevice(8);
           setGpuNumPerDeviceOptions([8]);
-          setCanDistributedJob(!(gpuCapacity < 16));
-        } else {
-          let options = [];
-          const _max = Math.max(...nodeCapacityArr);
-          for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
-            options.push(i);
-          }
-          setCanDistributedJob(!(gpuCapacity > _max));
+        }
+        setCanDistributedJob(!(gpuCapacity < 16));
+      } else {
+        let options = [];
+        const _max = Math.max(...nodeCapacityArr);
+        for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
+          options.push(i);
+        }
+        setCanDistributedJob(!(gpuCapacity > _max));
+        if (type === 'PSDistJob') {
           setGpuNumPerDevice(_max);
           setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         }
-      } else {
-        message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
       }
     }
   }, [type, gpuType]);
@@ -623,25 +623,43 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       })
   }
 
-  const getAllDevice = () => {
-    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
+  const getAllDevice = async () => {
+    let _gpuCapacity = 0;
+    axios.get(`/teams/${selectedTeam}/clusters/${selectedCluster}`)
       .then(res => {
-        const { data } = res;
-        setAllDevice(data);
-        if (data[gpuType] && data[gpuType].detail) {
-          const { deviceStr } = data[gpuType];
-          const arr = data[gpuType].detail.map((i: any) => i.capacity);
-          setNodeCapacityArr(arr);
-          if (deviceStr === 'npu.huawei.com/NPU') {
-            setCanDistributedJob(!(gpuCapacity < 16));
-          } else {
-            setCanDistributedJob(!(gpuCapacity > Math.max(...arr)));
-          }
+        if (!isEmpty(res)) {
+          const { data } = res;
+          _gpuCapacity = JSON.parse(data.metadata)[gpuType].user_quota || 0;
+          setGpuCapacity(_gpuCapacity);
+          axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
+            .then(res => {
+              const { data } = res;
+              setAllDevice(data);
+              if (data[gpuType]) {
+                const { deviceStr } = data[gpuType];
+                const arr = data[gpuType].detail ? data[gpuType].detail.map((i: any) => i.capacity) : [];
+                setNodeCapacityArr(arr);
+                if (deviceStr === 'npu.huawei.com/NPU') {
+                  setCanDistributedJob(!(_gpuCapacity < 16));
+                } else {
+                  setCanDistributedJob(!(_gpuCapacity > Math.max(...arr)));
+                }
+              } else {
+                message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
+              }
+            })
         }
       })
   }
 
-
+  const isEmpty = (obj: object) => {
+    if (obj === undefined) return true;
+    for(let key in obj) {
+      if(obj.hasOwnProperty(key))
+        return false;
+    }
+    return true;
+  }
 
   useEffect(() => {
     fetchGrafana()

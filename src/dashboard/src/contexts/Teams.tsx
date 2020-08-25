@@ -97,7 +97,8 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
               {"There are no virtual cluster available for the current cluster, please contact the administrator"}
             </DialogContentText>
             <DialogActions>
-              <Button autoFocus color="primary" href={`mailto:${administrators[0]}`}>Send Email</Button>
+              <Button variant="contained" href={`mailto:${administrators[0]}`}>Send Email</Button>
+              <Button variant="contained" onClick={() => {delete localStorage.token}}>Sign Out</Button>
             </DialogActions>
           </DialogContent>
         </Dialog>

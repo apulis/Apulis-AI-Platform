@@ -8,6 +8,6 @@ module.exports = async context => {
   const { cluster, user } = context.state
   const params = context.params
   params.userName = user.userName
-  const ret = await cluster.getAllDevice(params)
-  context.body = ret
+  const res = await cluster.getAllDevice(params)
+  context.body = res
 }

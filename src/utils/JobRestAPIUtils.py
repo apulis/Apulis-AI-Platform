@@ -1085,13 +1085,16 @@ def AddVC(userName, vcName, quota, metadata):
     dataHandler.Close()
     return ret
 
-def getClusterVCs(page=None,size=None):
+def getClusterVCs(page=None,size=None,name=None):
     vcList = None
     try:
         if page and size:
             with vc_cache_lock:
-                if str(page)+str(size) in vc_cache:
-                    vcList = copy.deepcopy(vc_cache[str(page)+str(size)].values())
+                query_index = str(page)+str(size)
+                if name:
+                    query_index += name
+                if query_index in vc_cache:
+                    vcList = copy.deepcopy(vc_cache[query_index].values())
         else:
             if "all" in vc_cache:
                 with vc_cache_lock:
@@ -1100,35 +1103,51 @@ def getClusterVCs(page=None,size=None):
         pass
 
     if not vcList:
-        vcList = DataManager.ListVCs(page,size)
+        vcList = DataManager.ListVCs(page,size,name)
         tmp = {}
         for vc in vcList:
             tmp[vc["vcName"]] = vc
 
         if page and size:
+            query_index = str(page) + str(size)
+            if name:
+                query_index += name
             with vc_cache_lock:
-                vc_cache[str(page)+str(size)] = tmp
+                vc_cache[query_index] = tmp
         else:
             with vc_cache_lock:
                 vc_cache["all"] = tmp
 
     return vcList
 
-def GetVcUserNum():
+def GetVcUserNum(vcName):
+    ret = 0
+    res = requests.get(url=config["usermanagerapi"] + "/vc/%s/user/count" % (vcName,),headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()["count"]
+    return ret
 
-    return 0
+def GetVcsUserCount():
+    ret = {}
+    res = requests.get(url=config["usermanagerapi"] + "/open/vc/user/name",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()["vcUserNames"]
+    return ret
 
-def ListVCs(userName,page=None,size=None):
+def ListVCs(userName,page=None,size=None,name=None):
     ret = {"result":[]}
-    vcList = getClusterVCs(page,size)
+    vcList = getClusterVCs(page,size,name)
+    vcCounts = GetVcsUserCount()
 
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
-            vc["userNum"] = GetVcUserNum()
+            userList = vcCounts.get(vc["vcName"],[])
+            vc["userNum"] = len(userList)
+            vc["userNameList"] = userList
             ret["result"].append(vc)
 
-    ret["totalNum"] = DataHandler().CountVCs()
+    ret["totalNum"] = DataHandler().CountVCs(name)
     # web portal (client) can filter out Default VC
     return ret
 
@@ -1230,12 +1249,22 @@ def GetJobTotalGpu(jobParams):
         numWorkers = int(jobParams["numpsworker"])
     return int(jobParams["resourcegpu"]) * numWorkers
 
+def DeleteVcRelate(vcName):
+    ret = False
+    res = requests.delete(url=config["usermanagerapi"] + "/open/vc/%s" %(vcName,),headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = True
+    return ret
+
 
 def DeleteVC(userName, vcName):
     dataHandler = DataHandler()
     if len(dataHandler.ListVCs())==1:
         return False
     if AuthorizationManager.IsClusterAdmin(userName):
+        ret = DeleteVcRelate(vcName)
+        if not ret:
+            return "Delete relation error"
         jobs = dataHandler.GetJobList("all", vcName, num=None,status="running,scheduling,pausing")
         for job in jobs:
             dataHandler.UpdateJobTextFields({"jobId": job["jobId"],"vcName":vcName},{"jobStatus": "killing"})

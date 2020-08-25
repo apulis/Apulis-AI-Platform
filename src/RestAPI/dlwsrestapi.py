@@ -1871,7 +1871,10 @@ class Endpoint(Resource):
         params = request.get_json(force=True)
         job_id = params["jobId"]
         requested_endpoints = params["endpoints"]
-        arguments = params["arguments"]
+        if "arguments" in params:
+            arguments = params["arguments"]
+        else
+            arguments = {}
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]

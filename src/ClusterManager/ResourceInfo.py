@@ -65,3 +65,4 @@ class ResourceInfo:
         for key in otherResourceInfo.CategoryToCountMap:
             if key in self.CategoryToCountMap:
                 self.CategoryToCountMap[key] = min(otherResourceInfo.CategoryToCountMap[key],self.CategoryToCountMap[key])
+        return self

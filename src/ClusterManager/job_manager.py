@@ -635,12 +635,13 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         vc_user_quota_resource = vc_user_quota_resources[vc_name]
         logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource,vc_name])
         if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
-            if sji["deviceType"] in detail_resources:
-                if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
-                    continue
-                else:
-                    if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+            if sji["job"]["jobStatus"] == "queued":
+                if sji["deviceType"] in detail_resources:
+                    if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
                         continue
+                    else:
+                        if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                            continue
             vc_resource.Subtract(sji["globalResInfo"])
             vc_user_quota_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
@@ -653,12 +654,13 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             vc_resource = vc_resources[vc_name]
             if vc_resource.CanSatisfy(sji["globalResInfo"]):
                 logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]])
-                if sji["deviceType"] in detail_resources:
-                    if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
-                        continue
-                    else:
-                        if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                if sji["job"]["jobStatus"] == "queued":
+                    if sji["deviceType"] in detail_resources:
+                        if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
                             continue
+                        else:
+                            if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                                continue
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
                 vc_resource.Subtract(sji["globalResInfo"])

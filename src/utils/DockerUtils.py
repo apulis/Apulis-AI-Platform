@@ -1,3 +1,4 @@
+import pprint
 import os
 import time
 import datetime
@@ -347,9 +348,17 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
 
         else:
             pass
-        # print config["dockers"]
+        modify_docker_tag_by_version_file(config)
     return
 
+def modify_docker_tag_by_version_file(config):
+    for docker_name, docker_version in config["docker_image_versions"].items():
+        if docker_name in config["dockers"]["container"] and docker_version != "" and docker_version != None:
+            old_tag = config["dockers"]["container"][docker_name]["fullname"]
+            prefix = old_tag.split(":")[0]
+            config["dockers"]["container"][docker_name]["fullname"] = prefix + ":" + str(docker_version)
+    #pprint.pprint(config["dockers"])
+    return
 
 def build_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, archtype=None):
     configuration(config, verbose, archtype=archtype)

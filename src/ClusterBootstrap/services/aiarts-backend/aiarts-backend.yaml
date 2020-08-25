@@ -40,6 +40,8 @@ spec:
           name: dlwsdatadata
         - mountPath: /etc/kubernetes
           name: cluster-conf
+        - mountPath: /root/ai_arts_backend.log
+          name: applog
       volumes:
       - name: appconfig
         configMap:
@@ -54,6 +56,9 @@ spec:
         hostPath:
           path: /etc/kubernetes
           type: DirectoryOrCreate
+      - name: applog
+        hostPath:
+          path: /var/log/aiarts-backend/ai_arts_backend.log
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

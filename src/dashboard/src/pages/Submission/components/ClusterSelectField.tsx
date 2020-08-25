@@ -44,20 +44,22 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
   }
   React.useEffect(() => {
     fetchVC().then((res)=>{
-      let clusterName = props.gpuType || '';
+      let clusterName = props.gpuType || '', allHasUsed = 0, myHasUsed = 0;
       if (!isEmpty(res)) {
         if (!clusterName) {
           clusterName = (String)(Object.keys(res['gpu_capacity'])[0]);
         }
       }
-      let hasUsed = 0;
       if (res['user_status'].length) {
         res['user_status'].forEach((i: any) => {
-          if (i['userGPU'][clusterName]) hasUsed += i['userGPU'][clusterName];
+          if (i['userGPU'][clusterName]) {
+            if (i.userName === userName) myHasUsed = i['userGPU'][clusterName];
+            allHasUsed += i['userGPU'][clusterName];
+          }
         })
       }
       const gpuCapacity = isEmpty(res) ? 0 : JSON.parse(res.metadata)[clusterName].user_quota || 0;
-      const gpuAvailable = Math.min(Number(JSON.parse(res.quota)[clusterName] - hasUsed), gpuCapacity);
+      const gpuAvailable = Math.min(Number(JSON.parse(res.quota)[clusterName] - allHasUsed), Number(gpuCapacity - myHasUsed));
       props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, gpuAvailable);
       setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} to use)`);
     })

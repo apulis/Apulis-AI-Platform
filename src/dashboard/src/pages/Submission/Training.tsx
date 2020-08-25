@@ -608,7 +608,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         }
         setCanDistributedJob(!(gpuCapacity < 16));
       } else {
-        setCanDistributedJob(!(gpuCapacity > _max));
+        console.log('---', gpuCapacity, _max)
+        setCanDistributedJob(gpuCapacity > _max);
         if (type === 'PSDistJob') {
           setGpuNumPerDevice(_max);
         }

@@ -682,9 +682,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
                 vc_name = sji["job"]["vcName"]
-                available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
+                available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name].GetMinValue(vc_resources[vc_name])
                 requested_resource = sji["globalResInfo"]
-                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource, available_resource.GetMinValue(vc_resources[vc_name]))}]
+                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,available_resource)}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)

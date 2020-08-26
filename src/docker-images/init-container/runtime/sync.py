@@ -124,7 +124,6 @@ def get_task_attempt_id():
 
 def create_own_config(k8s_core_api, job_name, pod_name, ip, ssh_port,
                       framework_attempt, task_attempt,ib_ip):
-    # pod_name="546d155b-7371-4903-ac44-3e4108c02731";job_name="546d155b-7371-4903-ac44-3e4108c02731";ip="10.36.0.0";ssh_port=22;job_namespace = "default";
     config_name = "c-" + pod_name
 
     labels = {
@@ -195,6 +194,23 @@ def get_role_idx():
                      os.environ)
         return "0"
 
+def get_ssh_port():
+    with open("../dlts-runtime/ssh_config/sshd/sshd_config") as f:
+        for line in f:
+
+            stripped_line = line.strip()
+            if stripped_line.startswith("Port "):
+                ports = stripped_line.split()
+                if len(ports) >= 2:
+                    return int(ports[1])
+                else:
+                    pass
+            else:
+                continue
+                
+
+    return 22
+
 def main(args):
 
     pod_name = get_pod_name()
@@ -217,7 +233,7 @@ def main(args):
     if os.environ.get("DLWS_HOST_NETWORK") == "enable":
         ssh_port = find_free_port()
     else:
-        ssh_port = 22
+        ssh_port = get_ssh_port()
 
     ps_num = get_ps_number()
     worker_num = get_worker_number()

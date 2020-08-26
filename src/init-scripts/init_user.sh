@@ -9,7 +9,7 @@ export ENV_FILE=/pod.env
 
 # install required pkgs
 export DEBIAN_FRONTEND=noninteractive
-time apt-get update && time apt-get install sudo openssl -y
+# time apt-get update && time apt-get install sudo openssl -y
 
 # setup user and group, fix permissions
 addgroup --force-badname --gid  ${DLWS_GID} domainusers
@@ -17,6 +17,7 @@ adduser --force-badname --home /home/${DLWS_USER_NAME} --shell /bin/bash --uid $
 usermod -p $(echo ${DLTS_JOB_TOKEN} | openssl passwd -1 -stdin) ${DLWS_USER_NAME}
 chown ${DLWS_USER_NAME} /home/${DLWS_USER_NAME}/ /home/${DLWS_USER_NAME}/.profile /home/${DLWS_USER_NAME}/.ssh || /bin/true
 chmod 700 /home/${DLWS_USER_NAME}/.ssh || /bin/true
+chmod 755 /home/${DLWS_USER_NAME} || /bin/true
 
 # setup sudoers
 adduser $DLWS_USER_NAME sudo

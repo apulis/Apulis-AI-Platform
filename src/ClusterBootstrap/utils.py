@@ -29,7 +29,7 @@ import pdb
 
 
 verbose = False
-ssh_port = "3399"
+
 class StaticVariable():
     rendered_target_directory = {}
 
@@ -140,50 +140,47 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
 
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 def SSH_exec_cmd(identity_file, user,host,cmd,showCmd=True):
-    global ssh_port
+
     if len(cmd)==0:
         return;
 
     if showCmd or verbose:
-        print ("""ssh -p %s -f -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (ssh_port, identity_file, user, host, cmd) )
+        print ("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
 
-    os.system("""ssh -p %s -f -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (ssh_port, identity_file, user, host, cmd) )
+    os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
 
     return
 
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 # run in the background
 def SSH_exec_cmd_2(identity_file, user,host,cmd,showCmd=True):
-    global ssh_port
+
     if len(cmd)==0:
         return;
 
     if showCmd or verbose:
-        print ("""ssh -p %s -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (ssh_port, identity_file, user, host, cmd) )
+        print ("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd) )
 
-    os.system("""ssh -p %s -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (ssh_port, identity_file, user, host, cmd) )
+    os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" '%s' """ % (identity_file, user, host, cmd) )
 
     return
 
 # SSH Connect to a remote host with identity file (private SSH key), user, host
 # Program usually exit here.
 def SSH_connect(identity_file, user,host):
-    global ssh_port
     if verbose:
-        print("""ssh -p %s -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" """ % (ssh_port, identity_file, user, host) )
-    os.system("""ssh -p %s -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" """ % (ssh_port, identity_file, user, host) )
+        print("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" """ % (identity_file, user, host) )
+    os.system("""ssh -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" """ % (identity_file, user, host) )
 
 # Copy a local file or directory (source) to remote (target) with identity file (private SSH key), user, host
 def scp (identity_file, source, target, user, host, verbose = False):
-    global ssh_port
-    cmd = 'scp -P %s -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -r "%s" "%s@%s:%s"' % (ssh_port, identity_file, source, user, host, target)
+    cmd = 'scp -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -r "%s" "%s@%s:%s"' % (identity_file, source, user, host, target)
     if verbose:
         print(cmd)
     os.system(cmd)
 
 # Copy a local file (source) or directory to remote (target) with identity file (private SSH key), user, host, and
 def sudo_scp (identity_file, source, target, user, host,changePermission=False, verbose = False ):
-    global ssh_port
     tmp = str(uuid.uuid4())
     scp(identity_file, source,"~/%s" % tmp, user, host, verbose )
     targetPath = os.path.dirname(target)
@@ -212,13 +209,12 @@ def sudo_scp (identity_file, source, target, user, host,changePermission=False, 
 
 # Copy a remote file (which require root access) to local (target) with identity file (private SSH key), user, host, and
 def sudo_scp_to_local (identity_file, source, target, user, host,changePermission=False, verbose = False ):
-    global ssh_port
     tmp = str(uuid.uuid4())
     cmd = "sudo cp %s ~/%s; sudo chmod og+rx ~/%s" % (source, tmp, tmp)
     if verbose:
         print(cmd)
     SSH_exec_cmd(identity_file, user, host, cmd, verbose)
-    cmd = 'scp -P %s -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -r "%s@%s:%s" "%s"' % (ssh_port, identity_file, user, host, tmp, target)
+    cmd = 'scp -q -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -r "%s@%s:%s" "%s"' % (identity_file, user, host, tmp, target)
     if verbose:
         print(cmd)
     os.system(cmd)
@@ -231,13 +227,12 @@ def sudo_scp_to_local (identity_file, source, target, user, host,changePermissio
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 # Return the output of the remote command to local
 def SSH_exec_cmd_with_output1(identity_file, user,host,cmd, supressWarning = False):
-    global ssh_port
     tmpname = os.path.join("/tmp", str(uuid.uuid4()))
     execcmd = cmd + " > " + tmpname
     if supressWarning:
         execcmd += " 2>/dev/null"
     SSH_exec_cmd(identity_file, user, host, execcmd )
-    scpcmd = 'scp -P %s -i %s "%s@%s:%s" "%s"' % (ssh_port, identity_file, user, host, tmpname, tmpname)
+    scpcmd = 'scp -i %s "%s@%s:%s" "%s"' % (identity_file, user, host, tmpname, tmpname)
     # print scpcmd
     os.system( scpcmd )
     SSH_exec_cmd(identity_file, user, host, "rm " + tmpname )
@@ -247,12 +242,11 @@ def SSH_exec_cmd_with_output1(identity_file, user,host,cmd, supressWarning = Fal
     return output
 
 def SSH_exec_cmd_with_output(identity_file, user,host,cmd, supressWarning = False):
-    global ssh_port
     if len(cmd)==0:
         return "";
     if supressWarning:
         cmd += " 2>/dev/null"
-    execmd = """ssh -p %s -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (ssh_port, identity_file, user, host, cmd )
+    execmd = """ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" """ % (identity_file, user, host, cmd )
     if verbose:
         print(execmd)
     try:
@@ -265,10 +259,9 @@ def SSH_exec_cmd_with_output(identity_file, user,host,cmd, supressWarning = Fals
 # This is an auxilary utility. It scan an IP range (e.g., 10.209.x.x/21, and find all notes that belong to the current cluster)
 import socket, struct, sys
 def SSH_exec_cmd_batchmode_with_output(identity_file, user,host,cmd):
-    global ssh_port
     if len(cmd)==0:
         return ""
-    execmd = """timeout 3s ssh -oBatchMode=yes -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -p %s "%s@%s" "%s" 2>/dev/null """ % (identity_file, ssh_port, user, host, cmd )
+    execmd = """timeout 3s ssh -oBatchMode=yes -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "%s" 2>/dev/null """ % (identity_file, user, host, cmd )
     if verbose:
         print(execmd)
     try:
@@ -342,8 +335,7 @@ def exec_cmd_local(execmd, supressWarning = False):
     return output
 
 def get_host_name( identity_file, user, host ):
-    global ssh_port
-    execmd = """ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -p %s "%s@%s" "hostname" """ % (identity_file, ssh_port, user, host )
+    execmd = """ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s "%s@%s" "hostname" """ % (identity_file, user, host )
     try:
         output = subprocess.check_output( execmd, shell=True )
     except subprocess.CalledProcessError as e:

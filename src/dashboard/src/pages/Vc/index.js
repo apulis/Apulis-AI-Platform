@@ -3,7 +3,7 @@ import {
   Table, TableHead, TableRow, TableCell, TableBody, 
   Button, TextField, Container,
   Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText,
-  CircularProgress, MenuItem, TablePagination
+  CircularProgress, MenuItem, Select, Tooltip
 } from "@material-ui/core";
 import axios from 'axios';
 import ClustersContext from "../../contexts/Clusters";
@@ -12,6 +12,9 @@ import { NameReg, NameErrorText, SameNameErrorText } from '../../const';
 import './index.less';
 import _ from 'lodash';
 import AuthzHOC from '../../components/AuthzHOC';
+import { Pagination } from '@material-ui/lab';
+import Loading from '../../components/Loading';
+import { Help } from "@material-ui/icons"; 
 
 const empty = {
   text: '',
@@ -29,37 +32,61 @@ export default class Vc extends React.Component {
       vcName: '',
       vcNameValidateObj: empty,
       quotaValidateObj: {},
+      metadataValidateObj: {},
       deleteModifyFlag: false,
       btnLoading: false,
       allDevice: {},
       qSelectData: {},
       mSelectData: {},
-      clickItem: {}
+      clickItem: {},
+      page: 1,
+      size: 10,
+      count: 0,
+      loading: false,
+      allVcList: []
     }
   }
 
   componentDidMount() {
-    const { selectedCluster, userName } = this.context;
+    const { selectedCluster } = this.context;
     this.getVcList();
-    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
+    axios.get(`/${selectedCluster}/getAllDevice`)
       .then((res) => {
         const allDevice = res.data;
-        let qSelectData = {}, mSelectData = {}, quotaValidateObj = {};
+        let qSelectData = {}, mSelectData = {}, quotaValidateObj = {}, metadataValidateObj = {};
         Object.keys(allDevice).forEach(i => {
           qSelectData[i] = null;
           mSelectData[i] = null;
           quotaValidateObj[i] = empty;
+          metadataValidateObj[i] = empty;
         });
-        this.setState({ allDevice, qSelectData, mSelectData });
+        this.setState({ allDevice, qSelectData, mSelectData, quotaValidateObj, metadataValidateObj });
       })
+    this.getVcList(true);
   }
 
-  getVcList = () => {
-    axios.get(`/${this.context.selectedCluster}/listVc`)
+  getVcList = (isAll) => {
+    this.setState({ loading: true });
+    const { page, size } = this.state;
+    axios.get(`/${this.context.selectedCluster}/listVc?page=${page}&size=${isAll ? 9999 : size}`)
       .then((res) => {
-        this.setState({
-          vcList: res.data.result
-        })
+        const { totalNum, result } = res.data;
+        if (!result.length && totalNum) {
+          this.setState({ page: 1 }, () => {
+            this.getVcList();
+          });
+        } else {
+          const obj = {
+            count: Math.ceil(totalNum / size),
+            loading: false
+          }
+          if (isAll) {
+            obj.allVcList = result;
+          } else {
+            obj.vcList = result;
+          }
+          this.setState({ ...obj })
+        }
       })
   }
 
@@ -91,14 +118,14 @@ export default class Vc extends React.Component {
   }
 
   save = async () => {
-    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj } = this.state;
+    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj } = this.state;
     const { selectedCluster, getTeams } = this.context;
     let flag = true;
     if (!vcName || vcNameValidateObj.error) {
       this.setState({
         vcNameValidateObj: {
           error: true,
-          text: vcNameValidateObj.text ? vcNameValidateObj.text : 'vcName is required！'
+          text: vcNameValidateObj.text ? vcNameValidateObj.text : 'VCName is required！'
         }
       })
       return;
@@ -106,23 +133,34 @@ export default class Vc extends React.Component {
     Object.keys(quotaValidateObj).forEach(i => {
       if (quotaValidateObj[i].error) flag = false;
     })
+    Object.keys(metadataValidateObj).forEach(i => {
+      if (metadataValidateObj[i].error) flag = false;
+    })
     if (!flag) return;
     let url, quota = {}, metadata = {}, canSave = true;
     if (Object.keys(allDevice).length > 0) {
       quota = _.cloneDeep(qSelectData);
-      // metadata = _.cloneDeep(mSelectData);
+      metadata = _.cloneDeep(mSelectData);
       Object.keys(quota).forEach(i => {
         if (!allDevice[i]) { 
           delete quota[i];
-          // delete metadata[i];
+          delete metadata[i];
         }
         if (quota[i] === null) quota[i] = 0;
-        // if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
-        // if (metadata[i].user_quota > quota[i]) {
-        //   message('error', 'The value of metadata cannot be greater than the value of quota！');
-        //   canSave = false;
-        //   return;
-        // }
+        if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
+        if (metadata[i] && metadata[i].user_quota && metadata[i].user_quota > quota[i]) {
+          this.setState({
+            metadataValidateObj: {
+              ...metadataValidateObj,
+              [i]: {
+                error: true,
+                text: 'Cannot be greater than DeviceNumber'
+              }
+            }
+          })
+          canSave = false;
+          return;
+        }
       });
     }
     if (!canSave) return;
@@ -136,6 +174,7 @@ export default class Vc extends React.Component {
         this.onCloseDialog();
         getTeams();
         this.getVcList();
+        this.getVcList(true);
       }, (e) => {
         message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
       })
@@ -148,10 +187,15 @@ export default class Vc extends React.Component {
     this.setState({ btnLoading: true });
     axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
       .then((res) => {
+        if (res.data.result === false) {
+          message('error', 'Could not delete last VC');
+          return;
+        }
         message('success', 'Delete successfully！');
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();
         this.getVcList();
+        this.getVcList(true);
       }, () => { 
         message('error', 'Delete failed！');
         this.setState({ btnLoading: false });
@@ -159,11 +203,11 @@ export default class Vc extends React.Component {
   }
 
   vcNameChange = e => {
-    const { vcList } = this.state;
+    const { allVcList } = this.state;
     const val = e.target.value;
-    const hasNames = vcList.map(i => i.vcName);
+    const hasNames = allVcList.map(i => i.vcName);
     const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
-    const text = !val ? 'vcName is required！' : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
+    const text = !val ? 'VCName is required！' : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
     this.setState({ 
       vcName: val,
       vcNameValidateObj: {
@@ -174,27 +218,36 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
-    const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem, quotaValidateObj } = this.state;
+    const { allDevice, qSelectData, mSelectData, allVcList, isEdit, clickItem, quotaValidateObj, metadataValidateObj } = this.state;
     return Object.keys(allDevice).map(m => {
-      const totalNum = allDevice[m].capacity;
       let val = null, options = {}, oldVal = {}, num = allDevice[m].capacity;
       if (type == 1) {
         val = qSelectData[m];
         oldVal = qSelectData;
       } else {
-        // val =  mSelectData[m] && mSelectData[m].user_quota !== null ? mSelectData[m].user_quota : null;
-        // oldVal = mSelectData;
+        val =  mSelectData[m] && mSelectData[m].user_quota !== null ? mSelectData[m].user_quota : null;
+        oldVal = mSelectData;
       }
-      vcList.forEach(n => {
+      allVcList.forEach(n => {
         const useNum = JSON.parse(n.quota)[m];
-        num = useNum ? num - useNum : num;
+        num = useNum ? (num - useNum < 0 ? 0 : num - useNum) : num;
       })
       options[m] = Number(num);
       const editData = isEdit ? JSON.parse(clickItem[type === 1 ? 'quota' : 'metadata'])[m] : null;
       const temp = editData && editData.constructor  === Object ? editData.user_quota : editData;
-      const optionsData = temp ? editData + num : options[m];
+      let key, _error, _helperText, maxData;
       if (!isEdit && options[m] === 0) val = 0;
-      const key = type === 1 ? 'qSelectData' : 'mSelectData';
+      if (type === 1) {
+        key = 'qSelectData';
+        _error = quotaValidateObj[m] ? quotaValidateObj[m].error : false;
+        _helperText = quotaValidateObj[m] ? quotaValidateObj[m].text : '';
+        maxData = temp ? editData + num : options[m];
+      } else {
+        key = 'mSelectData';
+        _error = metadataValidateObj[m] ? metadataValidateObj[m].error : false;
+        _helperText = metadataValidateObj[m] ? metadataValidateObj[m].text : '';
+        maxData = this.state.qSelectData[m]
+      }
       return (
         <div className="select-item">
           <TextField
@@ -209,14 +262,12 @@ export default class Vc extends React.Component {
             label="Value"
             variant="outlined"
             className="select-value"
-            defaultValue={val}
-            onChange={e => this.onNumValChange(key, oldVal, m, type, e.target.value, optionsData)}
-            inputProps={{min: "0", max: optionsData, step: "1"}}
-            error={quotaValidateObj[m] ? quotaValidateObj[m].error : false}
-            helperText={quotaValidateObj[m] ? quotaValidateObj[m].text : ''}
+            defaultValue={val || 0}
+            onChange={e => this.onNumValChange(key, oldVal, m, type, e.target.value, maxData)}
+            inputProps={{min: "0", max: maxData, step: "1"}}
+            error={_error}
+            helperText={_helperText}
           />
-            {/* {this.getOptions(optionsData)}
-          </TextField> */}
         </div>
       )
     })
@@ -224,37 +275,37 @@ export default class Vc extends React.Component {
 
   onNumValChange = (key, oldVal, m, type, val, max) => {
     const _val = Number(val);
-    const { quotaValidateObj } = this.state;
-    if (!Number.isInteger(_val) || _val > max || _val < 0) {
-      this.setState({
-        quotaValidateObj: {
-          ...quotaValidateObj,
-          [m]: {
-            error: true,
-            text: `Must be a positive integer from 0 to ${max}`
-          }
-        }
-      });
-      return;
-    } else {
-      this.setState({
-        quotaValidateObj: {
-          ...quotaValidateObj,
-          [m]: empty
-        }
-      });
-    }
+    const { quotaValidateObj, metadataValidateObj, mSelectData } = this.state;
+    const stateKey = type === 1 ? 'quotaValidateObj' : 'metadataValidateObj';
+    let stateVal = {};
     this.setState({
       [key]: { ...oldVal, [m]: type === 1 ? _val : { user_quota: _val }}
     })
-  }
-  
-  getOptions = (data) => {
-    let content = [];
-    for(let i = 0; i <= data; i++){
-      content.push(<MenuItem key={i} value={i}>{i}</MenuItem>)
+    if (!Number.isInteger(_val) || _val > max || _val < 0) {
+      const obj = {
+        error: true,
+        text: (_val > max && type === 2) ? `Cannot be greater than DeviceNumber` : `Must be a positive integer from 0 to ${max}`
+      };
+      stateVal = type === 1 ? { ...quotaValidateObj, [m]: obj } : { ...metadataValidateObj, [m]: obj };
+      this.setState({
+        [stateKey]: stateVal
+      });
+      return;
+    } else {
+      stateVal = type === 1 ? { ...quotaValidateObj, [m]: empty } : { ...metadataValidateObj, [m]: empty };
+      this.setState({
+        [stateKey]: stateVal
+      });
     }
-    return content;
+    if (type === 1 && !(_val < mSelectData[m].user_quota) &&
+      metadataValidateObj[m] && metadataValidateObj[m].text === 'Cannot be greater than DeviceNumber') {
+      this.setState({
+        metadataValidateObj: {
+          ...metadataValidateObj,
+          [m]: empty
+        }
+      })
+    }
   }
 
   onClickDel = item => {
@@ -265,7 +316,7 @@ export default class Vc extends React.Component {
   }
 
   checkCountJobByStatus = (vcName, callback) => {
-    const { selectedCluster, userName } = this.context;
+    const { selectedCluster } = this.context;
     const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
     axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
@@ -280,39 +331,94 @@ export default class Vc extends React.Component {
 
   onCloseDialog = () => {
     let qSelectData = this.state.qSelectData;
+    let mSelectData = this.state.mSelectData;
     Object.keys(qSelectData).forEach(i => qSelectData[i] = 0);
+    Object.keys(mSelectData).forEach(i => mSelectData[i] = { 'user_quota': 0});
     this.setState({
       modifyFlag: false,
       vcNameValidateObj: empty,
       quotaValidateObj: {},
+      metadataValidateObj: {},
       qSelectData,
+      mSelectData
     })
   }
+
+  onPageChange = (e, page) => {
+    this.setState({ page }, () => {
+      this.getVcList();
+    });
+  }
+
+  onSizeChange = (e) => {
+    this.setState({
+      size: Number(e.target.value),
+      page: 1
+    }, () => {
+      this.getVcList();
+    });
+  }
+
+  getDeviceTypeContent = (v, isNum, isMetadata) => {
+    const val = JSON.parse(v);
+    const keys = Object.keys(val);
+    let content = null;
+    if (keys.length) {
+      isNum ? content = keys.map(i => <p>{isMetadata ? val[i].user_quota : val[i]}</p>)  : content = keys.map(i => <p>{i}</p>)
+    }
+    return content;
+  }
+
+  getUsrnameList = (list) => {
+    const len = list.length;
+    if (len) {
+      return list.map((i, idx) => `${i}${idx === len - 1 ? '' : '，'}`);
+    } else {
+      return '--';
+    }
+  }
+
   render() {
-    const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, allDevice, vcNameValidateObj } = this.state;
+    const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, 
+      allDevice, vcNameValidateObj, page, count, size, loading } = this.state;
+
+    if (loading) return <Loading/>
+
     return (
       <Container fixed maxWidth="xl">
-        <div style={{marginLeft: 'auto', marginRight: 'auto'}}>
+        <div className="vcWrap">
           <AuthzHOC needPermission={'MANAGE_VC'}>
-            <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button></div>
+            <Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button>
           </AuthzHOC>
-          <Table style={{ width: '80%', marginTop: 20 }}>
+          <Table>
             <TableHead> 
-              <TableRow style={{ backgroundColor: '#7583d1' }}>
-                <TableCell style={{ color: '#fff' }}>VcName</TableCell>
-                <TableCell style={{ color: '#fff' }}>quota</TableCell>
-                {/* <TableCell style={{ color: '#fff' }}>metadata</TableCell> */}
-                <TableCell style={{ color: '#fff' }}>permissions</TableCell>
-                <AuthzHOC needPermission={'MANAGE_VC'}><TableCell style={{ color: '#fff' }}>actions</TableCell></AuthzHOC>
+              <TableRow>
+                <TableCell>VCName</TableCell>
+                <TableCell>DeviceType</TableCell>
+                <TableCell>DeviceNumber</TableCell>
+                <TableCell>
+                  <Tooltip title="Maximum number of devices available to each user">
+                    <div className="helpWrap">MaxAvailable<Help fontSize="small" /></div>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  <Tooltip title="The number of users who own this VC resource">
+                    <div className="helpWrap">UserNumber<Help fontSize="small" /></div>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>Users</TableCell>
+                <AuthzHOC needPermission={'MANAGE_VC'}><TableCell>Actions</TableCell></AuthzHOC>
               </TableRow>
             </TableHead>
             <TableBody>
               {vcList.map(item => (
                 <TableRow key={item.vcName}>
                   <TableCell>{item.vcName} </TableCell>
-                  <TableCell>{item.quota} </TableCell>
-                  {/* <TableCell>{item.metadata} </TableCell> */}
-                  <TableCell>{item.admin ? 'Admin' : 'User'} </TableCell>
+                  <TableCell>{this.getDeviceTypeContent(item.quota)}</TableCell>
+                  <TableCell>{this.getDeviceTypeContent(item.quota, true)}</TableCell>
+                  <TableCell>{this.getDeviceTypeContent(item.metadata, true, true)}</TableCell>
+                  <TableCell>{item.userNum}</TableCell>
+                  <TableCell style={{ maxWidth: 250 }}><div className="textEllipsis" title={item.userNameList}>{this.getUsrnameList(item.userNameList)}</div></TableCell>
                   <AuthzHOC needPermission={'MANAGE_VC'}>
                     <TableCell>
                       <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
@@ -324,20 +430,29 @@ export default class Vc extends React.Component {
               ))}
             </TableBody>
           </Table>
-          {/* <TablePagination
-            count={vcList.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onChangePage={handleChangePage}
-            onChangeRowsPerPage={handleChangeRowsPerPage}
-          /> */}
+          <div className="paginationWrap">
+            <Select
+                value={size}
+                onChange={this.onSizeChange}
+                displayEmpty
+              >
+                {[10,20,30,40,50].map(i => <MenuItem value={i}>{i} rows</MenuItem>)}
+            </Select>
+            <Pagination
+              color="primary"
+              count={count}
+              page={page}
+              style={{ display: 'inline-block' }}
+              onChange={this.onPageChange}
+            />
+          </div>
           {modifyFlag && 
           <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth>
             <DialogTitle>{isEdit ? 'Modify' : 'ADD'}</DialogTitle>
             <DialogContent dividers>
               <form>
                 <TextField
-                  label="vcName *"
+                  label="VCName *"
                   value={vcName}
                   onChange={this.vcNameChange}
                   margin="normal"
@@ -347,10 +462,10 @@ export default class Vc extends React.Component {
                   helperText={vcNameValidateObj.text}
                   inputProps={{ maxLength: 20 }}
                 />
-                <h3>quota</h3>
+                <h3>DeviceNumber</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}
-                {/* <h3>metadata/user_quota</h3>
-                {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)} */}
+                <h3>MaxAvailable</h3>
+                {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)}
               </form>
             </DialogContent>
             <DialogActions>

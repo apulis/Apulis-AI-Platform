@@ -19,16 +19,22 @@ MAINTAINER Andrew Su <andrew.su@apulis.com>
 RUN apt update \
  && apt upgrade -y \
  && apt install -y git bash python3 python3-pip \
- && pip3 install --upgrade pip
+ && pip3 install --upgrade pip \
+ && apt-get install -y \
+    nmap \
+    vim
 
 # && pip3 install tensorflow==1.12
 
 WORKDIR /root/
 
 ADD tensorflow-1.12.0-cp36-cp36m-linux_x86_64.whl .
-
 RUN pip3 install tensorflow-1.12.0-cp36-cp36m-linux_x86_64.whl
 
+COPY HiAI /usr/local/HiAI
+COPY huawei_code /code
 COPY code /d_solution
+
+
 WORKDIR /d_solution/
 

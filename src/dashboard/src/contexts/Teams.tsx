@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, SetStateAction, createContext, FC } from 'react';
+import React, { useEffect, useState, SetStateAction, createContext, FC } from 'react';
 import {
   Box, Button,
   Dialog, DialogActions,
@@ -8,9 +8,8 @@ import {
 } from "@material-ui/core";
 import _ from "lodash";
 import ConfigContext from './Config';
-import ClustersContext from '../contexts/Clusters';
 import axios from 'axios';
-import Loading from '../components/Loading';
+import Loading from '../components/Loading';;
 
 interface Context {
   teams: any;
@@ -20,6 +19,8 @@ interface Context {
   saveClusterId(clusterId: SetStateAction<string>): void;
   getTeams(): void;
   permissionList: string[];
+  administrators: string[];
+  userGroupPath?: string;
 }
 
 const Context = createContext<Context>({
@@ -30,16 +31,22 @@ const Context = createContext<Context>({
   permissionList: [],
   saveClusterId: function(clusterId: SetStateAction<string>) {},
   getTeams: function() {},
+  administrators: []
 });
 
+interface ProviderProps {
+  userGroupPath?: string;
+}
+
+
 export default Context;
-export const Provider: React.FC<{permissionList?: string[]}> = ({ children, permissionList = [] }) => {
+export const Provider: React.FC<{permissionList?: string[], administrators?: string[]} & ProviderProps> = ({ children, permissionList = [], userGroupPath = '', administrators = [] }) => {
   const fetchTeamsUrl = '/api/teams';
   const [clusterId, setClusterId] = React.useState<string>('');
   const saveClusterId = (clusterId: React.SetStateAction<string>) => {
     setClusterId(clusterId);
   };
-  const [teams, setTeams] = useState<{id: string; clusters: any[]}[]>([]);
+  const [teams, setTeams] = useState<{id: string; clusters: any[]}[] | undefined>(undefined);
   const [selectedTeam, setSelectedTeam] = useState<string>('');
   const saveSelectedTeam = (team: SetStateAction<string>) => {
     setSelectedTeam(team);
@@ -54,9 +61,18 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   const getTeams = () => {
     axios.get('/teams').then(res => {
       if (res && res.data && JSON.stringify(res.data) !== JSON.stringify(teams)) {
+        if (res.data.length === 0) {
+          console.error('没有可用的虚拟集群，请联系管理员添加')
+        }
         setTeams(res.data);
       }
     })
+  }
+
+  const clearAuthInfo = async () => {
+    delete localStorage.token;
+    await axios.get('/authenticate/logout');
+    window.location.href = userGroupPath + '/user/login?' + encodeURIComponent(window.location.href);
   }
 
   useEffect(() => {
@@ -66,7 +82,7 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
   useEffect(()=> {
     const currentTeam = localStorage.getItem('team');
     if (currentTeam) {
-      if (teams.find(t => t.id === currentTeam)) {
+      if (teams?.find(t => t.id === currentTeam)) {
         setSelectedTeam(currentTeam);
       } else {
         const localTeam = teams && teams[0] && teams[0].id;
@@ -78,41 +94,47 @@ export const Provider: React.FC<{permissionList?: string[]}> = ({ children, perm
     } else {
       setSelectedTeam(_.map(teams, 'id')[0]);
     }
-  },[teams]);
+  }, [teams]);
   
-  // const EmptyTeam: FC = () => {
-  //   return (
-  //     <Box display="flex">
-  //       <Dialog open>
-  //         <DialogTitle style={{ color: 'red' }}>
-  //           {"warning"}
-  //         </DialogTitle>
-  //         <DialogContent>
-  //           <DialogContentText>
-  //             {"You are not an authorized user for this cluster. Please request to join a security group by following the button below."}
-  //           </DialogContentText>
-  //         </DialogContent>
-  //         <DialogActions>
-  //           <Button onClick={onClick} color="primary">
-  //             JOIN SG
-  //           </Button>
-  //         </DialogActions>
-  //       </Dialog>
-  //     </Box>
-  //   )
-  // };
-  if (teams !== undefined && teams.length === 0) {
+  const EmptyTeam: FC = () => {
+    return (
+      <Box display="flex">
+        <Dialog open>
+          <DialogTitle style={{ color: 'red' }}>
+            {"warning"}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {"There are no virtual cluster available for the current cluster, please contact the administrator"}
+            </DialogContentText>
+            <DialogActions>
+              <Button variant="contained" href={`mailto:${administrators[0]}`}>Send Email</Button>
+              <Button variant="contained" onClick={() => clearAuthInfo()}>Sign Out</Button>
+            </DialogActions>
+          </DialogContent>
+        </Dialog>
+      </Box>
+    )
+  };
+
+  if (teams === undefined) {
     return (
 
       <Context.Provider
-        value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList  }}
+        value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList, administrators }}
         children={<Loading />}
       />
     )
   }
+  if (teams !== undefined && teams.length === 0) {
+    return <Context.Provider
+      value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList, administrators  }}
+      children={<EmptyTeam />}
+    />;
+  }
   return (
     <Context.Provider
-      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList }}
+      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList, administrators }}
       children={children}
     />
   );

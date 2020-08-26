@@ -3,6 +3,7 @@ import * as H from 'history';
 import { Box, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from "@material-ui/core";
 import { getPageQuery } from "../utils/getPageQuery";
 import { withRouter, RouteComponentProps } from "react-router-dom";
+import Loading from '../components/Loading';
 
 interface IAuthContext {
   id?: string | number;
@@ -25,7 +26,6 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
   const isLogin = Boolean(id);
   const isRegister = Boolean(userName);
 
-  let chidComponent: React.ReactNode;
   const onClick = (path: string) => {
     const redirect = window.location.href.split('?')[0];
     window.location.href = userGroupPath + path + '?redirect=' + encodeURIComponent(redirect);
@@ -39,53 +39,32 @@ const Provider: React.FC<ProviderProps & RouteComponentProps> = ({ children, id,
     }
 
   }, [])
+  const href = window.location.href;
   if (!isLogin) {
-    chidComponent = (<Box display="flex">
-      <Dialog open>
-        <DialogTitle style={{ color: 'red' }}>
-          Notice
-        </DialogTitle>
-        <DialogContent style={{width: '350px'}}>
-          <DialogContentText>
-            Not login
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => onClick('/user/login')} color="primary">
-            To Login
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>)
+    if (!/localhost/.test(href)) {
+      onClick('/user/login');
+      // return null;
+    } else {
+      alert('TO LOGIN！')
+    }
     return (
       <AuthContext.Provider
         value={{ id, openId, userName, currentRole, permissionList }}
-        children={chidComponent}
+        children={<Loading />}
       />
     );
   }
   if (!isRegister) {
-    chidComponent = (<Box display="flex">
-      <Dialog open>
-        <DialogTitle style={{ color: 'red' }}>
-          Notice
-        </DialogTitle>
-        <DialogContent style={{width: '350px'}}>
-          <DialogContentText>
-            Not Register
-        </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => onClick('/user/register')} color="primary">
-            To Register
-        </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>)
+    if (!/localhost/.test(href)) {
+      onClick('/user/register');
+      // return null;
+    } else {
+      alert('TO LOGIN！')
+    }
     return (
       <AuthContext.Provider
         value={{ id, openId, userName, currentRole, permissionList }}
-        children={chidComponent}
+        children={<Loading />}
       />
     );
   }

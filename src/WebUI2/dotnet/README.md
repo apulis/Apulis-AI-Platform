@@ -1,4 +1,4 @@
-# WebUI for Apulis platform
+# WebUI for DL Workspace
 
 1. Development Requirement. 
 

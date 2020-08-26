@@ -143,7 +143,7 @@ ${userName}
     return {
       hidden,
       icon: 'pause',
-      tooltip: 'Pause',
+      tooltip: 'Pause，this action will kill the pod，which can be recreated by resume.',
       onClick: onPause
     }
   }, [onPause]);

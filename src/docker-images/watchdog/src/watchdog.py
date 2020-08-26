@@ -72,6 +72,11 @@ def gen_pai_pod_gauge():
             labels=["service_name", "name", "namespace", "phase", "host_ip",
                 "initialized", "pod_scheduled", "ready"])
 
+def gen_job_pod_gauge():
+    return GaugeMetricFamily("job_pod_count", "count of job pod",
+            labels=["job_id", "name", "namespace", "phase", "host_ip",
+                "initialized", "pod_scheduled", "ready"])
+
 def gen_pai_container_gauge():
     return GaugeMetricFamily("pai_container_count", "count of container pod",
             labels=["service_name", "pod_name", "name", "namespace", "state",
@@ -283,7 +288,7 @@ def process_service_endpoints(service_name, host_ip, annotations, service_endpoi
                 ServiceEndpoint(service_name, host_ip, port, path, timeout))
 
 
-def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage):
+def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage,job_pod_gauge):
     """ add metrics to pai_pod_gauge or pai_container_gauge if successfully paesed pod.
     Because we are parsing json outputed by k8s, its format is subjected to change,
     we should test if field exists before accessing it to avoid KeyError """
@@ -363,13 +368,17 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
         pass
 
     labels = pod["metadata"].get("labels")
-    if labels is None or "app" not in labels :
+    isJob = False
+    if labels is None or ("app" not in labels and "jobId" not in labels):
         logger.info("unknown pod %s", pod["metadata"]["name"])
         return None
+    elif "jobId" in labels:
+        service_name = labels["jobId"]
+        isJob = True
     else:
-        pass
+        service_name = labels["app"] # get pai service name from label
 
-    service_name = labels["app"] # get pai service name from label
+
     annotations = walk_json_field_safe(pod, "metadata", "annotations") or {}
 
     if host_ip != "unscheduled":
@@ -402,8 +411,14 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
                 error_counter.labels(type="unknown_pod_cond").inc()
                 logger.error("unexpected condition %s in pod %s", cond_t, pod_name)
 
-    pai_pod_gauge.add_metric([service_name, pod_name, namespace, phase, host_ip,
-        initialized, pod_scheduled, ready], 1)
+    if isJob:
+        logging.info("count job_id %s"%service_name)
+        job_pod_gauge.add_metric([service_name, pod_name, namespace, phase, host_ip,
+                                  initialized, pod_scheduled, ready], 1)
+        return
+    else:
+        pai_pod_gauge.add_metric([service_name, pod_name, namespace, phase, host_ip,
+            initialized, pod_scheduled, ready], 1)
 
     # generate pai_containers
     if status.get("containerStatuses") is not None:
@@ -432,14 +447,14 @@ def parse_pod_item(pod, pai_pod_gauge, pai_container_gauge, pods_info, service_e
 
 
 def process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge,
-        pods_info, service_endpoints, vc_usage):
+        pods_info, service_endpoints, vc_usage,job_pod_gauge):
     def _map_fn(item):
         return catch_exception(parse_pod_item,
                 "catch exception when parsing pod item",
                 None,
                 item,
                 pai_pod_gauge, pai_container_gauge,
-                pods_info, service_endpoints, vc_usage)
+                pods_info, service_endpoints, vc_usage,job_pod_gauge)
 
     list(map(_map_fn, pods_object["items"]))
 
@@ -603,7 +618,8 @@ def parse_node_item(node,
                 cluster_gpu_info.available += available
                 cluster_gpu_info.preemptable_available += preemptable_available
                 cluster_gpu_info.allocatable += device_allocatable
-            
+                cluster_gpu_info.reserved += reserved
+
                 logger.debug("dispatch gauge info. found gpu: ip[%s], device_capacity[%d], preemptable_available[%d], device_allocatable[%d]" % 
                                (ip, device_capacity, preemptable_available, device_allocatable))
 
@@ -612,6 +628,7 @@ def parse_node_item(node,
                 cluster_npu_info.available += available
                 cluster_npu_info.preemptable_available += preemptable_available
                 cluster_npu_info.allocatable += device_allocatable
+                cluster_npu_info.reserved += reserved
 
                 logger.debug("dispatch gauge info. found npu: ip[%s], device_capacity[%d], available[%d], total_used_processor[%d]" % 
                                 (ip, device_capacity, available, total_used_processor))
@@ -745,8 +762,8 @@ def process_vc_info(vc_quota_url, device_type_quota_url,vc_usage, cluster_gpu_in
         return []
 
 def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info):
-    logger.debug("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s",
-            vc_info, vc_usage, cluster_gpu_info,cluster_npu_info)
+    logger.info("vc_info %s, vc_usage %s, cluster_gpu_info %s cluster_npu_info %s device_type_info %s",
+            vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_type_info)
 
     vc_total_gauge = gen_k8s_vc_device_total()
     vc_avail_gauge = gen_k8s_vc_device_available()
@@ -792,6 +809,17 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                 deviceStr = device_type_info[gpu_type]["deviceStr"]
                 ratio_sum[deviceStr] = list(map(add,ratio_sum[deviceStr],cur_ratio))
 
+        ### if not all devices is allcated to vc,this make sense
+        for deviceStr,resources_list in ratio_sum.items():
+            if deviceStr == "nvidia.com/gpu":
+                cluster_info = cluster_gpu_info
+            else:
+                cluster_info = cluster_npu_info
+            if resources_list[1]<cluster_info.available:
+                resources_list[1] = cluster_info.available
+            if resources_list[0] < cluster_info.preemptable_available:
+                resources_list[0] = cluster_info.preemptable_available
+
         for vc_name, gpu_info in ratio.items():
             for gpu_type, cur_ratio in gpu_info.items():
                 if gpu_type not in device_type_info:
@@ -806,14 +834,16 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                     else:
                         if deviceStr == "npu.huawei.com/NPU":
                             available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                            reserved = int(math.floor(cluster_npu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                             preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                         else:
                             available = int(math.floor(cluster_gpu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                            reserved = int(math.floor(cluster_gpu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                             preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0]))
                     quota = vc_info[vc_name][gpu_type]
                     vc_avail_gauge.add_metric(labels, available)
                     vc_preemptive_avail_gauge.add_metric(labels, preemptive_available)
-                    vc_unschedulable_gauge.add_metric(labels, max(0, quota - available))
+                    vc_unschedulable_gauge.add_metric(labels, max(0, reserved))
 
         for vc_name, vc_usage_info in vc_usage.map.items():
             for gpu_type, vc_used in vc_usage_info.items():
@@ -834,17 +864,20 @@ def gen_vc_metrics(vc_info, vc_usage, cluster_gpu_info,cluster_npu_info,device_t
                 if all((x== 0 for x in ratio_sum[deviceStr])):
                     available = 0
                     preemptive_available = 0
+                    reserved = 0
                 else:
                     if deviceStr == "npu.huawei.com/NPU":
                         available = int(math.floor(cluster_npu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                        reserved = int(math.floor(cluster_npu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                         preemptive_available = int(math.floor(cluster_npu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0])) if ratio_sum[deviceStr][0]!=0 else 0
                     else:
                         available = int(math.floor(cluster_gpu_info.available * cur_ratio[1] / ratio_sum[deviceStr][1]))
+                        reserved = int(math.floor(cluster_gpu_info.reserved * cur_ratio[1] / ratio_sum[deviceStr][1]))
                         preemptive_available = int(math.floor(cluster_gpu_info.preemptable_available * cur_ratio[0] / ratio_sum[deviceStr][0])) if ratio_sum[deviceStr][0]!=0 else 0
                 total_used, non_preemptable_used = vc_used
                 vc_avail_gauge.add_metric(labels, available)
                 vc_preemptive_avail_gauge.add_metric(labels, preemptive_available)
-                vc_unschedulable_gauge.add_metric(labels, max(0, quota - available))
+                vc_unschedulable_gauge.add_metric(labels, max(0, reserved))
     except Exception as e:
         error_counter.labels(type="vc_quota").inc()
         logger.exception("failed to process vc info")
@@ -857,17 +890,18 @@ def process_pods(k8s_api_addr, ca_path, headers, pods_info, service_endpoints, v
     list_pods_url = "{}/api/v1/pods".format(k8s_api_addr)
 
     pai_pod_gauge = gen_pai_pod_gauge()
+    job_pod_gauge = gen_job_pod_gauge()
     pai_container_gauge = gen_pai_container_gauge()
 
     try:
         pods_object = get_pods_info(list_pods_histogram)
-        process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage)
+        process_pods_status(pods_object, pai_pod_gauge, pai_container_gauge, pods_info, service_endpoints, vc_usage,job_pod_gauge)
 
     except Exception as e:
         error_counter.labels(type="parse").inc()
         logger.exception("failed to process pods")
 
-    return [pai_pod_gauge, pai_container_gauge]
+    return [pai_pod_gauge, pai_container_gauge,job_pod_gauge]
 
 
 def process_nodes(k8s_api_addr, ca_path, headers, pods_info,
@@ -1051,13 +1085,15 @@ class ClusterGPUInfo(object):
         self.available = 0
         self.preemptable_available = 0 # gpu available for preemptable job
         self.allocatable = 0
+        self.reserved = 0
 
     def __repr__(self):
-        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d" % (
+        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d,reserved %d" % (
                 self.capacity,
                 self.available,
                 self.preemptable_available,
                 self.allocatable,
+                self.reserved,
                 )
 
 class ClusterNPUInfo(object):
@@ -1066,13 +1102,15 @@ class ClusterNPUInfo(object):
         self.available = 0
         self.preemptable_available = 0 # npu available for preemptable job
         self.allocatable = 0
+        self.reserved = 0
 
     def __repr__(self):
-        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d" % (
+        return "capacity: %d, available: %d, preemptable_available %s, allocatable %d,reserved %d" % (
                 self.capacity,
                 self.available,
                 self.preemptable_available,
                 self.allocatable,
+                self.reserved,
                 )
 
 

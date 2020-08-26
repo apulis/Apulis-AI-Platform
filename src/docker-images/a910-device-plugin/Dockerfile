@@ -12,13 +12,10 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 FROM golang:1.13.7-alpine3.11
-
-ENV GOPROXY https://goproxy.io
-ENV GO111MODULE on
-
 RUN apk --no-cache add git pkgconfig build-base
 RUN mkdir -p /go/src/apulis/k8s-device-plugin
 ADD . /go/src/apulis/k8s-device-plugin
+
 RUN cd /go/src/apulis/k8s-device-plugin/cmd; GO111MODULE=${GO111MODULE} go build -o /go/bin/a910-device-plugin; cd /go
 
 FROM alpine:3.11

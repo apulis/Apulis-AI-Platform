@@ -165,7 +165,7 @@ const UserButton: React.FC = () => {
         <Dashboard className={styles.leftIcon}/>
         User Dashboard
       </Button>
-      <Button variant="outlined" color="inherit" onClick={showUserProfile} className={classes.userLabel}>
+      <Button variant="outlined" color="inherit" style={{textTransform: 'none'}} onClick={showUserProfile} className={classes.userLabel}>
         <AccountBox className={styles.leftIcon}/>
         {nickName || userName}
       </Button>

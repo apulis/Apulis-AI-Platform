@@ -25,9 +25,11 @@ import requests
 from config import global_vars
 from authorization import ResourceType, Permission, AuthorizationManager, IdentityManager, ACLManager
 import authorization
+import EndpointUtils
 from cache import CacheManager
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../ClusterManager"))
 from ResourceInfo import ResourceInfo
+# import inference
 import quota
 
 import copy
@@ -618,15 +620,15 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             dataHandler.Close()
     return jobs
 
-def ListInferenceJob(jobOwner,vcName,num):
+def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orderBy=None):
     jobs = {}
     dataHandler = None
     try:
         dataHandler = DataHandler()
         if jobOwner == "all":
-            jobs = dataHandler.ListInferenceJob("all", vcName, num, pendingStatus, ("=", "or"))
+            jobs = dataHandler.ListInferenceJob("all", vcName, num, status, ("=", "or"),jobName=search)
         else:
-            jobs = dataHandler.ListInferenceJob(jobOwner, vcName, num)
+            jobs = dataHandler.ListInferenceJobV2(jobOwner, vcName, num,status,jobName=search,order=order,orderBy=orderBy)
     except Exception as e:
         logger.error('ListInferenceJob Exception: user: %s, ex: %s', jobOwner, str(e))
     finally:
@@ -793,6 +795,22 @@ def GetJobDetailV2(userName, jobId):
             dataHandler.Close()
     return job
 
+def GetInferenceJobDetail(userName, jobId):
+    job = {}
+    dataHandler = None
+    try:
+        dataHandler = DataHandler()
+        jobs = dataHandler.GetInferenceJob(jobId)
+        if len(jobs) == 1:
+            if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
+                job = jobs[0]
+    except Exception as e:
+        logger.error("get job detail v2 exception for user: %s, jobId: %s, exception: %s", userName, jobId, str(e))
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+    return job
+
 def GetJobStatus(jobId):
     result = None
     dataHandler = DataHandler()
@@ -800,28 +818,42 @@ def GetJobStatus(jobId):
     dataHandler.Close()
     return result
 
-def GetJobLog(userName, jobId):
+def GetJobLog(userName, jobId,page=1):
     dataHandler = DataHandler()
     jobs =  dataHandler.GetJob(jobId=jobId)
     if len(jobs) == 1:
         if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
             try:
-                log = dataHandler.GetJobTextField(jobId,"jobLog")
-                try:
-                    if isBase64(log):
-                        log = base64.b64decode(log)
-                except Exception:
-                    pass
-                if log is not None:
-                    return {
-                        "log": log,
-                        "cursor": None,
-                    }
-            except:
+                # log = dataHandler.GetJobTextField(jobId,"jobLog")
+                jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
+                jobPath = "work/"+jobParams["jobPath"]
+                localJobPath = os.path.join(config["storage-mount-path"], jobPath)
+                logPath = os.path.join(localJobPath, "logs")
+                max_page = 1
+                if not page:
+                    page = 1
+                page = int(page)
+                if os.path.exists(os.path.join(logPath,"max_page")):
+                    with open(os.path.join(logPath,"max_page"),"r") as f:
+                        max_page = int(f.read())
+                if max_page<page:
+                    page = max_page
+                if os.path.exists(os.path.join(logPath,"log-container-" +jobId + ".txt"+"."+str(page))):
+                    with open(os.path.join(logPath,"log-container-" + jobId + ".txt"+"."+str(page)), "r") as f:
+                        log = f.read()
+                    if log is not None:
+                        return {
+                            "log": log,
+                            "cursor": None,
+                            "max_page":max_page
+                        }
+            except Exception as e:
+                logger.exception(e)
                 pass
     return {
-        "log": {},
+        "log": "",
         "cursor": None,
+        "max_page":0
     }
 
 def GetClusterStatus():
@@ -839,6 +871,25 @@ def updateUserPerm(identityName,isAdmin,isAuthorized):
     ret = dataHandler.UpdateIdentityInfoPerm(identityName,isAdmin,isAuthorized)
     dataHandler.Close()
     return ret
+
+def Infer(jobId,image,signature_name):
+    dataHandler = DataHandler()
+    jobs = dataHandler.GetInferenceJob(jobId)
+    if not signature_name:
+        signature_name = "predict"
+    if len(jobs)>0:
+        job = jobs[0]
+        if "inference-url" in job:
+            inference_url = job["inference-url"]
+            # ret = inference.object_classifier_infer(inference_url,image,signature_name)
+            ret = inference.object_detaction_infer(inference_url,image,signature_name)
+            ret = base64.b64encode(ret)
+        else:
+            ret = "job not running"
+    else:
+        ret = "can't get job for jobid: " + jobId
+    return ret
+
 
 def AddUser(username,uid,gid,groups):
     ret = None
@@ -1027,36 +1078,76 @@ def AddVC(userName, vcName, quota, metadata):
                 "metadata": metadata
             }
             with vc_cache_lock:
-                vc_cache[vcName] = cacheItem
+                # vc_cache[vcName] = cacheItem
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
     return ret
 
-def getClusterVCs():
+def getClusterVCs(page=None,size=None,name=None):
     vcList = None
     try:
-        with vc_cache_lock:
-            vcList = copy.deepcopy(vc_cache.values())
+        if page and size:
+            with vc_cache_lock:
+                query_index = str(page)+str(size)
+                if name:
+                    query_index += name
+                if query_index in vc_cache:
+                    vcList = copy.deepcopy(vc_cache[query_index].values())
+        else:
+            if "all" in vc_cache:
+                with vc_cache_lock:
+                    vcList = copy.deepcopy(vc_cache["all"].values())
     except Exception:
         pass
 
     if not vcList:
-        vcList = DataManager.ListVCs()
-        with vc_cache_lock:
-            for vc in vcList:
-                vc_cache[vc["vcName"]] = vc
+        vcList = DataManager.ListVCs(page,size,name)
+        tmp = {}
+        for vc in vcList:
+            tmp[vc["vcName"]] = vc
+
+        if page and size:
+            query_index = str(page) + str(size)
+            if name:
+                query_index += name
+            with vc_cache_lock:
+                vc_cache[query_index] = tmp
+        else:
+            with vc_cache_lock:
+                vc_cache["all"] = tmp
 
     return vcList
 
-def ListVCs(userName):
-    ret = []
-    vcList = getClusterVCs()
+def GetVcUserNum(vcName):
+    ret = 0
+    res = requests.get(url=config["usermanagerapi"] + "/vc/%s/user/count" % (vcName,),headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()["count"]
+    return ret
+
+def GetVcsUserCount():
+    ret = {}
+    res = requests.get(url=config["usermanagerapi"] + "/open/vc/user/name",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()["vcUserNames"]
+    return ret
+
+def ListVCs(userName,page=None,size=None,name=None):
+    ret = {"result":[]}
+    vcList = getClusterVCs(page,size,name)
+    vcCounts = GetVcsUserCount()
 
     for vc in vcList:
         if AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.User):
             vc['admin'] = AuthorizationManager.HasAccess(userName, ResourceType.VC, vc["vcName"], Permission.Admin)
-            ret.append(vc)
+            userList = vcCounts.get(vc["vcName"],[])
+            vc["userNum"] = len(userList)
+            vc["userNameList"] = userList
+            ret["result"].append(vc)
+
+    ret["totalNum"] = DataHandler().CountVCs(name)
     # web portal (client) can filter out Default VC
     return ret
 
@@ -1158,12 +1249,22 @@ def GetJobTotalGpu(jobParams):
         numWorkers = int(jobParams["numpsworker"])
     return int(jobParams["resourcegpu"]) * numWorkers
 
+def DeleteVcRelate(vcName):
+    ret = False
+    res = requests.delete(url=config["usermanagerapi"] + "/open/vc/%s" %(vcName,),headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = True
+    return ret
+
 
 def DeleteVC(userName, vcName):
     dataHandler = DataHandler()
     if len(dataHandler.ListVCs())==1:
         return False
     if AuthorizationManager.IsClusterAdmin(userName):
+        ret = DeleteVcRelate(vcName)
+        if not ret:
+            return "Delete relation error"
         jobs = dataHandler.GetJobList("all", vcName, num=None,status="running,scheduling,pausing")
         for job in jobs:
             dataHandler.UpdateJobTextFields({"jobId": job["jobId"],"vcName":vcName},{"jobStatus": "killing"})
@@ -1172,7 +1273,8 @@ def DeleteVC(userName, vcName):
         ret =  dataHandler.DeleteVC(vcName)
         if ret:
             with vc_cache_lock:
-                vc_cache.pop(vcName, None)
+                # vc_cache.pop(vcName, None)
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
@@ -1191,7 +1293,8 @@ def UpdateVC(userName, vcName, quota, metadata):
                 "metadata": metadata
             }
             with vc_cache_lock:
-                vc_cache[vcName] = cacheItem
+                # vc_cache[vcName] = cacheItem
+                vc_cache.clear()
     else:
         ret = "Access Denied!"
     dataHandler.Close()
@@ -1222,44 +1325,7 @@ def GetEndpoints(userName, jobId):
                 if job["endpoints"] is not None:
                     endpoints = json.loads(job["endpoints"])
                 for [_, endpoint] in endpoints.items():
-                    epItem = {
-                        "id": endpoint["id"],
-                        "name": endpoint["name"],
-                        "username": endpoint["username"],
-                        "status": endpoint["status"],
-                        "hostNetwork": endpoint["hostNetwork"],
-                        "podName": endpoint["podName"],
-                        "domain": config["domain"],
-                    }
-                    if "podPort" in endpoint:
-                        epItem["podPort"] = endpoint["podPort"]
-                    if endpoint["status"] == "running":
-                        port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
-                        epItem["port"] = port
-                        if "nodeName" in endpoint:
-                            epItem["nodeName"] = config["webportal_node"].split("."+epItem["domain"])[0]
-                        if epItem["name"] == "ssh":
-                            try:
-                                desc = list(yaml.full_load_all(base64.b64decode(job["jobDescription"])))
-                                if epItem["id"].find("worker")!=-1:
-                                    desc = desc[int(re.match(".*worker(\d+)-ssh",epItem["id"]).groups()[0])+1]
-                                elif epItem["id"].find("ps0")!=-1:
-                                    desc = desc[0]
-                                else:
-                                    desc = desc[0]
-                                for i in desc["spec"]["containers"][0]["env"]:
-                                    if i["name"] == "DLTS_JOB_TOKEN":
-                                        epItem["password"] = i["value"]
-                            except Exception as e:
-                                logger.error(e)
-                        elif epItem["name"] == "inference-url":
-                            epItem["modelname"] = endpoint["modelname"]
-                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
-                        elif epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
-                            epItem["port"] = base64.b64encode(str(epItem["port"]).encode("utf-8"))
-                    if epItem["name"] == "ipython" or epItem["name"] == "tensorboard":
-                        if "extranet_port" in config and config["extranet_port"]:
-                            epItem["domain"] = epItem["domain"] + ":"+ str(config["extranet_port"])
+                    epItem = EndpointUtils.parse_endpoint(endpoint,job)
                     ret.append(epItem)
     except Exception as e:
         logger.error("Get endpoint exception, ex: %s", str(e))
@@ -1492,7 +1558,49 @@ def getAlias(username):
         username = username.split("/")[1].strip()
     return username
 
+def ConvertDataFormat(projectId, datasetId,datasetType,targetFormat):
+    data_handler = None
+    if datasetType is None:
+        datasetType = "image"
+    if targetFormat is None:
+        targetFormat = "coco"
+    try:
+        data_handler = DataHandler()
+        ret = data_handler.ConvertDataFormat(projectId, datasetId,datasetType,targetFormat)
+        return ret
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+    return None
 
+def GetConvertList(status):
+    data_handler = None
+    try:
+        data_handler = DataHandler()
+        ret = data_handler.getConvertList(status)
+        return ret
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+    return None
+
+def GetConvertDetail(projectId,datasetId):
+    data_handler = None
+    try:
+        data_handler = DataHandler()
+        ret = data_handler.GetConvertDetail(projectId,datasetId)
+        if len(ret)>0:
+            return ret[0]
+    except Exception as e:
+        logger.error("Exception in ConvertDataFormat: %s" % str(e))
+    finally:
+        if data_handler is not None:
+            data_handler.Close()
+    return None
 
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False

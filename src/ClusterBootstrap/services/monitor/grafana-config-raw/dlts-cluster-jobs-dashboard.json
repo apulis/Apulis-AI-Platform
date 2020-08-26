@@ -140,7 +140,7 @@
           "unit": "short"
         },
         {
-          "alias": "Current Assigned GPU Utilization",
+          "alias": "GPU Util",
           "colorMode": "value",
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -158,7 +158,7 @@
           "unit": "percent"
         },
         {
-          "alias": "Assigned GPU Utilization Over Interval",
+          "alias": "GPU Util Over Interval",
           "colorMode": "value",
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -176,7 +176,7 @@
           "unit": "percent"
         },
         {
-          "alias": "Current Assigned NPU Utilization",
+          "alias": "NPU Util",
           "colorMode": "value",
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -194,7 +194,7 @@
           "unit": "percent"
         },
         {
-          "alias": "Assigned NPU Utilization Over Interval",
+          "alias": "NPU Util Over Interval",
           "colorMode": "value",
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -369,8 +369,6 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "5s",
-      "10s",
       "30s",
       "1m",
       "5m",

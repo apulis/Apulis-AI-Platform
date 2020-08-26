@@ -12,7 +12,7 @@
 **/id_rsa.pub
 **/deploy/*
 src/ClusterBootstrap/*.yaml
-src/ClusterBootstrap/dashboard/config/local.yaml
+
 *.iso
 *.srl
 *.swp
@@ -80,12 +80,11 @@ src/ClusterBootstrap/services/jobmanager2/dlws-scripts.yaml
 src/ClusterBootstrap/services/monitor/alerting/kill-idle.rules
 
 /src/dashboard/build/*
+src/dashboard/config/local.yaml
 
 *.log
+src/ClusterBootstrap/template/*config.yaml.template
 
 **/.vscode/*
 .idea
 venv
-
-# Rendered configuation for each cluter or platform
-

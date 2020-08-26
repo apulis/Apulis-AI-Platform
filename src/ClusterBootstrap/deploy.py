@@ -43,12 +43,12 @@ import az_tools
 
 from params import default_config_parameters, scriptblocks
 from ConfigUtils import *
+import pdb
 
 capacityMatch = re.compile("\d+\.?\d*\s*[K|M|G|T|P]B")
 digitsMatch = re.compile("\d+\.?\d*")
 defanswer = ""
 ipAddrMetaname = "hostIP"
-ssh_port = "3399"
 
 # CoreOS version and channels, further configurable.
 coreosversion = "1235.9.0"
@@ -512,8 +512,7 @@ def init_deployment():
 
 
 def check_node_availability(ipAddress):
-    global  ssh_port
-    status = os.system('ssh -p %s -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -oBatchMode=yes %s@%s hostname > /dev/null' % (ssh_port, config["admin_username"], config["ssh_cert"], ipAddress))
+    status = os.system('ssh -o "StrictHostKeyChecking no" -o "UserKnownHostsFile=/dev/null" -i %s -oBatchMode=yes %s@%s hostname > /dev/null' % (config["admin_username"], config["ssh_cert"], ipAddress))
     #status = sock.connect_ex((ipAddress,22))
     return status == 0
 
@@ -911,15 +910,18 @@ def gen_device_type_config(config):
         archtype = "amd64"
         if "archtype" in nodeInfo:
             archtype = nodeInfo["archtype"]
-        if nodeInfo["role"] == "worker":
-            if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+        if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
+            if "series" in nodeInfo:
+                defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+            else:
                 defalt_virtual_cluster_device_type_list.add(nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+
     config["defalt_virtual_cluster_device_type_list"] = defalt_virtual_cluster_device_type_list
 
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")
     cmd = """jwt_header=$(echo -n '{"alg":"HS256","typ":"JWT"}' | base64 | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
-    cmd += """payload=$(echo -n '{"uid":30000}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
+    cmd += """payload=$(echo -n '{"uid":30000,"exp":""" + str(time.time()+3600*24*30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
     cmd += """secret=\""""+config["jwt"]["secret_key"] + "\";"
     cmd += """hexsecret=$(echo -n "$secret" | xxd -p | paste -sd "");"""
     cmd += """hmac_signature=$(echo -n "${jwt_header}.${payload}" |  openssl dgst -sha256 -mac HMAC -macopt hexkey:$hexsecret -binary | base64  | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
@@ -928,6 +930,7 @@ def gen_usermanagerapitoken(config):
     config["usermanagerapitoken"] = utils.exec_cmd_local(cmd)
     print("==========generate jwt token for restfulapi done!!!==============")
     print("token is: ",config["usermanagerapitoken"] )
+
 def get_ssh_config():
     if "ssh_cert" not in config and os.path.isfile("./deploy/sshkey/id_rsa"):
         config["ssh_cert"] = "./deploy/sshkey/id_rsa"
@@ -1025,25 +1028,14 @@ def get_kubectl_binary(force = False):
     get_other_binary()
 
 def get_hyperkube_docker(force = False) :
-    os.system("mkdir -p ./deploy/bin")
-    print( "Use docker container %s" % config["dockers"]["container"]["hyperkube"]["fullname"])
+    
+    ## not need anymore
+    return
 
-    if force or not os.path.exists("./deploy/bin/hyperkube"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/hyperkube", "./deploy/bin/hyperkube")
-
-    if force or not os.path.exists("./deploy/bin/kubelet"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubelet", "./deploy/bin/kubelet")
-
-    if force or not os.path.exists("./deploy/bin/kubectl"):
-        copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/kubectl", "./deploy/bin/kubectl")
-
-    if config['kube_custom_cri']:
-        if force or not os.path.exists("./deploy/bin/crishim"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/crishim", "./deploy/bin/crishim")
-
-        if force or not os.path.exists("./deploy/bin/nvidiagpuplugin.so"):
-            copy_from_docker_image(config["dockers"]["container"]["hyperkube"]["fullname"], "/nvidiagpuplugin.so", "./deploy/bin/nvidiagpuplugin.so")
-
+def set_mirror():
+    cmd = "sed -i 's/{apt_mirror_url}/%s/' ../init-scripts/bootstrap.sh " % (config["apt_mirror_url"])
+    print(cmd)
+    utils.exec_cmd_local(cmd)
     return
 
 def deploy_masters(force = False):
@@ -1817,6 +1809,7 @@ def deploy_webUI_on_node(ipAddress):
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/config.yaml","/etc/RestfulAPI/config.yaml", sshUser, webUIIP )
+    utils.sudo_scp(config["ssh_cert"],"./deploy/RestfulAPI/appsettings.json","/etc/RestfulAPI/appsettings.json", sshUser, webUIIP )
     utils.sudo_scp(config["ssh_cert"],"./deploy/UserDashboard/local.config","/etc/UserDashboard/local.config", sshUser, webUIIP )
 
     utils.render_template_directory("./template/dashboard", "./deploy/dashboard",config)
@@ -1831,7 +1824,7 @@ def install_ssh_key(key_files):
 
     rootpasswdfile = "./deploy/sshkey/rootpasswd"
     rootuserfile = "./deploy/sshkey/rootuser"
-    global  ssh_port
+
 
     with open(rootpasswdfile, "r") as f:
         rootpasswd = f.read().strip()
@@ -1848,17 +1841,17 @@ def install_ssh_key(key_files):
         if len(key_files)>0:
             for key_file in key_files:
                 print "Install key %s on %s" % (key_file, node)
-                os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i %s -p %s %s@%s""" %(rootpasswdfile, key_file, ssh_port, rootuser, node))
+                os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i %s %s@%s""" %(rootpasswdfile, key_file, rootuser, node))
         else:
             print "Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node)
-            os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub -p %s %s@%s""" %(rootpasswdfile, ssh_port, rootuser, node))
+            os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub %s@%s""" %(rootpasswdfile, rootuser, node))
 
 
     if rootuser != config["admin_username"]:
          for node in all_nodes:
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile, ssh_port, rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"])) # TODO centos command different
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile, ssh_port, rootuser, node, config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile,rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile,rootuser, node,config["admin_username"])) # TODO centos command different
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile,rootuser, node, config["admin_username"]))
 
 
             if len(key_files)>0:
@@ -1867,18 +1860,18 @@ def install_ssh_key(key_files):
                     with open(key_file, "r") as f:
                         publicKey = f.read().strip()
                         f.close()
-                    os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,publicKey,config["admin_username"]))
+                    os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
 
             else:
                 print "Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node)
                 with open("./deploy/sshkey/id_rsa.pub", "r") as f:
                     publicKey = f.read().strip()
                     f.close()
-                os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,publicKey,config["admin_username"]))
+                os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
 
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"]))
-            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,config["admin_username"]))
+            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"]))
 
 
 
@@ -3161,6 +3154,33 @@ def run_kubectl( commands ):
     else:
         run_kube( "./deploy/bin/kubectl", commands)
 
+def run_kubectl_with_output( command ):
+    if os.path.exists("./deploy/sshkey/admin.conf"):
+
+        kube_command = "kubectl --kubeconfig=./deploy/sshkey/admin.conf %s" % command
+        if verbose:
+            print(kube_command)
+        else:
+            pass
+
+        return utils.exec_cmd_local(kube_command)
+    else:
+        pass
+
+    return
+
+def get_cluster_k8s_node_list():
+
+    nodes = []
+    k8s_nodes = run_kubectl_with_output("get nodes --no-headers | awk '{print $1}'")
+
+    if k8s_nodes is not None:
+        nodes = k8s_nodes.strip().split()
+    else:
+        pass
+
+    return nodes
+
 # node can be either of fqdn or private-ip
 def kubernetes_get_node_name(node):
 
@@ -3562,7 +3582,10 @@ def kubernetes_label_worker(uncordon=False):
 
             # gpuType=nvidia/huawei for compatibility
             if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-                kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+                if "series" in nodeInfo:
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" + nodeInfo["series"])
+                else:
+                    kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
             else:
                 pass
 
@@ -3608,7 +3631,10 @@ def kubernetes_label_worker_2(nodename, nodeInfo):
 
         # gpuType=nvidia/huawei for compatibility
         if nodeInfo["type"] in specific_processor_type and "vendor" in nodeInfo:
-            kubernetes_label_node("--overwrite", nodename, "gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
+            if "series" in nodeInfo:
+                kubernetes_label_node("--overwrite", nodename,"gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype + "_" +nodeInfo["series"])
+            else:
+                kubernetes_label_node("--overwrite", nodename,"gpuType=" + nodeInfo["vendor"] + "_" + nodeInfo["type"] + "_" + archtype)
         else:
             pass
 
@@ -3616,6 +3642,12 @@ def kubernetes_label_worker_2(nodename, nodeInfo):
         pass
 
     return
+
+def kubernetes_setup_worker_infiniband_ip():
+    for nodename,nodeInfo in config["machines"].items():
+        if "ib_ip" in nodeInfo:
+            utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], nodename, "sudo ifconfig ib0 "+nodeInfo["ib_ip"]+"/24")
+
 
 def kubernetes_label_cpuworker():
     """Label kubernetes nodes with cpuworker=active."""
@@ -3953,7 +3985,7 @@ def get_admin_usr_password():
 
 # install ssh key remotely
 def install_ssh_key_by_nodes(all_nodes):
-    global ssh_port 
+
     rootuser, rootpasswd, rootpasswdfile = get_admin_usr_password()
     if rootuser is None or rootpasswd is None or rootpasswdfile is None:
         return
@@ -3963,33 +3995,35 @@ def install_ssh_key_by_nodes(all_nodes):
     ## install sshkeys using defalt key file (./deploy/sshkey/xxx)
     for node in all_nodes:
         print("Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node))
-        os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub -p %s %s@%s""" %(rootpasswdfile, ssh_port, rootuser, node))
+        os.system("""sshpass -f %s ssh-copy-id -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ./deploy/sshkey/id_rsa.pub %s@%s""" %(rootpasswdfile, rootuser, node))
 
     ## dlwsadmin is not root
     if rootuser != config["admin_username"]:
         for node in all_nodes:
             # create new user on target machine
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile, ssh_port, rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"])) # TODO centos command different
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile, ssh_port, rootuser, node, config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo useradd -p %s -d /home/%s -m -s /bin/bash %s"' % (rootpasswdfile,rootuser, node, rootpasswd,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo usermod -aG sudo %s"' % (rootpasswdfile,rootuser, node,config["admin_username"])) # TODO centos command different
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo mkdir -p /home/%s/.ssh"' % (rootpasswdfile,rootuser, node, config["admin_username"]))
 
             print("Install key %s on %s" % ("./deploy/sshkey/id_rsa.pub", node))
             with open("./deploy/sshkey/id_rsa.pub", "r") as f:
                 publicKey = f.read().strip()
                 f.close()
 
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,publicKey,config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo %s | sudo tee /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,publicKey,config["admin_username"]))
 
             ## set no password
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
-            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"]))
-            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -p %s %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile, ssh_port, rootuser, node,config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chown %s:%s -R /home/%s"' % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"],config["admin_username"]))
+            os.system('sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "sudo chmod 400 /home/%s/.ssh/authorized_keys"' % (rootpasswdfile,rootuser, node,config["admin_username"]))
+            os.system("""sshpass -f %s ssh  -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" %s@%s "echo '%s ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers.d/%s " """ % (rootpasswdfile,rootuser, node,config["admin_username"],config["admin_username"]))
     else:
         pass
 
     return
 
 def scale_up(config):
+
+    #pdb.set_trace()
 
     if "scale_up" not in config:
         print("Error: not scale_up config\n")
@@ -4001,6 +4035,7 @@ def scale_up(config):
     all_nodes = get_scale_nodes(config, "scale_up")
     install_ssh_key_by_nodes(all_nodes)
     domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
 
     ## scaling up
     for node_name in config["scale_up"]:
@@ -4014,6 +4049,12 @@ def scale_up(config):
         vendor = node_info["vendor"].lower()
         archtype = node_info["archtype"].lower()
 
+        if node_name in k8s_nodes:
+            print("%s is in the cluster, skip it" % (node))
+            continue
+        else:
+            pass
+
         if os != "ubuntu":
             print("os %s not supported" % (os))
         else:
@@ -4025,6 +4066,9 @@ def scale_up(config):
         run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
 
         ## wait for node to reboot
+        print("waiting for 2 seconds...")
+        time.sleep(2)
+
         while True: 
             cmd = "ping -c 1 node &> /dev/null; echo $?"
             output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
@@ -4088,6 +4132,7 @@ def scale_down(config):
         pass
 
     domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
 
     for node_name in config["scale_down"]:
         node_info = config["scale_down"][node_name]
@@ -4095,11 +4140,15 @@ def scale_down(config):
         print(node_info)
         node = node_name + domain
 
+        if node_name not in k8s_nodes:
+            print("%s is not in the cluster, skip it" % (node))
+            continue
+        else:
+            pass
+
         ## drain
         cmd = "drain %s --ignore-daemonsets" % (node_name)
         run_kubectl([cmd])
-        print(node_info)
-        node = node_name + domain
 
         ## delete node
         cmd = "delete node %s" % (node_name)
@@ -4108,11 +4157,14 @@ def scale_down(config):
         cmd = "yes | sudo kubeadm reset"
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
 
-        cmd = "rm -rf /etc/cni/net.d/ && rm -rf $HOME/.kube"
-        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
 
     return
 
+
+def create_job_service_account():
+    nodes = get_node_lists_for_service("restfulapi")
+    if len(nodes)>=1:
+        run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
 
 def run_command( args, command, nargs, parser ):
 
@@ -4236,6 +4288,10 @@ def run_command( args, command, nargs, parser ):
         bForce = args.force if args.force is not None else False
         get_kubectl_binary(force=args.force)
         exit()
+
+    elif command == "set_mirror":
+        set_mirror()
+        return
 
     elif command =="clean":
         clean_deployment()
@@ -4895,6 +4951,9 @@ def run_command( args, command, nargs, parser ):
     elif command == "labelworker":
         kubernetes_label_worker()
 
+    elif command == "setupib":
+        kubernetes_setup_worker_infiniband_ip()
+
     elif command == "gpulabel":
         kubernetes_label_GpuTypes()
 
@@ -5047,6 +5106,9 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "upload_dns_config_to_unifi":
         upload_dns_config_to_unifi()
+
+    elif command == "create_job_service_account":
+        create_job_service_account()
 
     else:
         parser.print_help()

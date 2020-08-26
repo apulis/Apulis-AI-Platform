@@ -4,6 +4,7 @@ const fetch = require('node-fetch')
 const Service = require('./service')
 
 const clustersConfig = config.get('clusters')
+const userGroup = config.get('userGroup')
 
 /**
  * @typedef {Object} State
@@ -193,19 +194,19 @@ class Cluster extends Service {
    * @param {string?} cursor
    * @return {Promise<{log: string, cursor: number}>}
    */
-  async getJobLog (jobId, cursor) {
+  async getJobLog (jobId, page, cursor) {
     const { user } = this.context.state
     const params = new URLSearchParams({
       jobId,
-      userName: user.userName
+      userName: user.userName,
+      page
     })
     if (cursor !== undefined) {
       params.set('cursor', cursor)
     }
     const response = await this.fetch('/GetJobLog?' + params)
-    const { log, cursor: nextCursor } = await response.json()
-    this.context.assert(Object.keys(log).length > 0, 404)
-    return { log, cursor: nextCursor }
+    const res = await response.json()
+    return res
   }
 
   /**
@@ -213,13 +214,9 @@ class Cluster extends Service {
    */
   async getTeams () {
     const { user } = this.context.state
-    const params = new URLSearchParams({
-      userName: user.userName
-    })
-    const response = await this.fetch('/ListVCs?' + params)
+    const response = await this.fetch(`/ListVCs??userName=${user.userName}&page=1&size=9999`)
     const data = await response.json()
     this.context.log.debug(data, 'Listed VC')
-
     return data['result']
   }
 
@@ -474,8 +471,8 @@ class Cluster extends Service {
   }
 
   async listVc (params) {
-    const { userName } = params
-    const response = await this.fetch(`/ListVCs?userName=${userName}`)
+    const { userName, size, page } = params
+    const response = await this.fetch(`/ListVCs?userName=${userName}&page=${page}&size=${size}`)
     this.context.assert(response.ok, 502)
     const data = await response.json()
     return data

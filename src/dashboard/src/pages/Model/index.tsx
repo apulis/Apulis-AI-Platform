@@ -97,7 +97,7 @@ const Model: React.FC = () => {
       setPushId(jobId);
       axios.post(`/${selectedCluster}/pushModelToFD`, { jobId: jobId }).then((res: any) => {
         getData();
-        message('success', `Push Inference successfully！`);
+        message('success', `Submitted successfully！`);
       }).catch(err => {
         console.log(err);
         setPushId('');
@@ -132,10 +132,10 @@ const Model: React.FC = () => {
       conversionType: type
     }).then((res: any) => {
       getData();
-      message('success', `Edge Inference successfully！`);
+      message('success', `Submitted successfully！`);
       setModalFlag1(false);
     },  () => {
-      message('error', `Edge Inference failed！`);
+      message('error', `Submitted failed！`);
     })
     setBtnLoading(false);
   }
@@ -281,7 +281,8 @@ const Model: React.FC = () => {
               fullWidth
               variant="filled"
               error={Boolean(errors.url)}
-              defaultValue={fdInfo.url}
+              value={fdInfo.url}
+              onChange={e => setFdInfo({ ...fdInfo, url: e.target.value })}
               helperText={errors.url ? errors.url.message : ''}
               InputLabelProps={{ shrink: true }}
               inputRef={register({
@@ -293,7 +294,8 @@ const Model: React.FC = () => {
               name="username"
               fullWidth
               variant="filled"
-              defaultValue={fdInfo.username}
+              value={fdInfo.username}
+              onChange={e => setFdInfo({ ...fdInfo, username: e.target.value })}
               error={Boolean(errors.username)}
               helperText={errors.username ? errors.username.message : ''}
               InputLabelProps={{ shrink: true }}
@@ -307,7 +309,8 @@ const Model: React.FC = () => {
               name="password"
               fullWidth
               variant="filled"
-              defaultValue={fdInfo.password}
+              value={fdInfo.password}
+              onChange={e => setFdInfo({ ...fdInfo, password: e.target.value })}
               error={Boolean(errors.password)}
               helperText={errors.password ? errors.password.message : ''}
               InputLabelProps={{ shrink: true }}

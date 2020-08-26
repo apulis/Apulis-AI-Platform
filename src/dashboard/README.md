@@ -1,10 +1,10 @@
-# dashboard
+# DLTS dashboard
 
-A dashboard that support serving multiple backend.
+A dashboard that support serving multiple DLTS backend.
 
 ## Configuration
 
-dashboard is using [config](https://npmjs.com/package/config) to maintain configurations, read [Configuration Files](https://github.com/lorenwest/node-config/wiki/Configuration-Files) for more file-wise details.
+DLTS dashboard is using [config](https://npmjs.com/package/config) to maintain configurations, read [Configuration Files](https://github.com/lorenwest/node-config/wiki/Configuration-Files) for more file-wise details.
 
 The configuration schema (with description) is maintained in [config.schema.json](./server/api/validator/config.schema.json).
 
@@ -25,7 +25,7 @@ The configuration schema (with description) is maintained in [config.schema.json
 6. Open <http://localhost:3000/> (may be automatically opened by script) to preview.
 7. For frontend development, local code changes will automatically refresh the browser; for backend development, local code changes will automatically restart the server.
 
-##　使用说明
+##　钱江源小组说明
 docker-images/webui3中，Dockerfile，先把源码copy进工作目录，再yarn安装依赖，再build打包，最后生成docker镜像。
 具体操作：./deploy.py docker push webui3 
 服务启停：./deploy.py kubernetes start webui3

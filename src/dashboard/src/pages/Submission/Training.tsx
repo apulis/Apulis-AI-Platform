@@ -51,6 +51,7 @@ import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePo
   NoNumberReg, NoNumberText, HttpsErrorText, HttpsReg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
+import { Stream } from "stream";
 
 interface EnvironmentVariable {
   name: string;
@@ -144,9 +145,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [environmentVariables]
   );
-  const onRemoveEnvironmentVariableClick = (time: number) => {
+  const onRemoveEnvironmentVariableClick = (time: number, name: string) => {
     const newArr = environmentVariables.filter(i => i.time !== time);
-    const nameArr = newArr.map(i => `environmentVariables${i.time}`);
     setEnvironmentVariables(newArr);
   }
 
@@ -543,7 +543,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
 
   const validateEVName = (val: string, index: number, time: number) => {
-    if (val) {
+    if (val && val !== environmentVariables[index].name) {
       if (environmentVariables.findIndex(i => i.name === val) > -1) {
         setError(`environmentVariables${time}`, 'error', 'Already has the same name！');
         return false;
@@ -581,7 +581,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             setNpuNumMsg(`Must be a positive integer from 0 to ${temp}`);
             return false;
           }
-          //this
         }
       }
     }
@@ -1235,7 +1234,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           />
                         </TableCell>
                         <TableCell align="center">
-                          <IconButton size="small" color="secondary" onClick={() => onRemoveEnvironmentVariableClick(time)}>
+                          <IconButton size="small" color="secondary" onClick={() => onRemoveEnvironmentVariableClick(time, name)}>
                             <Delete/>
                           </IconButton>
                         </TableCell>

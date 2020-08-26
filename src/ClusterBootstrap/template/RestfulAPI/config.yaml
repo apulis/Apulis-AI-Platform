@@ -127,3 +127,4 @@ master_private_ip: {{cnf["kube-vip"]}}
 {% endif %}
 
 data_platform_path: {{cnf["data_platform_path"]}}
+private_docker_registry: {{cnf["private_docker_registry"]}}

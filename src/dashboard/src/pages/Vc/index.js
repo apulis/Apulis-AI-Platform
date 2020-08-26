@@ -174,6 +174,7 @@ export default class Vc extends React.Component {
         this.onCloseDialog();
         getTeams();
         this.getVcList();
+        this.getVcList(true);
       }, (e) => {
         message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
       })
@@ -194,6 +195,7 @@ export default class Vc extends React.Component {
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();
         this.getVcList();
+        this.getVcList(true);
       }, () => { 
         message('error', 'Delete failed！');
         this.setState({ btnLoading: false });

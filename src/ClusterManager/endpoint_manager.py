@@ -145,6 +145,21 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
     if output != "":
         raise Exception("Failed to start tensorboard in container. JobId: %s ,output: %s" % (pod_name,output))
 
+def setup_vscode(user_name, pod_name,vscode_port):
+    bash_script = """
+        version="$(curl -fsSLI -o /dev/null -w "%{url_effective}" https://github.com/cdr/code-server/releases/latest)"                                                                                                                         
+        version="${version#https://github.com/cdr/code-server/releases/tag/}"
+        version="${version#v}"
+        echo "$version"
+        curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_amd64.deb
+        sudo dpkg -i code-server_${version}_amd64.deb
+
+        code-server --port vscode_port --host 0.0.0.0 --auth none
+    """
+    output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
+    if output != "":
+        raise Exception("Failed to start vscode in container. JobId: %s ,output: %s" % (pod_name,output))
+
 def is_server_ready(endpoint):
     pod_name = endpoint["podName"]
     port_name = endpoint["name"]
@@ -153,6 +168,8 @@ def is_server_ready(endpoint):
         cmd = "ps -ef|grep jupyter-lab"
     elif port_name == "tensorboard":
         cmd = "ps -ef|grep tensorboard"
+    elif port_name == "vscode":
+        cmd = "ps -ef|grep code-server"
     if cmd:
         output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
         if output == "":
@@ -176,6 +193,8 @@ def start_endpoint(endpoint):
     elif port_name == "tensorboard":
         port = base64.b64encode(str(port).encode("utf-8"))
         setup_tensorboard(user_name, pod_name,podPort,port)
+    elif port_name == "vscode":
+        setup_vscode(user_name, pod_name,podPort)
 
 def create_node_port(endpoint):
     port_name = endpoint["name"]
@@ -187,6 +206,8 @@ def create_node_port(endpoint):
     elif port_name == "ipython":
         endpoint["podPort"] = random.randint(40000, 49999)
     elif port_name == "tensorboard":
+        endpoint["podPort"] = random.randint(40000, 49999)
+    elif port_name == "vscode":
         endpoint["podPort"] = random.randint(40000, 49999)
     else:
         endpoint["podPort"] = int(endpoint["podPort"])

@@ -41,7 +41,7 @@
 * release-0.1.6
   
   + 新增用户权限和用户资源限制
-  + 自动调度npu
+  + 灵活调度NPU，GPU资源
   + 修复Bug,平台优化
 
 版本说明详情请参阅[RELEASE](docs/RELEASE.md)。

@@ -147,15 +147,24 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
 
 def setup_vscode(user_name, pod_name,vscode_port):
     bash_script = """
-        version="$(curl -fsSLI -o /dev/null -w "%{url_effective}" https://github.com/cdr/code-server/releases/latest)"                                                                                                                         
-        version="${version#https://github.com/cdr/code-server/releases/tag/}"
-        version="${version#v}"
-        echo "$version"
-        curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_amd64.deb
-        sudo dpkg -i code-server_${version}_amd64.deb
-
-        code-server --port vscode_port --host 0.0.0.0 --auth none
-    """
+        bash -c '
+            export DEBIAN_FRONTEND=noninteractive; 
+            if ! [ -x \"$(command -v code-server)\" ];then 
+                apt-get update && umask 022
+                version="$(curl -fsSLI -o /dev/null -w "%{url_effective}" https://github.com/cdr/code-server/releases/latest)"                                                                                                                         
+                version="${version#https://github.com/cdr/code-server/releases/tag/}"
+                version="${version#v}"
+                echo "$version"
+                curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_amd64.deb
+                sudo dpkg -i code-server_${version}_amd64.deb
+            fi
+            && cd /home/%s
+            && runuser -l %s  -c "
+                mkdir -p /var/log/vscode
+                nohup code-server --port %s --host 0.0.0.0 --auth none &>/var/log/vscode/log &
+            "
+        '
+    """% user_name, user_name, vscode_port
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start vscode in container. JobId: %s ,output: %s" % (pod_name,output))

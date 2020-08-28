@@ -42,6 +42,11 @@ def parse_endpoints(endpoints):
         if ep["status"]=="running":
             return "http://%s.%s/endpoints/v2/%s/v1/models/%s:predict" % (ep["nodeName"],ep["domain"],ep["port"],ep["modelname"])
 
+def sql_injection_parse(name):
+    if name.strip() in ["%","_"]:
+        return ""
+    return name
+
 class SingletonDBPool(object):
     __instance_lock = threading.Lock()
 
@@ -1240,7 +1245,7 @@ class DataHandler(object):
 
             if searchWord is not None and len(searchWord) > 0:
                 query += " and jobName like '%"
-                query += "%s" % (searchWord)
+                query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
             else:
                 pass
@@ -1352,7 +1357,7 @@ class DataHandler(object):
                 query += " and vcName = '%s'" % vcName
 
             if jobName:
-                query += " and jobName like '%%%s%%'" % jobName
+                query += " and jobName like '%%%s%%'" % sql_injection_parse(jobName)
 
             if status:
                 if "," not in status:
@@ -1416,32 +1421,33 @@ class DataHandler(object):
     @record
     def ListInferenceJobV2(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None,order=None,orderBy=None):
         ret = []
-
-        conn = None
-        cursor = None
         try:
-            conn = self.pool.get_connection()
-            cursor = conn.cursor()
 
             query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1 and isDeleted=0".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
+            params = []
             if userName != "all":
-                query += " and userName = '%s'" % userName
+                query += " and userName = %s" % "%s"
+                params.append(userName)
 
             if vcName != "all":
-                query += " and vcName = '%s'" % vcName
+                query += " and vcName = %s" % "%s"
+                params.append(vcName)
 
             if jobName:
-                query += " and jobName like '%%%s%%'" % jobName
+                query += " and jobName like %s" % "%s"
+                params.append("%%%s%%" % sql_injection_parse(jobName))
 
             if status:
                 if "," not in status:
-                    query += " and jobStatus %s '%s'" % (op[0], status)
+                    query += " and jobStatus %s %s" % (op[0], "%s")
+                    params.append(status)
                 else:
-                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_list = [" jobStatus %s %s" % (op[0], s) for s in status.split(',')]
                     status_statement = (" " + op[1] + " ").join(status_list)
-                    query += " and ( %s ) " % status_statement
+                    query += " and ( %s ) " % "%s"
+                    params.append(status_statement)
 
             if not orderBy:
                 orderBy = "jobTime"
@@ -1451,16 +1457,17 @@ class DataHandler(object):
             else:
                 order = "desc"
             if orderBy:
-                query += " order by %s %s" %(orderBy,order)
-
+                query += " order by %s %s" %("%s","%s")
+                params.append(orderBy)
+                params.append(order)
             if num is not None:
-                query += " limit %s " % str(num)
-            cursor.execute(query)
+                query += " limit %s " % "%s"
+                params.append(str(num))
 
-            columns = [column[0] for column in cursor.description]
-            data = cursor.fetchall()
-            for item in data:
-                record = dict(zip(columns, item))
+            with MysqlConn() as conn:
+                rets = conn.select_many(query,params)
+
+            for record in rets:
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
                 if record["jobParams"] is not None:
@@ -1472,14 +1479,8 @@ class DataHandler(object):
                     record["inference-url"] = parse_endpoints(endpoints)
 
                 ret.append(record)
-            conn.commit()
         except Exception as e:
             logger.exception('GetJobListV2 Exception: %s', str(e))
-        finally:
-            if cursor is not None:
-                cursor.close()
-            if conn is not None:
-                conn.close()
         return ret
 
     @record
@@ -1500,13 +1501,13 @@ class DataHandler(object):
             query = "SELECT count(*) OVER() as total, j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1 and isDeleted=0".format(
                 self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
-                query += " and userName = '%s'" % userName
+                query += " and userName = %s" % userName
 
             if vcName != "all":
                 query += " and vcName = '%s'" % vcName
 
             if name is not None:
-                query += " and jobName like '%%%s%%'" % name
+                query += " and jobName like '%%%s%%'" % sql_injection_parse(name)
 
             if type is not None:
                 query += " and m.type = '%s'" % type

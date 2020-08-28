@@ -54,12 +54,17 @@ def fd_create_file(modconvertInfo, fdinfo):
         'Description': modconvertInfo["jobId"] + " model file",
         'Type': 'model_file'
     }
-    resp = requests.post(url, auth=auth, verify=False, data=json.dumps(data))
-    if resp.status_code == 201:
-        fileId = resp.json()['FileID']
-        dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
-        return True
-    else:
+    try:
+        resp = requests.post(url, auth=auth, verify=False, data=json.dumps(data))
+        if resp.status_code == 201:
+            fileId = resp.json()['FileID']
+            dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
+            return True
+        else:
+            dataHandler.UpdateClusterStatus(modconvertInfo["jobId"], "push failed")
+            return False
+    except Exception as e:
+        dataHandler.UpdateClusterStatus(modconvertInfo["jobId"], "push failed")
         return False
 
 def fd_push_file(modconvertInfo, fdinfo):

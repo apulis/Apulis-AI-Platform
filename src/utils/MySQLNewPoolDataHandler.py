@@ -44,8 +44,8 @@ def parse_endpoints(endpoints):
 
 def sql_injection_parse(name):
     if name.strip() in ["%","_"]:
-        return ""
-    return name
+        return " "
+    return name.strip()
 
 class SingletonDBPool(object):
     __instance_lock = threading.Lock()

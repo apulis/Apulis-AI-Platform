@@ -22,11 +22,11 @@ import {
   Switch,
   MenuItem,
   SvgIcon, useMediaQuery,
-  Dialog, DialogActions, DialogContent, DialogTitle
+  Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText
 } from "@material-ui/core";
 import axios from 'axios';
 import Tooltip from '@material-ui/core/Tooltip';
-import { Info, Delete, Add } from "@material-ui/icons";
+import { Delete, Add, Help } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
 import { useSnackbar } from 'notistack';
@@ -118,6 +118,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [enableJobPath, setEnableJobPath] = useState(true);
   const [showSaveTemplate, setSaveTemplate] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [checkVCModal, setCheckVCModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
   const [allDevice, setAllDevice] = useState<{
     [name: string]: { deviceStr: string, capacity: number, detail: Array<[]> }
@@ -159,6 +160,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [selectDelTPName, setSelectDelTPName] = useState('');
   const [tplDatabase, setTplDatabase] = useState("user");
   const [iconInfoShow, setIconInfoShow] = useState(false);
+  const [tpInfoShow, setTPInfoShow] = useState(false);
   const [isSave, setIsSave] = useState(false);
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
@@ -221,6 +223,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   };
   const [showDeleteTemplate, setShowDeleteTemplate] = useState(false);
   const onDeleteTemplateClick = async () => {
+    const hasThisVC = await checkVC();
+    if (!hasThisVC) return;
     if (!selectDelTPName) {
       message('error', 'Need select one template')
       return
@@ -394,7 +398,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     post: postEndpoints,
   } = useFetch('/api');
   const [open, setOpen] = useState(false);
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
+    const hasThisVC = await checkVC();
+    if (!hasThisVC) return;
     if (isSave) {
       onSaveTemplateClick();
     } else {
@@ -448,9 +454,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       }
       if (type === 'PSDistJob') {
         if (workers * gpuNumPerDevice > gpuAvailable) {
-          if (!window.confirm('There won\'t be enough workers match your request.\nProceed?')) {
-            return;
-          }
+          const msg = window.confirm('There won\'t be enough workers match your request.\nProceed?');
+          if (!msg) return;
         }
       }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
@@ -464,7 +469,23 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (result) {
       const { grafana } = result
       setGrafanaUrl(grafana);
+    } 
+  }
+
+  const checkVC = async () => {
+    let result = false;
+    const res = await axios.get('/teams');
+    if (res.data.length && res.data.findIndex((i: any) => i.id === selectedTeam) > -1) {
+      result = true;
+    } else {
+      setCheckVCModal(true);
     }
+    return result;
+  }
+
+  const handleCheckVcClose = () => {
+    setCheckVCModal(false);
+    location.reload();
   }
 
   useEffect(() => {
@@ -541,7 +562,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         const { deviceStr } = allDevice[gpuType];
         if (deviceStr === 'npu.huawei.com/NPU') {
           if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${gpusPerNode > 8 ? 8 : gpusPerNode}，and can only be one of 0, 1, 2, 4, 8`);
+            setNpuNumMsg(`Must be a positive integer from 0 to ${gpuAvailable > 8 ? 8 : gpuAvailable}，and can only be one of 0, 1, 2, 4, 8`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
@@ -549,14 +570,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           const allocatableArr = detail.map((i: any) => i.allocatable);
           const capacityArr = detail.map((i: any) => i.capacity);
           const maxAllocatable = Math.max(...allocatableArr);
-          const maxCapacity = Math.max(...capacityArr);
+          const maxCapacity = Math.max(...capacityArr) > gpuAvailable ? gpuAvailable : Math.max(...capacityArr);
 
           if (_val < 0 || !Number.isInteger(_val) || _val > maxCapacity) {
             setNpuNumMsg(`Must be a positive integer from 0 to ${maxCapacity}`);
             return false;
           }
           if (_val > maxAllocatable) {
-            if (!window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')) return false;
+            const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
+            if (!msg) return false;
           }
         }
       }
@@ -585,18 +607,18 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           temp1.push(i.capacity);
           temp2.push(index + 1);
         });
-        const maxNum = Math.max(...temp1);
-        let options = [1];
-        for (let n = 2; n <= maxNum; n = n * 2) {
+        const maxNum = Math.max(...temp1) > gpuAvailable ? gpuAvailable : Math.max(...temp1);
+        let options = [];
+        for (let n = 1; n <= maxNum; n = n * 2) {
           options.push(n);
         }
-        setGpuNumPerDeviceOptions(options);
+        setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         setNumNodesOptions(temp2);
       } else {
         message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
       }
     }
-  }, [type]);
+  }, [type, gpuType]);
 
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
@@ -973,11 +995,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     checked={tensorboard}
                     onChange={(e, checked) => setTensorboard(checked)}
                   />
-                  <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
+                  <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
                 </Grid>
                 {iconInfoShow && <Grid item xs={12} container justify="flex-end">
                   <Chip
-                    icon={<Info/>}
+                    icon={<Help/>}
                     label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
                   />
                 </Grid>}
@@ -1031,7 +1053,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   </Grid>
                 </Grid>
               </CardContent>
-              <CardContent>
+              {/* <CardContent>
                 <Typography component="span" variant="h6">Mount Directories</Typography>
                 <Table size="small">
                   <TableHead>
@@ -1134,7 +1156,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TableRow>
                   </TableBody>
                 </Table>
-              </CardContent>
+              </CardContent> */}
               <CardContent>
                 <Typography component="span" variant="h6">Environment Variables</Typography>
                 <Table size="small">
@@ -1198,7 +1220,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             <Collapse in={database}>
               <Divider/>
               <CardContent>
-                <Typography component="span" variant="h6">Template Management</Typography>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography component="span" variant="h6">Template Management</Typography>
+                  <Help fontSize="small" onClick={() => setTPInfoShow(!tpInfoShow)} style={{ marginLeft: 4, cursor: 'pointer' }} />
+                </div>
+                {tpInfoShow &&
+                <div style={{ margin: '10px 0'}}>
+                  <Chip
+                    icon={<Help/>}
+                    label={<div style={{ margin: '10px 0'}}><div>Scope user: Only yourself can use this template.</div><div>Scope team: Everyone in the team can use this template.</div></div>}
+                  />
+                </div>}
                 <Grid container wrap="wrap" spacing={1}>
                   <Grid item xs={12} sm={6}>
                     <TextField
@@ -1282,6 +1314,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           handleWarnClose={handleClose}
           autoHideDuration={1000}
         />
+
+        {checkVCModal && 
+        <Dialog
+          open={checkVCModal}
+          onClose={handleCheckVcClose}
+        >
+          <DialogTitle>This virtual cluster has been deleted, please switch other virtual cluster！</DialogTitle>
+          <DialogActions>
+            <Button onClick={handleCheckVcClose} color="primary">OK</Button>
+          </DialogActions>
+        </Dialog>}
       </div>
     </Container>
   );

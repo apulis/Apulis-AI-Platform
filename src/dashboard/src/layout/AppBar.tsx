@@ -16,6 +16,7 @@ import {
   Divider,
   ListItemText,
   Dialog,
+  Modal,
   Snackbar,
   SnackbarContent,
   Hidden
@@ -27,6 +28,7 @@ import {
   ExitToApp,
   Group,
   HelpOutline,
+  Info,
   MenuRounded,
   Dashboard,
 } from '@material-ui/icons';
@@ -69,7 +71,6 @@ const useStyles = makeStyles((theme: Theme) =>
       whiteSpace: 'nowrap',
       cursor: 'default'
     }
-
   })
 );
 
@@ -149,6 +150,8 @@ TeamMenu = () => {
 
 const UserButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
+  const [viersonModalOpen,setVersionModalOpen] = React.useState(false);
+
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const history = useHistory();
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
@@ -168,13 +171,18 @@ const UserButton: React.FC = () => {
   }
   const showUserProfile = () => {
     setAnchorEl(null)
-    // setOpenUserProfile(true);
+  }
+  const showVersion = () => {
+    setOpen(false);
+    setAnchorEl(null)
+    history.push('/versionInfo');
   }
   const showHelp = () => {
     setOpen(false);
     setAnchorEl(null)
     history.push('/help');
   }
+  
   const showUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   }
@@ -209,6 +217,10 @@ const UserButton: React.FC = () => {
         onClose={handleCloseUserMenu}
       >
         {/* <MenuItem onClick={showUserProfile}>Profile</MenuItem> */}
+        <MenuItem onClick={showVersion}>
+          <Info style={{ marginRight: 8 }} />
+            Version
+          </MenuItem>
         <MenuItem onClick={showHelp}>
           <HelpOutline style={{ marginRight: 8 }} />
             Help

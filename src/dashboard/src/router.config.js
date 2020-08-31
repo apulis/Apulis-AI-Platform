@@ -11,6 +11,7 @@ const ClusterStatus = React.lazy(() => import('./pages/ClusterStatus'));
 const Vc = React.lazy(() => import('./pages/Vc/index.js'));
 const Model = React.lazy(() => import('./pages/Model/index'));
 const Help = React.lazy(() => import('./pages/Help/Help'));
+const version = React.lazy(() => import('./pages/VersionInfo'));
 const CentralInference = React.lazy(() => import('./pages/CentralInference/index'));
 
 
@@ -64,6 +65,10 @@ export default [
   {
     path: '/help',
     component: Help,
+  },
+  {
+    path: '/versionInfo',
+    component: version,
   },
   // {
   //   path: '/centralInference',

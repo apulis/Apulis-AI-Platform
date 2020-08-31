@@ -32,6 +32,6 @@ ADD RestAPI /DLWorkspace/src/RestAPI
 ADD ClusterManager /DLWorkspace/src/ClusterManager
 
 # add version info
-ADD ../../../version-info /
+ADD version-info /
 
 CMD /run.sh

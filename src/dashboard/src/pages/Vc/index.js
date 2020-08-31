@@ -42,7 +42,8 @@ export default class Vc extends React.Component {
       page: 1,
       size: 10,
       count: 0,
-      loading: false
+      loading: false,
+      allVcList: []
     }
   }
 
@@ -61,12 +62,13 @@ export default class Vc extends React.Component {
         });
         this.setState({ allDevice, qSelectData, mSelectData, quotaValidateObj, metadataValidateObj });
       })
+    this.getVcList(true);
   }
 
-  getVcList = () => {
+  getVcList = (isAll) => {
     this.setState({ loading: true });
     const { page, size } = this.state;
-    axios.get(`/${this.context.selectedCluster}/listVc?page=${page}&size=${size}`)
+    axios.get(`/${this.context.selectedCluster}/listVc?page=${page}&size=${isAll ? 9999 : size}`)
       .then((res) => {
         const { totalNum, result } = res.data;
         if (!result.length && totalNum) {
@@ -74,11 +76,16 @@ export default class Vc extends React.Component {
             this.getVcList();
           });
         } else {
-          this.setState({
-            vcList: result,
+          const obj = {
             count: Math.ceil(totalNum / size),
             loading: false
-          })
+          }
+          if (isAll) {
+            obj.allVcList = result;
+          } else {
+            obj.vcList = result;
+          }
+          this.setState({ ...obj })
         }
       })
   }
@@ -141,7 +148,7 @@ export default class Vc extends React.Component {
         }
         if (quota[i] === null) quota[i] = 0;
         if (metadata[i] === null || !metadata[i]) metadata[i] = {user_quota: 0};
-        if (metadata[i].user_quota > quota[i]) {
+        if (metadata[i] && metadata[i].user_quota && metadata[i].user_quota > quota[i]) {
           this.setState({
             metadataValidateObj: {
               ...metadataValidateObj,
@@ -167,6 +174,7 @@ export default class Vc extends React.Component {
         this.onCloseDialog();
         getTeams();
         this.getVcList();
+        this.getVcList(true);
       }, (e) => {
         message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
       })
@@ -187,6 +195,7 @@ export default class Vc extends React.Component {
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();
         this.getVcList();
+        this.getVcList(true);
       }, () => { 
         message('error', 'Delete failed！');
         this.setState({ btnLoading: false });
@@ -194,9 +203,9 @@ export default class Vc extends React.Component {
   }
 
   vcNameChange = e => {
-    const { vcList } = this.state;
+    const { allVcList } = this.state;
     const val = e.target.value;
-    const hasNames = vcList.map(i => i.vcName);
+    const hasNames = allVcList.map(i => i.vcName);
     const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
     const text = !val ? 'VCName is required！' : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
     this.setState({ 
@@ -209,9 +218,8 @@ export default class Vc extends React.Component {
   }
 
   getSelectHtml = (type) => {
-    const { allDevice, qSelectData, mSelectData, vcList, isEdit, clickItem, quotaValidateObj, metadataValidateObj } = this.state;
+    const { allDevice, qSelectData, mSelectData, allVcList, isEdit, clickItem, quotaValidateObj, metadataValidateObj } = this.state;
     return Object.keys(allDevice).map(m => {
-      const totalNum = allDevice[m].capacity;
       let val = null, options = {}, oldVal = {}, num = allDevice[m].capacity;
       if (type == 1) {
         val = qSelectData[m];
@@ -220,7 +228,7 @@ export default class Vc extends React.Component {
         val =  mSelectData[m] && mSelectData[m].user_quota !== null ? mSelectData[m].user_quota : null;
         oldVal = mSelectData;
       }
-      vcList.forEach(n => {
+      allVcList.forEach(n => {
         const useNum = JSON.parse(n.quota)[m];
         num = useNum ? (num - useNum < 0 ? 0 : num - useNum) : num;
       })
@@ -267,13 +275,16 @@ export default class Vc extends React.Component {
 
   onNumValChange = (key, oldVal, m, type, val, max) => {
     const _val = Number(val);
-    const { quotaValidateObj, metadataValidateObj } = this.state;
+    const { quotaValidateObj, metadataValidateObj, mSelectData } = this.state;
     const stateKey = type === 1 ? 'quotaValidateObj' : 'metadataValidateObj';
     let stateVal = {};
+    this.setState({
+      [key]: { ...oldVal, [m]: type === 1 ? _val : { user_quota: _val }}
+    })
     if (!Number.isInteger(_val) || _val > max || _val < 0) {
       const obj = {
         error: true,
-        text: _val > max ? `Cannot be greater than DeviceNumber` : `Must be a positive integer from 0 to ${max}`
+        text: (_val > max && type === 2) ? `Cannot be greater than DeviceNumber` : `Must be a positive integer from 0 to ${max}`
       };
       stateVal = type === 1 ? { ...quotaValidateObj, [m]: obj } : { ...metadataValidateObj, [m]: obj };
       this.setState({
@@ -286,9 +297,15 @@ export default class Vc extends React.Component {
         [stateKey]: stateVal
       });
     }
-    this.setState({
-      [key]: { ...oldVal, [m]: type === 1 ? _val : { user_quota: _val }}
-    })
+    if (type === 1 && !(_val < mSelectData[m].user_quota) &&
+      metadataValidateObj[m] && metadataValidateObj[m].text === 'Cannot be greater than DeviceNumber') {
+      this.setState({
+        metadataValidateObj: {
+          ...metadataValidateObj,
+          [m]: empty
+        }
+      })
+    }
   }
 
   onClickDel = item => {
@@ -314,14 +331,16 @@ export default class Vc extends React.Component {
 
   onCloseDialog = () => {
     let qSelectData = this.state.qSelectData;
+    let mSelectData = this.state.mSelectData;
     Object.keys(qSelectData).forEach(i => qSelectData[i] = 0);
-    Object.keys(mSelectData).forEach(i => mSelectData[i]['user_quota'] = 0);
+    Object.keys(mSelectData).forEach(i => mSelectData[i] = { 'user_quota': 0});
     this.setState({
       modifyFlag: false,
       vcNameValidateObj: empty,
       quotaValidateObj: {},
       metadataValidateObj: {},
       qSelectData,
+      mSelectData
     })
   }
 

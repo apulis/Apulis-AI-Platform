@@ -40,7 +40,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs }) => {
     setPageSize(pageSize);
   }, [setPageSize]);
   const renderPrioirty = useCallback((job: any) => (
-    <PriorityField job={job}/>
+    <PriorityField job={job} isMy={true} />
   ), [])
 
   const columns = useMemo<Array<Column<any>>>(() => [

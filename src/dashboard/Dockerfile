@@ -1,4 +1,4 @@
-FROM node:dubnium
+FROM node:12
 
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
@@ -9,7 +9,7 @@ RUN yarn config set disturl $disturl
 RUN yarn config set registry $registry
 
 COPY package.json yarn.lock ./
-RUN yarn --frozen-lockfile
+RUN yarn
 
 COPY . .
 RUN yarn build

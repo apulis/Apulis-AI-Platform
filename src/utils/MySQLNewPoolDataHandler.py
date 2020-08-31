@@ -370,6 +370,7 @@ class DataHandler(object):
                     `name`  VARCHAR(255) NOT NULL,
                     `scope` VARCHAR(255) NOT NULL COMMENT '"master", "vc:vcname" or "user:username"',
                     `json`  TEXT         NOT NULL,
+                    `isDefault`  TINYINT(1)  DEFAULT 0,
                     `time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (`id`),
                     CONSTRAINT name_scope UNIQUE(`name`, `scope`)
@@ -380,6 +381,18 @@ class DataHandler(object):
                 conn.insert_one(sql)
                 conn.commit()
 
+            # insert a default template
+
+            sql = """
+                insert into %s (
+                    id, name, scope, json, isDefault
+                )
+                values(
+                    0, "default template", "team", %s, 1,
+                )
+            """ % (self.templatetablename), """
+                {"workPath": "", "interactivePorts": "", "name": "Default Job", "gpuType": "", "workers": 0, "jobPath": "", "dataPath": "", "gpuNumPerDevice": 0, "enableWorkPath": true, "preemptible": false, "enableJobPath": true, "command": " while true; do echo \"job running\"; sleep 1; done", "environmentVariables": [], "tensorboard": false, "plugins": {"blobfuse": [{"accountKey": "", "containerName": "", "mountPath": "", "mountOptions": "", "accountName": ""}], "imagePull": [{"username": "", "password": "", "registry": ""}]}, "ipython": true, "gpus": 1, "type": "RegularJob", "image": "ubuntu:18.04", "enableDataPath": true, "ssh": true}
+            """
             sql = """
                 CREATE TABLE IF NOT EXISTS  `%s`
                 (
@@ -1974,7 +1987,7 @@ class DataHandler(object):
     def GetTemplates(self, scope):
         ret = []
         try:
-            query = "SELECT `name`, `json` FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
+            query = "SELECT `name`, `json`, 'isDefault' FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
             with MysqlConn() as conn:
                 rets = conn.select_many(query,[scope])
             for one in rets:

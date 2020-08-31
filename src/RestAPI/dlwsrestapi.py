@@ -2044,6 +2044,19 @@ class GetConvertDetail(Resource):
 
 api.add_resource(GetConvertDetail, '/GetConvertDetail')
 
+class GetPlatformVersionInfo(Resource):
+    def get(self):
+        current_version, version_history = JobRestAPIUtils.GetVersionInfo()
+        ret = {}
+        ret['version'] = current_version
+        ret['history'] = version_history
+        resp == jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetPlatformVersionInfo, '/VersionInfo')
+
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)

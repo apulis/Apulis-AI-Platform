@@ -1600,6 +1600,28 @@ def GetConvertDetail(projectId,datasetId):
             data_handler.Close()
     return None
 
+def GetVersionInfo():
+    
+    if ( os.path.isfile('/versionInfo')):
+        with open('/versionInfo') as f:
+            all_version = yaml.load(f.read())
+            version_name_array = list(all_version.keys())
+            current = {}
+            current["name"] = version_name_array[0]
+            current['description'] = all_version[current['name']]['description']
+            current['updateAt'] = all_version[current['name']]['date']
+            history = []
+            for version_name in version_name_array[1:]:
+                version_info = {}
+                version_info['name'] = version_name
+                version_info['description'] = all_version[version_name]['description']
+                version_info['updateAt'] = all_version[version_name]['date']
+                history.append(version_info)
+        return current, history
+    else:
+        logger.error("Exception in reading version file: file not exist")
+    return None, None
+
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False
     TEST_JOB_STATUS = True

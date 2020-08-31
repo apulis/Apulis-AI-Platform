@@ -5,7 +5,6 @@ import {
 import Description from './components/Description'
 import { useHistory } from 'react-router-dom';
 import DrawerContext from '../../layout/Drawer/Context';
-import VersionInfo from '../../layout/components/VersionInfo';
 
 interface VersionInfo {
   version: string,

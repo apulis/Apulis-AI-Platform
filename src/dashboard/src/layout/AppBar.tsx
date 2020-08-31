@@ -313,7 +313,7 @@ const Title: React.FC = () => {
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
         <Typography component="h1" variant="h6" align="left">
-          依瞳 AI 专家系统
+          华为 AI 专家系统
         </Typography>
       </Link>
     </Box>

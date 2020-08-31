@@ -131,6 +131,9 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
     coco["categories"] = list(map(lambda x:x[1],sorted([[k,v] for k,v in categories.items()],key=lambda x:x[0])))
     with open(coco_file_path, "w") as f:
         f.write(json.dumps(coco, indent=4, separators=(',', ':')))
+    with open(os.path.join(os.path.dirname(coco_file_path),"class_names.json"), "w") as f:
+        f.write(json.dumps(coco["categories"], indent=4, separators=(',', ':')))
+
 
 def judge_datasets_is_private(projectId,datasetId):
     ret = False

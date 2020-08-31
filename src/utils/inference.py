@@ -6,6 +6,7 @@ import os,io
 import json
 from io import BytesIO
 import visualization_utils
+import re
 
 def object_classifier_infer(inference_url,image,signature_name):
     res = requests.post(inference_url, json={
@@ -51,7 +52,7 @@ def read_class_names2(class_file_name):
             names[one["id"]] = {"name":one["display_name"],"id":one['id']}
     return names
 
-def object_detaction_infer2(inference_url,imageFile,signature_name):
+def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
     image = Image.open(BytesIO(imageFile)).convert("RGB")
     (im_width, im_height) = image.size
     image_data = np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
@@ -66,7 +67,10 @@ def object_detaction_infer2(inference_url,imageFile,signature_name):
     output_dict['detection_classes'] = np.array([int(class_id) for class_id in output_dict['detection_classes']])
     output_dict['detection_boxes'] = np.array(output_dict['detection_boxes'])
     output_dict['detection_scores'] = np.array(output_dict['detection_scores'])
-    category_index = read_class_names2("/DLWorkspace/src/utils/coco.names")
+    class_name_path = re.sub("^/home", "/dlwsdata/work", os.path.join(jobParams["model_base_path"],"class_names.json"))
+    if not os.path.exists(class_name_path):
+        class_name_path = "/DLWorkspace/src/utils/coco.names"
+    category_index = read_class_names2(class_name_path)
     visualization_utils.visualize_boxes_and_labels_on_image_array(
         image_data,
         output_dict['detection_boxes'],

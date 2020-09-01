@@ -33,6 +33,14 @@ spec:
             port: 80
           initialDelaySeconds: 3000
           timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 80
+          timeoutSeconds: 10
         volumeMounts:
         - mountPath: /etc/nginx/ssl
           name: secret-volume

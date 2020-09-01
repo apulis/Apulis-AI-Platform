@@ -1457,9 +1457,7 @@ class DataHandler(object):
             else:
                 order = "desc"
             if orderBy:
-                query += " order by %s %s" %("%s","%s")
-                params.append(orderBy)
-                params.append(order)
+                query += " order by %s %s" %(orderBy,order)
             if num is not None:
                 query += " limit %s " % "%s"
                 params.append(str(num))

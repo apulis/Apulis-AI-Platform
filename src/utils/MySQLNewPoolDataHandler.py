@@ -1501,7 +1501,7 @@ class DataHandler(object):
             query = "SELECT count(*) OVER() as total, j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1 and isDeleted=0".format(
                 self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
-                query += " and userName = %s" % userName
+                query += " and userName = '%s'" % userName
 
             if vcName != "all":
                 query += " and vcName = '%s'" % vcName

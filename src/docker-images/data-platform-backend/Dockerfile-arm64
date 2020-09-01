@@ -1,10 +1,8 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
-RUN git clone --branch dev https://5ad9420031b357cdd1f9f9cea5022c19c0ea2da1@github.com/aurorazl/RemoteSensing-UI.git /RemoteSensing-UI
+FROM apulistech/dotnetcore-sdk:3.1-arm64 AS build-env
+RUN git clone --branch arm https://eb42b44ac8aad9d022c4ad5c8732a04c60bb91f6@github.com/aurorazl/RemoteSensing-UI.git /RemoteSensing-UI
 WORKDIR /RemoteSensing-UI/src/projects/WebUI/WebUI
 RUN dotnet publish --configuration Release
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
+FROM apulistech/dotnetcore-runtime:3.1-arm64
 WORKDIR /app
-COPY --from=build-env /RemoteSensing-UI/src/projects/WebUI/WebUI/bin/Release/netcoreapp2.2/publish .
-
-ENTRYPOINT ["dotnet","WebUI","--urls=http://*:3080"]
+COPY --from=build-env /RemoteSensing-UI/src/projects/WebUI/WebUI/bin/Release/netcoreapp3.1/publish .

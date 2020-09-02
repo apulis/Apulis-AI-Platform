@@ -3462,7 +3462,7 @@ def render_service_templates(use_service=None):
     generate_hdfs_containermounts()
     update_grafana_alert_config()
     # Multiple call of render_template will only render the directory once during execution.
-    utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=None)
+    utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=use_service)
     add_service_config()
 
 def get_all_services(use_service=None):

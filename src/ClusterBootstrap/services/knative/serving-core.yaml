@@ -133,7 +133,7 @@ metadata:
 spec:
   # This is the Go import path for the binary that is containerized
   # and substituted here.
-  image: apulistech/knative-serving-queue:0.15
+  image: apulistech/knative-serving-queue
 
 ---
 # Copyright 2018 The Knative Authors
@@ -446,7 +446,7 @@ metadata:
 data:
   # This is the Go import path for the binary that is containerized
   # and substituted here.
-  queueSidecarImage: apulistech/knative-serving-queue:0.15
+  queueSidecarImage: apulistech/knative-serving-queue
   _example: |
     ################################
     #                              #
@@ -1086,7 +1086,7 @@ spec:
       - name: activator
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: apulistech/knative-serving-activator:0.15
+        image: apulistech/knative-serving-activator
         # The numbers are based on performance test results from
         # https://github.com/knative/serving/issues/1625#issuecomment-511930023
         resources:
@@ -1214,7 +1214,7 @@ spec:
       - name: autoscaler
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: apulistech/knative-serving-autoscaler:0.15
+        image: apulistech/knative-serving-autoscaler
         resources:
           requests:
             cpu: 30m
@@ -1321,7 +1321,7 @@ spec:
       - name: controller
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: apulistech/knative-serving-controller:0.15
+        image: apulistech/knative-serving-controller
         resources:
           requests:
             cpu: 100m
@@ -1410,7 +1410,7 @@ spec:
       - name: webhook
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: apulistech/knative-serving-webhook:0.15
+        image: apulistech/knative-serving-webhook
         resources:
           requests:
             cpu: 100m

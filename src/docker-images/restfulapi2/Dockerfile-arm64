@@ -25,6 +25,7 @@ RUN rm -rf /usr/lib/python2.7/dist-packages/yaml
 RUN rm -rf /usr/lib/python2.7/dist-packages/PyYAML-*
 RUN pip install -r /requirements.txt
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+RUN apt update && apt install -y libjpeg-dev pkg-config libpng-dev libfreetype6-dev
 RUN pip install MySQL-python DBUtils Pillow futures  six numpy matplotlib pycocotools
 
 ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete

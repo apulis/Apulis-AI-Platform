@@ -126,9 +126,7 @@ default_config_parameters = {
         "nbconvert-extensions.tpl": True,
         "launch_glusterfs.pyc": True,
         "bootstrap_hdfs.pyc": True,
-        "release.yaml":True,
-        "serving-core.yaml":True,
-        "serving-crds.yaml":True,
+
     },
     "render-by-copy-ext": {
         ".png": True,
@@ -163,6 +161,9 @@ default_config_parameters = {
     },
     "render-by-copy-full": {
         "../docker-images/tutorial-dl/Dockerfile": True,
+        "../services/knative/release.yaml": True,
+        "../services/knative/serving-core.yaml": True,
+        "../services/knative/serving-crds.yaml": True,
     },
     "docker-run": {
         "hdfs": {

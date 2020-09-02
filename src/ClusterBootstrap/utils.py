@@ -107,7 +107,7 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
             pre_reder = os.path.join(template_dir, "pre-render.sh")
             if not use_service:
                 use_service = ""
-            os.system("sh " + pre_reder + " " + use_service)
+            os.system("use_service="+use_service + " sh " + pre_reder)
         filenames = os.listdir(template_dir)
         for filename in filenames:
             if filename == "copy_dir":

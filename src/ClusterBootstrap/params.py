@@ -161,9 +161,9 @@ default_config_parameters = {
     },
     "render-by-copy-full": {
         "../docker-images/tutorial-dl/Dockerfile": True,
-        "../services/knative/release.yaml": True,
-        "../services/knative/serving-core.yaml": True,
-        "../services/knative/serving-crds.yaml": True,
+        "./services/knative/release.yaml": True,
+        "./services/knative/serving-core.yaml": True,
+        "./services/knative/serving-crds.yaml": True,
     },
     "docker-run": {
         "hdfs": {

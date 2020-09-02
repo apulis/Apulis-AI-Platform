@@ -92,7 +92,7 @@ def render_template(template_file, target_file, config, verbose=False):
             print(e)
             pass
 
-def render_template_directory(template_dir, target_dir,config, verbose=False, exclude_dir=None):
+def render_template_directory(template_dir, target_dir,config, verbose=False, exclude_dir=None,use_service=None):
     if target_dir in StaticVariable.rendered_target_directory:
         return
     else:
@@ -105,7 +105,7 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
             open( markfile, 'w').close()
         if os.path.isfile(os.path.join(template_dir, "pre-render.sh")):
             pre_reder = os.path.join(template_dir, "pre-render.sh")
-            os.system("sh " + pre_reder)
+            os.system("sh " + pre_reder + " " + use_service)
         filenames = os.listdir(template_dir)
         for filename in filenames:
             if filename == "copy_dir":

@@ -3455,18 +3455,18 @@ def update_grafana_alert_config():
         config["grafana_alert"] = {}
         config["grafana_alert"]["enabled"] = "false"
 
-def render_service_templates():
+def render_service_templates(use_service=None):
     allnodes = get_nodes(config["clusterId"])
     # Additional parameter calculation
     set_zookeeper_cluster()
     generate_hdfs_containermounts()
     update_grafana_alert_config()
     # Multiple call of render_template will only render the directory once during execution.
-    utils.render_template_directory( "./services/", "./deploy/services/", config)
+    utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=None)
     add_service_config()
 
-def get_all_services():
-    render_service_templates()
+def get_all_services(use_service=None):
+    render_service_templates(use_service)
     rootdir = "./deploy/services"
     servicedic = {}
 
@@ -3525,7 +3525,7 @@ def get_service_name(service_config_file):
             return None
 
 def get_service_yaml( use_service ):
-    servicedic = get_all_services()
+    servicedic = get_all_services(use_service)
     newentries = {}
 
     for service in servicedic:

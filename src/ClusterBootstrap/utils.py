@@ -120,7 +120,7 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
                     # print "To render via copy %s" % fullname_copy_dir
                     # Allow target directory to be re-rendered
                     StaticVariable.rendered_target_directory.pop(target_dir, None)
-                    render_template_directory(fullname_copy_dir, target_dir,config, verbose, exclude_dir=template_dir)
+                    render_template_directory(fullname_copy_dir, target_dir,config, verbose, exclude_dir=template_dir,use_service=use_service)
             elif os.path.isfile(os.path.join(template_dir, filename)):
                 if exclude_dir is not None:
                     check_file = os.path.join(exclude_dir, filename)
@@ -135,10 +135,10 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
                     os.system( "cp -r %s %s" %(srcdir, dstdir))
                 else:
                     if exclude_dir is None:
-                        render_template_directory(srcdir, dstdir,config, verbose)
+                        render_template_directory(srcdir, dstdir,config, verbose,use_service=use_service)
                     else:
                         exdir = os.path.join(exclude_dir, filename)
-                        render_template_directory(srcdir, dstdir,config, verbose, exclude_dir=exdir)
+                        render_template_directory(srcdir, dstdir,config, verbose, exclude_dir=exdir,use_service=use_service)
 
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 def SSH_exec_cmd(identity_file, user,host,cmd,showCmd=True):

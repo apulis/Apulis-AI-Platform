@@ -119,3 +119,4 @@ master_private_ip: {% if "master_private_ip" in cnf %} {{ cnf["master_private_ip
 {% endif %}
 
 data_platform_path: {{cnf["data_platform_path"]}}
+private_docker_registry: {{cnf["private_docker_registry"]}}

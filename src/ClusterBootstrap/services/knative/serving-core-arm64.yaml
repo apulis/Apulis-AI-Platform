@@ -1087,7 +1087,7 @@ spec:
         # This is the Go import path for the binary that is containerized
         # and substituted here.
         image: apulistech/knative-serving-activator:latest-arm64
-        imagePullPolicy: IfNotpresent
+        imagePullPolicy: IfNotPresent
         # The numbers are based on performance test results from
         # https://github.com/knative/serving/issues/1625#issuecomment-511930023
         resources:
@@ -1216,7 +1216,7 @@ spec:
         # This is the Go import path for the binary that is containerized
         # and substituted here.
         image: apulistech/knative-serving-autoscaler:latest-arm64
-        imagePullPolicy: IfNotpresent
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: 30m
@@ -1324,7 +1324,7 @@ spec:
         # This is the Go import path for the binary that is containerized
         # and substituted here.
         image: apulistech/knative-serving-controller:latest-arm64
-        imagePullPolicy: IfNotpresent
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: 100m
@@ -1414,7 +1414,7 @@ spec:
         # This is the Go import path for the binary that is containerized
         # and substituted here.
         image: apulistech/knative-serving-webhook:latest-arm64
-        imagePullPolicy: IfNotpresent
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: 100m

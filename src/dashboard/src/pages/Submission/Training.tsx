@@ -51,6 +51,7 @@ import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePo
   NoNumberReg, NoNumberText, HttpsErrorText, HttpsReg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
+import { Stream } from "stream";
 
 interface EnvironmentVariable {
   name: string;
@@ -88,7 +89,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return Object.keys(cluster.gpus)[0];
   }, [cluster]);
   const [gpuType, setGpuType] = useState(availbleGpu[0] ? availbleGpu[0].type : '');
-  const [gpusPerNode, setGpusPerNode] = useState(0);
+  const [gpuCapacity, setGpuCapacity] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
   const [npuNumMsg, setNpuNumMsg] = useState('');
   const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
@@ -126,7 +127,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuNumPerDevice, setGpuNumPerDevice] = useState(1);
   const [gpuNumPerDeviceOptions, setGpuNumPerDeviceOptions] = useState<number[]>([]);
   const [numNodesOptions, setNumNodesOptions] = useState<number[]>([]);
-
+  const [nodeCapacityArr, setNodeCapacityArr] = useState<number[]>([]);
   const onEnvironmentVariableNameChange = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
       const val = event.target.value;
@@ -144,9 +145,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     },
     [environmentVariables]
   );
-  const onRemoveEnvironmentVariableClick = (time: number) => {
+  const onRemoveEnvironmentVariableClick = (time: number, name: string) => {
     const newArr = environmentVariables.filter(i => i.time !== time);
-    const nameArr = newArr.map(i => `environmentVariables${i.time}`);
     setEnvironmentVariables(newArr);
   }
 
@@ -164,6 +164,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [isSave, setIsSave] = useState(false);
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const [gpus, setGpus] = useState(0);
+  const [canDistributedJob, setCanDistributedJob] = useState(true);
   const onSaveTemplateClick = async () => {
     if (!tplName) {
       setError('templateName', 'required', 'Template Name is required！');
@@ -446,17 +447,22 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       let totalGpus = gpus;
       if (type === 'PSDistJob') {
         job.numps = 1;
-        job.resourcegpu = gpuNumPerDevice;  //gpusPerNode
+        job.resourcegpu = gpuNumPerDevice;
         job.numpsworker = workers;
-        totalGpus = gpuNumPerDevice * workers;  //gpusPerNode
+        totalGpus = gpuNumPerDevice * workers;
       } else {
         job.resourcegpu = gpus;
       }
-      if (type === 'PSDistJob') {
-        if (workers * gpuNumPerDevice > gpuAvailable) {
-          const msg = window.confirm('There won\'t be enough workers match your request.\nProceed?');
-          if (!msg) return;
-        }
+      // if (type === 'PSDistJob') {
+      //   if (workers * gpuNumPerDevice > gpuAvailable) {
+      //     const msg = window.confirm('There won\'t be enough workers match your request.\nProceed?');
+      //     if (!msg) return;
+      //   }
+      // }
+      
+      if (gpus > gpuAvailable) {
+        const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
+        if (!msg) return;
       }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
     }
@@ -537,7 +543,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
 
   const validateEVName = (val: string, index: number, time: number) => {
-    if (val) {
+    if (val && val !== environmentVariables[index].name) {
       if (environmentVariables.findIndex(i => i.name === val) > -1) {
         setError(`environmentVariables${time}`, 'error', 'Already has the same name！');
         return false;
@@ -559,26 +565,21 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (val) {
       const _val = Number(val);
       if (allDevice[gpuType]) {
-        const { deviceStr } = allDevice[gpuType];
+        const { deviceStr, detail } = allDevice[gpuType];
+        const maxAllocatable = Math.max(...detail.map((i: any) => i.allocatable));
+        const maxCapacity = Math.max(...nodeCapacityArr);
+        const temp = Math.min(gpuCapacity, maxCapacity);
+
         if (deviceStr === 'npu.huawei.com/NPU') {
-          if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${gpuAvailable > 8 ? 8 : gpuAvailable}，and can only be one of 0, 1, 2, 4, 8`);
+          const _temp = Math.min(temp, 8);
+          if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8  || _val > _temp) {
+            setNpuNumMsg(`Must be a positive integer from 0 to ${_temp}，and can only be one of 0, 1, 2, 4, 8.`);
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
-          const { detail } = allDevice[gpuType];
-          const allocatableArr = detail.map((i: any) => i.allocatable);
-          const capacityArr = detail.map((i: any) => i.capacity);
-          const maxAllocatable = Math.max(...allocatableArr);
-          const maxCapacity = Math.max(...capacityArr) > gpuAvailable ? gpuAvailable : Math.max(...capacityArr);
-
-          if (_val < 0 || !Number.isInteger(_val) || _val > maxCapacity) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${maxCapacity}`);
+          if (_val < 0 || !Number.isInteger(_val) || _val > temp) {
+            setNpuNumMsg(`Must be a positive integer from 0 to ${temp}`);
             return false;
-          }
-          if (_val > maxAllocatable) {
-            const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
-            if (!msg) return false;
           }
         }
       }
@@ -592,33 +593,35 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [selectedTeam]);
 
   useEffect(() => {
-    if (type === 'PSDistJob') {
-      setGpuNumPerDevice(allDevice[gpuType] && allDevice[gpuType].deviceStr === 'nvidia.com/gpu' ? gpuNumPerDevice ? gpuNumPerDevice : 1 : 8);
-    }
-  }, [gpuType]);
-
-  useEffect(() => {
-    if (type === 'PSDistJob') {
-      if (allDevice[gpuType]) {
-        const data = allDevice[gpuType];
-        if (data.deviceStr === 'npu.huawei.com/NPU') setGpuNumPerDevice(8);
-        let temp1: any[] = [], temp2: any[] = [];
-        data.detail.forEach((i: any, index) => {
-          temp1.push(i.capacity);
-          temp2.push(index + 1);
-        });
-        const maxNum = Math.max(...temp1) > gpuAvailable ? gpuAvailable : Math.max(...temp1);
-        let options = [];
-        for (let n = 1; n <= maxNum; n = n * 2) {
-          options.push(n);
+    if (allDevice[gpuType]) {
+      let options: any = [];
+      const _max = Math.max(...nodeCapacityArr);
+      for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
+        options.push(i);
+      }
+      setNumNodesOptions(Array.from(new Set(options)));
+      if (allDevice[gpuType].deviceStr === 'npu.huawei.com/NPU') {
+        if (type === 'PSDistJob') {
+          setGpuNumPerDevice(8);
+          setGpuNumPerDeviceOptions([8]);
         }
-        setGpuNumPerDeviceOptions(Array.from(new Set(options)));
-        setNumNodesOptions(temp2);
+        setCanDistributedJob(!(gpuCapacity < 16));
       } else {
-        message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
+        console.log('---', gpuCapacity, _max)
+        setCanDistributedJob(gpuCapacity > _max);
+        if (type === 'PSDistJob') {
+          setGpuNumPerDevice(_max);
+        }
       }
     }
-  }, [type, gpuType]);
+  }, [type, gpuType, gpuCapacity]);
+
+  useEffect(() => {
+    if (!canDistributedJob) {
+      setType('RegularJob');
+      formValSet('type', 'RegularJob');
+    };
+  }, [canDistributedJob]);
 
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
@@ -627,11 +630,42 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       })
   }
 
-  const getAllDevice = () => {
-    axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
+  const getAllDevice = async () => {
+    let _gpuCapacity = 0;
+    axios.get(`/teams/${selectedTeam}/clusters/${selectedCluster}`)
       .then(res => {
-        setAllDevice(res.data);
+        if (!isEmpty(res)) {
+          const { data } = res;
+          _gpuCapacity = JSON.parse(data.metadata)[gpuType].user_quota || 0;
+          setGpuCapacity(_gpuCapacity);
+          axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
+            .then(res => {
+              const { data } = res;
+              setAllDevice(data);
+              if (data[gpuType]) {
+                const { deviceStr } = data[gpuType];
+                const arr = data[gpuType].detail ? data[gpuType].detail.map((i: any) => i.capacity) : [];
+                setNodeCapacityArr(arr);
+                if (deviceStr === 'npu.huawei.com/NPU') {
+                  setCanDistributedJob(!(_gpuCapacity < 16));
+                } else {
+                  setCanDistributedJob(!(_gpuCapacity > Math.max(...arr)));
+                }
+              } else {
+                message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
+              }
+            })
+        }
       })
+  }
+
+  const isEmpty = (obj: object) => {
+    if (obj === undefined) return true;
+    for(let key in obj) {
+      if(obj.hasOwnProperty(key))
+        return false;
+    }
+    return true;
   }
 
   useEffect(() => {
@@ -766,7 +800,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     cluster={selectedCluster}
                     gpuType={gpuType}
                     onClusterChange={saveSelectedCluster}
-                    onAvailbleGpuNumChange={(val1, val2) => { setGpusPerNode(val1); setGpuAvailable(val2) }}
+                    userName={userName}
+                    onAvailbleGpuNumChange={(val1, val2) => { setGpuCapacity(val1); setGpuAvailable(val2) }}
                   />
                   {/* <Tooltip title={`View Cluster ${gpuType} Status Per Node`}>
                     <IconButton color="secondary" size="small" onClick={() => setShowGPUFragmentation(true)} aria-label="delete">
@@ -819,11 +854,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     label="Job Type"
                     fullWidth
                     variant="filled"
+                    name="type"
                     value={type}
                     onChange={e => setType(e.target.value as string)}
                   >
                     <MenuItem value="RegularJob">Regular Job</MenuItem>
-                    <MenuItem value="PSDistJob">Distributed Job</MenuItem>
+                    {canDistributedJob && <MenuItem value="PSDistJob">Distributed Job</MenuItem>}
                     {/* <MenuItem value="InferenceJob">Inference Job</MenuItem> */}
                   </TextField>
                 </Grid>
@@ -871,7 +907,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     />
                   </Grid>
                 )}
-                { type === 'PSDistJob'  && (
+                { type === 'PSDistJob' && canDistributedJob && (
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
@@ -888,7 +924,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TextField>
                   </Grid>
                 )}
-                { type === 'PSDistJob' && (
+                { type === 'PSDistJob' && canDistributedJob && (
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
@@ -906,7 +942,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     </TextField>
                   </Grid>
                 )}
-                { type === 'PSDistJob' && (
+                { type === 'PSDistJob' && canDistributedJob && (
                   <Grid item xs={12} sm={6}>
                     <TextField
                       disabled
@@ -1198,7 +1234,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           />
                         </TableCell>
                         <TableCell align="center">
-                          <IconButton size="small" color="secondary" onClick={() => onRemoveEnvironmentVariableClick(time)}>
+                          <IconButton size="small" color="secondary" onClick={() => onRemoveEnvironmentVariableClick(time, name)}>
                             <Delete/>
                           </IconButton>
                         </TableCell>
@@ -1325,6 +1361,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             <Button onClick={handleCheckVcClose} color="primary">OK</Button>
           </DialogActions>
         </Dialog>}
+
+        {/* {confirmModal && 
+        <Dialog
+          open={confirmModal}
+          onClose={handleCheckVcClose}
+        >
+          <DialogTitle>This virtual cluster has been deleted, please switch other virtual cluster！</DialogTitle>
+          <DialogActions>
+            <Button onClick={handleCheckVcClose} color="primary">OK</Button>
+          </DialogActions>
+        </Dialog>} */}
       </div>
     </Container>
   );

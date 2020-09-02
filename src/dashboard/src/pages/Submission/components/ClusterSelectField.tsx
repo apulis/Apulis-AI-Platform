@@ -1,8 +1,6 @@
 import React from "react";
-
 import { MenuItem, TextField } from "@material-ui/core";
 import { BaseTextFieldProps } from "@material-ui/core/TextField";
-
 import ClustersContext from "../../../contexts/Clusters";
 import TeamsContext from "../../../contexts/Teams";
 import useFetch from "use-http";
@@ -14,10 +12,11 @@ interface ClusterSelectFieldProps {
   onClusterChange(value: string): void;
   gpuType?: string;
   onAvailbleGpuNumChange?(val1: number, val2: number): void;
+  userName?: string | undefined;
 }
 
 const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps> = (
-  { cluster, onClusterChange, variant="standard", ...props }
+  { cluster, onClusterChange, variant="standard", userName, ...props }
 ) => {
   const { clusters,selectedCluster, saveSelectedCluster } = React.useContext(ClustersContext);
   const { selectedTeam } = React.useContext(TeamsContext);
@@ -45,18 +44,24 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
   }
   React.useEffect(() => {
     fetchVC().then((res)=>{
-      let clusterName = props.gpuType || '';
+      let clusterName = props.gpuType || '', allHasUsed = 0, myHasUsed = 0;
       if (!isEmpty(res)) {
         if (!clusterName) {
           clusterName = (String)(Object.keys(res['gpu_capacity'])[0]);
         }
       }
-      const gpuCapacity = isEmpty(res) ? 0 : res['gpu_capacity'][clusterName] || 0;
-      const gpuAvailable = isEmpty(res) ? 0 : res['gpu_avaliable'][clusterName] || 0;
-      const maxQuota = isEmpty(res) ? 0 : JSON.parse(res.quota)[clusterName] || 0;
-      const _gpuAvailable = Math.max(gpuAvailable, maxQuota);
-      props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, _gpuAvailable);
-      setHelperText(`${clusterName} (${_gpuAvailable} / ${gpuCapacity} to use)`);
+      if (res['user_status'].length) {
+        res['user_status'].forEach((i: any) => {
+          if (i['userGPU'][clusterName]) {
+            if (i.userName === userName) myHasUsed = i['userGPU'][clusterName];
+            allHasUsed += i['userGPU'][clusterName];
+          }
+        })
+      }
+      const gpuCapacity = isEmpty(res) ? 0 : JSON.parse(res.metadata)[clusterName].user_quota || 0;
+      const gpuAvailable = Math.min(Number(JSON.parse(res.quota)[clusterName] - allHasUsed), Number(gpuCapacity - myHasUsed));
+      props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, gpuAvailable);
+      setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} to use)`);
     })
     if (selectedCluster) {
       onClusterChange(selectedCluster);

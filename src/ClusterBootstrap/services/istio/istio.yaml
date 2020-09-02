@@ -301,7 +301,7 @@ spec:
         excludeIPRanges: ""
         excludeInboundPorts: ""
         excludeOutboundPorts: ""
-        image: proxyv2
+        image: apulistech/istio-proxyv2
         includeIPRanges: '*'
         logLevel: warning
         privileged: false
@@ -318,7 +318,7 @@ spec:
         statusPort: 15020
         tracer: zipkin
       proxy_init:
-        image: proxyv2
+        image: apulistech/istio-proxy
         resources:
           limits:
             cpu: 100m
@@ -467,7 +467,7 @@ spec:
       enableProtocolSniffingForInbound: true
       enableProtocolSniffingForOutbound: true
       env: {}
-      image: pilot
+      image: apulistech/istio-pilot
       keepaliveMaxServerConnectionAge: 30m
       nodeSelector: {}
       podAntiAffinityLabelSelector: []

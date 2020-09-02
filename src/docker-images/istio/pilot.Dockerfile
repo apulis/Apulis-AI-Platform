@@ -1,8 +1,8 @@
-ARG VERSION=1.6.5
+ARG VERSION=1.6.8
 
 FROM golang:1.14 as build
 
-ARG VERSION=1.6.5
+ARG VERSION=1.6.8
 ARG TARGETPLATFORM
 
 ENV GO111MODULE=on \
@@ -23,7 +23,7 @@ FROM istio/pilot:${VERSION} as pilot
 
 FROM apulistech/istio-base
 
-ARG VERSION=1.6.5
+ARG VERSION=1.6.8
 
 COPY --from=build /go/src/github.com/istio/istio/out/pilot-discovery /usr/local/bin/pilot-discovery
 COPY --from=pilot /cacert.pem /cacert.pem

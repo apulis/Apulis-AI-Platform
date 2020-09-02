@@ -1,6 +1,6 @@
 FROM apulistech/istio-envoy-build-env as builder
 
-ARG VERSION=1.6.1
+ARG VERSION=1.6.8
 
 WORKDIR /go/src
 

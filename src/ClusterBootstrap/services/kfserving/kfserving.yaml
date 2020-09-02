@@ -1005,6 +1005,7 @@ spec:
         - --logtostderr=true
         - --v=10
         image: apulistech/kfserving-kube-rbac-proxy
+        imagePullPolicy: IfNotPresent
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443

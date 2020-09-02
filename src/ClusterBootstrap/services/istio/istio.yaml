@@ -267,7 +267,7 @@ spec:
         requests:
           cpu: 10m
       enableHelmTest: false
-      imagePullPolicy: ""
+      imagePullPolicy: "IfNotPresent"
       imagePullSecrets: []
       istioNamespace: istio-system
       istiod:
@@ -301,7 +301,7 @@ spec:
         excludeIPRanges: ""
         excludeInboundPorts: ""
         excludeOutboundPorts: ""
-        image: apulistech/istio-proxyv2
+        image: apulistech/istio-proxy
         includeIPRanges: '*'
         logLevel: warning
         privileged: false

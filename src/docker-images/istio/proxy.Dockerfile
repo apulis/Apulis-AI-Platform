@@ -1,8 +1,8 @@
-ARG VERSION=1.6.5
+ARG VERSION=1.6.8
 
 FROM golang:1.14 as build
 
-ARG VERSION=1.6.5
+ARG VERSION=1.6.8
 ARG TARGETPLATFORM
 
 ENV GO111MODULE=on \
@@ -24,7 +24,7 @@ FROM apulistech/istio-envoy as envoy
 
 FROM apulistech/istio-base
 
-ARG VERSION=1.6.5
+ARG VERSION=1.6.8
 ARG ENVOY_VERSION=""
 
 COPY --from=proxyv2 /var/lib/istio/envoy/ /var/lib/istio/envoy/

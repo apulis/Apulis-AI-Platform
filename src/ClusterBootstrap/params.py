@@ -126,6 +126,9 @@ default_config_parameters = {
         "nbconvert-extensions.tpl": True,
         "launch_glusterfs.pyc": True,
         "bootstrap_hdfs.pyc": True,
+        "release.yaml":True,
+        "serving-core.yaml":True,
+        "serving-crds.yaml":True,
     },
     "render-by-copy-ext": {
         ".png": True,

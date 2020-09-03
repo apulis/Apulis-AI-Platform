@@ -200,12 +200,12 @@ spec:
           rollingUpdate:
             maxSurge: 100%
             maxUnavailable: 25%
-  hub: docker.io/istio
+  hub: docker.io/apulistech
   meshConfig:
     defaultConfig:
       proxyMetadata: {}
     enablePrometheusMerge: false
-  tag: 1.6.8
+  tag: latest-arm64
   values:
     base:
       validationURL: ""
@@ -301,7 +301,7 @@ spec:
         excludeIPRanges: ""
         excludeInboundPorts: ""
         excludeOutboundPorts: ""
-        image: apulistech/istio-proxy:latest-arm64
+        image: istio-proxy
         includeIPRanges: '*'
         logLevel: warning
         privileged: false
@@ -318,7 +318,7 @@ spec:
         statusPort: 15020
         tracer: zipkin
       proxy_init:
-        image: apulistech/istio-proxy:latest-arm64
+        image: istio-proxy
         resources:
           limits:
             cpu: 100m
@@ -467,7 +467,7 @@ spec:
       enableProtocolSniffingForInbound: true
       enableProtocolSniffingForOutbound: true
       env: {}
-      image: apulistech/istio-pilot:latest-arm64
+      image: istio-pilot
       keepaliveMaxServerConnectionAge: 30m
       nodeSelector: {}
       podAntiAffinityLabelSelector: []

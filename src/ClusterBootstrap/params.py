@@ -163,6 +163,7 @@ default_config_parameters = {
         "../docker-images/tutorial-dl/Dockerfile": True,
         "./services/knative/release.yaml": True,
         "./services/knative/serving-core.yaml": True,
+        "./services/knative/serving-core-arm64.yaml": True,
         "./services/knative/serving-crds.yaml": True,
     },
     "docker-run": {

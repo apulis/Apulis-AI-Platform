@@ -1,6 +1,6 @@
 FROM golang:1.11-alpine AS build
 RUN apk add --update make git
-RUN mkdir -p /go/src/github.com/brancz && git clone -b release-0.4 https://github.com/brancz/kube-rbac-proxy.git /go/src/github.com/brancz/kube-rbac-proxy
+RUN mkdir -p /go/src/github.com/brancz && git clone -b release-0.2 https://github.com/brancz/kube-rbac-proxy.git /go/src/github.com/brancz/kube-rbac-proxy
 WORKDIR /go/src/github.com/brancz/kube-rbac-proxy
 RUN make build && cp /go/src/github.com/brancz/kube-rbac-proxy/_output/linux/$(go env GOARCH)/kube-rbac-proxy /usr/local/bin
 

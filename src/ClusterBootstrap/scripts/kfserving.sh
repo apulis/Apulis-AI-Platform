@@ -4,6 +4,7 @@ then
     kubectl delete --filename https://github.com/knative/serving/releases/download/v0.15.0/serving-core.yaml
     kubectl delete --filename https://github.com/knative/net-istio/releases/download/v0.15.0/release.yaml
     kubectl delete -f https://raw.githubusercontent.com/kubeflow/kfserving/master/install/0.2.2/kfserving.yaml
+    kubectl patch crd/routes.serving.knative.dev -p '{"metadata":{"finalizers":[]}}' --type=merge
 fi
 
 if [ "$1" = "install" ];
@@ -65,19 +66,27 @@ then
     kubectl delete -f istio/samples/bookinfo/platform/kube/bookinfo.yaml
 fi
 
-if [ "$1" = "build" ] && [ "$2" = "knative" ];
+if [ "$1" = "build" ];
 then
-    for file in $3;do
+    for file in "../docker-images/$2";do
       arr=(${file//./ })
-      docker build -t apulistech/knative-`basename ${arr[0]}` -f $file
-      docker push apulistech/knative-`basename ${arr[0]}`
+      docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
     done
 fi
 
-if [ "$1" = "pull" ] && [ "$2" = "knative" ];
+if [ "$1" = "push" ];
 then
-  for file in $3;do
+    for file in "../docker-images/$2";do
       arr=(${file//./ })
-      docker pull apulistech/knative-`basename ${arr[0]}`
+      docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
+      docker push apulistech/$2-`basename ${arr[0]}`
+    done
+fi
+
+if [ "$1" = "pull" ];
+then
+  for file in "../docker-images/$2";do
+      arr=(${file//./ })
+      docker pull apulistech/$2-`basename ${arr[0]}`
   done
 fi

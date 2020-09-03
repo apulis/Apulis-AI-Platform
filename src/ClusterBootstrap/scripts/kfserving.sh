@@ -68,7 +68,7 @@ fi
 
 if [ "$1" = "build" ];
 then
-    for file in "../docker-images/$2";do
+    for file in ../docker-images/$2/*;do
       arr=(${file//./ })
       docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
     done
@@ -76,7 +76,7 @@ fi
 
 if [ "$1" = "push" ];
 then
-    for file in "../docker-images/$2";do
+    for file in ../docker-images/$2;do
       arr=(${file//./ })
       docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
       docker push apulistech/$2-`basename ${arr[0]}`
@@ -85,7 +85,7 @@ fi
 
 if [ "$1" = "pull" ];
 then
-  for file in "../docker-images/$2";do
+  for file in ../docker-images/$2;do
       arr=(${file//./ })
       docker pull apulistech/$2-`basename ${arr[0]}`
   done

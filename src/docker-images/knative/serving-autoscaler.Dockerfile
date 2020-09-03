@@ -5,4 +5,5 @@ RUN cd autoscaler && go build && cp ./autoscaler /usr/local/bin
 
 FROM debian:stable-slim
 COPY --from=build /usr/local/bin/autoscaler .
+ENV KO_DATA_PATH=/var/run/ko
 ENTRYPOINT ["./autoscaler"]

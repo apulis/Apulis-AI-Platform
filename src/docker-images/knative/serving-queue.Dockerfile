@@ -5,4 +5,5 @@ RUN cd queue && go build && cp ./queue /usr/local/bin
 
 FROM debian:stable-slim
 COPY --from=build /usr/local/bin/queue .
+ENV KO_DATA_PATH=/var/run/ko
 ENTRYPOINT ["./queue"]

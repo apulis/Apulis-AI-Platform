@@ -5,4 +5,5 @@ RUN cd webhook && go build && cp ./webhook /usr/local/bin
 
 FROM debian:stable-slim
 COPY --from=build /usr/local/bin/webhook .
+ENV KO_DATA_PATH=/var/run/ko
 ENTRYPOINT ["./webhook"]

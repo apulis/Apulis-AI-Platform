@@ -5,4 +5,5 @@ RUN cd controller && go build && cp ./controller /usr/local/bin
 
 FROM debian:stable-slim
 COPY --from=build /usr/local/bin/controller .
+ENV KO_DATA_PATH=/var/run/ko
 ENTRYPOINT ["./controller"]

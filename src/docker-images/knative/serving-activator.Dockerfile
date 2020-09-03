@@ -5,4 +5,5 @@ RUN cd activator && go build && cp ./activator /usr/local/bin
 
 FROM debian:stable-slim
 COPY --from=build /usr/local/bin/activator .
+ENV KO_DATA_PATH=/var/run/ko
 ENTRYPOINT ["./activator"]

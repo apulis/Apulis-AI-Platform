@@ -37,6 +37,15 @@ k8s_config.load_kube_config()
 k8s_CoreAPI = client.CoreV1Api()
 k8s_AppsAPI = client.AppsV1Api()
 
+class DictToInstance:
+    def __init__(self,dicts):
+        self.dicts = dicts
+    def __getattr__(self, item):
+        res = self.dicts.get(item)
+        if isinstance(res,dict):
+            res = DictToInstance(res)
+        return res
+
 class JobDeployer:
     def __init__(self):
         self.k8s_CoreAPI = k8s_CoreAPI
@@ -59,8 +68,10 @@ class JobDeployer:
             group="serving.kubeflow.org",
             version="v1alpha2",
             namespace=self.namespace,
-            plural="inferenceService",
+            plural="inferenceservices",
             body=body)
+        if isinstance(api_response,dict):
+            return DictToInstance(api_response)
         return api_response
 
     @record
@@ -74,6 +85,19 @@ class JobDeployer:
             body=body,
             grace_period_seconds=grace_period_seconds,
         )
+        return api_response
+
+    @record
+    def _delete_inferenceService(self, name, grace_period_seconds=None):
+        body = client.V1DeleteOptions()
+        body.grace_period_seconds = grace_period_seconds
+        api_response = client.CustomObjectsApi().delete_namespaced_custom_object(
+            group="serving.kubeflow.org",
+            version="v1alpha2",
+            name=name,
+            namespace=self.namespace,
+            plural="inferenceservices",
+            body=body)
         return api_response
 
     @record
@@ -185,6 +209,21 @@ class JobDeployer:
         return errors
 
     @record
+    def _cleanup_inferenceServices(self, inferenceService_names, force=False):
+        errors = []
+        grace_period_seconds = 0 if force else None
+        for inferenceService_name in inferenceService_names:
+            try:
+                self._delete_inferenceService(inferenceService_name, grace_period_seconds)
+            except Exception as e:
+                if isinstance(e, ApiException) and 404 == e.status:
+                    return []
+                message = "Delete inferenceService failed: {}".format(inferenceService_name)
+                logger.warning(message, exc_info=True)
+                errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
     def _cleanup_services(self, services):
         errors = []
         for service in services:
@@ -250,6 +289,8 @@ class JobDeployer:
         self._cleanup_pods(pod_names)
         deployment_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "Deployment"]
         self._cleanup_deployment(deployment_names)
+        inferenceService_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "InferenceService"]
+        self._cleanup_inferenceServices(inferenceService_names)
         created = []
         for pod in pods:
             if pod["kind"] == "Pod":
@@ -322,6 +363,13 @@ class JobDeployer:
     def delete_job(self, job_id, force=False):
         label_selector = "run={}".format(job_id)
 
+        # query inferenceservice
+        dataHandler = DataHandler()
+        job = dataHandler.GetInferenceJob(job_id)[0]
+        inferenceService_names = [job["jobName"]]
+        inferenceservice_errors = self._cleanup_inferenceServices(inferenceService_names)
+        logger.info("deleting inferenceservices %s" % job_id)
+
         # query pods then delete
         pod_errors = self._cleanup_pods_with_labels(label_selector)
         logger.info("deleting pods %s" % label_selector)
@@ -344,7 +392,7 @@ class JobDeployer:
         configmap_errors = self._cleanup_configmap(label_selector)
 
         errors = pod_errors + service_errors + deployment_errors + secret_errors + \
-                configmap_errors
+                configmap_errors + inferenceservice_errors
         return errors
 
     @record
@@ -438,7 +486,7 @@ class JobRole(object):
             # See below for details:
             # https://github.com/kubernetes/kubernetes/issues/72226
             # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-            if self.pod.metadata.deletion_timestamp is not None:
+            if self.pod.metadata.deletion_timestamp is not None and self.pod.metadata.labels["type"] != "InferenceService":
                 logger.info("pod %s has deletion_timestamp %s. Marking pod as Unknown." %
                             (self.pod_name, self.pod.metadata.deletion_timestamp))
                 return "Unknown"
@@ -470,6 +518,12 @@ class JobRole(object):
         return status_code == 0
 
     def _is_role_ready(self):
+        if self.pod.metadata.labels["type"] == "InferenceService":
+            for status in self.pod.status.container_statuses:
+                if not status.ready:
+                    return False
+            return True
+
         for container in self.pod.spec.containers:
             if container.name == self.pod_name and container.readiness_probe is not None:
                 for status in self.pod.status.container_statuses:

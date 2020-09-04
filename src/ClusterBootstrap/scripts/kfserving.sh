@@ -66,11 +66,19 @@ then
     kubectl delete -f istio/samples/bookinfo/platform/kube/bookinfo.yaml
 fi
 
+
+archtype=`uname -m`
+if $archtype="aarch64";then
+  tag=latest-arm64
+else
+  tag=latest
+fi
+
 if [ "$1" = "build" ];
 then
     for file in ../docker-images/$2/*;do
       arr=(${file//./ })
-      docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
+      docker build -t apulistech/$2-`basename ${arr[0]}`:$tag -f $file "../docker-images/$2"
     done
 fi
 
@@ -78,8 +86,8 @@ if [ "$1" = "push" ];
 then
     for file in ../docker-images/$2/*;do
       arr=(${file//./ })
-      docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
-      docker push apulistech/$2-`basename ${arr[0]}`
+      docker build -t apulistech/$2-`basename ${arr[0]}`:$tag -f $file "../docker-images/$2"
+      docker push apulistech/$2-`basename ${arr[0]}`:$tag
     done
 fi
 
@@ -87,6 +95,6 @@ if [ "$1" = "pull" ];
 then
   for file in ../docker-images/$2/*;do
       arr=(${file//./ })
-      docker pull apulistech/$2-`basename ${arr[0]}`
+      docker pull apulistech/$2-`basename ${arr[0]}`:$tag
   done
 fi

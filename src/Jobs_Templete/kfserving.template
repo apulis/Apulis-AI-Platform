@@ -2,6 +2,35 @@ apiVersion: "serving.kubeflow.org/v1alpha2"
 kind: "InferenceService"
 metadata:
   name: {{ job["model_name"] }}
+  labels:
+    run: {{ job["jobId"] }}
+    podName: {{ job["podName"] }}
+    jobId: {{ job["jobId"] }}
+    jobRole: {{ jobRole }}
+    userName: "{{ job["user"] }}"
+    vcName: "{{ job["vcName"] }}"
+    type: InferenceService
+    'gpu-request': '{{ job["gpuLimit"]|int }}'
+
+
+  {% for label in job["labels"] %}
+    {{label.name}}: "{{label.value}}"
+  {% endfor %}
+
+  {% if "gpuType" in job %}
+    {% if job['gpuType'] and job["gpuType"]|length > 0 %}
+    gpuType: {{ job["gpuType"] }}
+    {% endif %}
+  {% endif %}
+    preemptionAllowed: "{{ job["preemptionAllowed"] }}"
+
+  {% if "annotations" in job %}
+  annotations:
+    {% for annotationKey,annotationVal in job["annotations"].items() %}
+      {{ annotationKey }}: {{ annotationVal }}
+    {% endfor %}
+  {% endif %}
+
 spec:
   default:
     predictor:

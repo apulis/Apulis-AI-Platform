@@ -4,9 +4,9 @@ RUN mkdir -p /go/src/github.com/brancz && git clone -b release-0.2 https://githu
 WORKDIR /go/src/github.com/brancz/kube-rbac-proxy
 RUN make build && \
  if [ "$(go env GOARCH)" = "arm64" ]; then \
-    cp /go/src/github.com/brancz/kube-rbac-proxy/_output/linux/aarch64/kube-rbac-proxy /usr/local/bin\
+    cp /go/src/github.com/brancz/kube-rbac-proxy/_output/linux/aarch64/kube-rbac-proxy /usr/local/bin;\
  else \
-    cp /go/src/github.com/brancz/kube-rbac-proxy/_output/linux/amd64/kube-rbac-proxy /usr/local/bin \
+    cp /go/src/github.com/brancz/kube-rbac-proxy/_output/linux/amd64/kube-rbac-proxy /usr/local/bin; \
  fi
 
 FROM alpine:3.8

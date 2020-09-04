@@ -4011,7 +4011,9 @@ def start_kube_service(servicename):
             apply_arm64 = True
 
     if os.path.exists(os.path.join(dirname, "only_one_arch")) and apply_arm64:
-        start_kube_service_with_launch_order(dirname, default_launch_file)
+        return
+
+    start_kube_service_with_launch_order(dirname, default_launch_file)
 
     return
 

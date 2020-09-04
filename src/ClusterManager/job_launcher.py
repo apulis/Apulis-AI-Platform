@@ -54,6 +54,16 @@ class JobDeployer:
         return api_response
 
     @record
+    def _create_inferenceService(self, body):
+        api_response = client.CustomObjectsApi().create_namespaced_custom_object(
+            group="serving.kubeflow.org",
+            version="v1alpha2",
+            namespace=self.namespace,
+            plural="services",
+            body=body)
+        return api_response
+
+    @record
     def _delete_pod(self, name, grace_period_seconds=None):
         body = client.V1DeleteOptions()
         body.grace_period_seconds = grace_period_seconds
@@ -246,6 +256,8 @@ class JobDeployer:
                 created_pod = self._create_pod(pod)
             elif pod["kind"] == "Deployment":
                 created_pod = self._create_deployment(pod)
+            elif pod["kind"] == "InferenceService":
+                created_pod = self._create_inferenceService(pod)
             created.append(created_pod)
             logger.info("Create pod succeed: %s" % created_pod.metadata.name)
         return created
@@ -691,22 +703,6 @@ class PythonLauncher(Launcher):
             }
             conditionFields = {"jobId": job_object.job_id}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
-
-            if job_object.params["jobtrainingtype"] == "InferenceJob":
-                endpoint_id = "e-" + job_object.job_id + "-port-"+ pods[0].metadata.labels["inference_port"]
-                endpoint = {
-                    "id": endpoint_id,
-                    "jobId": job_object.job_id,
-                    "podName": pods[0].metadata.labels["podName"],
-                    "username": pods[0].metadata.labels["userName"],
-                    "modelname": pods[0].metadata.labels["modelname"],
-                    "name": "inference-url",
-                    "podPort": pods[0].metadata.labels["inference_port"],
-                    "status": "pending",
-                    "hostNetwork": False
-                }
-                endpoints[endpoint_id] = endpoint
-                dataHandler.UpdateJobTextField(job_object.job_id, "endpoints", json.dumps(endpoints))
 
         except Exception as e:
             logger.error("Submit job failed: %s" % job, exc_info=True)

@@ -194,7 +194,8 @@ class PodTemplate():
                 if "inference_port" not in pod:
                     pod["inference_port"] = 8080
                 pod["model_name"] = pod["jobName"]
-                pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/data/flowers"
+                pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/path/noExist"
+                pod["framework"] = pod["framework"].split("-")[0]
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
             # mount /pod
@@ -208,38 +209,6 @@ class PodTemplate():
 
             k8s_pod = self.generate_pod(pod, params["cmd"])
             k8s_pods.append(k8s_pod)
-
-        if params["jobtrainingtype"] == "InferenceJob":
-            pod = copy.deepcopy(params)
-            pod["numps"] = 0
-            pod["numworker"] = 1
-            pod["fragmentGpuJob"] = True
-            if "gpuLimit" not in pod:
-                pod["gpuLimit"] = pod["resourcegpu"]
-
-            if "gpuStr" not in pod and "gpuType" in pod and pod["gpuType"]:
-                deviceDict = gpuMapping.get(pod["gpuType"])
-                if deviceDict is None:
-                    return None,"wrong device type"
-                else:
-                    pod["gpuStr"] = deviceDict.get("deviceStr")
-
-            pod["envs"].append({"name": "DLWS_ROLE_NAME", "value": "inferenceworker"})
-            pod["envs"].append({"name": "DLWS_NUM_GPU_PER_WORKER", "value": 0})
-
-            pod_path = job.get_hostpath(job.job_path, "master")
-            pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
-
-            pod["podName"] = job.job_id
-            # for now,deployment_replicas is o
-            pod["deployment_replicas"] = pod["resourcegpu"]
-            pod["device_per_pod"] = 1
-            if "inference_port" not in pod:
-                pod["inference_port"] = 8080
-            pod["model_name"] = pod["jobName"]
-            pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/data/flowers"
-            k8s_deployment = self.generate_deployment(pod)
-            k8s_pods.append(k8s_deployment)
 
         return k8s_pods, None
 

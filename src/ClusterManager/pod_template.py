@@ -5,7 +5,7 @@ import yaml
 from jinja2 import Template
 from job import Job
 import copy
-
+import re
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 from osUtils import mkdirsAsUser
@@ -195,6 +195,8 @@ class PodTemplate():
                     pod["inference_port"] = 8080
                 pod["model_name"] = pod["jobName"]
                 pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/path/noExist"
+                pod["model_base_path"] = re.sub("^/data", config["storage-mount-path"]+"/storage", pod["model_base_path"])
+                pod["model_base_path"] = re.sub("^/home", config["storage-mount-path"]+"/work", pod["model_base_path"])
                 pod["framework"] = pod["framework"].split("-")[0]
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]

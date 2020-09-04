@@ -310,7 +310,7 @@ spec:
       serviceAccountName: controller
       nodeSelector:
         restfulapi: active
-        archType: amd64
+        archType: arm64
       containers:
       - name: networking-istio
         # This is the Go import path for the binary that is containerized
@@ -387,7 +387,7 @@ spec:
       serviceAccountName: controller
       nodeSelector:
         restfulapi: active
-        archType: amd64
+        archType: arm64
       containers:
       - name: webhook
         # This is the Go import path for the binary that is containerized

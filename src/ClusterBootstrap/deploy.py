@@ -4031,11 +4031,18 @@ def stop_kube_service(servicename):
         stop_one_kube_service(fname)
         return
 
+    apply_arm64 = False
     default_launch_file = "launch_order"
-    stop_kube_service_with_launch_order(dirname, default_launch_file)
     for archtype in get_archtypes():
         if archtype != "amd64":
             stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+            apply_arm64 = True
+
+    if os.path.exists(os.path.join(dirname,"only_one_arch")) and apply_arm64:
+        return
+
+    stop_kube_service_with_launch_order(dirname, default_launch_file)
+
     return
 
 def stop_kube_service_with_launch_order(dirname, launch_filename):

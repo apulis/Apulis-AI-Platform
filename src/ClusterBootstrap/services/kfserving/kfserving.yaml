@@ -992,6 +992,9 @@ spec:
       control-plane: kfserving-controller-manager
       controller-tools.k8s.io: "1.0"
   serviceName: controller-manager-service
+  nodeSelector:
+    restfulapi: active
+    archType: amd64
   template:
     metadata:
       labels:

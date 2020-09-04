@@ -17,6 +17,7 @@ then
     available_interface=
     for virtual_interface in `ls /sys/devices/virtual/net/`
     do
+	  # can't use ${#array_name} to acquire arraya length due to jinjia transfer syntax	
 	  num=`echo virtual_interface_array | wc -w`
       virtual_interface_array[${num}]=$virtual_interface
     done

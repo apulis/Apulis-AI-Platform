@@ -59,7 +59,7 @@ class JobDeployer:
             group="serving.kubeflow.org",
             version="v1alpha2",
             namespace=self.namespace,
-            plural="services",
+            plural="inferenceService",
             body=body)
         return api_response
 

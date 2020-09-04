@@ -62,6 +62,13 @@ class PodTemplate():
 
         return pod_obj
 
+    def generate_custom_resource(self, resource):
+        assert(isinstance(self.template, Template))
+        pod_yaml = self.template.render(job=resource)
+        # because user's cmd can be multiple lines, should add after yaml load
+        resource_obj = yaml.full_load(pod_yaml)
+        return resource_obj
+
     def generate_pods(self, job):
         """
         Return (pods, errors)
@@ -209,7 +216,10 @@ class PodTemplate():
                 if "gpuType" in pod and pod["gpuType"] and pod["gpuType"].endswith("arm64"):
                     pod["init-container"] += "-arm64"
 
-            k8s_pod = self.generate_pod(pod, params["cmd"])
+            if params["jobtrainingtype"] == "InferenceJob":
+                k8s_pod = self.generate_custom_resource(pod)
+            else:
+                k8s_pod = self.generate_pod(pod, params["cmd"])
             k8s_pods.append(k8s_pod)
 
         return k8s_pods, None

@@ -1082,6 +1082,9 @@ spec:
         serving.knative.dev/release: "v0.15.0"
     spec:
       serviceAccountName: controller
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
       containers:
       - name: activator
         # This is the Go import path for the binary that is containerized
@@ -1211,6 +1214,9 @@ spec:
         serving.knative.dev/release: "v0.15.0"
     spec:
       serviceAccountName: controller
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
       containers:
       - name: autoscaler
         # This is the Go import path for the binary that is containerized
@@ -1319,6 +1325,9 @@ spec:
         serving.knative.dev/release: "v0.15.0"
     spec:
       serviceAccountName: controller
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
       containers:
       - name: controller
         # This is the Go import path for the binary that is containerized
@@ -1409,6 +1418,9 @@ spec:
         serving.knative.dev/release: "v0.15.0"
     spec:
       serviceAccountName: controller
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
       containers:
       - name: webhook
         # This is the Go import path for the binary that is containerized

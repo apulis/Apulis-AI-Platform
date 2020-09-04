@@ -5,7 +5,7 @@ RUN cd webhook && CGO_ENABLED=0 go build \
     mkdir -p /ko-app; \
     mkdir -p ./kodata; \
     cp -RL ./kodata /var/run/ko; \
-    cp activator /ko-app/;
+    cp webhook /ko-app/;
 
 FROM debian:stable-slim
 COPY --from=build /ko-app /ko-app

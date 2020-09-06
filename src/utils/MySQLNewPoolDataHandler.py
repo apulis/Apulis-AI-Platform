@@ -1472,7 +1472,8 @@ class DataHandler(object):
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"]=="running":
-                    record["inference-url"] =
+                    nodeName,domain = EndpointUtils.getNodename()
+                    record["inference-url"] = "http://%s.%s/endpoints/v3/v1/models/%s:predict" % (nodeName,domain, record["jobName"])
 
                 ret.append(record)
         except Exception as e:

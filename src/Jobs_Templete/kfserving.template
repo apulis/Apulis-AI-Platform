@@ -34,5 +34,7 @@ metadata:
 spec:
   default:
     predictor:
+      minReplicas: {{ job["minReplicas"] }}
+      maxReplicas: {{ job["maxReplicas"] }}
       {{ job["framework"] }}:
         storageUri: "file://{{ job["model_base_path"] }}"

@@ -205,6 +205,8 @@ class PodTemplate():
                 pod["model_base_path"] = re.sub("^/data", config["storage-mount-path"]+"/storage", pod["model_base_path"])
                 pod["model_base_path"] = re.sub("^/home", config["storage-mount-path"]+"/work", pod["model_base_path"])
                 pod["framework"] = pod["framework"].split("-")[0]
+                pod["minReplicas"] = params["minReplicas"] if "minReplicas" in params else 1
+                pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
             # mount /pod

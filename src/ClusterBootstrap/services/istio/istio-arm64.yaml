@@ -260,7 +260,9 @@ spec:
         s390x: 2
       configValidation: true
       controlPlaneSecurityEnabled: true
-      defaultNodeSelector: {}
+      defaultNodeSelector:
+        restfulapi: active
+        archType: arm64
       defaultPodDisruptionBudget:
         enabled: true
       defaultResources:

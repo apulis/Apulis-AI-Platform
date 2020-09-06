@@ -368,7 +368,9 @@ spec:
       image:
         repository: grafana/grafana
         tag: 6.7.4
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       persist: false
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
@@ -403,7 +405,9 @@ spec:
         usernameKey: username
         viewOnlyMode: false
       hub: quay.io/kiali
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
       security:
@@ -449,7 +453,9 @@ spec:
         loadshedding:
           latencyThreshold: 100ms
           mode: enforce
-        nodeSelector: {}
+        nodeSelector:
+          restfulapi: active
+          archType: arm64
         podAntiAffinityLabelSelector: []
         podAntiAffinityTermLabelSelector: []
         replicaCount: 1
@@ -469,7 +475,9 @@ spec:
       env: {}
       image: istio-pilot
       keepaliveMaxServerConnectionAge: 30m
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
       policy:
@@ -480,7 +488,9 @@ spec:
     prometheus:
       contextPath: /prometheus
       hub: docker.io/prom
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
       provisionPrometheusCert: true
@@ -522,7 +532,9 @@ spec:
         spanStorageType: badger
         storageClassName: ""
         tag: "1.16"
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       opencensus:
         exporters:
           stackdriver:

@@ -1471,10 +1471,8 @@ class DataHandler(object):
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
-                endpoints = record["endpoints"]
-                if endpoints:
-                    endpoints = json.loads(record["endpoints"]).values()
-                    record["inference-url"] = parse_endpoints(endpoints)
+                if record["jobStatus"]=="running":
+                    record["inference-url"] =
 
                 ret.append(record)
         except Exception as e:

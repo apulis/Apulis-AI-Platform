@@ -68,7 +68,7 @@ fi
 
 
 archtype=`uname -m`
-if $archtype="aarch64";then
+if [ $archtype="aarch64" ];then
   tag=latest-arm64
 else
   tag=latest

@@ -998,6 +998,9 @@ spec:
         control-plane: kfserving-controller-manager
         controller-tools.k8s.io: "1.0"
     spec:
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
       containers:
       - args:
         - --secure-listen-address=0.0.0.0:8443

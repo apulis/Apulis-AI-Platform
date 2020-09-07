@@ -1323,6 +1323,7 @@ spec:
           operator: Exists
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
+      hostNetwork: true
       containers:
       - name: controller
         # This is the Go import path for the binary that is containerized

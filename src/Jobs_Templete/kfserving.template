@@ -38,3 +38,4 @@ spec:
       maxReplicas: {{ job["maxReplicas"] }}
       {{ job["framework"] }}:
         storageUri: "file://{{ job["model_base_path"] }}"
+        runtimeVersion: {{ job["version"] }}

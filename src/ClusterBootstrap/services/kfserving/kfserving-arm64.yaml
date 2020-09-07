@@ -1002,7 +1002,7 @@ spec:
           operator: Exists
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
-      hostnetwork: true
+      hostNetwork: true
       containers:
       - args:
         - --secure-listen-address=0.0.0.0:8443

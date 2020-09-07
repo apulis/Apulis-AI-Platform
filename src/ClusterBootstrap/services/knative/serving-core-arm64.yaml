@@ -1294,6 +1294,7 @@ spec:
           operator: Exists
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
+      hostNetwork: true
       containers:
       - name: controller
         # This is the Go import path for the binary that is containerized
@@ -1308,6 +1309,8 @@ spec:
             cpu: 1000m
             memory: 1000Mi
         env:
+        - name: SSL_CERT_DIR
+          value: /etc/customca
         - name: SYSTEM_NAMESPACE
           valueFrom:
             fieldRef:
@@ -1326,6 +1329,14 @@ spec:
           containerPort: 9090
         - name: profiling
           containerPort: 8008
+        volumeMounts:
+          - mountPath: /etc/customca
+            name: customca
+      volumes:
+      - name: customca
+        secret:
+          defaultMode: 420
+          secretName: customca
 ---
 apiVersion: v1
 kind: Service

@@ -1001,6 +1001,11 @@ spec:
       nodeSelector:
         restfulapi: active
         archType: amd64
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       containers:
       - args:
         - --secure-listen-address=0.0.0.0:8443

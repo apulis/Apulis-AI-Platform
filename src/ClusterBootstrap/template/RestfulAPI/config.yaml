@@ -130,3 +130,4 @@ master_private_ip:  {{cnf["etcd_private_ip"]}}
 
 data_platform_path: {{cnf["data_platform_path"]}}
 private_docker_registry: {{cnf["private_docker_registry"]}}
+endpoint_use_short_domian: {{cnf["endpoint_use_short_domian"]}}

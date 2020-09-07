@@ -1085,6 +1085,11 @@ spec:
       nodeSelector:
         restfulapi: active
         archType: arm64
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       containers:
       - name: activator
         # This is the Go import path for the binary that is containerized
@@ -1217,6 +1222,11 @@ spec:
       nodeSelector:
         restfulapi: active
         archType: arm64
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       containers:
       - name: autoscaler
         # This is the Go import path for the binary that is containerized
@@ -1328,6 +1338,11 @@ spec:
       nodeSelector:
         restfulapi: active
         archType: arm64
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       containers:
       - name: controller
         # This is the Go import path for the binary that is containerized
@@ -1421,6 +1436,11 @@ spec:
       nodeSelector:
         restfulapi: active
         archType: arm64
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       containers:
       - name: webhook
         # This is the Go import path for the binary that is containerized

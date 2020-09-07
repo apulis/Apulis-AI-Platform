@@ -7,8 +7,8 @@ then
 	    cp istio-1.6.8/bin/istioctl /usr/bin/
     fi
     if [ "$(uname -m)" = "aarch64" ]; then
-      istioctl install -f services/istio/istio-arm64.yaml --set values.global.jwtPolicy=first-party-jwt --force
+      istioctl install -f deploy/services/istio/istio-arm64.yaml --set values.global.jwtPolicy=first-party-jwt --force
     else
-      istioctl install -f services/istio/istio.yaml --set values.global.jwtPolicy=first-party-jwt --force
+      istioctl install -f deploy/services/istio/istio.yaml --set values.global.jwtPolicy=first-party-jwt --force
     fi
 fi

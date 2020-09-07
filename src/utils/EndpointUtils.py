@@ -20,10 +20,10 @@ def parse_endpoint(endpoint,job=None):
         port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
         epItem["port"] = port
         if "nodeName" in endpoint:
-            if "master_private_ip" in config:
-                epItem["nodeName"], epItem["domain"] = config["master_private_ip"].split(".", 1)
-            elif "endpoint_use_short_domian" in config:
+            if "endpoint_use_short_domian" in config:
                 epItem["nodeName"] = config["endpoint_use_short_domian"]
+            elif "master_private_ip" in config:
+                epItem["nodeName"], epItem["domain"] = config["master_private_ip"].split(".", 1)
             else:
                 epItem["nodeName"] = config["webportal_node"].split("." + epItem["domain"])[0]
         if epItem["name"] == "ssh":

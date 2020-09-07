@@ -100,7 +100,7 @@ then
   done
 fi
 
-if [ "$1" = "push2" ];
+if [ "$1" = "push2harbor" ];
 then
     for file in ../docker-images/$2/*;do
       arr=(${file//./ })

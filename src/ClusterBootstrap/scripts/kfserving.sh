@@ -24,7 +24,8 @@ then
   then
         sudo kubeadm init
         sudo chmod 777 /etc/kubernetes/admin.conf
-        sudo cp /etc/kubernetes/admin.conf /home/dlwsadmin/code/DLWorkspace/src/ClusterBootstrap/deploy/sshkey/
+        sudo cp /etc/kubernetes/admin.conf deploy/sshkey/
+        sudo cp /etc/kubernetes/admin.conf ~/.kube/config
         kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v1.18.0"
   fi
 fi

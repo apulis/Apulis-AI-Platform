@@ -105,6 +105,6 @@ then
     for file in ../docker-images/$2/*;do
       arr=(${file//./ })
       docker tag apulistech/$2-`basename ${arr[0]}`:$tag harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag
-      docker push apulistech/$2-`basename ${arr[0]}`:$tag
+      docker push harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag
     done
 fi

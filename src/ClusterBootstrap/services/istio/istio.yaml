@@ -230,6 +230,11 @@ spec:
         debug: info
         domain: ""
         env: {}
+        tolerations:
+          - key: CriticalAddonsOnly
+            operator: Exists
+          - key: node-role.kubernetes.io/master
+            effect: NoSchedule
         meshExpansionPorts:
         - name: tcp-pilot-grpc-tls
           port: 15011

@@ -108,3 +108,12 @@ then
       docker push harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag
     done
 fi
+
+if [ "$1" = "save" ];
+then
+    for file in ../docker-images/$2/*;do
+      arr=(${file//./ })
+      docker pull harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag
+      docker save harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag -o $2/$(echo harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag|sed -e "s/\//-/g").tar
+    done
+fi

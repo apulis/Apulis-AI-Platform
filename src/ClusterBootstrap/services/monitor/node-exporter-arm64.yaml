@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: node-exporter
+  name: node-exporter-arm64
   namespace: kube-system
 spec:
   selector:

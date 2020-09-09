@@ -87,10 +87,10 @@ spec:
     metadata:
       labels:
         operator: prometheus
-    nodeSelector:
-      prometheus: active
-      archType: arm64
     spec:
+      nodeSelector:
+        prometheus: active
+        archType: arm64
       serviceAccountName: prometheus-operator
       containers:
        - name: prometheus-operator

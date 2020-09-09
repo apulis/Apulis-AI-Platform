@@ -87,11 +87,11 @@ spec:
     metadata:
       labels:
         operator: prometheus
-    nodeSelector:
-      prometheus: active
-      archType: amd64
     spec:
       serviceAccountName: prometheus-operator
+      nodeSelector:
+        prometheus: active
+        archType: amd64
       containers:
        - name: prometheus-operator
          image: {{cnf["dockers"]["container"]["prometheus-operator"]["fullname"]}}

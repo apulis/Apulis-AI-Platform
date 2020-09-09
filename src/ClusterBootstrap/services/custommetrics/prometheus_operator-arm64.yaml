@@ -75,7 +75,7 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus-operator
+  name: prometheus-operator-arm64
   labels:
     operator: prometheus
 spec:

@@ -85,6 +85,7 @@ spec:
       operator: prometheus
   template:
     metadata:
+      name: prometheus-operator-arm64
       labels:
         operator: prometheus
     spec:

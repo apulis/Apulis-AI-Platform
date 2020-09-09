@@ -89,12 +89,12 @@ spec:
         operator: prometheus
     nodeSelector:
       prometheus: active
-      archType: amd64
+      archType: arm64
     spec:
       serviceAccountName: prometheus-operator
       containers:
        - name: prometheus-operator
-         image: {{cnf["dockers"]["container"]["prometheus-operator"]["fullname"]}}
+         image: {{cnf["dockers"]["container"]["prometheus-operator"]["fullname"]}}-arm64
          resources:
            requests:
              cpu: 100m

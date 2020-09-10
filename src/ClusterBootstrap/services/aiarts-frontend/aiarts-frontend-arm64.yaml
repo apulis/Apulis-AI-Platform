@@ -14,7 +14,7 @@ spec:
       name: aiarts-frontend-arm64
       labels:
         aiarts-frontend-node: pod
-        app: aiarts-frontend
+        app: aiarts-frontend-arm64
     spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
@@ -23,7 +23,7 @@ spec:
         aiarts-frontend: active
         archType: arm64
       containers:
-      - name: aiarts-frontend
+      - name: aiarts-frontend-arm64
         image: {{cnf["dockers"]["container"]["aiarts-frontend"]["fullname"]}}-arm64
         imagePullPolicy: Always
         ports:

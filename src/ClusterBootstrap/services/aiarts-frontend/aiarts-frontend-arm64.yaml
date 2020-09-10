@@ -1,7 +1,7 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: aiarts-frontend
+  name: aiarts-frontend-arm64
   namespace: default
   labels:
      run: dlwsaiarts-frontend
@@ -11,7 +11,7 @@ spec:
       aiarts-frontend-node: pod
   template:
     metadata:
-      name: aiarts-frontend
+      name: aiarts-frontend-arm64
       labels:
         aiarts-frontend-node: pod
         app: aiarts-frontend
@@ -21,7 +21,7 @@ spec:
       {% endif %}
       nodeSelector:
         aiarts-frontend: active
-        archType: amd64
+        archType: arm64
       containers:
       - name: aiarts-frontend
         image: {{cnf["dockers"]["container"]["aiarts-frontend"]["fullname"]}}-arm64

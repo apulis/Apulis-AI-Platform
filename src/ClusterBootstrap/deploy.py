@@ -4020,7 +4020,7 @@ def start_kube_service(servicename):
         archtypes = get_archtypes()
     if "arm64" in archtypes:
         start_kube_service_with_launch_order(dirname, default_launch_file + "_" + "arm64")
-    elif "amd64" in archtypes:
+    if "amd64" in archtypes:
         start_kube_service_with_launch_order(dirname, default_launch_file)
 
     return
@@ -4052,7 +4052,7 @@ def stop_kube_service(servicename):
         archtypes = get_archtypes()
     if "arm64" in archtypes:
         stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + "arm64")
-    elif "amd64" in archtypes:
+    if "amd64" in archtypes:
         stop_kube_service_with_launch_order(dirname, default_launch_file)
 
     return

@@ -1,27 +1,27 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql
+  name: mysql-arm64
   namespace: kube-system
 spec:
   ports:
   - port: {{cnf["mysql_port"]}}
   selector:
-    app: mysql
+    app: mysql-arm64
 ---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: mysql
+  name: mysql-arm64
   namespace: kube-system
 spec:
   selector:
     matchLabels:
-      app: mysql
+      app: mysql-arm64
   template:
     metadata:
       labels:
-        app: mysql
+        app: mysql-arm64
     spec:
       nodeSelector:
       {% if cnf["mysqlserver_node"]|length > 0 %}

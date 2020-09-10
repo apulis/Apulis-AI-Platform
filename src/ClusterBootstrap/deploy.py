@@ -3505,6 +3505,14 @@ def get_archtypes():
             archtypes.add(machines[key]["archtype"])
     return archtypes
 
+def get_master_archtypes():
+    machines = config["machines"]
+    archtypes = set()
+    for key in machines.keys():
+        if machines[key].has_key("archtype") and machines[key].get("role")=="infrastructure":
+            archtypes.add(machines[key]["archtype"])
+    return archtypes
+
 def get_service_name(service_config_file):
     f = open(service_config_file)
     try:
@@ -4003,17 +4011,17 @@ def start_kube_service(servicename):
     if "/" in servicename:
         start_one_kube_service(fname)
         return
-    apply_arm64 = False
+
     default_launch_file = "launch_order"
-    for archtype in get_archtypes():
-        if archtype != "amd64":
-            start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
-            apply_arm64 = True
 
-    if os.path.exists(os.path.join(dirname, "only_one_arch")) and apply_arm64:
-        return
-
-    start_kube_service_with_launch_order(dirname, default_launch_file)
+    if os.path.exists(os.path.join(dirname, "only_one_arch")):
+        archtypes = get_master_archtypes()
+    else:
+        archtypes = get_archtypes()
+    if "arm64" in archtypes:
+        start_kube_service_with_launch_order(dirname, default_launch_file + "_" + "arm64")
+    elif "amd64" in archtypes:
+        start_kube_service_with_launch_order(dirname, default_launch_file)
 
     return
 

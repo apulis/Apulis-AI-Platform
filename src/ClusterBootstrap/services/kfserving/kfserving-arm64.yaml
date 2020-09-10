@@ -996,7 +996,7 @@ spec:
     spec:
       nodeSelector:
         restfulapi: active
-        archType: amd64
+        archType: arm64
       tolerations:
         - key: CriticalAddonsOnly
           operator: Exists

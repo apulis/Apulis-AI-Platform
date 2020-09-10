@@ -68,7 +68,7 @@ spec:
           path: /etc/kubernetes/admin.conf
       - name: sshkey
         hostPath:
-          path: /root/.ssh/id_rsa
+          path: /home/dlwsadmin/.ssh/id_rsa
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

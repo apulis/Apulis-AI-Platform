@@ -18,8 +18,6 @@ import PriorityField from './PriorityField';
 import message from '../../utils/message';
 import { pollInterval } from '../../const';
 import useInterval from '../../hooks/useInterval';
-import { Help } from "@material-ui/icons"; 
-import { Tooltip } from "@material-ui/core";
 
 const renderUser = (job: any) => job['userName'].split('@', 1)[0];
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
@@ -28,7 +26,7 @@ const getFinishedDate = (job: any) => new Date(job['jobStatusDetail'] ? job['job
 const _renderId = (job: any) => renderId(job, 1);
 
 interface JobsTableProps {
-  title: any;
+  title: string;
   jobs: any[];
 }
 
@@ -51,7 +49,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
     { title: 'Priority', type: 'numeric', sorting: false,
       render: (job: any) => (<PriorityField job={job} key={job.jobId} />), disableClick: true },
     { title: 'Submitted', type: 'datetime',
-      render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) }, 
+      render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
     { title: 'Started', type: 'datetime',
       render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
     { title: 'Finished', type: 'datetime',
@@ -139,10 +137,7 @@ const AllJobs: FunctionComponent = () => {
       {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>} */}
       {jobs.length === 0 ?
         <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3> :
-        <JobsTable jobs={jobs}
-          title={<Tooltip title="Sorting rules: The first click is in asc order, the second click is in desc order, and the third click is to restore the original order.">
-            <div className="helpWrap">All Jobs<Help fontSize="small" /></div>
-          </Tooltip>} />}
+        <JobsTable title="All Jobs" jobs={jobs}/>}
     </>
   );
 

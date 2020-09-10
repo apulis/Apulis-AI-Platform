@@ -3,7 +3,7 @@ ARG VERSION=1.6.8
 FROM golang:1.14 as build
 
 ARG VERSION=1.6.8
-ARG TARGETPLATFORM
+ARG TARGETPLATFORM=linux/arm64
 
 ENV GO111MODULE=on \
   CGO_ENABLED=0
@@ -20,7 +20,7 @@ RUN export GOOS=$(echo ${TARGETPLATFORM} | cut -d / -f1) && \
   STATIC=0 LDFLAGS='-extldflags -static -s -w' ./common/scripts/gobuild.sh /go/src/github.com/istio/istio/out/pilot-agent ./pilot/cmd/pilot-agent
 
 FROM istio/proxyv2:${VERSION} as proxyv2
-FROM apulistech/istio-envoy as envoy
+FROM apulistech/istio-envoy:latest-arm64 as envoy
 
 FROM apulistech/istio-base:latest-arm64
 

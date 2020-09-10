@@ -200,7 +200,7 @@ spec:
           rollingUpdate:
             maxSurge: 100%
             maxUnavailable: 25%
-  hub: docker.io/apulistech
+  hub: {{cnf["private_docker_registry"]}}apulistech
   meshConfig:
     defaultConfig:
       proxyMetadata: {}
@@ -230,6 +230,11 @@ spec:
         debug: info
         domain: ""
         env: {}
+        tolerations:
+          - key: CriticalAddonsOnly
+            operator: Exists
+          - key: node-role.kubernetes.io/master
+            effect: NoSchedule
         meshExpansionPorts:
         - name: tcp-pilot-grpc-tls
           port: 15011
@@ -255,12 +260,14 @@ spec:
         zvpn: {}
     global:
       arch:
-        amd64: 2
+        arm64: 2
         ppc64le: 2
         s390x: 2
       configValidation: true
       controlPlaneSecurityEnabled: true
-      defaultNodeSelector: {}
+      defaultNodeSelector:
+        restfulapi: active
+        archType: arm64
       defaultPodDisruptionBudget:
         enabled: true
       defaultResources:
@@ -368,7 +375,9 @@ spec:
       image:
         repository: grafana/grafana
         tag: 6.7.4
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       persist: false
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
@@ -383,7 +392,11 @@ spec:
         name: http
         type: ClusterIP
       storageClassName: ""
-      tolerations: []
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
     istiocoredns:
       coreDNSImage: coredns/coredns
       coreDNSPluginImage: istio/coredns-plugin:0.2-istio-1.1
@@ -403,7 +416,9 @@ spec:
         usernameKey: username
         viewOnlyMode: false
       hub: quay.io/kiali
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
       security:
@@ -449,12 +464,18 @@ spec:
         loadshedding:
           latencyThreshold: 100ms
           mode: enforce
-        nodeSelector: {}
+        nodeSelector:
+          restfulapi: active
+          archType: arm64
         podAntiAffinityLabelSelector: []
         podAntiAffinityTermLabelSelector: []
         replicaCount: 1
         sessionAffinityEnabled: false
-        tolerations: []
+        tolerations:
+          - key: CriticalAddonsOnly
+            operator: Exists
+          - key: node-role.kubernetes.io/master
+            effect: NoSchedule
     pilot:
       appNamespaces: []
       autoscaleEnabled: true
@@ -469,18 +490,26 @@ spec:
       env: {}
       image: istio-pilot
       keepaliveMaxServerConnectionAge: 30m
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
       policy:
         enabled: false
       replicaCount: 1
-      tolerations: []
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       traceSampling: 1
     prometheus:
       contextPath: /prometheus
       hub: docker.io/prom
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       podAntiAffinityLabelSelector: []
       podAntiAffinityTermLabelSelector: []
       provisionPrometheusCert: true
@@ -489,7 +518,11 @@ spec:
       security:
         enabled: true
       tag: v2.15.1
-      tolerations: []
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
     sidecarInjectorWebhook:
       enableNamespacesByDefault: false
       injectLabel: istio-injection
@@ -522,7 +555,9 @@ spec:
         spanStorageType: badger
         storageClassName: ""
         tag: "1.16"
-      nodeSelector: {}
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
       opencensus:
         exporters:
           stackdriver:

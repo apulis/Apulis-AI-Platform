@@ -24,7 +24,8 @@ then
   then
         sudo kubeadm init
         sudo chmod 777 /etc/kubernetes/admin.conf
-        sudo cp /etc/kubernetes/admin.conf /home/dlwsadmin/code/DLWorkspace/src/ClusterBootstrap/deploy/sshkey/
+        sudo cp /etc/kubernetes/admin.conf deploy/sshkey/
+        sudo cp /etc/kubernetes/admin.conf ~/.kube/config
         kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v1.18.0"
   fi
 fi
@@ -66,27 +67,53 @@ then
     kubectl delete -f istio/samples/bookinfo/platform/kube/bookinfo.yaml
 fi
 
+
+archtype=`uname -m`
+if [ $archtype = "aarch64" ];then
+  tag=latest-arm64
+else
+  tag=latest
+fi
+
 if [ "$1" = "build" ];
 then
     for file in ../docker-images/$2/*;do
       arr=(${file//./ })
-      docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
+      docker build -t apulistech/$2-`basename ${arr[0]}`:$tag -f $file "../docker-images/$2"
     done
 fi
 
 if [ "$1" = "push" ];
 then
-    for file in ../docker-images/$2;do
+    for file in ../docker-images/$2/*;do
       arr=(${file//./ })
-      docker build -t apulistech/$2-`basename ${arr[0]}` -f $file "../docker-images/$2"
-      docker push apulistech/$2-`basename ${arr[0]}`
+      docker build -t apulistech/$2-`basename ${arr[0]}`:$tag -f $file "../docker-images/$2"
+      docker push apulistech/$2-`basename ${arr[0]}`:$tag
     done
 fi
 
 if [ "$1" = "pull" ];
 then
-  for file in ../docker-images/$2;do
+  for file in ../docker-images/$2/*;do
       arr=(${file//./ })
-      docker pull apulistech/$2-`basename ${arr[0]}`
+      docker pull apulistech/$2-`basename ${arr[0]}`:$tag
   done
+fi
+
+if [ "$1" = "push2harbor" ];
+then
+    for file in ../docker-images/$2/*;do
+      arr=(${file//./ })
+      docker tag apulistech/$2-`basename ${arr[0]}`:$tag harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag
+      docker push harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag
+    done
+fi
+
+if [ "$1" = "save" ];
+then
+    for file in ../docker-images/$2/*;do
+      arr=(${file//./ })
+      docker pull harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag
+      docker save harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag -o $3/$(echo harbor.sigsus.cn:8443/sz_gongdianju/apulistech/$2-`basename ${arr[0]}`:$tag|sed -e "s/\//-/g").tar
+    done
 fi

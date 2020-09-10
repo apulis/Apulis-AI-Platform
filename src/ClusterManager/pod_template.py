@@ -5,7 +5,7 @@ import yaml
 from jinja2 import Template
 from job import Job
 import copy
-
+import re
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 from osUtils import mkdirsAsUser
@@ -61,6 +61,13 @@ class PodTemplate():
         pod_obj["spec"]["containers"][0]["env"].append({"name": "DLWS_LAUNCH_CMD", "value": cmd})
 
         return pod_obj
+
+    def generate_custom_resource(self, resource):
+        assert(isinstance(self.template, Template))
+        pod_yaml = self.template.render(job=resource)
+        # because user's cmd can be multiple lines, should add after yaml load
+        resource_obj = yaml.full_load(pod_yaml)
+        return resource_obj
 
     def generate_pods(self, job):
         """
@@ -194,7 +201,12 @@ class PodTemplate():
                 if "inference_port" not in pod:
                     pod["inference_port"] = 8080
                 pod["model_name"] = pod["jobName"]
-                pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/data/flowers"
+                pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/path/noExist"
+                pod["model_base_path"] = re.sub("^/data", config["storage-mount-path"]+"/storage", pod["model_base_path"])
+                pod["model_base_path"] = re.sub("^/home", config["storage-mount-path"]+"/work", pod["model_base_path"])
+                pod["framework"],pod["version"] = pod["framework"].split("-")[0]
+                pod["minReplicas"] = params["minReplicas"] if "minReplicas" in params else 1
+                pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
             # mount /pod
@@ -206,40 +218,11 @@ class PodTemplate():
                 if "gpuType" in pod and pod["gpuType"] and pod["gpuType"].endswith("arm64"):
                     pod["init-container"] += "-arm64"
 
-            k8s_pod = self.generate_pod(pod, params["cmd"])
+            if params["jobtrainingtype"] == "InferenceJob":
+                k8s_pod = self.generate_custom_resource(pod)
+            else:
+                k8s_pod = self.generate_pod(pod, params["cmd"])
             k8s_pods.append(k8s_pod)
-
-        if params["jobtrainingtype"] == "InferenceJob":
-            pod = copy.deepcopy(params)
-            pod["numps"] = 0
-            pod["numworker"] = 1
-            pod["fragmentGpuJob"] = True
-            if "gpuLimit" not in pod:
-                pod["gpuLimit"] = pod["resourcegpu"]
-
-            if "gpuStr" not in pod and "gpuType" in pod and pod["gpuType"]:
-                deviceDict = gpuMapping.get(pod["gpuType"])
-                if deviceDict is None:
-                    return None,"wrong device type"
-                else:
-                    pod["gpuStr"] = deviceDict.get("deviceStr")
-
-            pod["envs"].append({"name": "DLWS_ROLE_NAME", "value": "inferenceworker"})
-            pod["envs"].append({"name": "DLWS_NUM_GPU_PER_WORKER", "value": 0})
-
-            pod_path = job.get_hostpath(job.job_path, "master")
-            pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
-
-            pod["podName"] = job.job_id
-            # for now,deployment_replicas is o
-            pod["deployment_replicas"] = pod["resourcegpu"]
-            pod["device_per_pod"] = 1
-            if "inference_port" not in pod:
-                pod["inference_port"] = 8080
-            pod["model_name"] = pod["jobName"]
-            pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/data/flowers"
-            k8s_deployment = self.generate_deployment(pod)
-            k8s_pods.append(k8s_deployment)
 
         return k8s_pods, None
 

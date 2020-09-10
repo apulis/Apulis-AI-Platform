@@ -847,7 +847,7 @@ data:
   explainers: |-
     {
         "alibi": {
-            "image" : "gcr.io/kfserving/alibi-explainer",
+            "image" : "{{cnf["private_docker_registry"]}}gcr.io/kfserving/alibi-explainer",
             "defaultImageVersion": "0.2.2",
             "allowedImageVersions": [
                "0.2.2"
@@ -856,12 +856,12 @@ data:
     }
   ingress: |-
     {
-        "ingressGateway" : "knative-ingress-gateway.knative-serving",
+        "ingressGateway" : "{{cnf["private_docker_registry"]}}knative-ingress-gateway.knative-serving",
         "ingressService" : "istio-ingressgateway.istio-system.svc.cluster.local"
     }
   logger: |-
     {
-        "image" : "gcr.io/kfserving/logger:0.2.2",
+        "image" : "{{cnf["private_docker_registry"]}}gcr.io/kfserving/logger:0.2.2",
         "memoryRequest": "100Mi",
         "memoryLimit": "1Gi",
         "cpuRequest": "100m",
@@ -870,50 +870,46 @@ data:
   predictors: |-
     {
         "tensorflow": {
-            "image": "emacski/tensorflow-serving",
-            "defaultImageVersion": "1.14.0",
-            "defaultGpuImageVersion": "1.14.0-gpu",
+            "image": "{{cnf["private_docker_registry"]}}emacski/tensorflow-serving",
+            "defaultImageVersion": "2.2.0",
+            "defaultGpuImageVersion": "2.2.0-gpu",
             "allowedImageVersions": [
-               "1.11.0",
-               "1.11.0-gpu",
-               "1.12.0",
-               "1.12.0-gpu",
-               "1.13.0",
-               "1.13.0-gpu",
-               "1.14.0",
-               "1.14.0-gpu"
+               "1.15.0",
+               "1.15.0-gpu",
+               "2.2.0",
+               "2.2-gpu"
             ]
         },
         "onnx": {
-            "image": "mcr.microsoft.com/onnxruntime/server",
+            "image": "{{cnf["private_docker_registry"]}}mcr.microsoft.com/onnxruntime/server",
             "defaultImageVersion": "v0.5.1",
             "allowedImageVersions": [
                "v0.5.1"
             ]
         },
         "sklearn": {
-            "image": "gcr.io/kfserving/sklearnserver",
+            "image": "{{cnf["private_docker_registry"]}}gcr.io/kfserving/sklearnserver",
             "defaultImageVersion": "0.2.2",
             "allowedImageVersions": [
                "0.2.2"
             ]
         },
         "xgboost": {
-            "image": "gcr.io/kfserving/xgbserver",
+            "image": "{{cnf["private_docker_registry"]}}gcr.io/kfserving/xgbserver",
             "defaultImageVersion": "0.2.2",
             "allowedImageVersions": [
                "0.2.2"
             ]
         },
         "pytorch": {
-            "image": "gcr.io/kfserving/pytorchserver",
+            "image": "{{cnf["private_docker_registry"]}}gcr.io/kfserving/pytorchserver",
             "defaultImageVersion": "0.2.2",
             "allowedImageVersions": [
                "0.2.2"
             ]
         },
         "tensorrt": {
-            "image": "nvcr.io/nvidia/tensorrtserver",
+            "image": "{{cnf["private_docker_registry"]}}nvcr.io/nvidia/tensorrtserver",
             "defaultImageVersion": "19.05-py3",
             "allowedImageVersions": [
                "19.05-py3"
@@ -922,7 +918,7 @@ data:
     }
   storageInitializer: |-
     {
-        "image" : "apulistech/kfserving-storage-initializer",
+        "image" : "{{cnf["private_docker_registry"]}}apulistech/kfserving-storage-initializer",
         "memoryRequest": "100Mi",
         "memoryLimit": "1Gi",
         "cpuRequest": "100m",
@@ -998,13 +994,21 @@ spec:
         control-plane: kfserving-controller-manager
         controller-tools.k8s.io: "1.0"
     spec:
+      nodeSelector:
+        restfulapi: active
+        archType: amd64
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
       containers:
       - args:
         - --secure-listen-address=0.0.0.0:8443
         - --upstream=http://127.0.0.1:8080/
         - --logtostderr=true
         - --v=10
-        image: apulistech/kfserving-kube-rbac-proxy
+        image: {{cnf["private_docker_registry"]}}apulistech/kfserving-kube-rbac-proxy
         imagePullPolicy: IfNotPresent
         name: kube-rbac-proxy
         ports:
@@ -1021,7 +1025,7 @@ spec:
               fieldPath: metadata.namespace
         - name: SECRET_NAME
           value: kfserving-webhook-server-secret
-        image: apulistech/kfserving-manager
+        image: {{cnf["private_docker_registry"]}}apulistech/kfserving-manager
         imagePullPolicy: IfNotPresent
         name: manager
         ports:

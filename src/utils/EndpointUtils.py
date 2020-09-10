@@ -4,6 +4,15 @@ import yaml
 import logging
 from config import config
 
+def getNodename():
+    domain = config["domain"]
+    if "endpoint_use_short_domian" in config:
+        return config["endpoint_use_short_domian"],domain
+    elif "master_private_ip" in config:
+        return config["master_private_ip"].split(".", 1)
+    else:
+        return config["webportal_node"].split("." + domain)[0],domain
+
 def parse_endpoint(endpoint,job=None):
     epItem = {
         "id": endpoint["id"],
@@ -20,12 +29,7 @@ def parse_endpoint(endpoint,job=None):
         port = int(endpoint["endpointDescription"]["spec"]["ports"][0]["nodePort"])
         epItem["port"] = port
         if "nodeName" in endpoint:
-            if "endpoint_use_short_domian" in config:
-                epItem["nodeName"] = config["endpoint_use_short_domian"]
-            elif "master_private_ip" in config:
-                epItem["nodeName"], epItem["domain"] = config["master_private_ip"].split(".", 1)
-            else:
-                epItem["nodeName"] = config["webportal_node"].split("." + epItem["domain"])[0]
+            epItem["nodeName"],epItem["domain"] = getNodename()
         if epItem["name"] == "ssh":
             try:
                 if job:

@@ -1471,10 +1471,9 @@ class DataHandler(object):
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
-                endpoints = record["endpoints"]
-                if endpoints:
-                    endpoints = json.loads(record["endpoints"]).values()
-                    record["inference-url"] = parse_endpoints(endpoints)
+                if record["jobStatus"]=="running":
+                    nodeName,domain = EndpointUtils.getNodename()
+                    record["inference-url"] = "http://%s.%s/endpoints/v3/v1/models/%s:predict" % (nodeName,domain, record["jobName"])
 
                 ret.append(record)
         except Exception as e:
@@ -1685,15 +1684,15 @@ class DataHandler(object):
             for item in data:
                 record = dict(zip(columns, item))
 
-                endpoints = record["endpoints"]
-                if endpoints:
-                    endpoints = json.loads(record["endpoints"]).values()
-                    record["inference-url"] = parse_endpoints(endpoints)
-
                 if record["jobStatusDetail"] is not None:
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
+                if record["jobStatus"]=="running":
+                    nodeName,domain = EndpointUtils.getNodename()
+                    record["inference-url"] = "http://%s.%s/endpoints/v3/v1/models/%s:predict" % (nodeName,domain, record["jobName"])
+
                 ret.append(record)
             conn.commit()
         except Exception as e:

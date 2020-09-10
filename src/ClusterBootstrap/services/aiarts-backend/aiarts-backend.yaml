@@ -42,6 +42,10 @@ spec:
           name: cluster-conf
         - mountPath: /root/logs
           name: applog
+        - mountPath: /root/.kube/config
+          name: kubeconf
+        - mountPath: /home/dlwsadmin/.ssh/id_rsa
+          name: sshkey
       volumes:
       - name: appconfig
         configMap:
@@ -59,6 +63,12 @@ spec:
       - name: applog
         hostPath:
           path: /var/log/aiarts-backend
+      - name: kubeconf
+        hostPath:
+          path: /etc/kubernetes/admin.conf
+      - name: sshkey
+        hostPath:
+          path: /root/.ssh/id_rsa
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

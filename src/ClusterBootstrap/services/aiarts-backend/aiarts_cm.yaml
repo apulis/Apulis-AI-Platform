@@ -46,6 +46,11 @@ data:
 
     InteractiveModeJob: false
     PrivateRegistry: {{cnf["private_docker_registry"]}}
+    imagesave:
+      k8sconf: /root/.kube/config
+      sshkey: /root/.ssh/id_rsa
+      sshuser: dlwsadmin
+      sshport: 22
 
 
 kind: ConfigMap

@@ -44,7 +44,7 @@ spec:
           name: applog
         - mountPath: /root/.kube/config
           name: kubeconf
-        - mountPath: /root/.ssh/id_rsa
+        - mountPath: /home/dlwsadmin/.ssh/id_rsa
           name: sshkey
       volumes:
       - name: appconfig

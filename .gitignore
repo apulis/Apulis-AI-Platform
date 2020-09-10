@@ -69,7 +69,7 @@ src/RepairManager/test/mock-data/*
 /.vs/ProjectSettings.json
 /.vs/VSWorkspaceState.json
 /.vs/DLWorkspace/v15/.suo
-.vscode/*
+.vscode
 
 cluster-autoscaler
 src/ClusterBootstrap/services/monitor/grafana-config.yaml

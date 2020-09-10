@@ -44,7 +44,7 @@ spec:
           name: applog
         - mountPath: /root/.kube/config
           name: kubeconf
-        - mountPath: /home/dlwsadmin/.ssh/id_rsa
+        - mountPath: /root/.ssh
           name: sshkey
       volumes:
       - name: appconfig
@@ -68,7 +68,7 @@ spec:
           path: /etc/kubernetes/admin.conf
       - name: sshkey
         hostPath:
-          path: /home/dlwsadmin/.ssh/id_rsa
+          path: /home/dlwsadmin/.ssh
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

@@ -43,7 +43,7 @@ spec:
       {% endif %}
       containers:
       - name: prometheus
-        image: {{cnf["dockers"]["container"]["prometheus"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["prometheus"]["fullname"]}}-arm64
         resources:
           limits:
             memory: "10Gi"

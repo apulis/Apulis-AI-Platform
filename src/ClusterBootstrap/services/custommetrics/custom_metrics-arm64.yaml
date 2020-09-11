@@ -103,10 +103,10 @@ spec:
       serviceAccountName: custom-metrics-apiserver
       nodeSelector:
         prometheus: active
-        archType: amd64
+        archType: arm64
       containers:
       - name: custom-metrics-server
-        image: {{cnf["dockers"]["container"]["k8s-prometheus-adapter"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["k8s-prometheus-adapter"]["fullname"]}}-arm64
         args:
         - --prometheus-url=http://metrics-prometheus.default.svc:9090
         - --metrics-relist-interval=30s

@@ -53,7 +53,7 @@ fi
 
 # Setup container
 echo "==========================begin to create user and setup env =============" &>> ${LOG_DIR}/bootstrap.log
-if [ id "${DLWS_USER_NAME}" &>/dev/null ];
+if id "${DLWS_USER_NAME}" &>/dev/null;
 then
     echo "User ${DLWS_USER_NAME} found, skip init_user.sh ..."
 else

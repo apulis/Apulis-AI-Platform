@@ -43,3 +43,5 @@ userGroup:
   domain: "http://{{cnf["webportal_node"]}}"
   backEndPath: /custom-user-dashboard-backend
   frontEndPath: /custom-user-dashboard
+
+extranet_protocol: {{cnf["extranet_protocol"]}}

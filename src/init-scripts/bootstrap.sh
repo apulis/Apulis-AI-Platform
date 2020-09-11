@@ -53,7 +53,12 @@ fi
 
 # Setup container
 echo "==========================begin to create user and setup env =============" &>> ${LOG_DIR}/bootstrap.log
-bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
+if [ id "${DLWS_USER_NAME}" &>/dev/null ];
+then
+    echo "User ${DLWS_USER_NAME} found, skip init_user.sh ..."
+else
+    bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
+fi
 echo "==========================create user done!===============================" &>> ${LOG_DIR}/bootstrap.log
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];

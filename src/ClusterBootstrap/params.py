@@ -687,17 +687,13 @@ default_config_parameters = {
                "1.15.0-gpu",
                "2.2.0",
                "2.2.0-arm64",
-               "2.2-gpu"
+               "2.2.0-gpu"
             ]
       },
         "pytorch": {
             "allowedImageVersions": [
                "1.5.1",
                "1.5.1-gpu",
-            ]
-        },
-        "custom":{
-            "allowedImageVersions":[
             ]
         }
     },

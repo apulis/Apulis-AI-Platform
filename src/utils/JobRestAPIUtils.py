@@ -602,13 +602,13 @@ def PostModelConversionJob(jobParamsJsonStr):
 
 def get_type_and_num(resources,deviceString):
     ret = {}
-    for deviceType, details in resources:
+    for deviceType, details in resources.items():
         if details["deviceStr"] == deviceString:
             ret[deviceType]={"capacity":details["capacity"]}
     return ret
 
 def GetAllSupportInference():
-    ret = collections.defaultdict(lambda :collections.defaultdict(lambda :{}))
+    ret = collections.defaultdict(lambda :collections.defaultdict(lambda :collections.defaultdict(lambda :{})))
     gpuStrList = {"npu":"npu.huawei.com/NPU","gpu":"nvidia.com/gpu"}
     try:
         dataHandler = DataHandler()
@@ -617,34 +617,35 @@ def GetAllSupportInference():
             for framework, items in config["inference"].items():
                 versionlist = items['allowedImageVersions']
                 tmp=collections.defaultdict(lambda :[])
-                for one in versionlist:
-                    if "-" in one:
-                        version,suffix = one.split("-")
-                        if suffix=="arm64":
-                            suffix = "cpu"
-                            details = get_type_and_num(resources,gpuStrList["npu"])
+                if versionlist:
+                    for one in versionlist:
+                        if "-" in one:
+                            version,suffix = one.split("-")
+                            if suffix=="arm64":
+                                suffix = "cpu"
+                                details = get_type_and_num(resources,gpuStrList["npu"])
+                            else:
+                                details = get_type_and_num(resources, gpuStrList[suffix])
+
                         else:
-                            details = get_type_and_num(resources, gpuStrList[suffix])
+                            version,suffix = one,"amd64"
+                            suffix = "cpu"
+                            details = get_type_and_num(resources, gpuStrList["gpu"])
 
-                    else:
-                        version,suffix = one,"amd64"
-                        suffix = "cpu"
-                        details = get_type_and_num(resources, gpuStrList["gpu"])
-
-                    tmp[version].append({"image":"","device":suffix,"details":details})
+                        tmp[version].append({"image":"","device":suffix,"details":details})
 
                 for current_version,item_list in tmp.items():
                     for one in item_list:
-                        ret[framework + "-" + current_version][one["device"]].update(one["details"])
+                        ret[framework][current_version][one["device"]].update(one["details"])
 
-                if "custom" in config["inference"]:
-                    ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["npu"]))
-                    ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["gpu"]))
-                    ret["custom"]["gpu"].update(get_type_and_num(resources,gpuStrList["gpu"]))
-                    ret["custom"]["npu"].update(get_type_and_num(resources,gpuStrList["npu"]))
+                # if "custom" in config["inference"]:
+                #     ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["npu"]))
+                #     ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["gpu"]))
+                #     ret["custom"]["gpu"].update(get_type_and_num(resources,gpuStrList["gpu"]))
+                #     ret["custom"]["npu"].update(get_type_and_num(resources,gpuStrList["npu"]))
 
     except Exception as e:
-        logger.error('Exception: %s', str(e))
+        logger.exception('Exception: %s', str(e))
     return ret
 
 def GetJobList(userName, vcName, jobOwner, num=None):

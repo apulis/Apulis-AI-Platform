@@ -600,18 +600,49 @@ def PostModelConversionJob(jobParamsJsonStr):
     dataHandler.Close()
     return ret
 
+def get_type_and_num(resources,deviceString):
+    ret = {}
+    for deviceType, details in resources:
+        if details["deviceStr"] == deviceString:
+            ret[deviceType]={"capacity":details["capacity"]}
+    return ret
+
 def GetAllSupportInference():
-    ret = []
+    ret = collections.defaultdict(lambda :collections.defaultdict(lambda :{}))
+    gpuStrList = {"npu":"npu.huawei.com/NPU","gpu":"nvidia.com/gpu"}
     try:
+        dataHandler = DataHandler()
+        resources = dataHandler.GetAllDevice()
         if "inference" in config:
             for framework, items in config["inference"].items():
-                for one in items:
-                    images = []
-                    devices = []
-                    for one_support in one["support"]:
-                        images.append(one_support["image"])
-                        devices.append(one_support["device"])
-                    ret.append({"framework":framework+"-"+str(one["version"]),"image":images,"device":devices})
+                versionlist = items['allowedImageVersions']
+                tmp=collections.defaultdict(lambda :[])
+                for one in versionlist:
+                    if "-" in one:
+                        version,suffix = one.split("-")
+                        if suffix=="arm64":
+                            suffix = "cpu"
+                            details = get_type_and_num(resources,gpuStrList["npu"])
+                        else:
+                            details = get_type_and_num(resources, gpuStrList[suffix])
+
+                    else:
+                        version,suffix = one,"amd64"
+                        suffix = "cpu"
+                        details = get_type_and_num(resources, gpuStrList["gpu"])
+
+                    tmp[version].append({"image":"","device":suffix,"details":details})
+
+                for current_version,item_list in tmp.items():
+                    for one in item_list:
+                        ret[framework + "-" + current_version][one["device"]].update(one["details"])
+
+                if "custom" in config["inference"]:
+                    ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["npu"]))
+                    ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["gpu"]))
+                    ret["custom"]["gpu"].update(get_type_and_num(resources,gpuStrList["gpu"]))
+                    ret["custom"]["npu"].update(get_type_and_num(resources,gpuStrList["npu"]))
+
     except Exception as e:
         logger.error('Exception: %s', str(e))
     return ret

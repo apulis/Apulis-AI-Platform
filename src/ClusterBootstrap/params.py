@@ -680,22 +680,30 @@ default_config_parameters = {
 
     # inferenceJob config
     "inference":{
-      "tensorflow":[
-            {"version":"1.15.0",
-                     "support":
-                         [
-                             {"image":"emacski/tensorflow-serving:1.15.0","device":"CPU"},
-                             {"image":"tensorflow/serving:1.15.0-gpu","device":"GPU"}
-                          ]
-            },
-            {"version":"2.2.0",
-                     "support":
-                         [
-                             {"image":"emacski/tensorflow-serving:2.2.0","device":"CPU"},
-                             {"image":"tensorflow/serving:2.2.0-gpu","device":"GPU"}
-                          ]
-            }
-      ]
+      "tensorflow":{
+            "defaultImageVersion": "2.2.0",
+            "defaultGpuImageVersion": "2.2.0-gpu",
+            "allowedImageVersions": [
+               "1.15.0",
+               "1.15.0-arm64",
+               "1.15.0-gpu",
+               "2.2.0",
+               "2.2.0-arm64",
+               "2.2-gpu"
+            ]
+      },
+        "pytorch": {
+            "defaultImageVersion": "1.5.1",
+            "allowedImageVersions": [
+               "1.5.1",
+               "1.5.1-gpu",
+            ]
+        },
+        "custom":{
+            "allowedImageVersions":[
+
+            ]
+        }
     },
 
     # System dockers.

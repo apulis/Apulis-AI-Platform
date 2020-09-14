@@ -902,10 +902,11 @@ data:
             ]
         },
         "pytorch": {
-            "image": "{{cnf["private_docker_registry"]}}gcr.io/kfserving/pytorchserver",
-            "defaultImageVersion": "0.2.2",
+            "image": "{{cnf["private_docker_registry"]}}apulistech/kfserving-pytorchserver",
+            "defaultImageVersion": "1.5.1",
             "allowedImageVersions": [
-               "0.2.2"
+               "1.5.1",
+               "1.5.1-gpu",
             ]
         },
         "tensorrt": {

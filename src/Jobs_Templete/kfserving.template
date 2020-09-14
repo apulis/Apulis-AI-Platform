@@ -39,3 +39,9 @@ spec:
       {{ job["framework"] }}:
         storageUri: "file://{{ job["model_base_path"] }}"
         runtimeVersion: {{ job["version"] }}
+        {% if job["framework"] == "pytorch" %}modelClassName: {{ job["model_class_name"] }}{% endif %}
+        resources:
+          limits:
+            {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
+          requests:
+            cpu: 100m

@@ -870,13 +870,15 @@ data:
   predictors: |-
     {
         "tensorflow": {
-            "image": "{{cnf["private_docker_registry"]}}emacski/tensorflow-serving",
+            "image": "{{cnf["private_docker_registry"]}}apulistech/tensorflow-serving",
             "defaultImageVersion": "2.2.0",
             "defaultGpuImageVersion": "2.2.0-gpu",
             "allowedImageVersions": [
                "1.15.0",
+               "1.15.0-arm64",
                "1.15.0-gpu",
                "2.2.0",
+               "2.2.0-arm64",
                "2.2-gpu"
             ]
         },
@@ -902,10 +904,11 @@ data:
             ]
         },
         "pytorch": {
-            "image": "{{cnf["private_docker_registry"]}}gcr.io/kfserving/pytorchserver",
-            "defaultImageVersion": "0.2.2",
+            "image": "{{cnf["private_docker_registry"]}}apulistech/kfserving-pytorchserver",
+            "defaultImageVersion": "1.5.1",
             "allowedImageVersions": [
-               "0.2.2"
+               "1.5.1",
+               "1.5.1-gpu",
             ]
         },
         "tensorrt": {

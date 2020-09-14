@@ -93,13 +93,11 @@ administrators:
 {% endfor %}
 
 inference:
-  {% for framework,items in cnf["inference"].items() %}{{framework}}:{% for one in items %}
-    - version: {{one["version"]}}
-      support: {% for one_support in one["support"] %}
-      - image: {{cnf["private_docker_registry"]}}{{one_support["image"]}}
-        device: {{one_support["device"]}}
+  {% for framework,items in cnf["inference"].items() %}{{framework}}:
+    allowedImageVersions:
+      {% for one in items["allowedImageVersions"] %}
+      - {{one}}
       {% endfor %}
-    {% endfor %}
   {% endfor %}
 
 usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend

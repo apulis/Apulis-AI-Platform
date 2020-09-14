@@ -681,8 +681,6 @@ default_config_parameters = {
     # inferenceJob config
     "inference":{
       "tensorflow":{
-            "defaultImageVersion": "2.2.0",
-            "defaultGpuImageVersion": "2.2.0-gpu",
             "allowedImageVersions": [
                "1.15.0",
                "1.15.0-arm64",
@@ -693,7 +691,6 @@ default_config_parameters = {
             ]
       },
         "pytorch": {
-            "defaultImageVersion": "1.5.1",
             "allowedImageVersions": [
                "1.5.1",
                "1.5.1-gpu",
@@ -701,7 +698,6 @@ default_config_parameters = {
         },
         "custom":{
             "allowedImageVersions":[
-
             ]
         }
     },

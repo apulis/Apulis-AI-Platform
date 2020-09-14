@@ -38,10 +38,15 @@ spec:
       maxReplicas: {{ job["maxReplicas"] }}
       {{ job["framework"] }}:
         storageUri: "file://{{ job["model_base_path"] }}"
-        runtimeVersion: {{ job["version"] }}
+        {% if "version" in job %}runtimeVersion: {{ job["version"] }}{% endif %}
         {% if job["framework"] == "pytorch" %}modelClassName: {{ job["model_class_name"] }}{% endif %}
         resources:
           limits:
             {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
           requests:
             cpu: 100m
+        {% if job["framework"] == "custom" %}
+        container:
+          name: kfserving-container
+          image: {{ job["image"] }}
+        {% endif %}

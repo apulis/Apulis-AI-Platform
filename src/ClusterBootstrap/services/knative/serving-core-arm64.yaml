@@ -111,7 +111,7 @@ metadata:
 spec:
   # This is the Go import path for the binary that is containerized
   # and substituted here.
-  image: apulistech/knative-serving-queue:latest-arm64
+  image: {{cnf["private_docker_registry"]}}apulistech/knative-serving-queue:latest-arm64
 
 ---
 # Copyright 2018 The Knative Authors
@@ -423,7 +423,7 @@ metadata:
 data:
   # This is the Go import path for the binary that is containerized
   # and substituted here.
-  queueSidecarImage: apulistech/knative-serving-queue:latest-arm64
+  queueSidecarImage: {{cnf["private_docker_registry"]}}apulistech/knative-serving-queue:latest-arm64
   _example: |
     ################################
     #                              #

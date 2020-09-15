@@ -209,7 +209,7 @@ class PodTemplate():
                 if "version" in params:
                     pod["version"] = params["version"]
                 if "-" in params["framework"]:
-                    pod["framework"],pod["version"] = params["framework"].rsplit("-")[0]
+                    pod["framework"],pod["version"] = params["framework"].rsplit("-")
 
                 pod["minReplicas"] = params["minReplicas"] if "minReplicas" in params else 1
                 pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])

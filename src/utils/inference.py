@@ -7,6 +7,8 @@ import json
 from io import BytesIO
 import visualization_utils
 import re
+import dns.resolver
+import logging
 
 def object_classifier_infer(inference_url,image,signature_name):
     res = requests.post(inference_url, json={
@@ -52,15 +54,28 @@ def read_class_names2(class_file_name):
             names[one["id"]] = {"name":one["display_name"],"id":one['id']}
     return names
 
+def query_service_domain(domain):
+    my_resolver = dns.resolver.Resolver()
+    my_resolver.nameservers = ['10.96.0.10']
+    answer = my_resolver.query(domain)
+    for i in answer:
+        return i.to_text()
+
+
+
 def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
     image = Image.open(BytesIO(imageFile)).convert("RGB")
     (im_width, im_height) = image.size
     image_data = np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
     image_data_yolo_list = image_data[np.newaxis, :].tolist()
-    headers = {"Content-type": "application/json"}
-    inference_url = "http://127.0.0.1/endpoints/"+inference_url.split("/endpoints/")[1]
+    headers = {"Content-type": "application/json","Host":"{}-predictor-default.default.example.com".format(inference_url.split("/endpoints/v3/v1/models/")[1].split(":")[0])}
+    service_ip = query_service_domain('istio-ingressgateway.istio-system.svc.cluster.local')
+    inference_url = "http://{}/v1/models/".format(service_ip)+inference_url.split("/endpoints/v3/v1/models/")[1]
     r = requests.post(inference_url,headers=headers,
-                      data=json.dumps({"signature_name": "serving_default","instances":image_data_yolo_list}))
+                      data=json.dumps({"signature_name": "serving_default","instances":image_data_yolo_list}),
+                      )
+    if r.status_code!=200:
+        logging.error(r.content)
     r = r.json()
     output_dict = r['predictions'][0]
     output_dict['num_detections'] = int(output_dict['num_detections'])

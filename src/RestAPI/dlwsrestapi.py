@@ -2052,9 +2052,13 @@ class GetPlatformVersionInfo(Resource):
         ret = {}
         ret['version'] = current_version
         ret['history'] = version_history
-        resp == jsonify(ret)
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        resp.headers["dataType"] = "json"
+        try:
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+        except Exception as e:
+            print (e)
+            return "error"
         return resp
 
 api.add_resource(GetPlatformVersionInfo, '/VersionInfo')

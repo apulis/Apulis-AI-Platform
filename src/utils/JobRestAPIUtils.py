@@ -1647,8 +1647,8 @@ def GetConvertDetail(projectId,datasetId):
 
 def GetVersionInfo():
     
-    if ( os.path.isfile('/versionInfo')):
-        with open('/versionInfo') as f:
+    if ( os.path.isfile('/version-info')):
+        with open('/version-info') as f:
             all_version = yaml.load(f.read())
             version_name_array = list(all_version.keys())
             current = {}

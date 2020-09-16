@@ -1,3 +1,6 @@
-1.0.0:
-    description: "this is a ner version"
-    date: 1598780507
+- version: 1.0.1
+  description: "this is a ner version"
+  updateAt: 1598780507
+- version: 1.0.0
+  description: "this is a ner version"
+  updateAt: 1598780507

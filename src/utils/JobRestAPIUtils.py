@@ -1650,17 +1650,16 @@ def GetVersionInfo():
     if ( os.path.isfile('/version-info')):
         with open('/version-info') as f:
             all_version = yaml.load(f.read())
-            version_name_array = list(all_version.keys())
             current = {}
-            current["name"] = version_name_array[0]
-            current['description'] = all_version[current['name']]['description']
-            current['updateAt'] = all_version[current['name']]['date']
+            current["name"] = all_version[0]['version']
+            current['description'] = all_version[0]['description']
+            current['updateAt'] = all_version[0]['updateAt']
             history = []
-            for version_name in version_name_array[1:]:
+            for versionInfo in all_version[1:]:
                 version_info = {}
-                version_info['name'] = version_name
-                version_info['description'] = all_version[version_name]['description']
-                version_info['updateAt'] = all_version[version_name]['date']
+                version_info["name"] = versionInfo['version']
+                version_info['description'] = versionInfo['description']
+                version_info['updateAt'] = versionInfo['updateAt']
                 history.append(version_info)
         return current, history
     else:

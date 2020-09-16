@@ -608,7 +608,7 @@ def get_type_and_num(resources,deviceString):
     return ret
 
 def GetAllSupportInference():
-    ret = collections.defaultdict(lambda :collections.defaultdict(lambda :collections.defaultdict(lambda :{})))
+    ret = collections.defaultdict(lambda :collections.defaultdict(lambda :{}))
     gpuStrList = {"npu":"npu.huawei.com/NPU","gpu":"nvidia.com/gpu"}
     try:
         dataHandler = DataHandler()
@@ -636,7 +636,7 @@ def GetAllSupportInference():
 
                 for current_version,item_list in tmp.items():
                     for one in item_list:
-                        ret[framework][current_version][one["device"]].update(one["details"])
+                        ret[framework][current_version].update(one["details"])
 
                 # if "custom" in config["inference"]:
                 #     ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["npu"]))

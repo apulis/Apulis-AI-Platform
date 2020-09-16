@@ -712,6 +712,7 @@ class PythonLauncher(Launcher):
 
             pods, error = pod_template.generate_pods(job_object)
             if error:
+                logger.error("submit job error %s" % error)
                 dataHandler.SetJobError(job_object.job_id, "ERROR: %s" % error)
                 dataHandler.Close()
                 return False

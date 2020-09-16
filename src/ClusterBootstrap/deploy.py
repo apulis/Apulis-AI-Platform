@@ -921,7 +921,7 @@ def gen_device_type_config(config):
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")
     cmd = """jwt_header=$(echo -n '{"alg":"HS256","typ":"JWT"}' | base64 | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
-    cmd += """payload=$(echo -n '{"uid":30000,"exp":""" + str(time.time()+3600*24**30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
+    cmd += """payload=$(echo -n '{"uid":30000,"exp":""" + str(time.time()+3600*24*30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
     cmd += """secret=\""""+config["jwt"]["secret_key"] + "\";"
     cmd += """hexsecret=$(echo -n "$secret" | xxd -p | paste -sd "");"""
     cmd += """hmac_signature=$(echo -n "${jwt_header}.${payload}" |  openssl dgst -sha256 -mac HMAC -macopt hexkey:$hexsecret -binary | base64  | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
@@ -930,6 +930,7 @@ def gen_usermanagerapitoken(config):
     config["usermanagerapitoken"] = utils.exec_cmd_local(cmd)
     print("==========generate jwt token for restfulapi done!!!==============")
     print("token is: ",config["usermanagerapitoken"] )
+
 def get_ssh_config():
     if "ssh_cert" not in config and os.path.isfile("./deploy/sshkey/id_rsa"):
         config["ssh_cert"] = "./deploy/sshkey/id_rsa"
@@ -1027,7 +1028,7 @@ def get_kubectl_binary(force = False):
     get_other_binary()
 
 def get_hyperkube_docker(force = False) :
-    
+
     ## not need anymore
     return
 
@@ -2973,7 +2974,7 @@ def run_script(node, args, sudo = False, supressWarning = False, background=Fals
             fullcmd += " " + args[i]
 
     srcdir = os.path.dirname(args[0])
-    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning, 
+    utils.SSH_exec_cmd_with_directory(config["ssh_cert"], config["admin_username"], node, srcdir, fullcmd, supressWarning,
             background=background)
 
 
@@ -4068,7 +4069,7 @@ def scale_up(config):
         print("waiting for 2 seconds...")
         time.sleep(2)
 
-        while True: 
+        while True:
             cmd = "ping -c 1 node &> /dev/null; echo $?"
             output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
             output = output.strip()
@@ -4090,7 +4091,7 @@ def scale_up(config):
         #        sleep 10
         #        break
         #    else
-        #        echo "wating for $node to start!" 
+        #        echo "wating for $node to start!"
         #    fi
 
         #    sleep 1;
@@ -4112,7 +4113,7 @@ def scale_up(config):
 
         ## join worker
         update_worker_nodes_by_kubeadm_2([node])
-        
+
         ## label service
         kubernetes_label_nodes_2(node_name, "active", [], False)
 
@@ -4219,6 +4220,16 @@ def run_command( args, command, nargs, parser ):
         merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
         f.close()
 
+    docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
+    if not os.path.exists(docker_image_versions_file):
+        parser.print_help()
+        print "ERROR: docker_image_versions.yaml does not exist!"
+        exit()
+
+    with open(docker_image_versions_file) as f:
+        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+        f.close()
+
     if os.path.exists("./deploy/clusterID.yml"):
         with open("./deploy/clusterID.yml") as f:
             tmp = yaml.load(f, Loader=yaml.FullLoader)
@@ -4258,7 +4269,7 @@ def run_command( args, command, nargs, parser ):
         update_docker_image_config()
 
     # additional glusterfs launch parameter.
-    config["launch-glusterfs-opt"] = args.glusterfs;
+    config["launch-glusterfs-opt"] = args.glusterfs
 
     get_ssh_config()
     configuration( config, verbose )
@@ -5271,6 +5282,16 @@ def get_config():
         pass
 
     with open(config_file) as f:
+        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+        f.close()
+
+    docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
+    if not os.path.exists(docker_image_versions_file):
+        parser.print_help()
+        print "ERROR: docker_image_versions.yaml does not exist!"
+        exit()
+
+    with open(docker_image_versions_file) as f:
         merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
         f.close()
 

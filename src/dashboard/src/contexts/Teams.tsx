@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, SetStateAction, createContext, FC } from 'react';
+import React, { useEffect, useState, SetStateAction, createContext, FC } from 'react';
 import {
   Box, Button,
   Dialog, DialogActions,
@@ -8,9 +8,8 @@ import {
 } from "@material-ui/core";
 import _ from "lodash";
 import ConfigContext from './Config';
-import ClustersContext from '../contexts/Clusters';
 import axios from 'axios';
-import Loading from '../components/Loading';
+import Loading from '../components/Loading';;
 
 interface Context {
   teams: any;
@@ -21,6 +20,7 @@ interface Context {
   getTeams(): void;
   permissionList: string[];
   administrators: string[];
+  userGroupPath?: string;
 }
 
 const Context = createContext<Context>({
@@ -34,8 +34,13 @@ const Context = createContext<Context>({
   administrators: []
 });
 
+interface ProviderProps {
+  userGroupPath?: string;
+}
+
+
 export default Context;
-export const Provider: React.FC<{permissionList?: string[], administrators?: string[]}> = ({ children, permissionList = [], administrators = [] }) => {
+export const Provider: React.FC<{permissionList?: string[], administrators?: string[]} & ProviderProps> = ({ children, permissionList = [], userGroupPath = '', administrators = [] }) => {
   const fetchTeamsUrl = '/api/teams';
   const [clusterId, setClusterId] = React.useState<string>('');
   const saveClusterId = (clusterId: React.SetStateAction<string>) => {
@@ -62,6 +67,12 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
         setTeams(res.data);
       }
     })
+  }
+
+  const clearAuthInfo = async () => {
+    delete localStorage.token;
+    await axios.get('/authenticate/logout');
+    window.location.href = userGroupPath + '/user/login?' + encodeURIComponent(window.location.href);
   }
 
   useEffect(() => {
@@ -97,13 +108,15 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
               {"There are no virtual cluster available for the current cluster, please contact the administrator"}
             </DialogContentText>
             <DialogActions>
-              <Button autoFocus color="primary" href={`mailto:${administrators[0]}`}>Send Email</Button>
+              <Button variant="contained" href={`mailto:${administrators[0]}`}>Send Email</Button>
+              <Button variant="contained" onClick={() => clearAuthInfo()}>Sign Out</Button>
             </DialogActions>
           </DialogContent>
         </Dialog>
       </Box>
     )
   };
+
   if (teams === undefined) {
     return (
 

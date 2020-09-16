@@ -26,7 +26,7 @@ spec:
         archType: arm64
       containers:
       - name: repairmanager
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}{{cnf["repairmanager"]}}2:{{cnf["dockertag"]}}-arm64
+        image: {{cnf["dockers"]["container"]["repairmanager2"]["fullname"]}}-arm64
         command: ["/run.sh"]
         imagePullPolicy: Always
         env:

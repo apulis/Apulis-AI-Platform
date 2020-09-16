@@ -7,7 +7,7 @@ import datetime
 import functools
 import timeit
 import collections
-
+import copy
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../storage"))
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
 
@@ -236,27 +236,27 @@ def ApproveJob(redis_conn, job, dataHandlerOri=None):
             return False
         metadata = json.loads(vc["metadata"])
 
-        if deviceType in metadata and "user_quota" in metadata[deviceType]:
-            user_running_jobs = dataHandler.GetJobList(job["userName"], vcName, status="running,queued,scheduling", op=("=", "or"))
-            running_gpus = collections.defaultdict(lambda :0)
-            for running_job in user_running_jobs:
-                running_jobParams = json.loads(base64.b64decode(running_job["jobParams"]))
-                # ignore preemptible GPUs
-                if "preemptionAllowed" in running_jobParams and running_jobParams["preemptionAllowed"] is True:
-                    continue
-                running_job_total_gpus = GetJobTotalGpu(running_jobParams)
-                running_gpus[running_job["userName"]] += running_job_total_gpus
-
-            logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata[deviceType]))
-
-            user_quota_num = metadata[deviceType]["user_quota"]
-            if job_total_gpus > 0 and int(user_quota_num) < (running_gpus[job["userName"]] + job_total_gpus):
-                logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, user_quota_num))
-                detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, user_quota_num)}]
-                dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
-                if dataHandlerOri is None:
-                    dataHandler.Close()
-                return False
+        # if deviceType in metadata and "user_quota" in metadata[deviceType]:
+        #     user_running_jobs = dataHandler.GetJobList(job["userName"], vcName, status="running,queued,scheduling", op=("=", "or"))
+        #     running_gpus = collections.defaultdict(lambda :0)
+        #     for running_job in user_running_jobs:
+        #         running_jobParams = json.loads(base64.b64decode(running_job["jobParams"]))
+        #         # ignore preemptible GPUs
+        #         if "preemptionAllowed" in running_jobParams and running_jobParams["preemptionAllowed"] is True:
+        #             continue
+        #         running_job_total_gpus = GetJobTotalGpu(running_jobParams)
+        #         running_gpus[running_job["userName"]] += running_job_total_gpus
+        #
+        #     logger.info("Job {} require {}, used quota (exclude preemptible GPUs) {}, with user quota of {}.".format(job_id, job_total_gpus, running_gpus, metadata[deviceType]))
+        #
+        #     user_quota_num = metadata[deviceType]["user_quota"]
+        #     if job_total_gpus > 0 and int(user_quota_num) < (running_gpus[job["userName"]] + job_total_gpus):
+        #         logger.info("Job {} excesses the user quota: {} + {} > {}. Will need approve from admin.".format(job_id, running_gpus, job_total_gpus, user_quota_num))
+        #         detail = [{"message": "exceeds the user quota in VC: {} (used) + {} (requested) > {} (user quota). Will need admin approval.".format(running_gpus, job_total_gpus, user_quota_num)}]
+        #         dataHandler.UpdateJobTextField(job["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
+        #         if dataHandlerOri is None:
+        #             dataHandler.Close()
+        #         return False
 
         detail = [{"message": "waiting for available resource."}]
 
@@ -455,6 +455,12 @@ def check_job_status(job_id):
             logger.info("Job: {}, Succeeded!".format(job_id))
             return "Succeeded", []
 
+    # for distribute job(only npu),if all worker is finished,master(for npu,sleep infinity) is also finished.
+    worker_status = [job_role.status()=="Succeeded" for job_role in job_roles if job_role.role_name=="worker"]
+    if len(worker_status)>0 and all(worker_status):
+        logger.info("job: {} worker all finished".format(job_id))
+        return "Succeeded", []
+
     statuses = [job_role.status() for job_role in job_roles]
     logger.info("Job: {}, status: {}".format(job_id, statuses))
 
@@ -543,6 +549,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     global_unschedulable = ResourceInfo(cluster_gpu_unschedulable)
 
     vc_resources = {}
+    vc_user_quota_resources = {}
     detail_resources = collections.defaultdict(lambda :[])
     details = data_handler.GetAllDevice()
     globalResInfo = ResourceInfo.Difference(global_total, global_unschedulable)
@@ -552,10 +559,14 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     for vc in vc_list:
         vc_name = vc["vcName"]
+        vc_metadata = json.loads(vc["metadata"])
         vc_schedulable = {}
+        vc_user_quota_allocable = {}
         for gpu_type, total in vc_total[vc_name].items():
             vc_schedulable[gpu_type] = total - vc_unschedulable[vc_name][gpu_type]
+            vc_user_quota_allocable[gpu_type] = vc_metadata[gpu_type]["user_quota"] if gpu_type in vc_metadata and "user_quota" in vc_metadata[gpu_type] else 9999
         vc_resources[vc_name] = ResourceInfo(vc_schedulable)
+        vc_user_quota_resources[vc_name] = ResourceInfo(vc_user_quota_allocable)
 
     for deviceType,detail in details.items():
         for one in detail["detail"]:
@@ -608,6 +619,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     logger.info("TakeJobActions : local resources : %s" % (vc_resources))
     logger.info("TakeJobActions : global resources : %s" % (globalResInfo.CategoryToCountMap))
+    logger.info("TakeJobActions : user resources : %s" % (vc_user_quota_resources))
+
+    vc_pre_user_quota_resources = collections.defaultdict(lambda : copy.deepcopy(vc_user_quota_resources))
 
     for sji in jobsInfo:
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))
@@ -620,18 +634,21 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
             continue
         vc_resource = vc_resources[vc_name]
-        logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]])
-        if (not sji["preemptionAllowed"]) and (vc_resource.CanSatisfy(sji["globalResInfo"])):
-            if sji["deviceType"] in detail_resources:
-                if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
-                    continue
-                else:
-                    if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+        vc_user_quota_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
+        logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource,vc_name])
+        if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
+            if sji["job"]["jobStatus"] == "queued":
+                if sji["deviceType"] in detail_resources:
+                    if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
                         continue
+                    else:
+                        if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                            continue
             vc_resource.Subtract(sji["globalResInfo"])
+            vc_user_quota_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
             sji["allowed"] = True
-            logger.info("TakeJobActions : local assignment : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
+            logger.info("TakeJobActions : local assignment : %s : %s %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap,vc_name))
 
     for sji in jobsInfo:
         if sji["preemptionAllowed"] and (sji["allowed"] is False):
@@ -639,12 +656,13 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             vc_resource = vc_resources[vc_name]
             if vc_resource.CanSatisfy(sji["globalResInfo"]):
                 logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]])
-                if sji["deviceType"] in detail_resources:
-                    if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
-                        continue
-                    else:
-                        if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                if sji["job"]["jobStatus"] == "queued":
+                    if sji["deviceType"] in detail_resources:
+                        if sji["jobtrainingtype"] == "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["resourcegpu"]:
                             continue
+                        else:
+                            if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < (sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]:
+                                continue
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
                 vc_resource.Subtract(sji["globalResInfo"])
@@ -664,9 +682,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
                 vc_name = sji["job"]["vcName"]
-                available_resource = vc_resources[vc_name]
+                available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
                 requested_resource = sji["globalResInfo"]
-                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource, available_resource)}]
+                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,available_resource.GetMinValue(vc_resources[vc_name]))}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)

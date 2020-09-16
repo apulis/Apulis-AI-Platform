@@ -115,6 +115,9 @@ router.get('/:clusterId/countJobByStatus/:targetStatus/:vcName',
 router.get('/:clusterId/getAllDevice',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/getAllDevice'))
+router.get('/vc/user',
+  require('./middlewares/user')(),
+  require('./controllers/cluster/vc/getUserVc'))
 
 router.get('/clusters/:clusterId/teams/:teamId/inferenceJobs',
   require('./middlewares/user')(),

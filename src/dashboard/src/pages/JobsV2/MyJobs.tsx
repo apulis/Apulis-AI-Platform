@@ -20,6 +20,8 @@ import { renderId, renderGPU, sortGPU, renderStatus, renderDate, sortDate } from
 import PriorityField from './PriorityField';
 import { pollInterval } from '../../const';
 import message from '../../utils/message';
+import { Help } from "@material-ui/icons"; 
+import { Tooltip } from "@material-ui/core";
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(
@@ -30,9 +32,10 @@ const _renderId = (job: any) => renderId(job, 0);
 
 interface JobsTableProps {
   jobs: any[];
+  title: any;
 }
 
-const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs }) => {
+const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, title }) => {
   const { cluster } = useContext(ClusterContext);
 
   const [pageSize, setPageSize] = useState(10);
@@ -40,7 +43,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs }) => {
     setPageSize(pageSize);
   }, [setPageSize]);
   const renderPrioirty = useCallback((job: any) => (
-    <PriorityField job={job}/>
+    <PriorityField job={job} isMy={true} />
   ), [])
 
   const columns = useMemo<Array<Column<any>>>(() => [
@@ -69,7 +72,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs }) => {
   const actions = [supportEmail, pause, resume, kill];
   return (
     <MaterialTable
-      title="My Jobs"
+      title={title}
       columns={columns}
       data={jobs}
       options={options}
@@ -111,9 +114,10 @@ const MyJobs: FunctionComponent = () => {
   }
 
   if (jobs !== undefined) return (
-    <JobsTable
-      jobs={jobs}
-    />
+    <JobsTable jobs={jobs}
+      title={<Tooltip title="Sorting rules: The first click is in asc order, the second click is in desc order, and the third click is to restore the original order.">
+        <div className="helpWrap">My Jobs<Help fontSize="small" /></div>
+      </Tooltip>} />
   );
 
   return <Loading/>;

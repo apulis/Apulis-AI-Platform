@@ -17,12 +17,14 @@ then
     available_interface=
     for virtual_interface in `ls /sys/devices/virtual/net/`
     do
-      virtual_interface_array[${#virtual_interface_array[@]}]=$virtual_interface
+	  # can't use ${ #array_name } to acquire arraya length due to jinjia transfer syntax	
+	  num=`echo virtual_interface_array | wc -w`
+      virtual_interface_array[${num}]=$virtual_interface
     done
     for network_interface in  `ip addr | grep -v lo| sed -r -n ' s/^[0-9]+: (.*):.*/\1/p'`
     do
-      if ! ifconfig $network_interface | grep inet\  ;
-      then
+      if [[ ! `ifconfig $network_interface | grep "inet " ` ]] ;
+	  then
         continue
       fi
       if [[ "${virtual_interface_array[@]}" =~ "$network_interface" ]] ; then

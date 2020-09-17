@@ -289,7 +289,10 @@ class Cluster extends Service {
     this.context.assert(response.ok, 502)
     const data = await response.json()
     this.context.log.debug(data, 'Got endpoints')
-
+    const protocol = require('config').get('extranet_protocol')
+    data.forEach(val => {
+      val.protocol = protocol ? 'https' : 'http'
+    })
     return data
   }
 

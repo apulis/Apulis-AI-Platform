@@ -5,7 +5,6 @@ import ClustersContext from "../../../contexts/Clusters";
 import TeamsContext from "../../../contexts/Teams";
 import useFetch from "use-http";
 import _ from "lodash";
-import {sumValues} from "../../../utlities/ObjUtlities";
 
 interface ClusterSelectFieldProps {
   cluster: string | undefined;

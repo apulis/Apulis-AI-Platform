@@ -728,41 +728,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
     return message;
   }
-  const renderCustomizedLabel = (props: any) => {
-    const { x, y, width, height, value } = props;
-    const radius = 10;
-    return (
-      <g>
-        <circle cx={x + width / 2} cy={y - radius} r={radius} fill="#fff" />
-        <text x={x + width / 2} y={y - radius} fill="#000" textAnchor="middle" dominantBaseline="middle">
-          {value}
-        </text>
-      </g>
-    );
-  };
   const styleSnack={backgroundColor: green[400]};
 
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
-        {/* <DLTSDialog open={showGPUFragmentation}
-          message={null}
-          handleClose={() => setShowGPUFragmentation(false)}
-          handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
-          title={`View Cluster ${gpuType} Status Per Node`}
-          titleStyle={{color:grey[400]}}
-        >
-          <BarChart width={500} height={600} data={gpuFragmentation}>
-            <CartesianGrid strokeDasharray="10 10"/>
-            <XAxis dataKey={"metric['device_available']"} label={{value: `Available ${gpuType} count`, position: 'insideBottomLeft', offset: 0}}>
-            </XAxis>
-            <YAxis dataKey={"value[1]"} domain={[0, Math.max.apply(Math, gpuFragmentation.map(i => { return Number(i.value[1]) }))]}
-              label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
-            <Bar dataKey="value[1]" fill="#8884d8" >
-              <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
-            </Bar>
-          </BarChart>
-        </DLTSDialog> */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card>
             <CardHeader title="Submit Training Job"/>

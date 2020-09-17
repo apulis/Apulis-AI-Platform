@@ -400,12 +400,12 @@ class DataHandler(object):
                 "jobPath": "", 
                 "dataPath": "", 
                 "gpuNumPerDevice": 0, 
-                "enableWorkPath": true, 
-                "preemptible": false, 
-                "enableJobPath": true, 
+                "enableWorkPath": True, 
+                "preemptible": False, 
+                "enableJobPath": True, 
                 "command": " while true; do echo \"job running\"; sleep 1; done", 
                 "environmentVariables": [], 
-                "tensorboard": false, 
+                "tensorboard": False, 
                 "plugins": {
                     "blobfuse": [
                         {
@@ -424,12 +424,12 @@ class DataHandler(object):
                         }
                     ]
                 }, 
-                "ipython": true, 
+                "ipython": True, 
                 "gpus": 1, 
                 "type": "RegularJob", 
                 "image": "ubuntu:18.04", 
-                "enableDataPath": true, 
-                "ssh": true
+                "enableDataPath": True, 
+                "ssh": True
             }
             with MysqlConn() as conn:
                 conn.insert_one(sql,(self.templatetablename, json.dumps(default_job_json)))

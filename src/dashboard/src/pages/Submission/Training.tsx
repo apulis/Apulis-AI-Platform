@@ -52,6 +52,7 @@ import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePo
 import './Training.less';
 import { useForm } from "react-hook-form";
 import { Stream } from "stream";
+import { validateInteractivePorts } from "../../utlities/validators";
 
 interface EnvironmentVariable {
   name: string;
@@ -525,22 +526,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }, [postJobData]);
 
-  const validateInteractivePorts = (val: string) => {
-    if (val) {
-      let flag = true;
-      const arr = val.split(',');
-      if (arr.length > 1) {
-        arr.forEach(n => {
-          const _n = Number(n)
-          if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
-        });
-      } else {
-        flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
-      }
-      return flag;
-    }
-    return true;
-  }
+  
 
   const validateEVName = (val: string, index: number, time: number) => {
     if (val && val !== environmentVariables[index].name) {

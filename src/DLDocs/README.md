@@ -14,8 +14,7 @@
 ### 编译镜像
 
 ```shell script
-docker build -t apulistech/集群名字_dldocs .
-docker push apulistech/集群名字_dldocs
+./deploy.py docker push dldocs
 ```
 
 ### 更新服务

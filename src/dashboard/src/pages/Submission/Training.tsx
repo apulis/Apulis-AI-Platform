@@ -636,7 +636,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       .then(res => {
         if (!isEmpty(res)) {
           const { data } = res;
-          _gpuCapacity = JSON.parse(data.metadata)[gpuType].user_quota || 0;
+          _gpuCapacity = JSON.parse(data.metadata)[gpuType]?.user_quota || 0;
           setGpuCapacity(_gpuCapacity);
           axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
             .then(res => {

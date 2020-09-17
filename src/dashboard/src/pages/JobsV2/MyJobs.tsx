@@ -30,22 +30,15 @@ const _renderId = (job: any) => renderId(job, 0);
 
 interface JobsTableProps {
   jobs: any[];
-  onExpectMoreJobs?: (length: number) => void;
 }
 
-const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }) => {
+const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs }) => {
   const { cluster } = useContext(ClusterContext);
 
   const [pageSize, setPageSize] = useState(10);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
     setPageSize(pageSize);
   }, [setPageSize]);
-  // const onChangePage = useCallback((page: number) => {
-  //   const maxPage = Math.ceil(jobs.length / pageSize) - 1;
-  //   if (page >= maxPage) {
-  //     onExpectMoreJobs(pageSize);
-  //   }
-  // }, [jobs, pageSize, onExpectMoreJobs]);
   const renderPrioirty = useCallback((job: any) => (
     <PriorityField job={job} isMy={true} />
   ), [])
@@ -54,7 +47,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
     { title: 'Id', type: 'string', field: 'jobId',
       render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Name', type: 'string', field: 'jobName', sorting: false },
-    { title: 'Status', type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
+    { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus },
     { title: 'Number of Device', type: 'numeric',
       render: renderGPU, customSort: sortGPU },
     { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},
@@ -82,7 +75,6 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
       options={options}
       actions={actions}
       onChangeRowsPerPage={onChangeRowsPerPage}
-      // onChangePage={onChangePage}
     />
   );
 };
@@ -93,9 +85,6 @@ const MyJobs: FunctionComponent = () => {
   const { selectedTeam } = useContext(TeamsContext);
   const [limit, setLimit] = useState(9999);
   const [jobs, setJobs] = useState<any[]>();
-  const onExpectMoreJobs = useCallback((count: number) => {
-    setLimit((limit: number) => limit + count);
-  }, []);
 
   useEffect(() => {
     setJobs(undefined);
@@ -124,7 +113,6 @@ const MyJobs: FunctionComponent = () => {
   if (jobs !== undefined) return (
     <JobsTable
       jobs={jobs}
-      // onExpectMoreJobs={onExpectMoreJobs}
     />
   );
 

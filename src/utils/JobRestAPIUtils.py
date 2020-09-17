@@ -128,6 +128,12 @@ def SubmitJob(jobParamsJsonStr):
     if "resourcegpu" not in jobParams:
         jobParams["resourcegpu"] = 0
 
+    private_docker_registry = ""
+    if "private_docker_registry" in config:
+        private_docker_registry = config["private_docker_registry"]
+
+    jobParams["image"] = private_docker_registry + jobParams["image"]
+
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
             jobParams["resourcegpu"] = 0
@@ -302,6 +308,11 @@ def PostInferenceJob(jobParamsJsonStr):
     jobParams["hostNetwork"] = False
     jobParams["gpuType"] = None if "gpuType" not in jobParams else jobParams["gpuType"]
 
+    private_docker_registry = ""
+    if "private_docker_registry" in config:
+        private_docker_registry = config["private_docker_registry"]
+
+    jobParams["image"] = private_docker_registry + jobParams["image"]
 
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
@@ -454,6 +465,11 @@ def PostModelConversionJob(jobParamsJsonStr):
         return ret
 
     # env
+    private_docker_registry = ""
+    if "private_docker_registry" in config:
+        private_docker_registry = config["private_docker_registry"]
+
+    jobParams["image"] = private_docker_registry + jobParams["image"]
 
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:

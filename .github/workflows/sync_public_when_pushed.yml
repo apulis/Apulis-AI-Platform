@@ -1,0 +1,60 @@
+# This workflow will sync DLWorkspace branch develop updates to public repo
+# Notice: the branch 'develop' is the main branch for public updates
+# And synd when source_repo has been pushed
+# Before sync, merge-repo steps will merge branch `develop` to `to_public`
+# Editor haiyuan
+# Update time: 2020-09-07
+
+name: sync_public_when_pushed
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+  # schedule:
+  #  - cron:  "*/5 * * * *"
+  # workflow_dispatch:
+
+jobs:
+  merge-repo:
+    runs-on: ubuntu-latest
+    steps:
+    - name: update repo
+      run: |
+        cd ..
+        git clone -b to_public https://banrieen:18209188642git@github.com/apulis/DLWorkspace.git
+        cd DLWorkspace
+        git config --global user.email "banrieen@173.com"
+        git config --global user.name "banrieen"
+        git pull
+        git merge origin/develop -X theirs --no-ff
+        ls -la
+        git push origin to_public
+        cd ..
+        rm -rf DLWorkspace
+  sync-repo:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: apulis/DLWorkspace
+        ref: to_public
+        persist-credentials: false
+    - name: repo-sync to github apulis_platform
+      uses: wei/git-sync@v2
+      with:
+        source_repo: "https://banrieen:18209188642git@github.com/apulis/DLWorkspace.git"
+        source_branch: "to_public"
+        destination_repo: "https://banrieen:18209188642git@github.com/apulis/apulis_platform.git"
+        destination_branch: "master"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: repo-sync to gitee apulis_platform
+      uses: wei/git-sync@v2
+      with:
+        source_repo: "https://banrieen:18209188642git@github.com/apulis/DLWorkspace.git"
+        source_branch: "to_public" 
+        destination_repo: "https://banrieen:18209188642git@gitee.com/apulis/apulis_platform.git"
+        destination_branch: "master"
+        github_token: ${{ secrets.GITHUB_TOKEN }}

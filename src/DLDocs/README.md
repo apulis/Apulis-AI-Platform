@@ -10,3 +10,17 @@
 
 ### 2.在VScode中调整图片路径
 - 在经过第一步使用Typora编辑完成后，图片资源的路径依然是错误的，需要把docs路径下的所有图片的路径，统一搜索替换从绝对路径方式(/assets)改成相对路径方式(./assets)。
+
+### 编译镜像
+
+```shell script
+docker build -t apulistech/集群名字_dldocs .
+docker push apulistech/集群名字_dldocs
+```
+
+### 更新服务
+编译完镜像后，执行
+```shell script
+./deploy.py kubernetes stop dldocs
+./deploy.py kubernetes start dldocs
+```

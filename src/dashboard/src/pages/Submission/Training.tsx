@@ -697,7 +697,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         let result1 = data1.data.result, result2 = data2.data.result;
         if (result2.length) {
           let sortededResult = [{metric: {device_available: "0"}, value: result2[0].value}];
-          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
+          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }, value: number[] }) => {
             if (i.metric.device_available === '0') {
               sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
             } else {

@@ -26,7 +26,6 @@ module.exports = async context => {
     const cluster = new Cluster(context, id)
     const userTeams = await User.getUserVc(context, context.cookies.get('token'))
     const teams = await cluster.getTeams()
-    console.log('----------------------------------------------------------------------------------------------',teams)
     let teamsData = [];
     teams.forEach(i => {
       if (userTeams.vcList.findIndex(m => i.vcName === m) > -1) teamsData.push(i);

@@ -389,12 +389,50 @@ class DataHandler(object):
                 )
                 values(
                     0, "default template", "team", %s, 1,
-                )
-            """ % (self.templatetablename , """
-                {"workPath": "", "interactivePorts": "", "name": "Default Job", "gpuType": "", "workers": 0, "jobPath": "", "dataPath": "", "gpuNumPerDevice": 0, "enableWorkPath": true, "preemptible": false, "enableJobPath": true, "command": " while true; do echo \"job running\"; sleep 1; done", "environmentVariables": [], "tensorboard": false, "plugins": {"blobfuse": [{"accountKey": "", "containerName": "", "mountPath": "", "mountOptions": "", "accountName": ""}], "imagePull": [{"username": "", "password": "", "registry": ""}]}, "ipython": true, "gpus": 1, "type": "RegularJob", "image": "ubuntu:18.04", "enableDataPath": true, "ssh": true}
-            """ )
+                ) on duplicate key update id=0
+            """
+            default_job_json={
+                "workPath": "", 
+                "interactivePorts": "", 
+                "name": "Default Job", 
+                "gpuType": "", 
+                "workers": 0, 
+                "jobPath": "", 
+                "dataPath": "", 
+                "gpuNumPerDevice": 0, 
+                "enableWorkPath": true, 
+                "preemptible": false, 
+                "enableJobPath": true, 
+                "command": " while true; do echo \"job running\"; sleep 1; done", 
+                "environmentVariables": [], 
+                "tensorboard": false, 
+                "plugins": {
+                    "blobfuse": [
+                        {
+                            "accountKey": "", 
+                            "containerName": "", 
+                            "mountPath": "", 
+                            "mountOptions": "", 
+                            "accountName": ""
+                        }
+                    ], 
+                    "imagePull": [
+                        {
+                            "username": "", 
+                            "password": "", 
+                            "registry": ""
+                        }
+                    ]
+                }, 
+                "ipython": true, 
+                "gpus": 1, 
+                "type": "RegularJob", 
+                "image": "ubuntu:18.04", 
+                "enableDataPath": true, 
+                "ssh": true
+            }
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,(self.templatetablename, json.dumps(default_job_json)))
                 conn.commit()
             
             sql = """

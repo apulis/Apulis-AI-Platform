@@ -242,7 +242,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       console.error(error);
     }
   }
-  const [json, setJson] = useState('');
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
   const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -373,7 +372,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           setDockerPassword(imagePullObj['password'])
         }
       }
-      setJson(templates.find(i => i.name === _selectName && i.scope === _selectScope)!.json);
     }
     setSelectTPName(val);
   }

@@ -25,7 +25,6 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText
 } from "@material-ui/core";
 import axios from 'axios';
-import Tooltip from '@material-ui/core/Tooltip';
 import { Delete, Add, Help } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
@@ -38,20 +37,17 @@ import UserContext from "../../contexts/User";
 import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
-import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
-import {green, grey, red} from "@material-ui/core/colors";
-import {DLTSDialog} from "../CommonComponents/DLTSDialog";
+import { green } from "@material-ui/core/colors";
 import {
   SUCCESSFULSUBMITTED,
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg,
+import { NameReg, NameErrorText, InteractivePortsMsg,
   NoNumberReg, NoNumberText, HttpsErrorText, HttpsReg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
-import { Stream } from "stream";
 import { validateInteractivePorts } from "../../utlities/validators";
 
 interface EnvironmentVariable {

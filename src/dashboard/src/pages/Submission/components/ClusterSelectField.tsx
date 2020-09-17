@@ -5,7 +5,6 @@ import ClustersContext from "../../../contexts/Clusters";
 import TeamsContext from "../../../contexts/Teams";
 import useFetch from "use-http";
 import _ from "lodash";
-import {sumValues} from "../../../utlities/ObjUtlities";
 
 interface ClusterSelectFieldProps {
   cluster: string | undefined;
@@ -58,7 +57,7 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
           }
         })
       }
-      const gpuCapacity = isEmpty(res) ? 0 : JSON.parse(res.metadata)[clusterName].user_quota || 0;
+      const gpuCapacity = isEmpty(res) ? 0 : JSON.parse(res.metadata)[clusterName]?.user_quota || 0;
       const gpuAvailable = Math.min(Number(JSON.parse(res.quota)[clusterName] - allHasUsed), Number(gpuCapacity - myHasUsed));
       props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, gpuAvailable);
       setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} to use)`);

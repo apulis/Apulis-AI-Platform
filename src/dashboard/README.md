@@ -25,7 +25,12 @@ The configuration schema (with description) is maintained in [config.schema.json
 6. Open <http://localhost:3000/> (may be automatically opened by script) to preview.
 7. For frontend development, local code changes will automatically refresh the browser; for backend development, local code changes will automatically restart the server.
 
-##　钱江源小组说明
-docker-images/webui3中，Dockerfile，先把源码copy进工作目录，再yarn安装依赖，再build打包，最后生成docker镜像。
-具体操作：./deploy.py docker push webui3 
-服务启停：./deploy.py kubernetes start webui3
+## 关于访问 restapi 的问题
+
+当前项目有关 job 的接口都会有 nodejs 去访问 restapi 服务，由于 restapi 有安全限制，如果开发时出现访问 restapi 服务 403 的情况，需要去服务器修改 restapi 的安全设置，增加自己的 ip白名单，如下：
+```
+location /apis {
+  allow 本机 ip;
+  ...other;
+}
+```

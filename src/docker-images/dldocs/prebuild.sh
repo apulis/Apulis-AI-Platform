@@ -4,3 +4,4 @@
 
 rm -rf DLDocs
 cp -r ../../../../DLDocs .
+cp -r ../../../../DLDocs/Dockerfile .

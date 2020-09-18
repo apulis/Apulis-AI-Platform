@@ -119,6 +119,8 @@ router.get('/:clusterId/getAllDevice',
 router.get('/:clusterId/VersionInfo',
   require('./middlewares/user')(),
   require('./controllers/version/getVersionInfo'))
+router.get('/DocsUrl',
+  require('./controllers/docs/getDocsUrl'))
 
 router.get('/vc/user',
   require('./middlewares/user')(),

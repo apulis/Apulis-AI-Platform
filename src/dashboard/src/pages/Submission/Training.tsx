@@ -25,7 +25,6 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle, DialogContentText
 } from "@material-ui/core";
 import axios from 'axios';
-import Tooltip from '@material-ui/core/Tooltip';
 import { Delete, Add, Help } from "@material-ui/icons";
 import { withRouter } from "react-router";
 import IconButton from '@material-ui/core/IconButton';
@@ -38,20 +37,18 @@ import UserContext from "../../contexts/User";
 import ClustersContext from '../../contexts/Clusters';
 import TeamsContext from "../../contexts/Teams";
 import theme, { Provider as MonospacedThemeProvider } from "../../contexts/MonospacedTheme";
-import {BarChart, Bar, XAxis, YAxis, CartesianGrid, LabelList} from "recharts";
-import {green, grey, red} from "@material-ui/core/colors";
-import {DLTSDialog} from "../CommonComponents/DLTSDialog";
+import { green } from "@material-ui/core/colors";
 import {
   SUCCESSFULSUBMITTED,
   SUCCESSFULTEMPLATEDELETE, SUCCESSFULTEMPLATEDSAVE
 } from "../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../CommonComponents/DLTSSnackbar";
 import message from '../../utils/message';
-import { NameReg, NameErrorText, NoChineseReg, NoChineseErrorText, InteractivePortsMsg,
+import { NameReg, NameErrorText, InteractivePortsMsg,
   NoNumberReg, NoNumberText, HttpsErrorText, HttpsReg } from '../../const';
 import './Training.less';
 import { useForm } from "react-hook-form";
-import { Stream } from "stream";
+import { validateInteractivePorts } from "../../utlities/validators";
 
 interface EnvironmentVariable {
   name: string;
@@ -245,7 +242,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       console.error(error);
     }
   }
-  const [json, setJson] = useState('');
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
   const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const val = e.target.value;
@@ -376,7 +372,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           setDockerPassword(imagePullObj['password'])
         }
       }
-      setJson(templates.find(i => i.name === _selectName && i.scope === _selectScope)!.json);
     }
     setSelectTPName(val);
   }
@@ -525,22 +520,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }, [postJobData]);
 
-  const validateInteractivePorts = (val: string) => {
-    if (val) {
-      let flag = true;
-      const arr = val.split(',');
-      if (arr.length > 1) {
-        arr.forEach(n => {
-          const _n = Number(n)
-          if (!_n || _n < 40000 || _n > 49999 || !Number.isInteger(_n)) flag = false;
-        });
-      } else {
-        flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
-      }
-      return flag;
-    }
-    return true;
-  }
+  
 
   const validateEVName = (val: string, index: number, time: number) => {
     if (val && val !== environmentVariables[index].name) {
@@ -636,7 +616,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       .then(res => {
         if (!isEmpty(res)) {
           const { data } = res;
-          _gpuCapacity = JSON.parse(data.metadata)[gpuType].user_quota || 0;
+          _gpuCapacity = JSON.parse(data.metadata)[gpuType]?.user_quota || 0;
           setGpuCapacity(_gpuCapacity);
           axios.get(`/${selectedCluster}/getAllDevice?userName=${userName}`)
             .then(res => {
@@ -717,7 +697,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         let result1 = data1.data.result, result2 = data2.data.result;
         if (result2.length) {
           let sortededResult = [{metric: {device_available: "0"}, value: result2[0].value}];
-          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }, value: Array<[]> }) => {
+          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }, value: number[] }) => {
             if (i.metric.device_available === '0') {
               sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
             } else {
@@ -748,41 +728,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
     return message;
   }
-  const renderCustomizedLabel = (props: any) => {
-    const { x, y, width, height, value } = props;
-    const radius = 10;
-    return (
-      <g>
-        <circle cx={x + width / 2} cy={y - radius} r={radius} fill="#fff" />
-        <text x={x + width / 2} y={y - radius} fill="#000" textAnchor="middle" dominantBaseline="middle">
-          {value}
-        </text>
-      </g>
-    );
-  };
   const styleSnack={backgroundColor: green[400]};
 
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
-        {/* <DLTSDialog open={showGPUFragmentation}
-          message={null}
-          handleClose={() => setShowGPUFragmentation(false)}
-          handleConfirm={null} confirmBtnTxt={null} cancelBtnTxt={null}
-          title={`View Cluster ${gpuType} Status Per Node`}
-          titleStyle={{color:grey[400]}}
-        >
-          <BarChart width={500} height={600} data={gpuFragmentation}>
-            <CartesianGrid strokeDasharray="10 10"/>
-            <XAxis dataKey={"metric['device_available']"} label={{value: `Available ${gpuType} count`, position: 'insideBottomLeft', offset: 0}}>
-            </XAxis>
-            <YAxis dataKey={"value[1]"} domain={[0, Math.max.apply(Math, gpuFragmentation.map(i => { return Number(i.value[1]) }))]}
-              label={{value: 'Node count', angle: -90, position: 'insideLeft'}} allowDecimals={false} />
-            <Bar dataKey="value[1]" fill="#8884d8" >
-              <LabelList dataKey="value[1]" content={renderCustomizedLabel} />
-            </Bar>
-          </BarChart>
-        </DLTSDialog> */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card>
             <CardHeader title="Submit Training Job"/>

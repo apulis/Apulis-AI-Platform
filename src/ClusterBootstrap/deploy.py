@@ -4222,13 +4222,11 @@ def run_command( args, command, nargs, parser ):
 
     docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
     if not os.path.exists(docker_image_versions_file):
-        parser.print_help()
-        print "ERROR: docker_image_versions.yaml does not exist!"
-        exit()
-
-    with open(docker_image_versions_file) as f:
-        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
-        f.close()
+        print "WARNING: docker_image_versions.yaml does not exist!"
+    else:
+        with open(docker_image_versions_file) as f:
+            merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+            f.close()
 
     if os.path.exists("./deploy/clusterID.yml"):
         with open("./deploy/clusterID.yml") as f:

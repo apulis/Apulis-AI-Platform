@@ -1,0 +1,45 @@
+{% if false %}
+apiVersion: v1
+kind: Service
+metadata:
+  name: dldocs
+  namespace: default
+spec:
+  selector:
+    app: dldocs
+---
+{% endif %}
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: dldocs
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      webportal-node: pod
+  template:
+    metadata:
+      name: dldocs
+      labels:
+        app: dldocs
+        dldocs-node: pod
+    spec:
+      {% if cnf["dnsPolicy"] %}    
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      nodeSelector:
+        archType: amd64
+        webportal: active
+      {% if true %}  
+      hostNetwork: true
+      {% endif %}
+      containers:
+      - name: webui3
+        image: {{cnf["dockers"]["container"]["dldocs"]["fullname"]}}
+        imagePullPolicy: Always
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule            

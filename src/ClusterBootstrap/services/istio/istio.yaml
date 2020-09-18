@@ -506,7 +506,7 @@ spec:
       traceSampling: 1
     prometheus:
       contextPath: /prometheus
-      hub: docker.io/prom
+      hub: {{cnf["private_docker_registry"]}}prom
       nodeSelector:
         restfulapi: active
         archType: amd64
@@ -517,7 +517,7 @@ spec:
       scrapeInterval: 15s
       security:
         enabled: true
-      tag: v2.15.1
+      tag: v2.18.0
       tolerations:
         - key: CriticalAddonsOnly
           operator: Exists

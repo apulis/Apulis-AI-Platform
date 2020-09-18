@@ -160,8 +160,7 @@ def setup_vscode(user_name, pod_name,vscode_port):
             fi
             && cd /home/%s
             && runuser -l %s  -c "
-                mkdir -p /var/log/vscode
-                nohup code-server --port %s --host 0.0.0.0 --auth none &>/var/log/vscode/log &
+                nohup code-server --port %s --host 0.0.0.0 --auth none &>/job/vscode/log &
             "
         '
     """% user_name, user_name, vscode_port

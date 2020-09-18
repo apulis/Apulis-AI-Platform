@@ -277,6 +277,7 @@ def start_endpoints_by_thread(pending_endpoints,data_handler,jobId):
 def clear_done_job_id(ret):
     logging.info("\n----------------thread for jobId %s is completed", ret.result())
     global_thread_dict.pop(ret.result(),None)
+    logging.info("\n----------------running thread is %s",global_thread_dict.keys())
 
 def start_endpoints():
     try:

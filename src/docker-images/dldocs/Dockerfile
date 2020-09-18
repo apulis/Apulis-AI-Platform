@@ -10,7 +10,7 @@ RUN yarn
 
 COPY DLDocs/. /home/docs
 
-RUN yarn docs:build
+RUN yarn handbook:build
 
 EXPOSE 3386
 

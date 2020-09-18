@@ -153,8 +153,22 @@ def setup_vscode(user_name, pod_name,vscode_port):
                 version="${version#https://github.com/cdr/code-server/releases/tag/}"
                 version="${version#v}"
                 echo "$version"
-                curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_amd64.deb
-                sudo dpkg -i code-server_${version}_amd64.deb
+                arch() {
+                  case "$(uname -m)" in
+                  aarch64)
+                    echo arm64
+                    ;;
+                  x86_64)
+                    echo amd64
+                    ;;
+                  amd64) # FreeBSD.
+                    echo amd64
+                    ;;
+                  esac
+                }
+                ARCH="$(arch)"
+                curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_$ARCH.deb
+                sudo dpkg -i code-server_${version}_$ARCH.deb
             fi && cd /home/%s && chmod 777 /job/ && runuser -l %s  -c "nohup code-server --port %s --host 0.0.0.0 --auth none &>/job/vscode.log &"
         '
     """% ("%{url_effective}",user_name, user_name, vscode_port)

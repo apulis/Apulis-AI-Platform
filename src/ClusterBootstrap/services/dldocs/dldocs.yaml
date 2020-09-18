@@ -17,7 +17,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      webportal-node: pod
+      dldocs-node: pod
   template:
     metadata:
       name: dldocs

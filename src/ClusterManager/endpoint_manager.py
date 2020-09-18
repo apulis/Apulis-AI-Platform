@@ -158,12 +158,12 @@ def setup_vscode(user_name, pod_name,vscode_port):
                 curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_amd64.deb
                 sudo dpkg -i code-server_${version}_amd64.deb
             fi
-            && cd /home/%s
-            && runuser -l %s  -c "
-                nohup code-server --port %s --host 0.0.0.0 --auth none &>/job/vscode/log &
+            && cd /home/{}
+            && runuser -l {}  -c "
+                nohup code-server --port {} --host 0.0.0.0 --auth none &>/job/vscode/log &
             "
         '
-    """% (user_name, user_name, vscode_port)
+    """.format(user_name, user_name, vscode_port)
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start vscode in container. JobId: %s ,output: %s" % (pod_name,output))

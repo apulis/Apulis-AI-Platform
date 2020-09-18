@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Iframe from "react-iframe";
 import axios from 'axios';
 
-const Help = () => {
+const Help: React.FC = () => {
   const [docsUrl, setDocsUrl] = useState('')
 
   const apiGetUrlDocs = async () => {

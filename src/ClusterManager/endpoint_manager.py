@@ -275,6 +275,7 @@ def start_endpoints_by_thread(pending_endpoints,data_handler,jobId):
     return jobId
 
 def clear_done_job_id(ret):
+    logging.info("\n----------------thread for jobId %s is completed", ret.result())
     global_thread_dict.pop(ret.result(),None)
 
 def start_endpoints():
@@ -288,6 +289,8 @@ def start_endpoints():
                     t =pool.submit(start_endpoints_by_thread,pending_endpoint,data_handler,jobId)
                     global_thread_dict[jobId] = t
                     t.add_done_callback(clear_done_job_id)
+                else:
+                    logging.info("\n----------------jobId %s is starting", jobId)
         except Exception as e:
             logger.exception("start endpoint failed")
         finally:

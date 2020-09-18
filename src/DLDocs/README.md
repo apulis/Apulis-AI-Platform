@@ -14,6 +14,11 @@
 ### 编译镜像
 
 ```shell script
+ssh root @10.31.3.108
+1
+cd /root/DLWorkspace/src/ClusterBootstrap
+git checkout dev-lxx
+git pull
 ./deploy.py docker push dldocs
 ```
 

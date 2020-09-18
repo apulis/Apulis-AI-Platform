@@ -1,16 +1,16 @@
 FROM node:12
 
-RUN mkdir -p /home/docs
-WORKDIR /home/docs
+RUN mkdir -p /home/handbook
+WORKDIR /home/handbook
 
 
 ADD package.json .
 RUN yarn config set registry 'https://registry.npm.taobao.org'
 RUN yarn
 
-COPY . /home/docs
+COPY . /home/handbook
 
-RUN yarn docs:build
+RUN yarn handbook:build
 
 EXPOSE 3386
 

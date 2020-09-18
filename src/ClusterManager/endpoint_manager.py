@@ -146,22 +146,16 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort):
         raise Exception("Failed to start tensorboard in container. JobId: %s ,output: %s" % (pod_name,output))
 
 def setup_vscode(user_name, pod_name,vscode_port):
-    bash_script = """
-        bash -c '
-            export DEBIAN_FRONTEND=noninteractive; 
+    bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive; 
             if ! [ -x \"$(command -v code-server)\" ];then 
-                apt-get update && umask 022
+                apt-get update && umask 022 
                 version="$(curl -fsSLI -o /dev/null -w "%s" https://github.com/cdr/code-server/releases/latest)"                                                                                                                         
                 version="${version#https://github.com/cdr/code-server/releases/tag/}"
                 version="${version#v}"
                 echo "$version"
                 curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_amd64.deb
                 sudo dpkg -i code-server_${version}_amd64.deb
-            fi
-            && cd /home/%s
-            && runuser -l %s  -c "
-                nohup code-server --port %s --host 0.0.0.0 --auth none &>/job/vscode/log &
-            "
+            fi && cd /home/%s && chmod 777 /job/ && runuser -l %s  -c "nohup code-server --port %s --host 0.0.0.0 --auth none &>/job/vscode.log &"
         '
     """% ("%{url_effective}",user_name, user_name, vscode_port)
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
@@ -277,6 +271,7 @@ def start_endpoints_by_thread(pending_endpoints,data_handler,jobId):
 def clear_done_job_id(ret):
     logging.info("\n----------------thread for jobId %s is completed", ret.result())
     global_thread_dict.pop(ret.result(),None)
+    logging.info("\n----------------running thread is %s",global_thread_dict.keys())
 
 def start_endpoints():
     try:
@@ -290,7 +285,7 @@ def start_endpoints():
                     global_thread_dict[jobId] = t
                     t.add_done_callback(clear_done_job_id)
                 else:
-                    logging.info("\n----------------jobId %s is starting", jobId)
+                    logging.info("\n----------------jobId %s is running", jobId)
         except Exception as e:
             logger.exception("start endpoint failed")
         finally:

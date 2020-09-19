@@ -68,7 +68,7 @@ def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
     (im_width, im_height) = image.size
     image_data = np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
     image_data_yolo_list = image_data[np.newaxis, :].tolist()
-    headers = {"Content-type": "application/json","Host":"{}-predictor-default.default.example.com".format(inference_url.split("/endpoints/v3/v1/models/")[1].split(":")[0])}
+    headers = {"Content-type": "application/json","Host":"{}-predictor-default.kfserving-pod.example.com".format(inference_url.split("/endpoints/v3/v1/models/")[1].split(":")[0])}
     service_ip = query_service_domain('istio-ingressgateway.istio-system.svc.cluster.local')
     inference_url = "http://{}/v1/models/".format(service_ip)+inference_url.split("/endpoints/v3/v1/models/")[1]
     r = requests.post(inference_url,headers=headers,

@@ -992,7 +992,6 @@ def Infer(jobId,image,signature_name):
             inference_url = job["inference-url"]
             # ret = inference.object_classifier_infer(inference_url,image,signature_name)
             ret = inference.object_detaction_infer2(inference_url,image,signature_name,job["jobParams"])
-            ret = base64.b64encode(ret)
         else:
             ret = "job not running"
     else:

@@ -78,27 +78,32 @@ def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
         logging.error(r.content)
     r = r.json()
     output_dict = r['predictions'][0]
-    output_dict['num_detections'] = int(output_dict['num_detections'])
-    output_dict['detection_classes'] = np.array([int(class_id) for class_id in output_dict['detection_classes']])
-    output_dict['detection_boxes'] = np.array(output_dict['detection_boxes'])
-    output_dict['detection_scores'] = np.array(output_dict['detection_scores'])
-    class_name_path = re.sub("^/home", "/dlwsdata/work", os.path.join(jobParams["model_base_path"],"class_names.json"))
+    class_name_path = re.sub("^/home", "/dlwsdata/work", os.path.join(jobParams["model_base_path"], "class_names.json"))
     if not os.path.exists(class_name_path):
         class_name_path = "/DLWorkspace/src/utils/coco.names"
     category_index = read_class_names2(class_name_path)
-    visualization_utils.visualize_boxes_and_labels_on_image_array(
-        image_data,
-        output_dict['detection_boxes'],
-        output_dict['detection_classes'],
-        output_dict['detection_scores'],
-        category_index,
-        instance_masks=output_dict.get('detection_masks'),
-        use_normalized_coordinates=True,
-        line_thickness=1,
-    )
-    Image.fromarray(image_data).show()
-    image = Image.fromarray(image_data)
-    imgByteArr = io.BytesIO()
-    image.save(imgByteArr,format='JPEG')
-    imgByteArr = imgByteArr.getvalue()
-    return imgByteArr
+    if "logits" in output_dict:
+        length = len(output_dict['logits'])
+        return [[v["name"],output_dict["logits"][k-1] if k<=length else [v["name"],None] ]for k,v in category_index.items()]
+    else:
+        output_dict['num_detections'] = int(output_dict['num_detections'])
+        output_dict['detection_classes'] = np.array([int(class_id) for class_id in output_dict['detection_classes']])
+        output_dict['detection_boxes'] = np.array(output_dict['detection_boxes'])
+        output_dict['detection_scores'] = np.array(output_dict['detection_scores'])
+        visualization_utils.visualize_boxes_and_labels_on_image_array(
+            image_data,
+            output_dict['detection_boxes'],
+            output_dict['detection_classes'],
+            output_dict['detection_scores'],
+            category_index,
+            instance_masks=output_dict.get('detection_masks'),
+            use_normalized_coordinates=True,
+            line_thickness=1,
+        )
+        Image.fromarray(image_data).show()
+        image = Image.fromarray(image_data)
+        imgByteArr = io.BytesIO()
+        image.save(imgByteArr,format='JPEG')
+        imgByteArr = imgByteArr.getvalue()
+        imgByteArr = base64.b64encode(imgByteArr)
+        return imgByteArr

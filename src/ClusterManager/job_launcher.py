@@ -67,7 +67,7 @@ class JobDeployer:
         api_response = client.CustomObjectsApi().create_namespaced_custom_object(
             group="serving.kubeflow.org",
             version="v1alpha2",
-            namespace=self.namespace,
+            namespace="kfserving-pod",
             plural="inferenceservices",
             body=body)
         if isinstance(api_response,dict):

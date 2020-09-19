@@ -55,12 +55,15 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     return <CopyableTextListItem primary={`SSH${task ? ` to ${task}` : ''}`} secondary={command}/>;
   }
   let url;
-  const availEndpoints = ['ipython', 'tensorboard', 'vscode']
+  const availEndpoints = ['ipython', 'tensorboard']
   if (availEndpoints.includes(endpoint.name)) {
     url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
+  } else if (endpoint.name === 'vscode') {
+    url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/v4/${endpoint['port']}/`
   } else {
     url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/`
   }
+  
   if (endpoint.name === 'ipython') {
     return (
       <ListItem button component="a" href={url} target="_blank">

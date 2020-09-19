@@ -390,51 +390,49 @@ class DataHandler(object):
                 values(
                     0, "default template", "team", %s, 1
                 ) on duplicate key update id=0
-            """ % (self.templatetablename ,
-                """'{"workPath": "", "interactivePorts": "", "name": "Default Job", "gpuType": "", "workers": 0, "jobPath": "", "dataPath": "", "gpuNumPerDevice": 0, "enableWorkPaeh": True, "preemptible": False, "enableJobPath": True, "command": " while true; do echo \"job running\"; sleep 1; done", "environmentVariables": [], "tensorboard": False, "plugins": {"blobfuse": [{"accountKey": "", "containerName": "", "mountPath": "", "mountOptions": "", "accountName": ""}], "imagePull": [{"username": "", "password": "", "registry": ""}]}, "ipython": True, "gpus": 1, "type": "RegularJob", "image": "ubuntu:18.04", "enableDataPath": True, "ssh": True}'"""
-            )
-            # default_job_json={
-            #     "workPath": "", 
-            #     "interactivePorts": "", 
-            #     "name": "Default Job", 
-            #     "gpuType": "", 
-            #     "workers": 0, 
-            #     "jobPath": "", 
-            #     "dataPath": "", 
-            #     "gpuNumPerDevice": 0, 
-            #     "enableWorkPath": True, 
-            #     "preemptible": False, 
-            #     "enableJobPath": True, 
-            #     "command": " while true; do echo \"job running\"; sleep 1; done", 
-            #     "environmentVariables": [], 
-            #     "tensorboard": False, 
-            #     "plugins": {
-            #         "blobfuse": [
-            #             {
-            #                 "accountKey": "", 
-            #                 "containerName": "", 
-            #                 "mountPath": "", 
-            #                 "mountOptions": "", 
-            #                 "accountName": ""
-            #             }
-            #         ], 
-            #         "imagePull": [
-            #             {
-            #                 "username": "", 
-            #                 "password": "", 
-            #                 "registry": ""
-            #             }
-            #         ]
-            #     }, 
-            #     "ipython": True, 
-            #     "gpus": 1, 
-            #     "type": "RegularJob", 
-            #     "image": "ubuntu:18.04", 
-            #     "enableDataPath": True, 
-            #     "ssh": True
-            # }
+            """ %(self.templatetablename, "%s")
+            default_job_json={
+                "workPath": "", 
+                "interactivePorts": "", 
+                "name": "Default Job", 
+                "gpuType": "", 
+                "workers": 0, 
+                "jobPath": "", 
+                "dataPath": "", 
+                "gpuNumPerDevice": 0, 
+                "enableWorkPath": True,
+                "preemptible": False,
+                "enableJobPath": True,
+                "command": " while true; do echo \"job running\"; sleep 1; done", 
+                "environmentVariables": [], 
+                "tensorboard": False,
+                "plugins": {
+                    "blobfuse": [
+                        {
+                            "accountKey": "", 
+                            "containerName": "", 
+                            "mountPath": "", 
+                            "mountOptions": "", 
+                            "accountName": ""
+                        }
+                    ], 
+                    "imagePull": [
+                        {
+                            "username": "", 
+                            "password": "", 
+                            "registry": ""
+                        }
+                    ]
+                }, 
+                "ipython": True,
+                "gpus": 1, 
+                "type": "RegularJob", 
+                "image": "ubuntu:18.04", 
+                "enableDataPath": True,
+                "ssh": True
+            }
             with MysqlConn() as conn:
-                conn.insert_one(sql)
+                conn.insert_one(sql,(json.dumps(default_job_json),))
                 conn.commit()
             
             sql = """

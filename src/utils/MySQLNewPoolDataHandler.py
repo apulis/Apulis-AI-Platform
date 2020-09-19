@@ -388,7 +388,7 @@ class DataHandler(object):
                     id, name, scope, json, isDefault
                 )
                 values(
-                    0, "default template", "team", %s, 1,
+                    0, "default_template", "vc:platform", %s, 1
                 ) on duplicate key update id=0
             """ %(self.templatetablename, "%s")
             default_job_json={

@@ -55,10 +55,10 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     return <CopyableTextListItem primary={`SSH${task ? ` to ${task}` : ''}`} secondary={command}/>;
   }
   let url;
-  if (endpoint.name == "ipython" || endpoint.name === 'tensorboard'){
+  const availEndpoints = ['ipython', 'tensorboard', 'vscode']
+  if (availEndpoints.includes(endpoint.name)) {
     url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
-  }
-  else{
+  } else {
     url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/`
   }
   if (endpoint.name === 'ipython') {
@@ -72,6 +72,14 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     return (
       <ListItem button component="a" href={url} target="_blank">
         <ListItemText primary="TensorBoard" secondary={url}/>
+      </ListItem>
+    );
+  }
+
+  if (endpoint.name === 'vscode') {
+    return (
+      <ListItem button component="a" href={url} target="_blank">
+        <ListItemText primary="Vscode" secondary={url}/>
       </ListItem>
     );
   }
@@ -131,6 +139,9 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   }, [endpoints]);
   const tensorboard = useMemo(() => {
     return endpoints.some((endpoint) => endpoint.name === 'tensorboard');
+  }, [endpoints]);
+  const vscode = useMemo(() => {
+    return endpoints.some((endpoint) => endpoint.name === 'vscode');
   }, [endpoints]);
   const { post } =
     useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
@@ -211,6 +222,13 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           control={<Switch/>}
           label="Jupyter"
           onChange={onChange('iPython')}
+        />
+        <FormControlLabel
+          checked={vscode}
+          disabled={vscode || disabled}
+          control={<Switch/>}
+          label="Vscode"
+          onChange={onChange('vscode')}
         />
         <FormControlLabel
           checked={tensorboard}

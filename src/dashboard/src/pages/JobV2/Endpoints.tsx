@@ -55,7 +55,7 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     return <CopyableTextListItem primary={`SSH${task ? ` to ${task}` : ''}`} secondary={command}/>;
   }
   let url;
-  if (endpoint.name == "ipython" || endpoint.name === 'tensorboard'){
+  if (endpoint.name == "ipython" || endpoint.name === 'tensorboard') {
     url = `http://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
   } else {
     url = `http://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/`

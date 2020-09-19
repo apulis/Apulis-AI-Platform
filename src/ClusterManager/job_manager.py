@@ -29,7 +29,7 @@ import redis
 import logging
 import logging.config
 from job import Job, JobSchema
-from job_launcher import JobDeployer, JobRole, PythonLauncher
+from job_launcher import JobDeployer, JobRole, PythonLauncher,InferenceServiceJobDeployer
 
 from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time, record
 
@@ -319,7 +319,11 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         # if jobDescriptionPath is not None and os.path.isfile(jobDescriptionPath):
         #     k8sUtils.kubectl_delete(jobDescriptionPath)
 
-        job_deployer = JobDeployer()
+        jobType = dataHandler.GetJobTextField(job["jobId"], "jobType")
+        if jobType == "InferenceJob":
+            job_deployer = InferenceServiceJobDeployer()
+        else:
+            job_deployer = JobDeployer()
         job_deployer.delete_job(job["jobId"], force=True)
 
         if notifier is not None:
@@ -378,7 +382,11 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         # if jobDescriptionPath is not None and os.path.isfile(jobDescriptionPath):
         #     k8sUtils.kubectl_delete(jobDescriptionPath)
         if "enable_jobmanager_debug_mode" not in config or not config["enable_jobmanager_debug_mode"]:
-            job_deployer = JobDeployer()
+            jobType = dataHandler.GetJobTextField(job["jobId"], "jobType")
+            if jobType == "InferenceJob":
+                job_deployer = InferenceServiceJobDeployer()
+            else:
+                job_deployer = JobDeployer()
             job_deployer.delete_job(job["jobId"], force=True)
 
     elif result == "Unknown" or result == "NotFound":
@@ -423,7 +431,11 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                         conditionFields = {"jobId": job["jobId"]}
                         dataHandler.UpdateJobTextFields(conditionFields, dataFields)
                         if "enable_jobmanager_debug_mode" not in config or not config["enable_jobmanager_debug_mode"]:
-                            job_deployer = JobDeployer()
+                            jobType = dataHandler.GetJobTextField(job["jobId"], "jobType")
+                            if jobType == "InferenceJob":
+                                job_deployer = InferenceServiceJobDeployer()
+                            else:
+                                job_deployer = JobDeployer()
                             job_deployer.delete_job(job["jobId"], force=True)
                         jump = True
                         break

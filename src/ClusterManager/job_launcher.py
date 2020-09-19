@@ -430,13 +430,392 @@ class JobDeployer:
             return [-1, err.message]
 
 
+class InferenceServiceJobDeployer:
+    def __init__(self):
+        self.k8s_CoreAPI = k8s_CoreAPI
+        self.k8s_AppsAPI = k8s_AppsAPI
+        self.namespace = "kfserving-pod"
+        self.pretty = "pretty_example"
+
+    @record
+    def _create_inferenceService(self, body):
+        api_response = client.CustomObjectsApi().create_namespaced_custom_object(
+            group="serving.kubeflow.org",
+            version="v1alpha2",
+            namespace=self.namespace,
+            plural="inferenceservices",
+            body=body)
+        if isinstance(api_response,dict):
+            return DictToInstance(api_response)
+        return api_response
+
+    @record
+    def _delete_pod(self, name, grace_period_seconds=None):
+        body = client.V1DeleteOptions()
+        body.grace_period_seconds = grace_period_seconds
+        api_response = self.k8s_CoreAPI.delete_namespaced_pod(
+            name=name,
+            namespace=self.namespace,
+            pretty=self.pretty,
+            body=body,
+            grace_period_seconds=grace_period_seconds,
+        )
+        return api_response
+
+    @record
+    def _delete_inferenceService(self, name, grace_period_seconds=None):
+        body = client.V1DeleteOptions()
+        body.grace_period_seconds = grace_period_seconds
+        api_response = client.CustomObjectsApi().delete_namespaced_custom_object(
+            group="serving.kubeflow.org",
+            version="v1alpha2",
+            name=name,
+            namespace=self.namespace,
+            plural="inferenceservices",
+            body=body)
+        return api_response
+
+    @record
+    def _cleanup_pods_with_labels(self, label_selector):
+        errors = []
+        try:
+            self.k8s_CoreAPI.delete_collection_namespaced_pod(
+                self.namespace,
+                pretty=self.pretty,
+                label_selector=label_selector,
+                )
+        except ApiException as e:
+            message = "Delete pods failed: {}".format(label_selector)
+            logger.warning(message, exc_info=True)
+            errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def _cleanup_configmap(self, label_selector):
+        errors = []
+        try:
+            api_response = self.k8s_CoreAPI.delete_collection_namespaced_config_map(
+                self.namespace,
+                pretty=self.pretty,
+                label_selector=label_selector,
+                )
+        except ApiException as e:
+            message = "Delete configmap failed: {}".format(label_selector)
+            logger.warning(message, exc_info=True)
+            errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def _create_deployment(self, body):
+        api_response = self.k8s_AppsAPI.create_namespaced_deployment(
+            namespace=self.namespace,
+            body=body,
+            pretty=self.pretty,
+        )
+        return api_response
+
+    @record
+    def _delete_deployment(self, name, grace_period_seconds=None):
+        body = client.V1DeleteOptions()
+        body.grace_period_seconds = grace_period_seconds
+        api_response = self.k8s_AppsAPI.delete_namespaced_deployment(
+            name=name,
+            namespace=self.namespace,
+            pretty=self.pretty,
+            body=body,
+            grace_period_seconds=grace_period_seconds,
+        )
+        return api_response
+
+    @record
+    def _create_service(self, body):
+        api_response = self.k8s_CoreAPI.create_namespaced_service(
+            namespace=self.namespace,
+            body=body,
+            pretty=self.pretty,
+        )
+        return api_response
+
+    @record
+    def _delete_service(self, name):
+        api_response = self.k8s_CoreAPI.delete_namespaced_service(
+            name=name,
+            namespace=self.namespace,
+            pretty=self.pretty,
+            body=client.V1DeleteOptions(),
+        )
+        return api_response
+
+    @record
+    def _create_secret(self, body):
+        api_response = self.k8s_CoreAPI.create_namespaced_secret(
+            namespace=self.namespace,
+            body=body,
+            pretty=self.pretty,
+        )
+        return api_response
+
+    @record
+    def _delete_secret(self, name, grace_period_seconds=None):
+        body = client.V1DeleteOptions()
+        body.grace_period_seconds = grace_period_seconds
+        api_response = self.k8s_CoreAPI.delete_namespaced_secret(
+            name=name,
+            namespace=self.namespace,
+            pretty=self.pretty,
+            body=body,
+            grace_period_seconds=grace_period_seconds
+        )
+        return api_response
+
+    @record
+    def _cleanup_pods(self, pod_names, force=False):
+        errors = []
+        grace_period_seconds = 0 if force else None
+        for pod_name in pod_names:
+            try:
+                self._delete_pod(pod_name, grace_period_seconds)
+            except Exception as e:
+                if isinstance(e, ApiException) and 404 == e.status:
+                    return []
+                message = "Delete pod failed: {}".format(pod_name)
+                logger.warning(message, exc_info=True)
+                errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def _cleanup_inferenceServices(self, inferenceService_names, force=False):
+        errors = []
+        grace_period_seconds = 0 if force else None
+        for inferenceService_name in inferenceService_names:
+            try:
+                self._delete_inferenceService(inferenceService_name, grace_period_seconds)
+            except Exception as e:
+                if isinstance(e, ApiException) and 404 == e.status:
+                    return []
+                message = "Delete inferenceService failed: {}".format(inferenceService_name)
+                logger.warning(message, exc_info=True)
+                errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def _cleanup_services(self, services):
+        errors = []
+        for service in services:
+            assert(isinstance(service, client.V1Service))
+            try:
+                service_name = service.metadata.name
+                self._delete_service(service_name)
+            except ApiException as e:
+                message = "Delete service failed: {}".format(service_name)
+                logger.warning(message, exc_info=True)
+                errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def _cleanup_deployment(self, deployment_names, force=False):
+        errors = []
+        grace_period_seconds = 0 if force else None
+        for deployment_name in deployment_names:
+            try:
+                self._delete_deployment(deployment_name, grace_period_seconds)
+            except Exception as e:
+                if isinstance(e, ApiException) and 404 == e.status:
+                    return []
+                message = "Delete pod failed: {}".format(deployment_name)
+                logger.warning(message, exc_info=True)
+                errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def _cleanup_secrets(self, secret_names, force=False):
+        errors = []
+        grace_period_seconds = 0 if force else None
+        for secret_name in secret_names:
+            try:
+                self._delete_secret(secret_name, grace_period_seconds)
+            except Exception as e:
+                if isinstance(e, ApiException) and 404 == e.status:
+                    return []
+                message = "Deleting secret failed: {}".format(secret_name)
+                logger.warning(message, exc_info=True)
+                errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def _cleanup_secrets_with_labels(self, label_selector):
+        errors = []
+        try:
+            self.k8s_CoreAPI.delete_collection_namespaced_secret(
+                self.namespace,
+                pretty=self.pretty,
+                label_selector=label_selector
+            )
+        except ApiException as e:
+            message = "Delete secrets failed: {}".format(label_selector)
+            logging.warning(message, exc_info=True)
+            errors.append({"message": message, "exception": e})
+        return errors
+
+    @record
+    def create_pods(self, pods):
+        # TODO instead of delete, we could check update existiong ones. During refactoring, keeping the old way.
+        pod_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "Pod"]
+        self._cleanup_pods(pod_names)
+        deployment_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "Deployment"]
+        self._cleanup_deployment(deployment_names)
+        inferenceService_names = [pod["metadata"]["name"] for pod in pods if pod["kind"] == "InferenceService"]
+        self._cleanup_inferenceServices(inferenceService_names)
+        created = []
+        for pod in pods:
+            if pod["kind"] == "Pod":
+                created_pod = self._create_pod(pod)
+            elif pod["kind"] == "Deployment":
+                created_pod = self._create_deployment(pod)
+            elif pod["kind"] == "InferenceService":
+                created_pod = self._create_inferenceService(pod)
+            created.append(created_pod)
+            logger.info("Create pod succeed: %s" % created_pod.metadata.name)
+        return created
+
+    @record
+    def create_secrets(self, secrets):
+        # Clean up secrets first
+        secret_names = [secret["metadata"]["name"] for secret in secrets if secret["kind"] == "Secret"]
+        logger.info("Trying to delete secrets %s" % secret_names)
+        self._cleanup_secrets(secret_names)
+
+        created = []
+        for secret in secrets:
+            created_secret = self._create_secret(secret)
+            created.append(created_secret)
+            logger.info("Creating secret succeeded: %s" % created_secret.metadata.name)
+        return created
+
+    @record
+    def get_pods(self, field_selector="", label_selector=""):
+        api_response = self.k8s_CoreAPI.list_namespaced_pod(
+            namespace=self.namespace,
+            pretty=self.pretty,
+            field_selector=field_selector,
+            label_selector=label_selector,
+        )
+        logger.debug("Get pods: {}".format(api_response))
+        return api_response.items
+
+    @record
+    def _get_deployments(self, field_selector="", label_selector=""):
+        api_response = self.k8s_AppsAPI.list_namespaced_deployment(
+            namespace=self.namespace,
+            pretty=self.pretty,
+            field_selector=field_selector,
+            label_selector=label_selector,
+        )
+        logger.debug("Get pods: {}".format(api_response))
+        return api_response.items
+
+    @record
+    def _get_services_by_label(self, label_selector):
+        api_response = self.k8s_CoreAPI.list_namespaced_service(
+            namespace=self.namespace,
+            pretty=self.pretty,
+            label_selector=label_selector,
+        )
+        return api_response.items
+
+    @record
+    def get_secrets(self, field_selector="", label_selector=""):
+        api_response = self.k8s_CoreAPI.list_namespaced_secret(
+            namespace=self.namespace,
+            pretty=self.pretty,
+            field_selector=field_selector,
+            label_selector=label_selector,
+        )
+        logger.debug("Get secrets: {}".format(api_response))
+        return api_response.items
+
+    @record
+    def delete_job(self, job_id, force=False):
+        label_selector = "run={}".format(job_id)
+
+        # query inferenceservice
+        dataHandler = DataHandler()
+        job = dataHandler.GetInferenceJob(job_id)[0]
+        inferenceService_names = [job["jobName"]]
+        inferenceservice_errors = self._cleanup_inferenceServices(inferenceService_names)
+        logger.info("deleting inferenceservices %s" % job_id)
+
+        # query pods then delete
+        pod_errors = self._cleanup_pods_with_labels(label_selector)
+        logger.info("deleting pods %s" % label_selector)
+        # query services then delete
+        services = self._get_services_by_label(label_selector)
+        service_errors = self._cleanup_services(services)
+
+        deployments = self._get_deployments(label_selector=label_selector)
+        deployment_names = [deployment.metadata.name for deployment in deployments]
+        deployment_errors = self._cleanup_deployment(deployment_names, force)
+
+        logger.info("deleting deployments %s" % ",".join(deployment_names))
+
+        # query and delete secrets
+        secrets = self.get_secrets(label_selector=label_selector)
+        secret_names = [secret.metadata.name for secret in secrets]
+        secret_errors = self._cleanup_secrets_with_labels(label_selector)
+        logger.info("deleting secrets for %s" % label_selector)
+
+        configmap_errors = self._cleanup_configmap(label_selector)
+
+        errors = pod_errors + service_errors + deployment_errors + secret_errors + \
+                configmap_errors + inferenceservice_errors
+        return errors
+
+    @record
+    def pod_exec(self, pod_name, exec_command, timeout=60):
+        """work as the command (with timeout): kubectl exec 'pod_name' 'exec_command'"""
+        try:
+            logger.info("Exec on pod {}: {}".format(pod_name, exec_command))
+            client = stream(
+                self.k8s_CoreAPI.connect_get_namespaced_pod_exec,
+                name=pod_name,
+                namespace=self.namespace,
+                command=exec_command,
+                stderr=True,
+                stdin=False,
+                stdout=True,
+                tty=False,
+                _preload_content=False,
+            )
+            client.run_forever(timeout=timeout)
+
+            err = yaml.full_load(client.read_channel(ERROR_CHANNEL))
+            if err is None:
+                return [-1, "Timeout"]
+
+            if err["status"] == "Success":
+                status_code = 0
+            else:
+                logger.debug("Exec on pod {} failed. cmd: {}, err: {}.".format(pod_name, exec_command, err))
+                status_code = int(err["details"]["causes"][0]["message"])
+            output = client.read_all()
+            logger.info("Exec on pod {}, status: {}, cmd: {}, output: {}".format(pod_name, status_code, exec_command, output))
+            return [status_code, output]
+        except ApiException as err:
+            logger.error("Exec on pod {} error. cmd: {}, err: {}.".format(pod_name, exec_command, err), exc_info=True)
+            return [-1, err.message]
+
 class JobRole(object):
     MARK_ROLE_READY_FILE = "/pod/running/ROLE_READY"
 
     @staticmethod
     def get_job_roles(job_id):
-        deployer = JobDeployer()
-        pods = deployer.get_pods(label_selector="run={}".format(job_id))
+        dataHandler = DataHandler()
+        jobType = dataHandler.GetJobTextField(job_id, "jobType")
+        if jobType == "InferenceJob":
+            job_deployer = InferenceServiceJobDeployer()
+        else:
+            job_deployer = JobDeployer()
+        pods = job_deployer.get_pods(label_selector="run={}".format(job_id))
 
         job_roles = []
         for pod in pods:
@@ -624,9 +1003,14 @@ class PythonLauncher(Launcher):
         # check if existing any pod with label: run=job_id
         assert("jobId" in job)
         job_id = job["jobId"]
+        job_object, errors = JobSchema().load(job)
+
         if not self._all_pods_not_existing(job_id):
             logger.warning("Waiting until previously pods are cleaned up! Job {}".format(job_id))
-            job_deployer = JobDeployer()
+            if job_object.params["jobtrainingtype"] == "InferenceJob":
+                job_deployer = InferenceServiceJobDeployer()
+            else:
+                job_deployer = JobDeployer()
             errors = job_deployer.delete_job(job_id, force=True)
             if errors:
                 logger.warning("Force delete job {}: {}".format(job_id, errors))
@@ -728,8 +1112,11 @@ class PythonLauncher(Launcher):
                 f.write(job_description)
 
             secrets = pod_template.generate_secrets(job_object)
-            job_deployer = JobDeployer()
 
+            if job_object.params["jobtrainingtype"] == "InferenceJob":
+                job_deployer = InferenceServiceJobDeployer()
+            else:
+                job_deployer = JobDeployer()
 
             secrets = job_deployer.create_secrets(secrets)
             ret["output"] = "Created secrets: {}. ".format([secret.metadata.name for secret in secrets])
@@ -799,6 +1186,7 @@ class PythonLauncher(Launcher):
         result, detail = k8sUtils.GetJobStatus(job_id)
         # sync start time
         runningDetail = dataHandler.GetJobTextField(job_id, "jobStatusDetail")
+
         if runningDetail is None:
             runningDetail = {}
         else:
@@ -810,7 +1198,12 @@ class PythonLauncher(Launcher):
         dataHandler.UpdateJobTextField(job_id, "jobStatusDetail", base64.b64encode(json.dumps(detail)))
         logger.info("Killing job %s, with status %s, %s" % (job_id, result, detail))
 
-        job_deployer = JobDeployer()
+        jobType = dataHandler.GetJobTextField(job_id, "jobType")
+        if jobType == "InferenceJob":
+            job_deployer = InferenceServiceJobDeployer()
+        else:
+            job_deployer = JobDeployer()
+
         errors = job_deployer.delete_job(job_id, force=True)
 
         dataFields = {

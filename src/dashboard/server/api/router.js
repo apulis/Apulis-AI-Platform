@@ -98,6 +98,7 @@ router.get('/:clusterId/addVc/:vcName/:quota/:metadata',
   require('./middlewares/user')(),
   require('./middlewares/authorize')('MANAGE_VC'),
   require('./controllers/cluster/vc/addVc'))
+  
 router.get('/:clusterId/deleteVc/:vcName',
   require('./middlewares/user')(),
   require('./middlewares/authorize')('MANAGE_VC'),
@@ -115,6 +116,12 @@ router.get('/:clusterId/countJobByStatus/:targetStatus/:vcName',
 router.get('/:clusterId/getAllDevice',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/getAllDevice'))
+router.get('/:clusterId/VersionInfo',
+  require('./middlewares/user')(),
+  require('./controllers/version/getVersionInfo'))
+router.get('/DocsUrl',
+  require('./controllers/docs/getDocsUrl'))
+
 router.get('/vc/user',
   require('./middlewares/user')(),
   require('./controllers/cluster/vc/getUserVc'))
@@ -165,6 +172,7 @@ router.post('/:clusterId/teams/:teamId/postModelConversionJob',
   require('./middlewares/body')('postModelConversionJob'),
   require('./middlewares/authorize')('EDGE_INFERENCE'),
   require('./controllers/cluster/model/postModelConversionJob'))
+
 
 // router.get('/:clusterId/listUser',
 //   require('./middlewares/user')(),

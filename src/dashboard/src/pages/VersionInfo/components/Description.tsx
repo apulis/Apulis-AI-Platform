@@ -1,4 +1,5 @@
 import React from 'react';
+import { Divider } from '@material-ui/core';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -12,10 +13,12 @@ const useStyles = makeStyles((theme: Theme) =>
       borderBottom: '1px solid #f0f0f0'
     },
     label: {
-      padding: '16px'
+      padding: '16px',
+      textAlign: 'left'
     },
     content: {
-      padding: '16px'
+      padding: '16px',
+      textAlign: 'left'
     }
   })
 );
@@ -34,18 +37,21 @@ const Description: React.FC<Props> = (props) => {
   const { title, time, desc } = props
   const styles = useStyles({})
   return (
-    <table className={styles.table}>
-      <tr>
-        <th style={{ width: '20%' }} className={styles.label} colSpan={2}>{titleText}</th>
-        <td style={{ width: '30%' }} className={styles.content} colSpan={3}>{title}</td>
-        <th style={{ width: '20%' }} className={styles.label} colSpan={2}>{timeText}</th>
-        <td style={{ width: '30%' }} className={styles.content} colSpan={3}>{time}</td>
-      </tr>
-      <tr>
-        <th className={styles.label} colSpan={2}>{descText}</th>
-        <td className={styles.content} colSpan={8}>{desc}</td>
-      </tr>
-    </table>
+    <>
+      <Divider />
+      <table className={styles.table}>
+        <tr>
+          <th style={{ width: '20%' }} className={styles.label} colSpan={2}>{titleText}</th>
+          <td style={{ width: '30%' }} className={styles.content} colSpan={3}>{title}</td>
+          <th style={{ width: '20%' }} className={styles.label} colSpan={2}>{timeText}</th>
+          <td style={{ width: '30%' }} className={styles.content} colSpan={3}>{time}</td>
+        </tr>
+        <tr>
+          <th className={styles.label} colSpan={2}>{descText}</th>
+          <td className={styles.content} colSpan={8}>{desc}</td>
+        </tr>
+      </table>
+    </>
   )
 }
 export default Description;

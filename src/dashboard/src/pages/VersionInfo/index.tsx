@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import {
-  Button, Divider
-} from '@material-ui/core';
+import { Button, Divider } from '@material-ui/core';
 import Description from './components/Description'
 import { useHistory } from 'react-router-dom';
 import DrawerContext from '../../layout/Drawer/Context';
@@ -41,24 +39,17 @@ const Version: React.FC = () => {
 
   return (
     <>
-      <div style={{ paddingLeft: '16px' }}>
-        <Button variant="contained" color="primary" onClick={() => { history.push('/home'); setOpen(true) }}>返回首页</Button>
+      <div style={{ padding: '0 0 16px 16px' }}>
+        <Button variant="contained" color="primary" onClick={() => { history.push('/home'); setOpen(true) }}>back home</Button>
       </div>
       <div style={{ marginRight: '64px' }}>
-        <h2 style={{ marginLeft: '100px', color: '#3f51b5' }}>当前版本：</h2>
-        <Divider />
-        <Description titleText='版本号：' timeText='更新时间:' descText='版本描述:' title={curVersion.name} time={curVersion.updateAt} desc={curVersion.description} />
-      </div>
-      { historyVersionArr.length && (<div style={{ marginRight: '64px' }}>
-        <h2 style={{ marginLeft: '100px', color: '#3f51b5' }}>历史版本：</h2>
-        <Divider />
+        <Description titleText='version:' timeText='updateAt:' descText='description:' title={curVersion.name} time={curVersion.updateAt} desc={curVersion.description} />
         {
           historyVersionArr.map((version) => (
-            <Description titleText='版本号：' timeText='更新时间:' descText='版本描述:' title={version.name} time={version.updateAt} desc={version.description} />
+            <Description titleText='version:' timeText='updateAt:' descText='description:' title={version.name} time={version.updateAt} desc={version.description} />
           ))
         }
-      </div>)
-      }
+      </div>
     </>
   )
 };

@@ -284,7 +284,6 @@ class Cluster extends Service {
       jobId,
       userName: user.userName
     })
-
     const response = await this.fetch('/endpoints?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()

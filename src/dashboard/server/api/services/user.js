@@ -301,7 +301,7 @@ class User extends Service {
       }
     })
     const data = await response.json()
-    context.assert(data['success'] === true, 502)
+    context.assert(data['success'] === true, 502) // 这里断言失败
     delete data.success
     return data
   }

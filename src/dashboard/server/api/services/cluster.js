@@ -505,7 +505,11 @@ class Cluster extends Service {
     return data
   }
 
-
+  async getVersionInfo () {
+    const response = await this.fetch('/VersionInfo')
+    const data = await response.json()
+    return data
+  }
   /**
    * USER
    */

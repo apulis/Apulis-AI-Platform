@@ -352,12 +352,13 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
     return
 
 def modify_docker_tag_by_version_file(config):
-    for docker_name, docker_version in config["docker_image_versions"].items():
-        if docker_name in config["dockers"]["container"] and docker_version != "" and docker_version != None:
-            old_tag = config["dockers"]["container"][docker_name]["fullname"]
-            list = old_tag.split(":")
-            prefix = ":".join(list[0:(len(list)-1)])
-            config["dockers"]["container"][docker_name]["fullname"] = prefix + ":" + str(docker_version)
+    if "docker_image_versions" in config:
+        for docker_name, docker_version in config["docker_image_versions"].items():
+            if docker_name in config["dockers"]["container"] and docker_version != "" and docker_version != None:
+                old_tag = config["dockers"]["container"][docker_name]["fullname"]
+                list = old_tag.split(":")
+                prefix = ":".join(list[0:(len(list)-1)])
+                config["dockers"]["container"][docker_name]["fullname"] = prefix + ":" + str(docker_version)
     #pprint.pprint(config["dockers"])
     return
 

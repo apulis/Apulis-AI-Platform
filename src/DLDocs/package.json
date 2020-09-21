@@ -1,0 +1,18 @@
+{
+  "name": "DLDocs",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ecstatic": "^4.1.4",
+    "connect-history-api-fallback": "^1.6.0"
+  },
+  "devDependencies": {
+    "vuepress": "^1.5.3",
+    "express": "^4.17.1"
+  },
+  "scripts": {
+    "handbook:dev": "vuepress dev handbook",
+    "handbook:build": "vuepress build handbook"
+  }
+}

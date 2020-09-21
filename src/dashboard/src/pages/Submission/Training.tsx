@@ -56,6 +56,13 @@ interface EnvironmentVariable {
   time: number;
 }
 
+interface template {
+  scope: string;
+  json: string;
+  name: string;
+  isDefault: 1 | 0
+}
+
 const sanitizePath = (path: string) => {
   path = join('/', path);
   path = join('.', path);
@@ -89,7 +96,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuCapacity, setGpuCapacity] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
   const [npuNumMsg, setNpuNumMsg] = useState('');
-  const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
+  const [templates, setTemplates] = useState<template[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(1);
@@ -245,8 +252,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
-  const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const val = e.target.value;
+  
+  const onTemplateChange = (val: string,templates: template[]) => {
     if (val === 'None (Apply a Template)') {
       setName("");
       setValue('jobName', '');
@@ -273,8 +280,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setPreemptible(false);
       setValue('interactivePorts', '');
     } else {
-      const _selectName = val.split('.')[0];
-      const _selectScope = val.split('.')[1];
+      const [_selectName,_selectScope] = val.split('.')
       const {
         name,
         type,
@@ -611,7 +617,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
       .then(res => {
-        setTemplates(res.data);
+        const templates = res.data;
+        setTemplates(templates);
+        const template = templates.find((item: template) => (item.isDefault === 1))
+        if(template){
+          onTemplateChange(`${template.name}.${template.scope}`, templates)
+        }
       })
   }
 
@@ -795,12 +806,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     fullWidth
                     variant="filled"
                     value={selectTPName}
-                    onChange={onTemplateChange}
+                    onChange={(e) => { onTemplateChange(e.target.value, templates) }}
                   >
-                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                     {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
                       <MenuItem key={index} value={`${name}.${scope}`}>{`${name}(${scope})`}</MenuItem>
                     ))}
+                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                   </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6}>

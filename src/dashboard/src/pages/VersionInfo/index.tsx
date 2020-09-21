@@ -14,7 +14,6 @@ interface VersionInfo {
 
 const Version: React.FC = () => {
   const { selectedCluster } = useContext(ClusterContext);
-  console.log('ssssssssssssss',selectedCluster)
   const history = useHistory();
   const [curVersion, setCurVersion] = useState<VersionInfo>({ name: '', updateAt: '', description: '' });
   const [historyVersionArr, setHistoryVersionArr] = useState([{ name: '', updateAt: '', description: '' }]);
@@ -42,8 +41,8 @@ const Version: React.FC = () => {
       <div style={{ padding: '0 0 16px 16px' }}>
         <Button variant="contained" color="primary" onClick={() => { history.push('/home'); setOpen(true) }}>back home</Button>
       </div>
-      <div style={{ marginRight: '64px' }}>
-        <Description titleText='version:' timeText='updateAt:' descText='description:' title={curVersion.name} time={curVersion.updateAt} desc={curVersion.description} />
+      <div style={{ marginRight: '64px', position: 'relative' }}>
+        <Description titleText='version:' timeText='updateAt:' descText='description:' title={curVersion.name} time={curVersion.updateAt} desc={curVersion.description} icon={true} iconText={'current'}/>
         {
           historyVersionArr.map((version) => (
             <Description titleText='version:' timeText='updateAt:' descText='description:' title={version.name} time={version.updateAt} desc={version.description} />

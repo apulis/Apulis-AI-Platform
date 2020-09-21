@@ -7,7 +7,6 @@
 module.exports = async context => {
   const { cluster } = context.state
   const { jobId } = context.params
-
   const endpoints = await cluster.getEndpoints(jobId)
 
   context.body = endpoints

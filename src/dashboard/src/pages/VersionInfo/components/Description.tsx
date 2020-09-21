@@ -29,26 +29,31 @@ interface Props {
   descText?: string,
   title: string,
   time: string,
-  desc: string
+  desc: string,
+  icon?: boolean,
+  iconText?: string
 }
 
 const Description: React.FC<Props> = (props) => {
   const { titleText = '标题', timeText = '时间', descText = '描述' } = props
-  const { title, time, desc } = props
+  const { title, time, desc, icon, iconText } = props
   const styles = useStyles({})
   return (
     <>
       <Divider />
       <table className={styles.table}>
         <tr>
-          <th style={{ width: '20%' }} className={styles.label} colSpan={2}>{titleText}</th>
-          <td style={{ width: '30%' }} className={styles.content} colSpan={3}>{title}</td>
-          <th style={{ width: '20%' }} className={styles.label} colSpan={2}>{timeText}</th>
-          <td style={{ width: '30%' }} className={styles.content} colSpan={3}>{time}</td>
+          <th style={{ width: '15%' }} className={styles.label} colSpan={1}>
+            {icon && <span style={{ border: '1px', backgroundColor: '#3f51b5',padding:'3px', color: 'white', marginRight:'5px' }}>{iconText}</span>}
+            {titleText}
+          </th>
+          <td style={{ width: '35%' }} className={styles.content} colSpan={4}>{title}</td>
+          <th style={{ width: '15%' }} className={styles.label} colSpan={1}>{timeText}</th>
+          <td style={{ width: '35%' }} className={styles.content} colSpan={4}>{time}</td>
         </tr>
         <tr>
-          <th className={styles.label} colSpan={2}>{descText}</th>
-          <td className={styles.content} colSpan={8}>{desc}</td>
+          <th className={styles.label} colSpan={1}>{descText}</th>
+          <td className={styles.content} colSpan={9}>{desc}</td>
         </tr>
       </table>
     </>

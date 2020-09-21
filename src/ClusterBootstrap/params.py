@@ -262,6 +262,8 @@ default_config_parameters = {
         "namenode1": "etcd_node_1",
         "namenode2": "etcd_node_2",
 
+        "repairmanager": "etcd_node",
+        
         "datanode": "all",
 
         "grafana": "etcd_node_1",

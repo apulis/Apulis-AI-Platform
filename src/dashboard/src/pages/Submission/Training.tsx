@@ -56,6 +56,13 @@ interface EnvironmentVariable {
   time: number;
 }
 
+interface template {
+  scope: string;
+  json: string;
+  name: string;
+  isDefault: 1 | 0
+}
+
 const sanitizePath = (path: string) => {
   path = join('/', path);
   path = join('.', path);
@@ -89,7 +96,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuCapacity, setGpuCapacity] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
   const [npuNumMsg, setNpuNumMsg] = useState('');
-  const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
+  const [templates, setTemplates] = useState<template[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(1);
@@ -243,7 +250,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
-  const onTemplateChange = (val: string) => {
+  
+  const onTemplateChange = (val: string,templates: template[]) => {
+    // TODO
     if (val === 'None (Apply a Template)') {
       setName("");
       setValue('jobName', '');
@@ -269,8 +278,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setPreemptible(false);
       setValue('interactivePorts', '');
     } else {
-      const _selectName = val.split('.')[0];
-      const _selectScope = val.split('.')[1];
+      const [_selectName,_selectScope] = val.split('.')
       const {
         name,
         type,
@@ -605,8 +613,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
       .then(res => {
-        setTemplates(res.data);
+        const templates = res.data;
+        setTemplates(templates);
          // TODO 判断有无默认的进行初始化，有则调用onTemplateChange方法
+        const template = templates.find((item: template) => (item.isDefault === 1))
+        if(template){
+          onTemplateChange(`${template.name}.${template.scope}`, templates)
+        }
       })
   }
 
@@ -790,7 +803,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     fullWidth
                     variant="filled"
                     value={selectTPName}
-                    onChange={(e) => { onTemplateChange(e.target.value) }}
+                    onChange={(e) => { onTemplateChange(e.target.value, templates) }}
                   >
                      {/* TODO 有默认则用默认的(调用onTemplateChange方法)，没默认的则用None */}
                     {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (

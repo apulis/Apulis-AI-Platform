@@ -252,7 +252,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
   
   const onTemplateChange = (val: string,templates: template[]) => {
-    // TODO
     if (val === 'None (Apply a Template)') {
       setName("");
       setValue('jobName', '');
@@ -615,7 +614,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       .then(res => {
         const templates = res.data;
         setTemplates(templates);
-         // TODO 判断有无默认的进行初始化，有则调用onTemplateChange方法
         const template = templates.find((item: template) => (item.isDefault === 1))
         if(template){
           onTemplateChange(`${template.name}.${template.scope}`, templates)
@@ -805,7 +803,6 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     value={selectTPName}
                     onChange={(e) => { onTemplateChange(e.target.value, templates) }}
                   >
-                     {/* TODO 有默认则用默认的(调用onTemplateChange方法)，没默认的则用None */}
                     {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
                       <MenuItem key={index} value={`${name}.${scope}`}>{`${name}(${scope})`}</MenuItem>
                     ))}

@@ -243,8 +243,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
-  const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const val = e.target.value;
+  const onTemplateChange = (val: string) => {
     if (val === 'None (Apply a Template)') {
       setName("");
       setValue('jobName', '');
@@ -607,6 +606,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     axios.get(`/teams/${selectedTeam}/templates`)
       .then(res => {
         setTemplates(res.data);
+         // TODO 判断有无默认的进行初始化，有则调用onTemplateChange方法
       })
   }
 
@@ -790,12 +790,13 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     fullWidth
                     variant="filled"
                     value={selectTPName}
-                    onChange={onTemplateChange}
+                    onChange={(e) => { onTemplateChange(e.target.value) }}
                   >
-                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
+                     {/* TODO 有默认则用默认的(调用onTemplateChange方法)，没默认的则用None */}
                     {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
                       <MenuItem key={index} value={`${name}.${scope}`}>{`${name}(${scope})`}</MenuItem>
                     ))}
+                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                   </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6}>

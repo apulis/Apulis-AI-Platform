@@ -2032,7 +2032,7 @@ class DataHandler(object):
     def GetTemplates(self, scope):
         ret = []
         try:
-            query = "SELECT `name`, `json`, 'isDefault' FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
+            query = "SELECT `name`, `json`, `isDefault` FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
             with MysqlConn() as conn:
                 rets = conn.select_many(query,[scope])
             for one in rets:

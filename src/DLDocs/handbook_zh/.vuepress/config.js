@@ -1,5 +1,5 @@
 module.exports = {
-  base : '/docs/zh/handbook',
+  base : '/docs/zh/handbook/',
   title:'依瞳人工智能开发平台',
   dest:'./dist/zh/handbook',
   themeConfig: {

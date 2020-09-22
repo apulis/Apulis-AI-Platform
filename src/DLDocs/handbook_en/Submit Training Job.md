@@ -1,6 +1,6 @@
 By clicking the ' Submit Training Job" in the menu bar, the user can access the submission job page, as shown in Figure 12. The page includes basic setting, advanced settings, and template settings. After the job is submitted, the page will jump to Job detail page. 
 
-![img](assets/clip_image002-1600740445898.jpg)
+![img](./assets/clip_image002-1600740445898.jpg)
 
 Figure 13:  Submit Training Job
 
@@ -16,13 +16,13 @@ The detail description for each parameter is provided below:
 
 ·     Job Template:  You can select an existing training task template, as shown in Figure 14.
 
-![img](assets/clip_image004-1600740445898.jpg)
+![img](./assets/clip_image004-1600740445898.jpg)
 
 Figure 14:  Template List
 
 ·     Job Type: set the task type, the available choices are the Regular Job and the Distributed Job. If the Distributed Job is selected, the number of devices is changed to the number of nodes, and the parameter Total Number of Devices is also added. The Total Number of Devices equals to the Number of Nodes multiply by 8, as shown in Figure 15. 
 
-![img](assets/clip_image006-1600740445898.jpg)
+![img](./assets/clip_image006-1600740445898.jpg)
 
 Figure 15:  Job Type Set to Distributed Job
 
@@ -44,7 +44,7 @@ Figure 15:  Job Type Set to Distributed Job
 
 Advanced settings include Custom Docker Registry, Mount Directories and Environment Variables, as shown in Figure 16. 
 
-![img](assets/clip_image008-1600740445898.jpg)
+![img](./assets/clip_image008-1600740445898.jpg)
 
 Figure 16:  Advanced Settings 
 
@@ -58,7 +58,7 @@ Figure 16:  Advanced Settings
 
 Template settings include Save Template and Delete Template, as shown in Figure 17. 
 
-![img](assets/clip_image010-1600740445898.jpg)
+![img](./assets/clip_image010-1600740445898.jpg)
 
 Figure 17:  Template Settings
 
@@ -66,6 +66,6 @@ Figure 17:  Template Settings
 
 ·     Delete Template:  If there is no template in the current VC, the DELETE button is not displayed; if there is a template in the current VC, click DELETE and the delete template page will pop up. After selecting the template, click DELETE to delete the selected template, as shown in Figure 18. 
 
-![img](assets/clip_image012-1600740445898.jpg)
+![img](./assets/clip_image012-1600740445898.jpg)
 
 Figure 18:  Delete Template

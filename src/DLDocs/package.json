@@ -12,7 +12,9 @@
     "express": "^4.17.1"
   },
   "scripts": {
-    "handbook:dev": "vuepress dev handbook",
-    "handbook:build": "vuepress build handbook"
+    "en:dev": "vuepress dev handbook_en",
+    "en:build": "vuepress build handbook_en",
+    "zh:dev": "vuepress dev handbook_zh",
+    "zh:build": "vuepress build handbook_zh"
   }
 }

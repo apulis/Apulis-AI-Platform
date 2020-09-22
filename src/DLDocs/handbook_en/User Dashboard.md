@@ -1,6 +1,6 @@
 User Dashboard page includes upper menu bar, dashboard and Admin, as shown in Figure 34, where the Admin includes User, Group, and Role. 
 
-![img](assets/clip_image002-1600741292402.jpg)
+![img](./assets/clip_image002-1600741292402.jpg)
 
 Figure 34: User Dashboard
 
@@ -8,7 +8,7 @@ Figure 34: User Dashboard
 
 Upper Menu Bar include Apulis Dashboard button and the user name. Click Apulis Dashboard button to switch to Deep Learning Platform. After clicking the user name, you can choose Account info or logout. Select Account to open user details page as shown in Figure 35. Select Logout to exit the current session and logout, system will also jump to login page. 
 
-![img](assets/clip_image004-1600741292402.jpg)
+![img](./assets/clip_image004-1600741292402.jpg)
 
 Figure 35: Account Info
 
@@ -28,7 +28,7 @@ The user list includes username, nickname, phone, email, and action, as shown in
 
 
 
-![img](assets/clip_image006-1600741292402.jpg)
+![img](./assets/clip_image006-1600741292402.jpg)
 
 Figure 36: User List
 
@@ -44,7 +44,7 @@ Figure 36: User List
 
 Click on the nick name on the list can jump to the user details page, as shown in Figure 37. It shows the user information, User Roles and User Groups. The modifiable user information includes nickname, phone number, email and description. A system administrator may reset a user’s password. The User Role area shows a list of roles that the current user has associated with. The user may click Remove to remove a particular association. The associated user group displays the list of user groups associated with the current user. The user may click Remove to remove the association. 
 
-![img](assets/clip_image008-1600741292402.jpg)
+![img](./assets/clip_image008-1600741292402.jpg)
 
 Figure 37: User Detail Page
 
@@ -52,15 +52,15 @@ Figure 37: User Detail Page
 
 Three steps are required to create a new user:  fill up user information, associate roles, and preview, as shown in Figure 38 to Figure 40. 
 
-![img](assets/clip_image010-1600741292402.jpg)
+![img](./assets/clip_image010-1600741292402.jpg)
 
 Figure 38: Create New User – User Information
 
-![img](assets/clip_image012-1600741292402.jpg)
+![img](./assets/clip_image012-1600741292402.jpg)
 
 Figure 39: Create New User – Role Association
 
-![img](assets/clip_image014-1600741292402.jpg)
+![img](./assets/clip_image014-1600741292402.jpg)
 
 Figure 40: Create New User – Preview
 
@@ -78,7 +78,7 @@ Figure 40: Create New User – Preview
 
 User Group List includes group name, description, create time, and action as shown in Figure 41. 
 
-![img](assets/clip_image016-1600741292402.jpg)
+![img](./assets/clip_image016-1600741292402.jpg)
 
 Figure 41: List of User Group
 
@@ -92,7 +92,7 @@ Figure 41: List of User Group
 
 Click on the name of the user group in the list to display the user group information, its associated roles and users, as shown in Figure 42. User group information can be edited to modify the name and description of the group. The list of roles associated with the current user group is displayed in the associated roles. A specific associated role can be removed after clicking Remove button in the Role list. The associated user table displays the users associated with the current user group. The Remove button may remove a particular user from the user group. 
 
-![img](assets/clip_image018-1600741292402.jpg)
+![img](./assets/clip_image018-1600741292402.jpg)
 
 Figure 42: User Group Information
 
@@ -100,15 +100,15 @@ Figure 42: User Group Information
 
 Three steps are required to create a new group:  fill up group information, associate the roles and preview, as shown in Figure 43 to Figure 45. 
 
-![img](assets/clip_image020-1600741292402.jpg)
+![img](./assets/clip_image020-1600741292402.jpg)
 
 Figure 43: Create New User Group – Group Information
 
-![img](assets/clip_image022.jpg)
+![img](./assets/clip_image022.jpg)
 
 Figure 44: Create New User Group – Role Association
 
-![img](assets/clip_image024.jpg)
+![img](./assets/clip_image024.jpg)
 
 Figure 45: Create New User Group – Preview
 
@@ -126,7 +126,7 @@ The Role include Role List and New Role. The Role List shows a list of the exist
 
 Role list include role name, description, type, and action, as shown in Figure 46. 
 
-![img](assets/clip_image026.jpg)
+![img](./assets/clip_image026.jpg)
 
 Figure 46: Role List
 
@@ -142,7 +142,7 @@ Figure 46: Role List
 
 The New Role page creates a new role. It is required to fill in the role name, and role description. The new role can be created after selecting the proper permission assigned to the role as shown in Figure 47. 
 
-![img](assets/clip_image028.jpg)
+![img](./assets/clip_image028.jpg)
 
 Figure 47: Create New Role
 

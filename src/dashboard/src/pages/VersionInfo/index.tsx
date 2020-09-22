@@ -21,6 +21,7 @@ const Version: React.FC = () => {
 
   const apiGetVersionInfo = async () => {
     const url = `/${selectedCluster}/VersionInfo`;
+    debugger
     await axios.get(url)
       .then((res: any) => {
         if (res) {
@@ -33,6 +34,7 @@ const Version: React.FC = () => {
   }
 
   useEffect(() => {
+    debugger
     apiGetVersionInfo();
   }, [])
 

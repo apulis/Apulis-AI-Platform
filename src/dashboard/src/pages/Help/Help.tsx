@@ -10,7 +10,7 @@ const Help: React.FC = () => {
     await axios.get(url)
       .then((res) => {
         if (res) {
-          setDocsUrl(res.data.docsUrl + 'handbook/index.html')
+          setDocsUrl(res.data.docsUrl + 'en/handbook/index.html')
         }
       })
   }

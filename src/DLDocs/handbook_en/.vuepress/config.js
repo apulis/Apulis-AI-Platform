@@ -1,5 +1,5 @@
 module.exports = {
-  base : '/docs/en/handbook',
+  base : '/docs/en/handbook/',
   title:'Apulis AI Development Platform',
   dest:'./dist/en/handbook',
   themeConfig: {

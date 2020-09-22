@@ -56,6 +56,13 @@ interface EnvironmentVariable {
   time: number;
 }
 
+interface template {
+  scope: string;
+  json: string;
+  name: string;
+  isDefault: 1 | 0
+}
+
 const sanitizePath = (path: string) => {
   path = join('/', path);
   path = join('.', path);
@@ -89,7 +96,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuCapacity, setGpuCapacity] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
   const [npuNumMsg, setNpuNumMsg] = useState('');
-  const [templates, setTemplates] = useState<{name: string, json: string, scope: string}[]>([]);
+  const [templates, setTemplates] = useState<template[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(1);
@@ -99,6 +106,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [ssh, setSsh] = useState(false);
   const [ipython, setIpython] = useState(false);
   const [tensorboard, setTensorboard] = useState(false);
+  const [vscode, setVscode] = useState(false);
   const [advanced, setAdvanced] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [accountKey, setAccountKey] = useState("");
@@ -203,10 +211,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ssh,
         ipython,
         tensorboard,
+        vscode,
         plugins,
         gpuType,
         preemptible,
-        interactivePorts
+        interactivePorts,
       };
       const url = `/teams/${selectedTeam}/templates/${tplName}?database=${tplDatabase}`;
       await axios.put(url, template);
@@ -243,8 +252,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     }
   }
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
-  const onTemplateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const val = e.target.value;
+  
+  const onTemplateChange = (val: string,templates: template[]) => {
     if (val === 'None (Apply a Template)') {
       setName("");
       setValue('jobName', '');
@@ -266,12 +275,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setSsh(false);
       setIpython(false);
       setTensorboard(false);
+      setVscode(false);
       setGpuType(availbleGpu![0].type || '')
       setPreemptible(false);
       setValue('interactivePorts', '');
     } else {
-      const _selectName = val.split('.')[0];
-      const _selectScope = val.split('.')[1];
+      const [_selectName,_selectScope] = val.split('.')
       const {
         name,
         type,
@@ -290,6 +299,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         ssh,
         ipython,
         tensorboard,
+        vscode,
         plugins,
         gpuType,
         preemptible,
@@ -336,6 +346,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       if (ssh !== undefined) setSsh(ssh);
       if (ipython !== undefined) setIpython(ipython);
       if (tensorboard !== undefined) setTensorboard(tensorboard);
+      if (vscode !== undefined) setVscode(vscode)
       if (gpuType !== undefined) setGpuType(gpuType);
       if (preemptible !== undefined) setPreemptible(preemptible);
       if (interactivePorts !== undefined) {
@@ -512,7 +523,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     if (ssh) endpoints.push('ssh');
     if (ipython) endpoints.push('ipython');
     if (tensorboard) endpoints.push('tensorboard');
-
+    if (vscode) endpoints.push('vscode');
     if (endpoints.length > 0) {
       postEndpoints(`/clusters/${selectedCluster}/jobs/${jobId.current}/endpoints`, { endpoints });
     } else {
@@ -606,7 +617,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const getTemplates = () => {
     axios.get(`/teams/${selectedTeam}/templates`)
       .then(res => {
-        setTemplates(res.data);
+        const templates = res.data;
+        setTemplates(templates);
+        const template = templates.find((item: template) => (item.isDefault === 1))
+        if(template){
+          onTemplateChange(`${template.name}.${template.scope}`, templates)
+        }
       })
   }
 
@@ -790,12 +806,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     fullWidth
                     variant="filled"
                     value={selectTPName}
-                    onChange={onTemplateChange}
+                    onChange={(e) => { onTemplateChange(e.target.value, templates) }}
                   >
-                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                     {templates.length > 0 && templates.sort((a,b)=>a.name.localeCompare(b.name)).map(({ name, json, scope }: any, index: number) => (
                       <MenuItem key={index} value={`${name}.${scope}`}>{`${name}(${scope})`}</MenuItem>
                     ))}
+                    <MenuItem value={'None (Apply a Template)'} divider>None (Apply a Template)</MenuItem>
                   </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -958,7 +974,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     })}
                   />
                 </Grid>
-                <Grid item xs={4} container justify="center">
+                <Grid item xs={3} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
                     label="SSH"
@@ -966,7 +982,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={(e, checked) => setSsh(checked)}
                   />
                 </Grid>
-                <Grid item xs={4} container justify="center">
+                <Grid item xs={3} container justify="center">
                   <FormControlLabel
                     control={<Checkbox />}
                     label="Jupyter"
@@ -974,7 +990,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     onChange={(e, checked) => setIpython(checked)}
                   />
                 </Grid>
-                <Grid item xs={4} container justify="center" className="icon-grid">
+                <Grid item xs={3} container justify="center" className="icon-grid">
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label="Vscode"
+                    checked={vscode}
+                    onChange={(e, checked) => {setVscode(checked)}}
+                  />
+                </Grid>
+                <Grid item xs={3} container justify="center" className="icon-grid">
                   <FormControlLabel
                     control={<Checkbox />}
                     label="TensorBoard"
@@ -983,12 +1007,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   />
                   <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
                 </Grid>
-                {iconInfoShow && <Grid item xs={12} container justify="flex-end">
-                  <Chip
-                    icon={<Help/>}
-                    label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
-                  />
-                </Grid>}
+                
               </Grid>
             </CardContent>
             <Collapse in={advanced}>

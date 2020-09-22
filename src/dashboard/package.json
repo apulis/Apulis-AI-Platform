@@ -151,7 +151,7 @@
     "frontend": "node scripts/start.js",
     "build": "node scripts/build.js",
     "backend": "nodemon server",
-    "dev": "node server/index-dev",
+    "dev": "nodemon server",
     "lint:backend": "eslint server",
     "test:backend": "mocha --config server/.mocharc.js",
     "coverage:backend": "nyc --nycrc-path server/.nycrc.js npm run test:backend",

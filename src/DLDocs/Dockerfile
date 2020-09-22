@@ -10,7 +10,8 @@ RUN yarn
 
 COPY . /home/handbook
 
-RUN yarn handbook:build
+RUN yarn en:build
+RUN yarn zh:build
 
 EXPOSE 3386
 

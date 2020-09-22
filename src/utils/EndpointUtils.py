@@ -6,7 +6,7 @@ from config import config
 
 def getNodename():
     domain = config["domain"]
-    if "endpoint_use_short_domian" in config and config["endpoint_use_short_domian"].strip():
+    if "endpoint_use_short_domian" in config and config["endpoint_use_short_domian"]:
         return config["endpoint_use_short_domian"],domain
     elif "master_private_ip" in config:
         return config["master_private_ip"].split(".", 1)

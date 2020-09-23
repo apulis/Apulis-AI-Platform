@@ -110,6 +110,7 @@ extranet_port: 80
 {% else %}
 extranet_port: {{cnf["extranet_port"]}}
 {% endif %}
+extranet_protocol: {{cnf["extranet_protocol"]}}
 
 defalt_virtual_cluster_device_type_list:
 {% for one in cnf["defalt_virtual_cluster_device_type_list"] %}

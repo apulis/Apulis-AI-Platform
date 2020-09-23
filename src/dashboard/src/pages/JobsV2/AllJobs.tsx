@@ -33,7 +33,7 @@ interface JobsTableProps {
 const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
   const { cluster } = useContext(ClusterContext);
   const { permissionList = [] } = useContext(AuthContext);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
     setPageSize(pageSize);
   }, [setPageSize]);
@@ -41,7 +41,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
     { title: 'Id', type: 'string', field: 'jobId',
       render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
     { title: 'Name', type: 'string', field: 'jobName', sorting: false },
-    { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
+    { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus },
     { title: 'Number of Device', type: 'numeric',
       render: renderGPU, customSort: sortGPU },
     { title: 'User', type: 'string', render: renderUser},
@@ -104,39 +104,40 @@ const AllJobs: FunctionComponent = () => {
       })
   }
 
-  const runningJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const runningJobs = jobs.filter((job: any) => job['jobStatus'] === 'running');
-    if (runningJobs.length === 0) return undefined;
-    return runningJobs;
-  }, [jobs]);
-  const queuingJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const queuingJobs = jobs.filter((job: any) => job['jobStatus'] === 'queued' || job['jobStatus'] === 'scheduling' );
-    if (queuingJobs.length === 0) return undefined;
-    return queuingJobs
-  }, [jobs]);
-  const unapprovedJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const unapprovedJobs = jobs.filter((job: any)=>job['jobStatus'] === 'unapproved');
-    if (unapprovedJobs.length === 0) return undefined;
-    return unapprovedJobs
-  }, [jobs]);
-  const pausedJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const pausedJobs = jobs.filter((job: any) => job['jobStatus'] === 'paused' || job['jobStatus'] === 'pausing' );
-    if (pausedJobs.length === 0) return undefined;
-    return pausedJobs
-  }, [jobs]);
+  // const runningJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const runningJobs = jobs.filter((job: any) => job['jobStatus'] === 'running');
+  //   if (runningJobs.length === 0) return undefined;
+  //   return runningJobs;
+  // }, [jobs]);
+  // const queuingJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const queuingJobs = jobs.filter((job: any) => job['jobStatus'] === 'queued' || job['jobStatus'] === 'scheduling' );
+  //   if (queuingJobs.length === 0) return undefined;
+  //   return queuingJobs
+  // }, [jobs]);
+  // const unapprovedJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const unapprovedJobs = jobs.filter((job: any)=>job['jobStatus'] === 'unapproved');
+  //   if (unapprovedJobs.length === 0) return undefined;
+  //   return unapprovedJobs
+  // }, [jobs]);
+  // const pausedJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const pausedJobs = jobs.filter((job: any) => job['jobStatus'] === 'paused' || job['jobStatus'] === 'pausing' );
+  //   if (pausedJobs.length === 0) return undefined;
+  //   return pausedJobs
+  // }, [jobs]);
+
   if (jobs !== undefined) return (
     <>
-      {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}
+      {/* {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}
       {queuingJobs && <JobsTable title="Queuing Jobs" jobs={queuingJobs}/>}
       {unapprovedJobs && <JobsTable title="Unapproved Jobs" jobs={unapprovedJobs}/>}
-      {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>}
-      {jobs.length === 0 &&
-        <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3>
-      }
+      {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>} */}
+      {jobs.length === 0 ?
+        <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3> :
+        <JobsTable title="All Jobs" jobs={jobs}/>}
     </>
   );
 

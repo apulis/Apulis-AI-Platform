@@ -32,7 +32,7 @@ administrators:
 {% endfor %}
 clusters:
   {{cnf["cluster_name"]}}:
-      restfulapi: "http://{{cnf["restfulapi_node"]}}/apis"
+      restfulapi: "http://127.0.0.1/apis"
       title: Grafana-endpoint-of-the-cluster
       workStorage: {{cnf["storage-mount-path"]}}/work
       dataStorage: {{cnf["storage-mount-path"]}}/storage
@@ -43,3 +43,5 @@ userGroup:
   domain: "http://{{cnf["webportal_node"]}}"
   backEndPath: /custom-user-dashboard-backend
   frontEndPath: /custom-user-dashboard
+
+extranet_protocol: {{cnf["extranet_protocol"]}}

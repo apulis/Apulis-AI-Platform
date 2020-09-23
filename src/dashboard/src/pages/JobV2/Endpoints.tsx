@@ -24,7 +24,7 @@ import {
   Typography,
   Chip
 } from '@material-ui/core';
-import { Send, Info } from '@material-ui/icons';
+import { Send, Help } from '@material-ui/icons';
 import useFetch from 'use-http-2';
 import { useSnackbar } from 'notistack';
 import Loading from '../../components/Loading';
@@ -55,12 +55,15 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     return <CopyableTextListItem primary={`SSH${task ? ` to ${task}` : ''}`} secondary={command}/>;
   }
   let url;
-  if (endpoint.name == "ipython" || endpoint.name === 'tensorboard'){
-    url = `http://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
+  const availEndpoints = ['ipython', 'tensorboard']
+  if (availEndpoints.includes(endpoint.name)) {
+    url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
+  } else if (endpoint.name === 'vscode') {
+    url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/v4/${endpoint['port']}/`
+  } else {
+    url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/`
   }
-  else{
-    url = `http://${endpoint['nodeName']}.${endpoint['domain']}:${endpoint['port']}/`
-  }
+  
   if (endpoint.name === 'ipython') {
     return (
       <ListItem button component="a" href={url} target="_blank">
@@ -72,6 +75,14 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
     return (
       <ListItem button component="a" href={url} target="_blank">
         <ListItemText primary="TensorBoard" secondary={url}/>
+      </ListItem>
+    );
+  }
+
+  if (endpoint.name === 'vscode') {
+    return (
+      <ListItem button component="a" href={url} target="_blank">
+        <ListItemText primary="Vscode" secondary={url}/>
       </ListItem>
     );
   }
@@ -131,6 +142,9 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   }, [endpoints]);
   const tensorboard = useMemo(() => {
     return endpoints.some((endpoint) => endpoint.name === 'tensorboard');
+  }, [endpoints]);
+  const vscode = useMemo(() => {
+    return endpoints.some((endpoint) => endpoint.name === 'vscode');
   }, [endpoints]);
   const { post } =
     useFetch(`/api/clusters/${clusterId}/jobs/${jobId}/endpoints`,
@@ -213,15 +227,22 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
           onChange={onChange('iPython')}
         />
         <FormControlLabel
+          checked={vscode}
+          disabled={vscode || disabled}
+          control={<Switch/>}
+          label="Vscode"
+          onChange={onChange('vscode')}
+        />
+        <FormControlLabel
           checked={tensorboard}
           disabled={tensorboard || disabled}
           control={<Switch/>}
           label="TensorBoard"
           onChange={onChange('Tensorboard')}
         />
-        <Info fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
+        <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
       </FormGroup>
-      {iconInfoShow && <Chip icon={<Info/>}
+      {iconInfoShow && <Chip icon={<Help/>}
         label={<p>TensorBoard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
       />}
       {/* <AuthzHOC needPermission={'"MANAGE_ALL_USERS_JOB"'}></AuthzHOC> */}

@@ -260,7 +260,7 @@
                 "refId": "A"
               },
               {
-                "expr": "count (avg by (uuid) (task_device_percent)) / sum (avg by (instance,device_str) (k8s_vc_device_total))",
+                "expr": "count (avg by (uuid,vc_name)(task_device_percent)) / sum (avg by (instance,vc_name,device_str) (k8s_vc_device_total))",
                 "format": "time_series",
                 "intervalFactor": 2,
                 "legendFormat": "Cluster wide",

@@ -101,6 +101,11 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
             vc_total, vc_used, vc_available, vc_unschedulable)
     return vc_total, vc_used, vc_available, vc_unschedulable
 
+def caculate_n_th_max(li,n):
+    assert len(li)>=n
+    tmp = sorted(li,reverse=True)
+    return tmp[n-1]
+
 if __name__ == '__main__':
     vc_usage = collections.defaultdict(lambda :
             collections.defaultdict(lambda : 0))

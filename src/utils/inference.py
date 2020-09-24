@@ -84,7 +84,7 @@ def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
     category_index = read_class_names2(class_name_path)
     if "logits" in output_dict:
         length = len(output_dict['logits'])
-        return [[v["name"],output_dict["logits"][k-1] if k<=length else [v["name"],None] ]for k,v in category_index.items()]
+        return {"data":[[v["name"],output_dict["logits"][k-1] if k<=length else [v["name"],None] ]for k,v in category_index.items()],"type":"classify"}
     else:
         output_dict['num_detections'] = int(output_dict['num_detections'])
         output_dict['detection_classes'] = np.array([int(class_id) for class_id in output_dict['detection_classes']])
@@ -106,4 +106,4 @@ def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
         image.save(imgByteArr,format='JPEG')
         imgByteArr = imgByteArr.getvalue()
         imgByteArr = base64.b64encode(imgByteArr)
-        return imgByteArr
+        return {"data":imgByteArr,"type":"detection"}

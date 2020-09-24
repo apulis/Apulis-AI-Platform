@@ -49,6 +49,9 @@ import { NameReg, NameErrorText, InteractivePortsMsg,
 import './Training.less';
 import { useForm } from "react-hook-form";
 import { validateInteractivePorts } from "../../utlities/validators";
+import {DLTSDialog} from "../CommonComponents/DLTSDialog";
+import './Training.less';
+import { useTranslation } from "react-i18next";
 
 interface EnvironmentVariable {
   name: string;
@@ -69,6 +72,7 @@ const sanitizePath = (path: string) => {
   return path;
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
+  const {t} = useTranslation();
   const { selectedCluster, saveSelectedCluster, availbleGpu } = useContext(ClustersContext);
   const { userName, uid } = useContext(UserContext);
   const { teams, selectedTeam }= useContext(TeamsContext);
@@ -126,6 +130,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [checkVCModal, setCheckVCModal] = useState(false);
   const [environmentVariables, setEnvironmentVariables] = useState<EnvironmentVariable[]>([]);
+  const SUCCESSFULSUBMITTED = t('tips.SUCCESSFULSUBMITTED')
+  const SUCCESSFULTEMPLATEDELETE = t('tips.SUCCESSFULTEMPLATEDELETE')
+  const SUCCESSFULTEMPLATEDSAVE = t('tips.SUCCESSFULTEMPLATEDSAVE')
   const [allDevice, setAllDevice] = useState<{
     [name: string]: { deviceStr: string, capacity: number, detail: Array<[]> }
   }>({});
@@ -233,7 +240,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     const hasThisVC = await checkVC();
     if (!hasThisVC) return;
     if (!selectDelTPName) {
-      message('error', 'Need select one template')
+      message('error', t('tips.Needselectonetemplate'))
       return
     }
     try {
@@ -245,7 +252,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       setSelectDelTPName('');
       getTemplates();
     } catch (error) {
-      enqueueSnackbar('Failed to delete the template', {
+      enqueueSnackbar( t('tips.Failedtodeletethetemplate'), {
         variant: 'error',
       })
       console.error(error);
@@ -745,13 +752,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     return message;
   }
   const styleSnack={backgroundColor: green[400]};
-
+  const jobNameIsRequired = t('submission.jobNameIsRequired');
+  const dockerImageIsRequired = t('submission.dockerImageIsRequired');
+  const commandIsRequired = t('submission.commandIsRequired');
+  const NoNumberText = t('tips.NoNumberText');
   return (
     <Container maxWidth={isDesktop ? 'lg' : 'xs'}>
       <div className="training-wrap" >
         <form onSubmit={handleSubmit(onSubmit)}>
           <Card>
-            <CardHeader title="Submit Training Job"/>
+            <CardHeader title={t('submission.submitTrainingJob')}/>
             <Divider/>
             <CardContent>
               <Grid
@@ -779,7 +789,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    label="Job Name"
+                    label={t('submission.jobName')}
                     name="jobName"
                     fullWidth
                     variant="filled"
@@ -790,10 +800,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     InputLabelProps={{ shrink: true }}
                     inputProps={{ maxLength: 20 }}
                     inputRef={register({
-                      required: 'Job Name is required！',
+                      required: jobNameIsRequired,
                       pattern: {
                         value: NameReg,
-                        message: NameErrorText
+                        message: t('tips.NameErrorText')
                       }
                     })}
                   />
@@ -802,7 +812,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <TextField
                     disabled={!Array.isArray(templates)}
                     select
-                    label="Job Template"
+                    label={t('submission.jobTemplate')}
                     fullWidth
                     variant="filled"
                     value={selectTPName}
@@ -817,7 +827,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12} sm={6}>
                   <TextField
                     select
-                    label="Job Type"
+                    label={t('submission.jobType')}
                     fullWidth
                     variant="filled"
                     name="type"
@@ -832,7 +842,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12} sm={6}>
                   <TextField
                     select
-                    label="Preemptible Job"
+                    label={t('submission.preemptibleJob')}
                     fullWidth
                     variant="filled"
                     value={String(preemptible)}
@@ -845,7 +855,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid item xs={12} sm={6}>
                   <TextField
                     select
-                    label="Device Type"
+                    label={t('submission.deviceType')}
                     fullWidth
                     variant="filled"
                     value={String(gpuType)}
@@ -860,7 +870,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <Grid item xs={6}>
                     <TextField
                       name="gpus"
-                      label="Number of Device"
+                      label={t('submission.deviceNumber')}
                       fullWidth
                       variant="filled"
                       defaultValue={gpus}
@@ -877,7 +887,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   <Grid item xs={12} sm={6}>
                     <TextField
                       select
-                      label="Number of Nodes"
+                      label={t('submission.numberOfNodes')}
                       fullWidth
                       variant="filled"
                       value={workers}
@@ -913,7 +923,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     <TextField
                       disabled
                       type="number"
-                      label="Total Number of Device"
+                      label={t('submission.totalNumberOfDevice')}
+                      // value = {workers * gpusPerNode}
                       value = {workers * gpuNumPerDevice}
                       fullWidth
                       variant="filled"
@@ -922,7 +933,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 )}
                 <Grid item xs={12}>
                   <TextField
-                    label="Docker Image"
+                    label={t('submission.dockerImage')}
                     fullWidth
                     variant="filled"
                     defaultValue={image}
@@ -930,17 +941,17 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     name="image"
                     onChange={e => setImage(e.target.value)}
                     error={Boolean(errors.image)}
-                    helperText={errors.image ? errors.image.message : ''}
-                    inputRef={register({
-                      required: 'Docker Image is required！'
-                    })}
+                      helperText={errors.image ? errors.image.message : ''}
+                      inputRef={register({
+                        required: dockerImageIsRequired
+                      })}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <MonospacedThemeProvider>
                     <TextField
                       multiline
-                      label="Command"
+                      label={t('submission.command')}
                       name="command"
                       fullWidth
                       variant="filled"
@@ -951,15 +962,15 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       error={Boolean(errors.command)}
                       helperText={errors.command ? errors.command.message : ''}
                       inputRef={register({
-                        required: 'Command is required！'
+                        required: commandIsRequired
                       })}
                     />
                   </MonospacedThemeProvider>
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    label="Interactive Ports"
-                    placeholder={InteractivePortsMsg}
+                    label={t('submission.interactivePorts')}
+                    placeholder={t('tips.InteractivePortsMsg')}
                     fullWidth
                     variant="filled"
                     rows="10"
@@ -968,7 +979,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     InputLabelProps={{ shrink: true }}
                     onChange={e => setInteractivePorts(e.target.value)}
                     error={Boolean(errors.interactivePorts)}
-                    helperText={errors.interactivePorts ? InteractivePortsMsg : ''}
+                    helperText={errors.interactivePorts ? t('tips.InteractivePortsMsg') : ''}
                     inputRef={register({
                       validate: val => validateInteractivePorts(val)
                     })}
@@ -1013,7 +1024,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             <Collapse in={advanced}>
               <Divider/>
               <CardContent>
-                <Typography component="div" variant="h6" >Custom Docker Registry</Typography>
+                  <Typography component="div" variant="h6" >{t('submission.customDockerRegistry')}</Typography>
                 <Grid
                   container
                   wrap="wrap"
@@ -1042,7 +1053,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     <TextField
                       value={dockerUsername}
                       onChange={e => setDockerUsername(e.target.value)}
-                      label="Username"
+                      label={t('submission.username')}
                       fullWidth
                       variant="filled"
                     />
@@ -1051,7 +1062,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     <TextField
                       value={dockerPassword}
                       onChange={e => setDockerPassword(e.target.value)}
-                      label="Password"
+                      label={t('submission.password')}
                       fullWidth
                       variant="filled"
                     />
@@ -1063,9 +1074,9 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Path in Container</TableCell>
-                      <TableCell>Path on Host Machine / Storage Server</TableCell>
-                      <TableCell align="center">Enable</TableCell>
+                      <TableCell>{t('submission.pathInContainer')}</TableCell>
+                      <TableCell>{t('submission.pathOnHostMachineOrStorageServer')}</TableCell>
+                      <TableCell align="center">{t('submission.enable')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1073,7 +1084,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       <TableCell>/work</TableCell>
                       <TableCell>
                         <TextField
-                          label="Work Path"
+                          label={t('submission.workPath')}
                           fullWidth
                           margin="dense"
                           variant="filled"
@@ -1086,7 +1097,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           inputRef={register({
                             pattern: {
                               value: NoChineseReg,
-                              message: NoChineseErrorText
+                              message: t('tips.NoChineseErrorText')
                             }
                           })}
                         />
@@ -1103,7 +1114,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       <TableCell>/data</TableCell>
                       <TableCell>
                         <TextField
-                          label="Data Path"
+                          label={t('submission.dataPath')}
                           fullWidth
                           margin="dense"
                           variant="filled"
@@ -1116,7 +1127,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           inputRef={register({
                             pattern: {
                               value: NoChineseReg,
-                              message: NoChineseErrorText
+                              message: t('tips.NoChineseErrorText')
                             }
                           })}
                         />
@@ -1133,7 +1144,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       <TableCell>/job</TableCell>
                       <TableCell>
                         <TextField
-                          label="Job Path"
+                          label={t('submission.jobPath')}
                           fullWidth
                           margin="dense"
                           variant="filled"
@@ -1146,7 +1157,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                           inputRef={register({
                             pattern: {
                               value: NoChineseReg,
-                              message: NoChineseErrorText
+                              message: t('tips.NoChineseErrorText')
                             }
                           })}
                         />
@@ -1163,12 +1174,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 </Table>
               </CardContent> */}
               <CardContent>
-                <Typography component="span" variant="h6">Environment Variables</Typography>
+                <Typography component="span" variant="h6">{t('submission.environmentVariables')}</Typography>
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Value</TableCell>
+                        <TableCell>{t('submission.name')}</TableCell>
+                      <TableCell>{t('submission.value')}</TableCell>
                       <TableCell/>
                     </TableRow>
                   </TableHead>
@@ -1177,7 +1188,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       <TableRow key={time}>
                         <TableCell>
                           <TextField
-                            label="Environment Variable Name"
+                            label={t('submission.environmentVariableName')}
                             fullWidth
                             margin="dense"
                             variant="filled"
@@ -1194,7 +1205,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                         </TableCell>
                         <TableCell>
                           <TextField
-                            label="Environment Variable Value"
+                            label={t('submission.environmentVariableValue')}
                             fullWidth
                             margin="dense"
                             variant="filled"
@@ -1239,7 +1250,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                 <Grid container wrap="wrap" spacing={1}>
                   <Grid item xs={12} sm={6}>
                     <TextField
-                      label="Template name"
+                      label={t('submission.templateName')}
                       name="templateName"
                       fullWidth
                       variant="filled"
@@ -1251,14 +1262,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       inputRef={register({
                         pattern: {
                           value: NameReg,
-                          message: NameErrorText
+                          message: t('tips.NameErrorText')
                         }
                       })}
                     />
                   </Grid>
                   <Grid item xs>
                     <TextField
-                      label="Scope"
+                      label={t('submission.scope')}
                       select
                       fullWidth
                       variant="filled"
@@ -1278,22 +1289,22 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
             <CardActions>
               <Grid item xs={12} container justify="space-between">
                 <Grid item xs container>
-                  <Button type="button" color="secondary" onClick={() => setAdvanced(!advanced)}>Advanced</Button>
-                  <Button type="button" color="secondary" onClick={() => setDatabase(!database)}>Template</Button>
+                    <Button type="button" color="secondary" onClick={() => setAdvanced(!advanced)}>{t('submission.advanced')}</Button>
+                  <Button type="button" color="secondary" onClick={() => setDatabase(!database)}>{t('submission.template')}</Button>
                 </Grid>
-                <Button type="submit" color="primary" variant="contained" onClick={() => setIsSave(false)} disabled={postJobLoading || postEndpointsLoading || open }>Submit</Button>
+                <Button type="submit" color="primary" variant="contained" onClick={() => setIsSave(false)} disabled={postJobLoading || postEndpointsLoading || open }>{t('submission.submit')}</Button>
               </Grid>
             </CardActions>
           </Card>
         </form>
         {deleteModal &&
         <Dialog open={deleteModal} maxWidth='xs' fullWidth onClose={() => setDeleteModal(false)}>
-          <DialogTitle>Delete Template</DialogTitle>
+          <DialogTitle>{t('submission.deleteTemplate')}</DialogTitle>
           <DialogContent>
             <TextField
               disabled={templates.length === 0}
               select
-              label="Select Template"
+              label={t('submission.selectTemplate')}
               fullWidth
               variant="filled"
               value={selectDelTPName}
@@ -1306,10 +1317,10 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setDeleteModal(false)} color="primary">
-              Cancel
+              {t('submission.cancel')}
             </Button>
             <Button onClick={onDeleteTemplateClick} color="secondary">
-              Delete
+              {t('submission.delete')}
             </Button>
           </DialogActions>
         </Dialog>}

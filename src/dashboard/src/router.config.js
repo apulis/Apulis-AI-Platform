@@ -1,5 +1,4 @@
 import React from 'react';
-
 const Home = React.lazy(() => import('./pages/Home'));
 const EmptyTeam = React.lazy(() => import('./pages/EmptyTeam'));
 const Submission = React.lazy(() => import('./pages/Submission'));

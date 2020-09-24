@@ -16,26 +16,28 @@ import CopyableTextListItem from '../../components/CopyableTextListItem';
 import JobStatus from '../../components/JobStatus';
 
 import Context from './Context';
+import { useTranslation } from "react-i18next";
 
 const Brief: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { cluster, job } = useContext(Context);
   return (
     <List dense>
       <ListItem>
-        <ListItemText primary="Job Id" secondary={job['jobId']}/>
+        <ListItemText primary={t('jobV2.jobId')} secondary={job['jobId']}/>
       </ListItem>
       <ListItem>
-        <ListItemText primary="Job Name" secondary={job['jobName']}/>
+        <ListItemText primary={t('jobV2.jobName')} secondary={job['jobName']}/>
       </ListItem>
       <ListItem>
-        <ListItemText primary="VcName" secondary={job['vcName']}/>
+        <ListItemText primary={t('jobV2.vcName')} secondary={job['vcName']}/>
       </ListItem>
       <ListItem>
-        <ListItemText primary="Docker Image" secondary={job['jobParams']['image']}/>
+        <ListItemText primary={t('jobV2.dockerImage')} secondary={job['jobParams']['image']}/>
       </ListItem>
       <ListItem>
         <ListItemText
-          primary="Command"
+          primary={t('jobV2.command')}
           secondary={job['jobParams']['cmd']}
           secondaryTypographyProps={{ component: 'div' }}
           style={{
@@ -46,20 +48,20 @@ const Brief: FunctionComponent = () => {
         />
       </ListItem>
       <CopyableTextListItem
-        primary="Data Path"
+        primary={t('jobV2.dataPath')}
         secondary={`${cluster['dataStorage'] || ''}/${job['jobParams']['dataPath']}`}
       />
       <CopyableTextListItem
-        primary="Work Path"
+        primary={t('jobV2.workPath')}
         secondary={`${cluster['workStorage'] || ''}/${job['jobParams']['workPath']}`}
       />
       <CopyableTextListItem
-        primary="Job Path"
+        primary={t('jobV2.jobPath')}
         secondary={`${cluster['workStorage'] || ''}/${job['jobParams']['jobPath']}`}
       />
       <ListItem>
         <ListItemText
-          primary="Preemptible"
+          primary={t('jobV2.preemptible')}
           secondary={job['jobParams']['preemptionAllowed'] ? <Check/> : <Close/>}
         />
       </ListItem>
@@ -67,7 +69,7 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'PSDistJob' && (
           <ListItem>
             <ListItemText
-              primary="Number of Nodes"
+              primary={t('jobV2.numberOfNodes')}
               secondary={job['jobParams']['numpsworker']}
             />
           </ListItem>
@@ -77,7 +79,7 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'PSDistJob' && (
           <ListItem>
             <ListItemText
-              primary="Total of Device"
+              primary={t('jobV2.totalOfDevice')}
               secondary={job['jobParams']['numpsworker'] * job['jobParams']['resourcegpu']}
             />
           </ListItem>
@@ -87,7 +89,7 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'RegularJob' && (
           <ListItem>
             <ListItemText
-              primary="Device Type"
+              primary={t('jobV2.deviceType')}
               secondary={job['jobParams']['gpuType']}
             />
           </ListItem>
@@ -97,7 +99,7 @@ const Brief: FunctionComponent = () => {
         job['jobParams']['jobtrainingtype'] === 'RegularJob' && (
           <ListItem>
             <ListItemText
-              primary="Number of Device"
+              primary={t('jobV2.numberOfDevice')}
               secondary={job['jobParams']['resourcegpu']}
             />
           </ListItem>
@@ -105,14 +107,14 @@ const Brief: FunctionComponent = () => {
       }
       <ListItem>
         <ListItemText
-          primary="Job Status"
+          primary={t('jobV2.jobStatus')}
           secondary={<JobStatus job={job}/>}
           secondaryTypographyProps={{ component: 'div' }}
         />
       </ListItem>
       <ListItem>
         <ListItemText
-          primary="Job Submission Time"
+          primary={t('jobV2.jobSubmissionTime')}
           secondary={new Date(job['jobTime']).toLocaleString('en')}
         />
       </ListItem>

@@ -1,6 +1,6 @@
 Cluster Status menu include Team Virtual Cluster Status tab, Team VC user status tab, cluster usage tab, and physical cluster node status tab, as shown in Figure 25. 
 
-![img](assets/clip_image002-1600740763157.jpg)
+![img](./assets/clip_image002-1600740763157.jpg)
 
 Figure 25:  Cluster Status
 
@@ -28,11 +28,11 @@ This page shows the virtual cluster status statistic as shown in Figure 24, incl
 
 The default displays the current VC user list as shown in Figure 26. It can switch to display all user list as shown in Figure 27. The list includes username, Device Type, Current Allocated, Current Allocated Preemptible, Currently Idle, Past Month Booked Hour, Past Month Idle Hour, and Past Month Idle Hour. 
 
-![img](assets/clip_image004-1600740763157.jpg)
+![img](./assets/clip_image004-1600740763157.jpg)
 
 Figure 26: User List of the VC in Use
 
-![img](assets/clip_image006-1600740763157.jpg)
+![img](./assets/clip_image006-1600740763157.jpg)
 
 Figure 27: User List of All VC
 
@@ -56,7 +56,7 @@ Figure 27: User List of All VC
 
 This tab includes VC Device Usage and Cluster Usage charts as shown in Figure 28.
 
-![img](assets/clip_image008-1600740763157.jpg)
+![img](./assets/clip_image008-1600740763157.jpg)
 
 Figure 28: Cluster Usage
 
@@ -64,7 +64,7 @@ Figure 28: Cluster Usage
 
 This tab displays the status of physical cluster as shown in Figure 29, including Node Name, Node IP, Device Type, Number of Device, Used, Preemptible Used, Available, Status, and Pods.
 
-![img](assets/clip_image010-1600740763157.jpg)
+![img](./assets/clip_image010-1600740763157.jpg)
 
 Figure 29: Physical Cluster Node Status
 

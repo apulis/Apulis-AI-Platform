@@ -1,5 +1,5 @@
 module.exports = {
-  base : '/docs/en/handbook',
+  base : '/docs/en/handbook/',
   title:'Apulis AI Development Platform',
   dest:'./dist/en/handbook',
   themeConfig: {
@@ -15,42 +15,42 @@ module.exports = {
           },
           {
               title: '2 Operation Instructions',
-              path: '/2.Login and Registration',
+              path: '/Login and Registration',
               collapsable: false,
               children: [
                   {
                       title: '2.1 Login and Registration',
-                      path: '/2.Login and Registration',
+                      path: '/Login and Registration',
                       sidebarDepth:2,
                   },
                   {
                       title: '2.2 Home Page',
-                      path: '/3.Home Page',
+                      path: '/Home Page',
                       sidebarDepth:2,
                   },
                   {
                       title: '2.3 Submit Training Job',
-                      path: '/4.Submit Training Job',
+                      path: '/Submit Training Job',
                       sidebarDepth:2,
                   },
                   {
                       title: '2.4 View and Manage Jobs',
-                      path: '/5.View and Manage Jobs',
+                      path: '/View and Manage Jobs',
                       sidebarDepth:2,
                   },
                   {
                       title: '2.5 Cluster Status',
-                      path: '/6.Cluster Status',
+                      path: '/Cluster Status',
                       sidebarDepth:2,
                   },
                   {
                       title: '2.6 Visual Cluster',
-                      path: '/7.Virtual Cluster',
+                      path: '/Virtual Cluster',
                       sidebarDepth:2,
                   },
                   {
                       title: '2.7 user Dashboard',
-                      path: '/8.User Dashboard',
+                      path: '/User Dashboard',
                       sidebarDepth:2,
                   },
                   // {

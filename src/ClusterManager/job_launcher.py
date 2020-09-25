@@ -1003,11 +1003,15 @@ class PythonLauncher(Launcher):
         # check if existing any pod with label: run=job_id
         assert("jobId" in job)
         job_id = job["jobId"]
+        job["cluster"] = config
         job_object, errors = JobSchema().load(job)
+        # TODO assert job_object is a Job
+        assert isinstance(job_object, Job), "job_object is not of Job, but " + str(type(job_object))
+        job_object.params = json.loads(base64.b64decode(job["jobParams"]))
 
         if not self._all_pods_not_existing(job_id):
             logger.warning("Waiting until previously pods are cleaned up! Job {}".format(job_id))
-            if job_object.params["jobtrainingtype"] == "InferenceJob":
+            if  job_object.params["jobtrainingtype"] == "InferenceJob":
                 job_deployer = InferenceServiceJobDeployer()
             else:
                 job_deployer = JobDeployer()
@@ -1028,13 +1032,6 @@ class PythonLauncher(Launcher):
                 endpoint["status"] = "pending"
                 logger.info("Reset endpoint status to 'pending': {}".format(endpoint_id))
                 dataHandler.UpdateEndpoint(endpoint)
-
-            job["cluster"] = config
-            job_object, errors = JobSchema().load(job)
-            # TODO assert job_object is a Job
-            assert isinstance(job_object, Job), "job_object is not of Job, but " + str(type(job_object))
-
-            job_object.params = json.loads(base64.b64decode(job["jobParams"]))
 
             # inject gid, uid and user
             # TODO it should return only one entry

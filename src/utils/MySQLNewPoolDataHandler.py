@@ -313,7 +313,7 @@ class DataHandler(object):
             gpu_count_per_node = config["gpu_count_per_node"]
             worker_node_num = config["worker_node_num"]
             gpu_type = config["gpu_type"]
-            default_type = json.dumps({one:0 for one in config["defalt_virtual_cluster_device_type_list"] })
+            default_type = json.dumps({one:0 for one in config["defalt_virtual_cluster_device_type_list"] }  if config["defalt_virtual_cluster_device_type_list"] else {})
             logging.info([config['defalt_virtual_cluster_name'],default_type])
             sql = """
                 CREATE TABLE IF NOT EXISTS  `%s`

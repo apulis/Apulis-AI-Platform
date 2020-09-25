@@ -595,7 +595,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             singleJobInfo["jobtrainingtype"] = job_params["jobtrainingtype"]
             singleJobInfo["resourcegpu"] = job_params["resourcegpu"]
             singleJobInfo["numpsworker"] = job_params["numpsworker"] if "numpsworker" in job_params else 1
-            singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])/int(job_params["numpsworker"])
+            singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])/int(job_params["numpsworker"]) if int(job_params["numpsworker"]) else int(job_params["resourcegpu"])
 
             # Job lists will be sorted based on and in the order of below
             # 1. non-preemptible precedes preemptible

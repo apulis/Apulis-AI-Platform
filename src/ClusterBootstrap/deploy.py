@@ -1155,6 +1155,8 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
         print(kubernetes_master)
+        utils.scp(config["ssh_cert"], "/etc/kubernetes/manifests/vip.yaml", "/etc/kubernetes/manifests/vip.yaml", kubernetes_master_user,kubernetes_master, verbose=verbose)
+
         deploycmd = """sudo kubeadm init --v=8 --control-plane-endpoint=%s --kubernetes-version=%s %s""" % (kubernetes_master0, kubernetes_version, init_arguments)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
         time.sleep(30)
@@ -1584,29 +1586,32 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
 
     # step 2: init with vip
     # *acquire info of primary master
+    join_list = get_master_node_host_except_primary()
     kubernetes_masters = config["kubernetes_master_node"]
     kubernetes_master0 = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
     k8sAPIport = config["k8sAPIport"]
-    # *generate certificate key
-    certcmd = "sudo kubeadm init --v=8 phase upload-certs --upload-certs"
-    certresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,certcmd)
-    cert = certresult.split('\n')[2]
-    # *generate token
-    tokencmd = "sudo kubeadm token create"
-    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
-    token = tokenresult.split("\n")[0]
-    hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
-    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd).strip()
-    # *print info
-    if verbose:
-        print("Token === %s, hash == %s\ncertificate key == %s" % (token, hash, cert) )
-    # *join all remain master into cluster
-    join_list = get_master_node_host_except_primary()
+
     for nodename in join_list:
         print(nodename)
         nodeInfo = config["machines"][nodename]
         print nodeInfo
+
+        # *generate certificate key
+        certcmd = "sudo kubeadm init --v=8 phase upload-certs --upload-certs"
+        certresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,certcmd)
+        cert = certresult.split('\n')[2]
+        # *generate token
+        tokencmd = "sudo kubeadm token create"
+        tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+        token = tokenresult.split("\n")[0]
+        hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+        hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd).strip()
+        # *print info
+        if verbose:
+            print("Token === %s, hash == %s\ncertificate key == %s" % (token, hash, cert) )
+        # *join all remain master into cluster
+
         join_cmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kube_vip, k8sAPIport, hash,cert)
         if verbose:
             print(join_cmd)

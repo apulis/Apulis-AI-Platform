@@ -5,6 +5,7 @@ dir=`dirname $0`
 kill_idle_rule=${dir}/alerting/kill-idle.rules
 
 grafana_file_name=${dir}/grafana-config.yaml
+grafana_zh_file_name=${dir}/grafana-zh-config.yaml
 alert_tmpl_file_name=${dir}/alert-templates.yaml
 prometheus_file_name=${dir}/prometheus-alerting.yaml
 
@@ -28,3 +29,16 @@ done | xargs ${dir}/../../deploy/bin/kubectl --namespace=kube-system create conf
 ${dir}/../../deploy/bin/kubectl --namespace=kube-system create configmap alert-templates --from-file=${dir}/alert-templates --dry-run -o yaml > $alert_tmpl_file_name
 
 ${dir}/../../deploy/bin/kubectl --namespace=kube-system create configmap prometheus-alert --from-file=${dir}/alerting --dry-run -o yaml > $prometheus_file_name
+
+# generate grafana-zh config
+# generate extra grafana-config from ./grafana-zh-config-raw
+for i in `find ${dir}/grafana-zh-config-raw/ -type f -regex ".*json" ` ; do
+    ${dir}/gen_grafana-config.py ${i} ${dir}/grafana-zh-config
+done
+
+cp ${dir}/email-notification.json ${dir}/grafana-zh-config
+
+# create configmap
+for i in `find ${dir}/grafana-zh-config/ -type f -regex ".*json" ` ; do
+    echo --from-file=$i
+done | xargs ${dir}/../../deploy/bin/kubectl --namespace=kube-system create configmap grafana-zh-configuration --dry-run -o yaml >> $grafana_zh_file_name 

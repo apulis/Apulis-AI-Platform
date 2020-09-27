@@ -24,13 +24,13 @@ const tryParseJSON = (json, empty) => {
 module.exports = async context => {
   const getClusterTeams = async id => {
     const cluster = new Cluster(context, id)
-    const userTeams = await User.getUserVc(context, context.cookies.get('token'))
+    // const userTeams = await User.getUserVc(context, context.cookies.get('token'))
     const teams = await cluster.getTeams()
-    let teamsData = [];
-    teams.forEach(i => {
-      if (userTeams.vcList.findIndex(m => i.vcName === m) > -1) teamsData.push(i);
-    })
-    return teamsData.map(i => {
+    let teamsData = []
+    // teams.forEach(i => {
+    //   if (userTeams.vcList.findIndex(m => i.vcName === m) > -1) teamsData.push(i);
+    // })
+    return teams.map(i => {
       // @ts-ignore
       const { vcName, admin, metadata, quota } = i;
       const metadataObject = tryParseJSON(metadata, Object.create(null))

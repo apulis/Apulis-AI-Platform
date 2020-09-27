@@ -45,3 +45,4 @@ userGroup:
   frontEndPath: /custom-user-dashboard
 
 extranet_protocol: {{cnf["extranet_protocol"]}}
+docs: "{{cnf['extranet_protocol']}}://{{cnf['webportal_node']}}/docs"

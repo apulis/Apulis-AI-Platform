@@ -86,7 +86,7 @@ spec:
           name: grafana-ini
       - name: grafana-confg-volume
         configMap:
-          name: grafana-configuration
+          name: grafana-zh-configuration
       - name: ca-certificates
         hostPath:
           path: /etc/ssl/certs

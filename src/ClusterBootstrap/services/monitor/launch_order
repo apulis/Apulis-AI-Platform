@@ -5,6 +5,7 @@ prometheus-alerting.yaml
 prometheus.yaml
 grafana-ini.yaml
 grafana-config.yaml
+grafana-zh-config.yaml
 grafana.yaml
 grafana-zh.yaml
 alert-templates.yaml

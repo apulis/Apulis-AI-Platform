@@ -73,7 +73,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     userLabel: {
       whiteSpace: 'nowrap',
-      cursor: 'default'
     }
   })
 );
@@ -95,8 +94,7 @@ const OpenDrawerButton: React.FC = () => {
   );
 };
 
-let TeamMenu: React.FC;
-TeamMenu = () => {
+const TeamMenu: React.FC = () => {
   const { teams, saveSelectedTeam, selectedTeam } = React.useContext(
     TeamContext
   );

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   AppBar,
   Box,
@@ -34,6 +34,7 @@ import {
   Translate,
   KeyboardReturn
 } from '@material-ui/icons';
+import axios from 'axios';
 import CloseIcon from '@material-ui/icons/Close';
 import { TransitionProps } from '@material-ui/core/transitions';
 import DrawerContext from './Drawer/Context';
@@ -45,7 +46,6 @@ import copy from 'clipboard-copy'
 import { green, purple } from "@material-ui/core/colors";
 import { SlideProps } from '@material-ui/core/Slide';
 import AuthzHOC from '../components/AuthzHOC';
-import axios from 'axios';
 import { useTranslation } from "react-i18next";
 
 import i18n from "i18next";
@@ -358,12 +358,24 @@ const SignOutButton: React.FC = () => {
 };
 
 const Title: React.FC = () => {
+  const [platformName, setPlatformName] = useState<string>('');
+
+  const getPlatformName = async () => {
+    const res = await axios.get<{i18n: string | boolean; platformName: string}>('/platform-config');
+    const { i18n, platformName } = res.data;
+    setPlatformName(platformName);
+  }
+
+  useEffect(() => {
+    getPlatformName()
+  }, [])
+
   const styles = useStyles({});
   return (
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
         <Typography component="h1" variant="h6" align="left">
-          华为 AI 专家系统
+          {platformName}
         </Typography>
       </Link>
     </Box>

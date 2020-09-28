@@ -43,7 +43,7 @@ COPY src/dashboards/* /usr/local/grafana/dashboards/
 
 RUN git clone https://github.com/tghfly/grafana-chinese.git /tmp/grafana-chinese
 RUN rm -rf /usr/share/grafana/bin && rm -rf /usr/share/grafana/public
-RUN cp -r /tmp/grafana-chinese/bin/linux-amd64/ /usr/share/grafana \
+RUN cp -r /tmp/grafana-chinese/bin/linux-amd64/ /usr/share/grafana && \
   cp -r /tmp/grafana-chinese/public /usr/share/grafana
 RUN mv /usr/share/grafana/linux-amd64/ /usr/share/grafana/bin/
 RUN cp /usr/share/grafana/bin/grafana-server /usr/sbin/grafana-server

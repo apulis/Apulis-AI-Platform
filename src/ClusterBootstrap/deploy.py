@@ -4063,7 +4063,7 @@ def scale_up(config):
         print(node_info)
 
         ## install necessary software
-        run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
+        run_script(node, ["./scripts/prepare_ubuntu.sh"], sudo = True)
 
         ## wait for node to reboot
         print("waiting for 2 seconds...")
@@ -4097,8 +4097,8 @@ def scale_up(config):
         #    sleep 1;
         #done
 
-        run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
-        run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
+        run_script(node, ["./scripts/prepare_ubuntu.sh continue"], sudo = True)
+        run_script(node, ["./scripts/install_kubeadm.sh"], sudo = True)
 
         ## turn off swap
         output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)

@@ -59,11 +59,11 @@ interface EnvironmentVariable {
   time: number;
 }
 
-interface template {
+interface Itemplate {
   scope: string;
   json: string;
   name: string;
-  isDefault: 1 | 0
+  isDefault: 1 | 0;
 }
 
 const sanitizePath = (path: string) => {
@@ -100,7 +100,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuCapacity, setGpuCapacity] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
   const [npuNumMsg, setNpuNumMsg] = useState('');
-  const [templates, setTemplates] = useState<template[]>([]);
+  const [templates, setTemplates] = useState<Itemplate[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(1);
@@ -260,7 +260,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
   
-  const onTemplateChange = (val: string,templates: template[]) => {
+  const onTemplateChange = (val: string,templates: Itemplate[]) => {
     if (val === 'None (Apply a Template)') {
       setName("");
       setValue('jobName', '');
@@ -562,22 +562,23 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const validateNumDevices = (val: string) => {
     if (val) {
       const _val = Number(val);
+      console.log(123, allDevice[gpuType])
       if (allDevice[gpuType]) {
         const { deviceStr, detail } = allDevice[gpuType];
         const maxAllocatable = Math.max(...detail.map((i: any) => i.allocatable));
         const maxCapacity = Math.max(...nodeCapacityArr);
         const temp = Math.min(gpuCapacity, maxCapacity);
-
         if (deviceStr === 'npu.huawei.com/NPU') {
           const _temp = Math.min(temp, 8);
           if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8  || _val > _temp) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${_temp}，and can only be one of 0, 1, 2, 4, 8.`);
+            t('submission.npuNumberValidator')
+            setNpuNumMsg(t('submission.npuNumberValidator').replace('{temp}', String(_temp)));
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
           if (_val < 0 || !Number.isInteger(_val) || _val > temp) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${temp}`);
-            return false;
+            setNpuNumMsg(t('submission.gpuNumberValidator').replace('{temp}', String(temp)));
+            return false; 
           }
         }
       }
@@ -626,7 +627,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       .then(res => {
         const templates = res.data;
         setTemplates(templates);
-        const template = templates.find((item: template) => (item.isDefault === 1))
+        const template = templates.find((item: Itemplate) => (item.isDefault === 1))
         if(template){
           onTemplateChange(`${template.name}.${template.scope}`, templates)
         }

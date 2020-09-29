@@ -19,7 +19,9 @@ const index = {
     interactivePorts:'交互端口',
     advanced:'高级',
     template:'模板',
-    submit:'提交'
+    submit:'提交',
+    npuNumberValidator: '需要是 0 到 {temp} 的正整数，并且只能是 0, 1, 2, 4, 8 中的一个',
+    gpuNumberValidator: '需要是 0 到 {temp} 的正整数', 
 }
 const advance = {
     customDockerRegistry:'自定义Docker Registry',

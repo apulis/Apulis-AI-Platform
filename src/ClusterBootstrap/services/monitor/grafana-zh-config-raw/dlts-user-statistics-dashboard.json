@@ -636,7 +636,7 @@
           "expr": "count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU活跃",
+          "legendFormat": "GPU活动",
           "refId": "B"
         },
         {
@@ -657,7 +657,7 @@
           "expr": "count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU活跃",
+          "legendFormat": "NPU活动",
           "refId": "E"
         },
         {
@@ -1455,7 +1455,7 @@
           "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU活跃",
+          "legendFormat": "GPU活动",
           "refId": "B"
         },
         {
@@ -1469,7 +1469,7 @@
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU VC 活跃",
+          "legendFormat": "GPU VC 活动",
           "refId": "D"
         },
         {
@@ -1483,7 +1483,7 @@
           "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU 活跃",
+          "legendFormat": "NPU 活动",
           "refId": "F"
         },
         {
@@ -1497,7 +1497,7 @@
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU VC 活跃",
+          "legendFormat": "NPU VC 活动",
           "refId": "H"
         }
       ],
@@ -2620,7 +2620,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "每个活动设备的磁盘I / O",
+      "title": "每个活动设备的磁盘I/O",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2754,7 +2754,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "每个活动设备的网络I / O",
+      "title": "每个活动设备的网络I/O",
       "tooltip": {
         "shared": true,
         "sort": 2,

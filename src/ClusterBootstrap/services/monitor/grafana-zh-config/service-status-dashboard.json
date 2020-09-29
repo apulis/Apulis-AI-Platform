@@ -226,14 +226,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 流入",
               "refId": "A"
             },
             {
               "expr": "avg by (instance)(service_net_out_byte{name=\"$service_name\"})",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 流出",
               "refId": "B"
             }
           ],

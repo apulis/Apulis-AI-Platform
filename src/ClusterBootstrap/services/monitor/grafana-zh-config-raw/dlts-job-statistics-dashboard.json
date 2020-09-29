@@ -223,7 +223,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "活跃GPU",
+      "title": "活动GPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",

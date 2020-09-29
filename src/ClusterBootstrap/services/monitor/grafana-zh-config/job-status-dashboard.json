@@ -224,14 +224,14 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Inbound",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 流入",
               "refId": "A"
             },
             {
               "expr": "sum(rate(task_net_out_byte{job_name=\"$job_id\"}[5m])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Outbound",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 流出",
               "refId": "B"
             }
           ],
@@ -735,7 +735,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "GPU DCGM Util",
+          "title": "GPU DCGM使用率",
           "tooltip": {
             "shared": true,
             "sort": 0,

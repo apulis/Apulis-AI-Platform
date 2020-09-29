@@ -465,7 +465,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "活跃",
+      "title": "活动",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -969,7 +969,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "活跃",
+      "title": "活动",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -3482,7 +3482,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "每个活动设备的磁盘I / O",
+      "title": "每个活动设备的磁盘I/O",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -3617,7 +3617,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "每个活动设备的网络I / O",
+      "title": "每个活动设备的网络I/O",
       "tooltip": {
         "shared": true,
         "sort": 2,

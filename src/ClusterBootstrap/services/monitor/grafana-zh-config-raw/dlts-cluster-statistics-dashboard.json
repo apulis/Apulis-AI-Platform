@@ -468,7 +468,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "活跃的GPU",
+      "title": "活动的GPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -976,7 +976,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "活跃的NPU",
+      "title": "活动的NPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1153,7 +1153,7 @@
           "expr": "count(avg by (uuid) (task_device_percent{device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "活跃的GPU",
+          "legendFormat": "活动的GPU",
           "refId": "F"
         },
         {
@@ -1195,7 +1195,7 @@
           "expr": "count(avg by (uuid) (task_device_percent{device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "活跃NPU",
+          "legendFormat": "活动NPU",
           "refId": "K"
         },
         {
@@ -2330,7 +2330,7 @@
           "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'}>0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "活跃(GPU)",
+          "legendFormat": "活动(GPU)",
           "refId": "C"
         },
         {
@@ -2351,7 +2351,7 @@
           "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'}>0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "活跃(NPU)",
+          "legendFormat": "活动(NPU)",
           "refId": "F"
         }
       ],
@@ -3900,7 +3900,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "每个活动设备的磁盘I / O",
+      "title": "每个活动设备的磁盘I/O",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -4006,7 +4006,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "每个活动设备的网络I / O",
+      "title": "每个活动设备的网络I/O",
       "tooltip": {
         "shared": true,
         "sort": 0,

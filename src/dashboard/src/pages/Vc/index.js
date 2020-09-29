@@ -417,21 +417,21 @@ class Vc extends React.Component {
           <Table>
             <TableHead> 
               <TableRow>
-                <TableCell>VCName</TableCell>
-                <TableCell>DeviceType</TableCell>
-                <TableCell>DeviceNumber</TableCell>
+                <TableCell>{t('VcName')}</TableCell>
+                <TableCell>{t('DeviceType')}</TableCell>
+                <TableCell>{t('DeviceCount')}</TableCell>
                 <TableCell>
-                  <Tooltip title="Maximum number of devices available to each user">
-                    <div className="helpWrap">MaxAvailable<Help fontSize="small" /></div>
+                  <Tooltip title={t('max number of devices available to each user')}>
+                    <div className="helpWrap">{t('MaxAvailable')}<Help fontSize="small" /></div>
                   </Tooltip>
                 </TableCell>
-                <TableCell>
-                  <Tooltip title="The number of users who own this VC resource">
-                    <div className="helpWrap">UserNumber<Help fontSize="small" /></div>
+                <TableCell> 
+                  <Tooltip title={t('The number of users who own this VC resource')}>
+                    <div className="helpWrap">{t('UserCount')}<Help fontSize="small" /></div>
                   </Tooltip>
                 </TableCell>
-                <TableCell>Users</TableCell>
-                <AuthzHOC needPermission={'MANAGE_VC'}><TableCell>Actions</TableCell></AuthzHOC>
+                <TableCell>{t('Users')}</TableCell>
+                <AuthzHOC needPermission={'MANAGE_VC'}><TableCell>{t('actions')}</TableCell></AuthzHOC>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -460,7 +460,7 @@ class Vc extends React.Component {
                 onChange={this.onSizeChange}
                 displayEmpty
               >
-                {[10,20,30,40,50].map(i => <MenuItem value={i}>{i} rows</MenuItem>)}
+                {[10,20,30,40,50].map(i => <MenuItem value={i}>{i} {t('rows')}</MenuItem>)}
             </Select>
             <Pagination
               color="primary"

@@ -7,9 +7,9 @@ import ClusterContext from '../../contexts/Clusters';
 import axios from 'axios';
 
 interface VersionInfo {
-  name: string,
-  updateAt: string,
-  description: string
+  name: string;
+  updateAt: string;
+  description: string;
 }
 
 const Version: React.FC = () => {
@@ -21,7 +21,6 @@ const Version: React.FC = () => {
 
   const apiGetVersionInfo = async () => {
     const url = `/${selectedCluster}/VersionInfo`;
-    debugger
     await axios.get(url)
       .then((res: any) => {
         if (res) {
@@ -34,7 +33,6 @@ const Version: React.FC = () => {
   }
 
   useEffect(() => {
-    debugger
     apiGetVersionInfo();
   }, [])
 

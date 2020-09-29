@@ -623,11 +623,11 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [canDistributedJob]);
 
   const getTemplates = () => {
-    axios.get(`/teams/${selectedTeam}/templates`)
+    axios.get<Itemplate[]>(`/teams/${selectedTeam}/templates`)
       .then(res => {
         const templates = res.data;
         setTemplates(templates);
-        const template = templates.find((item: Itemplate) => (item.isDefault === 1))
+        const template = templates.find((item) => (item.isDefault === 1))
         if(template){
           onTemplateChange(`${template.name}.${template.scope}`, templates)
         }

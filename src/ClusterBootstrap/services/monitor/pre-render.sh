@@ -36,8 +36,6 @@ for i in `find ${dir}/grafana-zh-config-raw/ -type f -regex ".*json" ` ; do
     ${dir}/gen_grafana-config.py ${i} ${dir}/grafana-zh-config
 done
 
-cp ${dir}/email-notification.json ${dir}/grafana-zh-config
-
 # create configmap
 for i in `find ${dir}/grafana-zh-config/ -type f -regex ".*json" ` ; do
     echo --from-file=$i

@@ -212,9 +212,8 @@ const LangMenu: React.FC = () => {
 
 const UserButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
-  const [viersonModalOpen,setVersionModalOpen] = React.useState(false);
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const history = useHistory();
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
@@ -282,15 +281,15 @@ const UserButton: React.FC = () => {
         {/* <MenuItem onClick={showUserProfile}>Profile</MenuItem> */}
         <MenuItem onClick={showVersion}>
           <Info style={{ marginRight: 8 }} />
-            Version
+            {t('layout.version')}
           </MenuItem>
         <MenuItem onClick={showHelp}>
           <HelpOutline style={{ marginRight: 8 }} />
-            Help
+            {t('layout.help')}
           </MenuItem>
         <MenuItem onClick={handleSignOut} >
           <ExitToApp style={{ marginRight: 8 }} />
-          Sign out
+          {t('layout.signout')}
         </MenuItem>
       </Menu>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>

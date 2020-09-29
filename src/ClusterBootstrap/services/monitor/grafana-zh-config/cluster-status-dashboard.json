@@ -89,7 +89,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Used GPUs",
+            "title": "已使用 GPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -165,7 +165,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Avaliable GPUs",
+            "title": "可用 GPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -241,7 +241,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Reserved GPU",
+            "title": "预留 GPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -319,7 +319,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Total GPUs",
+            "title": "全部 GPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -336,7 +336,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -407,7 +407,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Used NPUs",
+            "title": "已使用 NPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -483,7 +483,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Avaliable NPUs",
+            "title": "可用 NPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -559,7 +559,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Reserved NPU",
+            "title": "预留 NPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -637,7 +637,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Total NPUs",
+            "title": "全部 NPU",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -654,7 +654,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard NPU Row",
+        "title": "NPU仪表板行",
         "titleSize": "h6"
       },
       {
@@ -726,7 +726,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Running Jobs",
+            "title": "运行中任务",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -803,7 +803,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Active Nodes",
+            "title": "活跃节点",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -880,7 +880,7 @@
               }
             ],
             "thresholds": "",
-            "title": "Total Node",
+            "title": "全部节点",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [
@@ -897,7 +897,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表盘行",
         "titleSize": "h6"
       }
     ],
@@ -935,7 +935,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "Cluster Status",
+    "title": "集群状态",
     "version": 3,
     "uid": "cluster-status"
   }

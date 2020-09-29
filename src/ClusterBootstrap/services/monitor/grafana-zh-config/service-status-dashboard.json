@@ -144,7 +144,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Memory Usage",
+          "title": "内存使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -182,7 +182,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     },
     {
@@ -240,7 +240,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Network",
+          "title": "网络",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -310,21 +310,21 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 读取",
               "refId": "A"
             },
             {
               "expr": "avg by (instance)(irate(service_block_out_byte{name=\"$service_name\"}[300s]))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 写入",
               "refId": "B"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Block IO",
+          "title": "阻塞 IO",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -362,7 +362,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     }
   ],
@@ -422,7 +422,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Service Status",
+  "title": "服务状态",
   "version": 1,
   "uid": "service-status"
 }}

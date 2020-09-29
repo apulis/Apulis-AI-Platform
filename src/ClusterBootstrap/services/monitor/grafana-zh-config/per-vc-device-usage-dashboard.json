@@ -60,28 +60,28 @@
                 "expr": "sum( avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "Total",
+                "legendFormat": "全部",
                 "refId": "A"
               },
               {
                 "expr": "sum( avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "Available",
+                "legendFormat": "可用",
                 "refId": "B"
               },
               {
                 "expr": "sum( avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "Preemptive available",
+                "legendFormat": "抢占可用",
                 "refId": "C"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per VC GPU Usage",
+            "title": "每个VC GPU使用情况",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -170,7 +170,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per VC NPU Usage",
+            "title": "每VC NPU使用量",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -208,7 +208,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       }
     ],
@@ -270,7 +270,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "Per VC Device Statistic",
+    "title": "每个VC设备统计信息",
     "version": 0,
     "uid": "per-vc-gpu-statistic"
   }

@@ -139,7 +139,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Allocated",
+      "title": "已分配",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -220,7 +220,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assignable",
+      "title": "可分配的",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -302,7 +302,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Unhealthy",
+      "title": "不良",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -384,7 +384,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assigned",
+      "title": "已分配",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -465,7 +465,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Active",
+      "title": "活跃",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -546,7 +546,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Idle",
+      "title": "闲置",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -643,7 +643,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Allocated",
+      "title": "已分配",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -724,7 +724,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assignable",
+      "title": "可分配的",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -806,7 +806,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Unhealthy",
+      "title": "不良",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -888,7 +888,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assigned",
+      "title": "已分配",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -969,7 +969,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Active",
+      "title": "活跃",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1050,7 +1050,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Idle",
+      "title": "空闲",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1074,7 +1074,7 @@
       "id": 53,
       "panels": [],
       "repeat": null,
-      "title": "Device Over Time",
+      "title": "随时间推移的设备",
       "type": "row"
     },
     {
@@ -1119,42 +1119,42 @@
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
-          "legendFormat": "Allocated GPU",
+          "legendFormat": "已分配GPU",
           "refId": "A"
         },
         {
           "expr": "avg(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assignable GPU",
+          "legendFormat": "可分配GPU",
           "refId": "B"
         },
         {
           "expr": "avg(k8s_vc_device_unschedulable{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Unhealthy GPU",
+          "legendFormat": "不健康GPU",
           "refId": "C"
         },
         {
           "expr": "count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assigned GPU",
+          "legendFormat": "已分配GPU",
           "refId": "D"
         },
         {
           "expr": "count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active GPU",
+          "legendFormat": "活跃GPU",
           "refId": "E"
         },
         {
           "expr": "(count( avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) OR on() vector(0)) - (count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Idle GPU",
+          "legendFormat": "空闲GPU",
           "refId": "F"
         },
         {
@@ -1162,49 +1162,49 @@
           "format": "time_series",
           "instant": false,
           "intervalFactor": 2,
-          "legendFormat": "Allocated NPU",
+          "legendFormat": "已分配NPU",
           "refId": "G"
         },
         {
           "expr": "avg(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assignable NPU",
+          "legendFormat": "可分配NPU",
           "refId": "H"
         },
         {
           "expr": "avg(k8s_vc_device_unschedulable{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Unhealthy NPU",
+          "legendFormat": "不健康NPU",
           "refId": "I"
         },
         {
           "expr": "count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assigned NPU",
+          "legendFormat": "已分配NPU",
           "refId": "J"
         },
         {
           "expr": "count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active NPU",
+          "legendFormat": "活跃NPU",
           "refId": "K"
         },
         {
           "expr": "(count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) OR on() vector(0)) - (count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Idle NPU",
+          "legendFormat": "空闲NPU",
           "refId": "L"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Devices",
+      "title": "设备",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1249,7 +1249,7 @@
       "id": 54,
       "panels": [],
       "repeat": null,
-      "title": "GPU Utilization",
+      "title": "GPU使用率",
       "type": "row"
     },
     {
@@ -1322,7 +1322,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Allocated GPU Utilization",
+      "title": "分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1403,7 +1403,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Allocated GPU Utilization Over Time",
+      "title": "随时间分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1485,7 +1485,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned GPU Utilization",
+      "title": "分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1566,7 +1566,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned GPU Utilization Over Time",
+      "title": "随时间分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1648,7 +1648,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active GPU Utilization",
+      "title": "主动GPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1730,7 +1730,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active GPU Utilization Over Time",
+      "title": "随着时间的推移主动使用GPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1754,7 +1754,7 @@
       "id": 530,
       "panels": [],
       "repeat": null,
-      "title": "NPU Utilization",
+      "title": "NPU利用率",
       "type": "row"
     },
     {
@@ -1827,7 +1827,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Allocated NPU Utilization",
+      "title": "分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1908,7 +1908,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Allocated NPU Utilization Over Time",
+      "title": "随时间分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1990,7 +1990,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned NPU Utilization",
+      "title": "分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2071,7 +2071,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned NPU Utilization Over Time",
+      "title": "随时间分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2153,7 +2153,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active NPU Utilization",
+      "title": "主动NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2235,7 +2235,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active NPU Utilization Over Time",
+      "title": "随时间推移主动NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2259,7 +2259,7 @@
       "id": 540,
       "panels": [],
       "repeat": null,
-      "title": "Device Utilization Over Time",
+      "title": "随着时间的推移设备利用率",
       "type": "row"
     },
     {
@@ -2303,49 +2303,49 @@
           "expr": "sum(avg by (uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) / sum(avg by (instance)(k8s_vc_device_total{device_str='nvidia.com/gpu'}))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Allocated GPU",
+          "legendFormat": "已分配GPU",
           "refId": "A"
         },
         {
           "expr": "avg by (uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assigned GPU",
+          "legendFormat": "已分配GPU",
           "refId": "B"
         },
         {
           "expr": "avg by (uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active GPU",
+          "legendFormat": "活跃GPU",
           "refId": "C"
         },
         {
           "expr": "sum(avg by (uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) / sum(avg by (instance)(k8s_vc_device_total{device_str='npu.huawei.com/NPU'}))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Allocated NPU",
+          "legendFormat": "已分配NPU",
           "refId": "D"
         },
         {
           "expr": "avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assigned NPU",
+          "legendFormat": "已分配NPU",
           "refId": "E"
         },
         {
           "expr": "avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active NPU",
+          "legendFormat": "活跃NPU",
           "refId": "F"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Device Utilization",
+      "title": "设备利用率",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2390,7 +2390,7 @@
       "id": 55,
       "panels": [],
       "repeat": null,
-      "title": "Resource Per Active Device",
+      "title": "每个活动设备的资源",
       "type": "row"
     },
     {
@@ -2464,7 +2464,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "GPU Memory",
+      "title": "GPU内存",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2547,7 +2547,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "NPU Memory",
+      "title": "NPU内存",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2713,7 +2713,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Memory",
+      "title": "内存",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2796,7 +2796,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Disk Read",
+      "title": "磁盘读取",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2879,7 +2879,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Disk Write",
+      "title": "磁盘写入",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2962,7 +2962,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Network In",
+      "title": "网络输入",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -3045,7 +3045,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Network Out",
+      "title": "网络输出",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -3069,7 +3069,7 @@
       "id": 56,
       "panels": [],
       "repeat": null,
-      "title": "Resource Per Active Device Over Time",
+      "title": "随时间推移每个活动设备的资源",
       "type": "row"
     },
     {
@@ -3141,7 +3141,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Device Memory Per Active Device",
+      "title": "每个活动设备的设备内存",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3244,7 +3244,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "CPU Per Active Device",
+      "title": "每个活动设备的CPU",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3346,7 +3346,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Memory Usage Per Device",
+      "title": "每个设备的内存使用率",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -3482,7 +3482,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Disk I/O Per Active Device",
+      "title": "每个活动设备的磁盘I / O",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -3617,7 +3617,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Network I/O Per Active Device",
+      "title": "每个活动设备的网络I / O",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -3662,7 +3662,7 @@
       "id": 57,
       "panels": [],
       "repeat": null,
-      "title": "User",
+      "title": "用户",
       "type": "row"
     },
     {
@@ -3719,7 +3719,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Assigned Device By User",
+      "title": "用户分配的设备",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3806,7 +3806,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Assigned Device Utilization By User",
+      "title": "用户分配的设备利用率",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3893,7 +3893,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Active Device By User",
+      "title": "用户活动设备",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3980,7 +3980,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Active Device Utilization By User",
+      "title": "用户的主动设备利用率",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -4070,7 +4070,7 @@
     ]
   },
   "timezone": "",
-  "title": "DLTS VC Statistics",
+  "title": "DLTS VC统计",
   "uid": "dlts-vc-statistics",
   "version": 1
 }

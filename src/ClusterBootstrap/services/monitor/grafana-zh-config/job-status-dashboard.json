@@ -143,7 +143,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Memory Usage",
+          "title": "内存 使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -181,7 +181,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     },
     {
@@ -238,7 +238,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Network",
+          "title": "网络",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -307,21 +307,21 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Read",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 读取",
               "refId": "A"
             },
             {
               "expr": "avg (irate(task_block_out_byte{job_name=\"$job_id\"}[300s])) by (instance)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{'{{'}}instance{{'}}'}} Write",
+              "legendFormat": "{{'{{'}}instance{{'}}'}} 写入",
               "refId": "B"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Block IO",
+          "title": "阻塞IO",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -359,7 +359,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     },
     {
@@ -402,14 +402,14 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Usage",
+          "title": "NPU 使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -477,14 +477,14 @@
               "expr": "avg by (minor_number,instance) (task_device_mem_percent{job_name=\"$job_id\",device_str='npu.huawei.com/NPU'})",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
               "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Memory Usage",
+          "title": "NPU内存使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -522,7 +522,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     },
     {
@@ -572,7 +572,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "GPU Usage",
+          "title": "GPU 使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -647,7 +647,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "GPU Memory Usage",
+          "title": "GPU 内存使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -685,7 +685,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     },
     {
@@ -849,7 +849,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     }
   ],
@@ -909,7 +909,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Job Status",
+  "title": "任务状态",
   "version": 1,
   "uid": "job-status"
 }}

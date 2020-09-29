@@ -102,7 +102,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Storage Usage",
+          "title": "存储空间使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -140,7 +140,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     }
   ],
@@ -178,7 +178,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Storage usage",
+  "title": "存储空间使用量",
   "version": 0,
   "uid": "storage-usage"
 }}

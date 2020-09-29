@@ -139,7 +139,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assigned GPUs",
+      "title": "已安排GPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -223,7 +223,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Active GPUs",
+      "title": "活跃GPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -307,7 +307,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Idle GPUs",
+      "title": "",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -405,7 +405,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assigned NPUs",
+      "title": "分配的NPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -489,7 +489,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Active NPUs",
+      "title": "有源NPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -573,7 +573,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Idle NPUs",
+      "title": "空闲的NPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -598,7 +598,7 @@
       "id": 42,
       "panels": [],
       "repeat": null,
-      "title": "GPU Utilization",
+      "title": "GPU使用率",
       "type": "row"
     },
     {
@@ -672,7 +672,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned GPU Utilization",
+      "title": "分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -755,7 +755,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned GPU Utilization Over Time",
+      "title": "随时间分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -838,7 +838,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active GPU Utilization",
+      "title": "主动GPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -921,7 +921,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active Utilization Over Time",
+      "title": "随着时间的推移积极利用",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -945,7 +945,7 @@
       "id": 420,
       "panels": [],
       "repeat": null,
-      "title": "NPU Utilization",
+      "title": "NPU利用率",
       "type": "row"
     },
     {
@@ -1019,7 +1019,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned NPU Utilization",
+      "title": "分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1102,7 +1102,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned NPU Utilization Over Time",
+      "title": "随时间分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1185,7 +1185,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active NPU Utilization",
+      "title": "主动NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1268,7 +1268,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active NPU Utilization Over Time",
+      "title": "随时间推移主动NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1292,7 +1292,7 @@
       "id": 43,
       "panels": [],
       "repeat": null,
-      "title": "Resource Per Active Device",
+      "title": "每个活动设备的资源",
       "type": "row"
     },
     {
@@ -1366,7 +1366,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "GPU Memory",
+      "title": "GPU内存",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "50%",
@@ -1450,7 +1450,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "NPU Memory",
+      "title": "NPU内存",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "50%",
@@ -1618,7 +1618,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Memory",
+      "title": "内存",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1701,7 +1701,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Disk Read",
+      "title": "磁盘读取",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1784,7 +1784,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Disk Write",
+      "title": "磁盘写入",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1867,7 +1867,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Network In",
+      "title": "网络输入",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1950,7 +1950,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Network Out",
+      "title": "网络输出",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1974,7 +1974,7 @@
       "id": 44,
       "panels": [],
       "repeat": null,
-      "title": "Time Series",
+      "title": "时间序列",
       "type": "row"
     },
     {
@@ -2018,21 +2018,21 @@
           "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+          "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
           "refId": "A"
         },
         {
           "expr": "avg(task_device_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+          "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
           "refId": "B"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Device Utilization",
+      "title": "设备利用率",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2106,21 +2106,21 @@
           "expr": "avg(task_device_mem_percent{job_name=\"$job_name\",device_str='nvidia.com/gpu'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+          "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
           "refId": "A"
         },
         {
           "expr": "avg(task_device_mem_percent{job_name=\"$job_name\",device_str='npu.huawei.com/NPU'}) by (minor_number, instance)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+          "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
           "refId": "B"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Device Memory Usage",
+      "title": "设备内存使用率",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2282,7 +2282,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Memory",
+      "title": "内存",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2375,7 +2375,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Disk I/O",
+      "title": "磁盘I/O",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2474,7 +2474,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Network I/O",
+      "title": "网络I/O",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2564,7 +2564,7 @@
     ]
   },
   "timezone": "",
-  "title": "DLTS Job Statistics",
+  "title": "DLTS任务统计",
   "uid": "dlts-job-statistics",
   "version": 1
 }

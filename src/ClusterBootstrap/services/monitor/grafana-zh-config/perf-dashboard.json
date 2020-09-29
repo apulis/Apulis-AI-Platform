@@ -67,7 +67,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Datahandler 90th percentile latency per function from jobmanager",
+            "title": "数据处理程序来自JobManager的每个功能的90％延迟",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -142,7 +142,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Datahandler 90th percentile latency per function from restfulapi",
+            "title": "Restfulapi的Datahandler每个功能的第90个百分位延迟",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -180,7 +180,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -223,14 +223,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "Connection Latency",
+                "legendFormat": "连接延迟",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "90th percentile DB connection latency from jobmanager",
+            "title": "来自Jobmanager的第90个百分点的数据库连接延迟",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -305,7 +305,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "90th percentile DB connection latency from restfulapi",
+            "title": "来自restfulapi的第90个百分点的数据库连接延迟",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -343,7 +343,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       }
     ],
@@ -381,7 +381,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "Performance dashboard",
+    "title": "绩效仪表板",
     "version": 0,
     "uid": "perf"
   }

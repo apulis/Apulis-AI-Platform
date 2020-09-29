@@ -60,28 +60,28 @@
               "expr": "sum (avg (k8s_node_device_available{device_str='nvidia.com/gpu'})by (host_ip) )",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "Available",
+              "legendFormat": "可用",
               "refId": "A"
             },
             {
               "expr": "sum(avg (k8s_node_device_total{device_str='nvidia.com/gpu'})by (host_ip) )",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "Total",
+              "legendFormat": "全部",
               "refId": "B"
             },
             {
               "expr": "sum(avg (k8s_node_device_reserved{device_str='nvidia.com/gpu'})by (host_ip) )",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "Reserved",
+              "legendFormat": "预留",
               "refId": "C"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "GPU Usage",
+          "title": "GPU 使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -150,28 +150,28 @@
               "expr": "sum(avg (k8s_node_device_available{device_str='npu.huawei.com/NPU'})by (host_ip))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "Available",
+              "legendFormat": "可用",
               "refId": "A"
             },
             {
               "expr": "sum(avg (k8s_node_device_total{device_str='npu.huawei.com/NPU'})by (host_ip))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "Total",
+              "legendFormat": "全部",
               "refId": "B"
             },
             {
               "expr": "sum(avg (k8s_node_device_reserved{device_str='npu.huawei.com/NPU'})by (host_ip))",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "Reserved",
+              "legendFormat": "预留",
               "refId": "C"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Usage",
+          "title": "NPU 使用量",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -209,7 +209,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表盘行",
       "titleSize": "h6"
     }
   ],
@@ -247,7 +247,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "device Usage",
+  "title": "设备 使用量",
   "version": 0,
   "uid": "device-usage-history"
 }}

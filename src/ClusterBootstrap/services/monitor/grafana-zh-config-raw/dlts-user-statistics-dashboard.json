@@ -138,7 +138,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assigned GPUs",
+      "title": "分配的GPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -220,7 +220,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Active GPUs",
+      "title": "主动式GPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -302,7 +302,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Idle GPUs",
+      "title": "空闲的GPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -398,7 +398,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Assigned NPUs",
+      "title": "分配的NPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -480,7 +480,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Active NPUs",
+      "title": "有源NPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -562,7 +562,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "Idle NPUs",
+      "title": "空闲的NPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -586,7 +586,7 @@
       "id": 24,
       "panels": [],
       "repeat": null,
-      "title": "Device Over Time",
+      "title": "随时间推移的设备",
       "type": "row"
     },
     {
@@ -717,7 +717,7 @@
       "id": 25,
       "panels": [],
       "repeat": null,
-      "title": "GPU Utilization",
+      "title": "GPU使用率",
       "type": "row"
     },
     {
@@ -790,7 +790,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned GPU Utilization",
+      "title": "分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -872,7 +872,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned GPU Utilization Over Time",
+      "title": "随时间分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -955,7 +955,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active GPU Utilization",
+      "title": "主动GPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1037,7 +1037,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active GPU Utilization Over Time",
+      "title": "随着时间的推移主动使用GPU",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1061,7 +1061,7 @@
       "id": 250,
       "panels": [],
       "repeat": null,
-      "title": "NPU Utilization",
+      "title": "NPU利用率",
       "type": "row"
     },
     {
@@ -1134,7 +1134,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned NPU Utilization",
+      "title": "分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1216,7 +1216,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Assigned NPU Utilization Over Time",
+      "title": "随时间分配的NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1299,7 +1299,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active NPU Utilization",
+      "title": "主动NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1381,7 +1381,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "Active NPU Utilization Over Time",
+      "title": "随时间推移主动NPU利用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1405,7 +1405,7 @@
       "id": 26,
       "panels": [],
       "repeat": null,
-      "title": "Device Utilization Over Time",
+      "title": "随着时间的推移设备利用率",
       "type": "row"
     },
     {
@@ -1504,7 +1504,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Device Utilization",
+      "title": "设备利用率",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -1549,7 +1549,7 @@
       "id": 27,
       "panels": [],
       "repeat": null,
-      "title": "Resource Per Active Device",
+      "title": "每个活动设备的资源",
       "type": "row"
     },
     {
@@ -1621,7 +1621,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "GPU Memory",
+      "title": "GPU内存",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1702,7 +1702,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "NPU Memory",
+      "title": "NPU内存",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1864,7 +1864,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Memory",
+      "title": "内存",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -1945,7 +1945,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Disk Read",
+      "title": "磁盘读取",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2026,7 +2026,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Disk Write",
+      "title": "磁盘写入",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2107,7 +2107,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Network In",
+      "title": "网络输入",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2188,7 +2188,7 @@
         }
       ],
       "thresholds": "",
-      "title": "Network Out",
+      "title": "网络输出",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
@@ -2212,7 +2212,7 @@
       "id": 28,
       "panels": [],
       "repeat": null,
-      "title": "Resource Per Active Device Over Time",
+      "title": "随时间推移每个活动设备的资源",
       "type": "row"
     },
     {
@@ -2283,7 +2283,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Device Memory Per Active Device",
+      "title": "每个活动设备的设备内存",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2384,7 +2384,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "CPU Per Active Device",
+      "title": "每个活动设备的CPU",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2485,7 +2485,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Memory Per Active Device",
+      "title": "每个活动设备的内存",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2620,7 +2620,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Disk I/O Per Active Device",
+      "title": "每个活动设备的磁盘I / O",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2754,7 +2754,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Network I/O Per Active Device",
+      "title": "每个活动设备的网络I / O",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -2864,7 +2864,7 @@
     ]
   },
   "timezone": "",
-  "title": "DLTS User Statistics",
+  "title": "DLTS用户统计",
   "uid": "dlts-user-statistics",
   "version": 1
 }

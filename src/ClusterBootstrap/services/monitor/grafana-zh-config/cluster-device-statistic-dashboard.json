@@ -67,7 +67,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per user allocation",
+            "title": "每个用户分配",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -105,7 +105,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -148,35 +148,35 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "{{'{{'}}vc_name{{'}}'}} allocation",
+                "legendFormat": "{{'{{'}}vc_name{{'}}'}} 分配",
                 "refId": "A"
               },
               {
                 "expr": "count(avg by (uuid) (task_device_percent))",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "Cluster wide allocation",
+                "legendFormat": "集群范围内的分配",
                 "refId": "B"
               },
               {
                 "expr": "avg by (instance,vc_name) (k8s_vc_device_total)",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "{{'{{'}}vc_name{{'}}'}} quota",
+                "legendFormat": "{{'{{'}}vc_name{{'}}'}} 配额",
                 "refId": "C"
               },
               {
                 "expr": "sum(avg by (instance,device_str,device_str) (k8s_vc_device_total))",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "Cluster wide quota",
+                "legendFormat": "集群范围内的配额",
                 "refId": "D"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per VC allocation & quota",
+            "title": "每个VC分配 & 配额",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -214,7 +214,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -263,14 +263,14 @@
                 "expr": "count (avg by (uuid) (task_device_percent)) / sum (avg by (instance,device_str) (k8s_vc_device_total))",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "Cluster wide",
+                "legendFormat": "集群范围",
                 "refId": "B"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per VC allocation rate",
+            "title": "每个VC分配率",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -308,7 +308,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -357,7 +357,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per user device utils",
+            "title": "每个用户设备的效用",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -395,7 +395,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -451,7 +451,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Per VC device utils",
+            "title": " 每个VC设备的效用",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -489,7 +489,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       }
     ],
@@ -527,8 +527,10 @@
       ]
     },
     "timezone": "browser",
-    "title": "Cluster Device statistic",
+    "title": "集群设备统计",
     "version": 0,
     "uid": "cluster-gpu-statistic"
   }
 }
+
+ 

@@ -62,14 +62,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "GPU utilization (in %).",
+            "title": "GPU利用率(单位:%)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -138,14 +138,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Memory clock frequency (in MHz).",
+            "title": "记忆时钟频率(单位:MHz).",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -183,7 +183,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -226,14 +226,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "GPU temperature (in C).",
+            "title": "GPU温度(单位:C).",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -302,14 +302,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Memory temperature (in C).",
+            "title": "内存温度(单位:C).",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -347,7 +347,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -390,14 +390,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "SM clock frequency (in MHz).",
+            "title": "时钟频率(单位:MHz).",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -466,14 +466,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Power draw (in W).",
+            "title": "能量吸取(单位:W)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -511,7 +511,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -554,14 +554,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total energy consumption since boot (in mJ).",
+            "title": "启动后的总能耗(单位:mJ)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -630,14 +630,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of bytes transmitted through PCIe TX (in KB) via NVML.",
+            "title": "通过NVML PCIe TX传输的字节总数(单位为KB)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -675,7 +675,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -718,14 +718,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of bytes received through PCIe RX (in KB) via NVML.",
+            "title": "通过NVML PCIe RX接收的字节总数(以KB为单位)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -794,14 +794,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of PCIe retries.",
+            "title": "PCIe重试的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -839,7 +839,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -882,14 +882,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Memory utilization (in %).",
+            "title": "内存利用率(%)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -958,14 +958,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Encoder utilization (in %).",
+            "title": "编码器利用率(%)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1003,7 +1003,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -1046,14 +1046,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Decoder utilization (in %).",
+            "title": "译码器利用率(%)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1122,14 +1122,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Value of the last XID error encountered.",
+            "title": "最后遇到的XID错误的值",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1167,7 +1167,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -1210,14 +1210,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Throttling duration due to power constraints (in us).",
+            "title": "由于功率限制(在美国)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1286,14 +1286,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Throttling duration due to thermal constraints (in us).",
+            "title": "由于热限制(在美国)的节流时间",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1331,7 +1331,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -1374,14 +1374,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Throttling duration due to sync-boost constraints (in us).",
+            "title": "由于同步推进限制(在美国)的节流时间",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1450,14 +1450,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Throttling duration due to board limit constraints (in us).",
+            "title": "节流时间由于董事会限制限制(在美国)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1495,7 +1495,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -1538,14 +1538,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Throttling duration due to low utilization (in us).",
+            "title": "由于低利用率(在美国)的节流时间",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1614,14 +1614,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Throttling duration due to reliability constraints (in us).",
+            "title": "由于可靠性的限制(在美国)节流时间",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1659,7 +1659,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -1702,14 +1702,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total throttling duration (in us).",
+            "title": "总节流时间(美国)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1778,14 +1778,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Framebuffer memory free (in MiB).",
+            "title": "Framebuffer内存空闲(MiB)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1823,7 +1823,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -1866,14 +1866,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Framebuffer memory used (in MiB).",
+            "title": "使用的Framebuffer内存(在MiB中)",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1942,14 +1942,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of single-bit volatile ECC errors.",
+            "title": "单位易失性ECC错误的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -1987,7 +1987,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -2030,14 +2030,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of double-bit volatile ECC errors.",
+            "title": "双位易失性ECC错误的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2106,14 +2106,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of single-bit persistent ECC errors.",
+            "title": "单位持续ECC错误的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2151,7 +2151,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -2194,14 +2194,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of double-bit persistent ECC errors.",
+            "title": "双位ECC持续错误的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2270,14 +2270,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of retired pages due to single-bit errors.",
+            "title": "由于单位错误而退出的页面总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2315,7 +2315,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -2358,14 +2358,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of retired pages due to double-bit errors.",
+            "title": "由于双位错误而退出的页面总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2434,14 +2434,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of pages pending retirement.",
+            "title": "即将销毁的页面总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2479,7 +2479,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -2522,14 +2522,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of NVLink flow-control CRC errors.",
+            "title": "NVLink重试的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2598,14 +2598,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of NVLink data CRC errors.",
+            "title": "NVLink恢复错误的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2643,7 +2643,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -2686,14 +2686,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of NVLink retries.",
+            "title": "所有通道的NVLink带宽计数器的总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2762,14 +2762,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of NVLink recovery errors.",
+            "title": "NVLink恢复错误总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2807,7 +2807,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       },
       {
@@ -2850,14 +2850,14 @@
                 "format": "time_series",
                 "hide": false,
                 "intervalFactor": 2,
-                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} on {{'{{'}}instance{{'}}'}}",
+                "legendFormat": "GPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
                 "refId": "A"
               }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Total number of NVLink bandwidth counters for all lanes",
+            "title": "所有通道的NVLink带宽计数器总数",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -2895,7 +2895,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "Dashboard Row",
+        "title": "仪表板行",
         "titleSize": "h6"
       }
     ],
@@ -2955,7 +2955,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "Job DCGM Metrics",
+    "title": "任务DCGM指标",
     "version": 1,
     "uid": "job-dcgm-metrics"
   }

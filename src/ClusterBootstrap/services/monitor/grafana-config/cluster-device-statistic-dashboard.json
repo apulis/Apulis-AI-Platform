@@ -67,7 +67,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "每个用户分配",
+            "title": "Per user allocation",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -105,7 +105,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "仪表板行",
+        "title": "Dashboard Row",
         "titleSize": "h6"
       },
       {
@@ -176,7 +176,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "每个VC分配 & 配额",
+            "title": "Per VC allocation & quota",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -214,7 +214,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "仪表板行",
+        "title": "Dashboard Row",
         "titleSize": "h6"
       },
       {
@@ -270,7 +270,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "每个VC分配率",
+            "title": "Per VC allocation rate",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -308,7 +308,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "仪表板行",
+        "title": "Dashboard Row",
         "titleSize": "h6"
       },
       {
@@ -357,7 +357,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "每个用户设备的效用",
+            "title": "Per user device utils",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -395,7 +395,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "仪表板行",
+        "title": "Dashboard Row",
         "titleSize": "h6"
       },
       {
@@ -451,7 +451,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": " 每个VC设备的效用",
+            "title": "Per VC device utils",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -489,7 +489,7 @@
         "repeatIteration": null,
         "repeatRowId": null,
         "showTitle": false,
-        "title": "仪表板行",
+        "title": "Dashboard Row",
         "titleSize": "h6"
       }
     ],
@@ -527,7 +527,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "集群设备统计",
+    "title": "Cluster Device statistic",
     "version": 0,
     "uid": "cluster-gpu-statistic"
   }

@@ -70,7 +70,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "usage",
+              "legendFormat": "使用量",
               "refId": "B"
             }
           ],
@@ -171,7 +171,7 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "usage",
+              "legendFormat": "使用量",
               "metric": "",
               "refId": "A",
               "step": 600,
@@ -198,7 +198,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Memory",
+          "title": "内存",
           "tooltip": {
             "msResolution": false,
             "shared": true,
@@ -294,7 +294,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Network Traffic",
+          "title": "网络流量",
           "tooltip": {
             "msResolution": false,
             "shared": true,
@@ -399,7 +399,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Disk",
+          "title": "磁盘",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -482,7 +482,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "GPU Utilization",
+          "title": "GPU的利用率",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -561,7 +561,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "GPU Memory",
+          "title": "GPU内存",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -598,7 +598,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "GPU row",
+      "title": "GPU 行",
       "titleSize": "h6"
     },
     {
@@ -656,7 +656,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Utilization",
+          "title": "NPU的利用率",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -735,7 +735,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU Memory",
+          "title": "NPU的缓存",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -822,7 +822,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Filesystem free space percent",
+          "title": "文件系统空闲空间百分比",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -897,7 +897,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Filesystem free inode percent",
+          "title": "文件系统空闲inode百分比",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -935,7 +935,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     },
     {
@@ -998,7 +998,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Node load",
+          "title": "节点负载",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1036,7 +1036,7 @@
       "repeatIteration": null,
       "repeatRowId": null,
       "showTitle": false,
-      "title": "Dashboard Row",
+      "title": "仪表板行",
       "titleSize": "h6"
     }
   ],
@@ -1101,7 +1101,7 @@
     ]
   },
   "timezone": "browser",
-  "title": "Node Status",
+  "title": "节点状态",
   "version": 1,
   "uid": "node-status"
 }}

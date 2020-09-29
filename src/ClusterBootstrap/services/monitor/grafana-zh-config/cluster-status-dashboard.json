@@ -937,6 +937,6 @@
     "timezone": "browser",
     "title": "集群状态",
     "version": 3,
-    "uid": "cluster-status"
+    "uid": "cluster-status-zh"
   }
 }

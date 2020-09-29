@@ -2957,6 +2957,6 @@
     "timezone": "browser",
     "title": "任务DCGM指标",
     "version": 1,
-    "uid": "job-dcgm-metrics"
+    "uid": "job-dcgm-metrics-zh"
   }
 }

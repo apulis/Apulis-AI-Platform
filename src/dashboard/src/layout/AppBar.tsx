@@ -289,7 +289,7 @@ const UserButton: React.FC = () => {
           </MenuItem>
         <MenuItem onClick={handleSignOut} >
           <ExitToApp style={{ marginRight: 8 }} />
-          {t('layout.signout')}
+          {t('layout.signOut')}
         </MenuItem>
       </Menu>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>

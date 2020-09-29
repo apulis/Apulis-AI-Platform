@@ -191,3 +191,6 @@ router.post('/:clusterId/teams/:teamId/postModelConversionJob',
 //   require('./controllers/cluster/access/deleteAce'))
 router.get('/error.gif',
   require('./controllers/error'))
+
+router.get('/platform-config',
+  require('./controllers/platform-config'))

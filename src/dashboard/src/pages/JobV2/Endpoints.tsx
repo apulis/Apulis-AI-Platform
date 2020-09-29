@@ -24,19 +24,20 @@ import {
   Typography,
   Chip
 } from '@material-ui/core';
-import { Send, Help } from '@material-ui/icons';
+import { Send, Help, Info } from '@material-ui/icons';
 import useFetch from 'use-http-2';
 import { useSnackbar } from 'notistack';
 import Loading from '../../components/Loading';
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import Context from './Context';
 import { useForm } from "react-hook-form";
-import { OneInteractivePortsMsg, pollInterval } from '../../const';
+import {pollInterval } from '../../const';
 import message from '../../utils/message';
 import axios from 'axios';
 import useInterval from '../../hooks/useInterval';
 import UserContext from '../../contexts/User';
 import AuthContext from '../../contexts/Auth';
+import { useTranslation } from "react-i18next";
 
 interface RouteParams {
   clusterId: string;
@@ -126,6 +127,7 @@ const EndpointsList: FunctionComponent<{ endpoints: any[], setPollTime: any }> =
 };
 
 const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: any }> = ({ endpoints, setPollTime }) => {
+  const {t} = useTranslation()
   const { job } = useContext(Context);
   const { userName } = useContext(UserContext);
   const { permissionList = [] } = useContext(AuthContext);
@@ -154,41 +156,41 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   const onChange = useCallback((name: string) => (event: ChangeEvent<{}>, value: boolean) => {
     if (value === false) return;
     const _name = name === 'iPython' ? 'Jupyter' : name;
-    enqueueSnackbar(`Enabling ${_name}...`);
+    enqueueSnackbar(`${t('jobV2.enabling')} ${_name}...`);
     post({
       endpoints: [name.toLowerCase()]
     }).then(() => {
-      enqueueSnackbar(`${_name} enabled`, { variant: 'success' })
+      enqueueSnackbar(`${_name} ${t('jobV2.enabled')}`, { variant: 'success' })
     }, () => {
-      enqueueSnackbar(`Failed to enable ${_name}`, { variant: 'error' })
+      enqueueSnackbar(`${t('jobV2.failedToEnable')} ${_name}`, { variant: 'error' })
     });
   }, [post, enqueueSnackbar]);
 
   const onSubmit = (data: any) => {
     if (!data.interactivePorts) {
-      setError('interactivePorts', 'validate', 'Interactive Port is required！');
+      setError('interactivePorts', 'validate', t('jobV2.interactivePortIsRequired'));
       return;
     }
     const port = Number(data.interactivePorts);
     for (const i of endpoints) {
       const { status, podPort, name } = i;
       if (status === 'running' && name !== 'ssh' && name !== 'ipython' && name !== 'tensorboard' && podPort === port) {
-        enqueueSnackbar(`Already has port ${port}！`, { variant: 'error' });
+        enqueueSnackbar(`${t('jobV2.alreadyHasPort')} ${port}！`, { variant: 'error' });
         return;
       }
     }
-    enqueueSnackbar(`Exposing port ${port}...`);
+    enqueueSnackbar(`${t('jobV2.exposingPort')} ${port}...`);
     post({
       endpoints: [{
         name: `port-${port}`,
         podPort: port
       }]
     }).then(() => {
-      enqueueSnackbar(`Port ${port} exposed`, { variant: 'success' });
+      enqueueSnackbar(`${t('jobV2.port')} ${port} ${t('jobV2.exposed')}`, { variant: 'success' });
       setValue('interactivePorts', '');
       setPollTime(pollInterval);
     }, () => {
-      enqueueSnackbar(`Failed to expose port ${port}`, { variant: 'error' });
+      enqueueSnackbar(`${t('jobV2.port')} ${port}`, { variant: 'error' });
     });
   };
 
@@ -203,7 +205,7 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
       } else {
         flag = Number(val) >= 40000 && Number(val) <= 49999 && Number.isInteger(Number(val));
       }
-      !flag && setError('interactivePorts', 'validate', OneInteractivePortsMsg);
+      !flag && setError('interactivePorts', 'validate', t('tips.OneInteractivePortsMsg'));
       return flag;
     }
     return true;
@@ -242,19 +244,19 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
         />
         <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} style={{ marginTop: 8, cursor: 'pointer' }}/>
       </FormGroup>
-      {iconInfoShow && <Chip icon={<Help/>}
-        label={<p>TensorBoard will listen on directory<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>inside docker container.</p>}
+      {iconInfoShow && <Chip icon={<Info/>}
+        label={<p>{t('jobV2.tensorBoardWillListenOnDirectory')}<code> ~/tensorboard/$DLWS_JOB_ID/logs </code>{t('jobV2.insideDockerContainer')}</p>}
       />}
       {/* <AuthzHOC needPermission={'"MANAGE_ALL_USERS_JOB"'}></AuthzHOC> */}
       <Box pt={1} pb={2} component="form" onSubmit={handleSubmit(onSubmit)}>
         <TextField
           fullWidth
-          label="New Interactive Port（inside Pod）"
+          label={t('jobV2.newInteractivePort')}
           disabled={disabled}
           name="interactivePorts"
           error={Boolean(errors.interactivePorts)}
           defaultValue={''}
-          helperText={errors.interactivePorts ? errors.interactivePorts.message || OneInteractivePortsMsg : ''}
+          helperText={errors.interactivePorts ? errors.interactivePorts.message || t('tips.OneInteractivePortsMsg') : ''}
           inputRef={register({
             validate: val => validateInteractivePorts(val)
           })}
@@ -273,9 +275,8 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
   )
 };
 
-const Endpoints: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
+const Endpoints: FunctionComponent<{ jobStatus: string }> = ({ jobStatus }) => {
   const { clusterId, jobId } = useParams<RouteParams>();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { job } = useContext(Context);
   const [endpoints, setEndpoints] = useState<any[]>([]);
   const [pollTime, setPollTime] = useState<any>(pollInterval);
@@ -294,7 +295,10 @@ const Endpoints: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
         const { data } = res;
         const eLen = endpoints.length;
         const dLen = data ? data.length : 0;
-        if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
+        const stopedStatus = ['error', 'failed', 'finished', 'killing', 'killed'];
+        if (stopedStatus.includes(jobStatus)) {
+          setPollTime(null)
+        }
         if (eLen !== dLen) {
           setEndpoints(data);
         } else if (eLen && dLen) {

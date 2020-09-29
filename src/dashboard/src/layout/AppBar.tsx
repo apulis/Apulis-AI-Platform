@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   AppBar,
   Box,
@@ -31,7 +31,10 @@ import {
   Info,
   MenuRounded,
   Dashboard,
+  Translate,
+  KeyboardReturn
 } from '@material-ui/icons';
+import axios from 'axios';
 import CloseIcon from '@material-ui/icons/Close';
 import { TransitionProps } from '@material-ui/core/transitions';
 import DrawerContext from './Drawer/Context';
@@ -43,8 +46,9 @@ import copy from 'clipboard-copy'
 import { green, purple } from "@material-ui/core/colors";
 import { SlideProps } from '@material-ui/core/Slide';
 import AuthzHOC from '../components/AuthzHOC';
-import axios from 'axios';
+import { useTranslation } from "react-i18next";
 
+import i18n from "i18next";
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -69,7 +73,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     userLabel: {
       whiteSpace: 'nowrap',
-      cursor: 'default'
     }
   })
 );
@@ -79,10 +82,11 @@ const Transition = React.forwardRef<unknown, TransitionProps>(function Transitio
 });
 
 const OpenDrawerButton: React.FC = () => {
+  const {t} = useTranslation();
   const { setOpen, open } = React.useContext(DrawerContext);
   const onClick = React.useCallback(() => setOpen(!open), [setOpen, open]);
   return (
-    <Tooltip title={open ? 'Hide' : 'Show'}>
+    <Tooltip title={(open ? t('layout.hide') : t('layout.show')) as string }>
       <IconButton edge="start" color="inherit" onClick={onClick}>
         <MenuRounded />
       </IconButton>
@@ -90,8 +94,7 @@ const OpenDrawerButton: React.FC = () => {
   );
 };
 
-let TeamMenu: React.FC;
-TeamMenu = () => {
+const TeamMenu: React.FC = () => {
   const { teams, saveSelectedTeam, selectedTeam } = React.useContext(
     TeamContext
   );
@@ -148,10 +151,70 @@ TeamMenu = () => {
   );
 };
 
+const LangMenu: React.FC = () => {
+  const lng = localStorage.language || navigator.language;
+  const selectedMenu = lng === 'zh-CN' ? {label: '中文', value: 'zh-CN'} : {label: 'English', value: 'en-US'}
+  const menus = [{label: '中文', value: 'zh-CN'}, {label: 'English', value: 'en-US'}]
+
+  const [open, setOpen] = React.useState(false);
+
+  const button = React.useRef<any>(null);
+
+  const onButtonClick = React.useCallback(() => setOpen(true), [setOpen]);
+  const onMenuClose = React.useCallback(() => setOpen(false), [setOpen]);
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
+  const selectLang = (lang: string) => {
+    localStorage.language = lang;
+    changeLanguage(lang);
+    document.cookie=`lang=${lang}; path=/`;
+  };
+  const onMenuItemClick = React.useCallback(
+    menu => () => {
+      selectLang(menu.value);
+      setOpen(false);
+    },
+    [selectedMenu]
+  );  
+  const styles = useStyles({});
+  return (
+    <>
+      <Button
+        ref={button}
+        variant="outlined"
+        color="inherit"
+        onClick={onButtonClick}
+        style={{ textTransform: 'none' }}
+      >
+        <Translate className={styles.leftIcon} />
+        {selectedMenu.label}
+      </Button>
+      <Menu anchorEl={button.current} open={open} onClose={onMenuClose}>
+        {menus.map((menu: any) => (
+          <MenuItem
+            key={menu.value}
+            disabled={menu.value === selectedMenu.value}
+            onClick={onMenuItemClick(menu)}
+          >
+            {menu.value === selectedMenu.value ? (
+              <Check className={styles.leftIcon} />
+            ) : (
+              <Translate className={styles.leftIcon} />
+            )}
+            <Typography>{menu.label}</Typography>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+};
+
 const UserButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
   const [viersonModalOpen,setVersionModalOpen] = React.useState(false);
 
+  const {t} = useTranslation();
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const history = useHistory();
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
@@ -199,8 +262,8 @@ const UserButton: React.FC = () => {
   return (
     <main>
       <Button variant="outlined" color="inherit" style={{ marginRight: '10px' }} href={userGroupPath}>
-        <Dashboard className={styles.leftIcon} />
-        User Dashboard
+        <Dashboard className={styles.leftIcon}/>
+        {t('layout.userDashboard')}
       </Button>
       <Button variant="outlined" color="inherit" style={{ textTransform: 'none' }} onClick={showUserMenu} className={classes.userLabel} aria-controls="user-menu" aria-haspopup="true">
         <AccountBox className={styles.leftIcon} />
@@ -282,14 +345,37 @@ const clearAuthInfo = async (userGroupPath: string) => {
   await axios.get('/authenticate/logout');
   window.location.href = userGroupPath + '/user/login?' + encodeURIComponent(window.location.href);
 }
+const SignOutButton: React.FC = () => {
+  const {t} = useTranslation();
+  const { userGroupPath } = React.useContext(UserContext);
+  return (
+    <Tooltip title={(t('layout.signOut') as string)} onClick={() => {delete localStorage.token}}>
+      <IconButton edge="end" color="inherit" onClick={() => clearAuthInfo(userGroupPath || '')}>
+        <ExitToApp />
+      </IconButton>
+    </Tooltip>
+  );
+};
 
 const Title: React.FC = () => {
+  const [platformName, setPlatformName] = useState<string>('');
+
+  const getPlatformName = async () => {
+    const res = await axios.get<{i18n: string | boolean; platformName: string}>('/platform-config');
+    const { i18n, platformName } = res.data;
+    setPlatformName(platformName);
+  }
+
+  useEffect(() => {
+    getPlatformName()
+  }, [])
+
   const styles = useStyles({});
   return (
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
         <Typography component="h1" variant="h6" align="left">
-          Apulis
+          {platformName}
         </Typography>
       </Link>
     </Box>

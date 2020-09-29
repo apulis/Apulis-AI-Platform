@@ -15,13 +15,15 @@ import AuthzHOC from '../../components/AuthzHOC';
 import { Pagination } from '@material-ui/lab';
 import Loading from '../../components/Loading';
 import { Help } from "@material-ui/icons"; 
+import i18next from 'i18next';
+import { withTranslation } from 'react-i18next';
 
 const empty = {
   text: '',
   error: false
 }
 
-export default class Vc extends React.Component {
+class Vc extends React.Component {
   static contextType = ClustersContext
   constructor() {
     super()
@@ -119,13 +121,15 @@ export default class Vc extends React.Component {
 
   save = async () => {
     const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj } = this.state;
+    const { t } = this.props;
+    const tTip = t('vcName is required！')
     const { selectedCluster, getTeams } = this.context;
     let flag = true;
     if (!vcName || vcNameValidateObj.error) {
       this.setState({
         vcNameValidateObj: {
           error: true,
-          text: vcNameValidateObj.text ? vcNameValidateObj.text : 'VCName is required！'
+          text: vcNameValidateObj.text ? vcNameValidateObj.text : tTip
         }
       })
       return;
@@ -170,44 +174,50 @@ export default class Vc extends React.Component {
     url = `/${selectedCluster}/${isEdit ? 'updateVc' : 'addVc'}/${vcName}/${quota}/${metadata}`;
     await axios.get(url)
       .then((res) => {
-        message('success', `${isEdit ? 'Modified' : 'Added'}  successfully！`);
+        let msg = `${isEdit ? 'Modified' : 'Added'} successfully！`
+        message('success', t(msg));
         this.onCloseDialog();
         getTeams();
         this.getVcList();
         this.getVcList(true);
       }, (e) => {
-        message('error', `${isEdit ? 'Modified' : 'Added'}  failed！`);
+        let msg = `${isEdit ? 'Modified' : 'Added'} failed！`;
+        message('error', t(msg));
       })
     this.setState({ btnLoading: false });
   }
 
   delete = () => {
+    const { t } = this.props;
+    const [ tSuccess, tFailed ] = [t('Delete successfully！'), t('Delete failed！')]
     const { selectedCluster, getTeams } = this.context;
     const { vcName } = this.state.delItem;
     this.setState({ btnLoading: true });
     axios.get(`/${selectedCluster}/deleteVc/${vcName}`)
       .then((res) => {
         if (res.data.result === false) {
-          message('error', 'Could not delete last VC');
+          message(tFailed);
           return;
         }
-        message('success', 'Delete successfully！');
+        message(tSuccess);
         this.setState({ deleteModifyFlag: false, btnLoading: false });
         getTeams();
         this.getVcList();
         this.getVcList(true);
       }, () => { 
-        message('error', 'Delete failed！');
+        message('error', tFailed);
         this.setState({ btnLoading: false });
       })
   }
 
   vcNameChange = e => {
-    const { allVcList } = this.state;
+    const { t } = this.props;
+    const tRequired = t('vcName is required！');
+    const { vcList } = this.state;
     const val = e.target.value;
     const hasNames = allVcList.map(i => i.vcName);
     const error = !val || !NameReg.test(val) || hasNames.includes(val) ? true : false;
-    const text = !val ? 'VCName is required！' : !NameReg.test(val) ? NameErrorText : hasNames.includes(val) ? SameNameErrorText : '';
+    const text = !val ? tRequired : !NameReg.test(val) ?  t('tips.NameErrorText') : hasNames.includes(val) ? t('tips.SameNameErrorText')  : '';
     this.setState({ 
       vcName: val,
       vcNameValidateObj: {
@@ -219,6 +229,8 @@ export default class Vc extends React.Component {
 
   getSelectHtml = (type) => {
     const { allDevice, qSelectData, mSelectData, allVcList, isEdit, clickItem, quotaValidateObj, metadataValidateObj } = this.state;
+    const { t } = this.props;
+    const tType = t('Type')
     return Object.keys(allDevice).map(m => {
       let val = null, options = {}, oldVal = {}, num = allDevice[m].capacity;
       if (type == 1) {
@@ -251,7 +263,7 @@ export default class Vc extends React.Component {
       return (
         <div className="select-item">
           <TextField
-            label="Type"
+            label={tType}
             variant="outlined"
             value={m}
             disabled
@@ -259,7 +271,7 @@ export default class Vc extends React.Component {
           />
           <TextField
             type="number"
-            label="Value"
+            label={t("Value")}
             variant="outlined"
             className="select-value"
             defaultValue={val || 0}
@@ -274,6 +286,8 @@ export default class Vc extends React.Component {
   }
 
   onNumValChange = (key, oldVal, m, type, val, max) => {
+    const { t } = this.props;
+    const tTip = t('Must be a positive integer from 0 to ${max}').replace('${max}', `${max}`)
     const _val = Number(val);
     const { quotaValidateObj, metadataValidateObj, mSelectData } = this.state;
     const stateKey = type === 1 ? 'quotaValidateObj' : 'metadataValidateObj';
@@ -288,7 +302,14 @@ export default class Vc extends React.Component {
       };
       stateVal = type === 1 ? { ...quotaValidateObj, [m]: obj } : { ...metadataValidateObj, [m]: obj };
       this.setState({
-        [stateKey]: stateVal
+        [stateKey]: stateVal,
+        quotaValidateObj: {
+          ...quotaValidateObj,
+          [m]: {
+            error: true,
+            text: tTip
+          }
+        }
       });
       return;
     } else {
@@ -317,11 +338,12 @@ export default class Vc extends React.Component {
 
   checkCountJobByStatus = (vcName, callback) => {
     const { selectedCluster } = this.context;
+    const { t } = this.props;
     const targetStatus = encodeURIComponent('running,scheduling,killing,pausing');
     axios.get(`/${selectedCluster}/countJobByStatus/${targetStatus}/${vcName}`)
     .then((res) => {
       if (res.data > 0) {
-        message('warning','No running, scheduling, killing, or pausing job is required to perform operations!');
+        message('warning',t('A VC contains active jobs cannot be modified'));
         return
       } else {
         callback();
@@ -384,11 +406,13 @@ export default class Vc extends React.Component {
 
     if (loading) return <Loading/>
 
+    const { t } = this.props;
+    const tQuota = t('quota');
     return (
       <Container fixed maxWidth="xl">
         <div className="vcWrap">
           <AuthzHOC needPermission={'MANAGE_VC'}>
-            <Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>ADD</Button>
+            <div><Button variant="outlined" size="medium" color="primary" onClick={this.addVc}>{t('ADD')}</Button></div>
           </AuthzHOC>
           <Table>
             <TableHead> 
@@ -421,9 +445,9 @@ export default class Vc extends React.Component {
                   <TableCell style={{ maxWidth: 250 }}><div className="textEllipsis" title={item.userNameList}>{this.getUsrnameList(item.userNameList)}</div></TableCell>
                   <AuthzHOC needPermission={'MANAGE_VC'}>
                     <TableCell>
-                      <Button color="primary" onClick={() => this.updateVc(item)}>Modify</Button>
+                      <Button color="primary" onClick={() => this.updateVc(item)}>{t('Modify')}</Button>
                       <Button color="secondary" disabled={item.vcName === this.context.selectedTeam} 
-                        onClick={() => this.onClickDel(item)}>Delete</Button>
+                        onClick={() => this.onClickDel(item)}>{t('Delete')}</Button>
                     </TableCell>
                   </AuthzHOC>
                 </TableRow>
@@ -448,11 +472,11 @@ export default class Vc extends React.Component {
           </div>
           {modifyFlag && 
           <Dialog open={modifyFlag} disableBackdropClick maxWidth='xs' fullWidth>
-            <DialogTitle>{isEdit ? 'Modify' : 'ADD'}</DialogTitle>
+            <DialogTitle>{isEdit ? t('Modify') : t('ADD')}</DialogTitle>
             <DialogContent dividers>
               <form>
                 <TextField
-                  label="VCName *"
+                  label={t("vcName *")}
                   value={vcName}
                   onChange={this.vcNameChange}
                   margin="normal"
@@ -469,22 +493,22 @@ export default class Vc extends React.Component {
               </form>
             </DialogContent>
             <DialogActions>
-              <Button onClick={this.onCloseDialog} color="primary" variant="outlined">Cancel</Button>
+              <Button onClick={this.onCloseDialog} color="primary" variant="outlined">{t('Cancel')}</Button>
               <Button onClick={this.save} color="primary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
-                {btnLoading && <CircularProgress size={20}/>}Save
+                {btnLoading && <CircularProgress size={20}/>}{t('Save')}
               </Button>
             </DialogActions>
           </Dialog>}
           {deleteModifyFlag && 
           <Dialog open={deleteModifyFlag} maxWidth='xs' fullWidth onClose={() => this.setState({ deleteModifyFlag: false })}>
-            <DialogTitle>Delete</DialogTitle>
+            <DialogTitle>{t('Delete')}</DialogTitle>
             <DialogContent>
-              <DialogContentText>Are you sure to delete this VC？</DialogContentText>
+              <DialogContentText>{t('Are you sure to delete this VC?')}</DialogContentText>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">Cancel</Button>
+              <Button onClick={() => this.setState({ deleteModifyFlag: false })} color="primary" variant="outlined">{t('Cancel')}</Button>
               <Button onClick={this.delete} color="secondary" variant="contained" disabled={btnLoading} style={{ marginLeft: 8 }}>
-                {btnLoading && <CircularProgress size={20}/>}Delete
+                {btnLoading && <CircularProgress size={20}/>}{t('Delete')}
               </Button>
             </DialogActions>
           </Dialog>}
@@ -493,3 +517,5 @@ export default class Vc extends React.Component {
     )
   }
 }
+
+export default  withTranslation()(Vc);

@@ -1,20 +1,19 @@
 import React, {
   FunctionComponent,
   useEffect,
-  useMemo,
   useState
 } from 'react';
 import {
   Box,
 } from '@material-ui/core';
 import { useParams } from 'react-router-dom';
-import useFetch from 'use-http-2';
-import { useSnackbar } from 'notistack';
 import { Pagination } from '@material-ui/lab';
 import { pollInterval } from '../../const';
 import useInterval from '../../hooks/useInterval';
 import message from '../../utils/message';
 import axios from 'axios';
+
+import { useTranslation } from "react-i18next";
 
 interface RouteParams {
   clusterId: string;
@@ -22,6 +21,7 @@ interface RouteParams {
 }
 
 const Console: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { clusterId, jobId } = useParams<RouteParams>();
   const [data, setData] = useState({});
   const [count, setCount] = useState(0);
@@ -50,7 +50,7 @@ const Console: FunctionComponent = () => {
     return (
       <Box p={1} style={{ overflow: 'auto' }}>
         <Box m={0} component="pre">
-          Because this job has not started, there is no logs
+          {t('jobV2.becauseThisJobHasNotStarted')}
         </Box>
       </Box>
     )

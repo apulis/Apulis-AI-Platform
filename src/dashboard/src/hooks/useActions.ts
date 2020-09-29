@@ -4,6 +4,7 @@ import { Action } from 'material-table';
 import ConfigContext from '../contexts/Config';
 import UserContext from '../contexts/User';
 import useConfirm from './useConfirm';
+import { useTranslation } from "react-i18next";
 
 const APPROVABLE_STATUSES = [
   'unapproved'
@@ -25,7 +26,8 @@ const KILLABLE_STATUSES = [
   'paused'
 ];
 
-const useActions = (clusterId: string, isInference?: boolean) => {
+const useActions = (clusterId: string) => {
+  const {t} = useTranslation();
   const { userName, administrators } = useContext(UserContext);
   const supportMail = administrators![0];
   const confirm = useConfirm();
@@ -62,12 +64,12 @@ ${userName}
     return confirm(`Approve job ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being approved.`);
+      enqueueSnackbar(`${title}${t('hooks.isBeingApproved')}`);
       return updateStatus(job.jobId, 'approved').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s approve request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('hooks.approveRequestIsAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to approve.`, { variant: 'error' });
+          enqueueSnackbar(`${title}${t('hooks.isFailedToApprove')}`, { variant: 'error' });
         }
       });
     });
@@ -75,15 +77,15 @@ ${userName}
 
   const onPause = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`Pause job ${title} ?`).then((answer) => {
+    return confirm(`${t('tips.pauseJob')} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being paused.`);
+      enqueueSnackbar(`${title} ${t('tips.isBeingPaused')}`);
       return updateStatus(job.jobId, 'pausing').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s pause request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('tips.pauseRequestAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to pause.`, { variant: 'error' });
+          enqueueSnackbar(`${title} ${t('tips.isFailedToPause')}`, { variant: 'error' });
         }
       });
     });
@@ -91,15 +93,15 @@ ${userName}
 
   const onResume = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`Resume job ${title} ?`).then((answer) => {
+    return confirm(`${t('tips.resumeJob')} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being resumed.`);
+      enqueueSnackbar(`${title}${t('hooks.isBeingResumed')}`);
       return updateStatus(job.jobId, 'queued').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s resume request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('hooks.resumeRequestIsAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to resume.`, { variant: 'error' });
+          enqueueSnackbar(`${title}${t('hooks.isFailedToResume')}`, { variant: 'error' });
         }
       });
     });
@@ -107,15 +109,15 @@ ${userName}
 
   const onKill = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
-    return confirm(`Kill ${isInference ? 'inference' : 'job'} ${title} ?`).then((answer) => {
+    return confirm(`${t('tips.killJob')} ${title} ?`).then((answer) => {
       if (answer === false) return;
 
-      enqueueSnackbar(`${title} is being killed.`);
+      enqueueSnackbar(`${title}${t('hooks.isBeingKilled')}`);
       return updateStatus(job.jobId, 'killing').then((response) => {
         if (response.ok) {
-          enqueueSnackbar(`${title}'s kill request is accepted.`, { variant: 'success' });
+          enqueueSnackbar(`${title}${t('hooks.killRequestIsAccepted')}`, { variant: 'success' });
         } else {
-          enqueueSnackbar(`${title} is failed to kill.`, { variant: 'error' });
+          enqueueSnackbar(`${title}${t('hooks.isFailedToKill')}`, { variant: 'error' });
         }
       });
     });
@@ -124,7 +126,7 @@ ${userName}
   const supportEmail = useCallback((job: any): Action<any> => {
     return {
       icon: 'help',
-      tooltip: 'Send email for support',
+      tooltip: t('hooks.sendEmailForSupport'),
       onClick: onSupport
     };
   }, [onSupport]);
@@ -134,7 +136,7 @@ ${userName}
     return {
       hidden,
       icon: 'check',
-      tooltip: 'Approve',
+      tooltip: t('hooks.approve'),
       onClick: onApprove
     }
   }, [onApprove]);
@@ -143,7 +145,7 @@ ${userName}
     return {
       hidden,
       icon: 'pause',
-      tooltip: 'Pause，this action will kill the pod，which can be recreated by resume.',
+      tooltip: t('hooks.pause'),
       onClick: onPause
     }
   }, [onPause]);
@@ -152,7 +154,7 @@ ${userName}
     return {
       hidden,
       icon: 'play_arrow',
-      tooltip: 'Resume',
+      tooltip: t('hooks.resume'),
       onClick: onResume
     }
   }, [onResume]);
@@ -161,7 +163,7 @@ ${userName}
     return {
       hidden,
       icon: 'clear',
-      tooltip: 'Kill',
+      tooltip: t('hooks.kill'),
       onClick: onKill
     }
   }, [onKill]);

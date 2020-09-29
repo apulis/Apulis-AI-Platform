@@ -5,6 +5,7 @@ import ClustersContext from "../../../contexts/Clusters";
 import TeamsContext from "../../../contexts/Teams";
 import useFetch from "use-http";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 interface ClusterSelectFieldProps {
   cluster: string | undefined;
@@ -17,6 +18,7 @@ interface ClusterSelectFieldProps {
 const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps> = (
   { cluster, onClusterChange, variant="standard", userName, ...props }
 ) => {
+  const {t} = useTranslation();
   const { clusters,selectedCluster, saveSelectedCluster } = React.useContext(ClustersContext);
   const { selectedTeam } = React.useContext(TeamsContext);
   const fetchVcStatusUrl = `/api`;
@@ -60,7 +62,7 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
       const gpuCapacity = isEmpty(res) ? 0 : JSON.parse(res.metadata)[clusterName]?.user_quota || 0;
       const gpuAvailable = Math.min(Number(JSON.parse(res.quota)[clusterName] - allHasUsed), Number(gpuCapacity - myHasUsed));
       props.onAvailbleGpuNumChange && props.onAvailbleGpuNumChange(gpuCapacity, gpuAvailable);
-      setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} to use)`);
+      setHelperText(`${clusterName} (${gpuAvailable} / ${gpuCapacity} ${t('components.toUse')})`);
     })
     if (selectedCluster) {
       onClusterChange(selectedCluster);
@@ -74,7 +76,7 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
   return (
     <TextField
       select
-      label="Cluster"
+      label={t('submission.cluster')}
       helperText={helperText}
       value={cluster}
       onChange={onChange}

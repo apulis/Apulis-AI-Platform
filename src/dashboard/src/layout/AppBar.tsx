@@ -411,6 +411,9 @@ const DashboardAppBar: React.FC = () => {
           <Grid item style={{ marginLeft: '10px' }}>
             <UserButton />
           </Grid>
+          <Grid item style={{ marginLeft: '10px' }}>
+            <LangMenu />
+          </Grid>
         </Grid>
       </Toolbar>
     </AppBar>

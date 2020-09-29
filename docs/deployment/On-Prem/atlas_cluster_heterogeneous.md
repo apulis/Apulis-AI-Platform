@@ -361,8 +361,6 @@ enable_vc: `true | false`, 可选填 true 或 false，是否启用 VC，配置 a
 
 i18n: `true | zh-CN | en-US`  是否启用多语言配置，填 true 表示启用全部语言，选填 zh-CN 或 en-US 可指定一种语言
 
-以上的 true 或 false 都是字符串的 'true' 或 'false'
-
 
 #### 3.3 设置**DEV**执行环境
 

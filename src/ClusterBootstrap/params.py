@@ -44,6 +44,7 @@ default_config_parameters = {
     "node-exporter": { "port": 9100 },
     "watchdog": { "port": 9101 },
     "grafana": { "port": 3000, "prometheus-ip": "localhost" },
+    "grafana-zh": { "port": 3001, "prometheus-ip": "localhost" },
     "alert-manager": {
         "port": 9093,
         "configured": False,
@@ -655,6 +656,10 @@ default_config_parameters = {
             "url" : "grafana",
             "port": 3000,
         },
+        "grafana-zh": {
+            "url" : "grafana-zh",
+            "port": 3001,
+        },
         "hdfs": {
             "port": 50070,
         },
@@ -769,6 +774,7 @@ default_config_parameters = {
             "bash": {"fullname": "bash:5"},
             "prometheus": {"fullname": "prom/prometheus:v2.18.0"},
             "grafana": {"fullname": "apulistech/grafana:6.7.4"},
+            "grafana-zh": {"fullname": "apulistech/grafana-zh:6.7.4"},
             "alertmanager": {"fullname": "prom/alertmanager:v0.20.0"},
             "prometheus-operator": {"fullname": "jessestuart/prometheus-operator:v0.38.0"},
             "k8s-prometheus-adapter": {"fullname": "directxman12/k8s-prometheus-adapter:v0.7.0"},

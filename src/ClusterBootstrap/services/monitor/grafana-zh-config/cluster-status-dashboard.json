@@ -803,7 +803,7 @@
               }
             ],
             "thresholds": "",
-            "title": "活跃节点",
+            "title": "活动节点",
             "type": "singlestat",
             "valueFontSize": "80%",
             "valueMaps": [

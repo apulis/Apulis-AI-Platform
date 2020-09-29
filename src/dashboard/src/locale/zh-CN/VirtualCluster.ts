@@ -19,6 +19,7 @@ export default {
     'Value': '数量',
     'Cancel': '取消',
     'Save': '保存',
+    'DeviceNumber': '设备数量',
     //Modify Dialog
     'A VC contains active jobs cannot be modified': '虚拟集群包含活动作业，无法修改。',
     //Delete Dialog

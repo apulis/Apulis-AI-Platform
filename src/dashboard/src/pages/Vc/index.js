@@ -486,9 +486,9 @@ class Vc extends React.Component {
                   helperText={vcNameValidateObj.text}
                   inputProps={{ maxLength: 20 }}
                 />
-                <h3>DeviceNumber</h3>
+                <h3>{t('DeviceNumber')}</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}
-                <h3>MaxAvailable</h3>
+                <h3>{t('MaxAvailable')}</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)}
               </form>
             </DialogContent>

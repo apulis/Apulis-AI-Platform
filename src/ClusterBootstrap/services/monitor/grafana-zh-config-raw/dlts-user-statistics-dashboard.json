@@ -629,42 +629,42 @@
           "expr": "count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU Assigned",
+          "legendFormat": "GPU已分配",
           "refId": "A"
         },
         {
           "expr": "count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU Active",
+          "legendFormat": "GPU活跃",
           "refId": "B"
         },
         {
           "expr": "(count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) OR on() vector(0)) - (count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU Idle",
+          "legendFormat": "GPU空闲",
           "refId": "C"
         },
         {
           "expr": "count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU Assigned",
+          "legendFormat": "NPU已分配",
           "refId": "D"
         },
         {
           "expr": "count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU Active",
+          "legendFormat": "NPU活跃",
           "refId": "E"
         },
         {
           "expr": "(count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) OR on() vector(0)) - (count(avg by (uuid)(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU Idle",
+          "legendFormat": "NPU空闲",
           "refId": "F"
         }
       ],
@@ -1448,56 +1448,56 @@
           "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU Assigned",
+          "legendFormat": "GPU已分配",
           "refId": "A"
         },
         {
           "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU Active",
+          "legendFormat": "GPU活跃",
           "refId": "B"
         },
         {
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU VC Assigned",
+          "legendFormat": "GPU VC 已分配",
           "refId": "C"
         },
         {
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "GPU VC Active",
+          "legendFormat": "GPU VC 活跃",
           "refId": "D"
         },
         {
           "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU Assigned",
+          "legendFormat": "NPU 已分配",
           "refId": "E"
         },
         {
           "expr": "avg(task_device_percent{username=\"$username\",vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU Active",
+          "legendFormat": "NPU 活跃",
           "refId": "F"
         },
         {
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU VC Assigned",
+          "legendFormat": "NPU VC 已分配",
           "refId": "G"
         },
         {
           "expr": "avg(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "NPU VC Active",
+          "legendFormat": "NPU VC 活跃",
           "refId": "H"
         }
       ],

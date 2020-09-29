@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Button, Divider } from '@material-ui/core';
+import axios from 'axios';
+import { useTranslation } from "react-i18next";
+
 import Description from './components/Description'
 import { useHistory } from 'react-router-dom';
 import DrawerContext from '../../layout/Drawer/Context';
 import ClusterContext from '../../contexts/Clusters';
-import axios from 'axios';
 
 interface VersionInfo {
   name: string;
@@ -18,11 +20,11 @@ const Version: React.FC = () => {
   const [curVersion, setCurVersion] = useState<VersionInfo>({ name: '', updateAt: '', description: '' });
   const [historyVersionArr, setHistoryVersionArr] = useState([{ name: '', updateAt: '', description: '' }]);
   const { setOpen, open } = useContext(DrawerContext);
-
+  const { t } = useTranslation();
   const apiGetVersionInfo = async () => {
     const url = `/${selectedCluster}/VersionInfo`;
-    await axios.get(url)
-      .then((res: any) => {
+    await axios.get<{version: VersionInfo; history: VersionInfo[]}>(url)
+      .then((res) => {
         if (res) {
           const result = res.data;
           console.log(result);
@@ -42,10 +44,10 @@ const Version: React.FC = () => {
         <Button variant="contained" color="primary" onClick={() => { history.push('/home'); setOpen(true) }}>back home</Button>
       </div>
       <div style={{ marginRight: '64px', position: 'relative' }}>
-        <Description titleText='version:' timeText='updateAt:' descText='description:' title={curVersion.name} time={curVersion.updateAt} desc={curVersion.description} icon={true} iconText={'current'}/>
+        <Description titleText={t('version version')} timeText={t('version updateAt')} descText={t('version description')} title={curVersion.name} time={curVersion.updateAt} desc={curVersion.description} icon={true} iconText={t('version current')}/>
         {
           historyVersionArr.map((version) => (
-            <Description titleText='version:' timeText='updateAt:' descText='description:' title={version.name} time={version.updateAt} desc={version.description} />
+            <Description titleText={t('version version')} timeText={t('version updateAt')} descText={t('version description')} title={version.name} time={version.updateAt} desc={version.description} />
           ))
         }
       </div>

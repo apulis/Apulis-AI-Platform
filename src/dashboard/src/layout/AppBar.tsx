@@ -45,6 +45,7 @@ import _ from 'lodash';
 import copy from 'clipboard-copy'
 import { green, purple } from "@material-ui/core/colors";
 import { SlideProps } from '@material-ui/core/Slide';
+import ConfigContext from "../contexts/Config";
 import AuthzHOC from '../components/AuthzHOC';
 import { useTranslation } from "react-i18next";
 
@@ -384,6 +385,7 @@ const Title: React.FC = () => {
 const DashboardAppBar: React.FC = () => {
   const styles = useStyles({});
   //const { open } = React.useContext(DrawerContext);
+  const { lang } = React.useContext(ConfigContext)
   return (
     <AppBar
       component="aside"
@@ -411,9 +413,11 @@ const DashboardAppBar: React.FC = () => {
           <Grid item style={{ marginLeft: '10px' }}>
             <UserButton />
           </Grid>
-          <Grid item style={{ marginLeft: '10px' }}>
-            <LangMenu />
-          </Grid>
+          {
+            lang === true && <Grid item style={{ marginLeft: '10px' }}>
+              <LangMenu />
+            </Grid>
+          }
         </Grid>
       </Toolbar>
     </AppBar>

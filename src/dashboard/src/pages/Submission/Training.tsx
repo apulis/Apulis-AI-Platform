@@ -707,7 +707,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (!grafanaUrl) return;
-    let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
+    const getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params1 = new URLSearchParams({
       query: `count_values("device_available",avg by (host_ip) (k8s_node_device_available{device_type="${gpuType}"}))`
     });
@@ -716,12 +716,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     });
     fetch(getNodeGpuAva+params1).then(async (res1: any) => {
       fetch(getNodeGpuAva+params2).then(async (res2: any) => {
-        let data1 = await res1.json();
-        let data2 = await res2.json();
+        const data1 = await res1.json();
+        const data2 = await res2.json();
         let result1 = data1.data.result, result2 = data2.data.result;
         if (result2.length) {
           let sortededResult = [{metric: {device_available: "0"}, value: result2[0].value}];
-          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }, value: number[] }) => {
+          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }; value: number[] }) => {
             if (i.metric.device_available === '0') {
               sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
             } else {

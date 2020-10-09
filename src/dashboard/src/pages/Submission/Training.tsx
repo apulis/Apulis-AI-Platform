@@ -593,7 +593,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (allDevice[gpuType]) {
-      let options: any = [];
+      const options: number[] = [];
       const _max = Math.max(...nodeCapacityArr);
       for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
         options.push(i);

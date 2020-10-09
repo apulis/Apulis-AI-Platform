@@ -22,6 +22,7 @@ const index = {
   submit: '提交',
   npuNumberValidator: '需要是 0 到 {temp} 的正整数，并且只能是 0, 1, 2, 4, 8 中的一个',
   gpuNumberValidator: '需要是 0 到 {temp} 的正整数',
+  deviceChanged: '当前设备类型已经被改变，请去往 VC 页面同步数据'
 }
 const advance = {
   customDockerRegistry: '自定义Docker Registry',

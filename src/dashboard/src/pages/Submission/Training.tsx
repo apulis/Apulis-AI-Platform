@@ -628,7 +628,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
         const templates = res.data;
         setTemplates(templates);
         const template = templates.find((item) => (item.isDefault === 1))
-        if(template){
+        if (template) {
           onTemplateChange(`${template.name}.${template.scope}`, templates)
         }
       })
@@ -656,7 +656,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   setCanDistributedJob(!(_gpuCapacity > Math.max(...arr)));
                 }
               } else {
-                message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
+                message('warning', t('submission.deviceChanged'));
               }
             })
         }
@@ -665,7 +665,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   const isEmpty = (obj: object) => {
     if (obj === undefined) return true;
-    for(let key in obj) {
+    for(const key in obj) {
       if(obj.hasOwnProperty(key))
         return false;
     }

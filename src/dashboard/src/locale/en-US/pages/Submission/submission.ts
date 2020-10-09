@@ -21,7 +21,8 @@ const index = {
   template: 'TEMPLATE',
   submit: 'SUBMIT',
   npuNumberValidator: 'Must be a positive integer from 0 to {temp}，and can only be one of 0, 1, 2, 4, 8.',
-  gpuNumberValidator: 'Must be a positive integer from 0 to {temp}', 
+  gpuNumberValidator: 'Must be a positive integer from 0 to {temp}',
+  deviceChanged: 'The device type has been changed, please go to VC to synchronize the modification'
 }
 const advance = {
   customDockerRegistry: 'Custom Docker Registry',

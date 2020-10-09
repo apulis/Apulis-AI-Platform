@@ -5,8 +5,12 @@ prometheus-alerting.yaml
 prometheus.yaml
 grafana-ini.yaml
 grafana-config.yaml
+{% if cnf["language"]= "zh" %}
 grafana-zh-config.yaml
+{% endif -%}
 grafana.yaml
+{% if cnf["language"]= "zh" %}
 grafana-zh.yaml
+{% endif -%}
 alert-templates.yaml
 alert-manager.yaml

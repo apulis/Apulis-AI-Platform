@@ -69,7 +69,10 @@ default_config_parameters = {
 
     "mysql_port": "3306",
     "mysql_username": "root",
-    "mysql_data_path": "/var/lib/mysql",
+
+    "mysql_data_path": "/mntdlws/service/mysql/data",
+    "grafana_data_path": "/mntdlts/service/grafana/data",
+    "prometheus_data_path": "/mntdlts/service/prometheus/data",
 
     "extranet_protocol":"https",
 
@@ -111,7 +114,7 @@ default_config_parameters = {
     "physical-mount-path-vc": "/mntdlts/nfs",
 
     # required storage folder under storage-mount-path
-    "default-storage-folders": ["jobfiles", "storage", "work"],
+    "default-storage-folders": ["jobfiles", "storage", "work", "service"],
     "per_user_gpu_limit": "-1",
 
     # the path of where nvidia driver is installed on each node, default

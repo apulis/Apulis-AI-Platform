@@ -224,7 +224,7 @@ def mount_fileshare(verbose=True):
                 time.sleep(3)
 
             if len(existmounts) <= 0:
-                
+
                 nMounts += 1
                 if v["type"] == "azurefileshare":
                     exec_with_output( "mount -t cifs %s %s -o %s " % (v["url"], physicalmountpoint, v["options"] ), verbose=verbose )
@@ -252,13 +252,17 @@ def mount_fileshare(verbose=True):
         time.sleep(1)
 
 def link_fileshare():
+
     with open("mounting.yaml", 'r') as datafile:
         config = yaml.load(datafile)
         datafile.close()
+
 #    print config
     allmountpoints = config["mountpoints"]
     (retcode, output, err) = exec_with_output("sudo mount")
+
     for k,v in allmountpoints.iteritems():
+
         if "mountpoints" in v and v["type"]!="emptyDir":
             if output.find(v["curphysicalmountpoint"]) < 0:
                 logging.debug("!!!Warning!!! %s has not been mounted at %s " % (k, v["curphysicalmountpoint"]))
@@ -268,6 +272,7 @@ def link_fileshare():
                     dirname = os.path.join(v["curphysicalmountpoint"], basename )
                     exec_wo_output("sudo mkdir -p %s; " % dirname)
                     exec_wo_output("sudo chmod ugo+rwx %s; " % dirname)
+                    
             for basename in v["mountpoints"]:
                 dirname = os.path.join(v["curphysicalmountpoint"], basename )
                 storage_mount_path = config["storage-mount-path"]

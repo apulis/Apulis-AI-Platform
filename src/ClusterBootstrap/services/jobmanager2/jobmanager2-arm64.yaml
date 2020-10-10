@@ -1,9 +1,10 @@
-kind: DaemonSet
+kind: Daployment
 apiVersion: apps/v1
 metadata:
   name: jobmanager-arm64
   namespace: default
 spec:
+  replicas: 1
   selector:
     matchLabels:
       jobmanager-node: pod

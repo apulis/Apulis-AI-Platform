@@ -1155,7 +1155,7 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
         print(kubernetes_master)
-        utils.scp(config["ssh_cert"], "/etc/kubernetes/manifests/vip.yaml", "/etc/kubernetes/manifests/vip.yaml", kubernetes_master_user,kubernetes_master, verbose=verbose)
+        utils.sudo_scp(config["ssh_cert"], "/etc/kubernetes/manifests/vip.yaml", "/etc/kubernetes/manifests/vip.yaml", kubernetes_master_user,kubernetes_master, verbose=verbose)
 
         deploycmd = """sudo kubeadm init --v=8 --control-plane-endpoint=%s --kubernetes-version=%s %s""" % (kubernetes_master0, kubernetes_version, init_arguments)
         utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)

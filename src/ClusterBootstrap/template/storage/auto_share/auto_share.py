@@ -235,7 +235,10 @@ def mount_fileshare(verbose=True):
                 
                 elif v["type"] == "nfs":
                     exec_with_output( "mount %s:%s %s -o %s " % (v["server"], v["filesharename"], physicalmountpoint, v["options"]), verbose=verbose )
-               
+                
+                elif v["type"] == "ceph":
+                    exec_with_output( "%s" % (v["mountcmd"]), verbose=verbose)
+
                 elif v["type"] == "hdfs":
                     mount_hdfs( v, physicalmountpoint, verbose=verbose )
                 
@@ -272,7 +275,7 @@ def link_fileshare():
                     dirname = os.path.join(v["curphysicalmountpoint"], basename )
                     exec_wo_output("sudo mkdir -p %s; " % dirname)
                     exec_wo_output("sudo chmod ugo+rwx %s; " % dirname)
-                    
+
             for basename in v["mountpoints"]:
                 dirname = os.path.join(v["curphysicalmountpoint"], basename )
                 storage_mount_path = config["storage-mount-path"]

@@ -46,3 +46,5 @@ userGroup:
 
 extranet_protocol: {{cnf["extranet_protocol"]}}
 docs: "{{cnf['extranet_protocol']}}://{{cnf['webportal_node']}}/docs"
+platformName: {{cnf["platform_name"]}}
+i18n: {{cnf["i18n"]}}

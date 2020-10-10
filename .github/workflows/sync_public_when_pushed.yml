@@ -22,17 +22,12 @@ jobs:
     steps:
     - name: update repo
       run: |
-        cd ..
         git clone -b to_public https://banrieen:18209188642git@github.com/apulis/DLWorkspace.git
         cd DLWorkspace
         git config --global user.email "banrieen@173.com"
         git config --global user.name "banrieen"
-        git pull
         git merge origin/develop -X theirs --no-ff
-        ls -la
         git push origin to_public
-        cd ..
-        rm -rf DLWorkspace
   sync-repo:
     runs-on: ubuntu-latest
     steps:

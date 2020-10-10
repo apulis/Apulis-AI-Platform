@@ -16,20 +16,20 @@ import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from '@material-ui/icons/Delete';
 import CheckIcon from "@material-ui/icons/Check";
 import {JobsOperationDialog} from "../../Jobs/components/JobsOperationDialog";
-import {
-  SUCESSFULKILLED,
-  SUCCESSFULLYPAUSED,
-  SUCCESSFULLYRESUMED, SUCCESSFULLYAPPROVED
-} from "../../../Constants/WarnConstants";
 import {DLTSSnackbar} from "../../CommonComponents/DLTSSnackbar";
+import { useTranslation } from "react-i18next";
 
 interface BriefProps {
   readonly?: boolean;
 }
 
 const Brief: React.FC<BriefProps> = ({ readonly = false }) => {
+  const {t} = useTranslation();
   const { cluster, job, clusterId, jobId } = useContext(Context);
-
+  const SUCESSFULKILLED = t('tips.SUCESSFULKILLED')
+  const SUCCESSFULLYPAUSED = t('tips.SUCCESSFULLYPAUSED')
+  const SUCCESSFULLYRESUMED = t('tips.SUCCESSFULLYRESUMED')
+  const SUCCESSFULLYAPPROVED = t('tips.SUCCESSFULLYAPPROVED')
   const isKillable = useCallback((status: string) => (
     status === 'running' ||
     status === 'scheduling' ||

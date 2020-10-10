@@ -75,7 +75,7 @@ class Cluster extends Service {
      */
   async getJobOwner (jobId) {
     const params = new URLSearchParams({
-      jobId,
+      jobId
     })
     const response = await this.fetch('/GetJobDetail?' + params)
     this.context.assert(response.ok, 502)

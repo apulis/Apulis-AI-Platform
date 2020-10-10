@@ -173,9 +173,11 @@ def mount_fileshare(verbose=True):
     with open("mounting.yaml", 'r') as datafile:
         config = yaml.load(datafile)
         datafile.close()
+
 #    print config
     allmountpoints = config["mountpoints"]
     nMounts = 0
+
     for k,v in allmountpoints.iteritems():
         if "curphysicalmountpoint" in v and istrue(v, "autoshare", True):
             physicalmountpoint = v["curphysicalmountpoint"] 
@@ -211,28 +213,41 @@ def mount_fileshare(verbose=True):
                         umounts.append( words[2] )
                     else:
                         existmounts.append( words[2])
+
             umounts.sort()
+
             # Examine mount point, unmount those file shares that fails. 
             for um in umounts:
                 cmd = "umount -v %s" % um
                 logging.debug( "Mount fails, to examine mount %s " % um )                
                 exec_with_output( cmd, verbose=verbose )
                 time.sleep(3)
+
             if len(existmounts) <= 0:
+                
                 nMounts += 1
                 if v["type"] == "azurefileshare":
                     exec_with_output( "mount -t cifs %s %s -o %s " % (v["url"], physicalmountpoint, v["options"] ), verbose=verbose )
+                
                 elif v["type"] == "glusterfs":
                     mount_glusterfs( v, physicalmountpoint, verbose=verbose)
                     exec_with_output( "mount -t glusterfs -o %s %s:%s %s " % (v["options"], v["node"], v["filesharename"], physicalmountpoint ), verbose=verbose )
+                
                 elif v["type"] == "nfs":
                     exec_with_output( "mount %s:%s %s -o %s " % (v["server"], v["filesharename"], physicalmountpoint, v["options"]), verbose=verbose )
+               
                 elif v["type"] == "hdfs":
                     mount_hdfs( v, physicalmountpoint, verbose=verbose )
+                
                 elif v["type"] == "local" or v["type"] == "localHDD":
                     exec_with_output( "mount %s %s " % ( v["device"], physicalmountpoint ), verbose=verbose )
+                
+                elif v["type"] == "ceph":
+                    exec_with_output( "%s" % (v["mountcmd"]), verbose=verbose)                
+                
                 else:
                     nMounts -= 1
+
     if nMounts > 0:
         time.sleep(1)
 

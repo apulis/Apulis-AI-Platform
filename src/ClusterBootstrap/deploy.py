@@ -954,6 +954,7 @@ def gen_usermanagerapitoken(config):
     config["usermanagerapitoken"] = utils.exec_cmd_local(cmd)
     print("==========generate jwt token for restfulapi done!!!==============")
     print("token is: ",config["usermanagerapitoken"] )
+
 def get_ssh_config():
     if "ssh_cert" not in config and os.path.isfile("./deploy/sshkey/id_rsa"):
         config["ssh_cert"] = "./deploy/sshkey/id_rsa"
@@ -2137,6 +2138,7 @@ def get_mount_fileshares(curNode = None):
     physicalmountpoint = config["physical-mount-path"]
     storagemountpoint = config["storage-mount-path"]
     mountshares = {}
+
     for k,v in config["mountpoints"].iteritems():
         if "type" in v:
             if ("mountpoints" in v):
@@ -2168,12 +2170,15 @@ def get_mount_fileshares(curNode = None):
                 curphysicalmountpoint = mountsharename
             else:
                 curphysicalmountpoint = os.path.join( physicalmountpoint, mountsharename )
+
             if "curphysicalmountpoint" not in v:
                 v["curphysicalmountpoint"] = curphysicalmountpoint
             else:
                 curphysicalmountpoint = v["curphysicalmountpoint"]
+
             bMount = False
             errorMsg = None
+
             if v["type"] == "azurefileshare":
                 if "accountname" in v and "filesharename" in v and "accesskey" in v:
                     allmountpoints[k] = copy.deepcopy( v )
@@ -2195,6 +2200,7 @@ def get_mount_fileshares(curNode = None):
                     fstab += "%s:/%s %s glusterfs %s 0 0\n" % (allmountpoints[k]["node"], v["filesharename"], curphysicalmountpoint, options)
                 else:
                     errorMsg = "glusterfs fileshare %s, there is no filesharename parameter" % (k)
+            
             elif v["type"] == "nfs" and "server" in v:
                 if "filesharename" in v and "server" in v:
                     allmountpoints[k] = copy.deepcopy( v )
@@ -2204,6 +2210,18 @@ def get_mount_fileshares(curNode = None):
                     fstab += "%s:/%s %s /nfsmnt nfs %s\n" % (v["server"], v["filesharename"], curphysicalmountpoint, options)
                 else:
                     errorMsg = "nfs fileshare %s, there is no filesharename or server parameter" % (k)
+
+            elif v["type"] == "ceph" and "mountcmd" in v and v["mountcmd"] is not None and len(v["mountcmd"]) > 0:
+                
+                if "filesharename" in v:
+                    allmountpoints[k] = copy.deepcopy( v )
+                    bMount = True
+                    allmountpoints[k]["mountcmd"] = v["mountcmd"]
+                    fstab += "%s:/%s %s /nfsmnt nfs %s\n" % (v["server"], v["filesharename"], curphysicalmountpoint, options)
+
+                else:
+                    errorMsg = "ceph fileshare %s, there is no filesharename or ceph command" % (k)
+            
             elif v["type"] == "hdfs":
                 allmountpoints[k] = copy.deepcopy( v )
                 if "server" not in v or v["server"] =="":
@@ -2217,6 +2235,7 @@ def get_mount_fileshares(curNode = None):
                 allmountpoints[k]["options"] = options
                 fstaboptions = fetch_config(config, ["mountconfig", "hdfs", "fstaboptions"])
                 fstab += "hadoop-fuse-dfs#hdfs://%s %s fuse %s\n" % (allmountpoints[k]["server"][0], curphysicalmountpoint, fstaboptions)
+            
             elif (v["type"] == "local" or v["type"] == "localHDD") and "device" in v:
                 allmountpoints[k] = copy.deepcopy( v )
                 bMount = True
@@ -2226,13 +2245,17 @@ def get_mount_fileshares(curNode = None):
                 bMount = True
             else:
                 errorMsg = "Error: Unknown or missing critical parameter in fileshare %s with type %s" %( k, v["type"])
+            
             if not (errorMsg is None):
                 print errorMsg
                 raise ValueError(errorMsg)
+
             if bMount:
                 allmountpoints[k]["mountpoints"] = mountpoints
+
         else:
             print "Error: fileshare %s with no type" %( k )
+
     return allmountpoints, fstab
 
 def insert_fstab_section( node, secname, content):
@@ -3583,6 +3606,7 @@ def get_node_lists_for_service(service):
         elif nodetype.find( "etcd_node_" )>=0:
 
             nodenumber = int(nodetype[nodetype.find( "etcd_node_" )+len("etcd_node_"):])
+
             if len(config["etcd_node"])>=nodenumber:
                 nodes = [ config["etcd_node"][nodenumber-1] ]
             else:
@@ -4296,10 +4320,111 @@ def install_ssh_key_by_nodes(all_nodes):
 
     return
 
+def scale_up_worker(config, node_name, node_info):
+
+    domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
+    node = node_name + domain
+
+    os = node_info["os"].lower()
+    role = node_info["role"].lower()
+    device_type = node_info["type"].lower()
+    vendor = node_info["vendor"].lower()
+    archtype = node_info["archtype"].lower()
+
+    if node_name in k8s_nodes:
+        print("%s is in the cluster, skip it" % (node))
+        return
+    else:
+        pass
+
+    if os != "ubuntu":
+        print("os %s not supported" % (os))
+    else:
+        pass
+
+    print(node_info)
+
+    ## install necessary software
+    run_script(node, ["./scripts/prepare_ubuntu.sh"], sudo = True)
+
+    ## wait for node to reboot
+    print("waiting for 2 seconds...")
+    time.sleep(2)
+
+    while True:
+        cmd = "ping -c 1 node &> /dev/null; echo $?"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+        output = output.strip()
+        print(output)
+
+        if output == "0":
+            print("%s started! wait for 10 more seconds and continue" % (node))
+            time.sleep(10)
+            break
+        else:
+            print("waiting for %s to reboot" % (node))
+            time.sleep(1)
+
+    run_script(node, ["./scripts/prepare_ubuntu.sh continue"], sudo = True)
+    run_script(node, ["./scripts/install_kubeadm.sh"], sudo = True)
+
+    ## turn off swap
+    output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)
+    print(output)
+
+    cmd = "sudo sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab"
+    output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+
+    cmd = "sudo swapoff -a"
+    output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+    print(output)
+
+    ## join worker
+    update_worker_nodes_by_kubeadm_2([node])
+
+    ## label service
+    kubernetes_label_nodes_2(node_name, "active", [], False)
+
+    ## label worker
+    kubernetes_label_worker_2(node_name, node_info)
+
+    return
+
+def scale_up_ha_master(config, node_name, node_info):
+
+    domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
+    node = node_name + domain
+    
+    write_nodelist_yaml()
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+
+    worker_ssh_user = config["admin_username"]
+    k8sAPIport = config["k8sAPIport"]
+
+    tokencmd = "sudo kubeadm token create"
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    token = tokenresult.split("\n")[0]
+    hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+
+    print("Token === %s, hash == %s" % (token, hash) )
+    workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+    if verbose:
+        print(workercmd)
+    else:
+        pass
+
+    utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
+    return
+
+
 def scale_up(config):
 
     #pdb.set_trace()
-
     if "scale_up" not in config:
         print("Error: not scale_up config\n")
         return
@@ -4309,96 +4434,16 @@ def scale_up(config):
     ## install sshkey
     all_nodes = get_scale_nodes(config, "scale_up")
     install_ssh_key_by_nodes(all_nodes)
-    domain = get_domain()
-    k8s_nodes = get_cluster_k8s_node_list()
 
     ## scaling up
     for node_name in config["scale_up"]:
 
         node_info = config["scale_up"][node_name]
-        node = node_name + domain
-
-        os = node_info["os"].lower()
-        role = node_info["role"].lower()
-        device_type = node_info["type"].lower()
-        vendor = node_info["vendor"].lower()
-        archtype = node_info["archtype"].lower()
-
-        if node_name in k8s_nodes:
-            print("%s is in the cluster, skip it" % (node))
-            continue
-        else:
-            pass
-
-        if os != "ubuntu":
-            print("os %s not supported" % (os))
-        else:
-            pass
-
-        print(node_info)
-
-        ## install necessary software
-        # run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
-        # time.sleep(60)
-        # run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
-        # run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
-        run_script(node, "./scripts/prepare_ubuntu.sh", sudo = True)
-
-        ## wait for node to reboot
-        print("waiting for 2 seconds...")
-        time.sleep(2)
-
-        while True:
-            cmd = "ping -c 1 node &> /dev/null; echo $?"
-            output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
-            output = output.strip()
-            print(output)
-
-            if output == "0":
-                print("%s started! wait for 10 more seconds and continue" % (node))
-                time.sleep(10)
-                break
-            else:
-                print("waiting for %s to reboot" % (node))
-                time.sleep(1)
-
-        #while true;
-        #do
-        #    if ping -c 1 node &> /dev/null
-        #    then
-        #        echo "$node started! wait for 10 more seconds and continue"
-        #        sleep 10
-        #        break
-        #    else
-        #        echo "wating for $node to start!"
-        #    fi
-
-        #    sleep 1;
-        #done
-
-        run_script(node, "./scripts/prepare_ubuntu.sh continue", sudo = True)
-        run_script(node, "./scripts/install_kubeadm.sh", sudo = True)
-
-        ## turn off swap
-        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)
-        print(output)
-
-        cmd = "sudo sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab"
-        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
-
-        cmd = "sudo swapoff -a"
-        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
-        print(output)
-
-        ## join worker
-        update_worker_nodes_by_kubeadm_2([node])
-
-        ## label service
-        kubernetes_label_nodes_2(node_name, "active", [], False)
-
-        ## label worker
-        kubernetes_label_worker_2(node_name, node_info)
-
+        
+        if node_info["role"] == "infrastructure" or node_info["role"] == "infra":
+            scale_up_ha_master(config, node_name, node_info)
+        else:       
+            scale_up_worker(config, node_name, node_info)                 
 
     return
 
@@ -4824,7 +4869,6 @@ def run_command( args, command, nargs, parser ):
             check_master_ETCD_status()
             gen_configs()
             update_mysqlserver_nodes(nargs)
-
 
     elif command == "updatenfs":
         response = raw_input_with_default("Deploy NFS Node(s) (y/n)?")

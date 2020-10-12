@@ -1061,12 +1061,15 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobList(self, userName, vcName, num=None, status=None, op=("=", "or")):
+    def GetJobList(self, userName, vcName, num=None, pageSize=None, pageNum=None, jobName=None, status=None, op=("=", "or")):
         ret = []
         try:
             query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1" % (
                 self.jobtablename)
             params = []
+            if jobName != None:
+                query += " and `jobName` = %s"
+                params.append(jobName)
             if userName != "all":
                 query += " and `userName` = %s"
                 params.append(userName)
@@ -1088,6 +1091,9 @@ class DataHandler(object):
 
             if num is not None:
                 query += " limit %s " % str(num)
+            elif pageNum != None and pageSize != None:
+                offset = (pageNum - 1)*pageSize
+                query += " limit %s offset %s " % (str(pageSize), str(offset))
             with MysqlConn() as conn:
                 rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()

@@ -71,8 +71,8 @@ default_config_parameters = {
     "mysql_username": "root",
 
     "mysql_data_path": "/mntdlws/service/mysql/data",
-    "grafana_data_path": "/mntdlts/service/grafana/data",
-    "prometheus_data_path": "/mntdlts/service/prometheus/data",
+    "grafana_data_path": "/mntdlws/service/grafana/data",
+    "prometheus_data_path": "/mntdlws/service/prometheus/data",
 
     "extranet_protocol":"https",
 

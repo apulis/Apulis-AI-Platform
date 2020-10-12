@@ -2528,6 +2528,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
         firstdirs = {}
         for node in nodes:
             remotecmd = ""
+
             if bForce:
                 for k,v in allmountpoints.iteritems():
                     if "mountpoints" in v and v["type"]!="emptyDir":
@@ -2541,6 +2542,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
                 output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "sudo mount")
             else:
                 remotecmd += "sudo mount;"
+
             for k,v in allmountpoints.iteritems():
                 if "mountpoints" in v and v["type"]!="emptyDir":
                     if mount_command_file == '' and output.find(v["curphysicalmountpoint"]) < 0:
@@ -2550,6 +2552,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
                             dirname = os.path.join(v["curphysicalmountpoint"], basename )
                             remotecmd += "sudo mkdir -p %s; " % dirname
                             remotecmd += "sudo chmod ugo+rwx %s; " %dirname
+                            
                     for basename in v["mountpoints"]:
                         dirname = os.path.join(v["curphysicalmountpoint"], basename )
                         storage_mount_path = config["storage-mount-path"]
@@ -2560,6 +2563,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
 
                         linkdir = os.path.join(storage_mount_path, basename)
                         remotecmd += "if [ ! -e %s ]; then sudo ln -s %s %s; fi; " % (linkdir, dirname, linkdir)
+            
             # following node need not make the directory
             if len(remotecmd)>0:
                 if mount_command_file == '':

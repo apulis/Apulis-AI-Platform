@@ -7,12 +7,19 @@ export default {
     'quota': '配额',
     'permissions': '权限',
     'actions': '操作',
+    'DeviceType': '设备类型',
+    'DeviceCount': '设备数量',
+    'MaxAvailable': '最大可用数量',
+    'UserCount': '用户数量',
+    'Users': '用户',
+    'rows': '行',
     //Add Dialog
     'vcName': '虚拟集群名称',
     'Type': '类型',
     'Value': '数量',
     'Cancel': '取消',
     'Save': '保存',
+    'DeviceNumber': '设备数量',
     //Modify Dialog
     'A VC contains active jobs cannot be modified': '虚拟集群包含活动作业，无法修改。',
     //Delete Dialog
@@ -26,5 +33,8 @@ export default {
     'Added successfully！':'新增成功！',
     'Delete successfully！': '删除成功！',
     'Delete failed！': '删除失败！',
-    'vcName *': '虚拟集群名称 *'
+    'vcName *': '虚拟集群名称 *',
+    'max number of devices available to each user': '每个用户最大设备配额',
+    'The number of users who own this VC resource': '当前可用使用该 VC 的用户数量',
+
   }

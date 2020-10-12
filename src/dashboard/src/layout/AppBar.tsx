@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   AppBar,
   Box,
@@ -34,6 +34,7 @@ import {
   Translate,
   KeyboardReturn
 } from '@material-ui/icons';
+import axios from 'axios';
 import CloseIcon from '@material-ui/icons/Close';
 import { TransitionProps } from '@material-ui/core/transitions';
 import DrawerContext from './Drawer/Context';
@@ -44,8 +45,8 @@ import _ from 'lodash';
 import copy from 'clipboard-copy'
 import { green, purple } from "@material-ui/core/colors";
 import { SlideProps } from '@material-ui/core/Slide';
+import ConfigContext from "../contexts/Config";
 import AuthzHOC from '../components/AuthzHOC';
-import axios from 'axios';
 import { useTranslation } from "react-i18next";
 
 import i18n from "i18next";
@@ -73,7 +74,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     userLabel: {
       whiteSpace: 'nowrap',
-      cursor: 'default'
     }
   })
 );
@@ -95,8 +95,7 @@ const OpenDrawerButton: React.FC = () => {
   );
 };
 
-let TeamMenu: React.FC;
-TeamMenu = () => {
+const TeamMenu: React.FC = () => {
   const { teams, saveSelectedTeam, selectedTeam } = React.useContext(
     TeamContext
   );
@@ -214,9 +213,8 @@ const LangMenu: React.FC = () => {
 
 const UserButton: React.FC = () => {
   const { setOpen, open } = React.useContext(DrawerContext);
-  const [viersonModalOpen,setVersionModalOpen] = React.useState(false);
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const [openUserProfile, setOpenUserProfile] = React.useState(false);
   const history = useHistory();
   const [openCopyWarn, setOpenCopyWarn] = React.useState(false);
@@ -284,15 +282,15 @@ const UserButton: React.FC = () => {
         {/* <MenuItem onClick={showUserProfile}>Profile</MenuItem> */}
         <MenuItem onClick={showVersion}>
           <Info style={{ marginRight: 8 }} />
-            Version
+            {t('layout.version')}
           </MenuItem>
         <MenuItem onClick={showHelp}>
           <HelpOutline style={{ marginRight: 8 }} />
-            Help
+            {t('layout.help')}
           </MenuItem>
         <MenuItem onClick={handleSignOut} >
           <ExitToApp style={{ marginRight: 8 }} />
-          Sign out
+          {t('layout.signOut')}
         </MenuItem>
       </Menu>
       <Dialog fullScreen open={openUserProfile} onClose={handleClose} TransitionComponent={Transition}>
@@ -360,12 +358,24 @@ const SignOutButton: React.FC = () => {
 };
 
 const Title: React.FC = () => {
+  const [platformName, setPlatformName] = useState<string>('');
+
+  const getPlatformName = async () => {
+    const res = await axios.get<{i18n: string | boolean; platformName: string}>('/platform-config');
+    const { i18n, platformName } = res.data;
+    setPlatformName(platformName);
+  }
+
+  useEffect(() => {
+    getPlatformName()
+  }, [])
+
   const styles = useStyles({});
   return (
     <Box component="header" className={styles.title} display="flex">
       <Link to="/" className={styles.titleLink}>
         <Typography component="h1" variant="h6" align="left">
-          华为 AI 专家系统
+          {platformName}
         </Typography>
       </Link>
     </Box>
@@ -375,6 +385,7 @@ const Title: React.FC = () => {
 const DashboardAppBar: React.FC = () => {
   const styles = useStyles({});
   //const { open } = React.useContext(DrawerContext);
+  const { lang } = React.useContext(ConfigContext)
   return (
     <AppBar
       component="aside"
@@ -402,6 +413,11 @@ const DashboardAppBar: React.FC = () => {
           <Grid item style={{ marginLeft: '10px' }}>
             <UserButton />
           </Grid>
+          {
+            lang === true && <Grid item style={{ marginLeft: '10px' }}>
+              <LangMenu />
+            </Grid>
+          }
         </Grid>
       </Toolbar>
     </AppBar>

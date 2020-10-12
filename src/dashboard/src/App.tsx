@@ -46,6 +46,7 @@ interface BootstrapProps {
   currentRole?: string[];
   userGroupPath?: string;
   id?: number;
+  i18n: boolean | string;
 }
 
 const lng = localStorage.language || navigator.language;
@@ -79,7 +80,13 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath }) => {
+const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath, ...rest }) => {
+  const lang = rest.i18n;
+  if (typeof lang === 'string') {
+    if (lng !== lang) {
+      i18n.changeLanguage(lang);
+    }
+  }
   const { enqueueSnackbar } = useSnackbar();
   initAxios((type: VariantType, msg: string) => {
     enqueueSnackbar(msg, {
@@ -89,7 +96,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
   }, userGroupPath || '');
   return(
     <BrowserRouter basename="/expert">
-      <ConfigProvider>
+      <ConfigProvider lang={lang}>
         <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
           <ConfirmProvider>
             <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
@@ -139,7 +146,7 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 }
 
 const App: React.FC<BootstrapProps> = (props) => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   return (
     <SnackbarProvider>
       <Contexts {...props} >

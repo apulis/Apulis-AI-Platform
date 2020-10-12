@@ -349,7 +349,18 @@ repair-manager:
 apt_mirror_url: http:\/\/mirrors.aliyun.com
 enable_custom_registry_secrets: True
 ssh_port: 22
+
+platform_name: Apulis Platform
+enable_vc: true
+i18n: true
 ```
+#### 最后三项配置说明
+platform_name: 可配置的平台名称
+
+enable_vc: `true | false`, 可选填 true 或 false，是否启用 VC，配置 aiarts 的项目填 false
+
+i18n: `true | zh-CN | en-US`  是否启用多语言配置，填 true 表示启用全部语言，选填 zh-CN 或 en-US 可指定一种语言
+
 
 #### 3.3 设置**DEV**执行环境
 

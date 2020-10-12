@@ -9,7 +9,8 @@ import submission from './en-US/pages/Submission/submission'
 import jobsV2 from './en-US/pages/jobsV2/jobsV2'
 import ClusterStatus from './en-US/ClusterStatus';
 import VirtualCluster from './en-US/VirtualCluster';
-import model from './en-US/model'
+import model from './en-US/model';
+import version from './en-US/version';
 
 export default {
   tips,
@@ -24,5 +25,6 @@ export default {
   ...ClusterStatus,
   ...VirtualCluster,
   ...model,
+  ...version,
   copy:'copy'
 }

@@ -59,11 +59,11 @@ interface EnvironmentVariable {
   time: number;
 }
 
-interface template {
+interface Itemplate {
   scope: string;
   json: string;
   name: string;
-  isDefault: 1 | 0
+  isDefault: 1 | 0;
 }
 
 const sanitizePath = (path: string) => {
@@ -100,7 +100,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const [gpuCapacity, setGpuCapacity] = useState(0);
   const [gpuAvailable, setGpuAvailable] = useState(0);
   const [npuNumMsg, setNpuNumMsg] = useState('');
-  const [templates, setTemplates] = useState<template[]>([]);
+  const [templates, setTemplates] = useState<Itemplate[]>([]);
   const [type, setType] = useState("RegularJob");
   const [preemptible, setPreemptible] = useState(false);
   const [workers, setWorkers] = useState(1);
@@ -260,7 +260,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }
   const [selectTPName, setSelectTPName] = useState('None (Apply a Template)');
   
-  const onTemplateChange = (val: string,templates: template[]) => {
+  const onTemplateChange = (val: string,templates: Itemplate[]) => {
     if (val === 'None (Apply a Template)') {
       setName("");
       setValue('jobName', '');
@@ -562,22 +562,23 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   const validateNumDevices = (val: string) => {
     if (val) {
       const _val = Number(val);
+      console.log(123, allDevice[gpuType])
       if (allDevice[gpuType]) {
         const { deviceStr, detail } = allDevice[gpuType];
         const maxAllocatable = Math.max(...detail.map((i: any) => i.allocatable));
         const maxCapacity = Math.max(...nodeCapacityArr);
         const temp = Math.min(gpuCapacity, maxCapacity);
-
         if (deviceStr === 'npu.huawei.com/NPU') {
           const _temp = Math.min(temp, 8);
           if (_val !== 0 && _val !== 1 && _val !== 2 && _val !== 4 && _val !== 8  || _val > _temp) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${_temp}，and can only be one of 0, 1, 2, 4, 8.`);
+            t('submission.npuNumberValidator')
+            setNpuNumMsg(t('submission.npuNumberValidator').replace('{temp}', String(_temp)));
             return false;
           }
         } else if (deviceStr === 'nvidia.com/gpu') {
           if (_val < 0 || !Number.isInteger(_val) || _val > temp) {
-            setNpuNumMsg(`Must be a positive integer from 0 to ${temp}`);
-            return false;
+            setNpuNumMsg(t('submission.gpuNumberValidator').replace('{temp}', String(temp)));
+            return false; 
           }
         }
       }
@@ -592,7 +593,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (allDevice[gpuType]) {
-      let options: any = [];
+      const options: number[] = [];
       const _max = Math.max(...nodeCapacityArr);
       for (let i = 1; i < ((gpuCapacity / _max) + 1); i++) {
         options.push(i);
@@ -622,12 +623,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
   }, [canDistributedJob]);
 
   const getTemplates = () => {
-    axios.get(`/teams/${selectedTeam}/templates`)
+    axios.get<Itemplate[]>(`/teams/${selectedTeam}/templates`)
       .then(res => {
         const templates = res.data;
         setTemplates(templates);
-        const template = templates.find((item: template) => (item.isDefault === 1))
-        if(template){
+        const template = templates.find((item) => (item.isDefault === 1))
+        if (template) {
           onTemplateChange(`${template.name}.${template.scope}`, templates)
         }
       })
@@ -655,7 +656,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                   setCanDistributedJob(!(_gpuCapacity > Math.max(...arr)));
                 }
               } else {
-                message('warning', 'The device type has been changed, please go to VC to synchronize the modification');
+                message('warning', t('submission.deviceChanged'));
               }
             })
         }
@@ -664,7 +665,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   const isEmpty = (obj: object) => {
     if (obj === undefined) return true;
-    for(let key in obj) {
+    for(const key in obj) {
       if(obj.hasOwnProperty(key))
         return false;
     }
@@ -706,7 +707,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
 
   useEffect(() => {
     if (!grafanaUrl) return;
-    let getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
+    const getNodeGpuAva = `${grafanaUrl}/api/datasources/proxy/1/api/v1/query?`;
     const params1 = new URLSearchParams({
       query: `count_values("device_available",avg by (host_ip) (k8s_node_device_available{device_type="${gpuType}"}))`
     });
@@ -715,12 +716,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
     });
     fetch(getNodeGpuAva+params1).then(async (res1: any) => {
       fetch(getNodeGpuAva+params2).then(async (res2: any) => {
-        let data1 = await res1.json();
-        let data2 = await res2.json();
+        const data1 = await res1.json();
+        const data2 = await res2.json();
         let result1 = data1.data.result, result2 = data2.data.result;
         if (result2.length) {
           let sortededResult = [{metric: {device_available: "0"}, value: result2[0].value}];
-          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }, value: number[] }) => {
+          result1.length > 0 && result1.forEach((i: { metric: { device_available: string }; value: number[] }) => {
             if (i.metric.device_available === '0') {
               sortededResult[0].value[1] = (Number(sortededResult[0].value[1]) + Number(i.value[1])).toString();
             } else {

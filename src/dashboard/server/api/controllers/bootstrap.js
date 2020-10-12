@@ -11,5 +11,10 @@ const userGroup = config.get('userGroup')
 module.exports = (context) => {
   let { user } = context.state
   context.type = 'js'
-  context.body = `bootstrap(${JSON.stringify({ ...user, administrators, userGroupPath: userGroup.frontEndPath })})`
+  context.body = `bootstrap(${JSON.stringify({
+    ...user,
+    administrators,
+    userGroupPath: userGroup.frontEndPath,
+    i18n: config.get('i18n')
+  })})`
 }

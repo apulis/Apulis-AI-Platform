@@ -51,7 +51,7 @@ const ClusterSelectField: React.FC<ClusterSelectFieldProps & BaseTextFieldProps>
           clusterName = (String)(Object.keys(res['gpu_capacity'])[0]);
         }
       }
-      if (res['user_status'].length) {
+      if (res['user_status']?.length) {
         res['user_status'].forEach((i: any) => {
           if (i['userGPU'][clusterName]) {
             if (i.userName === userName) myHasUsed = i['userGPU'][clusterName];

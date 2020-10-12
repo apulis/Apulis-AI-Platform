@@ -23,7 +23,7 @@ const tryParseJSON = (json, empty) => {
 module.exports = async context => {
   const getClusterTeams = async id => {
     const cluster = new Cluster(context, id)
-    // const userTeams = await User.getUserVc(context, context.cookies.get('token'))
+    const userTeams = await User.getUserVc(context, context.cookies.get('token'))
     const teams = await cluster.getTeams()
     let teamsData = []
     teams.forEach(i => {

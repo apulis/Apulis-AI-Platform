@@ -202,7 +202,7 @@ class PodTemplate():
                 if "inference_port" not in pod:
                     pod["inference_port"] = 8080
                 # pod["model_name"] = pod["jobName"]
-                pod["model_name"] = pod["jobId"]
+                pod["model_name"] = "ifs-"+pod["jobId"]
                 pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/path/noExist"
                 pod["model_base_path"] = re.sub("^/data", config["storage-mount-path"]+"/storage", pod["model_base_path"])
                 pod["model_base_path"] = re.sub("^/home", config["storage-mount-path"]+"/work", pod["model_base_path"])

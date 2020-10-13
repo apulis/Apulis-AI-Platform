@@ -555,7 +555,8 @@ def get_nodes_from_config(machinerole):
             else:
                 pass
 
-        return sorted(Nodes)
+        # return sorted(Nodes)
+        return Nodes
 
 
 def get_node_full_name(nodename):

@@ -1,7 +1,7 @@
 apiVersion: "serving.kubeflow.org/v1alpha2"
 kind: "InferenceService"
 metadata:
-  name: {{ job["model_name"] }}
+  name: "{{ job["model_name"] }}"
   labels:
     run: {{ job["jobId"] }}
     podName: {{ job["podName"] }}

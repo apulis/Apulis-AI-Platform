@@ -128,12 +128,6 @@ def SubmitJob(jobParamsJsonStr):
     if "resourcegpu" not in jobParams:
         jobParams["resourcegpu"] = 0
 
-    private_docker_registry = ""
-    if "private_docker_registry" in config:
-        private_docker_registry = config["private_docker_registry"]
-
-    jobParams["image"] = private_docker_registry + jobParams["image"]
-
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
             jobParams["resourcegpu"] = 0
@@ -307,12 +301,6 @@ def PostInferenceJob(jobParamsJsonStr):
     jobParams["isPrivileged"] = False
     jobParams["hostNetwork"] = False
     jobParams["gpuType"] = None if "gpuType" not in jobParams else jobParams["gpuType"]
-
-    private_docker_registry = ""
-    if "private_docker_registry" in config:
-        private_docker_registry = config["private_docker_registry"]
-
-    jobParams["image"] = private_docker_registry + jobParams["image"]
 
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
@@ -490,22 +478,9 @@ def PostModelConversionJob(jobParamsJsonStr):
 
         jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s && chmod 777 %s"' % (raw_cmd, output_dir, output_path + ".om")
 
-        baseImageName = "apulistech/atc:0.0.1"
-        if jobParams["conversionType"].startswith("arm64"):
-            jobParams["gpuType"] = "huawei_npu_arm64"
-            jobParams["image"] = baseImageName + "-arm64"
-        else:
-            jobParams["gpuType"] = "nvidia_gpu_amd64"
-            jobParams["image"] = baseImageName + "-amd64"
     else:
         ret["error"] = "ERROR: .. convert type " + jobParams["conversionType"] + " not supported"
         return ret
-
-    private_docker_registry = ""
-    if "private_docker_registry" in config:
-        private_docker_registry = config["private_docker_registry"]
-
-    jobParams["image"] = private_docker_registry + jobParams["image"]
 
     # env
     if isinstance(jobParams["resourcegpu"], basestring):

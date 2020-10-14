@@ -1473,7 +1473,7 @@ class DataHandler(object):
 
                 if record["jobStatus"]=="running":
                     nodeName,domain = EndpointUtils.getNodename()
-                    record["inference-url"] = "http://%s.%s/endpoints/v3/v1/models/%s:predict" % (nodeName,domain, record["jobName"])
+                    record["inference-url"] = "http://%s.%s/endpoints/v3/v1/models/%s:predict" % (nodeName,domain, "ifs-"+record["jobId"])
 
                 ret.append(record)
         except Exception as e:
@@ -1691,7 +1691,7 @@ class DataHandler(object):
 
                 if record["jobStatus"]=="running":
                     nodeName,domain = EndpointUtils.getNodename()
-                    record["inference-url"] = "http://%s.%s/endpoints/v3/v1/models/%s:predict" % (nodeName,domain, record["jobName"])
+                    record["inference-url"] = "http://%s.%s/endpoints/v3/v1/models/%s:predict" % (nodeName,domain, "ifs-"+record["jobId"])
 
                 ret.append(record)
             conn.commit()

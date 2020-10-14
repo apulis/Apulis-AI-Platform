@@ -1,4 +1,4 @@
-kind: Deployment
+kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: restfulapi
@@ -6,7 +6,6 @@ metadata:
   labels:
      run: dlwsrestfulapi
 spec:
-  replicas: 1
   selector:
     matchLabels:
       restfulapi-node: pod

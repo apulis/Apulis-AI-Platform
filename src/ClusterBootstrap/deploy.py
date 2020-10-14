@@ -2218,7 +2218,7 @@ def get_mount_fileshares(curNode = None):
                     allmountpoints[k] = copy.deepcopy( v )
                     bMount = True
                     allmountpoints[k]["mountcmd"] = v["mountcmd"]
-                    fstab += "%s:/%s %s /nfsmnt nfs %s\n" % (v["server"], v["filesharename"], curphysicalmountpoint, options)
+                    #fstab += "%s:/%s %s /nfsmnt nfs %s\n" % (v["server"], v["filesharename"], curphysicalmountpoint, options)
 
                 else:
                     errorMsg = "ceph fileshare %s, there is no filesharename or ceph command" % (k)

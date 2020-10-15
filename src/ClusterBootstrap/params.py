@@ -700,10 +700,9 @@ default_config_parameters = {
                "2.2.0-gpu"
             ]
       },
-        "pytorch": {
+        "apulisVision": {
             "allowedImageVersions": [
-               "1.5.1",
-               "1.5.1-gpu",
+               "latest"
             ]
         }
     },

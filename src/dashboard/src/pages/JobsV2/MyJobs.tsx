@@ -20,6 +20,7 @@ import { renderId, renderGPU, sortGPU, renderStatus, renderDate, sortDate } from
 import PriorityField from './PriorityField';
 import { pollInterval } from '../../const';
 import message from '../../utils/message';
+import { useTranslation } from "react-i18next";
 
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
 const getStartedDate = (job: any) => new Date(
@@ -30,43 +31,19 @@ const _renderId = (job: any) => renderId(job, 0);
 
 interface JobsTableProps {
   jobs: any[];
-  onExpectMoreJobs?: (length: number) => void;
 }
 
-const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }) => {
+const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs }) => {
   const { cluster } = useContext(ClusterContext);
-
+  const { t } = useTranslation();
   const [pageSize, setPageSize] = useState(10);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
     setPageSize(pageSize);
   }, [setPageSize]);
-  // const onChangePage = useCallback((page: number) => {
-  //   const maxPage = Math.ceil(jobs.length / pageSize) - 1;
-  //   if (page >= maxPage) {
-  //     onExpectMoreJobs(pageSize);
-  //   }
-  // }, [jobs, pageSize, onExpectMoreJobs]);
   const renderPrioirty = useCallback((job: any) => (
-    <PriorityField job={job}/>
+    <PriorityField job={job} isMy={true} />
   ), [])
 
-  const columns = useMemo<Array<Column<any>>>(() => [
-    { title: 'Id', type: 'string', field: 'jobId',
-      render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Name', type: 'string', field: 'jobName', sorting: false },
-    { title: 'Status', type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
-    { title: 'Number of Device', type: 'numeric',
-      render: renderGPU, customSort: sortGPU },
-    { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},
-    { title: 'Priority', type: 'numeric', sorting: false,
-      render: renderPrioirty, disableClick: true },
-    { title: 'Submitted', type: 'datetime',
-      render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
-    { title: 'Started', type: 'datetime',
-      render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
-    { title: 'Finished', type: 'datetime',
-      render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
-  ], [renderPrioirty]);
   const options = useMemo<Options>(() => ({
     padding: 'dense',
     actionsColumnIndex: -1,
@@ -76,26 +53,66 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs, onExpectMoreJobs }
   const actions = [supportEmail, pause, resume, kill];
   return (
     <MaterialTable
-      title="My Jobs"
-      columns={columns}
+      title={t('jobsV2.myJobs')}
+      // columns = {columns}
+      columns={[
+        { title: t('jobsV2.id'), type: 'string', field: 'jobId',
+          render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
+        { title: t('jobsV2.name'), type: 'string', field: 'jobName', sorting: false },
+        { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', sorting: false, render: renderStatus },
+        { title: t('jobsV2.deviceNumber'), type: 'numeric',
+          render: renderGPU, customSort: sortGPU },
+        { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
+        { title: t('jobsV2.priority'), type: 'numeric', sorting: false,
+          render: renderPrioirty, disableClick: true },
+        { title: t('jobsV2.submitted'), type: 'datetime',
+          render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
+        { title: t('jobsV2.started'), type: 'datetime',
+          render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
+        { title: t('jobsV2.finished'), type: 'datetime',
+          render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
+      ]}
       data={jobs}
       options={options}
       actions={actions}
       onChangeRowsPerPage={onChangeRowsPerPage}
+      localization={{
+        pagination: {
+            labelDisplayedRows: '{from}-{to} of {count}',
+            firstTooltip: t('jobsV2.firstPage'),
+            previousTooltip: t('jobsV2.previousPage'),
+            nextTooltip: t('jobsV2.nextPage'),
+            lastTooltip: t('jobsV2.lastPage'),
+            labelRowsPerPage: t('jobsV2.labelRowsPerPage'),
+            labelRowsSelect: t('jobsV2.labelRowsSelect')
+        },
+        toolbar: {
+            nRowsSelected: '{0} row(s) selected',
+            searchTooltip: t('jobsV2.search'),
+            searchPlaceholder: t('jobsV2.search')
+        },
+        header: {
+            actions: t('jobsV2.actions')
+        },
+        body: {
+            emptyDataSourceMessage: t('jobsV2.noRecordsToDisplay'),
+            filterRow: {
+                filterTooltip: 'Filter'
+            }
+        }
+      }} 
       // onChangePage={onChangePage}
     />
   );
 };
 
 const MyJobs: FunctionComponent = () => {
+  const { t } = useTranslation();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [limit, setLimit] = useState(9999);
   const [jobs, setJobs] = useState<any[]>();
-  const onExpectMoreJobs = useCallback((count: number) => {
-    setLimit((limit: number) => limit + count);
-  }, []);
 
   useEffect(() => {
     setJobs(undefined);
@@ -114,17 +131,16 @@ const MyJobs: FunctionComponent = () => {
       .then(res => {
         const { data } = res;
         const temp1 = JSON.stringify(jobs?.map(i => i.jobStatus));
-        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
+        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any }) => i.jobStatus));
         if (!(temp1 === temp2)) setJobs(res.data);
       }, () => {
-        message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
+        message('error', `${t('Failed to fetch jobs from cluster')}: ${cluster.id}`);
       })
   }
 
   if (jobs !== undefined) return (
     <JobsTable
       jobs={jobs}
-      // onExpectMoreJobs={onExpectMoreJobs}
     />
   );
 

@@ -946,7 +946,7 @@ def gen_device_type_config(config):
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")
     cmd = """jwt_header=$(echo -n '{"alg":"HS256","typ":"JWT"}' | base64 | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
-    cmd += """payload=$(echo -n '{"uid":30000,"exp":""" + str(time.time()+3600*24**30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
+    cmd += """payload=$(echo -n '{"uid":30000,"exp":""" + str(time.time()+3600*24*30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
     cmd += """secret=\""""+config["jwt"]["secret_key"] + "\";"
     cmd += """hexsecret=$(echo -n "$secret" | xxd -p | paste -sd "");"""
     cmd += """hmac_signature=$(echo -n "${jwt_header}.${payload}" |  openssl dgst -sha256 -mac HMAC -macopt hexkey:$hexsecret -binary | base64  | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
@@ -4550,6 +4550,14 @@ def run_command( args, command, nargs, parser ):
         merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
         f.close()
 
+    docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
+    if not os.path.exists(docker_image_versions_file):
+        print "WARNING: docker_image_versions.yaml does not exist!"
+    else:
+        with open(docker_image_versions_file) as f:
+            merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+            f.close()
+
     if os.path.exists("./deploy/clusterID.yml"):
         with open("./deploy/clusterID.yml") as f:
             tmp = yaml.load(f, Loader=yaml.FullLoader)
@@ -4589,7 +4597,7 @@ def run_command( args, command, nargs, parser ):
         update_docker_image_config()
 
     # additional glusterfs launch parameter.
-    config["launch-glusterfs-opt"] = args.glusterfs;
+    config["launch-glusterfs-opt"] = args.glusterfs
 
     get_ssh_config()
     configuration( config, verbose )
@@ -5634,6 +5642,16 @@ def get_config():
         pass
 
     with open(config_file) as f:
+        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+        f.close()
+
+    docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
+    if not os.path.exists(docker_image_versions_file):
+        parser.print_help()
+        print "ERROR: docker_image_versions.yaml does not exist!"
+        exit()
+
+    with open(docker_image_versions_file) as f:
         merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
         f.close()
 

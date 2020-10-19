@@ -4,6 +4,7 @@ const fetch = require('node-fetch')
 const Service = require('./service')
 
 const clustersConfig = config.get('clusters')
+const userGroup = config.get('userGroup')
 
 /**
  * @typedef {Object} State
@@ -72,16 +73,16 @@ class Cluster extends Service {
      * @param {string} jobId
      * @return {Promise}
      */
-    async getJobOwner (jobId) {
-      const params = new URLSearchParams({
-        jobId,
-      })
-      const response = await this.fetch('/GetJobDetail?' + params)
-      this.context.assert(response.ok, 502)
-      const job = await response.json()
-      this.context.log.debug('Got job %s', job['jobName'])
-      return job.jobParams ? job.jobParams.userName : ''
-    }
+  async getJobOwner (jobId) {
+    const params = new URLSearchParams({
+      jobId
+    })
+    const response = await this.fetch('/GetJobDetail?' + params)
+    this.context.assert(response.ok, 502)
+    const job = await response.json()
+    this.context.log.debug('Got job %s', job['jobName'])
+    return job.jobParams ? job.jobParams.userName : ''
+  }
 
   /**
      * @param {object} job
@@ -213,13 +214,9 @@ class Cluster extends Service {
    */
   async getTeams () {
     const { user } = this.context.state
-    const params = new URLSearchParams({
-      userName: user.userName
-    })
-    const response = await this.fetch('/ListVCs?' + params)
+    const response = await this.fetch(`/ListVCs??userName=${user.userName}&page=1&size=9999`)
     const data = await response.json()
     this.context.log.debug(data, 'Listed VC')
-
     return data['result']
   }
 
@@ -287,12 +284,14 @@ class Cluster extends Service {
       jobId,
       userName: user.userName
     })
-
     const response = await this.fetch('/endpoints?' + params)
     this.context.assert(response.ok, 502)
     const data = await response.json()
     this.context.log.debug(data, 'Got endpoints')
-
+    const protocol = require('config').get('extranet_protocol')
+    data.forEach(val => {
+      val.protocol = protocol ? 'https' : 'http'
+    })
     return data
   }
 
@@ -505,7 +504,11 @@ class Cluster extends Service {
     return data
   }
 
-
+  async getVersionInfo () {
+    const response = await this.fetch('/VersionInfo')
+    const data = await response.json()
+    return data
+  }
   /**
    * USER
    */

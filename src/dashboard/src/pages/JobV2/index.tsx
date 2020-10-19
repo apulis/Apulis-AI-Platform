@@ -47,6 +47,7 @@ import message from '../../utils/message';
 import useInterval from '../../hooks/useInterval';
 import { pollInterval } from '../../const';
 import AuthContext from '../../contexts/Auth';
+import { useTranslation } from "react-i18next";
 
 interface RouteParams {
   clusterId: string;
@@ -99,6 +100,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean; isMyJob: boolean }> =
 }
 
 const ManagableJob: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
+  const {t} = useTranslation();
   const [index, setIndex] = useState(0);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
@@ -115,10 +117,10 @@ const ManagableJob: FunctionComponent<{ jobStatus: any }> = ({ jobStatus }) => {
         textColor="primary"
         indicatorColor="primary"
       >
-        <Tab label="Brief"/>
-        <Tab label="Endpoints"/>
-        <Tab label="Metrics"/>
-        <Tab label="Console"/>
+        <Tab label={t('jobV2.brief')}/>
+        <Tab label={t('jobV2.endpoints')}/>
+        <Tab label={t('jobV2.metrics')}/>
+        <Tab label={t('jobV2.console')}/>
       </Tabs>
       <SwipeableViews
         index={index}
@@ -167,6 +169,7 @@ const UnmanagableJob: FunctionComponent = () => {
 }
 
 const JobContent: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { clusterId, jobId } = useParams<RouteParams>();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { email, userName } = useContext(UserContext);
@@ -196,7 +199,7 @@ const JobContent: FunctionComponent = () => {
 
   useEffect(() => {
     if (clusterError !== undefined) {
-      const key = enqueueSnackbar(`Failed to fetch cluster config: ${clusterId}`, {
+      const key = enqueueSnackbar(`t('jobV2.failedToFetchClusterConfig')} ${clusterId}`, {
         variant: 'error',
         persist: true
       });
@@ -224,14 +227,14 @@ const JobContent: FunctionComponent = () => {
         if (jobStatus === 'error' || jobStatus === 'failed' || jobStatus === 'finished' || jobStatus === 'killing' || jobStatus === 'killed') setPollTime(null);
         if (!(temp1 === temp2)) setJob(data);
       }, () => {
-        message('error', `Failed to fetch job: ${clusterId}/${jobId}`);
+        message('error', `${t('jobV2.failedToFetchJob')} ${clusterId}/${jobId}`);
       })
   }
 
   const status = useMemo(() => job && job['jobStatus'], [job]);
   const previousStatus = usePrevious(status);
   if (previousStatus !== undefined && status !== previousStatus) {
-    enqueueSnackbar(`Job is ${status} now.`, { variant: "info" });
+    enqueueSnackbar(`${t('jobV2.jobIs')} ${t('components.'+status)} ${t('jobV2.now')}`, { variant: "info" });
   }
 
   if (cluster === undefined || job === undefined) {

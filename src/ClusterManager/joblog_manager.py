@@ -104,6 +104,8 @@ def extract_job_log(jobId,logPath,userId):
         length = len(logLines)
         if len(logStr.strip()) > 0:
             if (length <= 2000):
+                if os.path.exists(os.path.join(jobLogDir,"max_page")):
+                    os.system("rm -rf %s" %(jobLogDir))
                 save_log(jobLogDir,str(jobId),userId,logStr)
             else:
                 with open(os.path.join(jobLogDir,"max_page"), 'w') as f:

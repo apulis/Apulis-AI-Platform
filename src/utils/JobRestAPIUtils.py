@@ -634,7 +634,7 @@ def GetAllSupportInference():
         logger.exception('Exception: %s', str(e))
     return ret
 
-def GetJobList(userName, vcName, jobOwner, num=None):
+def GetJobList(userName, vcName, jobOwner, num=None, pageSize=None, pageNum=None, jobName=None ):
     try:
         dataHandler = DataHandler()
         jobs = []
@@ -645,7 +645,7 @@ def GetJobList(userName, vcName, jobOwner, num=None):
 
         if jobOwner != "all" or not hasAccessOnAllJobs:
             jobs = jobs + GetUserPendingJobs(userName, vcName)
-            jobs = jobs + dataHandler.GetJobList(userName,vcName,num, "running,queued,scheduling,unapproved,pausing,paused", ("<>","and"))
+            jobs = jobs + dataHandler.GetJobList(userName,vcName,num, pageSize, pageNum, jobName, "running,queued,scheduling,unapproved,pausing,paused", ("<>","and"))
         else:
             jobs = GetUserPendingJobs(jobOwner, vcName)
 

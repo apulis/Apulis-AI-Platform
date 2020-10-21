@@ -6,7 +6,7 @@
 
 - 节点配置短域名解析
 
-  /etc/hosts例子    
+  /etc/hosts配置如下 （依单master双worker节点为例）   
 
   ```
   127.0.0.1      localhost

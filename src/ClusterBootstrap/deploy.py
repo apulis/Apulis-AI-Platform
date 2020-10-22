@@ -2201,7 +2201,7 @@ def get_mount_fileshares(curNode = None):
                     fstab += "%s:/%s %s glusterfs %s 0 0\n" % (allmountpoints[k]["node"], v["filesharename"], curphysicalmountpoint, options)
                 else:
                     errorMsg = "glusterfs fileshare %s, there is no filesharename parameter" % (k)
-            
+
             elif v["type"] == "nfs" and "server" in v:
                 if "filesharename" in v and "server" in v:
                     allmountpoints[k] = copy.deepcopy( v )
@@ -2213,7 +2213,7 @@ def get_mount_fileshares(curNode = None):
                     errorMsg = "nfs fileshare %s, there is no filesharename or server parameter" % (k)
 
             elif v["type"] == "ceph" and "mountcmd" in v and v["mountcmd"] is not None and len(v["mountcmd"]) > 0:
-                
+
                 if "filesharename" in v:
                     allmountpoints[k] = copy.deepcopy( v )
                     bMount = True
@@ -2222,7 +2222,7 @@ def get_mount_fileshares(curNode = None):
 
                 else:
                     errorMsg = "ceph fileshare %s, there is no filesharename or ceph command" % (k)
-            
+
             elif v["type"] == "hdfs":
                 allmountpoints[k] = copy.deepcopy( v )
                 if "server" not in v or v["server"] =="":
@@ -2236,7 +2236,7 @@ def get_mount_fileshares(curNode = None):
                 allmountpoints[k]["options"] = options
                 fstaboptions = fetch_config(config, ["mountconfig", "hdfs", "fstaboptions"])
                 fstab += "hadoop-fuse-dfs#hdfs://%s %s fuse %s\n" % (allmountpoints[k]["server"][0], curphysicalmountpoint, fstaboptions)
-            
+
             elif (v["type"] == "local" or v["type"] == "localHDD") and "device" in v:
                 allmountpoints[k] = copy.deepcopy( v )
                 bMount = True
@@ -2246,7 +2246,7 @@ def get_mount_fileshares(curNode = None):
                 bMount = True
             else:
                 errorMsg = "Error: Unknown or missing critical parameter in fileshare %s with type %s" %( k, v["type"])
-            
+
             if not (errorMsg is None):
                 print errorMsg
                 raise ValueError(errorMsg)
@@ -2553,7 +2553,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
                             dirname = os.path.join(v["curphysicalmountpoint"], basename )
                             remotecmd += "sudo mkdir -p %s; " % dirname
                             remotecmd += "sudo chmod ugo+rwx %s; " %dirname
-                            
+
                     for basename in v["mountpoints"]:
                         dirname = os.path.join(v["curphysicalmountpoint"], basename )
                         storage_mount_path = config["storage-mount-path"]
@@ -2564,7 +2564,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
 
                         linkdir = os.path.join(storage_mount_path, basename)
                         remotecmd += "if [ ! -e %s ]; then sudo ln -s %s %s; fi; " % (linkdir, dirname, linkdir)
-            
+
             # following node need not make the directory
             if len(remotecmd)>0:
                 if mount_command_file == '':
@@ -4402,7 +4402,7 @@ def scale_up_ha_master(config, node_name, node_info):
     domain = get_domain()
     k8s_nodes = get_cluster_k8s_node_list()
     node = node_name + domain
-    
+
     write_nodelist_yaml()
     kubernetes_masters = config["kubernetes_master_node"]
     kubernetes_master0 = kubernetes_masters[0]
@@ -4445,11 +4445,11 @@ def scale_up(config):
     for node_name in config["scale_up"]:
 
         node_info = config["scale_up"][node_name]
-        
+
         if node_info["role"] == "infrastructure" or node_info["role"] == "infra":
             scale_up_ha_master(config, node_name, node_info)
-        else:       
-            scale_up_worker(config, node_name, node_info)                 
+        else:
+            scale_up_worker(config, node_name, node_info)
 
     return
 
@@ -4547,7 +4547,7 @@ def run_command( args, command, nargs, parser ):
         exit()
 
     with open(config_file) as f:
-        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
+        merge_config(config, utils.ordered_load(f, yaml.SafeLoader))
         f.close()
 
     if os.path.exists("./deploy/clusterID.yml"):

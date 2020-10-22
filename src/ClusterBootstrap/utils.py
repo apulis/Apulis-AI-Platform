@@ -26,6 +26,7 @@ from shutil import copyfile, copytree
 import urllib
 import socket,struct
 import pdb
+from collections import OrderedDict
 
 
 verbose = False
@@ -362,8 +363,8 @@ def get_mac_address( identity_file, user, host, show=True ):
 # and then remove the temporary folder.
 # Command should assume that it starts srcdir, and execute a shell script in there.
 # If dstdir is given, the remote command will be executed at dstdir, and its content won't be removed
-def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd, 
-        supressWarning = False, preRemove = True, 
+def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd,
+        supressWarning = False, preRemove = True,
         removeAfterExecution = True, dstdir = None,
         background=False):
 
@@ -379,14 +380,14 @@ def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd,
 
     scp( identity_file, srcdir, tmpdir, user, host)
     dstcmd = "cd "+tmpdir + "; "
-    
+
     # background process needs be exec immediately
     if background:
-        dstcmd += "nohup " 
+        dstcmd += "nohup "
         dstcmd += cmd + "  > foo.out 2> foo.err < /dev/null & "
         print(dstcmd)
         SSH_exec_cmd( identity_file, user, host, dstcmd )
-        
+
         # cannot delete src file for backgroud jobs
         return
 
@@ -736,3 +737,19 @@ def keep_widest_subnet(ips):
 
 def random_str(length):
     return ''.join(random.choice(string.ascii_lowercase) for x in range(length))
+
+# usage example:
+# ordered_load(stream, yaml.SafeLoader)
+def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+
+    return yaml.load(stream, OrderedLoader)

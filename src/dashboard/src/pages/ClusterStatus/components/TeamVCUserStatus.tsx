@@ -6,6 +6,8 @@ import {
 } from "@material-ui/core";
 import MaterialTable, {MTableToolbar} from "material-table";
 import UserContext from '../../../contexts/User';
+import { useTranslation } from "react-i18next";
+
 interface TeamUsr {
   userStatus: any;
   showCurrentUser: boolean;
@@ -14,6 +16,7 @@ interface TeamUsr {
 }
 
 export const TeamVCUserStatus = (props: TeamUsr) => {
+  const { t } = useTranslation();
   const { userStatus, showCurrentUser, handleSwitch, currentCluster } = props;
   const { userName } = React.useContext(UserContext);
 
@@ -42,7 +45,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
                   </Tooltip>
                 </div>
               )
-            }}
+            }}            
           /> :
             <CircularProgress/>
         }
@@ -54,14 +57,14 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
       {
         userStatus ?  <MaterialTable
           title=""
-          columns={[{title: 'Username', field: 'userName'},
-            {title: 'Device Type', field: 'gpuType',type:'numeric'},
-            {title: 'Currently Allocated', field: 'usedGPU',type:'numeric'},
-            {title: 'Currently Allocated Preemptible', field: 'preemptableGPU',type:'numeric', render: (rowData: any) => <span>{rowData['preemptableGPU'] ? rowData['preemptableGPU'] : '0'}</span>},
-            {title: 'Currently Idle', field: 'idleGPU',type:'numeric'},
-            {title: 'Past Month Booked Hour', field: 'booked',type:'numeric', render: (rowData: any) => <span>{rowData['booked'] ? rowData['booked'] : '0'}</span>},
-            {title: 'Past Month Idle Hour', field: 'idle',type:'numeric', render: (rowData: any) => <span>{rowData['idle'] ? rowData['idle'] : '0'}</span>},
-            {title: 'Past Month Idle Hour %', field: '',type:'numeric', render: (rowData: any) => currentCluster === 'Lab-RR1-V100' ? null : <span style={{ color: Math.floor((rowData['idle'] / rowData['booked']) * 100) > 50 ? "red" : "black" }}>{rowData['booked'] == '0' ? '-' : Math.floor(((rowData['idle'] || 0) / (rowData['booked'])) * 100)}</span>, customSort: (a: any, b: any) => {return Math.floor((a['idle'] / a['booked']) * 100) - Math.floor((b['idle'] / b['booked']) * 100)}}
+          columns={[{title:  t('Username'), field: 'userName'},
+            {title: t('DeviceType'), field: 'gpuType',type:'numeric'},
+            {title: t('CurrentlyAllocated'), field: 'usedGPU',type:'numeric'},
+            {title: t('CurrentlyAllocatedPreemptible'), field: 'preemptableGPU',type:'numeric', render: (rowData: any) => <span>{rowData['preemptableGPU'] ? rowData['preemptableGPU'] : '0'}</span>},
+            {title: t('CurrentlyIdle'), field: 'idleGPU',type:'numeric'},
+            {title: t('PastMonthBookedHour'), field: 'booked',type:'numeric', render: (rowData: any) => <span>{rowData['booked'] ? rowData['booked'] : '0'}</span>},
+            {title: t('PastMonthIdleHour'), field: 'idle',type:'numeric', render: (rowData: any) => <span>{rowData['idle'] ? rowData['idle'] : '0'}</span>},
+            {title: t('PastMonthIdleHour%'), field: '',type:'numeric', render: (rowData: any) => currentCluster === 'Lab-RR1-V100' ? null : <span style={{ color: Math.floor((rowData['idle'] / rowData['booked']) * 100) > 50 ? "red" : "black" }}>{rowData['booked'] == '0' ? '-' : Math.floor(((rowData['idle'] || 0) / (rowData['booked'])) * 100)}</span>, customSort: (a: any, b: any) => {return Math.floor((a['idle'] / a['booked']) * 100) - Math.floor((b['idle'] / b['booked']) * 100)}}
           ]}
           data={showCurrentUser ? userStatus.filter((uc: any)=>uc['usedGPU'] > 0 && uc['userName'] !== 'Total') : userStatus}
           options={{filtering: false, paging: false, sorting: false}}
@@ -69,7 +72,7 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
             Toolbar: props => (
               <div>
                 <MTableToolbar {...props} />
-                <Tooltip title={showCurrentUser ? "Show All Use" : "Show Current Use"}>
+                <Tooltip title={(showCurrentUser ? t("Show All Use") : t("Show Current Use")) as string}>
                   <Switch
                     checked={showCurrentUser}
                     onChange={handleSwitch}
@@ -77,6 +80,29 @@ export const TeamVCUserStatus = (props: TeamUsr) => {
                 </Tooltip>
               </div>
             )
+          }}
+          localization={{
+            pagination: {
+                labelDisplayedRows: '{from}-{to} of {count}',
+                firstTooltip: t('First Page'),
+                previousTooltip: t('Previous Page'),
+                nextTooltip: t('Next Page'),
+                lastTooltip: t('Last Page')
+            },
+            toolbar: {
+                nRowsSelected: '{0} row(s) selected',
+                searchTooltip: t('Search'),
+                searchPlaceholder: t('Search')
+            },
+            header: {
+                actions: 'Actions'
+            },
+            body: {
+                emptyDataSourceMessage: t('No records to display'),
+                filterRow: {
+                    filterTooltip: 'Filter'
+                }
+            }
           }}
         /> :
           <CircularProgress/>

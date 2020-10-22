@@ -1,6 +1,6 @@
 # These are the default configuration parameter
 default_config_parameters = {
-    "supported_platform": ["azure_cluster", "onpremise"],
+    "supported_platform": ["onpremise"],
     "allroles": {"infra", "infrastructure", "worker", "nfs", "sql", "dev", "etcd", "kubernetes_master", "mysqlserver", "elasticsearch", "samba"},
     # Kubernetes setting
     "service_cluster_ip_range": "10.3.0.0/16",
@@ -75,6 +75,8 @@ default_config_parameters = {
     "prometheus_data_path": "/mntdlws/service/prometheus/data",
 
     "extranet_protocol":"https",
+    "apt_mirror_url": "http:\/\/mirrors.aliyun.com",
+    "ssh_port": 22,
 
     "datasource": "MySQL",
     "defalt_virtual_cluster_name": "platform",
@@ -86,7 +88,7 @@ default_config_parameters = {
     "etcd3port1": "2379",  # Etcd3port1 will be used by App to call Etcd
     "etcd3port2": "4001",  # Etcd3port2 is established for legacy purpose.
     "etcd3portserver": "2380",  # Server port for etcd
-    "k8sAPIport": "1443",  # Server port for apiserver
+    "k8sAPIport": "6443",  # Server port for apiserver
     "nvidiadriverversion": "375.20",
     # Default port for WebUI, Restful API,
     # Port webUI will run upon, nginx will forward to this port.
@@ -98,7 +100,7 @@ default_config_parameters = {
     "repairmanager": "repairmanager",
     "repairmanageretcd": "repairmanageretcd",
     "ssh_cert": "./deploy/sshkey/id_rsa",
-    "admin_username": "core",
+    "admin_username": "dlwsadmin",
     # the path of where dfs/nfs is source linked and consumed on each node,
     # default /dlwsdata
     "nfs-mnt-src-path": "/data/share",
@@ -531,12 +533,18 @@ default_config_parameters = {
 
     "k8s-bld": "k8s-temp-bld",
     "k8s-gitrepo": "kubernetes/kubernetes",
-    "k8s-gitbranch": "v1.9.1",
+    "k8s-gitbranch": "v1.19.0",
     "k8scri-gitrepo": "Microsoft/KubeGPU",
     "k8scri-gitbranch": "master",
     "kube_custom_cri": False,
     "kube_custom_scheduler": False,
-    "kubepresleep": 60,
+    "kubepresleep": 1,
+    "etcd_node_num": 1,
+    "deploy_method": "kubeadm",
+
+    # used by user-dashboard service
+    "enable_vc": "true",
+    "i18n": "true",
 
     "Authentications": {
         "Live-login-windows": {
@@ -685,7 +693,8 @@ default_config_parameters = {
     "dockerprefix": "",
     "dockertag": "latest",
     "jwt":{
-        "secret_key":"Sign key for JWT"
+        "secret_key":"Sign key for JWT",
+        "algorithm": "HS256"
     },
 
     # inferenceJob config

@@ -4,6 +4,7 @@ interface Context {
   addGroup?: string;
   wiki?: string;
   supportMail?: string;
+  lang?: string | boolean;
 }
 
 const Context = React.createContext<Context>({});

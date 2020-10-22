@@ -1,0 +1,25 @@
+docker_image_versions:
+  RepairManager2: latest
+  a910-device-plugin: latest
+  alertmanager: v0.20.0
+  backendbase: 1.9
+  bash: 5
+  custom-user-dashboard-backend: latest
+  custom-user-dashboard-frontend: latest
+  dashboard: latest
+  data-platform-backend: latest
+  gpu-reporter: latest
+  grafana: 6.7.4
+  init-container: latest
+  job-exporter: 1.9
+  mysql: 8.0
+  nginx: 1.9
+  node-exporter: v0.18.1
+  openresty: latest
+  prometheus: v2.18.0
+  prometheus-operator: v0.38.0
+  reaper: latest
+  redis: 5.0.6-alpine
+  restfulapi2: latest
+  watchdog: 1.9
+  webui3: latest

@@ -25,7 +25,7 @@ RUN rm -rf /usr/lib/python2.7/dist-packages/yaml
 RUN rm -rf /usr/lib/python2.7/dist-packages/PyYAML-*
 RUN pip install -r /requirements.txt
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-RUN pip install MySQL-python DBUtils Pillow futures six numpy matplotlib pycocotools dnspython
+RUN pip install MySQL-python DBUtils==1.3 Pillow futures six numpy matplotlib pycocotools dnspython
 
 ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete
 ADD utils /DLWorkspace/src/utils

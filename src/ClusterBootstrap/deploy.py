@@ -4496,6 +4496,25 @@ def create_job_service_account():
     if len(nodes)>=1:
         run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
 
+
+def reload_ordered_data(config, filename):
+
+    with open(filename) as f:
+
+        temp={}
+        merge_config(temp, utils.ordered_load(f, yaml.SafeLoader))
+
+        ## reload machines
+        if "machines" in temp:
+            config["machines"] = temp["machines"]
+        else:
+            pass
+
+        f.close()
+
+    return
+
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -4547,8 +4566,11 @@ def run_command( args, command, nargs, parser ):
         exit()
 
     with open(config_file) as f:
-        merge_config(config, utils.ordered_load(f, yaml.SafeLoader))
+        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
         f.close()
+
+    # reload ordered data
+    reload_ordered_data(config, config_file)
 
     docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
     if not os.path.exists(docker_image_versions_file):

@@ -49,4 +49,7 @@ spec:
         container:
           name: kfserving-container
           image: {{ job["image"] }}
+          env:
+            - name: STORAGE_URI
+              value: "file://{{ job["model_base_path"] }}"
         {% endif %}

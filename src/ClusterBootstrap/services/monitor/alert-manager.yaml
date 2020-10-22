@@ -44,7 +44,7 @@ spec:
           mountPath: /etc/alertmanager/template
       {% if cnf["alert-manager"]["reaper"] %}
       - name: reaper
-        image: {{cnf["worker-dockerregistry"]}}/{{cnf["dockerprefix"]}}/reaper:{{cnf["dockertag"]}}
+        image: {{cnf["dockers"]["container"]["reaper"]["fullname"]}}
         command:
           - 'python'
           - '/reaper/main.py'

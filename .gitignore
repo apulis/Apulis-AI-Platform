@@ -85,6 +85,6 @@ src/dashboard/config/local.yaml
 *.log
 src/ClusterBootstrap/template/*config.yaml.template
 
-**/.vscode/*
+.vscode
 .idea
 venv

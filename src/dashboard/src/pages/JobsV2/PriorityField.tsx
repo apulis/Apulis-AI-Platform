@@ -1,23 +1,24 @@
 import React, {
   FunctionComponent,
-  KeyboardEvent,
-  useCallback,
   useContext,
   useMemo,
   useState,
-  useRef
 } from 'react';
 import { Button, TextField } from '@material-ui/core';
 import { useSnackbar } from 'notistack';
 import ClusterContext from './ClusterContext';
 import AuthContext from '../../contexts/Auth';
+import { useTranslation } from "react-i18next";
+
 
 
 interface Props {
   job: any;
+  isMy?: boolean;
 }
 
-const PriorityField: FunctionComponent<Props> = ({ job }) => {
+const PriorityField: FunctionComponent<Props> = ({ job, isMy }) => {
+  const { t } = useTranslation();
   const { enqueueSnackbar } = useSnackbar();
   const { cluster } = useContext(ClusterContext);
   const { permissionList = [] } = useContext(AuthContext);
@@ -40,7 +41,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
     const val = priority < 1 ? 1 : priority > 1000 ? 1000 : priority;
     setPriority(val);
     if (val === job['priority']) return;
-    enqueueSnackbar('Priority is being set...');
+    enqueueSnackbar(t('jobsV2.priorityIsBeingSet'));
     setTextFieldDisabled(true);
 
     fetch(`/api/clusters/${cluster.id}/jobs/${job['jobId']}/priority`, {
@@ -49,13 +50,13 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
       headers: { 'Content-Type': 'application/json' }
     }).then((response) => {
       if (response.ok) {
-        enqueueSnackbar('Priority is set successfully', { variant: 'success' });
+        enqueueSnackbar(t('jobsV2.priorityIsSetSuccessfully'), { variant: 'success' });
       } else {
         throw Error();
       }
       setEditing(false);
     }).catch(() => {
-      enqueueSnackbar('Failed to set priority', { variant: 'error' });
+      enqueueSnackbar(t('jobsV2.failedToSetPriority'), { variant: 'error' });
     }).then(() => {
       setTextFieldDisabled(false);
     });
@@ -67,7 +68,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
         // inputRef={input}
         type="number"
         value={priority}
-        disabled={textFieldDisabled || !permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')}
+        disabled={textFieldDisabled || (isMy ? false : !permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB'))}
         fullWidth
         onBlur={onBlur}
         onChange={e => setPriority(Number(e.target.value))}
@@ -79,7 +80,7 @@ const PriorityField: FunctionComponent<Props> = ({ job }) => {
         fullWidth
         variant={buttonEnabled ? 'outlined' : 'text'}
         onClick={buttonEnabled ? () => setEditing(true) : undefined}
-        disabled={!permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')}
+        disabled={isMy ? false : !permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB')}
       >
         {priority}
       </Button>

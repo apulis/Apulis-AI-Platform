@@ -24,6 +24,7 @@ spec:
       containers:
       - name: redis
         image: {{cnf["dockers"]["container"]["redis"]["fullname"]}}
+        imagePullPolicy: Always
         command: ["redis-server", "--port", "9301", "--maxmemory", "100mb", "--maxmemory-policy", "allkeys-lru"]
         ports:
           - containerPort: 9301
@@ -31,7 +32,7 @@ spec:
             name: redis
             protocol: TCP
       - name: custom-user-dashboard-backend-arm64
-        image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}custom-user-dashboard-backend:{{cnf["dockertag"]}}-arm64
+        image: {{cnf["dockers"]["container"]["custom-user-dashboard-backend"]["fullname"]}}-arm64
         imagePullPolicy: Always
         volumeMounts:
         - mountPath: /etc/app/config

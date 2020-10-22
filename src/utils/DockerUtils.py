@@ -1,3 +1,4 @@
+import pprint
 import os
 import time
 import datetime
@@ -159,7 +160,7 @@ def run_docker(dockername, prompt="", dockerConfig = None, sudo = False, options
 def find_dockers( dockername):
     print("Search for dockers .... "+dockername)
     tmpf = tempfile.NamedTemporaryFile()
-    tmpfname = tmpf.name;
+    tmpfname = tmpf.name
     tmpf.close()
     #os.remove(tmpfname)
     dockerimages_all = os.system("docker images > " + tmpfname)
@@ -183,7 +184,7 @@ def build_docker_fullname( config, dockername, verbose = False ):
     dockername = dockername.lower()
     if dockername in config["dockers"]["container"]:
         return config["dockers"]["container"][dockername]["fullname"], config["dockers"]["container"][dockername]["name"]
-    dockerprefix = config["dockerprefix"];
+    dockerprefix = config["dockerprefix"]
     dockertag = config["dockertag"]
     infra_dockers = config["infrastructure-dockers"] if "infrastructure-dockers" in config else {}
     infra_docker_registry = config["infrastructure-dockerregistry"] if "infrastructure-dockerregistry" in config else config["dockerregistry"]
@@ -347,13 +348,23 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
 
         else:
             pass
-        # print config["dockers"]
+        modify_docker_tag_by_version_file(config)
     return
 
+def modify_docker_tag_by_version_file(config):
+    if "docker_image_versions" in config:
+        for docker_name, docker_version in config["docker_image_versions"].items():
+            if docker_name in config["dockers"]["container"] and docker_version != "" and docker_version != None:
+                old_tag = config["dockers"]["container"][docker_name]["fullname"]
+                list = old_tag.split(":")
+                prefix = ":".join(list[0:(len(list)-1)])
+                config["dockers"]["container"][docker_name]["fullname"] = prefix + ":" + str(docker_version)
+    #pprint.pprint(config["dockers"])
+    return
 
 def build_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, archtype=None):
     configuration(config, verbose, archtype=archtype)
-    docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
+    docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose)
     # print rootdir
     for _, tupl in docker_list.iteritems():
         dockername, _ = tupl
@@ -371,7 +382,7 @@ def push_one_docker(dirname, dockerprefix, tag, basename, config, verbose=False,
 def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False, nocache=False, archtype=None):
 
     configuration(config, verbose, archtype=archtype)
-    docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
+    docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose)
 
     for _, tupl in docker_list.iteritems():
         dockername, _ = tupl
@@ -382,7 +393,7 @@ def push_dockers(rootdir, dockerprefix, dockertag, nargs, config, verbose=False,
 
 def get_reponame(rootdir, dockerprefix, dockertag, nargs, config, verbose = False, archtype=None):
     configuration(config, verbose, archtype=archtype)
-    docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose );
+    docker_list = get_docker_list(rootdir, dockerprefix, dockertag, nargs, verbose)
 
     for _, tuple in docker_list.iteritems():
         docker_name, _ = tuple

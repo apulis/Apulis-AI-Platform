@@ -561,6 +561,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     global_unschedulable = ResourceInfo(cluster_gpu_unschedulable)
 
     vc_resources = {}
+    vc_user_quota_resources = {}
     detail_resources = collections.defaultdict(lambda :[])
     details = data_handler.GetAllDevice()
     globalResInfo = ResourceInfo.Difference(global_total, global_unschedulable)
@@ -570,10 +571,14 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     for vc in vc_list:
         vc_name = vc["vcName"]
+        vc_metadata = json.loads(vc["metadata"])
         vc_schedulable = {}
+        vc_user_quota_allocable = {}
         for gpu_type, total in vc_total[vc_name].items():
             vc_schedulable[gpu_type] = total - vc_unschedulable[vc_name][gpu_type]
+            vc_user_quota_allocable[gpu_type] = vc_metadata[gpu_type]["user_quota"] if gpu_type in vc_metadata and "user_quota" in vc_metadata[gpu_type] else 9999
         vc_resources[vc_name] = ResourceInfo(vc_schedulable)
+        vc_user_quota_resources[vc_name] = ResourceInfo(vc_user_quota_allocable)
 
     for deviceType,detail in details.items():
         for one in detail["detail"]:
@@ -632,6 +637,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
 
     logger.info("TakeJobActions : local resources : %s" % (vc_resources))
     logger.info("TakeJobActions : global resources : %s" % (globalResInfo.CategoryToCountMap))
+    logger.info("TakeJobActions : user resources : %s" % (vc_user_quota_resources))
+
+    vc_pre_user_quota_resources = collections.defaultdict(lambda : copy.deepcopy(vc_user_quota_resources))
 
     for sji in jobsInfo:
         logger.info("TakeJobActions : job : %s : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap, sji["sortKey"]))
@@ -644,8 +652,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
             continue
         vc_resource = vc_resources[vc_name]
-        logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_name])
-        if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]):
+        vc_user_quota_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
+        logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource,vc_name])
+        if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
             if sji["job"]["jobStatus"] == "queued":
                 if sji["deviceType"] in detail_resources:
                     if sji["jobtrainingtype"] == "PSDistJob" and quota.caculate_n_th_max(detail_resources[sji["deviceType"]],sji["numpsworker"]) < sji["pernoderesource"]:
@@ -654,6 +663,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                         if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["pernoderesource"]:
                             continue
             vc_resource.Subtract(sji["globalResInfo"])
+            vc_user_quota_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
             sji["allowed"] = True
             logger.info("TakeJobActions : local assignment : %s : %s %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap,vc_name))
@@ -690,8 +700,9 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
                 vc_name = sji["job"]["vcName"]
+                available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
                 requested_resource = sji["globalResInfo"]
-                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,vc_resource)}]
+                detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,available_resource.GetMinValue(vc_resources[vc_name]))}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)

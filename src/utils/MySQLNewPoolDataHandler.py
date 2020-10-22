@@ -605,13 +605,14 @@ class DataHandler(object):
         return ret
 
     @record
-    def ListVCs(self,page=None,size=None):
+    def ListVCs(self,page=None,size=None,name=None):
         ret = []
         try:
+            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+            if name:
+                query += " WHERE vcName like '%%%s%%'" %(name)
             if page and size:
-                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s` limit %d offset %d" % (self.vctablename,int(size),(int(page)-1)*int(size))
-            else:
-                query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+                query += " limit %d offset %d" % (int(size),(int(page)-1)*int(size))
             with MysqlConn() as conn:
                 rets = conn.select_many(query)
             for one in rets:
@@ -621,10 +622,12 @@ class DataHandler(object):
         return ret
 
     @record
-    def CountVCs(self):
+    def CountVCs(self,name=None):
         ret = None
         try:
             query = "SELECT count(1) FROM `%s`" % (self.vctablename)
+            if name:
+                query += " WHERE vcName like '%%%s%%'" %(name)
             with MysqlConn() as conn:
                 ret = conn.select_one_value(query)
         except Exception as e:
@@ -1064,12 +1067,15 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobList(self, userName, vcName, num=None, status=None, op=("=", "or")):
+    def GetJobList(self, userName, vcName, num=None, pageSize=None, pageNum=None, jobName=None, status=None, op=("=", "or")):
         ret = []
         try:
             query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1 and isDeleted=0" % (
                 self.jobtablename)
             params = []
+            if jobName != None:
+                query += " and `jobName` = %s"
+                params.append(jobName)
             if userName != "all":
                 query += " and `userName` = %s"
                 params.append(userName)
@@ -1091,6 +1097,9 @@ class DataHandler(object):
 
             if num is not None:
                 query += " limit %s " % str(num)
+            elif pageNum != None and pageSize != None:
+                offset = (pageNum - 1)*pageSize
+                query += " limit %s offset %s " % (str(pageSize), str(offset))
             with MysqlConn() as conn:
                 rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()

@@ -18,6 +18,7 @@ import UserContext from '../../contexts/User';
 import ConfigContext from "../../contexts/Config";
 import AuthContext from '../../contexts/Auth';
 import AuthzHOC from '../../components/AuthzHOC';
+import { useTranslation } from "react-i18next";
 
 const useStyles = makeStyles((theme: Theme) => createStyles({
   title: {
@@ -60,35 +61,36 @@ const LinkListItem: FC<LinkProps> = ({ to, children }) => {
 };
 
 const NavigationList: FC = () => {
+  const { t } = useTranslation();
   const styles = useStyles();
   return (
     <List component="nav" className={styles.drawerHeader}>
       <LinkListItem to="/home">
-        <ListItemText>Home</ListItemText>
+        <ListItemText>{t("layout.Home")}</ListItemText>
       </LinkListItem>
       <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>
         <LinkListItem to="/submission/training">
-          <ListItemText>Submit Training Job</ListItemText>
+          <ListItemText>{t("layout.SubmitTrainingJob")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={['SUBMIT_TRAINING_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_ALL_USER_JOB']}>
         <LinkListItem to="/jobs-v2">
-          <ListItemText>View and Manage Jobs</ListItemText>
+          <ListItemText>{t("layout.ViewandManageJobs")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={'VIEW_CLUSTER_STATUS'}>
         <LinkListItem to="/cluster-status">
-          <ListItemText>Cluster Status</ListItemText>
+          <ListItemText>{t("layout.ClusterStatus")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={['VIEW_VC', 'MANAGE_VC']}>
         <LinkListItem to="/vc">  
-          <ListItemText>Virtual Cluster</ListItemText>
+          <ListItemText>{t("layout.VirtualCluster")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       <AuthzHOC needPermission={'EDGE_INFERENCE'}>
         <LinkListItem to="/model">
-          <ListItemText>Edge Inference</ListItemText>
+          <ListItemText>{t("layout.Edge Inference")}</ListItemText>
         </LinkListItem>
       </AuthzHOC>
       {/* <AuthzHOC needPermission={'SUBMIT_TRAINING_JOB'}>

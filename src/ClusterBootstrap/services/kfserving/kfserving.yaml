@@ -11,7 +11,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    istio-injection: enabled
+    istio-injection: disabled
     serving.kubeflow.org/inferenceservice: enabled
   name: kfserving-pod
 ---

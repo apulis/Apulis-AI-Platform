@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hccl-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hccl-controller
+  template:
+    metadata:
+      labels:
+        app: hccl-controller
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: master
+      containers:
+      - name: hccl-controller
+        image: hccl-controller:v0.0.1
+        imagePullPolicy: Never
+        command: [ "/bin/bash", "-c", "--"]
+        args: [ "mkdir -p /var/log/atlas_dls/hccl-controller;hccl-controller --logtostderr=false --log_dir=/var/log/atlas_dls/hccl-controller
+         --log_file=/var/log/atlas_dls/hccl-controller/hccl-controller.log  --stderrthreshold=1 -v=5" ]
+        volumeMounts:
+          - name: device-hcclcontroller
+            mountPath: /var/log
+          - name: timezone
+            mountPath: /etc/timezone
+          - name: localtime
+            mountPath: /etc/localtime
+      volumes:
+        - name: device-hcclcontroller
+          hostPath:
+            path: /var/log
+        - name: timezone
+          hostPath:
+            path: /etc/timezone
+        - name: localtime
+          hostPath:
+            path: /etc/localtime

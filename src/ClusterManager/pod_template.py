@@ -189,7 +189,6 @@ class PodTemplate():
             elif "gpuStr" in pod:
 
                 pod["schedulerName"]=""
-
                 if pod["gpuStr"] == "npu.huawei.com/NPU":
                     pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"true"})
                     pod["schedulerName"]="volcano"

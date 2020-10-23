@@ -30,7 +30,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}a910-device-plugin:devel3
+          #image: {{cnf["worker-dockerregistry"]}}a910-device-plugin:devel3
+          image: {{cnf["dockers"]["container"]["a910-device-plugin"]["fullname"]}}
           imagePullPolicy: Always
           securityContext:
             # readOnlyRootFilesystem: true

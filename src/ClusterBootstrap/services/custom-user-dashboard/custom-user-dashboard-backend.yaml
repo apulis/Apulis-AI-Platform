@@ -24,6 +24,7 @@ spec:
       containers:
       - name: redis
         image: {{cnf["dockers"]["container"]["redis"]["fullname"]}}
+        imagePullPolicy: Always
         command: ["redis-server", "--port", "9301", "--maxmemory", "100mb", "--maxmemory-policy", "allkeys-lru"]
         ports:
           - containerPort: 9301

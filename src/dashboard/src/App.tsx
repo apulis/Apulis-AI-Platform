@@ -6,6 +6,9 @@ import Helmet from 'react-helmet';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
 import * as H from 'history';
 import { ThemeProvider } from "@material-ui/styles";
+
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 import initAxios from './utils/init-axios'
 import ConfigContext, { Provider as ConfigProvider } from "./contexts/Config";
 import UserContext, { Provider as UserProvider } from "./contexts/User";
@@ -21,6 +24,10 @@ import { SnackbarProvider, useSnackbar, VariantType } from 'notistack';
 import './App.less';
 import AuthzRoute from './components/AuthzRoute';
 import ROUTER from './router.config';
+
+import en from './locale/en-US';
+import cn from './locale/zh-CN';
+import { useTranslation } from "react-i18next";
 
 const theme = createMuiTheme();
 
@@ -39,7 +46,33 @@ interface BootstrapProps {
   currentRole?: string[];
   userGroupPath?: string;
   id?: number;
+  i18n: boolean | string;
 }
+
+const lng = localStorage.language || navigator.language;
+
+i18n
+  .use(initReactI18next) // passes i18n down to react-i18next
+  .init({
+    resources: {
+      "en-US": {
+        translation: {
+          ...en
+        }
+      },
+      "zh-CN": {
+        translation: {
+          ...cn
+        }
+      }
+    },
+    lng: lng,
+    fallbackLng: lng,
+
+    interpolation: {
+      escapeValue: false
+    }
+  });
 
 const Loading = (
   <Box flex={1} display="flex" alignItems="center" justifyContent="center">
@@ -47,7 +80,13 @@ const Loading = (
   </Box>
 );
 
-const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath }) => {
+const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, userName, isAdmin, isAuthorized, children, administrators, permissionList, currentRole, userGroupPath, ...rest }) => {
+  const lang = rest.i18n;
+  if (typeof lang === 'string') {
+    if (lng !== lang) {
+      i18n.changeLanguage(lang);
+    }
+  }
   const { enqueueSnackbar } = useSnackbar();
   initAxios((type: VariantType, msg: string) => {
     enqueueSnackbar(msg, {
@@ -56,8 +95,8 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
     });
   }, userGroupPath || '');
   return(
-    <BrowserRouter>
-      <ConfigProvider>
+    <BrowserRouter basename="/expert">
+      <ConfigProvider lang={lang}>
         <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
           <ConfirmProvider>
             <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
@@ -107,12 +146,13 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 }
 
 const App: React.FC<BootstrapProps> = (props) => {
+  const { t } = useTranslation();
   return (
     <SnackbarProvider>
       <Contexts {...props} >
       <Helmet
-        titleTemplate="Apulis Platform"
-        defaultTitle="Apulis Platform"
+        titleTemplate={t('tips.deepLearningPlatform')}
+        defaultTitle={t('tips.deepLearningPlatform')}
       />
       <CssBaseline/>
       <Box display="flex" minHeight="100vh" maxWidth="100vw">

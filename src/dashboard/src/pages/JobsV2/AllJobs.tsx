@@ -18,6 +18,7 @@ import PriorityField from './PriorityField';
 import message from '../../utils/message';
 import { pollInterval } from '../../const';
 import useInterval from '../../hooks/useInterval';
+import { useTranslation } from "react-i18next";
 
 const renderUser = (job: any) => job['userName'].split('@', 1)[0];
 const getSubmittedDate = (job: any) => new Date(job['jobTime']);
@@ -31,28 +32,29 @@ interface JobsTableProps {
 }
 
 const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
+  const {t} = useTranslation();
   const { cluster } = useContext(ClusterContext);
   const { permissionList = [] } = useContext(AuthContext);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const onChangeRowsPerPage = useCallback((pageSize: number) => {
     setPageSize(pageSize);
   }, [setPageSize]);
   const columns: Column<any>[]  = [
-    { title: 'Id', type: 'string', field: 'jobId',
+    { title: t('jobsV2.id'), type: 'string', field: 'jobId',
       render: _renderId, disableClick: true, sorting: false, cellStyle: {fontFamily: 'Lucida Console'}},
-    { title: 'Name', type: 'string', field: 'jobName', sorting: false },
-    { title: 'Status', type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
-    { title: 'Number of Device', type: 'numeric',
+    { title: t('jobsV2.name'), type: 'string', field: 'jobName', sorting: false },
+    { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
+    { title: t('jobsV2.deviceNumber'), type: 'numeric',
       render: renderGPU, customSort: sortGPU },
-    { title: 'User', type: 'string', render: renderUser},
-    { title: 'Preemptible', type: 'boolean', field: 'jobParams.preemptionAllowed'},
-    { title: 'Priority', type: 'numeric', sorting: false,
+    { title: t('jobsV2.user'), type: 'string', render: renderUser},
+    { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
+    { title: t('jobsV2.priority'), type: 'numeric',sorting: false,
       render: (job: any) => (<PriorityField job={job} key={job.jobId} />), disableClick: true },
-    { title: 'Submitted', type: 'datetime',
+    { title: t('jobsV2.submitted'), type: 'datetime',
       render: renderDate(getSubmittedDate), customSort: sortDate(getSubmittedDate) },
-    { title: 'Started', type: 'datetime',
+    { title: t('jobsV2.started'), type: 'datetime',
       render: renderDate(getStartedDate), customSort: sortDate(getStartedDate) },
-    { title: 'Finished', type: 'datetime',
+    { title: t('jobsV2.finished'), type: 'datetime',
       render: renderDate(getFinishedDate), customSort: sortDate(getFinishedDate) },
   ];
   const options = useMemo<Options>(() => ({
@@ -71,11 +73,37 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
       options={options}
       actions={permissionList.includes('VIEW_AND_MANAGE_ALL_USERS_JOB') ? actions : undefined}
       onChangeRowsPerPage={onChangeRowsPerPage}
+      localization={{
+        pagination: {
+            labelDisplayedRows: '{from}-{to} of {count}',
+            firstTooltip: t('jobsV2.firstPage'),
+            previousTooltip: t('jobsV2.previousPage'),
+            nextTooltip: t('jobsV2.nextPage'),
+            lastTooltip: t('jobsV2.lastPage'),
+            labelRowsPerPage: t('jobsV2.labelRowsPerPage'),
+            labelRowsSelect: t('jobsV2.labelRowsSelect')
+        },
+        toolbar: {
+            nRowsSelected: '{0} row(s) selected',
+            searchTooltip: t('jobsV2.search'),
+            searchPlaceholder: t('jobsV2.search')
+        },
+        header: {
+            actions: t('jobsV2.actions')
+        },
+        body: {
+            emptyDataSourceMessage: t('jobsV2.noRecordsToDisplay'),
+            filterRow: {
+                filterTooltip: 'Filter'
+            }
+        }
+      }}  
     />
   );
 }
 
 const AllJobs: FunctionComponent = () => {
+  const {t} = useTranslation();
   const { cluster } = useContext(ClusterContext);
   const { selectedTeam } = useContext(TeamsContext);
   const [limit, setLimit] = useState(9999);
@@ -97,46 +125,47 @@ const AllJobs: FunctionComponent = () => {
       .then(res => {
         const { data } = res;
         const temp1 = JSON.stringify(jobs?.map(i => i.jobStatus));
-        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any; }) => i.jobStatus));
+        const temp2 = JSON.stringify(data?.map((i: { jobStatus: any }) => i.jobStatus));
         if (!(temp1 === temp2))  setJobs(res.data);
       }, () => {
-        message('error', `Failed to fetch jobs from cluster: ${cluster.id}`);
+        message('error', `${t('tips.Failedtofetchjobsfromcluster')}: ${cluster.id}`);
       })
   }
 
-  const runningJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const runningJobs = jobs.filter((job: any) => job['jobStatus'] === 'running');
-    if (runningJobs.length === 0) return undefined;
-    return runningJobs;
-  }, [jobs]);
-  const queuingJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const queuingJobs = jobs.filter((job: any) => job['jobStatus'] === 'queued' || job['jobStatus'] === 'scheduling' );
-    if (queuingJobs.length === 0) return undefined;
-    return queuingJobs
-  }, [jobs]);
-  const unapprovedJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const unapprovedJobs = jobs.filter((job: any)=>job['jobStatus'] === 'unapproved');
-    if (unapprovedJobs.length === 0) return undefined;
-    return unapprovedJobs
-  }, [jobs]);
-  const pausedJobs = useMemo(() => {
-    if (jobs === undefined) return undefined;
-    const pausedJobs = jobs.filter((job: any) => job['jobStatus'] === 'paused' || job['jobStatus'] === 'pausing' );
-    if (pausedJobs.length === 0) return undefined;
-    return pausedJobs
-  }, [jobs]);
+  // const runningJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const runningJobs = jobs.filter((job: any) => job['jobStatus'] === 'running');
+  //   if (runningJobs.length === 0) return undefined;
+  //   return runningJobs;
+  // }, [jobs]);
+  // const queuingJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const queuingJobs = jobs.filter((job: any) => job['jobStatus'] === 'queued' || job['jobStatus'] === 'scheduling' );
+  //   if (queuingJobs.length === 0) return undefined;
+  //   return queuingJobs
+  // }, [jobs]);
+  // const unapprovedJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const unapprovedJobs = jobs.filter((job: any)=>job['jobStatus'] === 'unapproved');
+  //   if (unapprovedJobs.length === 0) return undefined;
+  //   return unapprovedJobs
+  // }, [jobs]);
+  // const pausedJobs = useMemo(() => {
+  //   if (jobs === undefined) return undefined;
+  //   const pausedJobs = jobs.filter((job: any) => job['jobStatus'] === 'paused' || job['jobStatus'] === 'pausing' );
+  //   if (pausedJobs.length === 0) return undefined;
+  //   return pausedJobs
+  // }, [jobs]);
+
   if (jobs !== undefined) return (
     <>
-      {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}
+      {/* {runningJobs && <JobsTable title="Running Jobs" jobs={runningJobs}/>}
       {queuingJobs && <JobsTable title="Queuing Jobs" jobs={queuingJobs}/>}
       {unapprovedJobs && <JobsTable title="Unapproved Jobs" jobs={unapprovedJobs}/>}
-      {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>}
-      {jobs.length === 0 &&
-        <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3>
-      }
+      {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>} */}
+      {jobs.length === 0 ?
+        <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3> :
+        <JobsTable title="All Jobs" jobs={jobs}/>}
     </>
   );
 

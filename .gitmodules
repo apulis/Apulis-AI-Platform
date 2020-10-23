@@ -1,3 +1,7 @@
 [submodule "src/docker-images/huawei_a910"]
 	path = src/docker-images/huawei_a910
 	url = https://github.com/apulis/k8s-device-plugin
+[submodule "k8s-prom"]
+        path = src/ClusterBootstrap/services/metricsServer/k8s-prom
+        url = https://github.com/iKubernetes/k8s-prom.git
+

@@ -137,10 +137,10 @@ if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ 
 then
     runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
 else
-    if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
-    then
-      DLWS_LAUNCH_CMD="${DLWS_LAUNCH_CMD}  && sleep infinity"
-    fi
+#    if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
+#    then
+#      DLWS_LAUNCH_CMD="${DLWS_LAUNCH_CMD}  && sleep infinity"
+#    fi
     printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
     chmod ugo+rx /pod/job_command.sh
     chmod ugo+rx /pod.env

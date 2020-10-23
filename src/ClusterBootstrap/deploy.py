@@ -1627,26 +1627,27 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         node_ip = os.popen(get_ip_cmd).readlines()[0].strip()
         search_device_command="ifconfig | grep "+ node_ip +" -B 1 | grep :\ | sed 's/\:.*//'"
         device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
-
+        # get machine arch type
+        machines = config["machines"]
+        machine_archtype=machines[nodename]["archtype"]
+        # set kube-vip image name
         if verbose:
             print ("select device: "+device_name)
-        else:
-            pass
-
         if "private_docker_registry" in config:
-
             registry = config["private_docker_registry"].strip()
             if not registry.endswith("/"):
                 registry = registry + "/"
             else:
                 pass
-
             kubevip_image = registry + "plndr/kube-vip:0.1.8"
-
         else:
             kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
+        if machine_archtype == "arm64":
+            kubevip_image = kubevip_image + "-arm64"
+        elif machine_archtype == "amd64":
+           pass 
 
-        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.8 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"],kubevip_image)
+        run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, config["kube-vip"],kubevip_image)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
 
     return
@@ -3328,21 +3329,27 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
     device_name = os.popen(search_device_command).readlines()[0].strip()
     print (device_name)
-
+    # get machine arch type
+    get_master_name_command= "hostname"
+    master_hostname = os.popen(get_master_name_command).readlines()[0].strip()
+    machines = config["machines"]
+    machine_archtype=machines[master_hostname]["archtype"]
+    # set kube-vip image name
     if "private_docker_registry" in config:
-
         registry = config["private_docker_registry"].strip()
         if not registry.endswith("/"):
             registry = registry + "/"
         else:
             pass
-
         kubevip_image = registry + "plndr/kube-vip:0.1.8"
-
     else:
         kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
+    if machine_archtype == "arm64":
+        kubevip_image = kubevip_image + "-arm64"
+    elif machine_archtype == "amd64":
+       pass 
 
-    run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.8 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip,kubevip_image)
+    run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, selected_ip,kubevip_image)
     print run_kubevip_docker_cmd
     os.system(run_kubevip_docker_cmd)
     print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )

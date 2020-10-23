@@ -1641,12 +1641,12 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
             else:
                 pass
 
-            kubevip_image = registry + "plndr/kube-vip:0.1.7"
+            kubevip_image = registry + "plndr/kube-vip:0.1.8"
 
         else:
-            kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+            kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
 
-        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"],kubevip_image)
+        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.8 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"],kubevip_image)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
 
     return
@@ -3337,12 +3337,12 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
         else:
             pass
 
-        kubevip_image = registry + "plndr/kube-vip:0.1.7"
+        kubevip_image = registry + "plndr/kube-vip:0.1.8"
 
     else:
-        kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+        kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
 
-    run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip,kubevip_image)
+    run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.8 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip,kubevip_image)
     print run_kubevip_docker_cmd
     os.system(run_kubevip_docker_cmd)
     print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )

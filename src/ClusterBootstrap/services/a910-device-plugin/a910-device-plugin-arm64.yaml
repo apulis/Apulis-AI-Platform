@@ -22,7 +22,7 @@ spec:
       hostNetwork: true
       {% endif %}
       nodeSelector:
-        gpuType: huawei_npu_amd64
+        gpuType: huawei_npu_arm64
       containers:
         - name: a910-device-plugin
           env:
@@ -30,7 +30,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}ascend-k8sdeviceplugin:v0.0.1
+          image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}ascend-k8sdeviceplugin:v0.0.1-arm64
           imagePullPolicy: Always
           securityContext:
             # readOnlyRootFilesystem: true

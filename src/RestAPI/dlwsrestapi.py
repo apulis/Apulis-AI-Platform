@@ -506,14 +506,37 @@ class ListJobs(Resource):
         parser.add_argument('num')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
+        parser.add_argument('pageSize')
+        parser.add_argument('pageNum')
+        parser.add_argument('jobName')
         args = parser.parse_args()
+        pageSize = None
+        pageNum = None
+        jobName = None
         num = None
         if args["num"] is not None:
             try:
                 num = int(args["num"])
             except:
                 pass
-        jobs = JobRestAPIUtils.GetJobList(args["userName"], args["vcName"], args["jobOwner"], num)
+        if args["pageSize"] is not None:
+            try:
+                pageSize = int(args["pageSize"])
+            except:
+                pass
+        pageNum = None
+        if args["pageNum"] is not None:
+            try:
+                pageNum = int(args["pageNum"])
+            except:
+                pass
+        jobName = None
+        if args["jobName"] is not None:
+            try:
+                jobName = args["jobName"]
+            except:
+                pass
+        jobs = JobRestAPIUtils.GetJobList(args["userName"], args["vcName"], args["jobOwner"], num, pageSize, pageNum, jobName)
 
         jobList = []
         queuedJobs = []

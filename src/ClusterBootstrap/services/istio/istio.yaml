@@ -299,7 +299,7 @@ spec:
       pilotCertProvider: istiod
       priorityClassName: ""
       proxy:
-        autoInject: enabled
+        autoInject: disabled
         clusterDomain: cluster.local
         componentLogLevel: misc:error
         enableCoreDump: false
@@ -527,7 +527,7 @@ spec:
       enableNamespacesByDefault: false
       injectLabel: istio-injection
       objectSelector:
-        autoInject: true
+        autoInject: false
         enabled: false
       rewriteAppHTTPProbe: true
     telemetry:

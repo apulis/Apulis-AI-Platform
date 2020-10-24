@@ -1126,14 +1126,14 @@
           "expr": "avg(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assignable GPU",
+          "legendFormat": "可分配的GPU",
           "refId": "B"
         },
         {
           "expr": "avg(k8s_vc_device_unschedulable{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Unhealthy GPU",
+          "legendFormat": "不可调度的GPU",
           "refId": "C"
         },
         {
@@ -1147,14 +1147,14 @@
           "expr": "count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active GPU",
+          "legendFormat": "活动的GPU",
           "refId": "E"
         },
         {
           "expr": "(count( avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) OR on() vector(0)) - (count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Idle GPU",
+          "legendFormat": "空闲的 GPU",
           "refId": "F"
         },
         {
@@ -1169,14 +1169,14 @@
           "expr": "avg(k8s_vc_device_available{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Assignable NPU",
+          "legendFormat": "可分配的NPU",
           "refId": "H"
         },
         {
           "expr": "avg(k8s_vc_device_unschedulable{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Unhealthy NPU",
+          "legendFormat": "不可调度的NPU",
           "refId": "I"
         },
         {
@@ -1190,14 +1190,14 @@
           "expr": "count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Active NPU",
+          "legendFormat": "活动的NPU",
           "refId": "K"
         },
         {
           "expr": "(count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) OR on() vector(0)) - (count(avg by (uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) OR on() vector(0))",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "Idle NPU",
+          "legendFormat": "空闲的NPU",
           "refId": "L"
         }
       ],
@@ -1322,7 +1322,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "分配的GPU使用率",
+      "title": "已分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1403,7 +1403,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "随时间分配的GPU使用率",
+      "title": "随着时间分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1485,7 +1485,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "分配的GPU使用率",
+      "title": "已分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1566,7 +1566,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "随时间分配的GPU使用率",
+      "title": "随着时间分配的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1648,7 +1648,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "主动GPU利用率",
+      "title": "活动的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1730,7 +1730,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "随着时间的推移主动使用GPU",
+      "title": "随着时间活动的GPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1754,7 +1754,7 @@
       "id": 530,
       "panels": [],
       "repeat": null,
-      "title": "NPU利用率",
+      "title": "NPU使用率",
       "type": "row"
     },
     {
@@ -1827,7 +1827,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "分配的NPU利用率",
+      "title": "分配的NPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1908,7 +1908,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "随时间分配的NPU利用率",
+      "title": "随着时间分配的NPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1990,7 +1990,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "分配的NPU利用率",
+      "title": "分配的NPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2071,7 +2071,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "随时间分配的NPU利用率",
+      "title": "随着时间分配的NPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2153,7 +2153,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "主动NPU利用率",
+      "title": "活动的NPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2235,7 +2235,7 @@
         }
       ],
       "thresholds": "50,90",
-      "title": "随时间推移主动NPU利用率",
+      "title": "随着时间推移主动NPU使用率",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2259,7 +2259,7 @@
       "id": 540,
       "panels": [],
       "repeat": null,
-      "title": "随着时间的推移设备利用率",
+      "title": "随着时间活动的设备使用率",
       "type": "row"
     },
     {
@@ -2345,7 +2345,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "设备利用率",
+      "title": "设备使用率",
       "tooltip": {
         "shared": true,
         "sort": 2,
@@ -3069,7 +3069,7 @@
       "id": 56,
       "panels": [],
       "repeat": null,
-      "title": "随时间推移每个活动设备的资源",
+      "title": "随着时间推移每个活动设备的资源",
       "type": "row"
     },
     {
@@ -3113,7 +3113,7 @@
           "expr": "(sum(avg by (instance,uuid)((task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'} > bool 0) * task_device_mem_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) / count(avg by (instance,uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(GPU)",
+          "legendFormat": "vc(GPU)",
           "refId": "A"
         },
         {
@@ -3127,7 +3127,7 @@
           "expr": "(sum(avg by (instance,uuid)((task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'} > bool 0) * task_device_mem_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) / count(avg by (instance,uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(NPU)",
+          "legendFormat": "vc(NPU)",
           "refId": "C"
         },
         {
@@ -3216,7 +3216,7 @@
           "expr": "(sum(avg by (instance)(task_cpu_percent{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0)) / 100) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(GPU)",
+          "legendFormat": "vc(GPU)",
           "refId": "A"
         },
         {
@@ -3230,7 +3230,7 @@
           "expr": "(sum(avg by (instance)(task_cpu_percent{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0)) / 100) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(NPU)",
+          "legendFormat": "vc(NPU)",
           "refId": "C"
         },
         {
@@ -3318,7 +3318,7 @@
           "expr": "(sum(avg by (instance)(task_mem_usage_byte{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(GPU)",
+          "legendFormat": "vc(GPU)",
           "refId": "A"
         },
         {
@@ -3332,7 +3332,7 @@
           "expr": "(sum(avg by (instance)(task_mem_usage_byte{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid)(task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(NPU)",
+          "legendFormat": "vc(NPU)",
           "refId": "C"
         },
         {
@@ -3806,7 +3806,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "用户分配的设备利用率",
+      "title": "用户分配的设备使用率",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -3980,7 +3980,7 @@
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "用户的主动设备利用率",
+      "title": "用户的主动设备使用率",
       "tooltip": {
         "shared": true,
         "sort": 0,

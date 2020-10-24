@@ -402,7 +402,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在 {{'{{'}}instance{{'}}'}}",
               "refId": "A"
             }
           ],
@@ -477,7 +477,7 @@
               "expr": "avg by (minor_number,instance) (task_device_mem_percent{job_name=\"$job_id\",device_str='npu.huawei.com/NPU'})",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在实例 {{'{{'}}instance{{'}}'}}",
+              "legendFormat": "NPU {{'{{'}}minor_number{{'}}'}} 在 {{'{{'}}instance{{'}}'}}",
               "refId": "A"
             }
           ],

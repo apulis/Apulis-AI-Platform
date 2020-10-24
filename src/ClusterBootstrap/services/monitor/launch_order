@@ -5,11 +5,11 @@ prometheus-alerting.yaml
 prometheus.yaml
 grafana-ini.yaml
 grafana-config.yaml
-{% if cnf["i18n"]= "zh-CN" or cnf["i18n"]= "true" %}
+{% if cnf["i18n"] == "zh-CN" or cnf["i18n"] == True %}
 grafana-zh-config.yaml
 {% endif -%}
 grafana.yaml
-{% if cnf["i18n"]= "zh-CN" or cnf["i18n"]= "true" %}
+{% if cnf["i18n"] == "zh-CN" or cnf["i18n"] == True %}
 grafana-zh.yaml
 {% endif -%}
 alert-templates.yaml

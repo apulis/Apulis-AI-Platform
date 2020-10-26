@@ -9,7 +9,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: a910-device-plugin
+        eugin
   template:
     metadata:
       labels:

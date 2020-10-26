@@ -711,7 +711,7 @@ default_config_parameters = {
       },
         "apulisVision": {
             "allowedImageVersions": [
-               "latest"
+               "1.0.0"
             ]
         }
     },

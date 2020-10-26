@@ -217,8 +217,6 @@ class PodTemplate():
                     pod["version"] = params["version"]
                 if "-" in params["framework"]:
                     pod["framework"],pod["version"] = params["framework"].rsplit("-")
-                if pod["framework"]=="apulisVision":
-                    pod["framework"] = "custom"
 
                 pod["minReplicas"] = params["minReplicas"] if "minReplicas" in params else 1
                 pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])

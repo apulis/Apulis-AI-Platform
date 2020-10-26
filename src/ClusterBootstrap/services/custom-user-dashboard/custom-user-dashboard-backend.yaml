@@ -17,7 +17,6 @@ spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
-      hostNetwork: true
       nodeSelector:
         jobmanager: active
         archType: amd64

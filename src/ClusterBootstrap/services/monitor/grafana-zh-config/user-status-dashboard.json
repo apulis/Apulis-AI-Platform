@@ -62,7 +62,7 @@
                 "unit": "short"
               },
               {
-                "alias": "used GPU",
+                "alias": "已使用GPU",
                 "colorMode": null,
                 "colors": [
                   "rgba(245, 54, 54, 0.9)",

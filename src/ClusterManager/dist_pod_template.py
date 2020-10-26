@@ -146,17 +146,26 @@ class DistPodTemplate():
         nums = {"ps": int(params["numps"]), "worker": int(params["numpsworker"])}
         for role in ["ps", "worker"]:
             for idx in range(nums[role]):
+
                 pod = copy.deepcopy(params)
+                pod["schedulerName"]=""
+
                 if "gpuStr" not in pod:
                     pod["gpuStr"] = gpuMapping[pod["gpuType"]]["deviceStr"]
+                else:
+                    pass
+
                 if pod["gpuStr"] == "npu.huawei.com/NPU":
+                    pod["schedulerName"]="volcano"     
                     pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"true"})
                 else:
                     pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"false"})
+                
                 pod["distRole"] = role
                 pod["distRoleIdx"] = idx
                 pod["distId"] = "%s%d" % (role, idx)
                 pod = enable_cpu_config(pod, job.cluster)
+                
                 # mount /pod
                 local_pod_path = job.get_hostpath(job.job_path, "%s-%d" % (role, idx))
                 pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": local_pod_path, "enabled": True})

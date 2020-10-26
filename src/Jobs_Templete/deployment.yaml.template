@@ -42,6 +42,9 @@ spec:
                   values:
                   - {{ job["jobId"] }}
               topologyKey: kubernetes.io/hostname
+      {% if job["schedulerName"]|length > 0 %}
+      schedulerName: {{ job["schedulerName"] }}
+      {% endif %}
       containers:
       - name: {{ job["podName"] }}-deployment
         image: {{ job["image"] }}

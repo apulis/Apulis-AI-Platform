@@ -263,7 +263,7 @@
           "refId": "D"
         }
       ],
-      "title": "设备利用率",
+      "title": "设备使用率",
       "transform": "table",
       "transparent": false,
       "type": "table"
@@ -391,7 +391,7 @@
     ]
   },
   "timezone": "",
-  "title": "DLTS群集作业",
+  "title": "DLTS集群作业",
   "uid": "dlts-cluster-jobs-zh",
   "version": 1
 }

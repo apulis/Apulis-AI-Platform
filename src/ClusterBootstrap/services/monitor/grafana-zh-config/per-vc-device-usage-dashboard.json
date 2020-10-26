@@ -60,21 +60,21 @@
                 "expr": "sum( avg (k8s_vc_device_total{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "全部",
+                "legendFormat": "total",
                 "refId": "A"
               },
               {
                 "expr": "sum( avg (k8s_vc_device_available{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "可用",
+                "legendFormat": "available",
                 "refId": "B"
               },
               {
                 "expr": "sum( avg (k8s_vc_device_preemptive_availabe{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}) by(vc_name) )",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "抢占可用",
+                "legendFormat": "preempt available",
                 "refId": "C"
               }
             ],

@@ -741,7 +741,7 @@ class InferenceServiceJobDeployer:
         # query inferenceservice
         dataHandler = DataHandler()
         job = dataHandler.GetInferenceJob(job_id)[0]
-        inferenceService_names = [job["jobName"]]
+        inferenceService_names = ["ifs-"+job["jobId"]]
         inferenceservice_errors = self._cleanup_inferenceServices(inferenceService_names)
         logger.info("deleting inferenceservices %s" % job_id)
 

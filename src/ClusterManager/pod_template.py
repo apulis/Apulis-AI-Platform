@@ -184,10 +184,16 @@ class PodTemplate():
                 if deviceDict is None:
                     return None,"wrong device type"
                 else:
-                    pod["gpuStr"] = deviceDict.get("deviceStr")
+                    pod["gpuStr"] = deviceDict.get("deviceStr")       
+
+                pod["schedulerName"]=""
+                if pod["gpuStr"] == "npu.huawei.com/NPU":
+                    pod["schedulerName"]="volcano"     
+                else:
+                    pass
 
             elif "gpuStr" in pod:
-
+                
                 if pod["gpuStr"] == "npu.huawei.com/NPU":
                     pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"true"})
                 else:

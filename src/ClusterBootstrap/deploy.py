@@ -59,6 +59,9 @@ nocache = False
 limitnodes = None
 allroles = {"infra", "infrastructure", "worker", "nfs", "sql", "samba", "mysqlserver"}
 
+## constants
+CONFIG_KEY_ORDERED_HOSTS = "ordered_hostnames"
+
 
 # default search for all partitions of hdb, hdc, hdd, and sdb, sdc, sdd
 
@@ -542,10 +545,10 @@ def get_nodes_from_config(machinerole):
     else:
         domain = get_domain()
         Nodes = []
+        ordered_hosts = get_order_data(config, CONFIG_KEY_ORDERED_HOSTS)
 
-        for nodename in config["machines"]:
+        for nodename in ordered_hosts:
             nodeInfo = config["machines"][nodename]
-
 
             if "role" in nodeInfo and nodeInfo["role"]==machinerole:
                 if len(nodename.split("."))<3:
@@ -596,6 +599,7 @@ def get_ETCD_master_nodes_from_cluster_portal(clusterId):
                 config["etcd_node"].append(node)
     else:
         config["etcd_node"] = Nodes
+
     config["kubernetes_master_node"] = Nodes
     return Nodes
 
@@ -1135,9 +1139,12 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
 
     if kubernetes_master0 == "" :
         kubernetes_master0 = kubernetes_masters[0]
-    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+    else:
+        pass
 
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
+
     #temporary hard-coding, will be fixed after refactoring of config/render logic
     config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
 
@@ -1152,7 +1159,7 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
     render_service_templates()
     # utils.exec_cmd_local("./scripts/install_kubeadm.sh")
 
-    for i,kubernetes_master in enumerate(kubernetes_masters):
+    for i, kubernetes_master in enumerate(kubernetes_masters):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
@@ -1627,39 +1634,44 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         node_ip = os.popen(get_ip_cmd).readlines()[0].strip()
         search_device_command="ifconfig | grep "+ node_ip +" -B 1 | grep :\ | sed 's/\:.*//'"
         device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
-
+        # get machine arch type
+        machines = config["machines"]
+        machine_archtype=machines[nodename]["archtype"]
+        # set kube-vip image name
         if verbose:
             print ("select device: "+device_name)
-        else:
-            pass
-
         if "private_docker_registry" in config:
-
             registry = config["private_docker_registry"].strip()
             if not registry.endswith("/"):
                 registry = registry + "/"
             else:
                 pass
-
-            kubevip_image = registry + "plndr/kube-vip:0.1.7"
-
+            kubevip_image = registry + "plndr/kube-vip:0.1.8"
         else:
-            kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+            kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
+        if machine_archtype == "arm64":
+            kubevip_image = kubevip_image + "-arm64"
+        elif machine_archtype == "amd64":
+           pass 
 
-        run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, config["kube-vip"],kubevip_image)
+        run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, config["kube-vip"],kubevip_image)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
 
     return
 
 # serve update_HA_master_nodes_by_kubeadm function
 def get_master_node_host_except_primary():
+
     remain_master_node_array = []
+
     kubernetes_masters_admin = config["kubernetes_master_node"]
     primary_master_admin = kubernetes_masters_admin[0]
+
     for master_admin in kubernetes_masters_admin:
         if master_admin != primary_master_admin:
             master_host = master_admin.split('.')[0]
             remain_master_node_array.append(master_host)
+
     return remain_master_node_array
 
 def update_HA_worker_nodes_by_kubeadm( nargs):
@@ -3290,59 +3302,38 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     print ("###### kubevip process ######")
     print ("#############################")
 
-    #prepare_kubevip_yaml_command = """ master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;ip_section=`echo $master_ip | sed "s|\.[0-9]*$||"`;echo $ip_section """
-    #ip_prefix = os.popen(prepare_kubevip_yaml_command).readlines()[0].strip()
-    #selected_ip = find_ip(ip_prefix)
-
     selected_ip = config["kube-vip"]
     print ("kube vip: "+ selected_ip)
     kubevip_in_config = False
-
-    #print ("kube vip: "+ selected_ip)
-    #kubevip_in_config = False
-
-    #try:
-    #    config_file = open("config.yaml",'a+')
-    #    all_lines = config_file.readlines()
-    #    config_file.seek(0)
-    #    config_file.truncate()
-    #    for line in all_lines:
-    #        if "kube-vip" in line:
-    #            config_file.write("kube-vip: "+ selected_ip)
-    #            kubevip_in_config = True
-    #        else:
-    #            config_file.write(line)
-    #except Exception,e:
-    #    print e
-
-    #if not kubevip_in_config:
-    #    config_file.write("\nkube-vip: "+ selected_ip+'\n')
-    #else:
-    #    pass
-
-    #config_file.close()
-    #config["kube-vip"] = selected_ip
-
 
     # search device bind with ip
     search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
     device_name = os.popen(search_device_command).readlines()[0].strip()
     print (device_name)
 
-    if "private_docker_registry" in config:
+    # get machine arch type
+    get_master_name_command= "hostname"
+    master_hostname = os.popen(get_master_name_command).readlines()[0].strip()
+    machines = config["machines"]
+    machine_archtype=machines[master_hostname]["archtype"]
 
+    # set kube-vip image name
+    if "private_docker_registry" in config:
         registry = config["private_docker_registry"].strip()
         if not registry.endswith("/"):
             registry = registry + "/"
         else:
             pass
-
-        kubevip_image = registry + "plndr/kube-vip:0.1.7"
-
+        kubevip_image = registry + "plndr/kube-vip:0.1.8"
     else:
-        kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.7"
+        kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
 
-    run_kubevip_docker_cmd = "sudo docker run --network host --rm plndr/kube-vip:0.1.7 kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (device_name, selected_ip,kubevip_image)
+    if machine_archtype == "arm64":
+        kubevip_image = kubevip_image + "-arm64"
+    elif machine_archtype == "amd64":
+       pass 
+
+    run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, selected_ip,kubevip_image)
     print run_kubevip_docker_cmd
     os.system(run_kubevip_docker_cmd)
     print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
@@ -3354,7 +3345,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
         print ("Ready to deploy kubernetes master/etcd on %s.  " % (",".join(config["kubernetes_master_node"])))
 
         gen_configs()
-        deploy_masters_by_kubeadm(force,kubernetes_master0=selected_ip ,init_arguments="--upload-certs")
+        deploy_masters_by_kubeadm(force, kubernetes_master0=selected_ip, init_arguments="--upload-certs")
 
         return True
     else:
@@ -4496,6 +4487,32 @@ def create_job_service_account():
     if len(nodes)>=1:
         run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
 
+# functions which are senstive to order can keep 
+# their ordered data via this method and fetch them 
+# via get_order_data
+def set_order_data(config_file, config_data):
+
+    ordered_data = {}
+    with open(config_file) as f:
+        merge_config(ordered_data, utils.ordered_load(f, yaml.SafeLoader))
+        f.close()
+
+    # machine names
+    if "machines" in ordered_data:
+        config_data[CONFIG_KEY_ORDERED_HOSTS] = ordered_data["machines"].keys()
+    else:
+        pass
+
+    return
+
+def get_order_data(config_data, key):
+
+    if key in config_data:
+        return config_data[key]
+    else:
+        return None
+
+
 def run_command( args, command, nargs, parser ):
 
     # If necessary, show parsed arguments.
@@ -4547,8 +4564,11 @@ def run_command( args, command, nargs, parser ):
         exit()
 
     with open(config_file) as f:
-        merge_config(config, utils.ordered_load(f, yaml.SafeLoader))
+        merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
         f.close()
+
+    # preserve ordered data
+    set_order_data(config_file, config)
 
     docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
     if not os.path.exists(docker_image_versions_file):

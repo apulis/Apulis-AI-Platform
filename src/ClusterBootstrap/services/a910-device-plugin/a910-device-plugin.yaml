@@ -9,7 +9,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: a910-device-plugin
+        eugin
   template:
     metadata:
       labels:
@@ -30,7 +30,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}a910-device-plugin:latest
+          image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}ascend-k8sdeviceplugin:v0.0.1
           imagePullPolicy: Always
           securityContext:
             # readOnlyRootFilesystem: true

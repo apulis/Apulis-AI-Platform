@@ -136,6 +136,9 @@ spec:
     - name: DLWS_HOST_NETWORK
       value: "enable"
     {% endif %}
+  {% if job["schedulerName"]|length > 0 %}
+  schedulerName: {{ job["schedulerName"] }}
+  {% endif %}
   containers:
   - name: {{ job["podName"] }}
     image: {{ job["image"] }}

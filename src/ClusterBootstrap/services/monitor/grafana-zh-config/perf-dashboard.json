@@ -67,7 +67,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "数据处理程序来自JobManager的每个功能的90％延迟",
+            "title": "来自任务管理服务的所有数据处理程序的90%延迟时间",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -142,7 +142,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "Restfulapi的Datahandler每个功能的第90个百分位延迟",
+            "title": "来自restfulapi服务的所有数据处理程序的90%延迟时间",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -298,7 +298,7 @@
                 "expr": "histogram_quantile(0.9, sum(rate(db_connect_latency_seconds_bucket{scraped_from=~\"restfulapi.*\"}[5m])) by (le))",
                 "format": "time_series",
                 "intervalFactor": 2,
-                "legendFormat": "Connection Latency",
+                "legendFormat": "连接延迟",
                 "refId": "A"
               }
             ],
@@ -381,7 +381,7 @@
       ]
     },
     "timezone": "browser",
-    "title": "绩效仪表板",
+    "title": "性能仪表盘",
     "version": 0,
     "uid": "perf-zh"
   }

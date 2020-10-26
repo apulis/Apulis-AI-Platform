@@ -39,10 +39,15 @@ data:
         - apulistech/tensorflow:2.3.0-gpu-py3
         - apulistech/tensorflow:1.14.0-gpu-py3
         - apulistech/tensorflow:1.15.2-gpu-py3
+        - apulistech/tf:1.15-arm-rc1
       pytorch:
         - apulistech/pytorch:1.5
       mxnet:
         - apulistech/mxnet:2.0.0-gpu-py3
+      mindspore:
+        - apulistech/mindspore:0.2.0-alpha
+      caffe:
+        - apulistech/caffe:BVLC
 
     InteractiveModeJob: false
     PrivateRegistry: {{cnf["private_docker_registry"]}}

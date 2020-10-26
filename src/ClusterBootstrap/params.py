@@ -269,7 +269,7 @@ default_config_parameters = {
         "namenode2": "etcd_node_2",
 
         "repairmanager": "etcd_node",
-        
+
         "datanode": "all",
 
         "grafana": "etcd_node_1",
@@ -538,6 +538,8 @@ default_config_parameters = {
     "k8scri-gitbranch": "master",
     "kube_custom_cri": False,
     "kube_custom_scheduler": False,
+
+    "scheduler_name": "",
     "kubepresleep": 1,
     "etcd_node_num": 1,
     "deploy_method": "kubeadm",

@@ -181,7 +181,7 @@
               "expr": "avg by (instance)(node_memory_Buffers_bytes{instance=~'$node(:[0-9]*)?$'} + node_memory_Cached_bytes)",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "buff/cache",
+              "legendFormat": "增益/缓存",
               "refId": "B"
             },
             {
@@ -190,7 +190,7 @@
               "hide": false,
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "total",
+              "legendFormat": "全部",
               "refId": "C",
               "step": 600
             }
@@ -277,7 +277,7 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "in",
+              "legendFormat": "流入",
               "refId": "A",
               "step": 600
             },
@@ -286,7 +286,7 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "out",
+              "legendFormat": "流出",
               "refId": "B",
               "step": 600
             }
@@ -381,7 +381,7 @@
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
-              "legendFormat": "read",
+              "legendFormat": "读取",
               "metric": "",
               "refId": "A",
               "step": 600,
@@ -392,7 +392,7 @@
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "write",
+              "legendFormat": "写入",
               "refId": "B"
             }
           ],
@@ -482,7 +482,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "GPU的利用率",
+          "title": "GPU的使用率",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -656,7 +656,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU的利用率",
+          "title": "NPU的使用率",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -735,7 +735,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "NPU的缓存",
+          "title": "NPU的内存",
           "tooltip": {
             "msResolution": true,
             "shared": true,

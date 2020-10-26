@@ -11,7 +11,13 @@ data:
     db:
       username: root
       password: apulis#2019#wednesday
+      {% if cnf["db_archtype"] == "amd64" %}
       host: mysql.kube-system
+      {% elif cnf["db_archtype"] == "arm64" %}
+      host: mysql-arm64.kube-system
+      {% else %}
+      host: mysql.kube-system
+      {% endif %}
       port: 3306
       database: ai_arts
       maxopenconns: 10

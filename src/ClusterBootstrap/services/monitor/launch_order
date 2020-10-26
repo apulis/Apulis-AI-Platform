@@ -7,10 +7,10 @@ grafana-ini.yaml
 grafana-config.yaml
 {% if cnf["i18n"] == "zh-CN" or cnf["i18n"] == True %}
 grafana-zh-config.yaml
-{% endif -%}
+{% endif %}
 grafana.yaml
 {% if cnf["i18n"] == "zh-CN" or cnf["i18n"] == True %}
 grafana-zh.yaml
-{% endif -%}
+{% endif %}
 alert-templates.yaml
 alert-manager.yaml

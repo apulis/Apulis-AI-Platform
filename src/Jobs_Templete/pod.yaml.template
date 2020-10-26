@@ -137,7 +137,7 @@ spec:
       value: "enable"
     {% endif %}
   {% if job["schedulerName"]|length > 0 %}
-  schedulerName: job["schedulerName"]
+  schedulerName: {{ job["schedulerName"] }}
   {% endif %}
   containers:
   - name: {{ job["podName"] }}

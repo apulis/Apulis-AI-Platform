@@ -13,10 +13,10 @@ spec:
         app: hccl-controller
     spec:
       nodeSelector:
-        kubernetes.io/hostname: master
+         node-role.kubernetes.io/master: ""
       containers:
       - name: hccl-controller
-        image: hccl-controller:v0.0.1-arm64
+        image: {{cnf["private_docker_registry"]}}hccl-controller:v0.0.1-arm64
         imagePullPolicy: Never
         command: [ "/bin/bash", "-c", "--"]
         args: [ "mkdir -p /var/log/atlas_dls/hccl-controller;hccl-controller --logtostderr=false --log_dir=/var/log/atlas_dls/hccl-controller
@@ -38,3 +38,9 @@ spec:
         - name: localtime
           hostPath:
             path: /etc/localtime
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+

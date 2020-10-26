@@ -741,7 +741,7 @@ class InferenceServiceJobDeployer:
         # query inferenceservice
         dataHandler = DataHandler()
         job = dataHandler.GetInferenceJob(job_id)[0]
-        inferenceService_names = [job["jobName"]]
+        inferenceService_names = ["ifs-"+job["jobId"]]
         inferenceservice_errors = self._cleanup_inferenceServices(inferenceService_names)
         logger.info("deleting inferenceservices %s" % job_id)
 
@@ -1198,10 +1198,10 @@ class PythonLauncher(Launcher):
         jobType = dataHandler.GetJobTextField(job_id, "jobType")
         if jobType == "InferenceJob":
             job_deployer = InferenceServiceJobDeployer()
+            errors = job_deployer.delete_job(job_id, force=True)
         else:
             job_deployer = JobDeployer()
-
-        errors = job_deployer.delete_job(job_id, force=True)
+            errors = job_deployer.delete_job(job_id, force=True)
 
         dataFields = {
             "jobStatusDetail": base64.b64encode(json.dumps(detail)),

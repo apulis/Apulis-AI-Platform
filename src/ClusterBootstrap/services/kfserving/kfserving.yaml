@@ -925,7 +925,14 @@ data:
             "allowedImageVersions": [
                "19.05-py3"
             ]
-        }
+        },
+        "apulisVision": {
+              "image": "{{cnf["private_docker_registry"]}}apulistech/apulisvision",
+              "defaultImageVersion": "1.0.0",
+              "allowedImageVersions": [
+                 "1.0.0"
+              ]
+          }
     }
   storageInitializer: |-
     {

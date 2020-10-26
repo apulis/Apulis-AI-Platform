@@ -147,6 +147,10 @@ def draw_bounding_box_on_image(image,
   """
   draw = ImageDraw.Draw(image)
   im_width, im_height = image.size
+  if 0 <= (xmin+xmax+ymin+ymax)/4 < 1:
+      use_normalized_coordinates = True
+  else:
+      use_normalized_coordinates = False
   if use_normalized_coordinates:
     (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
                                   ymin * im_height, ymax * im_height)

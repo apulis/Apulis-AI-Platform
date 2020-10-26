@@ -1198,10 +1198,10 @@ class PythonLauncher(Launcher):
         jobType = dataHandler.GetJobTextField(job_id, "jobType")
         if jobType == "InferenceJob":
             job_deployer = InferenceServiceJobDeployer()
+            errors = job_deployer.delete_job(job_id, force=True)
         else:
             job_deployer = JobDeployer()
-
-        errors = job_deployer.delete_job(job_id, force=True)
+            errors = job_deployer.delete_job(job_id, force=True)
 
         dataFields = {
             "jobStatusDetail": base64.b64encode(json.dumps(detail)),

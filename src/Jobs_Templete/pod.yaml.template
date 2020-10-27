@@ -177,7 +177,7 @@ spec:
         memory: {{ job["memoryrequest"] }}
       {% endif %}
     volumeMounts:
-	- name: time-zone-info
+    - name: time-zone-info
       mountPath: /etc/localtime
       readOnly: true
     - mountPath: /dlts-runtime

@@ -30,7 +30,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}ascend-k8sdeviceplugin:v0.0.1
+          image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}a910-device-plugin:devel3
           imagePullPolicy: Always
           securityContext:
             # readOnlyRootFilesystem: true

@@ -1,7 +1,7 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: image-label
+  name: image-label-arm64
   namespace: default
   labels:
      run: dlwsimage-label
@@ -11,21 +11,22 @@ spec:
       image-label-node: pod
   template:
     metadata:
-      name: image-label
+      name: image-label-arm64
       labels:
         image-label-node: pod
-        app: image-label
+        app: image-label-arm64
     spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
       nodeSelector:
         image-label: active
-        archType: amd64
+        archType: arm64
       containers:
-      - name: image_label
+      - name: image-label-arm64
         image: {{cnf["dockers"]["container"]["image-label"]["fullname"]}}-arm64
         imagePullPolicy: Always
+        ports:
         - containerPort: 3085
           hostPort: 3085
           name: main

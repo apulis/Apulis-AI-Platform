@@ -4,13 +4,7 @@ watchdog-arm64.yaml
 prometheus-alerting.yaml
 prometheus-arm64.yaml
 grafana-arm64.yaml
-{% if cnf["i18n"] == "zh-CN" or cnf["i18n"] == True %}
-grafana-zh-arm64.yaml
-{% endif %}
 grafana-ini.yaml
 grafana-config.yaml
-{% if cnf["i18n"] == "zh-CN" or cnf["i18n"] == True %}
-grafana-zh-config.yaml
-{% endif %}
 alert-templates.yaml
 alert-manager-arm64.yaml

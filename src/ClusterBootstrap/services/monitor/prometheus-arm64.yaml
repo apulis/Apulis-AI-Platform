@@ -93,7 +93,7 @@ spec:
       hostNetwork: true
       initContainers:
       - name: init
-        image: {{cnf["dockers"]["container"]["bash"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["bash"]["fullname"]}}-arm64
         volumeMounts:
         - name: prometheus-data
           mountPath: /prometheus-data

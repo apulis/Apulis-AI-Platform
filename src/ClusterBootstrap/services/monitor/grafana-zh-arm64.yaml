@@ -1,29 +1,29 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: grafana
+  name: grafana-zh
   namespace: kube-system
 spec:
   ports:
-  - port: {{cnf["grafana"]["port"]}}
+  - port: {{cnf["grafana-zh"]["port"]}}
   selector:
-    app: grafana
+    app: grafana-zh
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: grafana-arm64
+  name: grafana-zh-arm64
   namespace: kube-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: grafana
+      app: grafana-zh
   template:
     metadata:
       labels:
         task: monitoring
-        app: grafana
+        app: grafana-zh
     spec:
       nodeSelector:
         grafana: active
@@ -32,11 +32,11 @@ spec:
       hostPID: false
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-      - name: grafana
-        image: {{cnf["dockers"]["container"]["grafana"]["fullname"]}}-arm64
+      - name: grafana-zh-arm64
+        image: {{cnf["dockers"]["container"]["grafana-zh"]["fullname"]}}-arm64
         imagePullPolicy: Always
         ports:
-        - containerPort: {{cnf["grafana"]["port"]}}
+        - containerPort: {{cnf["grafana-zh"]["port"]}}
           protocol: TCP
         volumeMounts:
         - mountPath: /var/lib/grafana
@@ -57,11 +57,11 @@ spec:
             memory: "256Mi"
         env:
         - name : GRAFANA_URL
-          value: 'http://127.0.0.1:{{cnf["grafana"]["port"]}}' # for script to install dashboard only
+          value: 'http://127.0.0.1:{{cnf["grafana-zh"]["port"]}}' # for script to install dashboard only
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
         - name: GF_SERVER_HTTP_PORT
-          value: '{{cnf["grafana"]["port"]}}'
+          value: '{{cnf["grafana-zh"]["port"]}}'
           # The following env variables are required to make Grafana accessible via
           # the kubernetes api-server proxy. On production clusters, we recommend
           # removing these env variables, setup auth for grafana, and expose the grafana
@@ -71,12 +71,12 @@ spec:
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-        #  value: Admin
-          value: Viewer
+          value: Admin
+          #value: Viewer
         - name: GF_SERVER_ROOT_URL
           # If you're only using the API Server proxy, set this value instead:
           #value: /api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/
-          value: /endpoints/grafana/
+          value: /endpoints/grafana_zh/
           # value: /
         - name: GF_SECURITY_ALLOW_EMBEDDING
           value: "true"
@@ -86,7 +86,7 @@ spec:
           name: grafana-ini
       - name: grafana-confg-volume
         configMap:
-          name: grafana-configuration
+          name: grafana-zh-configuration
       - name: ca-certificates
         hostPath:
           path: /etc/ssl/certs
@@ -95,7 +95,7 @@ spec:
           path: /etc/hostname-fqdn
       - name: grafana-storage
         hostPath:
-          path: {{cnf["grafana_data_path"]}}
+          path: /data/grafana
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

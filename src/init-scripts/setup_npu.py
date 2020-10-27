@@ -173,7 +173,11 @@ def generate_tensorflow():
                         _, host_ip = line.strip().split("=")
 
                 instance_item = {}  # item of instance list
-                instance_item["pod_name"] = pod_name + "_" + str(done)
+                if worker_num > 1:
+                    instance_item["pod_name"] = pod_name + "_" + str(done)
+                else:
+                    instance_item["pod_name"] = pod_name
+
                 instance_item["server_id"] = host_ip
                 instance_item["devices"] = []
 

@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: kube-system
+spec:
+  ports:
+  - port: {{cnf["grafana"]["port"]}}
+  selector:
+    app: grafana
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

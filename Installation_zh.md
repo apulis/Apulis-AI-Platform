@@ -72,6 +72,10 @@ cd DLWorkspace/src/ClusterBootstrap/
 ```
 
 #### 3.  编译AIArts-Frontend
+切换至 AIArts-Frontend
+```shell
+docker build -t dlworkspace_aiarts-frontend:1.0.0 .
+```
 
 #### 4.  编译AIArts-Backend
 
@@ -81,11 +85,21 @@ bash build.sh
 ```
 
 #### 5.  编译user-dashboard-frontend
+切换至 user-dashboard-frontend
+```shell
+docker build -t dlworkspace_custom-user-dashboard-frontend:latest .
+```
 
 #### 6.  编译user-dashboard-backend
-
+切换至 user-dashboard-backend
+```shell
+docker build -t dlworkspace_custom-user-dashboard-backend:latest .
+```
 #### 7.  编译image-label-frontend
-
+切换至 image-label-frontend
+```shell
+docker build -t dlworkspace_image-label:latest .
+```
 #### 8.  编译image-label-backend
 ```shell
 cd DLWorkspace/src/ClusterBootstrap/

@@ -83,12 +83,13 @@ then
     done
 fi
 
+if [ ! -z $IMAGE_PUSH_HUB_URL ];then IMAGE_PUSH_HUB_URL="apulistech";fi
 if [ "$1" = "push" ];
 then
     for file in ../docker-images/$2/*;do
       arr=(${file//./ })
       docker build -t apulistech/$2-`basename ${arr[0]}`:$tag -f $file "../docker-images/$2"
-      docker push apulistech/$2-`basename ${arr[0]}`:$tag
+      docker push $IMAGE_PUSH_HUB_URL/$2-`basename ${arr[0]}`:$tag
     done
 fi
 
@@ -96,7 +97,7 @@ if [ "$1" = "pull" ];
 then
   for file in ../docker-images/$2/*;do
       arr=(${file//./ })
-      docker pull apulistech/$2-`basename ${arr[0]}`:$tag
+      docker pull $IMAGE_PUSH_HUB_URL/$2-`basename ${arr[0]}`:$tag
   done
 fi
 

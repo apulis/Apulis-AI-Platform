@@ -247,6 +247,9 @@ cd DLWorkspace/src/ClusterBootstrap/
 
 #### 11.  编译kfserving
 ```shell script
+IMAGE_PUSH_HUB_URL=harbor.sigsus.cn/sz_gongdianju/apulistech
+或者
+IMAGE_PUSH_HUB_URL=apulistech
 ./scripts/kfserving.sh push istio
 ./scripts/kfserving.sh push knative
 ./scripts/kfserving.sh push kfserving

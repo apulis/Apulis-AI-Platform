@@ -87,7 +87,10 @@ bash build.sh
 #### 7.  编译image-label-frontend
 
 #### 8.  编译image-label-backend
-
+```shell
+cd DLWorkspace/src/ClusterBootstrap/
+./deploy.py docker push data-platform-backend
+```
 #### 9.  编译ascend-for-volcano
 
 -  创建目录

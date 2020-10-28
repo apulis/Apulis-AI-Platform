@@ -27,7 +27,7 @@ spec:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ""
       labels:
-        name: ascend-device-plugin-ds
+        app: a910-device-plugin
     spec:
       tolerations:
         - key: CriticalAddonsOnly
@@ -43,7 +43,7 @@ spec:
       nodeSelector:
         gpuType: huawei_npu_amd64
       containers:
-      - image: {{cnf["private_docker_registry"]}}{{cnf["worker-dockerregistry"]}}ascend-k8sdeviceplugin:v0.0.1
+      - image: {{cnf["private_docker_registry"]}}ascend-k8sdeviceplugin:v0.0.1-arm64
         name: device-plugin-01
         command: [ "/bin/bash", "-c", "--"]
         args: [ "./build/build_in_docker.sh;ascendplugin  --useAscendDocker=${USE_ASCEND_DOCKER} --volcanoType=true" ]

@@ -232,7 +232,11 @@ cd DLWorkspace/src/ClusterBootstrap/
   
 
 #### 11.  编译kfserving
-
+```shell script
+./scripts/kfserving.sh push istio
+./scripts/kfserving.sh push knative
+./scripts/kfserving.sh push kfserving
+```
 
 
 ## 执行部署

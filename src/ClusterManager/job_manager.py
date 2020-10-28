@@ -169,7 +169,7 @@ def get_scheduling_job_details(details):
                 pod_detail["podPhase"] = pod_phase
                 if pod_phase == "Pending":
                     message = {}
-                    if "conditions" in status:
+                    if "conditions" in status and status["conditions"]:
                         conditions = status["conditions"]
                         for condition in conditions:
                             condition["last_transition_time"] = str(condition["last_transition_time"])

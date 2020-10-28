@@ -228,8 +228,6 @@ class PodTemplate():
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")
-                if "gpuType" in pod and pod["gpuType"] and pod["gpuType"].endswith("arm64"):
-                    pod["init-container"] += "-arm64"
 
             if params["jobtrainingtype"] == "InferenceJob":
                 k8s_pod = self.generate_custom_resource(pod)

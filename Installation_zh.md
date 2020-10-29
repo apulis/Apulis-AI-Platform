@@ -20,7 +20,34 @@
   your_second_worker_local_ip   worker02
   your_second_worker_local_ip   worker02.sigsus.cn
   ```
-  
+
+
+- 配置harbor（master节点）
+
+  1. [安装harbor](https://goharbor.io/docs/1.10/install-config/)
+
+  2. 配置harbor
+
+     - 配置证书
+
+       参考此 [配置步骤](https://goharbor.io/docs/2.1.0/install-config/configure-https/)
+
+       **注意：必须依照域名harbor.sigsus.cn生成证书**
+
+     - 更改端口与证书路径
+
+       https端口：8443
+
+       certificate: /opt/harbor/cert/harbor.sigsus.cn.crt
+
+       private_key: /opt/harbor/cert/harbor.sigsus.cn.key
+
+  3. 启动harbor
+
+     cd /opt/harbor/
+
+     docker-compose up -d
+
   
 
 ## 编译组件
@@ -64,40 +91,73 @@
 
   
 
-#### 2. 编译Restfulapi（隶属DLTS Main PROJECT)
+#### 2. 编译DLTS Main PROJECT组件
+
+​     **编译restfulapi2**
 
 ```
 cd DLWorkspace/src/ClusterBootstrap/
 ./deploy.py docker build restfulapi2
 ```
 
+​    **编译init-container** 
+
+```
+./deploy.py docker push init-container
+```
+
+​	**编译job-exporter**
+
+```
+./deploy.py docker push job-exporter
+```
+
+​    **编译gpu-reporter** 
+
+```
+./deploy.py docker push gpu-reporter
+```
+
+​     **编译watchdog**
+
+```
+./deploy.py docker push watchdog
+```
+
+​    **编译repairmanager2**
+
+```
+./deploy.py docker push repairmanager2
+```
+
 #### 3.  编译AIArts-Frontend
-切换至 AIArts-Frontend
+
 ```shell
+cd AIArts-Frontend/
 docker build -t dlworkspace_aiarts-frontend:1.0.0 .
 ```
 
 #### 4.  编译AIArts-Backend
 
 ```shell
-cd AIArtsBackend/deployment
+cd AIArtsBackend/deployment/
 bash build.sh
 ```
 
 #### 5.  编译user-dashboard-frontend
-切换至 user-dashboard-frontend
 ```shell
+cd user-dashboard-frontend/
 docker build -t dlworkspace_custom-user-dashboard-frontend:latest .
 ```
 
 #### 6.  编译user-dashboard-backend
-切换至 user-dashboard-backend
 ```shell
+cd user-dashboard-backend/
 docker build -t dlworkspace_custom-user-dashboard-backend:latest .
 ```
 #### 7.  编译image-label-frontend
-切换至 image-label-frontend
 ```shell
+cd NewObjectLabel/
 docker build -t dlworkspace_image-label:latest .
 ```
 #### 8.  编译image-label-backend

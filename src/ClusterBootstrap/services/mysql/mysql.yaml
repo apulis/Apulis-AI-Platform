@@ -45,9 +45,9 @@ spec:
           name: mysql
         volumeMounts:
         - name: mysql-storage
-          mountPath: /mntdlts/service/mysql/lib
+          mountPath: /var/lib/mysql
         - name: mysql-log
-          mountPath: /mntdlts/service/mysql/log          
+          mountPath: /var/log/mysql
       {% if cnf["private_docker_registry_username"] %}
       imagePullSecrets:
       - name: svccred

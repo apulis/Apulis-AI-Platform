@@ -4,7 +4,7 @@
 #WORKDIR /RemoteSensing-UI/src/projects/WebUI
 
 FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
-RUN git clone --branch dev https://0d7d3ce231a0f47c97b62c0d7e3ed1211f8218c3@github.com/apulistech/data-platform-backend.git /RemoteSensing-UI
+RUN git clone --branch dev https://c754fb803c3f5c7fe91780f1a7222275bea3cbbf@github.com/apulis/data-platform-backend.git /RemoteSensing-UI
 WORKDIR /RemoteSensing-UI/src/projects/WebUI/WebUI
 RUN dotnet publish --configuration Release
 

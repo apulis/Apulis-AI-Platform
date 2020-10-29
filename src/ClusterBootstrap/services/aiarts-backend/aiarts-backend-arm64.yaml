@@ -46,7 +46,16 @@ spec:
           name: kubeconf
         - mountPath: /root/.ssh
           name: sshkey
+        {% if cnf["saml_idp_metadata_url"] %}  
+        - mountPath: /root/saml-certs
+          name: saml-secret
+        {% endif %}
       volumes:
+      {% if cnf["saml_idp_metadata_url"] %}
+      - name: saml-secret
+        secret:
+          secretName: saml-sp-secret
+      {% endif %}   
       - name: appconfig
         configMap:
           name: aiarts-cm

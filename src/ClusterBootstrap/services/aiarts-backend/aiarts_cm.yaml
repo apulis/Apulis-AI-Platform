@@ -35,8 +35,14 @@ data:
       backendUrl: http://{{cnf["kube-vip"]}}
 
     auth:
-      url: http://{{cnf["kube-vip"]}}:52080/custom-user-dashboard-backend/auth/currentUser
+      url: http://{{cnf["kube-vip"]}}:80/
       key: "Sign key for JWT"
+      {% if cnf["saml_idp_metadata_url"] %}
+      samlRootUrl: {{cnf["saml_root_url"]}}
+      samlIdpMetadataURL: {{cnf["saml_idp_metadata_url"]}}
+      samlPrivateKey: /root/saml-certs/tls.key
+      samlCertificate: /root/saml-certs/tls.crt
+      {% endif %}
 
     DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
     image:

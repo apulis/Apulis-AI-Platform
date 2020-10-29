@@ -41,7 +41,7 @@ spec:
           effect: NoSchedule
       priorityClassName: "system-node-critical"
       nodeSelector:
-        gpuType: huawei_npu_amd64
+        gpuType: huawei_npu_arm64
       containers:
       - image: {{cnf["private_docker_registry"]}}ascend-k8sdeviceplugin:v0.0.1-arm64
         name: device-plugin-01

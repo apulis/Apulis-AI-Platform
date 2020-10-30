@@ -179,6 +179,12 @@ class PodTemplate():
                 else:
                     pod["gpuStr"] = deviceDict.get("deviceStr")
 
+                ## npu pod
+                if pod["gpuStr"] == "npu.huawei.com/NPU":
+                    pod["mount_npu_log"] = True
+                else:
+                    pod["mount_npu_log"] = False 
+
             elif "gpuStr" in pod:
 
                 if pod["gpuStr"] == "npu.huawei.com/NPU":

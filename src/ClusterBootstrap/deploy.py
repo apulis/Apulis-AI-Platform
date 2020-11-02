@@ -4039,16 +4039,31 @@ def start_kube_service(servicename):
         return
 
     default_launch_file = "launch_order"
-
-    if os.path.exists(os.path.join(dirname, "only_one_arch")):
-        archtypes = get_master_archtypes()
-    else:
-        archtypes = get_archtypes()
+    service_set=set()
     if "arm64" in archtypes:
-        start_kube_service_with_launch_order(dirname, default_launch_file + "_" + "arm64")
+        get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
     if "amd64" in archtypes:
-        start_kube_service_with_launch_order(dirname, default_launch_file)
+        get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+    start_kube_service_with_service_set(dirname, service_set)
+    return
 
+def get_service_list_from_launch_order(lauch_services_set, dirname, lauch_filename):
+    if not os.path.exists(os.path.join(dirname, launch_filename)):
+        return
+    with open(os.path.join(dirname, launch_filename), 'r') as f:
+        allservices = f.readlines()
+        for filename in allservices:
+            if filename.startswith("SLEEP"):
+                time.sleep(int(filename.split(" ")[1]))
+            else:
+                filename = filename.strip('\n')
+                if filename != '':
+                    lauch_services_set.add(filename)
+    return
+
+def start_kube_service_with_service_set(dirname, service_set):
+    for service in service_set:
+        start_one_kube_service(os.path.join(dirname, service))
     return
 
 def start_kube_service_with_launch_order(dirname, launch_filename):

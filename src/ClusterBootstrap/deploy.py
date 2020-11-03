@@ -4039,6 +4039,11 @@ def start_kube_service(servicename):
         return
 
     default_launch_file = "launch_order"
+    if os.path.exists(os.path.join(dirname, "only_one_arch")):
+        archtypes = get_master_archtypes()
+    else:
+        archtypes = get_archtypes()
+
     service_set=set()
     if "arm64" in archtypes:
         get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
@@ -4047,7 +4052,7 @@ def start_kube_service(servicename):
     start_kube_service_with_service_set(dirname, service_set)
     return
 
-def get_service_list_from_launch_order(lauch_services_set, dirname, lauch_filename):
+def get_service_list_from_launch_order(lauch_services_set, dirname, launch_filename):
     if not os.path.exists(os.path.join(dirname, launch_filename)):
         return
     with open(os.path.join(dirname, launch_filename), 'r') as f:

@@ -32,7 +32,13 @@
 
        参考此 [配置步骤](https://goharbor.io/docs/2.1.0/install-config/configure-https/)
 
-       **注意：必须依照域名harbor.sigsus.cn生成证书**
+       **注意：**
+
+       **1）建议依照域名harbor.sigsus.cn生成证书**
+
+       **2）此域名必须与config.yaml中private_docker_registry字段所包含的仓库地址一致**
+
+       
 
      - 更改端口与证书路径
 
@@ -41,6 +47,8 @@
        certificate: /opt/harbor/cert/harbor.sigsus.cn.crt
 
        private_key: /opt/harbor/cert/harbor.sigsus.cn.key
+
+       
 
   3. 启动harbor
 
@@ -276,6 +284,7 @@ cd DLWorkspace/src/ClusterBootstrap/
     PKG_PATH_STRING=\\$\\{TOP_DIR\\}/src/plugin/config/config_310
     LIBDRIVER="/driver/lib64"
   fi
+  
   sed -i "s/Ascend[0-9]\\{3\\}/${TYPE}/g" ${TOP_DIR}/ascendplugin.yaml
   sed -i "s#ath: /usr/local/Ascend/driver#ath: ${ASCNED_INSTALL_PATH}/driver#g" ${TOP_DIR}/ascendplugin.yaml
   sed -i "/^ENV LD_LIBRARY_PATH /c ENV LD_LIBRARY_PATH ${LD_LIBRARY_PATH_PARA1}:${LD_LIBRARY_PATH_PARA2}/common" ${TOP_DIR}/Dockerfile
@@ -362,29 +371,21 @@ webuiport: 3081
 useclusterfile : true
 
 machines:
-  atlas02:
+  master:
     role: infrastructure
     private-ip: 192.168.3.2
     archtype: arm64
     type: npu
     vendor: huawei
 
-scale_up:
-  atlas01:
-    archtype: arm64
-    role: worker
-    type: npu 
-    vendor: huawei
-    os: ubuntu
-
-  atlas-gpu01:
+  worker01:
     archtype: amd64
     role: worker
     type: gpu 
     vendor: nvidia
     os: ubuntu
 
-  atlas-gpu02:
+  worker02:
     archtype: amd64
     role: worker
     type: gpu 
@@ -392,6 +393,7 @@ scale_up:
     os: ubuntu
 
 # settings for docker
+private_docker_registry: harbor.sigsus.cn:8443/dlts/
 dockerregistry: apulistech/
 dockers:
   hub: apulistech/
@@ -412,7 +414,7 @@ Authentications:
 mountpoints:
   nfsshare1:
     type: nfs
-    server: atlas02
+    server: master
     filesharename: /mnt/local
     curphysicalmountpoint: /mntdlws
     mountpoints: ""
@@ -432,6 +434,22 @@ enable_custom_registry_secrets: True
 platform_name: Apulis Platform
 kube-vip: XXX.XXX.XXX.XXX
 ```
+
+**配置信息说明**
+
+- 需依照实际情况修改的字段包括以下
+
+  1）machines：修改机器IP兼短域名
+
+  2）dockerregistry：修改hub.docker中的组织名
+
+  3）kube-vip：单master情况下，填入master节点内网IP
+
+- 与其它环节存在依赖字段包括
+
+  1）private_docker_registry：此字段中harbor.sigsus.cn:8443应与配置harbor环节所采用的域名保持一致
+
+
 
 ### 2. 执行部署
 

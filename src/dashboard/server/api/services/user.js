@@ -280,7 +280,7 @@ class User extends Service {
     }
   }
 
-  static async getCurrentUserFromUserDashboard(context, token) {
+  static async getCurrentUserFromUserDashboard (context, token) {
     const getCurrentUserURL = userGroup.domain + userGroup.backEndPath + '/auth/currentUser'
     const response = await fetch(getCurrentUserURL, {
       headers: {
@@ -288,6 +288,10 @@ class User extends Service {
       }
     })
     const data = await response.json()
+    if (data.userName === 'admin') {
+      data.permissionList = ['SUBMIT_TRAINING_JOB', 'MANAGE_VC', 'VIEW_VC', 'VIEW_ALL_USER_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB', 'VIEW_CLUSTER_STATUS', 'MANAGE_USER', 'AI_ARTS_ALL', 'LABELING_IMAGE', 'DISPATCH_LABELING_TASK', 'REVIEW_LABELING_TASK']
+    }
+    console.log('datya', data)
     context.assert(data['success'] === true, 502)
     delete data.success
     return data

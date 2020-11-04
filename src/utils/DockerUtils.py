@@ -348,6 +348,7 @@ def config_dockers(rootdir, dockerprefix, dockertag, verbose, config, archtype=N
 
         else:
             pass
+        
         modify_docker_tag_by_version_file(config)
     return
 

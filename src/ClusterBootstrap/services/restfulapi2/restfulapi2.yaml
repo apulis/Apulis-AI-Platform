@@ -46,6 +46,8 @@ spec:
           name: dlwsdatawork
         - mountPath: /var/log/apache2
           name: log
+        - mountPath: /home
+          name: home
         - mountPath: /data
           name: data
         ports:
@@ -84,6 +86,9 @@ spec:
       - name: dlwsdatawork
         hostPath:
           path: {{cnf["storage-mount-path"]}}/work
+      - name: home
+        hostPath:
+          path: /dlwsdata/work
       - name: data
         hostPath:
           path: /dlwsdata/storage

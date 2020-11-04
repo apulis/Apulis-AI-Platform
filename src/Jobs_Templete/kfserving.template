@@ -43,6 +43,7 @@ spec:
         resources:
           limits:
             {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
+            memory: 5G
           requests:
             cpu: 100m
         {% if job["framework"] == "custom" %}

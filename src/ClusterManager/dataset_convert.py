@@ -86,17 +86,23 @@ def merge_json_to_coco_dataset(list_ppath,json_path,coco_file_path,prefix="",arg
     coco["categories"] = []
     coco["annotations"] = []
     with open(os.path.join(list_ppath, "list.json"), "r") as f:
-        ImgIDs = json.load(f)["ImgIDs"]
+        data = json.load(f)
+        ImgIDs = data.get("ImgIDs",[])
+        suffixs = data.get("suffixs",[])
     categories = {}
     categories_total = None
     if os.path.exists(category_path):
         with open(category_path, "r") as f2:
             categories_total = json.load(f2)["categories"]
-    for ImgID in ImgIDs:
+    for index,ImgID in enumerate(ImgIDs):
         new_image_id = ImgID
-        if not os.path.exists(os.path.join(json_path, 'images', "{}.json".format(ImgID))):
+        anno_path = os.path.join(json_path, 'images', "{}.json".format(ImgID))
+        if not os.path.exists(anno_path):
+            new_anno_path = os.path.join(json_path, 'images', "{}{}.json".format(suffixs[index],ImgID))
+            if os.path.exists(new_anno_path):
+                anno_path = new_anno_path
             continue
-        with open(os.path.join(json_path, 'images', "{}.json".format(ImgID)), "r") as f:
+        with open(anno_path, "r") as f:
             json_dict = json.load(f)
         json_dict["images"][0]["file_name"] = "{}.jpg".format(new_image_id)
         json_dict["images"][0]["id"] = new_image_id

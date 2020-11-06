@@ -5,7 +5,7 @@ cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
 deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main
 EOF
 
-k8s_version="1.18.0-00"
+k8s_version="1.18.2-00"
 
 sudo apt-get update
 sudo apt-get install -y kubelet=${k8s_version} kubeadm=${k8s_version} kubectl=${k8s_version}

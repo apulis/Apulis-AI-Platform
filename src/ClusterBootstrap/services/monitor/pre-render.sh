@@ -31,13 +31,13 @@ ${dir}/../../deploy/bin/kubectl --namespace=kube-system create configmap alert-t
 ${dir}/../../deploy/bin/kubectl --namespace=kube-system create configmap prometheus-alert --from-file=${dir}/alerting --dry-run -o yaml > $prometheus_file_name
 
 ###### abandon! now frontend will handle the job
-# generate grafana-zh config
-# generate extra grafana-config from ./grafana-zh-config-raw
-# for i in `find ${dir}/grafana-zh-config-raw/ -type f -regex ".*json" ` ; do
-    # ${dir}/gen_grafana-config.py ${i} ${dir}/grafana-zh-config
-# done
+generate grafana-zh config
+generate extra grafana-config from ./grafana-zh-config-raw
+for i in `find ${dir}/grafana-zh-config-raw/ -type f -regex ".*json" ` ; do
+  ${dir}/gen_grafana-config.py ${i} ${dir}/grafana-zh-config
+done
 
-# # create configmap
-# for i in `find ${dir}/grafana-zh-config/ -type f -regex ".*json" ` ; do
-    # echo --from-file=$i
-# done | xargs ${dir}/../../deploy/bin/kubectl --namespace=kube-system create configmap grafana-zh-configuration --dry-run -o yaml >> $grafana_zh_file_name 
+# create configmap
+for i in `find ${dir}/grafana-zh-config/ -type f -regex ".*json" ` ; do
+  echo --from-file=$i
+done | xargs ${dir}/../../deploy/bin/kubectl --namespace=kube-system create configmap grafana-zh-configuration --dry-run -o yaml >> $grafana_zh_file_name

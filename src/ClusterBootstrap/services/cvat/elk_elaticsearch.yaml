@@ -22,8 +22,8 @@ spec:
           image: {{cnf["dockers"]["container"]["cvat_elasticsearch"]["fullname"]}}
           imagePullPolicy: Always
           ports:
-            - containerPort: 9200
-              hostPort: 9200
+            - containerPort: 9211
+              hostPort: 9211
               name: es-port
               protocol: TCP
           volumeMounts:
@@ -35,7 +35,7 @@ spec:
             periodSeconds: 30
             successThreshold: 1
             tcpSocket:
-              port: 9200
+              port: 9211
             timeoutSeconds: 10
       volumes:
         - name: elasticsearch

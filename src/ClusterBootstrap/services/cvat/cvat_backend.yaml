@@ -57,7 +57,7 @@ spec:
             - name: DJANGO_LOG_SERVER_HOST
               value: '127.0.0.1'
             - name: DJANGO_LOG_SERVER_PORT
-              value: '5001'
+              value: '5002'
             - name: DJANGO_LOG_VIEWER_HOST
               value: '127.0.0.1'
             - name: DJANGO_LOG_VIEWER_PORT

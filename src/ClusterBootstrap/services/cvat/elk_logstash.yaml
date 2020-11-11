@@ -20,11 +20,11 @@ spec:
       hostNetwork: true
       containers:
         - name: logstash
-          image: {{cnf["dockers"]["container"]["cvat_logstash"]["fullname"]}}
+          image: harbor.sigsus.cn:8443/library/cvat_logstash
           imagePullPolicy: Always
           ports:
-            - containerPort: 5001
-              hostPort: 5001
+            - containerPort: 5002
+              hostPort: 5002
               name: ls-port
               protocol: TCP
 
@@ -34,7 +34,7 @@ spec:
             periodSeconds: 30
             successThreshold: 1
             tcpSocket:
-              port: 5001
+              port: 5002
             timeoutSeconds: 10
 
       tolerations:

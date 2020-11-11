@@ -87,8 +87,8 @@ spec:
               name: home
 
           ports:
-            - containerPort: 8080
-              hostPort: 8080
+            - containerPort: 8082
+              hostPort: 8082
               name: cvat-port
               protocol: TCP
           readinessProbe:
@@ -97,7 +97,7 @@ spec:
             periodSeconds: 30
             successThreshold: 1
             tcpSocket:
-              port: 8080
+              port: 8082
             timeoutSeconds: 10
 
       volumes:

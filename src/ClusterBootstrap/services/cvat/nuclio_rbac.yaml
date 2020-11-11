@@ -14,6 +14,14 @@
 
 ---
 # All access to services, configmaps, deployments, ingresses and HPAs limited to the "nuclio" namespace
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nuclio
+
+---
+
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
 metadata:

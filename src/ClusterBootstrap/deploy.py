@@ -1173,7 +1173,6 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
         utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
         #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
         kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
-        run_kubectl( ['apply -f "/home/dlwsadmin/DLWorkspace/temp-config/weave-net.yaml"'] )
         break
 
 

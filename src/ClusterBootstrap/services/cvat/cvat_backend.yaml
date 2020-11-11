@@ -83,7 +83,7 @@ spec:
               name: data
             - mountPath: /data
               name: dataset
-            - mountPath: /home
+            - mountPath: /dlws/home
               name: home
 
           ports:

@@ -209,6 +209,7 @@ def SubmitJob(jobParamsJsonStr):
     jobParams["dataPath"] = jobParams["dataPath"].replace("\\","/")
     jobParams["workPath"] = jobParams["workPath"].replace("\\","/")
     jobParams["jobPath"] = jobParams["jobPath"].replace("\\","/")
+
     jobParams["dataPath"] = os.path.realpath(os.path.join("/",jobParams["dataPath"]))[1:]
     jobParams["workPath"] = os.path.realpath(os.path.join("/",jobParams["workPath"]))[1:]
     jobParams["jobPath"] = os.path.realpath(os.path.join("/",jobParams["jobPath"]))[1:]
@@ -1392,6 +1393,28 @@ def UpdateVC(userName, vcName, quota, metadata):
     else:
         ret = "Access Denied!"
     dataHandler.Close()
+    return ret
+
+def DettachVC(userName, vcName):
+
+    ret = {}
+    ret["code"] = 0
+    
+    # select all jobs from db
+    dataHandler = DataHandler()
+
+    global pendingStatus
+    jobIds = dataHandler.GetUserJobs(userName, vcName, pendingStatus)
+    dataHandler.Close()
+
+    for jobId in jobIds:
+        if not KillJob(userName, jobId):
+            ret["code"] = -1
+            ret["msg"] = "delete job(id: %s) failed" % (jobId)
+        else:
+            pass
+
+    ret["msg"] = "success. %d job(s) deleted" % (len(jobIds))
     return ret
 
 def GetAllDevice(userName):

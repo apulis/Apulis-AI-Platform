@@ -859,6 +859,23 @@ class KillJob(Resource):
 ##
 api.add_resource(KillJob, '/KillJob')
 
+class DettachVC(Resource):
+    def post(self):
+        params = request.get_json(silent=True)
+        vcName = params["vcName"]
+        userName = params["userName"]
+
+        result = JobRestAPIUtils.DettachVC(userName, vcName)
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(DettachVC, '/DettachVC')
+
 class DeleteJob(Resource):
     def delete(self):
         parser = reqparse.RequestParser()

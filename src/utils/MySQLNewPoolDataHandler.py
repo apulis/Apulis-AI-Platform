@@ -1354,7 +1354,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT jobId FROM {} where """.format(self.jobtablename)
+            query = """SELECT jobName, jobId FROM {} where """.format(self.jobtablename)
             if "," not in vcName:
                 query += "vcName=%s " % (vcName)
             else:
@@ -1374,7 +1374,7 @@ class DataHandler(object):
 
             for item in data:
                 logger.info("GetUserJobs, item: %s" %(str(item)))
-                ret.append(item[0])
+                ret.append({"jobName": item[0], "jobId": item[1]})
 
             conn.commit()
 

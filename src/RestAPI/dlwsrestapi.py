@@ -695,6 +695,25 @@ class ListJobsV3(Resource):
 
 api.add_resource(ListJobsV3, '/ListJobsV3')
 
+class GetVCPendingJobs(Resource):
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('vcName')
+
+        args = parser.parse_args()
+        result = JobRestAPIUtils.GetVCPendingJobs(args["userName"], args["vcName"])
+
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        
+        return resp
+
+api.add_resource(GetVCPendingJobs, '/GetVCPendingJobs')
+
 class GetAllDevice(Resource):
     @api.doc(params=model.GetAllDevice.params)
     @api.response(200, "succeed", api.model("GetAllDevice", model.GetAllDevice.model))

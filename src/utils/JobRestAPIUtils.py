@@ -707,6 +707,34 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSi
 
     return jobs
 
+def GetVCPendingJobs(userName, vcName):
+    ret = {}
+    jobs = {}
+
+    ret["code"] = 0
+    ret["data"] = []
+    dataHandler = None
+
+    try:
+        dataHandler = DataHandler()
+        jobs = dataHandler.GetUserJobs(userName, vcName, pendingStatus)
+
+        ret["msg"] = "success!"
+        ret["data"] = jobs
+        
+    except Exception as e:
+        ret["code"] = -1
+        ret["msg"] = "failed! err: %s" % (str(e))
+        logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
+
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+        else:
+            pass
+
+    return
+
 def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orderBy=None):
     jobs = {}
     dataHandler = None
@@ -1399,7 +1427,7 @@ def DettachVC(userName, vcName):
 
     ret = {}
     ret["code"] = 0
-    
+
     # select all jobs from db
     dataHandler = DataHandler()
 
@@ -1407,10 +1435,10 @@ def DettachVC(userName, vcName):
     jobIds = dataHandler.GetUserJobs(userName, vcName, pendingStatus)
     dataHandler.Close()
 
-    for jobId in jobIds:
-        if not KillJob(userName, jobId):
+    for jobItem in jobIds:
+        if not KillJob(userName, jobItem["jobId"]):
             ret["code"] = -1
-            ret["msg"] = "delete job(id: %s) failed" % (jobId)
+            ret["msg"] = "delete job(id: %s) failed" % (jobItem["jobId"])
         else:
             pass
 

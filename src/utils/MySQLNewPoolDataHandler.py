@@ -1365,7 +1365,7 @@ class DataHandler(object):
             else:
                 query += "and jobStatus in (%s) " % (','.join(['"'+s+'"' for s in jobStatus.split(",")]))
 
-            query += "and isDeleted=0"           
+            query += 'and userName="%s" and isDeleted=0 ' % (userName)           
             logger.info("GetUserJobs, sql: %s" %(query))
             cursor.execute(query)
 

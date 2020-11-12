@@ -4044,10 +4044,8 @@ def start_kube_service(servicename):
         archtypes = get_archtypes()
 
     service_set=set()
-    if "arm64" in archtypes:
-        get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
-    if "amd64" in archtypes:
-        get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file )
     start_kube_service_with_service_set(dirname, service_set)
     return
 

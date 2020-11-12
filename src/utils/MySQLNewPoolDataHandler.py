@@ -1342,6 +1342,55 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetUserJobs(self, userName, vcName, jobStatus):
+
+        # vcName: multiple vcs are separated by comman
+        # jobStatus: multiple jobTypes are separated by comman
+        ret = []
+        conn = None
+        cursor = None
+
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = """SELECT jobName, jobId FROM {} where """.format(self.jobtablename)
+            if "," not in vcName:
+                query += 'vcName="%s" ' % (vcName)
+            else:
+                query += "vcName in (%s) " % (','.join(['"'+s+'"' for s in vcName.split(",")]))
+
+            if "," not in jobStatus:
+                query += 'and jobStatus="%s" ' % (jobStatus)
+            else:
+                query += "and jobStatus in (%s) " % (','.join(['"'+s+'"' for s in jobStatus.split(",")]))
+
+            query += "and isDeleted=0"           
+            logger.info("GetUserJobs, sql: %s" %(query))
+            cursor.execute(query)
+
+            columns = [column[0] for column in cursor.description]
+            data = cursor.fetchall()
+
+            for item in data:
+                logger.info("GetUserJobs, item: %s" %(str(item)))
+                ret.append({"jobName": item[0], "jobId": item[1]})
+
+            conn.commit()
+
+        except Exception as e:
+            logger.exception('GetJobListV2 Exception: %s', str(e))
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+        return ret
+
+
+    @record
     def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None,order=None,orderBy=None):
         ret = {}
         ret["queuedJobs"] = []

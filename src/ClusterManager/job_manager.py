@@ -690,20 +690,25 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     logger.info("TakeJobActions : global resources : %s" % (globalResInfo.CategoryToCountMap))
 
     for sji in jobsInfo:
+
         try:
+
             if sji["job"]["jobStatus"] == "queued" and (sji["allowed"] is True):
                 launcher.submit_job(sji["job"])
                 update_job_state_latency(redis_conn, sji["jobId"], "scheduling")
                 logger.info("TakeJobActions : submitting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
             elif sji["preemptionAllowed"] and (sji["job"]["jobStatus"] == "scheduling" or sji["job"]["jobStatus"] == "running") and (sji["allowed"] is False):
                 launcher.kill_job(sji["job"]["jobId"], "queued")
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
                 vc_name = sji["job"]["vcName"]
                 available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
                 requested_resource = sji["globalResInfo"]
                 detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,available_resource.GetMinValue(vc_resources[vc_name]))}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
+
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)
 

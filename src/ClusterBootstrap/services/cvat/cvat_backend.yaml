@@ -70,6 +70,8 @@ spec:
               value: '1'
             - name: CVAT_NUCLIO_HOST
               value: '127.0.0.1'
+            - name: CVAT_SHARE_URL
+              value: '/dlwsdata/storage'
           volumeMounts:
             - mountPath: /home/django/data
               name: cvat-data
@@ -79,13 +81,12 @@ spec:
               name: cvat-logs
             - mountPath: /home/django/models
               name: cvat-models
-            - mountPath: /mntdlws/nfs/label
-              name: data
+            - mountPath: /home/django/share
+              name: dataset
             - mountPath: /data
               name: dataset
             - mountPath: /dlws/home
               name: home
-
           ports:
             - containerPort: 8082
               hostPort: 8082
@@ -116,16 +117,12 @@ spec:
         - name: cvat-models
           hostPath:
             path: /dlwsdata/storage/cvat/models
-        - name: data
-          hostPath:
-            path: /mntdlws/nfs/label
         - name: dataset
           hostPath:
             path: /dlwsdata/storage
         - name: home
           hostPath:
             path: /dlwsdata/work
-
       tolerations:
         - key: CriticalAddonsOnly
           operator: Exists

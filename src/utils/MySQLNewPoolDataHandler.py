@@ -1356,12 +1356,12 @@ class DataHandler(object):
 
             query = """SELECT jobName, jobId FROM {} where """.format(self.jobtablename)
             if "," not in vcName:
-                query += "vcName=%s " % (vcName)
+                query += 'vcName="%s" ' % (vcName)
             else:
                 query += "vcName in (%s) " % (','.join(['"'+s+'"' for s in vcName.split(",")]))
 
             if "," not in jobStatus:
-                query += "and jobStatus=%s " % (jobStatus)
+                query += 'and jobStatus="%s" ' % (jobStatus)
             else:
                 query += "and jobStatus in (%s) " % (','.join(['"'+s+'"' for s in jobStatus.split(",")]))
 

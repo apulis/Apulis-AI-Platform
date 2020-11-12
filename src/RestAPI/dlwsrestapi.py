@@ -634,10 +634,11 @@ class ListJobsV3(Resource):
         parser.add_argument('searchWord')
         parser.add_argument('orderBy')
         parser.add_argument('order')
+        parser.add_argument('jobGroup')
 
         args = parser.parse_args()
         jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"],
-                args["jobType"], args["jobStatus"],
+                args["jobType"], args["jobStatus"],args["jobGroup"],
                 args["pageNum"], args["pageSize"],
                 args["searchWord"], args["orderBy"], args["order"])
 
@@ -2168,6 +2169,6 @@ class GetJobSummary(Resource):
 api.add_resource(GetJobSummary, '/GetJobSummary')
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGUSR2, dumpstacks)
+    #signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)
 

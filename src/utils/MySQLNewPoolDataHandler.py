@@ -186,6 +186,7 @@ class DataHandler(object):
                     `retries`             int    NULL DEFAULT 0,
                     `isDeleted`             int    NULL DEFAULT 0,
                     `lastUpdated` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    `jobGroup`    varchar(255) NULL,
                     PRIMARY KEY (`id`),
                     UNIQUE(`jobId`),
                     INDEX (`userName`),
@@ -193,7 +194,8 @@ class DataHandler(object):
                     INDEX (`jobId`),
                     INDEX (`vcName`),
                     INDEX (`jobStatus`),
-                    INDEX (`jobType`)
+                    INDEX (`jobType`),
+                    INDEX (`jobGroup`)
                 );
                 """ % (self.jobtablename)
 
@@ -932,12 +934,12 @@ class DataHandler(object):
     def AddJob(self, jobParams):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.jobtablename + "` (jobId, familyToken, isParent, jobName, userName, vcName, jobType,jobParams ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+            sql = "INSERT INTO `" + self.jobtablename + "` (jobId, familyToken, isParent, jobName, userName, vcName, jobType,jobParams,jobGroup) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             jobParam = base64.b64encode(json.dumps(jobParams))
             with MysqlConn() as conn:
                 conn.insert_one(sql, (
                     jobParams["jobId"], jobParams["familyToken"], jobParams["isParent"], jobParams["jobName"],
-                    jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam))
+                    jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam,jobParams["jobGroup"]))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1219,7 +1221,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum,
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus,jobGroup,pageNum,
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
 
         ret = {}
@@ -1242,6 +1244,9 @@ class DataHandler(object):
                         self.jobtablename, self.jobprioritytablename,
                         self.jobtablename, self.jobprioritytablename,
                         jobType)
+            ## add support for `jobGroup` filter :
+            if jobGroup > 0 :
+                query += " and jobGroup='{}'".format(jobGroup)
 
             ## all jobs
             if jobStatus.lower() != "all":
@@ -1630,7 +1635,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT `jobId`,`familyToken`,`isParent`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta`  FROM `%s` where `%s` = %s " % (
+            query = "SELECT `jobId`,`familyToken`,`isParent`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` ,`jobGroup` FROM `%s` where `%s` = %s " % (
             self.jobtablename, key, "%s")
             cursor.execute(query,[expected])
             columns = [column[0] for column in cursor.description]

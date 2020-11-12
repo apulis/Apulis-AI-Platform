@@ -1066,6 +1066,13 @@ class PythonLauncher(Launcher):
             job_object.params["envs"].append({"name": "IDENTITY_TOKEN", "value": jwt_authorization.create_jwt_token_with_message(
                                               {"userName":job_object.params["userName"],"uid":user_info["uid"]}
             )})
+            ### add support for job group
+            if "jobGroup" in job:
+               job_object.params["envs"].append({"name":"JOB_GROUP","value":job["jobGroup"]})
+            ### add support for job tracking
+            if "track" in job_object.params:
+               job_object.params["envs"].append({"name":"JOB_TRACK","value":job_object.params["track"]})   
+
 
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()
             blobfuse_secret_template = job_object.get_blobfuse_secret_template()

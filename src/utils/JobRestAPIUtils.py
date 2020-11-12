@@ -716,16 +716,17 @@ def GetVCPendingJobs(userName, vcName):
     dataHandler = None
 
     try:
+        global pendingStatus
         dataHandler = DataHandler()
         jobs = dataHandler.GetUserJobs(userName, vcName, pendingStatus)
 
         ret["msg"] = "success!"
         ret["data"] = jobs
-        
+
     except Exception as e:
         ret["code"] = -1
         ret["msg"] = "failed! err: %s" % (str(e))
-        logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
+        logger.error('get job list Exception: user: %s, ex: %s', userName, str(e))
 
     finally:
         if dataHandler is not None:
@@ -733,7 +734,7 @@ def GetVCPendingJobs(userName, vcName):
         else:
             pass
 
-    return
+    return ret
 
 def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orderBy=None):
     jobs = {}

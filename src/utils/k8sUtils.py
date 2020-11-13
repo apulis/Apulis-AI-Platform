@@ -69,7 +69,7 @@ def getJobConsoleDetail(podName):
 
 def getJupyterInfo(podName):
     bashScript = "-- cat /job/jupyter.log"
-    output = kubectl_exec("exec %s %s" % (podName, bashScript))
+    output = kubectl_exec("exec %s %s" % (podName, bashScript),timeout=3)
     if output=="":
         print "get jupyter info failed!"
     return output

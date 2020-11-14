@@ -2335,12 +2335,12 @@ class DataHandler(object):
         return ret
 
     @record
-    def get_job_summary(self, userName, jobType):
+    def get_job_summary(self, userName, jobType, vcName):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' and isDeleted=0 group by jobStatus;" % (self.jobtablename, userName, jobType)
-            print(query)
+            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' and isDeleted=0 and vcName='%s' group by jobStatus;" % (self.jobtablename, userName, jobType, vcName)
+            logger.info(query)
 
             with MysqlConn() as conn:
                 records = conn.select_many(query)

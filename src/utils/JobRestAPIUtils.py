@@ -1753,12 +1753,12 @@ def GetConvertDetail(projectId,datasetId):
     return None
 
 
-def GetJobSummary(userName, jobType):
+def GetJobSummary(userName, jobType, vcName):
     data_handler = None
 
     try:
         data_handler = DataHandler()
-        summary = data_handler.get_job_summary(userName, jobType)
+        summary = data_handler.get_job_summary(userName, jobType, vcName)
         return summary
 
     except Exception as e:

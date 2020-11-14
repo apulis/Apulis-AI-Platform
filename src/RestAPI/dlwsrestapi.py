@@ -2230,12 +2230,14 @@ class GetJobSummary(Resource):
 
         parser.add_argument('userName')
         parser.add_argument('jobType')
+        parser.add_argument('vcName')
 
         args = parser.parse_args()
         userName = args["userName"]
         jobType = args["jobType"]
+        vcName = args["vcName"]
 
-        ret = JobRestAPIUtils.GetJobSummary(userName, jobType)
+        ret = JobRestAPIUtils.GetJobSummary(userName, jobType, vcName)
         resp = jsonify(ret)
 
         resp.headers["Access-Control-Allow-Origin"] = "*"

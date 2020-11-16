@@ -29,7 +29,7 @@ data:
       sizelimit: 1000000000
 
     Anno:
-      backendUrl: http://{{cnf["kube-vip"]}}/cvat
+      backendUrl: http://{{cnf["kube-vip"]}}/annotations
 
     Infer:
       backendUrl: http://{{cnf["kube-vip"]}}

@@ -117,10 +117,12 @@ def get_cluster_status():
                         node_status["gpuType"] = s
 
                 canUseGpuStrSet = set(node["status"]["allocatable"].keys()).intersection(gpuStrList)
-                gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else "reserved/cpu"
+
+                # default to nvidia.com/gpu,which can make cluster to start job
+                gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else "nvidia.com/gpu"
 
                 # for cpu machine
-                if gpuStr=="reserved/cpu":
+                if gpuStr=="nvidia.com/gpu":
                     node["status"]["allocatable"][gpuStr] = 0
                     node["status"]["capacity"][gpuStr] = 0
 

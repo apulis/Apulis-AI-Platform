@@ -118,10 +118,17 @@ def get_cluster_status():
 
                 canUseGpuStrSet = set(node["status"]["allocatable"].keys()).intersection(gpuStrList)
                 gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else "reserved/cpu"
+
+                # for cpu machine
+                if gpuStr=="reserved/cpu":
+                    node["status"]["allocatable"][gpuStr] = 0
+                    node["status"]["capacity"][gpuStr] = 0
+
                 if node_status["gpuType"]:
                     if node_status["gpuType"] not in gpuMapping:
-                        if gpuStr!="reserved/cpu":
-                            gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0,"detail":[]}
+                        # if gpuStr!="reserved/cpu":
+                        gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0,"detail":[]}
+
                 if canUseGpuStrSet:
                     node_status["gpu_allocatable"] = ResourceInfo({node_status["gpuType"]: int(node["status"]["allocatable"][gpuStr])}).ToSerializable()
                 else:

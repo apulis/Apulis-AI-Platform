@@ -191,6 +191,12 @@ class PodTemplate():
                     pod["schedulerName"]="volcano"     
                 else:
                     pass
+					
+                ## npu pod
+                if pod["gpuStr"] == "npu.huawei.com/NPU":
+                    pod["mount_npu_log"] = True
+                else:
+                    pod["mount_npu_log"] = False 
 
             elif "gpuStr" in pod:
                 

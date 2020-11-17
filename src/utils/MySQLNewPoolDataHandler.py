@@ -605,6 +605,28 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetVC(self, vcName):
+
+        try:
+            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+
+            if vcName:
+                query += " WHERE vcName = '%s'" %(vcName)
+            else:
+                pass
+
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+
+            for one in rets:
+                return one
+
+        except Exception as e:
+            logger.exception('GetVC Exception: %s', str(e))
+
+        return None
+
+    @record
     def ListVCs(self,page=None,size=None,name=None):
         ret = []
         try:

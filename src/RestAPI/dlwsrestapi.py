@@ -365,6 +365,7 @@ class PostJob(Resource):
     def post(self):
 
         params = request.get_json(force=True)
+
         logger.info("Post Job")
         logger.info(params)
 
@@ -409,7 +410,7 @@ class PostJob(Resource):
         else:
             ret["code"] = -1
             if "error" in output:
-                ret["error"] = "Cannot create job!" + output["error"]
+                ret["error"] = "Cannot create job! " + output["error"]
             else:
                 ret["error"] = "Cannot create job!"
 

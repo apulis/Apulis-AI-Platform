@@ -189,7 +189,7 @@ def GetJobTotalGpu(jobParams):
     if "numpsworker" in jobParams:
         numWorkers = int(jobParams["numpsworker"])
         if numWorkers == 0:
-            numpsworker = 1
+            numWorkers = 1
         else:
             pass
     else:

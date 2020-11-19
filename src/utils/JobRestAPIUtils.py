@@ -95,16 +95,18 @@ def ToBool(value):
 
 
 def SubmitJob(jobParamsJsonStr):
-    ret = {}
 
+    ret = {}
     jobParams = LoadJobParams(jobParamsJsonStr)
 
     if "jobName" not in jobParams or len(jobParams["jobName"].strip()) == 0:
         ret["error"] = "ERROR: Job name cannot be empty"
         return ret
+
     if "vcName" not in jobParams or len(jobParams["vcName"].strip()) == 0:
         ret["error"] = "ERROR: VC name cannot be empty"
         return ret
+
     if "userId" not in jobParams or len(str(jobParams["userId"]).strip()) == 0:
         jobParams["userId"] = GetUser(jobParams["userName"])["uid"]
 
@@ -127,6 +129,8 @@ def SubmitJob(jobParamsJsonStr):
 
     if "resourcegpu" not in jobParams:
         jobParams["resourcegpu"] = 0
+    else:
+        pass
 
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
@@ -140,6 +144,16 @@ def SubmitJob(jobParamsJsonStr):
         jobParams["isParent"] = 1
 
     userName = getAlias(jobParams["userName"])
+        
+    # return if there is not enough devices
+    #if "gpuType" in jobParams:
+    #    valid, msg = ValidateDeviceRequest(jobParams["gpuType"], jobParams["resourcegpu"], jobParams["vcName"].strip())
+    #    if valid is False:
+    #        ret["error"] = msg
+    #        return
+    #else:
+    #    logger.info("gpuType not set!")
+    #    pass
 
     if not AuthorizationManager.HasAccess(jobParams["userName"], ResourceType.VC, jobParams["vcName"].strip(), Permission.User):
         ret["error"] = "Access Denied!"
@@ -1275,6 +1289,81 @@ def ListVCs(userName,page=None,size=None,name=None):
     # web portal (client) can filter out Default VC
     return ret
 
+def GetVCConfig(vcName):
+    
+    ret = {}
+    ret["quota"]={}
+    ret["user_quota"]={}
+
+    config = DataHandler().GetVC(vcName)
+    if config is None:
+        return ret 
+    else:
+        pass
+    
+    if "quota" in config and len(config["quota"]) > 0:
+        quota = json.loads(config["quota"])
+        ret["quota"] = quota
+    else:
+        pass
+
+    if "metadata" in config and len(config["metadata"]) > 0:
+        user_quota = json.loads(config["metadata"])
+        ret["user_quota"] = user_quota
+    else:
+        pass
+    
+    return ret
+
+def ValidateDeviceRequest(devType, devNum, vcName):
+
+    devType=devType.strip()
+    devNum=int(devNum)
+
+    userQuota=0
+    msg = "success!"
+
+    req_info= "devType: %s, devNum: %d, vcName: %s" % (devType, devNum, vcName)
+    vc_config = GetVCConfig(vcName)
+
+    if vc_config is None:
+        msg = "vc not exists(%s)" %(vcName)
+        logger.info(msg)
+        return False, msg
+    
+    if "quota" not in vc_config:
+        msg = "req(%s), incorrect vc config(%s)" %(req_info, str(vc_config))
+        logger.info(msg)
+        return False, msg
+
+    if devType not in vc_config["quota"]:
+        msg = "req(%s), target dev type not configed(%s)"% (req_info, str(vc_config))
+        logger.info(msg)
+        return False, msg
+
+    configNum = int(vc_config["quota"][devType])
+    if devNum > configNum:
+        msg = "req(%s), request num(%d) more than vc configed(%d) " %(req_info, devNum, configNum)
+        logger.info(msg)
+        return False, msg
+
+    if "user_quota" in vc_config:
+        # not empty
+        if bool(vc_config["user_quota"]):
+            if devType not in vc_config["user_quota"]:
+                msg = "req(%s), target dev type not included by user_quota(%s)" % (req_info, str(vc_config["user_quota"]))
+                logger.info(msg)
+                return False, msg
+            
+            elif "user_quota" in vc_config["user_quota"][devType] and int(vc_config["user_quota"][devType]["user_quota"]) < devNum:
+                msg = "req(%s), request num(%d) more than user_quota(%d)" % (req_info, devNum, int(vc_config["user_quota"][devType]["user_quota"]))
+                logger.info(msg)
+                return False, msg
+    else:
+        pass
+
+    return True, msg
+
 def GetVC(userName, vcName):
     ret = None
 
@@ -1283,6 +1372,7 @@ def GetVC(userName, vcName):
     cluster_status, _ = data_handler.GetClusterStatus()
     if not cluster_status or "gpu_capacity" not in cluster_status:
         return ret
+
     cluster_total = cluster_status["gpu_capacity"]
     cluster_available = cluster_status["gpu_avaliable"]
     cluster_reserved = cluster_status["gpu_reserved"]
@@ -1753,12 +1843,12 @@ def GetConvertDetail(projectId,datasetId):
     return None
 
 
-def GetJobSummary(userName, jobType):
+def GetJobSummary(userName, jobType, vcName):
     data_handler = None
 
     try:
         data_handler = DataHandler()
-        summary = data_handler.get_job_summary(userName, jobType)
+        summary = data_handler.get_job_summary(userName, jobType, vcName)
         return summary
 
     except Exception as e:

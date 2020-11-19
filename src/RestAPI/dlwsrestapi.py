@@ -365,6 +365,7 @@ class PostJob(Resource):
     def post(self):
 
         params = request.get_json(force=True)
+
         logger.info("Post Job")
         logger.info(params)
 
@@ -409,7 +410,7 @@ class PostJob(Resource):
         else:
             ret["code"] = -1
             if "error" in output:
-                ret["error"] = "Cannot create job!" + output["error"]
+                ret["error"] = "Cannot create job! " + output["error"]
             else:
                 ret["error"] = "Cannot create job!"
 
@@ -2230,12 +2231,14 @@ class GetJobSummary(Resource):
 
         parser.add_argument('userName')
         parser.add_argument('jobType')
+        parser.add_argument('vcName')
 
         args = parser.parse_args()
         userName = args["userName"]
         jobType = args["jobType"]
+        vcName = args["vcName"]
 
-        ret = JobRestAPIUtils.GetJobSummary(userName, jobType)
+        ret = JobRestAPIUtils.GetJobSummary(userName, jobType, vcName)
         resp = jsonify(ret)
 
         resp.headers["Access-Control-Allow-Origin"] = "*"

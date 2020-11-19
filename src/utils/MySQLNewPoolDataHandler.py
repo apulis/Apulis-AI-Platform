@@ -605,6 +605,28 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetVC(self, vcName):
+
+        try:
+            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+
+            if vcName:
+                query += " WHERE vcName = '%s'" %(vcName)
+            else:
+                pass
+
+            with MysqlConn() as conn:
+                rets = conn.select_many(query)
+
+            for one in rets:
+                return one
+
+        except Exception as e:
+            logger.exception('GetVC Exception: %s', str(e))
+
+        return None
+
+    @record
     def ListVCs(self,page=None,size=None,name=None):
         ret = []
         try:
@@ -2335,12 +2357,12 @@ class DataHandler(object):
         return ret
 
     @record
-    def get_job_summary(self, userName, jobType):
+    def get_job_summary(self, userName, jobType, vcName):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' and isDeleted=0 group by jobStatus;" % (self.jobtablename, userName, jobType)
-            print(query)
+            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' and isDeleted=0 and vcName='%s' group by jobStatus;" % (self.jobtablename, userName, jobType, vcName)
+            logger.info(query)
 
             with MysqlConn() as conn:
                 records = conn.select_many(query)

@@ -37,6 +37,9 @@ spec:
             tcpSocket:
               port: 9200
             timeoutSeconds: 10
+          resources:
+            limits:
+              memory: 2G
       volumes:
         - name: elasticsearch
           hostPath:

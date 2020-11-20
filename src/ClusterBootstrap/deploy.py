@@ -2436,6 +2436,7 @@ def config_nginx():
     for node in all_nodes:
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, "sudo mkdir -p /www/static/dashboard")
         utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/","/etc/nginx/conf.other", config["admin_username"], node )
+        utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/ssl","/etc/nginx/ssl", config["admin_username"], node )
 
     # See https://github.com/kubernetes/examples/blob/master/staging/https-nginx/README.md
     # Please use

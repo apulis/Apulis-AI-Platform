@@ -63,7 +63,7 @@ spec:
             - name: DJANGO_LOG_VIEWER_PORT
               value: '5601'
             - name: CVAT_ANALYTICS
-              value: '1'
+              value: '0'
             - name: no_proxy
               value: kibana,logstash,nuclio,${no_proxy}
             - name: CVAT_SERVERLESS

@@ -149,7 +149,7 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort, arguments):
         " && cd /home/" + user_name + \
         " && runuser -l " + user_name + " -c \" export PYTHONPATH=/usr/local/lib/python3.6/dist-packages; " + \
         "mkdir -p " + log_dir + "; chmod 777 " + log_dir + " ; " + \
-        "tensorboard --logdir=" + log_dir + " --host=1.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/" + \
+        "tensorboard --logdir=" + log_dir + " --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/" + \
         str(nodePort)+"/ &>/dev/null &\"'"
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":

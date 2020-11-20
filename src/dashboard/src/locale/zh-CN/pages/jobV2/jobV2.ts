@@ -12,6 +12,7 @@ const index = {
   imageName: '镜像名称',
   imageVersion: '镜像版本',
   desc: '描述',
+  successSubmitImage: '成功提交！',
   imageNameRequired: '镜像名称是必填的',
   imageNameReg: '只允许数字，字母和下划线的组合',
   

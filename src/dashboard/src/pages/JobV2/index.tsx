@@ -68,7 +68,11 @@ const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
     const { code, data } = res.data;
     if (code === 0) {
       const { duration } = data;
-      message('success', t('jobV2.saveImageSuccessLeft') + duration + t('jobV2.saveImageSuccessRight'));
+      if (duration) {
+        message('success', t('jobV2.saveImageSuccessLeft') + duration + t('jobV2.saveImageSuccessRight'));
+      } else {
+        message('success', t('jobV2.successSubmitImage'))
+      }
     }
   }
   return (

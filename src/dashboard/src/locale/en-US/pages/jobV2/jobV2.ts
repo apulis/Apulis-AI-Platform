@@ -11,8 +11,9 @@ const index = {
   imageName: 'Image Name',
   imageVersion: 'Image Version',
   desc: 'Description',
-  imageNameRequired: '镜像名称是必填的',
-  imageNameReg: '只允许数字，字母和下划线的组合',
+  successSubmitImage: 'Successfully',
+  imageNameRequired: 'Image Name is required!',
+  imageNameReg: 'The Name Must be composed of letter, numbers, underscore or horizontal line！',
   failedToFetchJob: 'Failed to fetch job:',
 }
 const endpoints = {

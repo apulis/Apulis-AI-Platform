@@ -17,6 +17,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         restfulapi: active
+        archType: amd64
       containers:
       - name: data-platform-backend
         image: {{cnf["dockers"]["container"]["data-platform-backend"]["fullname"]}} 

@@ -69,7 +69,7 @@ interface Itemplate {
 const sanitizePath = (path: string) => {
   path = join('/', path);
   path = join('.', path);
-  return path;
+  return path; 
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
   const {t} = useTranslation();

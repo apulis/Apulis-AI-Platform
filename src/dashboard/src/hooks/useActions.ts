@@ -91,6 +91,10 @@ ${userName}
     });
   }, [confirm, enqueueSnackbar, updateStatus]);
 
+  const onSaveImage = () => {
+    //
+  }
+
   const onResume = useCallback((event: any, job: any) => {
     const title = `${job.jobName}(${job.jobId})`;
     return confirm(`${t('tips.resumeJob')} ${title} ?`).then((answer) => {
@@ -122,6 +126,8 @@ ${userName}
       });
     });
   }, [confirm, enqueueSnackbar, updateStatus]);
+
+  
 
   const supportEmail = useCallback((job: any): Action<any> => {
     return {
@@ -167,7 +173,18 @@ ${userName}
       onClick: onKill
     }
   }, [onKill]);
-  return { supportEmail, approve, pause, resume, kill };
+
+  const saveImage = useCallback((job: any): Action<any> => {
+    const hidden = KILLABLE_STATUSES.indexOf(job['jobStatus']) === -1;
+    return {
+      hidden,
+      icon: 'save',
+      tooltip: t('hooks.saveImage'),
+      onClick: onSaveImage
+    }
+  }, [onSaveImage])
+
+  return { supportEmail, approve, pause, resume, kill, saveImage };
 }
 
 export default useActions;

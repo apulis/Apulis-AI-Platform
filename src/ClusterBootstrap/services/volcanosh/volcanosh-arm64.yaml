@@ -434,6 +434,16 @@ spec:
                 mountPath: /etc/timezone
               - name: localtime
                 mountPath: /etc/localtime
+
+      initContainers:
+      - command: ["/bin/sh", "-c", "mkdir -p /var/log/atlas_dls/volcano-admission /var/log/atlas_dls/volcano-controller /var/log/atlas_dls/volcano-scheduler"]
+        image: {{cnf["private_docker_registry"]}}vc-controller-manager:v0.0.1-arm64
+        imagePullPolicy: "IfNotPresent"
+        name: init
+        volumeMounts:
+        - mountPath: /var/log
+          name: device-volcanocontroller
+
       volumes:
           - name: device-volcanocontroller
             hostPath:

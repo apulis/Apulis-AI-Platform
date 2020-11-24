@@ -212,7 +212,7 @@ def start_endpoint(endpoint):
     port = endpoint["port"]
     user_name = endpoint["username"]
     if "arguments" in endpoint:
-        if endpoint["arguments"] and type(endpoint["arguments"]) == str:
+        if endpoint["arguments"] != "" and type(endpoint["arguments"]) == str:
             arguments = json.loads(endpoint["arguments"])
         else:
             arguments = {}

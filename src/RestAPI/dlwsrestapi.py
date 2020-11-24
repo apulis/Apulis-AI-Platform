@@ -1981,7 +1981,7 @@ class Endpoint(Resource):
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]
-        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard"] ]:
+        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard","vscode"] ]:
             if any(required_field not in interactive_port for required_field in ["name", "podPort"]):
                 # if ["name", "port"] not in interactive_port:
                 return ("Bad request, interactive port should have \"name\" and \"podPort\"]: %s" % requested_endpoints), 400
@@ -2246,6 +2246,22 @@ class GetJobSummary(Resource):
         return resp
 
 api.add_resource(GetJobSummary, '/GetJobSummary')
+class GetPlatformVersionInfo(Resource):
+    def get(self):
+        current_version, version_history = JobRestAPIUtils.GetVersionInfo()
+        ret = {}
+        ret['version'] = current_version
+        ret['history'] = version_history
+        try:
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+        except Exception as e:
+            print (e)
+            return "error"
+        return resp
+
+api.add_resource(GetPlatformVersionInfo, '/VersionInfo')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

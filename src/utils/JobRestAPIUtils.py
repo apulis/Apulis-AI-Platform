@@ -1690,6 +1690,33 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, arguments, interactive
             else:
                 logger.info("Endpoint %s exists. Skip.", endpoint_id)
 
+        # Only open vscode on the master
+        if 'vscode' in requested_endpoints:
+            if job_type == "RegularJob":
+                pod_name = pod_names[0]
+            else:
+                # For a distributed job, we set up jupyter on first worker node.
+                # PS node does not have GPU access.
+                # TODO: Simplify code logic after removing PS
+                pod_name = pod_names[1]
+
+            endpoint_id = "e-" + jobId + "-vscode"
+
+            if endpoint_id not in job_endpoints:
+                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
+                endpoint = {
+                    "id": endpoint_id,
+                    "jobId": jobId,
+                    "podName": pod_name,
+                    "username": username,
+                    "name": "vscode",
+                    "status": "pending",
+                    "hostNetwork": host_network
+                }
+                endpoints[endpoint_id] = endpoint
+            else:
+                logger.info("Endpoint %s exists. Skip.", endpoint_id)
+
         # interactive port
         for interactive_port in interactive_ports:
             if job_type == "RegularJob":
@@ -1867,6 +1894,26 @@ def GetJobSummary(userName, jobType, vcName):
 
 
 
+def GetVersionInfo():
+    
+    if ( os.path.isfile('/version-info')):
+        with open('/version-info') as f:
+            all_version = yaml.load(f.read())
+            current = {}
+            current["name"] = all_version[0]['version']
+            current['description'] = all_version[0]['description']
+            current['updateAt'] = all_version[0]['updateAt']
+            history = []
+            for versionInfo in all_version[1:]:
+                version_info = {}
+                version_info["name"] = versionInfo['version']
+                version_info['description'] = versionInfo['description']
+                version_info['updateAt'] = versionInfo['updateAt']
+                history.append(version_info)
+        return current, history
+    else:
+        logger.error("Exception in reading version file: file not exist")
+    return None, None
 
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False

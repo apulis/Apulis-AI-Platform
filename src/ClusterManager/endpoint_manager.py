@@ -143,11 +143,48 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,nodePort, arguments):
     if 'tensorboard_log_dir' in arguments:
         log_dir = arguments['tensorboard_log_dir']
     else:
-        log_dir = "~/tensorboard/\${DLWS_JOB_ID}/logs"
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v tensorboard)\" ];then apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard;fi && cd /home/" + user_name + " && chmod 777 " + log_dir + " && runuser -l " + user_name + " -c \"mkdir -p ~/tensorboard/\${DLWS_JOB_ID}/logs; nohup tensorboard --logdir="+ log_dir +" --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/"+str(nodePort)+"/ &>/dev/null &\"'"
+        log_dir = "~/tensorboard/${DLWS_JOB_ID}/logs"
+    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive;" + \
+        " if ! [ -x \"$(command -v tensorboard)\" ];then apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard;fi" + \
+        " && cd /home/" + user_name + \
+        " && runuser -l " + user_name + " -c \" export PYTHONPATH=/usr/local/lib/python3.6/dist-packages; " + \
+        "mkdir -p " + log_dir + "; chmod 777 " + log_dir + " ; " + \
+        "tensorboard --logdir=" + log_dir + " --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/" + \
+        str(nodePort)+"/ &>/dev/null &\"'"
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start tensorboard in container. JobId: %s ,output: %s" % (pod_name,output))
+
+def setup_vscode(user_name, pod_name,vscode_port):
+    bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive; 
+            if ! [ -x \"$(command -v code-server)\" ];then 
+                apt-get update && umask 022 
+                version="$(curl -fsSLI -o /dev/null -w "%s" https://github.com/cdr/code-server/releases/latest)"                                                                                                                         
+                version="${version#https://github.com/cdr/code-server/releases/tag/}"
+                version="${version#v}"
+                echo "$version"
+                arch() {
+                  case "$(uname -m)" in
+                  aarch64)
+                    echo arm64
+                    ;;
+                  x86_64)
+                    echo amd64
+                    ;;
+                  amd64) # FreeBSD.
+                    echo amd64
+                    ;;
+                  esac
+                }
+                ARCH="$(arch)"
+                curl -fOL https://github.com/cdr/code-server/releases/download/v$version/code-server_${version}_$ARCH.deb
+                sudo dpkg -i code-server_${version}_$ARCH.deb
+            fi && cd /home/%s && chmod 777 /job/ && runuser -l %s  -c "nohup code-server --port %s --host 0.0.0.0 --auth none &>/job/vscode.log &"
+        '
+    """% ("%{url_effective}",user_name, user_name, vscode_port)
+    output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
+    if output != "":
+        raise Exception("Failed to start vscode in container. JobId: %s ,output: %s" % (pod_name,output))
 
 def is_server_ready(endpoint):
     pod_name = endpoint["podName"]
@@ -157,6 +194,8 @@ def is_server_ready(endpoint):
         cmd = "ps -ef|grep jupyter-lab"
     elif port_name == "tensorboard":
         cmd = "ps -ef|grep tensorboard"
+    elif port_name == "vscode":
+        cmd = "ps -ef|grep code-server"
     if cmd:
         output = k8sUtils.kubectl_exec("exec %s %s" % (pod_name, " -- " + cmd))
         if output == "":
@@ -173,7 +212,7 @@ def start_endpoint(endpoint):
     port = endpoint["port"]
     user_name = endpoint["username"]
     if "arguments" in endpoint:
-        if endpoint["arguments"] != "" and type(endpoint["arguments"]) == str :
+        if endpoint["arguments"] :
             arguments = json.loads(endpoint["arguments"])
         else:
             arguments = {}
@@ -189,6 +228,8 @@ def start_endpoint(endpoint):
         port = base64.b64encode(str(port).encode("utf-8"))
         # if there is extra log dir(specify as "tensorboard_log_dir") in arguments, tensorboard command can modify log dir
         setup_tensorboard(user_name, pod_name,podPort,port, arguments)
+    elif port_name == "vscode":
+        setup_vscode(user_name, pod_name,podPort)
 
 def create_node_port(endpoint):
     port_name = endpoint["name"]
@@ -200,6 +241,8 @@ def create_node_port(endpoint):
     elif port_name == "ipython":
         endpoint["podPort"] = random.randint(40000, 49999)
     elif port_name == "tensorboard":
+        endpoint["podPort"] = random.randint(40000, 49999)
+    elif port_name == "vscode":
         endpoint["podPort"] = random.randint(40000, 49999)
     else:
         endpoint["podPort"] = int(endpoint["podPort"])
@@ -259,7 +302,9 @@ def start_endpoints_by_thread(pending_endpoints,data_handler,jobId):
     return jobId
 
 def clear_done_job_id(ret):
+    logging.info("\n----------------thread for jobId %s is completed", ret.result())
     global_thread_dict.pop(ret.result(),None)
+    logging.info("\n----------------running thread is %s",global_thread_dict.keys())
 
 def start_endpoints():
     try:
@@ -272,6 +317,8 @@ def start_endpoints():
                     t =pool.submit(start_endpoints_by_thread,pending_endpoint,data_handler,jobId)
                     global_thread_dict[jobId] = t
                     t.add_done_callback(clear_done_job_id)
+                else:
+                    logging.info("\n----------------jobId %s is running", jobId)
         except Exception as e:
             logger.exception("start endpoint failed")
         finally:

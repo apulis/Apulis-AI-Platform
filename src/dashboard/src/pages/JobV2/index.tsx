@@ -61,7 +61,7 @@ interface ISaveImageDialogProps {
   onOk?: () => void;
 }
 
-const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCancel, onOk }) => {
+export const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCancel, onOk }) => {
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const { t } = useTranslation();
   const { clusterId, jobId } = useParams<RouteParams>();
@@ -110,7 +110,7 @@ const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCancel, onOk
           <TextField
             name="version"
             fullWidth
-            label={t('jobV2.imageName')}
+            label={t('jobV2.imageVersion')}
             variant="filled"
             error={Boolean(errors.version)}
             helperText={errors.version ? errors.version.message : ''}
@@ -118,7 +118,7 @@ const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCancel, onOk
             inputProps={{ maxLength: 20 }}
             style={{ margin: '10px 0' }}
             inputRef={register({
-              required: t('jobV2.imageNameRequired') as string,
+              required: t('jobV2.imageVersionRequired') as string,
               pattern: {
                 value: NameReg,
                 message: t('jobV2.imageNameReg')
@@ -139,8 +139,12 @@ const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCancel, onOk
             })}
           />
           <DialogActions>
-            <Button variant="contained" onClick={() => onCancel && onCancel()}>Cancel</Button>
-            <Button variant="contained" type="submit" color="primary">Confirm</Button>
+            <Button variant="contained" onClick={() => onCancel && onCancel()}>
+              {t('jobV2.cancel')}
+            </Button>
+            <Button variant="contained" type="submit" color="primary">
+              {t('jobV2.confirm')}
+            </Button>
           </DialogActions>
 
         </form>

@@ -14,8 +14,10 @@ const index = {
   desc: '描述',
   successSubmitImage: '成功提交！',
   imageNameRequired: '镜像名称是必填的',
+  imageVersionRequired: '镜像版本是必填的',
   imageNameReg: '只允许数字，字母和下划线的组合',
-  
+  confirm: '确定',
+  cancel: '取消'
 
 }
 const endpoints = {

@@ -175,7 +175,7 @@ ${userName}
   }, [onKill]);
 
   const saveImage = useCallback((job: any): Action<any> => {
-    const hidden = KILLABLE_STATUSES.indexOf(job['jobStatus']) === -1;
+    const hidden = job['jobStatus'] !== 'running';
     return {
       hidden,
       icon: 'save',

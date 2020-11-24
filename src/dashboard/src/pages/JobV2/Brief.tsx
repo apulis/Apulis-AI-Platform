@@ -33,7 +33,7 @@ const Brief: FunctionComponent = () => {
         <ListItemText primary={t('jobV2.vcName')} secondary={job['vcName']}/>
       </ListItem>
       <ListItem>
-        <ListItemText primary={t('jobV2.dockerImage')} secondary={job['jobParams']['image']}/>
+        <ListItemText primary={t('jobV2.dockerImage')} secondary={job['jobParams']['image']} />
       </ListItem>
       <ListItem>
         <ListItemText

@@ -55,7 +55,13 @@ interface RouteParams {
   jobId: string;
 }
 
-const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
+interface ISaveImageDialogProps {
+  open: boolean;
+  onCancel?: () => void;
+  onOk?: () => void;
+}
+
+const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCancel, onOk }) => {
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const { t } = useTranslation();
   const { clusterId, jobId } = useParams<RouteParams>();
@@ -66,6 +72,7 @@ const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
       isPrivate: true,
     })
     const { code, data } = res.data;
+    onOk && onOk();
     if (code === 0) {
       const { duration } = data;
       if (duration) {
@@ -132,7 +139,7 @@ const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
             })}
           />
           <DialogActions>
-            <Button variant="contained">Cancel</Button>
+            <Button variant="contained" onClick={() => onCancel && onCancel()}>Cancel</Button>
             <Button variant="contained" type="submit" color="primary">Confirm</Button>
           </DialogActions>
 
@@ -191,7 +198,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean; isMyJob: boolean }> =
         {job['jobName']}
       </Typography>
       {actionButtons}
-      <SaveImageDialog open={saveImageVisible} />
+      <SaveImageDialog open={saveImageVisible} onOk={() => setSaveImageVisible(false)} onCancel={() => setSaveImageVisible(false)} />
     </Toolbar>
   );
 }

@@ -58,7 +58,8 @@ const EndpointListItem: FunctionComponent<{ endpoint: any }> = ({ endpoint }) =>
   let url;
   const availEndpoints = ['ipython', 'tensorboard']
   if (availEndpoints.includes(endpoint.name)) {
-    url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${endpoint['port']}/`
+    const path = window.btoa(JSON.stringify({ port: endpoint.port, userName: endpoint.username }))
+    url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/${path}/`
   } else if (endpoint.name === 'vscode') {
     url = `${endpoint.protocol}://${endpoint['nodeName']}.${endpoint['domain']}/endpoints/v4/${endpoint['port']}/`
   } else {
@@ -157,14 +158,14 @@ const EndpointsController: FunctionComponent<{ endpoints: any[], setPollTime: an
     if (value === false) return;
     const _name = name === 'iPython' ? 'Jupyter' : name;
     enqueueSnackbar(`${t('jobV2.enabling')} ${_name}...`);
-    post({
+    axios.post(`/clusters/${clusterId}/jobs/${jobId}/endpoints`, {
       endpoints: [name.toLowerCase()]
     }).then(() => {
       enqueueSnackbar(`${_name} ${t('jobV2.enabled')}`, { variant: 'success' })
     }, () => {
       enqueueSnackbar(`${t('jobV2.failedToEnable')} ${_name}`, { variant: 'error' })
     });
-  }, [post, enqueueSnackbar]);
+  }, [clusterId, enqueueSnackbar, jobId, t]);
 
   const onSubmit = (data: any) => {
     if (!data.interactivePorts) {

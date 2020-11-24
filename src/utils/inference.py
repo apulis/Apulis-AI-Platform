@@ -9,6 +9,7 @@ import visualization_utils
 import re
 import dns.resolver
 import logging
+import cv2
 
 def object_classifier_infer(inference_url,image,signature_name):
     res = requests.post(inference_url, json={
@@ -22,7 +23,6 @@ def object_classifier_infer(inference_url,image,signature_name):
 
 def object_detaction_infer(inference_url,imageFile,signature_name):
     import serve_utils
-    import cv2
     img_size = 608
     original_image = cv2.imdecode(np.frombuffer(imageFile, np.uint8), -1)
     image_data = serve_utils.image_preporcess(np.copy(original_image), [img_size, img_size])
@@ -64,9 +64,15 @@ def query_service_domain(domain):
 
 
 def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
-    image = Image.open(BytesIO(imageFile)).convert("RGB")
-    (im_width, im_height) = image.size
-    image_data = np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
+    # method 1
+    # image = Image.open(BytesIO(imageFile)).convert("RGB")
+    # (im_width, im_height) = image.size
+    # image_data = np.array(image.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
+
+    # method 2
+    img_np_arr = np.frombuffer(imageFile, np.uint8)
+    image_data = cv2.imdecode(img_np_arr, cv2.IMREAD_COLOR)
+
     image_data_yolo_list = image_data[np.newaxis, :].tolist()
     headers = {"Content-type": "application/json","Host":"{}-predictor-default.kfserving-pod.example.com".format(inference_url.split("/endpoints/v3/v1/models/")[1].split(":")[0])}
     service_ip = query_service_domain('istio-ingressgateway.istio-system.svc.cluster.local')

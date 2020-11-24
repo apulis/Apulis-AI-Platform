@@ -40,6 +40,8 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
     # key is vc_name, value is a map with key to be gpu_type and value to be real
     # quota
     ratio = collections.defaultdict(lambda : {})
+    # use for judge case:  1/3   1/3   1/3 ,decide the unschedule 1 belong to which vc:
+    ratio_unschedulable = collections.defaultdict(lambda : {})
 
     for vc_name, gpu_info in vc_info.items():
         for gpu_type, quota in gpu_info.items():
@@ -47,10 +49,34 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
                 unschedulable = 0
             else:
                 unschedulable = float(cluster_unschedulable.get(gpu_type, 0)) * quota / vc_quota_sum
-            vc_quota = quota - int(math.ceil(unschedulable))
+            ratio_unschedulable[vc_name][gpu_type] = unschedulable
 
+    def caculate_unschedulable(ratio_unschedulable):
+        unschedulables = []
+        for vc_name, gpu_info in ratio_unschedulable.items():
+            for gpu_type, unschedulable in gpu_info.items():
+                unschedulables.append([unschedulable,vc_name,gpu_type])
+                ratio_unschedulable[vc_name][gpu_type]=math.floor(unschedulable)
+        unschedulables = sorted(unschedulables,key=lambda x:x[1])
+        floats = collections.defaultdict(lambda : [])
+        for one in unschedulables:
+            floats[one[2]].append([math.modf(one[0])[0],one[1]])
+
+        if all([all([i[0] for i in floats_vc_list])==0 for _,floats_vc_list in floats.items()]):
+            return
+
+        for gpu_type,floats_vc_list in floats.items():
+            floats_list = [i[0] for i in floats_vc_list]
+            max_index = floats_list.index(max(floats_list))
+            max_vc_name = floats_vc_list[max_index][1]
+            ratio_unschedulable[max_vc_name][gpu_type]+=1
+
+    caculate_unschedulable(ratio_unschedulable)
+
+    for vc_name, gpu_info in vc_info.items():
+        for gpu_type, quota in gpu_info.items():
+            vc_quota = quota - int(ratio_unschedulable[vc_name][gpu_type])
             used = vc_usage.get(vc_name, {}).get(gpu_type, 0)
-
             ratio[vc_name][gpu_type] = max(vc_quota - used, 0)
 
     ratio_sum = collections.defaultdict(lambda : 0 )

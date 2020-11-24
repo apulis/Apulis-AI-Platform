@@ -1,0 +1,130 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: cvat-backend
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: cvat-backend
+      labels:
+        jobmanager-node: pod
+        app: cvat-backend
+    spec:
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      hostNetwork: true
+      containers:
+        - name: cvat-db
+          image: {{cnf["dockers"]["container"]["postgres"]["fullname"]}}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+              hostPort: 5432
+              name: cvat-db
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              value: root
+            - name: POSTGRES_DB
+              value: cvat
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: trust
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: cvat-db
+
+        - name: cvat-redis
+          image: {{cnf["dockers"]["container"]["cvat-redis"]["fullname"]}}
+          imagePullPolicy: Always
+
+        - name: cvat
+          image: {{cnf["dockers"]["container"]["cvat-backend"]["fullname"]}}
+          imagePullPolicy: Always
+          env:
+            - name: DJANGO_MODWSGI_EXTRA_ARGS
+              value: ''
+            - name: ALLOWED_HOSTS
+              value: '*'
+            - name: CVAT_REDIS_HOST
+              value: '127.0.0.1'
+            - name: CVAT_POSTGRES_HOST
+              value: '127.0.0.1'
+            - name: DJANGO_LOG_SERVER_HOST
+              value: '127.0.0.1'
+            - name: DJANGO_LOG_SERVER_PORT
+              value: '5002'
+            - name: DJANGO_LOG_VIEWER_HOST
+              value: '127.0.0.1'
+            - name: DJANGO_LOG_VIEWER_PORT
+              value: '5601'
+            - name: CVAT_ANALYTICS
+              value: '0'
+            - name: no_proxy
+              value: kibana,logstash,nuclio,${no_proxy}
+            - name: CVAT_SERVERLESS
+              value: '1'
+            - name: CVAT_NUCLIO_HOST
+              value: '127.0.0.1'
+            - name: CVAT_SHARE_URL
+              value: '/dlwsdata/storage'
+          volumeMounts:
+            - mountPath: /home/django/data
+              name: cvat-data
+            - mountPath: /home/django/keys
+              name: cvat-keys
+            - mountPath: /home/django/logs
+              name: cvat-logs
+            - mountPath: /home/django/models
+              name: cvat-models
+            - mountPath: /home/django/share
+              name: dataset
+            - mountPath: /data
+              name: dataset
+            - mountPath: /dlws/home
+              name: home
+          ports:
+            - containerPort: 8082
+              hostPort: 8082
+              name: cvat-port
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 30
+            successThreshold: 1
+            tcpSocket:
+              port: 8082
+            timeoutSeconds: 10
+
+      volumes:
+        - name: cvat-db
+          hostPath:
+            path: /var/lib/postgres
+        - name: cvat-data
+          hostPath:
+            path: /dlwsdata/storage/cvat/data
+        - name: cvat-keys
+          hostPath:
+            path: /dlwsdata/storage/cvat/keys
+        - name: cvat-logs
+          hostPath:
+            path: /dlwsdata/storage/cvat/logs
+        - name: cvat-models
+          hostPath:
+            path: /dlwsdata/storage/cvat/models
+        - name: dataset
+          hostPath:
+            path: /dlwsdata/storage
+        - name: home
+          hostPath:
+            path: /dlwsdata/work
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule

@@ -1,0 +1,44 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: logstash
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: logstash
+      labels:
+        jobmanager-node: pod
+        app: logstash
+    spec:
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      hostNetwork: true
+      containers:
+        - name: logstash
+          image: {{cnf["dockers"]["container"]["cvat_logstash"]["fullname"]}}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5002
+              hostPort: 5002
+              name: ls-port
+              protocol: TCP
+
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 30
+            successThreshold: 1
+            tcpSocket:
+              port: 5002
+            timeoutSeconds: 10
+
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule

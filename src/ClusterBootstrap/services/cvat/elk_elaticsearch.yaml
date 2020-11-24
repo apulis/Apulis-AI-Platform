@@ -1,0 +1,51 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: elasticsearch
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: elasticsearch
+      labels:
+        jobmanager-node: pod
+        app: elasticsearch
+    spec:
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      containers:
+        - name: elasticsearch
+          image: {{cnf["dockers"]["container"]["cvat_elasticsearch"]["fullname"]}}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9200
+              hostPort: 9211
+              name: es-port
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /usr/share/elasticsearch/data
+              name: elasticsearch
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 30
+            successThreshold: 1
+            tcpSocket:
+              port: 9200
+            timeoutSeconds: 10
+          resources:
+            limits:
+              memory: 2G
+      volumes:
+        - name: elasticsearch
+          hostPath:
+            path: /dlwsdata/storage/cvat/elasticsearch
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule

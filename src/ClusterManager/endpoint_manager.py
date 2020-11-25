@@ -217,7 +217,7 @@ def start_endpoint(endpoint):
         else:
             arguments = {}
     else:
-        argumetns = {}
+        arguments = {}
 
     port_name = endpoint["name"]
     if port_name == "ipython":

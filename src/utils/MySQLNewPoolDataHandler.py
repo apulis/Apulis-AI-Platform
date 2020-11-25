@@ -939,7 +939,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 conn.insert_one(sql, (
                     jobParams["jobId"], jobParams["familyToken"], jobParams["isParent"], jobParams["jobName"],
-                    jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam,jobParams["jobGroup"]))
+                    jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam,jobParams.get("jobGroup",None)))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1072,7 +1072,7 @@ class DataHandler(object):
     def GetJobList(self, userName, vcName, num=None, pageSize=None, pageNum=None, jobName=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1 and isDeleted=0" % (
+            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` ,`jobGroup` FROM `%s` where 1 and isDeleted=0" % (
                 self.jobtablename)
             params = []
             if jobName != None:
@@ -1245,8 +1245,9 @@ class DataHandler(object):
                         self.jobtablename, self.jobprioritytablename,
                         jobType)
             ## add support for `jobGroup` filter :
-            if jobGroup > 0 :
+            if jobGroup and int(jobGroup) > 0:
                 query += " and jobGroup='{}'".format(jobGroup)
+
 
             ## all jobs
             if jobStatus.lower() != "all":
@@ -1330,7 +1331,7 @@ class DataHandler(object):
             conn.commit()
 
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('GetJobListV3 Exception: %s', str(e))
 
         finally:
             if cursor is not None:

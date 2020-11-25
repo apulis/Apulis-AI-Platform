@@ -1068,10 +1068,13 @@ class PythonLauncher(Launcher):
             )})
             ### add support for job group
             if "jobGroup" in job:
-               job_object.params["envs"].append({"name":"JOB_GROUP","value":job["jobGroup"]})
+               job_object.params["envs"].append({"name":"DLWS_JOB_GROUP","value":job["jobGroup"]})
             ### add support for job tracking
-            if "track" in job_object.params:
-               job_object.params["envs"].append({"name":"JOB_TRACK","value":job_object.params["track"]})   
+            if "track" in job_object.params and int(job_object.params["track"]) == 1:
+               job_object.params["envs"].append({"name":"DLWS_JOB_TRACK","value":"1"})
+               job_object.params["envs"].append({"name":"MLFLOW_TRACKING_URI","value":"http://mlflow.default:9010"})
+               job_object.params["envs"].append({"name":"MLFLOW_EXPERIMENT_NAME","value": "ai_arts_" + job["jobGroup"]})
+               job_object.params["envs"].append({"name":"MLFLOW_RUN_ID","value":job_id})
 
 
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()

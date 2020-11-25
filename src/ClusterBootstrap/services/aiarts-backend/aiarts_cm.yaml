@@ -45,6 +45,7 @@ data:
       {% endif %}
 
     DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
+    TrackingUrl: http://localhost:9010/api/2.0/mlflow
     image:
       tensorflow:
         - apulistech/ubuntu:18.04-amd64
@@ -60,6 +61,8 @@ data:
         - apulistech/mindspore:0.2.0-alpha
       caffe:
         - apulistech/caffe:BVLC
+      test:
+        - apulistech/test-mlflow:py3
 
     InteractiveModeJob: false
     PrivateRegistry: {{cnf["private_docker_registry"]}}

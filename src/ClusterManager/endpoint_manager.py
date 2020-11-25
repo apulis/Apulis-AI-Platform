@@ -133,7 +133,20 @@ def kubectl_exec(params, timeout=None):
     return ""
 
 def setup_jupyter_server(user_name, pod_name,jupyter_port, baseurl):
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && cd /home/" + user_name + " && chmod 777 /job/ &&  runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+baseurl+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
+    bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive;
+    if ! [ -x \"$(command -v jupyter)\" ];then
+        apt-get update
+        &&  umask 022
+        && apt-get install -y python3-pip
+        && python3 -m pip install --upgrade pip
+        && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+        && python3 -m pip install jupyterlab;
+    fi
+    && cd /home/%s
+    && chmod 777 /job/
+    &&  runuser -l %s -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=%s --NotebookApp.base_url=/endpoints/%s/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"
+    '
+    """ (user_name, user_name, str(jupyter_port), baseurl)
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start jupyter server in container. JobId: %s ,output: %s" % (pod_name,output))
@@ -144,22 +157,31 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,baseurl, arguments):
         log_dir = arguments['tensorboard_log_dir']
     else:
         log_dir = "~/tensorboard/${DLWS_JOB_ID}/logs"
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive;" + \
-        " if ! [ -x \"$(command -v tensorboard)\" ];then apt-get update && umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install tensorboard;fi" + \
-        " && cd /home/" + user_name + \
-        " && runuser -l " + user_name + " -c \" export PYTHONPATH=/usr/local/lib/python3.6/dist-packages; " + \
-        "mkdir -p " + log_dir + "; chmod 777 " + log_dir + " ; " + \
-        "tensorboard --logdir=" + log_dir + " --host=0.0.0.0 --port=" + str(tensorboard_port) + " --path_prefix=/endpoints/" + \
-        str(baseurl)+"/ &>/dev/null &\"'"
+    bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive;
+        if ! [ -x \"$(command -v tensorboard)\" ];then
+            apt-get update
+            && umask 022
+            && apt-get install -y python3-pip
+            && python3 -m pip install --upgrade pip
+            && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+            && python3 -m pip install tensorboard;
+        fi
+        && cd /home/%s
+        && runuser -l %s -c \" export PYTHONPATH=/usr/local/lib/python3.6/dist-packages;
+        mkdir -p  %s ;
+        chmod 777 %s ;
+        tensorboard --logdir=%s --host=0.0.0.0 --port=%s --path_prefix=/endpoints/%s/ &>/dev/null &\"
+        '
+        """ (user_name, user_name, log_dir, log_dir, log_dir, str(tensorboard_port), baseurl)
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start tensorboard in container. JobId: %s ,output: %s" % (pod_name,output))
 
 def setup_vscode(user_name, pod_name,vscode_port):
-    bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive; 
-            if ! [ -x \"$(command -v code-server)\" ];then 
-                apt-get update && umask 022 
-                version="$(curl -fsSLI -o /dev/null -w "%s" https://github.com/cdr/code-server/releases/latest)"                                                                                                                         
+    bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive;
+            if ! [ -x \"$(command -v code-server)\" ];then
+                apt-get update && umask 022
+                version="$(curl -fsSLI -o /dev/null -w "%s" https://github.com/cdr/code-server/releases/latest)"
                 version="${version#https://github.com/cdr/code-server/releases/tag/}"
                 version="${version#v}"
                 echo "$version"

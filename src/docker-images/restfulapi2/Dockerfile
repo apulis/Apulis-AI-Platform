@@ -34,5 +34,7 @@ ADD ClusterManager /DLWorkspace/src/ClusterManager
 
 # add version info
 ADD version-info /
+RUN apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev
+
 
 CMD /run.sh

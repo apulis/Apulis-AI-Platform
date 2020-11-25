@@ -42,7 +42,12 @@ function prebuild(){
 
     rm -rf restfulapi2
     cp -r ../../docker-images/restfulapi2 .
-    cd restfulapi2
+
+    # 3. 渲染配置文件
+    cd ..
+    ./deploy.py rendertemplate ../docker-images/restfulapi2/ports.conf build/restfulapi2/ports.conf
+    ./deploy.py rendertemplate ../docker-images/restfulapi2/000-default.conf build/restfulapi2/000-default.conf
+    cd build/restfulapi2
 
     #rm -rf Jobs_Templete
     #rm -rf utils
@@ -56,8 +61,14 @@ function prebuild(){
     cp ../../../../version-info version-info
 
     # 下载kubectl，jobmanger会用到？
-    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-    chmod +x ./kubectl
+    if [ ! -e "../kubectl" ]; then
+        curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x ./kubectl
+        cp kubectl ../
+    else
+        cp ../kubectl ./
+        chmod +x ./kubectl
+    fi
 }
 
 function build(){

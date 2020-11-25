@@ -132,8 +132,8 @@ def kubectl_exec(params, timeout=None):
         return str(e)
     return ""
 
-def setup_jupyter_server(user_name, pod_name,jupyter_port, params):
-    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && cd /home/" + user_name + " && chmod 777 /job/ &&  runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+params+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
+def setup_jupyter_server(user_name, pod_name,jupyter_port, port):
+    bash_script = "bash -c 'export DEBIAN_FRONTEND=noninteractive; if ! [ -x \"$(command -v jupyter)\" ];then apt-get update &&  umask 022 && apt-get install -y python3-pip && python3 -m pip install --upgrade pip && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && python3 -m pip install jupyterlab;fi && cd /home/" + user_name + " && chmod 777 /job/ &&  runuser -l " + user_name + " -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=" + str(jupyter_port) + " --NotebookApp.base_url=/endpoints/"+port+ "/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"'"
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start jupyter server in container. JobId: %s ,output: %s" % (pod_name,output))
@@ -221,14 +221,14 @@ def start_endpoint(endpoint):
 
     port_name = endpoint["name"]
     if port_name == "ipython":
-        port = base64.b64encode(str(port).encode("utf-8"))
-        params = base64.b64encode(json.dumps({"port": str(port), "userName": user_name}, sort_keys=True, separators=(',', ':')))
-        setup_jupyter_server(user_name, pod_name,podPort, params)
+        port = base64.b64encode(json.dumps({"port": str(port), "userName": user_name}, sort_keys=True, separators=(',', ':')))
+        setup_jupyter_server(user_name, pod_name,podPort, port)
     elif port_name == "tensorboard":
-        port = base64.b64encode(str(port).encode("utf-8"))
+        port = base64.b64encode(json.dumps({"port": str(port), "userName": user_name}, sort_keys=True, separators=(',', ':')))
         # if there is extra log dir(specify as "tensorboard_log_dir") in arguments, tensorboard command can modify log dir
         setup_tensorboard(user_name, pod_name,podPort,port, arguments)
     elif port_name == "vscode":
+        # vscode don't need port path specification
         setup_vscode(user_name, pod_name,podPort)
 
 def create_node_port(endpoint):

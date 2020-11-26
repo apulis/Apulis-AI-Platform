@@ -1419,6 +1419,151 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetJobCount(self, vcName, jobType, jobStatus, searchWord):
+        total = 0
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = """SELECT count(*) AS total FROM {} where isDeleted=0""".format(self.jobtablename)
+            
+            if jobType.lower() != "all":
+                query += " and jobType = '%s'" % jobType
+
+            ## all jobs
+            if jobStatus.lower() != "all":
+                query += " and jobStatus = '%s'" % jobStatus
+            else:
+                pass
+
+            query += " and vcName = '%s'" % vcName
+
+            if searchWord is not None and len(searchWord) > 0:
+                query += " and jobName like '%"
+                query += "%s" % (sql_injection_parse(searchWord))
+                query += "%'"
+            else:
+                pass
+
+            if status is not None:
+                if "," not in status:
+                    query += " and jobStatus %s '%s'" % (op[0], status)
+                else:
+                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_statement = (" " + op[1] + " ").join(status_list)
+                    query += " and ( %s ) " % status_statement
+            else:
+                pass
+
+            logger.info(query)
+            cursor.execute(query)
+            total = cursor.fetchone()[0]
+
+            conn.commit()
+
+        except Exception as e:
+            logger.exception('GetAllJobList Exception: %s', str(e))
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+        return total
+
+    @record
+    def GetAllJobList(self, vcName, jobType, jobStatus, pageNum,
+            pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
+        ret = {"jobs": []}
+
+        conn = None
+        cursor = None
+
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
+                        jobType, jobTime, jobParams, priority FROM {} left join {}
+                        on {}.jobId =  {}.jobId where isDeleted=0""".format(self.jobtablename,
+                        self.jobtablename, self.jobprioritytablename,
+                        self.jobtablename, self.jobprioritytablename)
+            
+            if jobType.lower() != "all":
+                query += " and jobType = '%s'" % jobType
+
+            ## all jobs
+            if jobStatus.lower() != "all":
+                query += " and jobStatus = '%s'" % jobStatus
+            else:
+                pass
+
+            query += " and vcName = '%s'" % vcName
+
+            if searchWord is not None and len(searchWord) > 0:
+                query += " and jobName like '%"
+                query += "%s" % (sql_injection_parse(searchWord))
+                query += "%'"
+            else:
+                pass
+
+            if status is not None:
+                if "," not in status:
+                    query += " and jobStatus %s '%s'" % (op[0], status)
+                else:
+                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_statement = (" " + op[1] + " ").join(status_list)
+                    query += " and ( %s ) " % status_statement
+            else:
+                pass
+
+            if order != "asc":
+                order = "desc"
+
+            if orderBy is None or orderBy == "":
+                query += " order by jobTime Desc"
+            else:
+                query += "order by %s %s" % (orderBy, order)
+
+            if pageNum is not None and pageSize is not None:
+                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+            else:
+                pass
+
+            logger.info(query)
+            cursor.execute(query)
+            data = cursor.fetchall()
+
+            columns = [column[0] for column in cursor.description]
+            for item in data:
+                record = dict(zip(columns, item))
+
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                else:
+                    pass
+
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
+                ret["jobs"].append(record)
+
+            conn.commit()
+
+        except Exception as e:
+            logger.exception('GetAllJobList Exception: %s', str(e))
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+        return ret
+
+
+    @record
     def GetUserJobs(self, userName, vcName, jobStatus):
 
         # vcName: multiple vcs are separated by comman
@@ -2416,7 +2561,11 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' and isDeleted=0 and vcName='%s' group by jobStatus;" % (self.jobtablename, userName, jobType, vcName)
+            query = "select jobStatus, count(*) as count from `%s` where jobType='%s' and isDeleted=0 and vcName='%s'" % (self.jobtablename, userName, jobType, vcName)
+            if userName != "all":
+                query += " and userName='%s'" % (userName)
+            query += " group by jobStatus;"
+
             logger.info(query)
 
             with MysqlConn() as conn:

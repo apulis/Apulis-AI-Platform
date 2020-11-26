@@ -47,19 +47,28 @@ data:
     DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
     image:
       tensorflow:
-        - apulistech/ubuntu:18.04-amd64
-        - apulistech/tensorflow:2.3.0-gpu-py3
-        - apulistech/tensorflow:1.14.0-gpu-py3
-        - apulistech/tensorflow:1.15.2-gpu-py3
-        - apulistech/tf:1.15-arm-rc1
+        - image: apulistech/ubuntu:18.04-amd64
+          desc: "测试1"
+        - image: apulistech/tensorflow:2.3.0-gpu-py3
+          desc: "测试2"
+        - image: apulistech/tensorflow:1.14.0-gpu-py3
+          desc: "测试3"
+        - image: apulistech/tensorflow:1.15.2-gpu-py3
+          desc: "测试4"
+        - image: apulistech/tf:1.15-arm-rc1
+          desc: "测试5"
       pytorch:
-        - apulistech/pytorch:1.5
+        - image: apulistech/pytorch:1.5
+          desc: "测试6"
       mxnet:
-        - apulistech/mxnet:2.0.0-gpu-py3
+        - image: apulistech/mxnet:2.0.0-gpu-py3
+          desc: "测试7"
       mindspore:
-        - apulistech/mindspore:0.2.0-alpha
+        - image: apulistech/mindspore:0.2.0-alpha
+          desc: "测试8"
       caffe:
-        - apulistech/caffe:BVLC
+        - image: apulistech/caffe:BVLC
+          desc: "测试9"
 
     InteractiveModeJob: false
     PrivateRegistry: {{cnf["private_docker_registry"]}}

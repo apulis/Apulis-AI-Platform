@@ -243,9 +243,11 @@ def start_endpoint(endpoint):
 
     port_name = endpoint["name"]
     if port_name == "ipython":
+        port = base64.b64encode(str(port).encode("utf-8"))
         baseurl = base64.b64encode(json.dumps({"port": str(port), "userName": user_name}, sort_keys=True, separators=(',', ':')))
         setup_jupyter_server(user_name, pod_name,podPort, baseurl)
     elif port_name == "tensorboard":
+        port = base64.b64encode(str(port).encode("utf-8"))
         baseurl = base64.b64encode(json.dumps({"port": str(port), "userName": user_name}, sort_keys=True, separators=(',', ':')))
         # if there is extra log dir(specify as "tensorboard_log_dir") in arguments, tensorboard command can modify log dir
         setup_tensorboard(user_name, pod_name,podPort,baseurl, arguments)

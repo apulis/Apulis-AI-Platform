@@ -1427,11 +1427,11 @@ class DataHandler(object):
 
             query = """SELECT count(*) AS total FROM {} where isDeleted=0""".format(self.jobtablename)
             
-            if jobType.lower() != "all":
+            if jobType.lower() != "all" and len(jobType) > 0:
                 query += " and jobType = '%s'" % jobType
 
             ## all jobs
-            if jobStatus.lower() != "all":
+            if jobStatus.lower() != "all" and len(jobStatus) > 0:
                 query += " and jobStatus = '%s'" % jobStatus
             else:
                 pass
@@ -1445,16 +1445,6 @@ class DataHandler(object):
             else:
                 pass
 
-            if status is not None:
-                if "," not in status:
-                    query += " and jobStatus %s '%s'" % (op[0], status)
-                else:
-                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
-                    status_statement = (" " + op[1] + " ").join(status_list)
-                    query += " and ( %s ) " % status_statement
-            else:
-                pass
-
             logger.info(query)
             cursor.execute(query)
             total = cursor.fetchone()[0]
@@ -1462,7 +1452,7 @@ class DataHandler(object):
             conn.commit()
 
         except Exception as e:
-            logger.exception('GetAllJobList Exception: %s', str(e))
+            logger.exception('GetJobCount Exception: %s', str(e))
 
         finally:
             if cursor is not None:
@@ -1490,11 +1480,11 @@ class DataHandler(object):
                         self.jobtablename, self.jobprioritytablename,
                         self.jobtablename, self.jobprioritytablename)
             
-            if jobType.lower() != "all":
+            if jobType.lower() != "all" and len(jobType) > 0:
                 query += " and jobType = '%s'" % jobType
 
             ## all jobs
-            if jobStatus.lower() != "all":
+            if jobStatus.lower() != "all" and len(jobStatus) > 0:
                 query += " and jobStatus = '%s'" % jobStatus
             else:
                 pass
@@ -1505,16 +1495,6 @@ class DataHandler(object):
                 query += " and jobName like '%"
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
-            else:
-                pass
-
-            if status is not None:
-                if "," not in status:
-                    query += " and jobStatus %s '%s'" % (op[0], status)
-                else:
-                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
-                    status_statement = (" " + op[1] + " ").join(status_list)
-                    query += " and ( %s ) " % status_statement
             else:
                 pass
 
@@ -2561,9 +2541,12 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where jobType='%s' and isDeleted=0 and vcName='%s'" % (self.jobtablename, userName, jobType, vcName)
-            if userName != "all":
+            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 and vcName='%s'" % (self.jobtablename, vcName)
+            if userName != "all" and len(userName) > 0:
                 query += " and userName='%s'" % (userName)
+            if len(jobType) > 0:
+                query += " and jobType='%s'" % (jobType)
+
             query += " group by jobStatus;"
 
             logger.info(query)

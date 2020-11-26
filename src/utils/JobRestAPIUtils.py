@@ -722,7 +722,7 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSi
     return jobs
 
 
-def GetJobCount(vcName, jobOwner, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order):
+def GetJobCount(vcName, jobType, jobStatus, searchWord):
     count = 0
     dataHandler = None
 

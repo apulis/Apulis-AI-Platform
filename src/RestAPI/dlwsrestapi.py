@@ -739,7 +739,7 @@ class ListAllJobs(Resource):
         resp = generate_response(jobs)
         return resp
 
-api.add_resource(ListJobsV3, '/ListAllJobs')
+api.add_resource(ListAllJobs, '/ListAllJobs')
 
 class GetVCPendingJobs(Resource):
     def get(self):

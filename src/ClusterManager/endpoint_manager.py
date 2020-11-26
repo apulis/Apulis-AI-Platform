@@ -134,19 +134,19 @@ def kubectl_exec(params, timeout=None):
 
 def setup_jupyter_server(user_name, pod_name,jupyter_port, baseurl):
     bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive;
-    if ! [ -x \"$(command -v jupyter)\" ];then
-        apt-get update
-        &&  umask 022
-        && apt-get install -y python3-pip
-        && python3 -m pip install --upgrade pip
-        && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-        && python3 -m pip install jupyterlab;
-    fi
-    && cd /home/%s
-    && chmod 777 /job/
-    &&  runuser -l %s -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=%s --NotebookApp.base_url=/endpoints/%s/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"
-    '
-    """ (user_name, user_name, str(jupyter_port), baseurl)
+        if ! [ -x \"$(command -v jupyter)\" ];then
+            apt-get update && 
+            umask 022 && 
+            apt-get install -y python3-pip && 
+            python3 -m pip install --upgrade pip && 
+            python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && 
+            python3 -m pip install jupyterlab;
+        fi && 
+        cd /home/%s && 
+        chmod 777 /job/ &&  
+        runuser -l %s -c \"jupyter lab --no-browser --ip=0.0.0.0 --notebook-dir=/ --NotebookApp.token= --port=%s --NotebookApp.base_url=/endpoints/%s/ --NotebookApp.allow_origin='*' &>/job/jupyter.log &\"
+        '
+        """ % (user_name, user_name, jupyter_port, baseurl)
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start jupyter server in container. JobId: %s ,output: %s" % (pod_name,output))
@@ -159,20 +159,20 @@ def setup_tensorboard(user_name, pod_name,tensorboard_port,baseurl, arguments):
         log_dir = "~/tensorboard/${DLWS_JOB_ID}/logs"
     bash_script = """bash -c 'export DEBIAN_FRONTEND=noninteractive;
         if ! [ -x \"$(command -v tensorboard)\" ];then
-            apt-get update
-            && umask 022
-            && apt-get install -y python3-pip
-            && python3 -m pip install --upgrade pip
-            && python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-            && python3 -m pip install tensorboard;
-        fi
-        && cd /home/%s
-        && runuser -l %s -c \" export PYTHONPATH=/usr/local/lib/python3.6/dist-packages;
+            apt-get update && 
+            umask 022 && 
+            apt-get install -y python3-pip && 
+            python3 -m pip install --upgrade pip && 
+            python3 -m pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && 
+            python3 -m pip install tensorboard;
+        fi && 
+        cd /home/%s && 
+        runuser -l %s -c \" export PYTHONPATH=/usr/local/lib/python3.6/dist-packages;
         mkdir -p  %s ;
         chmod 777 %s ;
         tensorboard --logdir=%s --host=0.0.0.0 --port=%s --path_prefix=/endpoints/%s/ &>/dev/null &\"
         '
-        """ (user_name, user_name, log_dir, log_dir, log_dir, str(tensorboard_port), baseurl)
+        """ % (user_name, user_name, log_dir, log_dir, log_dir, str(tensorboard_port), baseurl)
     output = kubectl_exec("exec %s %s" % (pod_name, " -- " + bash_script))
     if output != "":
         raise Exception("Failed to start tensorboard in container. JobId: %s ,output: %s" % (pod_name,output))

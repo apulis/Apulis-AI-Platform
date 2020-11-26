@@ -1465,7 +1465,7 @@ class DataHandler(object):
     @record
     def GetAllJobList(self, vcName, jobType, jobStatus, pageNum,
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
-        ret = {"jobs": []}
+        jobs = []
 
         conn = None
         cursor = None
@@ -1527,7 +1527,7 @@ class DataHandler(object):
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
-                ret["jobs"].append(record)
+                jobs.append(record)
 
             conn.commit()
 
@@ -1540,7 +1540,7 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        return ret
+        return jobs
 
 
     @record

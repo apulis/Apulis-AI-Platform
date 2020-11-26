@@ -59,8 +59,8 @@ function setup_npu_config() {
 
 		generate_envs
 
-		useradd ${DLWS_USER_NAME} -g HwHiAiUser -s /bin/bash -m
-		python ${SCRIPT_DIR}/setup_huawei.py --command ${DLWS_LAUNCH_CMD} --out ${npu_info_dir} 
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
 		
 
 	## npu distributed job - master
@@ -68,8 +68,8 @@ function setup_npu_config() {
 	then
 		## master pod, generate hccl.json
 		python ${SCRIPT_DIR}/setup_npu.py master
-		useradd ${DLWS_USER_NAME} -g HwHiAiUser -s /bin/bash -m
-		python ${SCRIPT_DIR}/setup_huawei.py --command ${DLWS_LAUNCH_CMD} --out ${npu_info_dir}
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
 
 	## not distributed job
 	elif [ "$DLWS_ROLE_NAME" = "master" ] && [ ! -z "$NPU_IPS" ];
@@ -81,8 +81,8 @@ function setup_npu_config() {
 
 		python ${SCRIPT_DIR}/setup_npu.py master
 		generate_envs	
-		useradd ${DLWS_USER_NAME} -g HwHiAiUser -s /bin/bash -m
-		python ${SCRIPT_DIR}/setup_huawei.py --command ${DLWS_LAUNCH_CMD} --out ${npu_info_dir}
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
 	fi
 
 	## create npu log collection script 
@@ -253,3 +253,4 @@ fi
 
 # exit
 exit ${EXIT_CODE}
+

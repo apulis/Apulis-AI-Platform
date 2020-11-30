@@ -1017,9 +1017,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     checked={tensorboard}
                     onChange={(e, checked) => setTensorboard(checked)}
                   />
+                  
                   <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
                 </Grid>
-                
+                {iconInfoShow && <Grid item xs={12} container justify="flex-end">
+                  <Chip
+                    icon={<Help/>}
+                    // label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
+                    label={t(`submission.tensorboardListenTips`)}
+                  />
+                </Grid>}
               </Grid>
             </CardContent>
             <Collapse in={advanced}>

@@ -16,6 +16,7 @@ const index = {
   imageNameRequired: '镜像名称是必填的',
   imageVersionRequired: '镜像版本是必填的',
   imageNameReg: '只允许数字，字母和下划线的组合',
+  imageVersionReg: '只允许数字，字母和小数点',
   confirm: '确定',
   cancel: '取消'
 

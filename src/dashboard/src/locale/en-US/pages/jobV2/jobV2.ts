@@ -15,6 +15,7 @@ const index = {
   imageNameRequired: 'Image name is required!',
   imageVersionRequired: 'Image version is required!',
   imageNameReg: 'The Name Must be composed of letter, numbers, underscore or horizontal line！',
+  imageVersionReg: 'Only numbers, English letters and decimal points are allowed',
   failedToFetchJob: 'Failed to fetch job:',
   confirm: 'Confirm',
   cancel: 'Cancel'

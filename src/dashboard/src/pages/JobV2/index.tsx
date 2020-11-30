@@ -120,8 +120,8 @@ export const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCance
             inputRef={register({
               required: t('jobV2.imageVersionRequired') as string,
               pattern: {
-                value: NameReg,
-                message: t('jobV2.imageNameReg')
+                value: /^[A-Za-z0-9|.]+$/,
+                message: t('jobV2.imageVersionReg')
               }
             })}
           />

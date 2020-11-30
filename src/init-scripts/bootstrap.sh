@@ -15,11 +15,12 @@ function generate_envs() {
 	fi
 
 	cat >>${ENV_FILE} <<EOF
-export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/${osflag}-linux_gcc7.3.0/opp/op_impl/built-in/ai_core/tbe:
-export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/atc/lib64:/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/usr/local/Ascend/nnae/latest/${osflag}-linux_gcc7.3.0/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:/usr/local/lib:/usr/lib/
-export TBE_IMPL_PATH=/usr/local/Ascend/ascend-toolkit/latest/${osflag}-linux_gcc7.3.0/opp/op_impl/built-in/ai_core/tbe
-export PATH=/usr/local/Ascend/ascend-toolkit/latest/${osflag}-linux_gcc7.3.0/fwkacllib/ccec_compiler/bin/:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/${osflag}-linux_gcc7.3.0/opp
+export PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:$PYTHONPATH
+export LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/arm64-linux/atc/lib64:$LD_LIBRARY_PATH
+export TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe
+export PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/
+export ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp
+
 export SOC_VERSION=Ascend910
 
 export RANK_SIZE=1
@@ -58,11 +59,17 @@ function setup_npu_config() {
 
 		generate_envs
 
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
+		
+
 	## npu distributed job - master
 	elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
 	then
 		## master pod, generate hccl.json
 		python ${SCRIPT_DIR}/setup_npu.py master
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
 
 	## not distributed job
 	elif [ "$DLWS_ROLE_NAME" = "master" ] && [ ! -z "$NPU_IPS" ];
@@ -74,6 +81,8 @@ function setup_npu_config() {
 
 		python ${SCRIPT_DIR}/setup_npu.py master
 		generate_envs	
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
 	fi
 
 	## create npu log collection script 
@@ -244,3 +253,4 @@ fi
 
 # exit
 exit ${EXIT_CODE}
+

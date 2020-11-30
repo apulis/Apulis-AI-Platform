@@ -37,6 +37,7 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
             vc_total[vc_name][gpu_type] = total
             vc_quota_sum += total
 
+
     # key is vc_name, value is a map with key to be gpu_type and value to be real
     # quota
     ratio = collections.defaultdict(lambda : {})
@@ -48,7 +49,9 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
             if vc_quota_sum == 0:
                 unschedulable = 0
             else:
-                unschedulable = float(cluster_unschedulable.get(gpu_type, 0)) * quota / vc_quota_sum
+                cluster_schedulable_num = cluster_total.get(gpu_type,0)-cluster_unschedulable.get(gpu_type, 0)
+                cluster_unschedulable_num = max(vc_quota_sum - cluster_schedulable_num,0)
+                unschedulable = float(cluster_unschedulable_num) * quota / vc_quota_sum
             ratio_unschedulable[vc_name][gpu_type] = unschedulable
 
     def caculate_unschedulable(ratio_unschedulable):

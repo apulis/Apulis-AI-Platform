@@ -376,6 +376,7 @@ class DataHandler(object):
                     `name`  VARCHAR(255) NOT NULL,
                     `scope` VARCHAR(255) NOT NULL COMMENT '"master", "vc:vcname" or "user:username"',
                     `json`  TEXT         NOT NULL,
+                    `isDefault`  TINYINT(1)  DEFAULT 0,
                     `time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (`id`),
                     CONSTRAINT name_scope UNIQUE(`name`, `scope`)
@@ -386,6 +387,60 @@ class DataHandler(object):
                 conn.insert_one(sql)
                 conn.commit()
 
+            # insert a default template
+
+            sql = """
+                insert into %s (
+                    id, name, scope, json, isDefault
+                )
+                values(
+                    0, "default_template", "vc:platform", %s, 1
+                ) on duplicate key update id=0
+            """ %(self.templatetablename, "%s")
+            default_job_json={
+                "workPath": "", 
+                "interactivePorts": "", 
+                "name": "Default Job", 
+                "gpuType": "", 
+                "workers": 0, 
+                "jobPath": "", 
+                "dataPath": "", 
+                "gpuNumPerDevice": 0, 
+                "enableWorkPath": True,
+                "preemptible": False,
+                "enableJobPath": True,
+                "command": " while true; do echo \"job running\"; sleep 1; done", 
+                "environmentVariables": [], 
+                "tensorboard": False,
+                "plugins": {
+                    "blobfuse": [
+                        {
+                            "accountKey": "", 
+                            "containerName": "", 
+                            "mountPath": "", 
+                            "mountOptions": "", 
+                            "accountName": ""
+                        }
+                    ], 
+                    "imagePull": [
+                        {
+                            "username": "", 
+                            "password": "", 
+                            "registry": ""
+                        }
+                    ]
+                }, 
+                "ipython": True,
+                "gpus": 1, 
+                "type": "RegularJob", 
+                "image": "ubuntu:18.04", 
+                "enableDataPath": True,
+                "ssh": True
+            }
+            with MysqlConn() as conn:
+                conn.insert_one(sql,(json.dumps(default_job_json),))
+                conn.commit()
+            
             sql = """
                 CREATE TABLE IF NOT EXISTS  `%s`
                 (
@@ -1364,6 +1419,131 @@ class DataHandler(object):
         return ret
 
     @record
+    def GetJobCount(self, vcName, jobType, jobStatus, searchWord):
+        total = 0
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = """SELECT count(*) AS total FROM {} where isDeleted=0""".format(self.jobtablename)
+            
+            if jobType.lower() != "all" and len(jobType) > 0:
+                query += " and jobType = '%s'" % jobType
+
+            ## all jobs
+            if jobStatus.lower() != "all" and len(jobStatus) > 0:
+                query += " and jobStatus = '%s'" % jobStatus
+            else:
+                pass
+
+            query += " and vcName = '%s'" % vcName
+
+            if searchWord is not None and len(searchWord) > 0:
+                query += " and jobName like '%"
+                query += "%s" % (sql_injection_parse(searchWord))
+                query += "%'"
+            else:
+                pass
+
+            logger.info(query)
+            cursor.execute(query)
+            total = cursor.fetchone()[0]
+
+            conn.commit()
+
+        except Exception as e:
+            logger.exception('GetJobCount Exception: %s', str(e))
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+        return total
+
+    @record
+    def GetAllJobList(self, vcName, jobType, jobStatus, pageNum,
+            pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
+        jobs = []
+
+        conn = None
+        cursor = None
+
+        try:
+            conn = self.pool.get_connection()
+            cursor = conn.cursor()
+
+            query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
+                        jobType, jobTime, jobParams, priority FROM {} left join {}
+                        on {}.jobId =  {}.jobId where isDeleted=0""".format(self.jobtablename,
+                        self.jobtablename, self.jobprioritytablename,
+                        self.jobtablename, self.jobprioritytablename)
+            
+            if jobType.lower() != "all" and len(jobType) > 0:
+                query += " and jobType = '%s'" % jobType
+
+            ## all jobs
+            if jobStatus.lower() != "all" and len(jobStatus) > 0:
+                query += " and jobStatus = '%s'" % jobStatus
+            else:
+                pass
+
+            query += " and vcName = '%s'" % vcName
+
+            if searchWord is not None and len(searchWord) > 0:
+                query += " and jobName like '%"
+                query += "%s" % (sql_injection_parse(searchWord))
+                query += "%'"
+            else:
+                pass
+
+            if order != "asc":
+                order = "desc"
+
+            if orderBy is None or orderBy == "":
+                query += " order by jobTime Desc"
+            else:
+                query += "order by %s %s" % (orderBy, order)
+
+            if pageNum is not None and pageSize is not None:
+                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+            else:
+                pass
+
+            logger.info(query)
+            cursor.execute(query)
+            data = cursor.fetchall()
+
+            columns = [column[0] for column in cursor.description]
+            for item in data:
+                record = dict(zip(columns, item))
+
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                else:
+                    pass
+
+                if record["jobParams"] is not None:
+                    record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
+                jobs.append(record)
+
+            conn.commit()
+
+        except Exception as e:
+            logger.exception('GetAllJobList Exception: %s', str(e))
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+            if conn is not None:
+                conn.close()
+
+        return jobs
+
+
+    @record
     def GetUserJobs(self, userName, vcName, jobStatus):
 
         # vcName: multiple vcs are separated by comman
@@ -2202,7 +2382,7 @@ class DataHandler(object):
     def GetTemplates(self, scope):
         ret = []
         try:
-            query = "SELECT `name`, `json` FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
+            query = "SELECT `name`, `json`, `isDefault` FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
             with MysqlConn() as conn:
                 rets = conn.select_many(query,[scope])
             for one in rets:
@@ -2361,7 +2541,14 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where userName='%s' and jobType='%s' and isDeleted=0 and vcName='%s' group by jobStatus;" % (self.jobtablename, userName, jobType, vcName)
+            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 and vcName='%s'" % (self.jobtablename, vcName)
+            if userName != "all" and len(userName) > 0:
+                query += " and userName='%s'" % (userName)
+            if len(jobType) > 0:
+                query += " and jobType='%s'" % (jobType)
+
+            query += " group by jobStatus;"
+
             logger.info(query)
 
             with MysqlConn() as conn:

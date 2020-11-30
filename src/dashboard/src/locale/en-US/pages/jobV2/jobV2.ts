@@ -12,9 +12,12 @@ const index = {
   imageVersion: 'Image Version',
   desc: 'Description',
   successSubmitImage: 'Successfully',
-  imageNameRequired: 'Image Name is required!',
+  imageNameRequired: 'Image name is required!',
+  imageVersionRequired: 'Image version is required!',
   imageNameReg: 'The Name Must be composed of letter, numbers, underscore or horizontal line！',
   failedToFetchJob: 'Failed to fetch job:',
+  confirm: 'Confirm',
+  cancel: 'Cancel'
 }
 const endpoints = {
   newInteractivePort: 'New Interactive Port',

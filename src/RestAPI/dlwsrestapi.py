@@ -696,6 +696,51 @@ class ListJobsV3(Resource):
 
 api.add_resource(ListJobsV3, '/ListJobsV3')
 
+# shows a list of all jobs, and lets you POST to add new tasks
+class GetJobCount(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('vcName')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+        parser.add_argument('searchWord')
+
+        args = parser.parse_args()
+        count = JobRestAPIUtils.GetJobCount(args["vcName"],
+                args["jobType"], args["jobStatus"], args["searchWord"])
+
+        resp = generate_response(count)
+        return resp
+
+api.add_resource(GetJobCount, '/GetJobCount')
+
+# shows a list of all jobs, and lets you POST to add new tasks
+class ListAllJobs(Resource):
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('vcName')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+        parser.add_argument('pageNum')
+        parser.add_argument('pageSize')
+        parser.add_argument('searchWord')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
+
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.GetAllJobList(args["vcName"],
+                args["jobType"], args["jobStatus"],
+                args["pageNum"], args["pageSize"],
+                args["searchWord"], args["orderBy"], args["order"])
+
+        resp = generate_response(jobs)
+        return resp
+
+api.add_resource(ListAllJobs, '/ListAllJobs')
+
 class GetVCPendingJobs(Resource):
     def get(self):
 
@@ -1981,7 +2026,7 @@ class Endpoint(Resource):
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]
-        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard"] ]:
+        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard","vscode"] ]:
             if any(required_field not in interactive_port for required_field in ["name", "podPort"]):
                 # if ["name", "port"] not in interactive_port:
                 return ("Bad request, interactive port should have \"name\" and \"podPort\"]: %s" % requested_endpoints), 400
@@ -2246,6 +2291,22 @@ class GetJobSummary(Resource):
         return resp
 
 api.add_resource(GetJobSummary, '/GetJobSummary')
+class GetPlatformVersionInfo(Resource):
+    def get(self):
+        current_version, version_history = JobRestAPIUtils.GetVersionInfo()
+        ret = {}
+        ret['version'] = current_version
+        ret['history'] = version_history
+        try:
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+        except Exception as e:
+            print (e)
+            return "error"
+        return resp
+
+api.add_resource(GetPlatformVersionInfo, '/VersionInfo')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

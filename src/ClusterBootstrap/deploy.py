@@ -19,7 +19,7 @@ import copy
 import numbers
 import requests
 import platform
-
+from collections import OrderedDict
 from os.path import expanduser
 
 import yaml
@@ -4044,11 +4044,9 @@ def start_kube_service(servicename):
     else:
         archtypes = get_archtypes()
 
-    service_set=set()
-    if "arm64" in archtypes:
-        get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
-    if "amd64" in archtypes:
-        get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+    service_set=OrderedDict()
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file )
     start_kube_service_with_service_set(dirname, service_set)
     return
 
@@ -4063,11 +4061,11 @@ def get_service_list_from_launch_order(lauch_services_set, dirname, launch_filen
             else:
                 filename = filename.strip('\n')
                 if filename != '':
-                    lauch_services_set.add(filename)
+                    lauch_services_set[filename]=""
     return
 
 def start_kube_service_with_service_set(dirname, service_set):
-    for service in service_set:
+    for service in service_set.keys():
         start_one_kube_service(os.path.join(dirname, service))
     return
 

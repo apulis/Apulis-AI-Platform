@@ -1,6 +1,9 @@
 FROM apulistech/backendbase:1.9
 MAINTAINER Jin Li <jin.li@apulis.com>
 
+ADD ./sources.list /etc/apt
+RUN apt-get update && apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev
+
 # kubectl will be mapped by service
 RUN rm /etc/apache2/mods-enabled/mpm_*
 COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
@@ -31,5 +34,8 @@ ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete
 ADD utils /DLWorkspace/src/utils
 ADD RestAPI /DLWorkspace/src/RestAPI
 ADD ClusterManager /DLWorkspace/src/ClusterManager
+
+# add version info
+ADD version-info /
 
 CMD /run.sh

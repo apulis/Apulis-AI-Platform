@@ -101,7 +101,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
         <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
           <ConfirmProvider>
             <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
-              <TeamProvider permissionList={permissionList} administrators={administrators}>
+              <TeamProvider permissionList={permissionList} administrators={administrators} userGroupPath={userGroupPath}>
                 <ClustersProvider>
                   <ThemeProvider theme={theme}>
                     {children}

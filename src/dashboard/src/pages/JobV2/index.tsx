@@ -55,7 +55,13 @@ interface RouteParams {
   jobId: string;
 }
 
-const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
+interface ISaveImageDialogProps {
+  open: boolean;
+  onCancel?: () => void;
+  onOk?: () => void;
+}
+
+export const SaveImageDialog: React.FC<ISaveImageDialogProps> = ({ open, onCancel, onOk }) => {
   const { handleSubmit, register, errors, setValue, setError, clearError } = useForm({ mode: "onBlur" });
   const { t } = useTranslation();
   const { clusterId, jobId } = useParams<RouteParams>();
@@ -66,6 +72,7 @@ const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
       isPrivate: true,
     })
     const { code, data } = res.data;
+    onOk && onOk();
     if (code === 0) {
       const { duration } = data;
       if (duration) {
@@ -103,7 +110,7 @@ const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
           <TextField
             name="version"
             fullWidth
-            label={t('jobV2.imageName')}
+            label={t('jobV2.imageVersion')}
             variant="filled"
             error={Boolean(errors.version)}
             helperText={errors.version ? errors.version.message : ''}
@@ -111,7 +118,7 @@ const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
             inputProps={{ maxLength: 20 }}
             style={{ margin: '10px 0' }}
             inputRef={register({
-              required: t('jobV2.imageNameRequired') as string,
+              required: t('jobV2.imageVersionRequired') as string,
               pattern: {
                 value: NameReg,
                 message: t('jobV2.imageNameReg')
@@ -132,8 +139,12 @@ const SaveImageDialog: React.FC<{ open: boolean }> = ({ open }) => {
             })}
           />
           <DialogActions>
-            <Button variant="contained">Cancel</Button>
-            <Button variant="contained" type="submit" color="primary">Confirm</Button>
+            <Button variant="contained" onClick={() => onCancel && onCancel()}>
+              {t('jobV2.cancel')}
+            </Button>
+            <Button variant="contained" type="submit" color="primary">
+              {t('jobV2.confirm')}
+            </Button>
           </DialogActions>
 
         </form>
@@ -191,7 +202,7 @@ const JobToolbar: FunctionComponent<{ manageable: boolean; isMyJob: boolean }> =
         {job['jobName']}
       </Typography>
       {actionButtons}
-      <SaveImageDialog open={saveImageVisible} />
+      <SaveImageDialog open={saveImageVisible} onOk={() => setSaveImageVisible(false)} onCancel={() => setSaveImageVisible(false)} />
     </Toolbar>
   );
 }

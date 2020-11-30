@@ -1,7 +1,7 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: dotnet-server-arm64
+  name: data-platform-backend-arm64
   namespace: default
 spec:
   selector:
@@ -17,9 +17,10 @@ spec:
       hostNetwork: true
       nodeSelector:
         restfulapi: active
+        archType: arm64
       containers:
-      - name: dotnet-server-arm64
-        image: {{cnf["dockers"]["container"]["data-platform-backend"]["fullname"]}}-arm64
+      - name: data-platform-backend-arm64
+        image: {{cnf["dockers"]["container"]["data-platform-backend"]["fullname"]}}
         imagePullPolicy: Always
         command: ["dotnet", "WebUI.dll",'--urls=http://*:3088']
         env:

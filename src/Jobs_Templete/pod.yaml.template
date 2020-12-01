@@ -226,7 +226,7 @@ spec:
       {% endif %}
     {% endif %}
     {% if job["mount_npu_log"] %}
-    - mountPath: /var/log/npu/
+    - mountPath: /var/log/npulog/
       name: npulog
     {% endif %}
     env:

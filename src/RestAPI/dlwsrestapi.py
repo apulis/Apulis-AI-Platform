@@ -701,13 +701,14 @@ class GetJobCount(Resource):
     def get(self):
         parser = reqparse.RequestParser()
 
+        parser.add_argument('userName')
         parser.add_argument('vcName')
         parser.add_argument('jobType')
         parser.add_argument('jobStatus')
         parser.add_argument('searchWord')
 
         args = parser.parse_args()
-        count = JobRestAPIUtils.GetJobCount(args["vcName"],
+        count = JobRestAPIUtils.GetJobCount(args["userName"], args["vcName"],
                 args["jobType"], args["jobStatus"], args["searchWord"])
 
         resp = generate_response(count)
@@ -721,6 +722,7 @@ class ListAllJobs(Resource):
 
         parser = reqparse.RequestParser()
 
+        parser.add_argument('userName')
         parser.add_argument('vcName')
         parser.add_argument('jobType')
         parser.add_argument('jobStatus')
@@ -731,7 +733,7 @@ class ListAllJobs(Resource):
         parser.add_argument('order')
 
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.GetAllJobList(args["vcName"],
+        jobs = JobRestAPIUtils.GetAllJobList(args["userName"], args["vcName"],
                 args["jobType"], args["jobStatus"],
                 args["pageNum"], args["pageSize"],
                 args["searchWord"], args["orderBy"], args["order"])

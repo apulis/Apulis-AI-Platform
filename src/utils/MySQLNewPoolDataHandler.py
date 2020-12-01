@@ -16,7 +16,6 @@ import requests
 
 from prometheus_client import Histogram
 import threading
-
 from mysql_conn_pool import MysqlConn,db_connect_histogram
 import EndpointUtils
 
@@ -1419,7 +1418,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobCount(self, vcName, jobType, jobStatus, searchWord):
+    def GetJobCount(self, userName, vcName, jobType, jobStatus, searchWord):
         total = 0
         try:
             conn = self.pool.get_connection()
@@ -1436,7 +1435,10 @@ class DataHandler(object):
             else:
                 pass
 
-            query += " and vcName = '%s'" % vcName
+            if vcName is not None and vcName != "":
+                query += " and vcName = '%s'" % vcName
+            else:
+                pass
 
             if searchWord is not None and len(searchWord) > 0:
                 query += " and jobName like '%"
@@ -1463,7 +1465,7 @@ class DataHandler(object):
         return total
 
     @record
-    def GetAllJobList(self, vcName, jobType, jobStatus, pageNum,
+    def GetAllJobList(self, userName, vcName, jobType, jobStatus, pageNum,
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
         jobs = []
 
@@ -1489,7 +1491,10 @@ class DataHandler(object):
             else:
                 pass
 
-            query += " and vcName = '%s'" % vcName
+            if vcName is not None and vcName != "":
+                query += " and vcName = '%s'" % vcName
+            else:
+                pass
 
             if searchWord is not None and len(searchWord) > 0:
                 query += " and jobName like '%"
@@ -2541,9 +2546,10 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 and vcName='%s'" % (self.jobtablename, vcName)
-            if userName != "all" and len(userName) > 0:
-                query += " and userName='%s'" % (userName)
+            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0" % (self.jobtablename)
+
+            if vcName is not None and vcName != "":
+                query += " and vcName = '%s'" % vcName
             if len(jobType) > 0:
                 query += " and jobType='%s'" % (jobType)
 

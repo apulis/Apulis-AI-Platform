@@ -722,13 +722,13 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSi
     return jobs
 
 
-def GetJobCount(userName, vcName, jobType, jobStatus, searchWord):
+def GetJobCount(vcName, jobType, jobStatus, searchWord):
     count = 0
     dataHandler = None
 
     try:
         dataHandler = DataHandler()
-        count = dataHandler.GetJobCount(userName, vcName, jobType, jobStatus, searchWord)
+        count = dataHandler.GetJobCount(vcName, jobType, jobStatus, searchWord)
     except Exception as e:
         logger.error('get all job list Exception: ex: %s', str(e))
     finally:
@@ -739,7 +739,7 @@ def GetJobCount(userName, vcName, jobType, jobStatus, searchWord):
 
     return {"count" : count}
 
-def GetAllJobList(userName, vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order):
+def GetAllJobList( vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order):
     jobs = {}
     dataHandler = None
 
@@ -750,7 +750,7 @@ def GetAllJobList(userName, vcName, jobType, jobStatus, pageNum, pageSize, searc
         # if user needs to access all jobs, and has been authorized,
         # he could get all pending jobs; otherwise, he could get his
         # own jobs with all status
-        jobs = dataHandler.GetAllJobList(userName, vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order)
+        jobs = dataHandler.GetAllJobList( vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order)
 
     except Exception as e:
         logger.error('get all job list Exception: ex: %s', str(e))

@@ -1417,8 +1417,9 @@ class DataHandler(object):
 
         return ret
 
+
     @record
-    def GetJobCount(self, userName, vcName, jobType, jobStatus, searchWord):
+    def GetJobCount(self, vcName, jobType, jobStatus, searchWord):
         total = 0
         try:
             conn = self.pool.get_connection()
@@ -1436,14 +1437,18 @@ class DataHandler(object):
                 pass
 
             if vcName is not None and vcName != "":
-                query += " and vcName = '%s'" % vcName
+                query += " and vcName = '%s' " % vcName
             else:
                 pass
 
             if searchWord is not None and len(searchWord) > 0:
-                query += " and jobName like '%"
+                query += " and (jobName like '%"
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
+                query += " or userName like '%"
+                query += "%s" % (sql_injection_parse(searchWord))
+                query += "%'"
+                query += ") "
             else:
                 pass
 
@@ -1465,7 +1470,7 @@ class DataHandler(object):
         return total
 
     @record
-    def GetAllJobList(self, userName, vcName, jobType, jobStatus, pageNum,
+    def GetAllJobList(self, vcName, jobType, jobStatus, pageNum,
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
         jobs = []
 
@@ -1491,15 +1496,17 @@ class DataHandler(object):
             else:
                 pass
 
-            if vcName is not None and vcName != "":
-                query += " and vcName = '%s'" % vcName
-            else:
-                pass
+            if vcName is not None and len(vcName) > 0:
+                query += " and vcName = '%s'  " % vcName
 
             if searchWord is not None and len(searchWord) > 0:
-                query += " and jobName like '%"
+                query += " and (jobName like '%"
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
+                query += " or userName like '%"
+                query += "%s" % (sql_injection_parse(searchWord))
+                query += "%'"
+                query += ") "
             else:
                 pass
 
@@ -1509,7 +1516,7 @@ class DataHandler(object):
             if orderBy is None or orderBy == "":
                 query += " order by jobTime Desc"
             else:
-                query += "order by %s %s" % (orderBy, order)
+                query += " order by %s %s" % (orderBy, order)
 
             if pageNum is not None and pageSize is not None:
                 query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))

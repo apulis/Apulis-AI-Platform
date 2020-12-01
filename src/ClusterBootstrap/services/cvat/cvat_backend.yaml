@@ -72,6 +72,12 @@ spec:
               value: '127.0.0.1'
             - name: CVAT_SHARE_URL
               value: '/dlwsdata/storage'
+            - name: USER_MANAGER_CENTER
+              value: "http://localhost/custom-user-dashboard-backend"
+            - name: KFSERVING_GATEWAY
+              value: "http://localhost"
+            - name: reduce_task_visibility
+              value: true
           volumeMounts:
             - mountPath: /home/django/data
               name: cvat-data

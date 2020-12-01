@@ -61,7 +61,7 @@ function setup_npu_config() {
 
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
 		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
-		
+
 
 	## npu distributed job - master
 	elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
@@ -80,16 +80,16 @@ function setup_npu_config() {
 		echo "host=${host_ip}" >> ${npu_info_dir}/npu_0.info
 
 		python ${SCRIPT_DIR}/setup_npu.py master
-		generate_envs	
+		generate_envs
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
 		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
 	fi
 
-	## create npu log collection script 
+	## create npu log collection script
 	cat > /home/getnpu.sh << EOF
 #/bin/bash
 
-mapfile -t device_list < <( ls /dev/ | grep davinci[0-9] )     
+mapfile -t device_list < <( ls /dev/ | grep davinci[0-9] )
 device_id_list=()
 
 for device in \${device_list[@]}
@@ -101,16 +101,16 @@ done
 file_list=""
 for id in \${device_id_list[@]}
 do
-        latest_file=\`ls -t /var/log/npu/slog/device-\$id/ | head -n 1\`
+        latest_file=\`ls -t /var/log/npulog/slog/device-\$id/ | head -n 1\`
         if [ ! -z \$latest_file ]; then
-                tail -n 2000 /var/log/npu/slog/device-\$id/\${latest_file} | grep -i ERROR
+                tail -n 2000 /var/log/npulog/slog/device-\$id/\${latest_file} | grep -i ERROR
         fi
 done
 
-latest_file=\`ls -t /var/log/npu/slog/host-0/ | head -n 1\`
+latest_file=\`ls -t /var/log/npulog/slog/host-0/ | head -n 1\`
 if [ ! -z \$latest_file ]; then
-    tail -n 4000 /var/log/npu/slog/host-0/\${latest_file} | grep -i ERROR
-fi 
+    tail -n 4000 /var/log/npulog/slog/host-0/\${latest_file} | grep -i ERROR
+fi
 EOF
 	chmod 777 /home/getnpu.sh
 }
@@ -150,7 +150,7 @@ echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 # fi
 
 # if ! [ -x "$(command -v ip)" ];then
-#    time 
+#    time
 #     && time apt-get install -y iproute2
 # fi
 

@@ -1,0 +1,336 @@
+###################### Filebeat Configuration Example #########################
+
+# This file is an example configuration file highlighting only the most common
+# options. The filebeat.reference.yml file from the same directory contains all the
+# supported options with more comments. You can use it as a reference.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/filebeat/index.html
+
+# For more available modules and options, please see the filebeat.reference.yml sample
+# configuration file.
+
+#=========================== Filebeat inputs =============================
+
+filebeat.inputs:
+
+# Each - is an input. Most options can be set at the input level, so
+# you can use different inputs for various configurations.
+# Below are the input specific configurations.
+
+- type: log
+
+  # Change to true to enable this input configuration.
+  enabled: true
+
+  # Paths that should be crawled and fetched. Glob based paths.
+  paths:
+  # -->hostDir pathset start
+    - /var/log/npu/slog/*/*/*/*.log
+    - /var/log/npu/slog/*/*/*.log
+    - /var/log/npu/slog/*/*.log
+    - /var/log/npu/slog/*.log
+  # -->hostDir pathset end
+  #- c:\programdata\elasticsearch\logs\*
+
+  # Exclude lines. A list of regular expressions to match. It drops the lines that are
+  # matching any regular expression from the list.
+  #exclude_lines: ['^DBG']
+
+  # Include lines. A list of regular expressions to match. It exports the lines that are
+  # matching any regular expression from the list.
+  include_lines: ['^\[OPLOG]', '^\[ERROR]','^\[TRACE]']
+
+  # Exclude files. A list of regular expressions to match. Filebeat drops the files that
+  # are matching any regular expression from the list. By default, no files are dropped.
+  #exclude_files: ['.gz$']
+
+  # How often the input checks for new files in the paths that are specified
+  # for harvesting. Specify 1s to scan the directory as frequently as possible
+  # without causing Filebeat to scan too frequently. Default: 10s.
+  scan_frequency: 5s
+  max_backoff: 1s
+  close_inactive: 1m
+  ignore_older: 30m
+
+  # If close_archived enabled, all log files in archived_mode will be closed immediately
+  # when harvester reaching the End Of File
+  close_archived: true
+
+  # If ignore_archived enabled, all files in archived_mode which is not been harvesting will be ignored
+  # switch this on can save resource if no log in archived_mode exists before filebeat start
+  ignore_archived: true
+
+  # File mode for archived file, default 0440 if not declared
+  archived_mode: 0440
+
+  clean_removed: true
+  harvester_buffer_size: 65536
+  harvester_limit: 1000
+
+  # Optional additional fields. These fields can be freely picked
+  # to add additional information to the crawled log files for filtering
+  #fields:
+  #  level: debug
+  #  review: 1
+
+  ### Multiline options
+
+  # Multiline can be used for log messages spanning multiple lines. This is common
+  # for Java Stack Traces or C-Line Continuation
+
+  # The regexp Pattern that has to be matched. The example pattern matches all lines starting with [
+  multiline.pattern: '^\['
+
+  # Defines if the pattern set under pattern should be negated or not. Default is false.
+  multiline.negate: true
+
+  # Match can be set to "after" or "before". It is used to define if lines should be append to a pattern
+  # that was (not) matched before or after or as long as a pattern is not matched based on negate.
+  # Note: After is the equivalent to previous and before is the equivalent to to next in Logstash
+  multiline.match: after
+
+#================================= Paths ======================================
+
+# The home path for the filebeat installation. This is the default base path
+# for all other path settings and for miscellaneous files that come with the
+# distribution (for example, the sample dashboards).
+# If not set by a CLI flag or in the configuration file, the default for the
+# home path is the location of the binary.
+#path.home:
+
+# The configuration path for the filebeat installation. This is the default
+# base path for configuration files, including the main YAML configuration file
+# and the Elasticsearch template file. If not set by a CLI flag or in the
+# configuration file, the default for the configuration path is the home path.
+#path.config: ${path.home}
+
+# The data path for the filebeat installation. This is the default base path
+# for all the files in which filebeat needs to store its data. If not set by a
+# CLI flag or in the configuration file, the default for the data path is a data
+# subdirectory inside the home path.
+path.data: /usr/slog
+
+# The logs path for a filebeat installation. This is the default location for
+# the Beat's log files. If not set by a CLI flag or in the configuration file,
+# the default for the logs path is a logs subdirectory inside the home path.
+#path.logs: ${path.home}/logs
+
+#========================= Filebeat global options ============================
+
+# Name of the registry file. If a relative path is used, it is considered relative to the
+# data path.
+filebeat.registry.path: ${path.data}/filebeatregistry
+
+# These config files must have the full filebeat config part inside, but only
+# the prospector part is processed. All global options like spool_size are ignored.
+# The config_dir MUST point to a different directory then where the main filebeat config file is in.
+#filebeat.config_dir:
+
+# How long filebeat waits on shutdown for the publisher to finish.
+# Default is 0, not waiting.
+#filebeat.shutdown_timeout: 0
+
+# Enable filebeat config reloading
+#filebeat.config:
+  #prospectors:
+    #enabled: false
+    #path: prospectors.d/*.yml
+    #reload.enabled: true
+    #reload.period: 10s
+  #modules:
+    #enabled: false
+    #path: modules.d/*.yml
+    #reload.enabled: true
+    #reload.period: 10s
+
+
+#============================= Filebeat modules ===============================
+
+filebeat.config.modules:
+  # Glob pattern for configuration loading
+  path: ${path.config}/modules.d/*.yml
+
+  # Set to true to enable config reloading
+  reload.enabled: false
+
+  # Period on which files under path should be checked for changes
+  #reload.period: 10s
+
+#==================== Elasticsearch template setting ==========================
+
+#setup.template.settings:
+#  index.number_of_shards: 1
+  #index.codec: best_compression
+  #_source.enabled: false
+
+#================================ General =====================================
+
+# The name of the shipper that publishes the network data. It can be used to group
+# all the transactions sent by a single shipper in the web interface.
+#name:
+
+# The tags of the shipper are included in their own field with each
+# transaction published.
+#tags: ["service-X", "web-tier"]
+
+# Optional fields that you can specify to add additional information to the
+# output.
+#fields:
+#  env: staging
+
+max_procs: 8
+
+#============================== Dashboards =====================================
+# These settings control loading the sample dashboards to the Kibana index. Loading
+# the dashboards is disabled by default and can be enabled either by setting the
+# options here or by using the `setup` command.
+#setup.dashboards.enabled: false
+
+# The URL from where to download the dashboards archive. By default this URL
+# has a value which is computed based on the Beat name and version. For released
+# versions, this URL points to the dashboard archive on the artifacts.elastic.co
+# website.
+#setup.dashboards.url:
+
+#============================== Kibana =====================================
+
+# Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
+# This requires a Kibana endpoint configuration.
+#setup.kibana:
+
+  # Kibana Host
+  # Scheme and port can be left out and will be set to the default (http and 5601)
+  # In case you specify and additional path, the scheme is required: http://localhost:5601/path
+  # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
+  #host: "localhost:5601"
+
+#============================= Elastic Cloud ==================================
+
+# These settings simplify using filebeat with the Elastic Cloud (https://cloud.elastic.co/).
+
+# The cloud.id setting overwrites the `output.elasticsearch.hosts` and
+# `setup.kibana.host` options.
+# You can find the `cloud.id` in the Elastic Cloud web UI.
+#cloud.id:
+
+# The cloud.auth setting overwrites the `output.elasticsearch.username` and
+# `output.elasticsearch.password` settings. The format is `<user>:<pass>`.
+#cloud.auth:
+
+#================================ Outputs =====================================
+
+# Configure what output to use when sending the data collected by the beat.
+
+#-------------------------- Elasticsearch output ------------------------------
+#output.elasticsearch:
+  # Array of hosts to connect to.
+#  hosts: ["localhost:9200"]
+
+  # Optional protocol and basic auth credentials.
+  #protocol: "https"
+  #username: "elastic"
+  #password: "changeme"
+
+#----------------------------- Logstash output --------------------------------
+#output.logstash:
+  # The Logstash hosts
+  #hosts: ["localhost:5044"]
+
+  # Optional SSL. By default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client Certificate Key
+  #ssl.key: "/etc/pki/client/cert.key"
+
+#------------------------------- File output -----------------------------------
+output.file:
+  # Boolean flag to enable or disable the output module.
+  enabled: true
+
+  # Path to the directory where to save the generated files. The option is
+  # mandatory.
+  # -->outputDir pathset start
+  path: "/var/log/npu/oplog"
+  # -->outputDir pathset end
+  # Name of the generated files. The default is `filebeat` and it generates
+  # files: `filebeat`, `filebeat.1`, `filebeat.2`, etc.
+  filename: oplog.log
+
+  #codec.format define the format of output
+  codec.format:
+      string: '%{[log.file.path]} %{[message]}'
+
+  # Maximum size in kilobytes of each file. When this size is reached, and on
+  # every filebeat restart, the files are rotated. The default value is 10240
+  # kB.
+  #rotate_every_kb: 10000
+
+  # Maximum number of files under path. When this number of files is reached,
+  # the oldest file is deleted and the rest are shifted from last to first. The
+  # default is 7 files.
+  #number_of_files: 7
+
+  # Permissions to use for file creation. The default is 0600.
+  permissions: 0400
+  #permissions: 0600
+#================================ Logging ======================================
+# There are four options for the log output: file, stderr, syslog, eventlog
+# The file output is the default.
+
+# Sets log level. The default log level is info.
+# Available log levels are: error, warning, info, debug
+#logging.level: info
+
+# Enable debug output for selected components. To enable all selectors use ["*"]
+# Other available selectors are "beat", "publish", "service"
+# Multiple selectors can be chained.
+#logging.selectors: [ ]
+
+# Send all logging output to stderr. The default is false.
+#logging.to_stderr: false
+
+# Send all logging output to syslog. The default is false.
+#logging.to_syslog: false
+
+# Send all logging output to Windows Event Logs. The default is false.
+#logging.to_eventlog: false
+
+# If enabled, filebeat periodically logs its internal metrics that have changed
+# in the last period. For each metric that changed, the delta from the value at
+# the beginning of the period is logged. Also, the total values for
+# all non-zero internal metrics are logged on shutdown. The default is true.
+#logging.metrics.enabled: true
+
+# The period after which to log the internal metrics. The default is 30s.
+#logging.metrics.period: 30s
+
+# Logging to rotating files. Set logging.to_files to false to disable logging to
+# files.
+logging.to_files: true
+logging.files:
+  # Configure the path where the logs are written. The default is the logs directory
+  # under the home path (the binary location).
+  path: /var/log/npu/slog/slogd
+
+  # The name of the files where the logs are written to.
+  name: filebeatlog
+
+  # Configure log file size limit. If limit is reached, log file will be
+  # automatically rotated
+  #rotateeverybytes: 10485760 # = 10MB
+
+  # Number of rotated log files to keep. Oldest files will be deleted first.
+  keepfiles: 1
+
+  # The permissions mask to apply when rotating log files. The default value is 0600.
+  # Must be a valid Unix-style file permissions mask expressed in octal notation.
+  permissions: 0400
+
+# Set to true to log messages in json format.
+#logging.json: false
+

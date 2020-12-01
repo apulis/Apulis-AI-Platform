@@ -1651,7 +1651,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         if machine_archtype == "arm64":
             kubevip_image = kubevip_image + "-arm64"
         elif machine_archtype == "amd64":
-           pass 
+           pass
 
         run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, config["kube-vip"],kubevip_image)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
@@ -3331,7 +3331,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     if machine_archtype == "arm64":
         kubevip_image = kubevip_image + "-arm64"
     elif machine_archtype == "amd64":
-       pass 
+       pass
 
     run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, selected_ip,kubevip_image)
     print run_kubevip_docker_cmd
@@ -3486,9 +3486,15 @@ def render_service_templates(use_service=None):
     set_zookeeper_cluster()
     generate_hdfs_containermounts()
     update_grafana_alert_config()
+
     # Multiple call of render_template will only render the directory once during execution.
-    utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=use_service)
+    if use_service is not None:
+        utils.render_template_directory( "./services/"+use_service, "./deploy/services/"+use_service, config,use_service=use_service)
+    else:
+        utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=use_service)
+
     add_service_config()
+    return
 
 def get_all_services(use_service=None):
     render_service_templates(use_service)
@@ -4505,8 +4511,8 @@ def create_job_service_account():
     if len(nodes)>=1:
         run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
 
-# functions which are senstive to order can keep 
-# their ordered data via this method and fetch them 
+# functions which are senstive to order can keep
+# their ordered data via this method and fetch them
 # via get_order_data
 def set_order_data(config_file, config_data):
 

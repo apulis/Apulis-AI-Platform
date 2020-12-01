@@ -11,6 +11,7 @@ import ClusterStatus from './zh-CN/ClusterStatus';
 import VirtualCluster from './zh-CN/VirtualCluster';
 import model from './zh-CN/model'
 import version from './zh-CN/version';
+import teams from './zh-CN/teams';
 
 export default {
   tips,
@@ -26,5 +27,6 @@ export default {
   ...VirtualCluster,
   ...model,
   ...version,
-  copy:'复制'
+  copy: '复制',
+  teams,
 }

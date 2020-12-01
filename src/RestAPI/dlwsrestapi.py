@@ -701,6 +701,7 @@ class GetJobCount(Resource):
     def get(self):
         parser = reqparse.RequestParser()
 
+
         parser.add_argument('vcName')
         parser.add_argument('jobType')
         parser.add_argument('jobStatus')
@@ -720,6 +721,7 @@ class ListAllJobs(Resource):
     def get(self):
 
         parser = reqparse.RequestParser()
+
 
         parser.add_argument('vcName')
         parser.add_argument('jobType')

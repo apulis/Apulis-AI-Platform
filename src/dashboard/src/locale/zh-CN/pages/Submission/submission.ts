@@ -55,6 +55,10 @@ const template = {
   selectTemplate: '选择模板',
   cancel: '取消',
   templateSaved: '模板保存成功',
+  scopedUser: '作用域为用户： 只对自己有校',
+  scopedTeam: '作用域为虚拟机器：对当前虚拟集群下所有用户都有效',
+  user: '用户',
+  team: '虚拟集群',
 }
 export default {
   ...index,

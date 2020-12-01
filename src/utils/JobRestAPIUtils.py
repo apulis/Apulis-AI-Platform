@@ -1501,7 +1501,7 @@ def GetVC(userName, vcName):
 
 def GetJobTotalGpu(jobParams):
     numWorkers = 1
-    if "numpsworker" in jobParams:
+    if "numpsworker" in jobParams and jobParams["numpsworker"]:
         numWorkers = int(jobParams["numpsworker"])
     return int(jobParams["resourcegpu"]) * numWorkers
 

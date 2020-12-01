@@ -18,6 +18,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 from config import config
 from DataHandler import DataHandler,DataManager
+import k8sUtils
 import base64
 import re
 import requests
@@ -36,7 +37,6 @@ import copy
 import logging
 from cachetools import cached, TTLCache
 from threading import Lock
-
 
 DEFAULT_JOB_PRIORITY = 100
 USER_JOB_PRIORITY_RANGE = (100, 200)
@@ -1015,6 +1015,9 @@ def Infer(jobId,image,signature_name):
     return ret
 
 
+def AutoLabel(model_id, data):
+    return inference.object_detaction_auto_label(model_id, data)
+
 def AddUser(username,uid,gid,groups):
     ret = None
     needToUpdateDB = False
@@ -1773,10 +1776,29 @@ def GetJobSummary(userName, jobType):
     return None
 
 
-
-
-
-
+def GetInferenceModel(model_id):
+    output = k8sUtils.kubectl_exec("get deploy -n kfserving-system -l inference=system -o yaml")
+    deploys = yaml.load(output)
+    models = []
+    if "items" in deploys:
+        for deploy in deploys["items"]:
+            models.append({
+                "description":deploy["metadata"]['annotations'].get('description',""),
+                "id":deploy["metadata"]['annotations'].get('id',""),
+                "kind":deploy["metadata"]['annotations'].get('type'),
+                "labels": [item['name'] for item in json.loads(deploy['metadata']['annotations'].get('spec') or '[]')],
+                "min_pos_points":int(deploy['metadata']['annotations'].get('min_pos_points', 1)),
+                "name":deploy['metadata']['annotations'].get('name', deploy["metadata"]["name"]),
+                "state":"ready" if deploy['status'].get('readyReplicas',0)>=1 else "error",
+                "framework":deploy['metadata']['annotations'].get('framework'),
+            })
+    if model_id:
+        models = [i for i in models if i["id"]==model_id]
+        if models:
+            return models[0]
+        else:
+            return "not found"
+    return models
 
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False

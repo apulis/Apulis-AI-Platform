@@ -4,7 +4,7 @@ set -x
 
 # 镜像名和代码分支配置
 image_name=restfulapi2
-tag_name=rc4
+tag_name=rc5
 branch_name=v1.2.0
 image_fullname=${image_name}:${branch_name}-${tag_name}
 

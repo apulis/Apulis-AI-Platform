@@ -1,48 +1,6 @@
 #! /bin/bash
 set -ex
 
-# for huawei npu traing jobs only
-function generate_envs() {
-	ENV_FILE="/pod.env"
-	#GCCVERSION=$(gcc --version | grep ^gcc | sed 's/^.* //g')
-	ostype=$(arch)
-	osflag="arm64"
-
-	if [ "${ostype}" = "aarch64" ]; then
-	    osflag="arm64"
-	else
-	    osflag="x86-64"
-	fi
-
-	cat >>${ENV_FILE} <<EOF
-export PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:$PYTHONPATH
-export LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/arm64-linux/atc/lib64:$LD_LIBRARY_PATH
-export TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe
-export PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/
-export ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp
-
-export SOC_VERSION=Ascend910
-
-export RANK_SIZE=1
-export RANK_ID=${DLWS_JOB_ID}
-export POD_NAME=${DLWS_JOB_ID}
-EOF
-
-	IFS=',' read -ra ADDR <<< "$VISIBLE_IDS"
-	for i in "${ADDR[@]}"; do
-		echo "export DEVICE_ID=$i" >> "${ENV_FILE}"
-		echo "export DEVICE_INDEX=$i" >> "${ENV_FILE}"
-		break
-	done
-
-	## also write those envs for root user
-	cat >>"/root/.bashrc" <<SCRIPT
-if [ -f ${ENV_FILE} ]; then
-    . ${ENV_FILE}
-fi
-SCRIPT
-}
-
 ## set npu device configs
 function setup_npu_config() {
 
@@ -52,26 +10,31 @@ function setup_npu_config() {
 	## npu distributed job - worker
 	if [ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
 	then
+
 		## worker pod
 		echo "ip=${NPU_IPS}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
 		host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
 		echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
 
-		generate_envs
-
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
-		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
+
+        if ! [ -x "$(command -v python)" ] ; then
+		    python ${SCRIPT_DIR}/setup_npu.py master
+        fi
 
 
 	## npu distributed job - master
 	elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
 	then
-		## master pod, generate hccl.json
-		python ${SCRIPT_DIR}/setup_npu.py master
-		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
-		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
 
-	## not distributed job
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+
+		## master pod, generate hccl.json
+        if ! [ -x "$(command -v python)" ] ; then
+		    python ${SCRIPT_DIR}/setup_npu.py master
+        fi
+
+	## npu job, single node
 	elif [ "$DLWS_ROLE_NAME" = "master" ] && [ ! -z "$NPU_IPS" ];
 	then
 		## worker pod
@@ -79,10 +42,10 @@ function setup_npu_config() {
 		host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
 		echo "host=${host_ip}" >> ${npu_info_dir}/npu_0.info
 
-		python ${SCRIPT_DIR}/setup_npu.py master
-		generate_envs
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
-		python ${SCRIPT_DIR}/setup_huawei.py --command "${DLWS_LAUNCH_CMD}" --out ${npu_info_dir}/train.sh
+        if ! [ -x "$(command -v python)" ] ; then
+            python ${SCRIPT_DIR}/setup_npu.py master
+        if
 	fi
 
 	## create npu log collection script

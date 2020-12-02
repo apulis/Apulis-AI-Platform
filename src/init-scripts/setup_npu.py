@@ -5,10 +5,13 @@ import os
 import json
 import time
 import pdb
+import platform
+import string
+import random
 
 
 def generate_mindspore():
-    
+
     done = 0
     rank_id = 0
     hccl_data = {}
@@ -53,7 +56,7 @@ def generate_mindspore():
     group["device_num"] = str(worker_num * 8)
     group["server_num"] = str(worker_num)
     group["group_name"] = "test"
-    group["instance_count"] = group["device_num"] 
+    group["instance_count"] = group["device_num"]
     group["instance_list"] = []
 
     while True:
@@ -121,7 +124,7 @@ def generate_mindspore():
     return
 
 def generate_tensorflow():
-    
+
     done = 0          # worker node to process
     rank_id = 0       # equals to device count
     hccl_data = {}
@@ -200,7 +203,7 @@ def generate_tensorflow():
                     rank_id = rank_id + 1
                     instance_item["devices"].append(device_item)
                     #pdb.set_trace()
-                
+
                 group["instance_list"].append(instance_item)
                 f.close()
                 done = done + 1
@@ -228,8 +231,241 @@ def generate_tensorflow():
     return
 
 
+# 从/pod.env导入字典数据集
+def load_env(file_path):
+    envs = {}
+
+    with open(file_path, "r") as f:
+
+        lines = f.readlines()
+        for line in lines:
+
+            line = line.strip().lstrip("export")
+            if line is not "" and "=" in line:
+                key_val = line.strip().split("=")
+
+                key = key_val[0]
+                value = key_val[1]
+                envs[key] = value
+
+            else:
+                pass
+
+    return envs
+
+# 向/pod.env写入字典数据，先判断是否存在此环境量
+# 如果已存在，则覆盖此变量
+def add_env(path, envs):
+
+    envs_orig = load_env(path)
+
+    for k, v in envs.items():
+         envs_orig[k] = v
+
+    with open(path, "w") as f:
+        for k, v in envs_orig.items():
+            f.write("export %s=%s\n" % (k, v))
+
+    return
+
+
+def get_os_flag():
+
+    osflag="x86-64"
+
+    if platform.machine() == "aarch64":
+        osflag = "arm64"
+    else:
+        pass
+
+    return osflag
+
+def get_random_num(length):
+    return ''.join(random.choice(string.digits) for _ in range(length))
+
+def set_bashrc(username):
+
+    path = ""
+    if username == "root":
+        path = "/root/.bashrc"
+    else:
+        path = "/home/" + username + "/.bashrc"
+
+
+    with open(path, "a") as f:
+
+        cmd = '''
+        if [ -f "/pod.env"  ]; then
+            . /pod.env
+        fi
+        '''
+
+        f.write(cmd + "\n")
+        f.close()
+
+    return
+
+
+def handle_mindspore():
+
+    path = "/pod.env"
+    envs = load_env(path)
+
+    ## 将pod.env已有的环境变量
+    ## 与os当前具有的环境变量合并
+    for k, v in os.environ.items():
+        if k not in envs:
+            envs[k] = v
+        else:
+            pass
+
+    ## 不需要解析device id
+
+    ## 设置随机参数
+    envs["RANDOM"] = get_random_num(6)
+    envs["osflag"] = get_os_flag()
+
+    tensorflow_envs = [
+        "PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
+        "LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/arm64-linux/atc/lib64:$LD_LIBRARY_PATH",
+        "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe",
+        "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/",
+        "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp",
+
+        "SOC_VERSION=Ascend910",
+        "RANK_SIZE=1",
+        "POD_NAME=${DLWS_JOB_ID}",
+        "JOB_ID=${RANDOM}"
+    ]
+
+    envs_map= {}
+    envs_map["DEVICE_ID"] = "0"
+    
+    for item in tensorflow_envs:
+
+        tpl = string.Template(item)
+        new_item = tpl.safe_substitute(envs)
+
+        if "=" in new_item:
+            key_val = new_item.strip().split("=")
+            k = key_val[0]
+            v = key_val[1]
+            envs_map[k] = v
+
+        else:
+            pass
+
+    add_env(path, envs_map)
+
+    ## 生成shell脚本
+    pod_cmd = os.environ["DLWS_LAUNCH_CMD"]
+    npu_info_dir = "/home/" + os.environ["DLWS_USER_NAME"] + "/.npu/" + os.environ["DLWS_JOB_ID"] + "/train.sh"
+
+    cmd = 'python /pod/scripts/setup_huawei.py --type tensorflow --command "%s" --out %s'% (pod_cmd, npu_info_dir)
+    os.system(cmd)
+
+    set_bashrc("root")
+    return
+
+
+def handle_tensorflow():
+
+    path = "/pod.env"
+    envs = load_env(path)
+
+    ## 将pod.env已有的环境变量
+    ## 与os当前具有的环境变量合并
+    for k, v in os.environ.items():
+        if k not in envs:
+            envs[k] = v
+        else:
+            pass
+
+    ## 第一个设备id
+    device_id="0"
+    device_index="0"
+
+    if "VISIBLE_IDS" in envs:
+         devid = envs["VISIBLE_IDS"].split(",")[0]
+         if len(devid) > 0:
+             device_id = devid
+         else:
+             pass
+    else:
+        pass
+
+    device_index = device_id
+
+    ## 设置随机参数
+    envs["RANDOM"] = get_random_num(6)
+    envs["osflag"] = get_os_flag()
+
+
+
+    tensorflow_envs = [
+        "PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
+        "LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/arm64-linux/atc/lib64:$LD_LIBRARY_PATH",
+        "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe",
+        "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/",
+        "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp",
+
+        "SOC_VERSION=Ascend910",
+        "RANK_SIZE=1",
+        "POD_NAME=${DLWS_JOB_ID}",
+        "JOB_ID=${RANDOM}"
+    ]
+
+    envs_map= {}
+    envs_map["DEVICE_ID"] = device_id
+    envs_map["DEVICE_INDEX"] = device_index
+
+    for item in tensorflow_envs:
+
+        tpl = string.Template(item)
+        new_item = tpl.safe_substitute(envs)
+
+        if "=" in new_item:
+            key_val = new_item.strip().split("=")
+            k = key_val[0]
+            v = key_val[1]
+            envs_map[k] = v
+
+        else:
+            pass
+
+    add_env(path, envs_map)
+
+    ## 生成shell脚本
+    pod_cmd = os.environ["DLWS_LAUNCH_CMD"]
+    npu_info_dir = "/home/" + os.environ["DLWS_USER_NAME"] + "/.npu/" + os.environ["DLWS_JOB_ID"] + "/train.sh"
+
+    cmd = 'python /pod/scripts/setup_huawei.py --type tensorflow --command "%s" --out %s'% (pod_cmd, npu_info_dir)
+    print(cmd, "==========================")
+    os.system(cmd)
+    set_bashrc("root")
+
+    return
+
+
 if __name__ == "__main__":
 
-    generate_mindspore()
-    generate_tensorflow()
+
+    if "aiframework" in os.environ:
+
+        framework = os.environ["aiframework"].strip()
+
+        if framework == "tensorflow":
+            handle_tensorflow()
+
+        elif framework == "tensorflow":
+            handle_mindspore()
+
+        else:
+            pass
+
+    else:
+
+        generate_mindspore()
+        generate_tensorflow()
+
     pass

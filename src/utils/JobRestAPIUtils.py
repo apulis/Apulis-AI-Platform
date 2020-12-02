@@ -863,7 +863,7 @@ def DeleteJob(jobId):
     ret = False
     dataHandler = DataHandler()
     job = dataHandler.GetJobTextFields(jobId, ["jobStatus"])
-    if job is not None and job["jobStatus"] in CanDeleteJobStatus:
+    if job is not None and job["jobStatus"].lower() in CanDeleteJobStatus:
         ret = dataHandler.DeleteJob(jobId)
     dataHandler.Close()
     return ret

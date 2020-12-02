@@ -39,7 +39,6 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
   const detail = useMemo<Array<any>>(() => job['jobStatusDetail'], [job]);
   const splitMessage = (msg: string) => {
     let arr = []
-    let stack = []
     let cur = ''
     for (let char of msg) {
       if (char === '{') {
@@ -47,15 +46,13 @@ const JobStatus: FunctionComponent<Props> = ({ job }) => {
           arr.push(cur)
           cur = '{'
         }
-      }
-      else if (char === '}') {
+      } else if (char === '}') {
         if (cur) {
           cur += char
           arr.push(cur)
           cur = ''
         }
-      }
-      else {
+      } else {
         cur += char
       }
     }

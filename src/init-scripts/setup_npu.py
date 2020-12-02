@@ -340,7 +340,7 @@ def handle_mindspore():
 
     envs_map= {}
     envs_map["DEVICE_ID"] = "0"
-    
+
     for item in tensorflow_envs:
 
         tpl = string.Template(item)
@@ -457,7 +457,7 @@ if __name__ == "__main__":
         if framework == "tensorflow":
             handle_tensorflow()
 
-        elif framework == "tensorflow":
+        elif framework == "mindspore":
             handle_mindspore()
 
         else:

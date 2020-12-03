@@ -53,9 +53,6 @@ MAIN_PATH=$(dirname $(readlink -f $0))\n
 export JOB_ID=$RANDOM
 export SOC_VERSION=Ascend910
 export HCCL_CONNECT_TIMEOUT=200\n
-export GLOBAL_LOG_LEVEL=3
-export TF_CPP_MIN_LOG_LEVEL=3
-export SLOG_PRINT_TO_STDOUT=0\n
 
 # local variable
 export RANK_SIZE=${#VISIBLE_IDS[@]}
@@ -67,20 +64,17 @@ do
 export DEVICE_ID=$device_phy_id
 export RANK_ID=$device_phy_id
 echo "start training for rank $RANK_ID, device $DEVICE_ID"
-TMP_PATH=$SAVE_PATH/D$RANK
+TMP_PATH=$SAVE_PATH/D$RANK_ID
 mkdir -p $TMP_PATH
 cd $TMP_PATH
 # {{start command}}
     '''
     script=Template('${command} &\n')
     end='cd -\n\ndone\n\nwait'
-
-
-
-
+    
 txt = ids+env_path+script.substitute(command=args.command)+end
 print(txt)
 with open(args.out,"w") as f:
     f.write(txt)
-
+    
 

@@ -378,7 +378,7 @@ def handle_mindspore():
     pod_cmd = os.environ["DLWS_LAUNCH_CMD"]
     npu_info_dir = "/home/" + os.environ["DLWS_USER_NAME"] + "/.npu/" + os.environ["DLWS_JOB_ID"] + "/train.sh"
 
-    cmd = 'python /pod/scripts/setup_huawei.py --type tensorflow --command "%s" --out %s'% (pod_cmd, npu_info_dir)
+    cmd = 'python /pod/scripts/setup_huawei.py --type mindspore --command "%s" --out %s'% (pod_cmd, npu_info_dir)
     os.system(cmd)
 
     set_bashrc("root")

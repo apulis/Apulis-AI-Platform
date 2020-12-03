@@ -1,6 +1,30 @@
 #! /bin/bash
 set -ex
 
+# for huawei npu traing jobs only
+function generate_envs() {
+	ENV_FILE="/pod.env"
+	cat >>${ENV_FILE} <<EOF
+export PYTHONPATH=/usr/local/Ascend/ascend-toolkit/latest/arm64-linux_gcc7.3.0/opp/op_impl/built-in/ai_core/tbe:
+export LD_LIBRARY_PATH=/usr/local/Ascend/ascend-toolkit/latest/atc/lib64:/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/usr/local/Ascend/nnae/latest/arm64-linux_gcc7.3.0/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common:/usr/local/Ascend/driver/lib64/driver:/usr/local/lib:/usr/lib/
+export TBE_IMPL_PATH=/usr/local/Ascend/ascend-toolkit/latest/arm64-linux_gcc7.3.0/opp/op_impl/built-in/ai_core/tbe
+export PATH=/usr/local/Ascend/ascend-toolkit/latest/arm64-linux_gcc7.3.0/fwkacllib/ccec_compiler/bin/:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export ASCEND_OPP_PATH=/usr/local/Ascend/ascend-toolkit/latest/arm64-linux_gcc7.3.0/opp
+export SOC_VERSION=Ascend910
+
+export RANK_SIZE=1
+export RANK_ID=${DLWS_JOB_ID}
+export POD_NAME=${DLWS_JOB_ID}
+EOF
+
+	IFS=',' read -ra ADDR <<< "$VISIBLE_IDS"
+	for i in "${ADDR[@]}"; do
+		echo "export DEVICE_ID=$i" >> "${ENV_FILE}"
+		echo "export DEVICE_INDEX=$i" >> "${ENV_FILE}"
+		break
+	done
+}
+
 RUN_TIME_DIR=/dlts-runtime
 SCRIPT_DIR=/pod/scripts
 LOG_DIR=/pod/logs
@@ -101,6 +125,8 @@ then
 	host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
 	echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
 
+	generate_envs
+
 ## npu distributed job - master
 elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
 then
@@ -115,7 +141,8 @@ then
 	host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
 	echo "host=${host_ip}" >> ${npu_info_dir}/npu_0.info
 
-	python ${SCRIPT_DIR}/setup_npu.py master	
+	python ${SCRIPT_DIR}/setup_npu.py master
+	generate_envs	
 fi
 
 echo bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log

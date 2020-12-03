@@ -10,6 +10,7 @@ import jobsV2 from './zh-CN/pages/jobsV2/jobsV2'
 import ClusterStatus from './zh-CN/ClusterStatus';
 import VirtualCluster from './zh-CN/VirtualCluster';
 import model from './zh-CN/model'
+import version from './zh-CN/version';
 
 export default {
   tips,
@@ -24,5 +25,6 @@ export default {
   ...ClusterStatus,
   ...VirtualCluster,
   ...model,
+  ...version,
   copy:'复制'
 }

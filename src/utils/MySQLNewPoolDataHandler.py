@@ -1326,7 +1326,9 @@ class DataHandler(object):
                 pass
 
             query += " and userName = '%s'" % userName
-            query += " and vcName = '%s'" % vcName
+
+            if vcName is not None and vcName != "":
+                query += " and vcName = '%s'" % vcName
 
             if searchWord is not None and len(searchWord) > 0:
                 query += " and jobName like '%"

@@ -168,6 +168,12 @@ class PodTemplate():
             pod["podName"] = job.job_id
             pods.append(pod)
 
+        # add ai framework type to envs
+        if "frameworkType" in params:
+            pod["envs"].append({"name": "aiframework", "value": params["frameworkType"]})
+        else:
+            pass
+
         k8s_pods = []
         gpuMapping = DataHandler().GetAllDevice()
 
@@ -184,22 +190,22 @@ class PodTemplate():
                 if deviceDict is None:
                     return None,"wrong device type"
                 else:
-                    pod["gpuStr"] = deviceDict.get("deviceStr")       
+                    pod["gpuStr"] = deviceDict.get("deviceStr")
 
                 pod["schedulerName"]=""
                 if pod["gpuStr"] == "npu.huawei.com/NPU":
-                    pod["schedulerName"]="volcano"     
+                    pod["schedulerName"]="volcano"
                 else:
                     pass
-					
+
                 ## npu pod
                 if pod["gpuStr"] == "npu.huawei.com/NPU":
                     pod["mount_npu_log"] = True
                 else:
-                    pod["mount_npu_log"] = False 
+                    pod["mount_npu_log"] = False
 
             elif "gpuStr" in pod:
-                
+
                 if pod["gpuStr"] == "npu.huawei.com/NPU":
                     pod["envs"].append({"name":"DLWS_IS_NPU_JOB","value":"true"})
                 else:

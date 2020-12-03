@@ -1578,8 +1578,13 @@ class DataHandler(object):
                 query += 'and jobStatus="%s" ' % (jobStatus)
             else:
                 query += "and jobStatus in (%s) " % (','.join(['"'+s+'"' for s in jobStatus.split(",")]))
+            
+            if "," not in userName:
+                query += 'and userName="%s" ' % (userName)
+            else:
+                query += "and userName in (%s) " % (','.join(['"'+s+'"' for s in userName.split(",")]))
 
-            query += 'and userName="%s" and isDeleted=0 ' % (userName)           
+            query += ' and isDeleted=0 '           
             logger.info("GetUserJobs, sql: %s" %(query))
             cursor.execute(query)
 

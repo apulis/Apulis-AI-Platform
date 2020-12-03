@@ -79,7 +79,7 @@
         "#d44a3a"
       ],
       "datasource": "${DS_PM}",
-      "description": "Number of Devices allocated to the VC.",
+      "description": "分配给VC的设备数量",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -583,7 +583,7 @@
         "#d44a3a"
       ],
       "datasource": "${DS_PM}",
-      "description": "Number of Devices allocated to the VC.",
+      "description": "分配给VC的设备数量",
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -1083,7 +1083,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_PM}",
-      "description": "GPU numbers in the VC over time.",
+      "description": "VC中随时间变化的GPU数量",
       "fill": 0,
       "gridPos": {
         "h": 7,
@@ -1262,7 +1262,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all GPUs allocated to the VC.",
+      "description": "分配给VC的所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1344,7 +1344,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all GPUs in the VC in the selected time range.",
+      "description": "在选定的时间范围内，VC中所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1425,7 +1425,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the VC.",
+      "description": "VC中所有已分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1507,7 +1507,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the VC in the selected time range.",
+      "description": "在选定时间范围内，VC中所有已分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1588,7 +1588,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the VC.",
+      "description": "VC中所有活动GPU(>0%)的平均GPU利用率。",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1670,7 +1670,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the VC in the selected time range.",
+      "description": "在选定时间范围内，VC中所有活动GPU(>0%)的平均GPU利用率。",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1767,7 +1767,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all GPUs allocated to the VC.",
+      "description": "分配给VC的所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1849,7 +1849,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all GPUs in the VC in the selected time range.",
+      "description": "在选定的时间范围内，VC中所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1930,7 +1930,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the VC.",
+      "description": "VC中所有已分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -2012,7 +2012,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the VC in the selected time range.",
+      "description": "在选定时间范围内，VC中所有已分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -2093,7 +2093,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the VC.",
+      "description": "VC中所有活动GPU(>0%)的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -2175,7 +2175,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the VC in the selected time range.",
+      "description": "在选定时间范围内，VC中所有活动GPU(>0%)的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -2268,7 +2268,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization in the VC over time.",
+      "description": "随着时间的推移，VC中平均GPU利用率",
       "fill": 1,
       "gridPos": {
         "h": 7,
@@ -2403,7 +2403,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU memory utilization across all active GPUs (>0%) in the VC.",
+      "description": "VC中所有活动GPU(>0%)的平均GPU内存利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -2486,7 +2486,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU memory utilization across all active GPUs (>0%) in the VC.",
+      "description": "VC中所有活动GPU(0%)的平均GPU内存利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -3078,7 +3078,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_PM}",
-      "description": "Average GPU memory utilization per active GPU.",
+      "description": "每个活动GPU的平均GPU内存利用率",
       "fill": 1,
       "gridPos": {
         "h": 7,

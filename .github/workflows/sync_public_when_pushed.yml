@@ -26,7 +26,7 @@ jobs:
         cd DLWorkspace
         git config --global user.email "thomas@apulis.com"
         git config --global user.name "thomas"
-        git merge origin/develop -X theirs --no-ff
+        git merge remotes/origin/develop -X theirs --no-ff
         git push origin public
   sync-repo:
     runs-on: ubuntu-latest

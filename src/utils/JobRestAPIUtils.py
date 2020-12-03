@@ -848,7 +848,7 @@ def KillJob(userName, jobId):
     ret = False
     dataHandler = DataHandler()
     job = dataHandler.GetJobTextFields(jobId, ["userName", "vcName", "jobStatus", "isParent", "familyToken"])
-    if job is not None and job["jobStatus"] in pendingStatus.split(","):
+    if job is not None and job["jobStatus"].lower() in pendingStatus.split(","):
         if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Admin):
             dataFields = {"jobStatus": "killing"}
             conditionFields = {"jobId": jobId}

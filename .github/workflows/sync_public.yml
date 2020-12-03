@@ -27,7 +27,7 @@ jobs:
         git config --global user.email "banrieen@173.com"
         git config --global user.name "banrieen"
         git merge origin/develop -X theirs --no-ff
-        git push origin to_public
+        git push origin public
   sync-repo:
     runs-on: ubuntu-latest
     steps:

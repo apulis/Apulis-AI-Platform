@@ -2,6 +2,7 @@ apiVersion: "serving.kubeflow.org/v1alpha2"
 kind: "InferenceService"
 metadata:
   name: "{{ job["model_name"] }}"
+  namespace: kfserving-pod
   labels:
     run: {{ job["jobId"] }}
     podName: {{ job["podName"] }}

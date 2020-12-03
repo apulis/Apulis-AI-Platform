@@ -1267,7 +1267,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all GPUs in the cluster.",
+      "description": "集群中所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1348,7 +1348,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utlization across all GPUs in the cluster over the selected time range.",
+      "description": "在选定的时间范围内，集群中所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1429,7 +1429,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the cluster.",
+      "description": "集群中所有已分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1512,7 +1512,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the cluster over the selected time range.",
+      "description": "在选定时间范围内，集群中所有已分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1595,7 +1595,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the cluster.",
+      "description": "集群中所有活动GPU(>0%)的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1678,7 +1678,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the cluster over the selected time range.",
+      "description": "在选定的时间范围内，集群中所有活动GPU(>0%)的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -2323,14 +2323,14 @@
           "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "已安排(GPU)",
+          "legendFormat": "已分配的(GPU)",
           "refId": "B"
         },
         {
           "expr": "avg(task_device_percent{device_str='nvidia.com/gpu'}>0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "活动(GPU)",
+          "legendFormat": "活动的(GPU)",
           "refId": "C"
         },
         {
@@ -2344,14 +2344,14 @@
           "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'})",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "已安排(NPU)",
+          "legendFormat": "已分配的(NPU)",
           "refId": "E"
         },
         {
           "expr": "avg(task_device_percent{device_str='npu.huawei.com/NPU'}>0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "活动(NPU)",
+          "legendFormat": "活动的(NPU)",
           "refId": "F"
         }
       ],
@@ -2882,7 +2882,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU memory utilization per GPU across all active GPUs (>0%) in the cluster.",
+      "description": "集群中所有活动GPU(>0%)的平均内存利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -2966,7 +2966,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU memory utilization per GPU across all active GPUs (>0%) in the cluster.",
+      "description": "集群中所有活动GPU(>0%)的平均GPU内存利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,

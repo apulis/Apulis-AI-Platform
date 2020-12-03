@@ -17,8 +17,8 @@ function setup_npu_config() {
 		echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
 
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
-                if ! [ -x "$(command -v python)" ] ; then
-                     python ${SCRIPT_DIR}/setup_npu.py master
+                if  [ -x "$(command -v python)" ] ; then
+                     python ${SCRIPT_DIR}/setup_npu.py 
                 fi
 
 
@@ -29,8 +29,8 @@ function setup_npu_config() {
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
 
 		## master pod, generate hccl.json
-                if ! [ -x "$(command -v python)" ] ; then
-                     python ${SCRIPT_DIR}/setup_npu.py master
+                if  [ -x "$(command -v python)" ] ; then
+                     python ${SCRIPT_DIR}/setup_npu.py
                 fi
 
 	## npu job, single node
@@ -42,8 +42,8 @@ function setup_npu_config() {
 		echo "host=${host_ip}" >> ${npu_info_dir}/npu_0.info
 
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
-                if ! [ -x "$(command -v python)" ] ; then
-                     python ${SCRIPT_DIR}/setup_npu.py master
+                if  [ -x "$(command -v python)" ] ; then
+                     python ${SCRIPT_DIR}/setup_npu.py 
                 fi
 	fi
 

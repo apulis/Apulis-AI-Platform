@@ -251,20 +251,24 @@ def load_env(file_path):
             else:
                 pass
 
+        f.close()
+
     return envs
 
 # 向/pod.env写入字典数据，先判断是否存在此环境量
 # 如果已存在，则覆盖此变量
 def add_env(path, envs):
 
+    # 覆盖相同key数据，文件已有的key保持不变
     envs_orig = load_env(path)
-
     for k, v in envs.items():
          envs_orig[k] = v
 
     with open(path, "w") as f:
         for k, v in envs_orig.items():
             f.write("export %s=%s\n" % (k, v))
+        
+        f.close()
 
     return
 
@@ -310,9 +314,24 @@ def handle_mindspore():
 
     path = "/pod.env"
     envs = load_env(path)
+    envs_to_add= {}
+    envs_to_add["DEVICE_ID"] = "0"
+
+    if "VISIBLE_IDS" in envs:
+        envs["VISIBLE_IDS"] = envs["VISIBLE_IDS"].replace("\\","")
+        envs_to_add["VISIBLE_IDS"] = envs["VISIBLE_IDS"] 
+    else:
+        pass
+
+
+    if "NPU_IPS" in envs:
+        envs["NPU_IPS"] = envs["NPU_IPS"].replace("\\","")
+        envs_to_add["NPU_IPS"] = envs["NPU_IPS"] 
+    else:
+        pass
 
     ## 将pod.env已有的环境变量
-    ## 与os当前具有的环境变量合并
+    ## 与os当前具有的环境变量合并, 放入envs
     for k, v in os.environ.items():
         if k not in envs:
             envs[k] = v
@@ -338,8 +357,6 @@ def handle_mindspore():
         "JOB_ID=${RANDOM}"
     ]
 
-    envs_map= {}
-    envs_map["DEVICE_ID"] = "0"
 
     for item in tensorflow_envs:
 
@@ -350,12 +367,12 @@ def handle_mindspore():
             key_val = new_item.strip().split("=")
             k = key_val[0]
             v = key_val[1]
-            envs_map[k] = v
+            envs_to_add[k] = v
 
         else:
             pass
 
-    add_env(path, envs_map)
+    add_env(path, envs_to_add)
 
     ## 生成shell脚本
     pod_cmd = os.environ["DLWS_LAUNCH_CMD"]
@@ -365,13 +382,29 @@ def handle_mindspore():
     os.system(cmd)
 
     set_bashrc("root")
+    generate_mindspore()
+
     return
 
 
 def handle_tensorflow():
 
     path = "/pod.env"
+    
     envs = load_env(path)
+    envs_to_add= {}
+
+    if "VISIBLE_IDS" in envs:
+        envs["VISIBLE_IDS"] = envs["VISIBLE_IDS"].replace("\\","")
+        envs_to_add["VISIBLE_IDS"] = envs["VISIBLE_IDS"] 
+    else:
+        pass
+
+    if "NPU_IPS" in envs:
+        envs["NPU_IPS"] = envs["NPU_IPS"].replace("\\","")
+        envs_to_add["NPU_IPS"] = envs["NPU_IPS"] 
+    else:
+        pass
 
     ## 将pod.env已有的环境变量
     ## 与os当前具有的环境变量合并
@@ -386,7 +419,7 @@ def handle_tensorflow():
     device_index="0"
 
     if "VISIBLE_IDS" in envs:
-         devid = envs["VISIBLE_IDS"].split(",")[0]
+         devid = envs["VISIBLE_IDS"].split(",")[0].strip()
          if len(devid) > 0:
              device_id = devid
          else:
@@ -399,7 +432,6 @@ def handle_tensorflow():
     ## 设置随机参数
     envs["RANDOM"] = get_random_num(6)
     envs["osflag"] = get_os_flag()
-
 
 
     tensorflow_envs = [
@@ -415,9 +447,8 @@ def handle_tensorflow():
         "JOB_ID=${RANDOM}"
     ]
 
-    envs_map= {}
-    envs_map["DEVICE_ID"] = device_id
-    envs_map["DEVICE_INDEX"] = device_index
+    envs_to_add["DEVICE_ID"] = device_id
+    envs_to_add["DEVICE_INDEX"] = device_index
 
     for item in tensorflow_envs:
 
@@ -428,12 +459,12 @@ def handle_tensorflow():
             key_val = new_item.strip().split("=")
             k = key_val[0]
             v = key_val[1]
-            envs_map[k] = v
+            envs_to_add[k] = v
 
         else:
             pass
 
-    add_env(path, envs_map)
+    add_env(path, envs_to_add)
 
     ## 生成shell脚本
     pod_cmd = os.environ["DLWS_LAUNCH_CMD"]
@@ -444,6 +475,8 @@ def handle_tensorflow():
     os.system(cmd)
     set_bashrc("root")
 
+    ## 生成训练脚本
+    generate_tensorflow()
     return
 
 

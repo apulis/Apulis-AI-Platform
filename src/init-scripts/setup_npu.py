@@ -380,6 +380,7 @@ def handle_mindspore():
 
     cmd = 'python /pod/scripts/setup_huawei.py --type mindspore --command "%s" --out %s'% (pod_cmd, npu_info_dir)
     os.system(cmd)
+    os.system("chmod 777 " + npu_info_dir)
 
     set_bashrc("root")
     generate_mindspore()
@@ -473,6 +474,7 @@ def handle_tensorflow():
     cmd = 'python /pod/scripts/setup_huawei.py --type tensorflow --command "%s" --out %s'% (pod_cmd, npu_info_dir)
     print(cmd, "==========================")
     os.system(cmd)
+    os.system("chmod 777 " + npu_info_dir)
     set_bashrc("root")
 
     ## 生成训练脚本

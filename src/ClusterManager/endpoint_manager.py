@@ -227,7 +227,7 @@ def is_server_ready(endpoint):
 
 def start_endpoint(endpoint):
     # pending, running, stopped
-    logger.debug("Starting endpoint: %s", endpoint)
+    logger.info("Starting endpoint: %s", endpoint)
 
     pod_name = endpoint["podName"]
     podPort = endpoint["podPort"]

@@ -291,6 +291,7 @@ default_config_parameters = {
         "glusterfs": "worker_node",
         "FragmentGPUJob": "all",
         "a910-device-plugin": "worker_node",
+        "node-cleaner": "worker_node",
 
         ## applications
         "nginx": "all",

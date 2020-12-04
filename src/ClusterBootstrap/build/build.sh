@@ -17,8 +17,8 @@ local_harbor_fullname=harbor.sigsus.cn:8443/sz_gongdianju/apulistech/dlworkspace
 
 # 拷贝到其它机器
 # (ip port)
-#remote_machine=(219.133.167.42 52080)
-remote_machine=(192.168.1.176 22)
+remote_machine=(219.133.167.42 52080)
+#remote_machine=(192.168.1.176 22)
 tar_name=`sed 's|:|_|g' <<< ${image_fullname}`.tar
 
 

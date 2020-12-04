@@ -2024,7 +2024,7 @@ class Endpoint(Resource):
         if "arguments" in params:
             arguments = params["arguments"]
         else:
-            arguments = {}
+            arguments = json.dumps({})
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]

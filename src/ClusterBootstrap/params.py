@@ -795,6 +795,7 @@ default_config_parameters = {
             "aiarts-frontend": {"fullname": "apulistech/dlworkspace_aiarts-frontend:1.0.0"},
             "aiarts-backend": {"fullname": "apulistech/dlworkspace_aiarts-backend:1.0"},
             "data-platform": {"fullname": "apulistech/dlworkspace_data-platform-backend:latest"},
+            "node-cleaner": {"fullname": "apulistech/node-cleaner:latest"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

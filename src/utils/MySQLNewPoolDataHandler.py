@@ -1312,11 +1312,9 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT count(*) OVER() AS total, {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
-                        jobType, jobTime, jobParams, priority FROM {} left join {}
-                        on {}.jobId =  {}.jobId where jobType='{}' and isDeleted=0""".format(self.jobtablename,
-                        self.jobtablename, self.jobprioritytablename,
-                        self.jobtablename, self.jobprioritytablename,
+            query = """SELECT count(*) OVER() AS total, jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
+                        jobType, jobTime, jobParams FROM {}  
+                        where jobType='{}' and isDeleted=0""".format(self.jobtablename,
                         jobType)
 
             ## all jobs
@@ -2560,7 +2558,7 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0" % (self.jobtablename)
+            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 and userName='%s'" % (self.jobtablename, userName)
 
             if vcName is not None and vcName != "":
                 query += " and vcName = '%s'" % vcName

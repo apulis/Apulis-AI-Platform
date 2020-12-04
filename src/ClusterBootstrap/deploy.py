@@ -3502,6 +3502,12 @@ def get_all_services(use_service=None):
     servicedic = {}
 
     for service in os.listdir(rootdir):
+
+        if use_service is not None and service.lower() != use_service.lower():
+            continue
+        else:
+            pass
+
         dirname = os.path.join(rootdir, service)
         if os.path.isdir(dirname):
             launch_order_file = os.path.join( dirname, "launch_order")

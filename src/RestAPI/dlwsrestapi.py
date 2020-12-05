@@ -952,8 +952,10 @@ class DeleteJob(Resource):
         result = JobRestAPIUtils.DeleteJob(jobId)
         ret = {}
         if result:
+            ret["code"] = 0
             ret["result"] = "Success, the job record is deleted."
         else:
+            ret["code"] = -1
             ret["result"] = "Cannot delete the job. Job ID:" + jobId
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"

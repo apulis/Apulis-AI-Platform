@@ -859,7 +859,7 @@ def KillJob(userName, jobId):
     return ret
 
 def DeleteJob(jobId):
-    CanDeleteJobStatus = ["failed","error","unapproved","finished","killed","paused"]
+    CanDeleteJobStatus = ["failed","error","unapproved","finished","killing","killed","paused"]
     ret = False
     dataHandler = DataHandler()
     job = dataHandler.GetJobTextFields(jobId, ["jobStatus"])

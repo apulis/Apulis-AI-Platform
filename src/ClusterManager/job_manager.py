@@ -32,7 +32,7 @@ from job import Job, JobSchema
 from job_launcher import JobDeployer, JobRole, PythonLauncher,InferenceServiceJobDeployer
 from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time, record
 from job_launcher import get_job_status_detail, job_status_detail_with_finished_time
-from common import walk_json
+import common
 import JobRestAPIUtils
 
 logger = logging.getLogger(__name__)
@@ -346,13 +346,16 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         if job["jobStatus"] != "running":
             started_at = k8sUtils.localize_time(datetime.datetime.now())
             detail = [{"startedAt": started_at, "message": "started at {}".format(started_at)}]
+            last_updated = datetime.datetime.now()
 
             dataFields = {
                 "jobStatusDetail": base64.b64encode(json.dumps(detail)),
-                "jobStatus":"running"
+                "jobStatus":"running",
+                "lastUpdated": last_updated.isoformat(),
             }
 
-            last_updated = datetime.datetime.now()
+
+            job["lastUpdated"] = last_updated
             conditionFields = {"jobId": job["jobId"]}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
 
@@ -362,17 +365,15 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
             else:
                 pass
 
-            job["lastUpdated"] = last_updated
-
         else:
             ## running job
             pass
 
         ## read job time from vc configuration
         vc_name = jobParams["vcName"].strip()
-        vc_meta = walk_json(dataHandler.GetVC(vc_name), "metadata")
+        vc_meta = common.walk_json(dataHandler.GetVC(vc_name), "metadata")
         vc_meta = {} if vc_meta is None else json.loads(vc_meta)
-        vc_max_time = walk_json(vc_meta, "admin", "job_max_time_second")
+        vc_max_time = common.walk_json(vc_meta, "admin", "job_max_time_second")
 
         logger.info("vc_max_time: %s for job %s. ", str(vc_max_time), job["jobId"])
         logger.info("vc_meta: %s for job %s. ", str(vc_meta), job["jobId"])
@@ -394,16 +395,15 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
             logger.info("max_time: %s for job %s", str(max_time), job["jobId"])
             
         ## read user's setting
-        params = json.loads(base64decode(job["jobParams"]))
-
         if type(max_time) != int:
             if max_time is not None:
                 logger.info("unknown maxTimeSec %s for job %s", max_time,
                             job["jobId"])
 
         else:
-            start_time = int(datetime.datetime.timestamp(job["lastUpdated"]))
-            now = datetime.datetime.timestamp(datetime.datetime.now())
+            start_time = int(common.to_seconds_from_isodate_str(job["lastUpdated"]))
+            now = common.to_seconds_from_date(datetime.datetime.now())
+            logger.info("start_time: %s, current_time: %s, max_time: %s for job %s", str(start_time), str(now), str(max_time), job["jobId"])
 
             if start_time + max_time < now:
                 logger.info(
@@ -433,13 +433,16 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
     elif result == "Restart":
         logger.warning("Job %s request resources failed, return to queued...", job["jobId"])
         retries = dataHandler.AddandGetJobRetries(job["jobId"])
+
         if retries >= 500:
             dataFields = {
                 "jobStatus": "error",
                 "errorMsg": "can't allocate resources",
             }
+
             conditionFields = {"jobId": job["jobId"]}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+
         else:
            dataHandler.UpdateJobTextField(job["jobId"], "jobStatus", "queued")
 

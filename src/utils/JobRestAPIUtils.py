@@ -1314,6 +1314,17 @@ def GetVcsUserCount():
         ret = res.json()["vcUserNames"]
     return ret
 
+def GetUserData(userName):
+    ret = {}
+    res = requests.get(url=config["usermanagerapi"] + "/custom-user-dashboard-backend/open/user-info?userName=" + userName, headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()
+    else:
+        msg = "userName(%s), call /custom-user-dashboard-backend/open/user-info failed(%s)" %(userName, str(res.status_code))
+        logger.error(msg)
+
+    return ret
+
 def ListVCs(userName,page=None,size=None,name=None):
     ret = {"result":[]}
     vcList = getClusterVCs(page,size,name)

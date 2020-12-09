@@ -109,6 +109,7 @@ class DataHandler(object):
         self.monitormetricsTableName = "monitormetrics"
         self.monitorchannelTableName = "monitorchannel"
         self.pool = SingletonDBPool.instance()
+
         elapsed = timeit.default_timer() - start_time
         logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
         self.CreateDatabase()
@@ -430,7 +431,7 @@ class DataHandler(object):
                     ]
                 }, 
                 "ipython": True,
-                "gpus": 1, 
+                "gpus": 1,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
                 "type": "RegularJob", 
                 "image": "ubuntu:18.04", 
                 "enableDataPath": True,
@@ -536,6 +537,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 conn.insert_one(sql)
                 conn.commit()
+
     @record
     def AddDevice(self,deviceType, deviceStr, capacity,detail):
         ret = False

@@ -30,10 +30,10 @@ import logging
 import logging.config
 from job import Job, JobSchema
 from job_launcher import JobDeployer, JobRole, PythonLauncher,InferenceServiceJobDeployer
-
 from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time, record
-
 from job_launcher import get_job_status_detail, job_status_detail_with_finished_time
+from common import walk_json
+import JobRestAPIUtils
 
 logger = logging.getLogger(__name__)
 
@@ -294,6 +294,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         dataHandler = DataHandler()
     else:
         dataHandler = dataHandlerOri
+
     jobParams = json.loads(base64.b64decode(job["jobParams"]))
 
     result, details = check_job_status(job["jobId"])
@@ -337,8 +338,11 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         if notifier is not None:
             notifier.notify(notify.new_job_state_change_message(
                 job["userName"], job["jobId"], result.strip()))
+
     elif result == "Running":
+
         update_job_state_latency(redis_conn, job["jobId"], "running")
+
         if job["jobStatus"] != "running":
             started_at = k8sUtils.localize_time(datetime.datetime.now())
             detail = [{"startedAt": started_at, "message": "started at {}".format(started_at)}]
@@ -347,11 +351,85 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                 "jobStatusDetail": base64.b64encode(json.dumps(detail)),
                 "jobStatus":"running"
             }
+
+            last_updated = datetime.datetime.now()
             conditionFields = {"jobId": job["jobId"]}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+
             if notifier is not None:
                 notifier.notify(notify.new_job_state_change_message(
                     job["userName"], job["jobId"], result.strip()))
+            else:
+                pass
+
+            job["lastUpdated"] = last_updated
+
+        else:
+            ## running job
+            pass
+
+        ## read job time from vc configuration
+        vc_name = jobParams["vcName"].strip()
+        vc_meta = walk_json(dataHandler.GetVC(vc_name), "metadata")
+        vc_meta = {} if vc_meta is None else json.loads(vc_meta)
+        vc_max_time = walk_json(vc_meta, "admin", "job_max_time_second")
+
+        logger.info("vc_max_time: %s for job %s. ", str(vc_max_time), job["jobId"])
+        logger.info("vc_meta: %s for job %s. ", str(vc_meta), job["jobId"])
+
+        ## 1. use job time config from vc
+        ## 2. use user's own job time config, if is not set for vc 
+        max_time = 0
+        if vc_max_time is not None:
+            max_time = int(vc_max_time)
+
+        else:
+            user_data = JobRestAPIUtils.GetUserData(job["userName"])
+            if "jobMaxTimeSecond" in user_data:
+                max_time = int(user_data["jobMaxTimeSecond"])
+            else:
+                max_time = 999999999 # no limit
+
+            logger.info("user_data: %s for job %s", str(user_data), job["jobId"])
+            logger.info("max_time: %s for job %s", str(max_time), job["jobId"])
+            
+        ## read user's setting
+        params = json.loads(base64decode(job["jobParams"]))
+
+        if type(max_time) != int:
+            if max_time is not None:
+                logger.info("unknown maxTimeSec %s for job %s", max_time,
+                            job["jobId"])
+
+        else:
+            start_time = int(datetime.datetime.timestamp(job["lastUpdated"]))
+            now = datetime.datetime.timestamp(datetime.datetime.now())
+
+            if start_time + max_time < now:
+                logger.info(
+                    "killing job %s for its running time exceed maxTimeSec %ss, start %s, now %s",
+                    job["jobId"], max_time, start_time, now)
+
+                error_msg = "running exceed pre-defined %ss" % (max_time)
+                dataFields = {
+                    "errorMsg": error_msg,
+                }
+
+                conditionFields = {"jobId": job["jobId"]}
+                dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+                launcher.kill_job(job["jobId"], "killed")
+
+                if notifier is not None:
+                    notifier.notify(
+                        notify.new_job_killed_message(job["userName"],
+                                                      job["jobId"], error_msg))
+
+                else:
+                    pass
+
+            else:
+                pass
+
     elif result == "Restart":
         logger.warning("Job %s request resources failed, return to queued...", job["jobId"])
         retries = dataHandler.AddandGetJobRetries(job["jobId"])

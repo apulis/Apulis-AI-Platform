@@ -184,9 +184,17 @@ def get_scheduling_job_details(details):
 
 
 def GetJobTotalGpu(jobParams):
+    
     numWorkers = 1
     if "numpsworker" in jobParams:
         numWorkers = int(jobParams["numpsworker"])
+        if numWorkers == 0:
+            numWorkers = 1
+        else:
+            pass
+    else:
+        pass
+    
     return int(jobParams["resourcegpu"]) * numWorkers
 
 
@@ -533,6 +541,7 @@ def get_job_priority(priority_dict, job_id):
 @record
 def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     vc_list = data_handler.ListVCs()
+
     cluster_status, _ = data_handler.GetClusterStatus()
     cluster_total = cluster_status["gpu_capacity"]
     cluster_available = cluster_status["gpu_avaliable"]
@@ -570,13 +579,16 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     logger.info("Job priority dict: {}".format(priority_dict))
 
     for vc in vc_list:
+
         vc_name = vc["vcName"]
         vc_metadata = json.loads(vc["metadata"])
         vc_schedulable = {}
         vc_user_quota_allocable = {}
+
         for gpu_type, total in vc_total[vc_name].items():
             vc_schedulable[gpu_type] = total - vc_unschedulable[vc_name][gpu_type]
             vc_user_quota_allocable[gpu_type] = vc_metadata[gpu_type]["user_quota"] if gpu_type in vc_metadata and "user_quota" in vc_metadata[gpu_type] else 9999
+        
         vc_resources[vc_name] = ResourceInfo(vc_schedulable)
         vc_user_quota_resources[vc_name] = ResourceInfo(vc_user_quota_allocable)
 
@@ -651,9 +663,11 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             else:
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
             continue
+
         vc_resource = vc_resources[vc_name]
         vc_user_quota_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
         logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource,vc_name])
+        
         if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
             if sji["job"]["jobStatus"] == "queued":
                 if sji["deviceType"] in detail_resources:
@@ -662,6 +676,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                     else:
                         if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["pernoderesource"]:
                             continue
+                        
             vc_resource.Subtract(sji["globalResInfo"])
             vc_user_quota_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
@@ -690,20 +705,25 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     logger.info("TakeJobActions : global resources : %s" % (globalResInfo.CategoryToCountMap))
 
     for sji in jobsInfo:
+
         try:
+
             if sji["job"]["jobStatus"] == "queued" and (sji["allowed"] is True):
                 launcher.submit_job(sji["job"])
                 update_job_state_latency(redis_conn, sji["jobId"], "scheduling")
                 logger.info("TakeJobActions : submitting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
             elif sji["preemptionAllowed"] and (sji["job"]["jobStatus"] == "scheduling" or sji["job"]["jobStatus"] == "running") and (sji["allowed"] is False):
                 launcher.kill_job(sji["job"]["jobId"], "queued")
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
                 vc_name = sji["job"]["vcName"]
                 available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
                 requested_resource = sji["globalResInfo"]
                 detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,available_resource.GetMinValue(vc_resources[vc_name]))}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
+
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)
 

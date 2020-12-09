@@ -281,7 +281,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: networking-istio
+  name: networking-istio-arm64
   namespace: knative-serving
   labels:
     serving.knative.dev/release: "v0.15.0"
@@ -365,7 +365,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: istio-webhook
+  name: istio-webhook-arm64
   namespace: knative-serving
   labels:
     serving.knative.dev/release: "v0.15.0"

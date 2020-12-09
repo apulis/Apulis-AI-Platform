@@ -194,3 +194,8 @@ router.get('/error.gif',
 
 router.get('/platform-config',
   require('./controllers/platform-config'))
+
+router.post('/clusters/:clusterId/save_image/',
+  require('./middlewares/user')(),
+  require('./middlewares/body')('saveImage'),
+  require('./controllers/cluster/save_image.post'))

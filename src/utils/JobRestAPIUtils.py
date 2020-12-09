@@ -95,16 +95,18 @@ def ToBool(value):
 
 
 def SubmitJob(jobParamsJsonStr):
-    ret = {}
 
+    ret = {}
     jobParams = LoadJobParams(jobParamsJsonStr)
 
     if "jobName" not in jobParams or len(jobParams["jobName"].strip()) == 0:
         ret["error"] = "ERROR: Job name cannot be empty"
         return ret
+
     if "vcName" not in jobParams or len(jobParams["vcName"].strip()) == 0:
         ret["error"] = "ERROR: VC name cannot be empty"
         return ret
+
     if "userId" not in jobParams or len(str(jobParams["userId"]).strip()) == 0:
         jobParams["userId"] = GetUser(jobParams["userName"])["uid"]
 
@@ -127,6 +129,8 @@ def SubmitJob(jobParamsJsonStr):
 
     if "resourcegpu" not in jobParams:
         jobParams["resourcegpu"] = 0
+    else:
+        pass
 
     if isinstance(jobParams["resourcegpu"], basestring):
         if len(jobParams["resourcegpu"].strip()) == 0:
@@ -140,6 +144,16 @@ def SubmitJob(jobParamsJsonStr):
         jobParams["isParent"] = 1
 
     userName = getAlias(jobParams["userName"])
+        
+    # return if there is not enough devices
+    #if "gpuType" in jobParams:
+    #    valid, msg = ValidateDeviceRequest(jobParams["gpuType"], jobParams["resourcegpu"], jobParams["vcName"].strip())
+    #    if valid is False:
+    #        ret["error"] = msg
+    #        return
+    #else:
+    #    logger.info("gpuType not set!")
+    #    pass
 
     if not AuthorizationManager.HasAccess(jobParams["userName"], ResourceType.VC, jobParams["vcName"].strip(), Permission.User):
         ret["error"] = "Access Denied!"
@@ -209,6 +223,7 @@ def SubmitJob(jobParamsJsonStr):
     jobParams["dataPath"] = jobParams["dataPath"].replace("\\","/")
     jobParams["workPath"] = jobParams["workPath"].replace("\\","/")
     jobParams["jobPath"] = jobParams["jobPath"].replace("\\","/")
+
     jobParams["dataPath"] = os.path.realpath(os.path.join("/",jobParams["dataPath"]))[1:]
     jobParams["workPath"] = os.path.realpath(os.path.join("/",jobParams["workPath"]))[1:]
     jobParams["jobPath"] = os.path.realpath(os.path.join("/",jobParams["jobPath"]))[1:]
@@ -706,6 +721,77 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus,jobGroup, pageNu
 
     return jobs
 
+
+def GetJobCount(vcName, jobType, jobStatus, searchWord):
+    count = 0
+    dataHandler = None
+
+    try:
+        dataHandler = DataHandler()
+        count = dataHandler.GetJobCount(vcName, jobType, jobStatus, searchWord)
+    except Exception as e:
+        logger.error('get all job list Exception: ex: %s', str(e))
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+        else:
+            pass
+
+    return {"count" : count}
+
+def GetAllJobList( vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order):
+    jobs = {}
+    dataHandler = None
+
+    try:
+        dataHandler = DataHandler()
+        hasAccessOnAllJobs = False
+
+        # if user needs to access all jobs, and has been authorized,
+        # he could get all pending jobs; otherwise, he could get his
+        # own jobs with all status
+        jobs = dataHandler.GetAllJobList( vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order)
+
+    except Exception as e:
+        logger.error('get all job list Exception: ex: %s', str(e))
+
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+        else:
+            pass
+
+    return jobs
+
+def GetVCPendingJobs(userName, vcName):
+    ret = {}
+    jobs = {}
+
+    ret["code"] = 0
+    ret["data"] = []
+    dataHandler = None
+
+    try:
+        global pendingStatus
+        dataHandler = DataHandler()
+        jobs = dataHandler.GetUserJobs(userName, vcName, pendingStatus)
+
+        ret["msg"] = "success!"
+        ret["data"] = jobs
+
+    except Exception as e:
+        ret["code"] = -1
+        ret["msg"] = "failed! err: %s" % (str(e))
+        logger.error('get job list Exception: user: %s, ex: %s', userName, str(e))
+
+    finally:
+        if dataHandler is not None:
+            dataHandler.Close()
+        else:
+            pass
+
+    return ret
+
 def ListInferenceJob(jobOwner,vcName,num,search=None,status=None,order=None,orderBy=None):
     jobs = {}
     dataHandler = None
@@ -762,7 +848,7 @@ def KillJob(userName, jobId):
     ret = False
     dataHandler = DataHandler()
     job = dataHandler.GetJobTextFields(jobId, ["userName", "vcName", "jobStatus", "isParent", "familyToken"])
-    if job is not None and job["jobStatus"] in pendingStatus.split(","):
+    if job is not None and job["jobStatus"].lower() in pendingStatus.split(","):
         if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Admin):
             dataFields = {"jobStatus": "killing"}
             conditionFields = {"jobId": jobId}
@@ -773,11 +859,11 @@ def KillJob(userName, jobId):
     return ret
 
 def DeleteJob(jobId):
-    CanDeleteJobStatus = ["failed","error","unapproved","finished","killed","paused"]
+    CanDeleteJobStatus = ["failed","error","unapproved","finished","killing","killed","paused"]
     ret = False
     dataHandler = DataHandler()
     job = dataHandler.GetJobTextFields(jobId, ["jobStatus"])
-    if job is not None and job["jobStatus"] in CanDeleteJobStatus:
+    if job is not None and job["jobStatus"].lower() in CanDeleteJobStatus:
         ret = dataHandler.DeleteJob(jobId)
     dataHandler.Close()
     return ret
@@ -1245,6 +1331,81 @@ def ListVCs(userName,page=None,size=None,name=None):
     # web portal (client) can filter out Default VC
     return ret
 
+def GetVCConfig(vcName):
+    
+    ret = {}
+    ret["quota"]={}
+    ret["user_quota"]={}
+
+    config = DataHandler().GetVC(vcName)
+    if config is None:
+        return ret 
+    else:
+        pass
+    
+    if "quota" in config and len(config["quota"]) > 0:
+        quota = json.loads(config["quota"])
+        ret["quota"] = quota
+    else:
+        pass
+
+    if "metadata" in config and len(config["metadata"]) > 0:
+        user_quota = json.loads(config["metadata"])
+        ret["user_quota"] = user_quota
+    else:
+        pass
+    
+    return ret
+
+def ValidateDeviceRequest(devType, devNum, vcName):
+
+    devType=devType.strip()
+    devNum=int(devNum)
+
+    userQuota=0
+    msg = "success!"
+
+    req_info= "devType: %s, devNum: %d, vcName: %s" % (devType, devNum, vcName)
+    vc_config = GetVCConfig(vcName)
+
+    if vc_config is None:
+        msg = "vc not exists(%s)" %(vcName)
+        logger.info(msg)
+        return False, msg
+    
+    if "quota" not in vc_config:
+        msg = "req(%s), incorrect vc config(%s)" %(req_info, str(vc_config))
+        logger.info(msg)
+        return False, msg
+
+    if devType not in vc_config["quota"]:
+        msg = "req(%s), target dev type not configed(%s)"% (req_info, str(vc_config))
+        logger.info(msg)
+        return False, msg
+
+    configNum = int(vc_config["quota"][devType])
+    if devNum > configNum:
+        msg = "req(%s), request num(%d) more than vc configed(%d) " %(req_info, devNum, configNum)
+        logger.info(msg)
+        return False, msg
+
+    if "user_quota" in vc_config:
+        # not empty
+        if bool(vc_config["user_quota"]):
+            if devType not in vc_config["user_quota"]:
+                msg = "req(%s), target dev type not included by user_quota(%s)" % (req_info, str(vc_config["user_quota"]))
+                logger.info(msg)
+                return False, msg
+            
+            elif "user_quota" in vc_config["user_quota"][devType] and int(vc_config["user_quota"][devType]["user_quota"]) < devNum:
+                msg = "req(%s), request num(%d) more than user_quota(%d)" % (req_info, devNum, int(vc_config["user_quota"][devType]["user_quota"]))
+                logger.info(msg)
+                return False, msg
+    else:
+        pass
+
+    return True, msg
+
 def GetVC(userName, vcName):
     ret = None
 
@@ -1253,6 +1414,7 @@ def GetVC(userName, vcName):
     cluster_status, _ = data_handler.GetClusterStatus()
     if not cluster_status or "gpu_capacity" not in cluster_status:
         return ret
+
     cluster_total = cluster_status["gpu_capacity"]
     cluster_available = cluster_status["gpu_avaliable"]
     cluster_reserved = cluster_status["gpu_reserved"]
@@ -1339,7 +1501,7 @@ def GetVC(userName, vcName):
 
 def GetJobTotalGpu(jobParams):
     numWorkers = 1
-    if "numpsworker" in jobParams:
+    if "numpsworker" in jobParams and jobParams["numpsworker"]:
         numWorkers = int(jobParams["numpsworker"])
     return int(jobParams["resourcegpu"]) * numWorkers
 
@@ -1392,6 +1554,28 @@ def UpdateVC(userName, vcName, quota, metadata):
     else:
         ret = "Access Denied!"
     dataHandler.Close()
+    return ret
+
+def DettachVC(userName, vcName):
+
+    ret = {}
+    ret["code"] = 0
+
+    # select all jobs from db
+    dataHandler = DataHandler()
+
+    global pendingStatus
+    jobIds = dataHandler.GetUserJobs(userName, vcName, pendingStatus)
+    dataHandler.Close()
+
+    for jobItem in jobIds:
+        if not KillJob(userName, jobItem["jobId"]):
+            ret["code"] = -1
+            ret["msg"] = "delete job(id: %s) failed" % (jobItem["jobId"])
+        else:
+            pass
+
+    ret["msg"] = "success. %d job(s) deleted" % (len(jobIds))
     return ret
 
 def GetAllDevice(userName):
@@ -1543,6 +1727,33 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, arguments, interactive
                     "status": "pending",
                     "hostNetwork": host_network,
                     "arguments": arguments
+                }
+                endpoints[endpoint_id] = endpoint
+            else:
+                logger.info("Endpoint %s exists. Skip.", endpoint_id)
+
+        # Only open vscode on the master
+        if 'vscode' in requested_endpoints:
+            if job_type == "RegularJob":
+                pod_name = pod_names[0]
+            else:
+                # For a distributed job, we set up jupyter on first worker node.
+                # PS node does not have GPU access.
+                # TODO: Simplify code logic after removing PS
+                pod_name = pod_names[1]
+
+            endpoint_id = "e-" + jobId + "-vscode"
+
+            if endpoint_id not in job_endpoints:
+                logger.info("Endpoint %s does not exist. Add.", endpoint_id)
+                endpoint = {
+                    "id": endpoint_id,
+                    "jobId": jobId,
+                    "podName": pod_name,
+                    "username": username,
+                    "name": "vscode",
+                    "status": "pending",
+                    "hostNetwork": host_network
                 }
                 endpoints[endpoint_id] = endpoint
             else:
@@ -1701,12 +1912,12 @@ def GetConvertDetail(projectId,datasetId):
     return None
 
 
-def GetJobSummary(userName, jobType):
+def GetJobSummary(userName, jobType, vcName):
     data_handler = None
 
     try:
         data_handler = DataHandler()
-        summary = data_handler.get_job_summary(userName, jobType)
+        summary = data_handler.get_job_summary(userName, jobType, vcName)
         return summary
 
     except Exception as e:
@@ -1725,6 +1936,26 @@ def GetJobSummary(userName, jobType):
 
 
 
+def GetVersionInfo():
+    
+    if ( os.path.isfile('/version-info')):
+        with open('/version-info') as f:
+            all_version = yaml.load(f.read())
+            current = {}
+            current["name"] = all_version[0]['version']
+            current['description'] = all_version[0]['description']
+            current['updateAt'] = all_version[0]['updateAt']
+            history = []
+            for versionInfo in all_version[1:]:
+                version_info = {}
+                version_info["name"] = versionInfo['version']
+                version_info['description'] = versionInfo['description']
+                version_info['updateAt'] = versionInfo['updateAt']
+                history.append(version_info)
+        return current, history
+    else:
+        logger.error("Exception in reading version file: file not exist")
+    return None, None
 
 if __name__ == '__main__':
     TEST_SUB_REG_JOB = False

@@ -363,24 +363,66 @@ class PostJob(Resource):
     @api.expect(api.model("PostJobModel", model.PostJob(api).params))
     @api.response(200, "succeed", api.model("PostJob", model.PostJob(api).model))
     def post(self):
+
         params = request.get_json(force=True)
+
         logger.info("Post Job")
         logger.info(params)
 
         ret = {}
-        output = JobRestAPIUtils.SubmitJob(json.dumps(params))
+        authorization = request.headers.get('Authorization')
 
+        if authorization != None:
+            user_info = requests.get(url=config["usermanagerapi"] + "/auth/currentUser", headers={"Authorization": authorization})
+            logger.info("authorization from client: %s", authorization)
+
+            check_pass = True
+            err_msg = ""
+
+            if user_info.status_code == 200:
+                user_info = user_info.json()
+                if "currentVC" not in user_info or "vcName" not in params or params["vcName"] not in user_info["currentVC"]:
+                    check_pass = False
+                    err_msg = "invalid vc(%s) or user doesn't belong to target vc" % (params["vcName"])
+                    logger.error("invalid vc(%s), user info(%s)", params["vcName"], str(user_info))
+                else:
+                    pass
+            else:
+                err_msg = "currentUser request err. status_code=%d" % (user_info.status_code) 
+                check_pass = False
+
+            if not check_pass:
+                ret["error"] = err_msg
+                ret["code"] = -1
+                resp = jsonify(ret)
+                resp.headers["Access-Control-Allow-Origin"] = "*"
+                resp.headers["dataType"] = "json"
+
+                return resp
+            else:
+                logger.info("PostJob checking vc pass!")
+        else:
+            pass
+
+        output = JobRestAPIUtils.SubmitJob(json.dumps(params))
         if "jobId" in output:
             ret["jobId"] = output["jobId"]
         else:
+            ret["code"] = -1
             if "error" in output:
-                ret["error"] = "Cannot create job!" + output["error"]
+                ret["error"] = "Cannot create job! " + output["error"]
             else:
                 ret["error"] = "Cannot create job!"
+
+        ret["code"] = 0
+        ret["error"] = ""
+
         logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
         resp = jsonify(ret)
+
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
+
         return resp
 
 api.add_resource(PostJob, '/PostJob')
@@ -655,6 +697,72 @@ class ListJobsV3(Resource):
 
 api.add_resource(ListJobsV3, '/ListJobsV3')
 
+# shows a list of all jobs, and lets you POST to add new tasks
+class GetJobCount(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+
+
+        parser.add_argument('vcName')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+        parser.add_argument('searchWord')
+
+        args = parser.parse_args()
+        count = JobRestAPIUtils.GetJobCount(args["vcName"],
+                args["jobType"], args["jobStatus"], args["searchWord"])
+
+        resp = generate_response(count)
+        return resp
+
+api.add_resource(GetJobCount, '/GetJobCount')
+
+# shows a list of all jobs, and lets you POST to add new tasks
+class ListAllJobs(Resource):
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+
+        parser.add_argument('vcName')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+        parser.add_argument('pageNum')
+        parser.add_argument('pageSize')
+        parser.add_argument('searchWord')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
+
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.GetAllJobList(args["vcName"],
+                args["jobType"], args["jobStatus"],
+                args["pageNum"], args["pageSize"],
+                args["searchWord"], args["orderBy"], args["order"])
+
+        resp = generate_response(jobs)
+        return resp
+
+api.add_resource(ListAllJobs, '/ListAllJobs')
+
+class GetVCPendingJobs(Resource):
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('vcName')
+
+        args = parser.parse_args()
+        result = JobRestAPIUtils.GetVCPendingJobs(args["userName"], args["vcName"])
+
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        
+        return resp
+
+api.add_resource(GetVCPendingJobs, '/GetVCPendingJobs')
+
 class GetAllDevice(Resource):
     @api.doc(params=model.GetAllDevice.params)
     @api.response(200, "succeed", api.model("GetAllDevice", model.GetAllDevice.model))
@@ -819,6 +927,23 @@ class KillJob(Resource):
 ##
 api.add_resource(KillJob, '/KillJob')
 
+class DettachVC(Resource):
+    def post(self):
+        params = request.get_json(silent=True)
+        vcName = params["vcName"]
+        userName = params["userName"]
+
+        result = JobRestAPIUtils.DettachVC(userName, vcName)
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(DettachVC, '/DettachVC')
+
 class DeleteJob(Resource):
     def delete(self):
         parser = reqparse.RequestParser()
@@ -828,8 +953,10 @@ class DeleteJob(Resource):
         result = JobRestAPIUtils.DeleteJob(jobId)
         ret = {}
         if result:
+            ret["code"] = 0
             ret["result"] = "Success, the job record is deleted."
         else:
+            ret["code"] = -1
             ret["result"] = "Cannot delete the job. Job ID:" + jobId
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -1900,11 +2027,11 @@ class Endpoint(Resource):
         if "arguments" in params:
             arguments = params["arguments"]
         else:
-            arguments = {}
+            arguments = json.dumps({})
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]
-        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard"] ]:
+        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard","vscode"] ]:
             if any(required_field not in interactive_port for required_field in ["name", "podPort"]):
                 # if ["name", "port"] not in interactive_port:
                 return ("Bad request, interactive port should have \"name\" and \"podPort\"]: %s" % requested_endpoints), 400
@@ -2154,12 +2281,14 @@ class GetJobSummary(Resource):
 
         parser.add_argument('userName')
         parser.add_argument('jobType')
+        parser.add_argument('vcName')
 
         args = parser.parse_args()
         userName = args["userName"]
         jobType = args["jobType"]
+        vcName = args["vcName"]
 
-        ret = JobRestAPIUtils.GetJobSummary(userName, jobType)
+        ret = JobRestAPIUtils.GetJobSummary(userName, jobType, vcName)
         resp = jsonify(ret)
 
         resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -2167,6 +2296,22 @@ class GetJobSummary(Resource):
         return resp
 
 api.add_resource(GetJobSummary, '/GetJobSummary')
+class GetPlatformVersionInfo(Resource):
+    def get(self):
+        current_version, version_history = JobRestAPIUtils.GetVersionInfo()
+        ret = {}
+        ret['version'] = current_version
+        ret['history'] = version_history
+        try:
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+        except Exception as e:
+            print (e)
+            return "error"
+        return resp
+
+api.add_resource(GetPlatformVersionInfo, '/VersionInfo')
 
 if __name__ == '__main__':
     #signal.signal(signal.SIGUSR2, dumpstacks)

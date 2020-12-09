@@ -291,6 +291,7 @@ default_config_parameters = {
         "glusterfs": "worker_node",
         "FragmentGPUJob": "all",
         "a910-device-plugin": "worker_node",
+        "node-cleaner": "worker_node",
 
         ## applications
         "nginx": "all",
@@ -796,6 +797,7 @@ default_config_parameters = {
             "aiarts-backend": {"fullname": "apulistech/dlworkspace_aiarts-backend:1.0"},
             "data-platform": {"fullname": "apulistech/dlworkspace_data-platform-backend:latest"},
             "mlflow":{"fullname":"apulistech/mlflow:latest"},
+            "node-cleaner": {"fullname": "apulistech/node-cleaner:1.0"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

@@ -81,7 +81,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "每个VC GPU使用情况",
+            "title": "每个VC的GPU使用情况",
             "tooltip": {
               "shared": true,
               "sort": 0,
@@ -170,7 +170,7 @@
             "thresholds": [],
             "timeFrom": null,
             "timeShift": null,
-            "title": "每VC NPU使用量",
+            "title": "每个VC的NPU使用量",
             "tooltip": {
               "shared": true,
               "sort": 0,

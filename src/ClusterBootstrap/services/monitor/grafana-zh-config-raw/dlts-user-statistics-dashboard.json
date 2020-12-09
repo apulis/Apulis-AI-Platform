@@ -730,7 +730,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs to the user.",
+      "description": "分配给用户的所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -812,7 +812,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs to the user over the selected time range.",
+      "description": "在选定的时间范围内，分配给用户的所有GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -895,7 +895,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) assigned to the user.",
+      "description": "分配给用户的所有活动GPU（> 0％）的平均GPU利用率。",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -977,7 +977,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) assigned to the user over the selected time range.",
+      "description": "在选定的时间范围内，分配给用户的所有活动GPU(>0%)的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -1562,7 +1562,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU memory utilization across all active GPUs (>0%) assigned to the user.",
+      "description": "分配给用户的所有活动GPU(>0%)的平均GPU内存利用率。",
       "format": "percent",
       "gauge": {
         "maxValue": 100,

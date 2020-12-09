@@ -139,7 +139,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "已安排GPU",
+      "title": "已分配的GPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -223,7 +223,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "活动GPU",
+      "title": "活动的GPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -307,7 +307,7 @@
         }
       ],
       "thresholds": "0,0",
-      "title": "",
+      "title": "空闲的GPU",
       "transparent": false,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -611,7 +611,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the job.",
+      "description": "作业中所有分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -694,7 +694,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all assigned GPUs in the job in the selected time range.",
+      "description": "在选定的时间范围内，作业中所有分配GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -777,7 +777,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the job.",
+      "description": "作业中所有活动GPU(>0%)的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -860,7 +860,7 @@
         "#299c46"
       ],
       "datasource": "${DS_PM}",
-      "description": "Average GPU utilization across all active GPUs (>0%) in the job over the selected time range.",
+      "description": "在选定的时间范围内，作业中所有活动GPU的平均GPU利用率",
       "format": "percent",
       "gauge": {
         "maxValue": 100,

@@ -11,6 +11,7 @@ import ClusterStatus from './en-US/ClusterStatus';
 import VirtualCluster from './en-US/VirtualCluster';
 import model from './en-US/model';
 import version from './en-US/version';
+import teams from './en-US/teams';
 
 export default {
   tips,
@@ -26,5 +27,6 @@ export default {
   ...VirtualCluster,
   ...model,
   ...version,
-  copy:'copy'
+  copy: 'copy',
+  teams,
 }

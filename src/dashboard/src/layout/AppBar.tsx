@@ -357,19 +357,8 @@ const SignOutButton: React.FC = () => {
   );
 };
 
-const Title: React.FC = () => {
-  const [platformName, setPlatformName] = useState<string>('');
-
-  const getPlatformName = async () => {
-    const res = await axios.get<{i18n: string | boolean; platformName: string}>('/platform-config');
-    const { i18n, platformName } = res.data;
-    setPlatformName(platformName);
-  }
-
-  useEffect(() => {
-    getPlatformName()
-  }, [])
-
+const Title: React.FC<{platformName: string}> = ({ platformName }) => {
+ 
   const styles = useStyles({});
   return (
     <Box component="header" className={styles.title} display="flex">
@@ -382,7 +371,7 @@ const Title: React.FC = () => {
   );
 };
 
-const DashboardAppBar: React.FC = () => {
+const DashboardAppBar: React.FC<{platformName: string}> = ({ platformName }) => {
   const styles = useStyles({});
   //const { open } = React.useContext(DrawerContext);
   const { lang } = React.useContext(ConfigContext)
@@ -404,7 +393,7 @@ const DashboardAppBar: React.FC = () => {
           </Grid>
           <Hidden xsDown>
             <Grid item xs>
-              <Title />
+              <Title platformName={platformName} />
             </Grid>
           </Hidden>
           <Grid item >

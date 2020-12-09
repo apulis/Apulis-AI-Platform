@@ -1,6 +1,82 @@
 #! /bin/bash
 set -ex
 
+## set npu device configs
+function setup_npu_config() {
+
+	npu_info_dir=/home/${DLWS_USER_NAME}/.npu/${DLWS_JOB_ID}
+	mkdir -p $npu_info_dir
+
+	## npu distributed job - worker
+	if [ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
+	then
+
+		## worker pod
+		echo "ip=${NPU_IPS}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
+		host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
+		echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
+
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+                if  [ -x "$(command -v python)" ] ; then
+                     python ${SCRIPT_DIR}/setup_npu.py 
+                fi
+
+
+	## npu distributed job - master
+	elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
+	then
+
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+
+		## master pod, generate hccl.json
+                if  [ -x "$(command -v python)" ] ; then
+                     python ${SCRIPT_DIR}/setup_npu.py
+                fi
+
+	## npu job, single node
+	elif [ "$DLWS_ROLE_NAME" = "master" ] && [ ! -z "$NPU_IPS" ];
+	then
+		## worker pod
+		echo "ip=${NPU_IPS}" >> ${npu_info_dir}/npu_0.info
+		host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
+		echo "host=${host_ip}" >> ${npu_info_dir}/npu_0.info
+
+		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+                if  [ -x "$(command -v python)" ] ; then
+                     python ${SCRIPT_DIR}/setup_npu.py 
+                fi
+	fi
+
+	## create npu log collection script
+	cat > /home/getnpu.sh << EOF
+#/bin/bash
+
+mapfile -t device_list < <( ls /dev/ | grep davinci[0-9] )
+device_id_list=()
+
+for device in \${device_list[@]}
+do
+        id=\${device/davinci/}
+        device_id_list+=(\$id)
+done
+
+file_list=""
+for id in \${device_id_list[@]}
+do
+        latest_file=\`ls -t /var/log/npulog/slog/device-\$id/ | head -n 1\`
+        if [ ! -z \$latest_file ]; then
+                tail -n 2000 /var/log/npulog/slog/device-\$id/\${latest_file} | grep -i ERROR
+        fi
+done
+
+latest_file=\`ls -t /var/log/npulog/slog/host-0/ | head -n 1\`
+if [ ! -z \$latest_file ]; then
+    tail -n 4000 /var/log/npulog/slog/host-0/\${latest_file} | grep -i ERROR
+fi
+EOF
+	chmod 777 /home/getnpu.sh
+}
+
 RUN_TIME_DIR=/dlts-runtime
 SCRIPT_DIR=/pod/scripts
 LOG_DIR=/pod/logs
@@ -30,8 +106,14 @@ echo bootstrap starts at `date` &>> ${LOG_DIR}/bootstrap.log
 # if ! [ -x "$(command -v sudo)" ] ; then
 #     time apt-get update && time apt-get install -y sudo
 # fi
+
 # if ! [ -x "$(command -v ifconfig)" ];then
 #    time apt-get update && time apt-get install -y net-tools
+# fi
+
+# if ! [ -x "$(command -v ip)" ];then
+#    time
+#     && time apt-get install -y iproute2
 # fi
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
@@ -53,12 +135,7 @@ fi
 
 # Setup container
 echo "==========================begin to create user and setup env =============" &>> ${LOG_DIR}/bootstrap.log
-if id "${DLWS_USER_NAME}" &>/dev/null;
-then
-    echo "User ${DLWS_USER_NAME} found, skip init_user.sh ..."
-else
-    bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
-fi
+bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
 echo "==========================create user done!===============================" &>> ${LOG_DIR}/bootstrap.log
 
 if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
@@ -104,30 +181,10 @@ runuser -l ${DLWS_USER_NAME} -c "mkdir -p ${npu_info_dir}"
 echo "=========================setup path done!============================="&>> ${LOG_DIR}/bootstrap.log
 
 
-## npu distributed job - worker
-if [ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
-then
-    ## worker pod
-	echo "ip=${NPU_IPS}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
-	host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
-	echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
+echo "===========================begin to setup npu config=============================="&>> ${LOG_DIR}/bootstrap.log
+setup_npu_config
+echo "===========================setup npu config done!=============================="&>> ${LOG_DIR}/bootstrap.log
 
-## npu distributed job - master
-elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
-then
-	## master pod, generate hccl.json
-	python ${SCRIPT_DIR}/setup_npu.py master
-
-## not distributed job
-elif [ "$DLWS_ROLE_NAME" = "master" ] && [ ! -z "$NPU_IPS" ];
-then
-    ## worker pod
-	echo "ip=${NPU_IPS}" >> ${npu_info_dir}/npu_0.info
-	host_ip=`ip route get 1 | sed -n 's/^.*src \([0-9.]*\) .*$/\1/p'`
-	echo "host=${host_ip}" >> ${npu_info_dir}/npu_0.info
-
-	python ${SCRIPT_DIR}/setup_npu.py master
-fi
 
 echo bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log
 set +e
@@ -153,3 +210,4 @@ fi
 
 # exit
 exit ${EXIT_CODE}
+

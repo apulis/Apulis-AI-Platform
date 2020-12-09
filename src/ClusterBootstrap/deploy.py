@@ -19,7 +19,7 @@ import copy
 import numbers
 import requests
 import platform
-
+from collections import OrderedDict
 from os.path import expanduser
 
 import yaml
@@ -1173,7 +1173,6 @@ def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_mas
         utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
         #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
         kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
-        run_kubectl( ['apply -f "/home/dlwsadmin/DLWorkspace/temp-config/weave-net.yaml"'] )
         break
 
 
@@ -1652,7 +1651,7 @@ def update_HA_master_nodes_by_kubeadm( nargs ):
         if machine_archtype == "arm64":
             kubevip_image = kubevip_image + "-arm64"
         elif machine_archtype == "amd64":
-           pass 
+           pass
 
         run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, config["kube-vip"],kubevip_image)
         utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
@@ -2437,6 +2436,7 @@ def config_nginx():
     for node in all_nodes:
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, "sudo mkdir -p /www/static/dashboard")
         utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/","/etc/nginx/conf.other", config["admin_username"], node )
+        utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/ssl","/etc/nginx/ssl", config["admin_username"], node )
 
     # See https://github.com/kubernetes/examples/blob/master/staging/https-nginx/README.md
     # Please use
@@ -3331,7 +3331,7 @@ def deploy_cluster_with_kubevip_by_kubeadm(force = False):
     if machine_archtype == "arm64":
         kubevip_image = kubevip_image + "-arm64"
     elif machine_archtype == "amd64":
-       pass 
+       pass
 
     run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, selected_ip,kubevip_image)
     print run_kubevip_docker_cmd
@@ -3486,9 +3486,15 @@ def render_service_templates(use_service=None):
     set_zookeeper_cluster()
     generate_hdfs_containermounts()
     update_grafana_alert_config()
+
     # Multiple call of render_template will only render the directory once during execution.
-    utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=use_service)
+    if use_service is not None:
+        utils.render_template_directory( "./services/"+use_service, "./deploy/services/"+use_service, config,use_service=use_service)
+    else:
+        utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=use_service)
+
     add_service_config()
+    return
 
 def get_all_services(use_service=None):
     render_service_templates(use_service)
@@ -3496,6 +3502,12 @@ def get_all_services(use_service=None):
     servicedic = {}
 
     for service in os.listdir(rootdir):
+
+        if use_service is not None and service.lower() != use_service.lower():
+            continue
+        else:
+            pass
+
         dirname = os.path.join(rootdir, service)
         if os.path.isdir(dirname):
             launch_order_file = os.path.join( dirname, "launch_order")
@@ -4044,11 +4056,9 @@ def start_kube_service(servicename):
     else:
         archtypes = get_archtypes()
 
-    service_set=set()
-    if "arm64" in archtypes:
-        get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
-    if "amd64" in archtypes:
-        get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+    service_set=OrderedDict()
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file )
     start_kube_service_with_service_set(dirname, service_set)
     return
 
@@ -4063,11 +4073,11 @@ def get_service_list_from_launch_order(lauch_services_set, dirname, launch_filen
             else:
                 filename = filename.strip('\n')
                 if filename != '':
-                    lauch_services_set.add(filename)
+                    lauch_services_set[filename]=""
     return
 
 def start_kube_service_with_service_set(dirname, service_set):
-    for service in service_set:
+    for service in service_set.keys():
         start_one_kube_service(os.path.join(dirname, service))
     return
 
@@ -4507,8 +4517,8 @@ def create_job_service_account():
     if len(nodes)>=1:
         run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
 
-# functions which are senstive to order can keep 
-# their ordered data via this method and fetch them 
+# functions which are senstive to order can keep
+# their ordered data via this method and fetch them
 # via get_order_data
 def set_order_data(config_file, config_data):
 

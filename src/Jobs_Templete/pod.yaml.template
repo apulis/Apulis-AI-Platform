@@ -225,6 +225,10 @@ spec:
         {% endfor %}
       {% endif %}
     {% endif %}
+    {% if job["mount_npu_log"] %}
+    - mountPath: /var/log/npulog/
+      name: npulog
+    {% endif %}
     env:
     - name: FAMILY_TOKEN
       value: {{ job["familyToken"] }}
@@ -362,4 +366,9 @@ spec:
         {% endif %}
       {% endfor %}
     {% endif %}
+  {% endif %}
+  {% if job["mount_npu_log"] %}
+  - name: npulog
+    hostPath:
+      path: /var/log/npu/
   {% endif %}

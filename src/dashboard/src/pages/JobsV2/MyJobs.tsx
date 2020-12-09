@@ -50,7 +50,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ jobs }) => {
     pageSize
   }), [pageSize]);
   const { supportEmail, pause, resume, kill } = useActions(cluster.id);
-  const actions = [supportEmail, pause, resume, kill];
+  const actions = [pause, resume, kill, supportEmail];
   return (
     <MaterialTable
       title={t('jobsV2.myJobs')}

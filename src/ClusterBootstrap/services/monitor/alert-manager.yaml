@@ -21,6 +21,7 @@ spec:
     spec:
       nodeSelector:
         alert-manager: active
+        archType: amd64
       hostNetwork: true
       containers:
       - name: alert-manager

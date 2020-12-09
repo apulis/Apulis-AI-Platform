@@ -24,6 +24,42 @@
       "height": "250px",
       "panels": [
         {
+					"alert": {
+						"alertRuleTags": {},
+						"conditions": [
+								{
+										"evaluator": {
+												"params": [
+														70
+												],
+												"type": "gt"
+										},
+										"operator": {
+												"type": "and"
+										},
+										"query": {
+												"params": [
+														"A",
+														"5m",
+														"now"
+												]
+										},
+										"reducer": {
+												"params": [],
+												"type": "avg"
+										},
+										"type": "query"
+								}
+						],
+						"executionErrorState": "alerting",
+						"for": "5m",
+						"frequency": "1m",
+						"handler": 1,
+						"message": "Storage usage is more than 70%",
+						"name": "Storage Usage alert",
+						"noDataState": "no_data",
+						"notifications": []
+					},
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,

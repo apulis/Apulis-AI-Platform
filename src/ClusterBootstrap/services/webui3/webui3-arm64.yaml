@@ -38,6 +38,7 @@ spec:
       {% endif %}
       containers:
       - name: webui3
+        #image: {{cnf["worker-dockerregistry"]}}{{cnf["dockerprefix"]}}webui3:{{cnf["dockertag"]}}-arm64
         image: {{cnf["dockers"]["container"]["webui3"]["fullname"]}}-arm64
         imagePullPolicy: Always
         ports:

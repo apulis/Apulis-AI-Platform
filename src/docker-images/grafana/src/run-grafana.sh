@@ -25,6 +25,7 @@
 
 DATASOURCES_PATH=${DATASOURCES_PATH:-/usr/local/grafana/datasources}
 DASHBOARDS_PATH=${DASHBOARDS_PATH:-/usr/local/grafana/dashboards}
+NOTIFICATIONS_PATH=${NOTIFICATIONS_PATH:-/usr/local/grafana/notifications}
 USER=${USER:-admin}
 PASSWORD=${PASSWORD:-admin}
 
@@ -76,8 +77,24 @@ install_dashboards() {
   do
     if [[ -f "${dashboard}" ]]; then
       echo "Installing dashboard ${dashboard}"
-      if grafana_api POST /api/dashboards/import "" "${dashboard}"; then
+      if grafana_api POST /api/dashboards/db "" "${dashboard}"; then
         echo "installed ok"
+      else
+        echo "install failed"
+      fi
+    fi
+  done
+}
+
+install_notifications() {
+  local notification
+
+  for notification in ${NOTIFICATIONS_PATH}/*
+  do
+    if [[ -f "${notification}" ]]; then
+      echo "Installing notification ${notification}"
+      if grafana_api POST /api/alert-notifications "" "${notification}"; then
+        echo "install ok"
       else
         echo "install failed"
       fi
@@ -91,12 +108,15 @@ configure_grafana() {
   # http://docs.grafana.org/reference/scripting/#scripted-dashboards
   cp ${DASHBOARDS_PATH}/*.js /usr/share/grafana/public/dashboards/
   install_datasources
+  install_notifications
   install_dashboards
 }
 
 mkdir -p /usr/local/grafana/datasources/
+mkdir -p /usr/local/grafana/notifications/
 mkdir -p /usr/local/grafana/dashboards/
 cp /grafana-configuration/*-datasource.json /usr/local/grafana/datasources/
+cp /grafana-configuration/*-notification.json /usr/local/grafana/notifications/
 cp /grafana-configuration/*-dashboard.json /usr/local/grafana/dashboards/
 
 echo "Running configure_grafana in background..."

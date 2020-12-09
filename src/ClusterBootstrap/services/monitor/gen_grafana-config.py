@@ -33,8 +33,9 @@ def gen_grafana_config(data):
 
     uid = data.get("uid")
     title = data.get("title")
-    if title is not None and uid != title.replace(" ", "-").lower():
-        uid = title.replace(" ", "-").lower()
+    # these two lines has been delete due to multi language support. There is no lower case in Chinese. Also, these codes seems meaningless.
+    #  if title is not None and uid != title.replace(" ", "-").lower():
+        #  uid = title.replace(" ", "-").lower()
     if uid is not None:
         data["uid"] = uid
 

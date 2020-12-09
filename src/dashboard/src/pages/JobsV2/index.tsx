@@ -34,7 +34,7 @@ interface RouteParams {
 }
 
 const TabView: FunctionComponent = () => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const [index, setIndex] = useState(Number(window.location.search.split('index=')[1]) || 0);
   const onChange = useCallback((event: ChangeEvent<{}>, value: any) => {
     setIndex(value as number);
@@ -52,16 +52,16 @@ const TabView: FunctionComponent = () => {
           textColor="primary"
           indicatorColor="primary"
         >
-          <Tab label={t('jobsV2.myJobs')}/>
-          <Tab label={t('jobsV2.allJobs')}/>
+          <Tab label={t('jobsV2.myJobs')} />
+          <Tab label={t('jobsV2.allJobs')} />
         </Tabs>
       </AuthzHOC>
       <SwipeableViews
         index={index}
         onChangeIndex={onChangeIndex}
       >
-        {index === 0 ? <MyJobs/> : <div/>}
-        {index === 1 && <AuthzHOC needPermission={['VIEW_ALL_USER_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB']}><AllJobs/></AuthzHOC>}
+        {index === 0 ? <MyJobs /> : <div />}
+        {index === 1 && <AuthzHOC needPermission={['VIEW_ALL_USER_JOB', 'VIEW_AND_MANAGE_ALL_USERS_JOB']}><AllJobs /></AuthzHOC>}
       </SwipeableViews>
     </div>
   );
@@ -70,15 +70,15 @@ const TabView: FunctionComponent = () => {
 const ClusterJobs: FunctionComponent<{ cluster: any }> = ({ cluster }) => {
   return (
     <ClusterContext.Provider value={{ cluster: cluster }}>
-      <Paper elevation={2}>
-        {cluster.admin ? <TabView/> : <MyJobs/>}
+      <Paper elevation={2} style={{ marginRight: '10px' }}>
+        {cluster.admin ? <TabView /> : <MyJobs />}
       </Paper>
     </ClusterContext.Provider>
   );
 }
 
 const Jobs: FunctionComponent = () => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const { clusters } = useContext(ClustersContext);
   const history = useHistory();
   const { clusterId } = useParams<RouteParams>();
@@ -98,14 +98,14 @@ const Jobs: FunctionComponent = () => {
     <>
       <Toolbar disableGutters>
         <FormControl fullWidth>
-  <InputLabel>{t('jobsV2.chooseCluster')}</InputLabel>
-          <ClusterSelector defaultId={clusterId} onChange={onClusterChange}/>
+          <InputLabel>{t('jobsV2.chooseCluster')}</InputLabel>
+          <ClusterSelector defaultId={clusterId} onChange={onClusterChange} />
         </FormControl>
       </Toolbar>
       {
         cluster !== undefined
-          ? <ClusterJobs key={cluster.id} cluster={cluster}/>
-          : <Loading/>
+          ? <ClusterJobs key={cluster.id} cluster={cluster} />
+          : <Loading />
       }
     </>
   );

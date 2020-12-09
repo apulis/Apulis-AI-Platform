@@ -1,6 +1,9 @@
 FROM apulistech/backendbase:1.9
 MAINTAINER Jin Li <jin.li@apulis.com>
 
+ADD ./sources.list /etc/apt
+RUN apt-get update && apt-get install -y libglib2.0-0 libsm6 libxext6 libxrender-dev
+
 # kubectl will be mapped by service
 RUN rm /etc/apache2/mods-enabled/mpm_*
 COPY mpm_prefork.conf /etc/apache2/mods-available/mpm_prefork.conf
@@ -24,11 +27,15 @@ COPY ClusterManager/requirements.txt /
 RUN rm -rf /usr/lib/python2.7/dist-packages/yaml
 RUN rm -rf /usr/lib/python2.7/dist-packages/PyYAML-*
 RUN pip install -r /requirements.txt
-RUN pip install MySQL-python DBUtils futures
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+RUN pip install MySQL-python DBUtils==1.3 Pillow futures six numpy matplotlib pycocotools dnspython opencv-python==4.2.0.32
 
 ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete
 ADD utils /DLWorkspace/src/utils
 ADD RestAPI /DLWorkspace/src/RestAPI
 ADD ClusterManager /DLWorkspace/src/ClusterManager
+
+# add version info
+ADD version-info /
 
 CMD /run.sh

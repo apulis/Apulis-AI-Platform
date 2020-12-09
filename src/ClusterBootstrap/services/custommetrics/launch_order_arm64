@@ -1,0 +1,4 @@
+prometheus_operator-arm64.yaml
+SLEEP 10
+prometheus_instance.yaml
+custom_metrics-arm64.yaml

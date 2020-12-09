@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-arm64
+  namespace: kube-system
+spec:
+  ports:
+  - port: {{cnf["mysql_port"]}}
+  selector:
+    app: mysql-arm64
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: mysql-arm64
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: mysql-arm64
+  template:
+    metadata:
+      labels:
+        app: mysql-arm64
+    spec:
+      nodeSelector:
+      {% if cnf["mysqlserver_node"]|length > 0 %}
+        mysql-server: active
+      {% else %}
+        mysql: active
+      {% endif %}
+        archType: arm64
+      hostNetwork: true    
+      containers:
+      - image: {{cnf["dockers"]["container"]["mysql"]["fullname"]}}-arm64
+        name: mysql
+        env:
+          # Use secret in real usage
+        - name: MYSQL_ROOT_HOST
+          value: "%"
+        - name: MYSQL_ROOT_PASSWORD
+          value: "{{cnf["mysql_password"]}}"
+        ports:
+        - containerPort: {{cnf["mysql_port"]}}
+          name: mysql
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-log
+          mountPath: /var/log/mysql          
+      {% if cnf["private_docker_registry_username"] %}
+      imagePullSecrets:
+      - name: svccred
+      {% endif %}
+      volumes:
+      - name: mysql-storage
+        hostPath:
+          path: {{cnf["mysql_data_path"]}}
+      - name: mysql-log
+        hostPath:
+          path: /var/log/mysql
+          
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule            

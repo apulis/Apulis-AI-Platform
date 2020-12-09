@@ -11,5 +11,6 @@ validator.addSchema(require('./empty.schema'), 'postInferenceJob')
 validator.addSchema(require('./empty.schema'), 'setFDInfo')
 validator.addSchema(require('./empty.schema'), 'pushModelToFD')
 validator.addSchema(require('./empty.schema'), 'postModelConversionJob')
+validator.addSchema(require('./empty.schema'), 'saveImage')
 
 module.exports = validator

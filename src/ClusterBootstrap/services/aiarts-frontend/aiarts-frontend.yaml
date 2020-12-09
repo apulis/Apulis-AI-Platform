@@ -1,0 +1,37 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: aiarts-frontend
+  namespace: default
+  labels:
+     run: dlwsaiarts-frontend
+spec:
+  selector:
+    matchLabels:
+      aiarts-frontend-node: pod
+  template:
+    metadata:
+      name: aiarts-frontend
+      labels:
+        aiarts-frontend-node: pod
+        app: aiarts-frontend
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      nodeSelector:
+        aiarts-frontend: active
+        archType: amd64
+      containers:
+      - name: aiarts-frontend
+        image: {{cnf["dockers"]["container"]["aiarts-frontend"]["fullname"]}}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3084
+          hostPort: 3084 
+          name: main
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

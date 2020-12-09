@@ -4,6 +4,15 @@ import colorsys
 import numpy as np
 from serve_config import cfg
 
+def read_class_names2(class_file_name):
+    '''loads class name from a file'''
+    names = {}
+    with open(class_file_name, 'r') as data:
+        for ID, name in enumerate(data,1):
+            print(name)
+            names[ID] = {"name":name.strip('\n'),"id":ID}
+    return names
+
 def read_class_names(class_file_name):
     '''loads class name from a file'''
     names = {}

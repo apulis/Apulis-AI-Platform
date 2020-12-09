@@ -69,7 +69,7 @@ interface Itemplate {
 const sanitizePath = (path: string) => {
   path = join('/', path);
   path = join('.', path);
-  return path;
+  return path; 
 }
 const Training: React.ComponentClass = withRouter(({ history }) => {
   const {t} = useTranslation();
@@ -1017,9 +1017,16 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                     checked={tensorboard}
                     onChange={(e, checked) => setTensorboard(checked)}
                   />
+                  
                   <Help fontSize="small" onClick={() => setIconInfoShow(!iconInfoShow)} />
                 </Grid>
-                
+                {iconInfoShow && <Grid item xs={12} container justify="flex-end">
+                  <Chip
+                    icon={<Help/>}
+                    // label="TensorBoard will listen on directory ~/tensorboard/<JobId>/logs inside docker container."
+                    label={t(`submission.tensorboardListenTips`)}
+                  />
+                </Grid>}
               </Grid>
             </CardContent>
             <Collapse in={advanced}>
@@ -1238,14 +1245,14 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
               <Divider/>
               <CardContent>
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <Typography component="span" variant="h6">Template Management</Typography>
+                  <Typography component="span" variant="h6">{t('submission.templateManagements')}</Typography>
                   <Help fontSize="small" onClick={() => setTPInfoShow(!tpInfoShow)} style={{ marginLeft: 4, cursor: 'pointer' }} />
                 </div>
                 {tpInfoShow &&
                 <div style={{ margin: '10px 0'}}>
                   <Chip
                     icon={<Help/>}
-                    label={<div style={{ margin: '10px 0'}}><div>Scope user: Only yourself can use this template.</div><div>Scope team: Everyone in the team can use this template.</div></div>}
+                    label={<div style={{ margin: '10px 0'}}><div>{t('submission.scopedUser')}</div><div>{t('submission.scopedTeam')}</div></div>}
                   />
                 </div>}
                 <Grid container wrap="wrap" spacing={1}>
@@ -1277,12 +1284,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       value={tplDatabase}
                       onChange={e => setTplDatabase((e.target.value) as string)}
                     >
-                      <MenuItem value="user">user</MenuItem>
-                      <MenuItem value="team">team</MenuItem>
+                      <MenuItem value="user">{t('submission.user')}</MenuItem>
+                      <MenuItem value="team">{t('submission.team')}</MenuItem>
                     </TextField>
                   </Grid>
-                  <Button type="submit" color="primary" onClick={() => setIsSave(true)}>Save</Button>
-                  {templates.length > 0 && <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>Delete</Button>}
+                    <Button type="submit" color="primary" onClick={() => setIsSave(true)}>{t('submission.save')}</Button>
+                    {templates.length > 0 && <Button type="button" color="secondary" onClick={() => setDeleteModal(true)}>{t('submission.delete')}</Button>}
                 </Grid>
               </CardContent>
             </Collapse>

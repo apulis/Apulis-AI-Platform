@@ -9,7 +9,8 @@ import {
 import _ from "lodash";
 import ConfigContext from './Config';
 import axios from 'axios';
-import Loading from '../components/Loading';;
+import Loading from '../components/Loading';
+import { useTranslation } from "react-i18next";
 
 interface Context {
   teams: any;
@@ -48,7 +49,8 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
   };
   const [teams, setTeams] = useState<{id: string; clusters: any[]}[] | undefined>(undefined);
   const [selectedTeam, setSelectedTeam] = useState<string>('');
-  const saveSelectedTeam = (team: SetStateAction<string>) => {
+  const { t } = useTranslation();
+ const saveSelectedTeam = (team: SetStateAction<string>) => {
     setSelectedTeam(team);
     localStorage.setItem('team',team.toString());
     if (clusterId && window.location.pathname.split(`${clusterId}/`)[1]) {
@@ -62,7 +64,7 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
     axios.get('/teams').then(res => {
       if (res && res.data && JSON.stringify(res.data) !== JSON.stringify(teams)) {
         if (res.data.length === 0) {
-          console.error('没有可用的虚拟集群，请联系管理员添加')
+          // console.error('没有可用的虚拟集群，请联系管理员添加')
         }
         setTeams(res.data);
       }
@@ -101,15 +103,15 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
       <Box display="flex">
         <Dialog open>
           <DialogTitle style={{ color: 'red' }}>
-            {"warning"}
+            {t('teams.emptyTitleWarning')}
           </DialogTitle>
           <DialogContent>
             <DialogContentText>
-              {"There are no virtual cluster available for the current cluster, please contact the administrator"}
+              {t('teams.emptyTitleContent')}
             </DialogContentText>
             <DialogActions>
-              <Button variant="contained" href={`mailto:${administrators[0]}`}>Send Email</Button>
-              <Button variant="contained" onClick={() => clearAuthInfo()}>Sign Out</Button>
+              <Button variant="contained" href={`mailto:${administrators[0]}`}>{t('teams.emptyTitleSendEmail')}</Button>
+              <Button variant="contained" onClick={() => clearAuthInfo()}>{t('teams.emptyTitleSignout')}</Button>
             </DialogActions>
           </DialogContent>
         </Dialog>

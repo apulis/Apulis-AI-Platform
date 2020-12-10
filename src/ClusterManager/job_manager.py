@@ -401,18 +401,29 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                             job["jobId"])
 
         else:
-            start_time = int(common.to_seconds_from_date(job["lastUpdated"]))
+            start_time = int(common.to_seconds_from_date(job["ListJobsV3"]))
             now = common.to_seconds_from_date(datetime.datetime.now())
             logger.info("start_time: %s, current_time: %s, max_time: %s for job %s", str(start_time), str(now), str(max_time), job["jobId"])
 
             if start_time + max_time < now:
+
                 logger.info(
                     "killing job %s for its running time exceed maxTimeSec %ss, start %s, now %s",
                     job["jobId"], max_time, start_time, now)
 
                 error_msg = "running exceed pre-defined %ss" % (max_time)
+                job_status_detail = get_job_status_detail(job)
+
+                # write the message to both errorMsg and jobStatusDetail fields
+                if isinstance(job_status_detail, list) and len(job_status_detail) > 0:
+                    job_status_detail[0]["message2"] = error_msg
+                else:
+                    job_status_detail = []
+                    job_status_detail.append({"message2": error_msg})
+
                 dataFields = {
                     "errorMsg": error_msg,
+                    "jobStatusDetail": base64.b64encode(json.dumps(job_status_detail))
                 }
 
                 conditionFields = {"jobId": job["jobId"]}
@@ -420,10 +431,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                 launcher.kill_job(job["jobId"], "killed")
 
                 if notifier is not None:
-                    pass
-                    #notifier.notify(
-                    #    notify.new_job_killed_message(job["userName"],
-                    #                                  job["jobId"], error_msg))
+                    notifier.notify(notify.new_job_killed_message(job["userName"], job["jobId"], error_msg))
 
                 else:
                     pass

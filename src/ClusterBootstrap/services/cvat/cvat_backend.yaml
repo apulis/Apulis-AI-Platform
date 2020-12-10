@@ -62,12 +62,10 @@ spec:
               value: '127.0.0.1'
             - name: DJANGO_LOG_VIEWER_PORT
               value: '5601'
-            - name: CVAT_ANALYTICS
-              value: '0'
             - name: no_proxy
               value: kibana,logstash,nuclio,${no_proxy}
             - name: CVAT_SERVERLESS
-              value: '1'
+              value: '0'
             - name: CVAT_NUCLIO_HOST
               value: '127.0.0.1'
             - name: CVAT_SHARE_URL

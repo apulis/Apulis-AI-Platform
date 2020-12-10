@@ -3,7 +3,7 @@ kind: IstioOperator
 spec:
   addonComponents:
     grafana:
-      enabled: true
+      enabled: false
       k8s:
         replicaCount: 1
     istiocoredns:

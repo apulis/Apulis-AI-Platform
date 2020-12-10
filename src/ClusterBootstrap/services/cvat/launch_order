@@ -1,7 +1,2 @@
 cvat_backend.yaml
 cvat_frontend.yaml
-elk_elaticsearch.yaml
-elk_kibana.yaml
-elk_logstash.yaml
-nuclio_rbac.yaml
-nuclio.yaml

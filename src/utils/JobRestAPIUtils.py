@@ -1316,7 +1316,7 @@ def GetVcsUserCount():
 
 def GetUserData(userName):
     ret = {}
-    res = requests.get(url=config["usermanagerapi"] + "/custom-user-dashboard-backend/open/user-info?userName=" + userName, headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    res = requests.get(url=config["usermanagerapi"] + "/open/user-info?userName=" + userName, headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
     if res.status_code == 200:
         ret = res.json()
     else:

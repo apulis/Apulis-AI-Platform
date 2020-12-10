@@ -1315,7 +1315,7 @@ class DataHandler(object):
             cursor = conn.cursor()
 
             query = """SELECT count(*) OVER() AS total, jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
-                        jobType, jobTime, jobParams FROM {}  
+                        jobType, jobTime, jobParams, errorMsg FROM {}  
                         where jobType='{}' and isDeleted=0""".format(self.jobtablename,
                         jobType)
 
@@ -1373,8 +1373,8 @@ class DataHandler(object):
 
                 record = dict(zip(columns, item))
 
-                if record["jobStatusDetail"] is not None:
-                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                if record["jobStatusDetail"] is not None:                    
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))                        
                 else:
                     pass
 

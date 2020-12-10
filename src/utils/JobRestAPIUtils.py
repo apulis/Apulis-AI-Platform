@@ -1936,8 +1936,8 @@ def GetJobSummary(userName, jobType, vcName):
 
 
 def GetInferenceModel(model_id):
-    output = k8sUtils.kubectl_exec("get deploy -n kfserving-system -l inference=system -o yaml")
-    deploys = yaml.load(output)
+    output = k8sUtils.kubectl_exec("get deploy -n kfserving-system -l inference=system -o json")
+    deploys = json.loads(output)
     models = []
     if "items" in deploys:
         for deploy in deploys["items"]:

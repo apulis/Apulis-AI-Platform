@@ -113,3 +113,14 @@ def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
         imgByteArr = imgByteArr.getvalue()
         imgByteArr = base64.b64encode(imgByteArr)
         return {"data":imgByteArr,"type":"detection"}
+
+def object_detaction_auto_label(model_id, data):
+    headers = {"Content-type": "application/json","Host":"{}-predictor-default.kfserving-system.example.com".format(model_id)}
+    service_ip = query_service_domain('istio-ingressgateway.istio-system.svc.cluster.local')
+    inference_url = "http://{}/v1/models/".format(service_ip)+model_id+":predict"
+    r = requests.post(inference_url,headers=headers,
+                      data=json.loads(data),
+                      )
+    if r.status_code!=200:
+        logging.error(r.content)
+    return r.content

@@ -2272,6 +2272,26 @@ class GetConvertDetail(Resource):
 
 api.add_resource(GetConvertDetail, '/GetConvertDetail')
 
+class InferenceModel(Resource):
+    def get(self,model_id=None):
+        ret = JobRestAPIUtils.GetInferenceModel(model_id)
+        if ret == "not found":
+            return "model not found",404
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+    def post(self,model_id):
+        data = request.data
+        ret = JobRestAPIUtils.AutoLabel(model_id, data)
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(InferenceModel, '/models','/models/<model_id>')
+
 
 class GetJobSummary(Resource):
 

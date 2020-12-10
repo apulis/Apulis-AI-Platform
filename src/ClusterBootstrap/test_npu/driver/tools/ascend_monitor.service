@@ -1,0 +1,13 @@
+[Unit]
+Description=Ascend_monitor Service
+[Service]
+ExecStart=/usr/local/Ascend/driver/tools/ascend_monitor
+User=HwHiAiUser
+Group=HwHiAiUser
+Restart=always
+RestartSec=1
+StartLimitInterval=0
+KillMode=process
+[Install]
+WantedBy=multi-user.target
+

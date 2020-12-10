@@ -26,6 +26,7 @@ from flask_jwt_extended import (
 import prometheus_client
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),"../utils"))
+import k8sUtils
 #from JobRestAPIUtils import SubmitDistJob, GetJobList, GetJobStatus, DeleteJob, GetTensorboard, GetServiceAddress, GetLog, GetJob
 from config import config
 import JobRestAPIUtils
@@ -80,7 +81,7 @@ if "initAdminAccess" not in global_vars or not global_vars["initAdminAccess"]:
     logger.info("===========Init Admin Access===============")
     global_vars["initAdminAccess"] = True
     logger.info('setting admin access!')
-    ACLManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, 0)
+    # ACLManager.UpdateAce("Administrator", AuthorizationManager.GetResourceAclPath("", ResourceType.Cluster), Permission.Admin, 0)
     if config.get("administrators") and config["administrators"]:
         for one in config["administrators"]:
             if len(one.split("@"))==2:
@@ -362,24 +363,66 @@ class PostJob(Resource):
     @api.expect(api.model("PostJobModel", model.PostJob(api).params))
     @api.response(200, "succeed", api.model("PostJob", model.PostJob(api).model))
     def post(self):
+
         params = request.get_json(force=True)
+
         logger.info("Post Job")
         logger.info(params)
 
         ret = {}
-        output = JobRestAPIUtils.SubmitJob(json.dumps(params))
+        authorization = request.headers.get('Authorization')
 
+        if authorization != None:
+            user_info = requests.get(url=config["usermanagerapi"] + "/auth/currentUser", headers={"Authorization": authorization})
+            logger.info("authorization from client: %s", authorization)
+
+            check_pass = True
+            err_msg = ""
+
+            if user_info.status_code == 200:
+                user_info = user_info.json()
+                if "currentVC" not in user_info or "vcName" not in params or params["vcName"] not in user_info["currentVC"]:
+                    check_pass = False
+                    err_msg = "invalid vc(%s) or user doesn't belong to target vc" % (params["vcName"])
+                    logger.error("invalid vc(%s), user info(%s)", params["vcName"], str(user_info))
+                else:
+                    pass
+            else:
+                err_msg = "currentUser request err. status_code=%d" % (user_info.status_code) 
+                check_pass = False
+
+            if not check_pass:
+                ret["error"] = err_msg
+                ret["code"] = -1
+                resp = jsonify(ret)
+                resp.headers["Access-Control-Allow-Origin"] = "*"
+                resp.headers["dataType"] = "json"
+
+                return resp
+            else:
+                logger.info("PostJob checking vc pass!")
+        else:
+            pass
+
+        output = JobRestAPIUtils.SubmitJob(json.dumps(params))
         if "jobId" in output:
             ret["jobId"] = output["jobId"]
         else:
+            ret["code"] = -1
             if "error" in output:
-                ret["error"] = "Cannot create job!" + output["error"]
+                ret["error"] = "Cannot create job! " + output["error"]
             else:
                 ret["error"] = "Cannot create job!"
+
+        ret["code"] = 0
+        ret["error"] = ""
+
         logger.info("Submit job through restapi, output is %s, ret is %s", output, ret)
         resp = jsonify(ret)
+
         resp.headers["Access-Control-Allow-Origin"] = "*"
         resp.headers["dataType"] = "json"
+
         return resp
 
 api.add_resource(PostJob, '/PostJob')
@@ -469,7 +512,8 @@ class GetModelConversionTypes(Resource):
     @api.expect(api.model("GetModelConversionTypes", model.GetModelConversionTypes(api).params))
     def get(self):
         logger.info("Request to get fd server info")
-        ret = {"conversionTypes": ["caffe-Ascend310", "tensorflow-Ascend310"]}
+        conversion_types = JobRestAPIUtils.GetModelConversionTypes()
+        ret = {"conversionTypes": conversion_types}
         logger.info("Get fd server info through restapi, result is %s", ret)
         resp = jsonify(ret)
         resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -613,10 +657,110 @@ class ListJobsV2(Resource):
 
         resp = generate_response(jobs)
         return resp
-##
-## Actually setup the Api resource routing here
-##
+
 api.add_resource(ListJobsV2, '/ListJobsV2')
+
+# shows a list of all jobs, and lets you POST to add new tasks
+class ListJobsV3(Resource):
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('vcName')
+        parser.add_argument('jobOwner')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+        parser.add_argument('pageNum')
+        parser.add_argument('pageSize')
+        parser.add_argument('searchWord')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
+
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"],
+                args["jobType"], args["jobStatus"],
+                args["pageNum"], args["pageSize"],
+                args["searchWord"], args["orderBy"], args["order"])
+
+        if jobs is not None:
+            for _, joblist in jobs.items():
+                if isinstance(joblist, list):
+                    for job in joblist:
+                        remove_creds(job)
+        else:
+            pass
+
+        resp = generate_response(jobs)
+        return resp
+
+api.add_resource(ListJobsV3, '/ListJobsV3')
+
+# shows a list of all jobs, and lets you POST to add new tasks
+class GetJobCount(Resource):
+    def get(self):
+        parser = reqparse.RequestParser()
+
+
+        parser.add_argument('vcName')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+        parser.add_argument('searchWord')
+
+        args = parser.parse_args()
+        count = JobRestAPIUtils.GetJobCount(args["vcName"],
+                args["jobType"], args["jobStatus"], args["searchWord"])
+
+        resp = generate_response(count)
+        return resp
+
+api.add_resource(GetJobCount, '/GetJobCount')
+
+# shows a list of all jobs, and lets you POST to add new tasks
+class ListAllJobs(Resource):
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+
+        parser.add_argument('vcName')
+        parser.add_argument('jobType')
+        parser.add_argument('jobStatus')
+        parser.add_argument('pageNum')
+        parser.add_argument('pageSize')
+        parser.add_argument('searchWord')
+        parser.add_argument('orderBy')
+        parser.add_argument('order')
+
+        args = parser.parse_args()
+        jobs = JobRestAPIUtils.GetAllJobList(args["vcName"],
+                args["jobType"], args["jobStatus"],
+                args["pageNum"], args["pageSize"],
+                args["searchWord"], args["orderBy"], args["order"])
+
+        resp = generate_response(jobs)
+        return resp
+
+api.add_resource(ListAllJobs, '/ListAllJobs')
+
+class GetVCPendingJobs(Resource):
+    def get(self):
+
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('vcName')
+
+        args = parser.parse_args()
+        result = JobRestAPIUtils.GetVCPendingJobs(args["userName"], args["vcName"])
+
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        
+        return resp
+
+api.add_resource(GetVCPendingJobs, '/GetVCPendingJobs')
 
 class GetAllDevice(Resource):
     @api.doc(params=model.GetAllDevice.params)
@@ -642,6 +786,7 @@ class GetAllSupportInference(Resource):
         return resp
 api.add_resource(GetAllSupportInference, '/GetAllSupportInference')
 
+
 class ListInferenceJobV2(Resource):
     @api.doc(params=model.ListInferenceJob.params)
     def get(self):
@@ -650,7 +795,6 @@ class ListInferenceJobV2(Resource):
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
         parser.add_argument('page')
-        parser.add_argument('jobOwner')
         parser.add_argument('name')
         parser.add_argument('status')
         parser.add_argument('orderBy')
@@ -659,17 +803,17 @@ class ListInferenceJobV2(Resource):
         page = args["page"]
         size = args["size"]
         jobs = JobRestAPIUtils.ListInferenceJob(args["jobOwner"],args["vcName"],None,args["name"],args["status"],args["order"],args["orderBy"])
-        jobs.pop("meta",None)
-        for _, joblist in jobs.items():
-            if isinstance(joblist, list):
-                for job in joblist:
-                    remove_creds(job)
+        for job in jobs:
+            remove_creds(job)
         tmp = []
-        for k,v in jobs.items():
-            for one in v:
-                one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
-                one["duration"] = time.time()*1000 - one["jobTime"]
-                tmp.append(one)
+        for one in jobs:
+            one["jobTime"] = time.mktime(one["jobTime"].timetuple())*1000
+            if one["jobStatus"] in ["running","killing","pausing"]:
+                if "startedAt" in one["jobStatusDetail"][0]:
+                    one["duration"] = time.time()*1000 - time.mktime(time.strptime(one["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S"))*1000
+            elif one["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in one["jobStatusDetail"][0] and "startedAt" in one["jobStatusDetail"][0]:
+                one["duration"] = time.mktime(time.strptime(one["jobStatusDetail"][0]["finishedAt"][:19],"%Y-%m-%dT%H:%M:%S"))*1000 - time.mktime(time.strptime(one["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S"))*1000
+            tmp.append(one)
         if not page:
             page = 1
         if not size:
@@ -705,10 +849,28 @@ class ListModelConversionJob(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('num')
+        parser.add_argument('size')
         parser.add_argument('vcName')
         parser.add_argument('jobOwner')
+        parser.add_argument('jobName')
+        parser.add_argument('convType')
+        parser.add_argument('order')
+        parser.add_argument('orderBy')
+        parser.add_argument('jobStatus')
+        parser.add_argument('convStatus')
         args = parser.parse_args()
-        jobs = JobRestAPIUtils.ListModelConversionJob(args["jobOwner"], args["vcName"], args["num"])
+        jobs = JobRestAPIUtils.ListModelConversionJob(
+            args["jobOwner"],
+            args["vcName"],
+            pageNum=args["num"],
+            pageSize=args["size"],
+            name=args["jobName"],
+            type=args["convType"],
+            order=args["order"],
+            orderBy=args["orderBy"],
+            jobStatus=args["jobStatus"],
+            convStatus=args["convStatus"]
+        )
         for _, joblist in jobs.items():
             if isinstance(joblist, list):
                 for job in joblist:
@@ -764,7 +926,43 @@ class KillJob(Resource):
 ##
 api.add_resource(KillJob, '/KillJob')
 
+class DettachVC(Resource):
+    def post(self):
+        params = request.get_json(silent=True)
+        vcName = params["vcName"]
+        userName = params["userName"]
 
+        result = JobRestAPIUtils.DettachVC(userName, vcName)
+        resp = jsonify(result)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+
+        return resp
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(DettachVC, '/DettachVC')
+
+class DeleteJob(Resource):
+    def delete(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId')
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        result = JobRestAPIUtils.DeleteJob(jobId)
+        ret = {}
+        if result:
+            ret["code"] = 0
+            ret["result"] = "Success, the job record is deleted."
+        else:
+            ret["code"] = -1
+            ret["result"] = "Cannot delete the job. Job ID:" + jobId
+        resp = jsonify(ret)
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(DeleteJob, '/DeleteJob')
 
 class PauseJob(Resource):
     @api.doc(params=model.PauseJob.params)
@@ -1815,19 +2013,24 @@ class Endpoint(Resource):
     @api.doc(params=model.EndpointPost.params)
     @api.expect(api.model("Endpoint", model.EndpointPost.params2))
     def post(self):
-        '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'] }"'''
+
+        '''set job["endpoints"]: curl -X POST -H "Content-Type: application/json" /endpoints --data "{'jobId': ..., 'endpoints': ['ssh', 'ipython'], 'arguments': {'tensorboard_log_dir': '/home'} }"'''
         parser = reqparse.RequestParser()
         parser.add_argument('userName')
         args = parser.parse_args()
         username = args["userName"]
 
-        params = request.get_json(silent=True)
+        params = request.get_json(force=True)
         job_id = params["jobId"]
         requested_endpoints = params["endpoints"]
+        if "arguments" in params:
+            arguments = params["arguments"]
+        else:
+            arguments = json.dumps({})
 
         interactive_ports = []
         # endpoints should be ["ssh", "ipython", "tensorboard", {"name": "port name", "podPort": "port on pod in 40000-49999"}]
-        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard"] ]:
+        for interactive_port in [ elem for elem in requested_endpoints if elem not in ["ssh", "ipython", "tensorboard","vscode"] ]:
             if any(required_field not in interactive_port for required_field in ["name", "podPort"]):
                 # if ["name", "port"] not in interactive_port:
                 return ("Bad request, interactive port should have \"name\" and \"podPort\"]: %s" % requested_endpoints), 400
@@ -1837,7 +2040,7 @@ class Endpoint(Resource):
                 return ("Bad request, interactive port name length shoule be less than 16: %s" % requested_endpoints), 400
             interactive_ports.append(interactive_port)
 
-        msg, statusCode = JobRestAPIUtils.UpdateEndpoints(username, job_id, requested_endpoints, interactive_ports)
+        msg, statusCode = JobRestAPIUtils.UpdateEndpoints(username, job_id, requested_endpoints, arguments, interactive_ports)
         if statusCode != 200:
             return msg, statusCode
 
@@ -2068,6 +2271,46 @@ class GetConvertDetail(Resource):
         return resp
 
 api.add_resource(GetConvertDetail, '/GetConvertDetail')
+
+
+class GetJobSummary(Resource):
+
+    def get(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('userName')
+        parser.add_argument('jobType')
+        parser.add_argument('vcName')
+
+        args = parser.parse_args()
+        userName = args["userName"]
+        jobType = args["jobType"]
+        vcName = args["vcName"]
+
+        ret = JobRestAPIUtils.GetJobSummary(userName, jobType, vcName)
+        resp = jsonify(ret)
+
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        resp.headers["dataType"] = "json"
+        return resp
+
+api.add_resource(GetJobSummary, '/GetJobSummary')
+class GetPlatformVersionInfo(Resource):
+    def get(self):
+        current_version, version_history = JobRestAPIUtils.GetVersionInfo()
+        ret = {}
+        ret['version'] = current_version
+        ret['history'] = version_history
+        try:
+            resp = jsonify(ret)
+            resp.headers["Access-Control-Allow-Origin"] = "*"
+            resp.headers["dataType"] = "json"
+        except Exception as e:
+            print (e)
+            return "error"
+        return resp
+
+api.add_resource(GetPlatformVersionInfo, '/VersionInfo')
 
 if __name__ == '__main__':
     signal.signal(signal.SIGUSR2, dumpstacks)

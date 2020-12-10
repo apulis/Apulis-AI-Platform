@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import json
 import os
 import time
@@ -19,7 +19,7 @@ import copy
 import numbers
 import requests
 import platform
-
+from collections import OrderedDict
 from os.path import expanduser
 
 import yaml
@@ -58,6 +58,9 @@ verbose = False
 nocache = False
 limitnodes = None
 allroles = {"infra", "infrastructure", "worker", "nfs", "sql", "samba", "mysqlserver"}
+
+## constants
+CONFIG_KEY_ORDERED_HOSTS = "ordered_hostnames"
 
 
 # default search for all partitions of hdb, hdc, hdd, and sdb, sdc, sdd
@@ -240,10 +243,12 @@ def update_docker_image_config():
         # config["dockers"]["container"]["hyperkube"]["fullname"] = config["worker-dockerregistry"] + config["dockerprefix"] + "kubernetes:" + config["dockertag"]
 
 def update_config():
+
     apply_config_mapping(config, default_config_mapping)
     update_one_config(config, "coreosversion",["coreos","version"], basestring, coreosversion)
     update_one_config(config, "coreoschannel",["coreos","channel"], basestring, coreoschannel)
     update_one_config(config, "coreosbaseurl",["coreos","baseurl"], basestring, coreosbaseurl)
+
     if config["coreosbaseurl"] == "":
         config["coreosusebaseurl"] = ""
     else:
@@ -253,18 +258,24 @@ def update_config():
         exec("config[\"%s_predeploy\"] = os.path.join(\"./deploy/%s\", config[\"pre%sdeploymentscript\"])" % (cf, loc, cf))
         exec("config[\"%s_filesdeploy\"] = os.path.join(\"./deploy/%s\", config[\"%sdeploymentlist\"])" % (cf, loc, cf))
         exec("config[\"%s_postdeploy\"] = os.path.join(\"./deploy/%s\", config[\"post%sdeploymentscript\"])" % (cf, loc, cf))
-    config["webportal_node"] = None if len(get_node_lists_for_service("webportal"))==0 else get_node_lists_for_service("webportal")[0]
+
+    config["webportal_node"] = get_api_server(config)
 
     if ("influxdb_node" not in config):
         config["influxdb_node"] = config["webportal_node"]
+
     if ("elasticsearch_node" not in config):
         config["elasticsearch_node"] = config["webportal_node"]
+
     if ("mysql_node" not in config):
         config["mysql_node"] = None if len(get_node_lists_for_service("mysql"))==0 else get_node_lists_for_service("mysql")[0]
+
     if ("host" not in config["prometheus"]):
-        config["prometheus"]["host"] = None if len(get_node_lists_for_service("prometheus"))==0 else get_node_lists_for_service("prometheus")[0]
+        config["prometheus"]["host"] = get_api_server(config)
 
     update_docker_image_config()
+    return
+
 
 def add_ssh_key():
     keys = fetch_config(config, ["sshKeys"])
@@ -534,10 +545,10 @@ def get_nodes_from_config(machinerole):
     else:
         domain = get_domain()
         Nodes = []
+        ordered_hosts = get_order_data(config, CONFIG_KEY_ORDERED_HOSTS)
 
-        for nodename in config["machines"]:
+        for nodename in ordered_hosts:
             nodeInfo = config["machines"][nodename]
-
 
             if "role" in nodeInfo and nodeInfo["role"]==machinerole:
                 if len(nodename.split("."))<3:
@@ -547,7 +558,8 @@ def get_nodes_from_config(machinerole):
             else:
                 pass
 
-        return sorted(Nodes)
+        # return sorted(Nodes)
+        return Nodes
 
 
 def get_node_full_name(nodename):
@@ -587,6 +599,7 @@ def get_ETCD_master_nodes_from_cluster_portal(clusterId):
                 config["etcd_node"].append(node)
     else:
         config["etcd_node"] = Nodes
+
     config["kubernetes_master_node"] = Nodes
     return Nodes
 
@@ -666,6 +679,7 @@ def get_worker_nodes(clusterId, isScaledOnly):
         return get_scaled_nodes_from_config()
     else:
         return nodes
+
 
 def limit_nodes(nodes):
     if limitnodes is not None:
@@ -843,6 +857,21 @@ def gen_platform_wise_config():
 
     return
 
+def get_api_server(config):
+
+    get_nodes_by_roles(["infra"])
+    if "kube-vip" in config and config["kube-vip"] is not None:
+        return config["kube-vip"]
+    else:
+        pass
+
+    if len(config["kubernetes_master_node"]) > 0:
+        return config["kubernetes_master_node"][0]
+    else:
+        return ""
+
+    return ""
+
 def gen_configs():
     print "==============================================="
     print "generating configuration files..."
@@ -879,11 +908,8 @@ def gen_configs():
     config["nfs_user"] = config["admin_username"]
     config["kubernetes_master_ssh_user"] = config["admin_username"]
 
-    config["api_servers"] = "https://"+config["kubernetes_master_node"][0]+":"+str(config["k8sAPIport"])
+    config["api_servers"] = "https://"+ get_api_server(config) +":"+str(config["k8sAPIport"])
     config["etcd_endpoints"] = ",".join(["https://"+x+":"+config["etcd3port1"] for x in config["etcd_node"]])
-
-
-
 
     if os.path.isfile(config["ssh_cert"]+".pub"):
         f = open(config["ssh_cert"]+".pub")
@@ -891,6 +917,9 @@ def gen_configs():
         f.close()
 
         config["sshkey"] = sshkey_public
+    else:
+        pass
+
     add_ssh_key()
 
     check_config(config)
@@ -1099,7 +1128,7 @@ def deploy_masters(force = False):
     """
     utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_masters[0], deploycmd , False)
 
-def deploy_masters_by_kubeadm(force = False):
+def deploy_masters_by_kubeadm(force = False, init_arguments = "", kubernetes_master0 = ""):
     print "==============================================="
     print "Prepare to deploy kubernetes master"
     print "==============================================="
@@ -1108,10 +1137,14 @@ def deploy_masters_by_kubeadm(force = False):
     kubernetes_version = config["k8s-gitbranch"]
     kubernetes_ip_range = config["network"]["container-network-iprange"]
 
-    kubernetes_master0 = kubernetes_masters[0]
-    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+    if kubernetes_master0 == "" :
+        kubernetes_master0 = kubernetes_masters[0]
+    else:
+        pass
 
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
     utils.render_template_directory("./template/kube-addons", "./deploy/kube-addons",config)
+
     #temporary hard-coding, will be fixed after refactoring of config/render logic
     config["restapi"] = "http://%s:%s" %  (kubernetes_masters[0],config["restfulapiport"])
 
@@ -1124,22 +1157,24 @@ def deploy_masters_by_kubeadm(force = False):
     utils.render_template_directory("./template/RestfulAPI", "./deploy/RestfulAPI",config)
     utils.render_template_directory("./template/UserDashboard", "./deploy/UserDashboard",config)
     render_service_templates()
-    utils.exec_cmd_local("./scripts/install_kubeadm.sh")
+    # utils.exec_cmd_local("./scripts/install_kubeadm.sh")
 
-    for i,kubernetes_master in enumerate(kubernetes_masters):
+    for i, kubernetes_master in enumerate(kubernetes_masters):
 
         # please note:
         # control-plain-endpoint can only be used for kubeadm version >= v1.16
-        deploycmd = """sudo kubeadm init --control-plane-endpoint=%s --kubernetes-version=%s""" % (kubernetes_master0, kubernetes_version)
-        utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
+        print(kubernetes_master)
+        utils.sudo_scp(config["ssh_cert"], "/etc/kubernetes/manifests/vip.yaml", "/etc/kubernetes/manifests/vip.yaml", kubernetes_master_user,kubernetes_master, verbose=verbose)
 
-        if i==0:
-            utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
-            #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
-            kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
-            run_kubectl( ['apply -f "https://cloud.weave.works/k8s/net?k8s-version=%s"' % kubeversion ] )
-        else:
-            pass
+        deploycmd = """sudo kubeadm init --v=8 --control-plane-endpoint=%s --kubernetes-version=%s %s""" % (kubernetes_master0, kubernetes_version, init_arguments)
+        utils.SSH_exec_cmd(config["ssh_cert"], kubernetes_master_user, kubernetes_master, deploycmd , verbose)
+        time.sleep(30)
+
+        utils.sudo_scp_to_local( config["ssh_cert"], "/etc/kubernetes/admin.conf", "./deploy/sshkey/admin.conf", kubernetes_master_user, kubernetes_master, verbose )
+        #kubeversion = utils.exec_cmd_local("kubelet --version").split(" ")[1]
+        kubeversion = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user, kubernetes_master, "kubelet --version", verbose).split(" ")[1]
+        break
+
 
     if not os.path.exists("./deploy/bin/kubectl") and os.path.exists("/usr/bin/kubectl"):
         utils.exec_cmd_local("mkdir -p  ./deploy/bin; ln -s /usr/bin/kubectl ./deploy/bin/kubectl" )
@@ -1274,6 +1309,7 @@ def set_nfs_disk():
     etcd_server_user = config["nfs_user"]
     nfs_servers = config["nfs_node"] if len(config["nfs_node"]) > 0 else config["etcd_node"]
     machine_name_2_full = {nm.split('.')[0]:nm for nm in nfs_servers}
+
     for srvr_nm, nfs_cnf in config["nfs_disk_mnt"].items():
         nfs_cnf["cloud_config"] = {}
         for key in ["vnet_range", "samba_range"]:
@@ -1515,10 +1551,11 @@ def update_worker_nodes( nargs ):
     os.system("rm ./deploy/kubelet/kubelet.service")
     os.system("rm ./deploy/kubelet/worker-kubeconfig.yaml")
 
-def update_worker_nodes_by_kubeadm( nargs ):
+def update_worker_nodes_by_kubeadm( nargs, control_plane_address = ""):
     write_nodelist_yaml()
     kubernetes_masters = config["kubernetes_master_node"]
-    kubernetes_master0 = kubernetes_masters[0]
+    if control_plane_address == "":
+        control_plane_address = kubernetes_masters[0]
     kubernetes_master_user = config["kubernetes_master_ssh_user"]
 
     workerNodes = get_worker_nodes(config["clusterId"], False)
@@ -1527,16 +1564,17 @@ def update_worker_nodes_by_kubeadm( nargs ):
     k8sAPIport = config["k8sAPIport"]
 
     tokencmd = "sudo kubeadm token create"
-    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,control_plane_address,tokencmd)
     token = tokenresult.split("\n")[0]
     hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
-    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,control_plane_address,hashcmd)
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
 
         if in_list(node, nargs):
-            workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+            workercmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, control_plane_address, k8sAPIport, hash)
+
             if verbose:
                 print(workercmd)
             else:
@@ -1546,6 +1584,98 @@ def update_worker_nodes_by_kubeadm( nargs ):
         else:
             pass
 
+    return
+
+def update_HA_master_nodes_by_kubeadm( nargs ):
+    # step 1: acquire vip
+    kube_vip = config["kube-vip"]
+    if verbose:
+        print("kube-vip : "+kube_vip)
+
+    # step 2: init with vip
+    # *acquire info of primary master
+    join_list = get_master_node_host_except_primary()
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+    k8sAPIport = config["k8sAPIport"]
+
+    for nodename in join_list:
+        print(nodename)
+        nodeInfo = config["machines"][nodename]
+        print nodeInfo
+
+        # *generate certificate key
+        certcmd = "sudo kubeadm init --v=8 phase upload-certs --upload-certs"
+        certresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,certcmd)
+        cert = certresult.split('\n')[2]
+        # *generate token
+        tokencmd = "sudo kubeadm token create"
+        tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+        token = tokenresult.split("\n")[0]
+        hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+        hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd).strip()
+        # *print info
+        if verbose:
+            print("Token === %s, hash == %s\ncertificate key == %s" % (token, hash, cert) )
+        # *join all remain master into cluster
+
+        join_cmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s --control-plane --certificate-key %s" % (token, kube_vip, k8sAPIport, hash,cert)
+        if verbose:
+            print(join_cmd)
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, join_cmd)
+
+    # step 3: run kubevip pod
+    for nodename in join_list:
+        # search device bind with ip
+        # @remind: here unlike in function "deploy_cluster_with_kubevip_by_kubeadm" I split one shell command ""
+        get_ip_cmd = " cat /etc/hosts | grep "+ nodename +" | grep -v \""+ nodename+"\.\" | awk '{print $1}' "
+        node_ip = os.popen(get_ip_cmd).readlines()[0].strip()
+        search_device_command="ifconfig | grep "+ node_ip +" -B 1 | grep :\ | sed 's/\:.*//'"
+        device_name = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, search_device_command).strip()
+        # get machine arch type
+        machines = config["machines"]
+        machine_archtype=machines[nodename]["archtype"]
+        # set kube-vip image name
+        if verbose:
+            print ("select device: "+device_name)
+        if "private_docker_registry" in config:
+            registry = config["private_docker_registry"].strip()
+            if not registry.endswith("/"):
+                registry = registry + "/"
+            else:
+                pass
+            kubevip_image = registry + "plndr/kube-vip:0.1.8"
+        else:
+            kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
+        if machine_archtype == "arm64":
+            kubevip_image = kubevip_image + "-arm64"
+        elif machine_archtype == "amd64":
+           pass
+
+        run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, config["kube-vip"],kubevip_image)
+        utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], nodename, run_kubevip_docker_cmd)
+
+    return
+
+# serve update_HA_master_nodes_by_kubeadm function
+def get_master_node_host_except_primary():
+
+    remain_master_node_array = []
+
+    kubernetes_masters_admin = config["kubernetes_master_node"]
+    primary_master_admin = kubernetes_masters_admin[0]
+
+    for master_admin in kubernetes_masters_admin:
+        if master_admin != primary_master_admin:
+            master_host = master_admin.split('.')[0]
+            remain_master_node_array.append(master_host)
+
+    return remain_master_node_array
+
+def update_HA_worker_nodes_by_kubeadm( nargs):
+    control_plane_address = config["kube-vip"]
+    update_worker_nodes_by_kubeadm(nargs[1:],control_plane_address)
     return
 
 def update_worker_nodes_by_kubeadm_2(workerNodes):
@@ -1566,7 +1696,7 @@ def update_worker_nodes_by_kubeadm_2(workerNodes):
 
     print("Token === %s, hash == %s" % (token, hash) )
     for node in workerNodes:
-       workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+       workercmd = "sudo kubeadm join --v=8 --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
        if verbose:
            print(workercmd)
        else:
@@ -1693,26 +1823,30 @@ def update_mysqlserver_nodes(nargs):
     # This is to temporarily replace gpu_type with None to disallow nvidia runtime config to appear in /etc/docker/daemon.json
     prev_gpu_type = config["gpu_type"]
     config["gpu_type"] = "None"
+
     utils.render_template_directory("./template/kubelet", "./deploy/kubelet", config)
     config["gpu_type"] = prev_gpu_type
 
     write_nodelist_yaml()
 
-    os.system('sed "s/##etcd_endpoints##/%s/" "./deploy/kubelet/options.env.template" > "./deploy/kubelet/options.env"' % config["etcd_endpoints"].replace("/", "\\/"))
-    os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/kubelet.service.template > ./deploy/kubelet/kubelet.service' % config["api_servers"].replace("/", "\\/"))
-    os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/worker-kubeconfig.yaml.template > ./deploy/kubelet/worker-kubeconfig.yaml' % config["api_servers"].replace("/", "\\/"))
-
-    get_hyperkube_docker()
+    #os.system('sed "s/##etcd_endpoints##/%s/" "./deploy/kubelet/options.env.template" > "./deploy/kubelet/options.env"' % config["etcd_endpoints"].replace("/", "\\/"))
+    #os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/kubelet.service.template > ./deploy/kubelet/kubelet.service' % config["api_servers"].replace("/", "\\/"))
+    #os.system('sed "s/##api_servers##/%s/" ./deploy/kubelet/worker-kubeconfig.yaml.template > ./deploy/kubelet/worker-kubeconfig.yaml' % config["api_servers"].replace("/", "\\/"))
 
     mysqlserver_nodes = get_nodes_by_roles(["mysqlserver"])
     mysqlserver_nodes = limit_nodes(mysqlserver_nodes)
+
     for node in mysqlserver_nodes:
         if in_list(node, nargs):
             update_worker_node(node)
+        else:
+            pass
 
     os.system("rm ./deploy/kubelet/options.env")
     os.system("rm ./deploy/kubelet/kubelet.service")
     os.system("rm ./deploy/kubelet/worker-kubeconfig.yaml")
+
+    return
 
 
 def create_MYSQL_for_WebUI():
@@ -1753,6 +1887,8 @@ def deploy_restful_API_on_node(ipAddress):
 
 def deploy_webUI_on_node(ipAddress):
 
+
+    #pdb.set_trace()
     sshUser = config["admin_username"]
     webUIIP = ipAddress
     dockername = "%s/dlws-webui" %  (config["dockerregistry"])
@@ -2014,6 +2150,7 @@ def get_mount_fileshares(curNode = None):
     physicalmountpoint = config["physical-mount-path"]
     storagemountpoint = config["storage-mount-path"]
     mountshares = {}
+
     for k,v in config["mountpoints"].iteritems():
         if "type" in v:
             if ("mountpoints" in v):
@@ -2045,12 +2182,15 @@ def get_mount_fileshares(curNode = None):
                 curphysicalmountpoint = mountsharename
             else:
                 curphysicalmountpoint = os.path.join( physicalmountpoint, mountsharename )
+
             if "curphysicalmountpoint" not in v:
                 v["curphysicalmountpoint"] = curphysicalmountpoint
             else:
                 curphysicalmountpoint = v["curphysicalmountpoint"]
+
             bMount = False
             errorMsg = None
+
             if v["type"] == "azurefileshare":
                 if "accountname" in v and "filesharename" in v and "accesskey" in v:
                     allmountpoints[k] = copy.deepcopy( v )
@@ -2072,6 +2212,7 @@ def get_mount_fileshares(curNode = None):
                     fstab += "%s:/%s %s glusterfs %s 0 0\n" % (allmountpoints[k]["node"], v["filesharename"], curphysicalmountpoint, options)
                 else:
                     errorMsg = "glusterfs fileshare %s, there is no filesharename parameter" % (k)
+
             elif v["type"] == "nfs" and "server" in v:
                 if "filesharename" in v and "server" in v:
                     allmountpoints[k] = copy.deepcopy( v )
@@ -2081,6 +2222,18 @@ def get_mount_fileshares(curNode = None):
                     fstab += "%s:/%s %s /nfsmnt nfs %s\n" % (v["server"], v["filesharename"], curphysicalmountpoint, options)
                 else:
                     errorMsg = "nfs fileshare %s, there is no filesharename or server parameter" % (k)
+
+            elif v["type"] == "ceph" and "mountcmd" in v and v["mountcmd"] is not None and len(v["mountcmd"]) > 0:
+
+                if "filesharename" in v:
+                    allmountpoints[k] = copy.deepcopy( v )
+                    bMount = True
+                    allmountpoints[k]["mountcmd"] = v["mountcmd"]
+                    #fstab += "%s:/%s %s /nfsmnt nfs %s\n" % (v["server"], v["filesharename"], curphysicalmountpoint, options)
+
+                else:
+                    errorMsg = "ceph fileshare %s, there is no filesharename or ceph command" % (k)
+
             elif v["type"] == "hdfs":
                 allmountpoints[k] = copy.deepcopy( v )
                 if "server" not in v or v["server"] =="":
@@ -2094,6 +2247,7 @@ def get_mount_fileshares(curNode = None):
                 allmountpoints[k]["options"] = options
                 fstaboptions = fetch_config(config, ["mountconfig", "hdfs", "fstaboptions"])
                 fstab += "hadoop-fuse-dfs#hdfs://%s %s fuse %s\n" % (allmountpoints[k]["server"][0], curphysicalmountpoint, fstaboptions)
+
             elif (v["type"] == "local" or v["type"] == "localHDD") and "device" in v:
                 allmountpoints[k] = copy.deepcopy( v )
                 bMount = True
@@ -2103,13 +2257,17 @@ def get_mount_fileshares(curNode = None):
                 bMount = True
             else:
                 errorMsg = "Error: Unknown or missing critical parameter in fileshare %s with type %s" %( k, v["type"])
+
             if not (errorMsg is None):
                 print errorMsg
                 raise ValueError(errorMsg)
+
             if bMount:
                 allmountpoints[k]["mountpoints"] = mountpoints
+
         else:
             print "Error: fileshare %s with no type" %( k )
+
     return allmountpoints, fstab
 
 def insert_fstab_section( node, secname, content):
@@ -2236,6 +2394,10 @@ def config_fqdn():
         remotecmd = "echo %s | sudo tee /etc/hostname-fqdn; sudo chmod +r /etc/hostname-fqdn" % node
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
+        ##
+        remotecmd = "sudo mkdir -p /etc/nginx/fqdn; echo %s | sudo tee /etc/nginx/fqdn/hostname-fqdn; sudo chmod +r /etc/nginx/fqdn/hostname-fqdn" % node
+        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+
 def config_webui(nargs, archtype=None):
 
     nodes = get_node_lists_for_service("restfulapi")
@@ -2244,9 +2406,9 @@ def config_webui(nargs, archtype=None):
         reponame = reponame + "-" + archtype
 
     for node in nodes:
-        # pull new image
-        remotecmd = "sudo docker pull %s" % reponame
-        utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
+        # pull new image 2020/7/1: no need, no network, image is prepared
+        # remotecmd = "sudo docker pull %s" % reponame
+        # utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, remotecmd)
 
         # todo:
         # should judge if dashboard folder exists
@@ -2274,6 +2436,7 @@ def config_nginx():
     for node in all_nodes:
         utils.SSH_exec_cmd(config["ssh_cert"], config["admin_username"], node, "sudo mkdir -p /www/static/dashboard")
         utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/","/etc/nginx/conf.other", config["admin_username"], node )
+        utils.sudo_scp(config["ssh_cert"],"./deploy/services/nginx/ssl","/etc/nginx/ssl", config["admin_username"], node )
 
     # See https://github.com/kubernetes/examples/blob/master/staging/https-nginx/README.md
     # Please use
@@ -2378,6 +2541,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
         firstdirs = {}
         for node in nodes:
             remotecmd = ""
+
             if bForce:
                 for k,v in allmountpoints.iteritems():
                     if "mountpoints" in v and v["type"]!="emptyDir":
@@ -2391,6 +2555,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
                 output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "sudo mount")
             else:
                 remotecmd += "sudo mount;"
+
             for k,v in allmountpoints.iteritems():
                 if "mountpoints" in v and v["type"]!="emptyDir":
                     if mount_command_file == '' and output.find(v["curphysicalmountpoint"]) < 0:
@@ -2400,6 +2565,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
                             dirname = os.path.join(v["curphysicalmountpoint"], basename )
                             remotecmd += "sudo mkdir -p %s; " % dirname
                             remotecmd += "sudo chmod ugo+rwx %s; " %dirname
+
                     for basename in v["mountpoints"]:
                         dirname = os.path.join(v["curphysicalmountpoint"], basename )
                         storage_mount_path = config["storage-mount-path"]
@@ -2410,6 +2576,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
 
                         linkdir = os.path.join(storage_mount_path, basename)
                         remotecmd += "if [ ! -e %s ]; then sudo ln -s %s %s; fi; " % (linkdir, dirname, linkdir)
+
             # following node need not make the directory
             if len(remotecmd)>0:
                 if mount_command_file == '':
@@ -2420,6 +2587,7 @@ def link_fileshares(allmountpoints, bForce=False, mount_command_file=''):
                     break
 
 def deploy_webUI():
+
     nodes = get_node_lists_for_service("restfulapi")
     for node in nodes:
         deploy_restful_API_on_node(node)
@@ -2427,11 +2595,15 @@ def deploy_webUI():
     # masterIP = config["kubernetes_master_node"][0]
     nodes = get_node_lists_for_service("webportal")
     nodes_restfulapi = get_node_lists_for_service("restfulapi")
+
     for i, node in enumerate(nodes):
-        node_restfulapi = nodes_restfulapi[i] if i < len(nodes_restfulapi) else nodes_restfulapi[0]
-        config["webportal_node"] = node
-        config["restfulapi_node"] = node
+        node_restfulapi = get_api_server(config)
+        config["webportal_node"] = node_restfulapi
+        config["restfulapi_node"] = node_restfulapi
         deploy_webUI_on_node(node)
+
+    return
+
 
 def ufw_default_firewall_rule(node):
     cmd = "sudo ufw enable 22/tcp\n"
@@ -2445,10 +2617,13 @@ def ufw_default_firewall_rule(node):
     cmd += "sudo ufw enable\n"
 
 def deploy_nfs_config():
+
     nfs_nodes = get_nodes_by_roles(["nfs"])
+
     for node in nfs_nodes:
         utils.clean_rendered_target_directory()
         config["cur_nfs_node"] = node.split(".")[0]
+
         utils.render_template_directory("./template/StorageManager", "./deploy/StorageManager", config)
         utils.sudo_scp(config["ssh_cert"], "./deploy/StorageManager/config.yaml", "/etc/StorageManager/config.yaml", config["admin_username"], node)
         del config["cur_nfs_node"]
@@ -3121,6 +3296,94 @@ def deploy_ETCD_master_by_kubeadm(force = False):
             print "Cannot deploy cluster since there are insufficient number of etcd server or master server. \n To continue deploy the cluster we need at least %d etcd server(s)" % (int(config["etcd_node_num"]))
             return False
 
+def deploy_cluster_with_kubevip_by_kubeadm(force = False):
+
+    print ("#############################")
+    print ("###### kubevip process ######")
+    print ("#############################")
+
+    selected_ip = config["kube-vip"]
+    print ("kube vip: "+ selected_ip)
+    kubevip_in_config = False
+
+    # search device bind with ip
+    search_device_command=""" master_hostname=`hostname` ;master_ip=`grep "${master_hostname}" /etc/hosts | grep -v 127 | grep -v ${master_hostname}\. | awk '{print $1}'` ;device=`ifconfig | grep $master_ip -B 2 |grep ":\ " | sed 's/\:.*//'`;echo $device """
+    device_name = os.popen(search_device_command).readlines()[0].strip()
+    print (device_name)
+
+    # get machine arch type
+    get_master_name_command= "hostname"
+    master_hostname = os.popen(get_master_name_command).readlines()[0].strip()
+    machines = config["machines"]
+    machine_archtype=machines[master_hostname]["archtype"]
+
+    # set kube-vip image name
+    if "private_docker_registry" in config:
+        registry = config["private_docker_registry"].strip()
+        if not registry.endswith("/"):
+            registry = registry + "/"
+        else:
+            pass
+        kubevip_image = registry + "plndr/kube-vip:0.1.8"
+    else:
+        kubevip_image = "harbor.sigsus.cn:8443/library/plndr/kube-vip:0.1.8"
+
+    if machine_archtype == "arm64":
+        kubevip_image = kubevip_image + "-arm64"
+    elif machine_archtype == "amd64":
+       pass
+
+    run_kubevip_docker_cmd = "sudo docker run --network host --rm %s kubeadm init --interface %s --vip %s --leaderElection  | sudo sed 's?image: .*?image: %s?g' | sudo tee /etc/kubernetes/manifests/vip.yaml" % (kubevip_image, device_name, selected_ip,kubevip_image)
+    print run_kubevip_docker_cmd
+    os.system(run_kubevip_docker_cmd)
+    print ("Detected previous cluster deployment, cluster ID: %s. \n To clean up the previous deployment, run 'python deploy.py clean' \n" % config["clusterId"] )
+    print "The current deployment has:\n"
+
+    check_master_ETCD_status()
+
+    if "etcd_node" in config and len(config["etcd_node"]) >= int(config["etcd_node_num"]) and "kubernetes_master_node" in config and len(config["kubernetes_master_node"]) >= 1:
+        print ("Ready to deploy kubernetes master/etcd on %s.  " % (",".join(config["kubernetes_master_node"])))
+
+        gen_configs()
+        deploy_masters_by_kubeadm(force, kubernetes_master0=selected_ip, init_arguments="--upload-certs")
+
+        return True
+    else:
+        print "Cannot deploy cluster since there are insufficient number of etcd server or master server. \n To continue deploy the cluster we need at least %d etcd server(s)" % (int(config["etcd_node_num"]))
+        return False
+
+# serve find_ip function
+def ping_ip(ip_str, available_ip_list, occupied_ip_list):
+    cmd = ["ping", "-c",
+        "1", ip_str]
+    output = os.popen(" ".join(cmd)).readlines()
+    flag = False
+    for line in list(output):
+        if not line:
+            continue
+        if str(line).upper().find("TTL") >=0:
+            flag = True
+            break
+    if flag:
+        occupied_ip_list.append(ip_str)
+    else:
+        available_ip_list.append(ip_str)
+
+# serve deploy_cluster_with_kubevip_by_kubeadm function
+def find_ip(ip_prefix):
+    import threading
+    thread_list = []
+    available_ip_list = []
+    occupied_ip_list = []
+    for i in range(2,254):
+        ip = ('%s.%s'%(ip_prefix,i))
+        new_thread = threading.Thread(target=ping_ip, args=(ip, available_ip_list, occupied_ip_list,))
+        new_thread.start()
+        thread_list.append(new_thread)
+    for single_thread in thread_list:
+        single_thread.join()
+    return available_ip_list[0]
+
 
 def update_config_node( node ):
     role = SSH_exec_cmd_with_output( )
@@ -3209,21 +3472,42 @@ def set_zookeeper_cluster():
     config["zookeepernodes"] = ";".join(nodes)
     config["zookeepernumberofnodes"] = str(len(nodes))
 
-def render_service_templates():
+def update_grafana_alert_config():
+    if "grafana_alert" in config:
+        if "smtp" in config["grafana_alert"]:
+            config["grafana_alert"]["enabled"] = "true"
+    else:
+        config["grafana_alert"] = {}
+        config["grafana_alert"]["enabled"] = "false"
+
+def render_service_templates(use_service=None):
     allnodes = get_nodes(config["clusterId"])
     # Additional parameter calculation
     set_zookeeper_cluster()
     generate_hdfs_containermounts()
-    # Multiple call of render_template will only render the directory once during execution.
-    utils.render_template_directory( "./services/", "./deploy/services/", config)
-    add_service_config()
+    update_grafana_alert_config()
 
-def get_all_services():
-    render_service_templates()
+    # Multiple call of render_template will only render the directory once during execution.
+    if use_service is not None:
+        utils.render_template_directory( "./services/"+use_service, "./deploy/services/"+use_service, config,use_service=use_service)
+    else:
+        utils.render_template_directory( "./services/", "./deploy/services/", config,use_service=use_service)
+
+    add_service_config()
+    return
+
+def get_all_services(use_service=None):
+    render_service_templates(use_service)
     rootdir = "./deploy/services"
     servicedic = {}
 
     for service in os.listdir(rootdir):
+
+        if use_service is not None and service.lower() != use_service.lower():
+            continue
+        else:
+            pass
+
         dirname = os.path.join(rootdir, service)
         if os.path.isdir(dirname):
             launch_order_file = os.path.join( dirname, "launch_order")
@@ -3252,10 +3536,18 @@ def get_all_services():
 
 def get_archtypes():
     machines = config["machines"]
-    archtypes = []
+    archtypes = set()
     for key in machines.keys():
         if machines[key].has_key("archtype"):
-            archtypes.append(machines[key]["archtype"])
+            archtypes.add(machines[key]["archtype"])
+    return archtypes
+
+def get_master_archtypes():
+    machines = config["machines"]
+    archtypes = set()
+    for key in machines.keys():
+        if machines[key].has_key("archtype") and machines[key].get("role")=="infrastructure":
+            archtypes.add(machines[key]["archtype"])
     return archtypes
 
 def get_service_name(service_config_file):
@@ -3278,7 +3570,7 @@ def get_service_name(service_config_file):
             return None
 
 def get_service_yaml( use_service ):
-    servicedic = get_all_services()
+    servicedic = get_all_services(use_service)
     newentries = {}
 
     for service in servicedic:
@@ -3547,6 +3839,11 @@ def kubernetes_label_GpuTypes():
         if nodeInfo["role"] == "worker":
             kubernetes_label_node("--overwrite", nodename, "gpuType="+nodeInfo["gpu-type"])
 
+def kubernetes_label_storage():
+    for nodename in config["mysqlserver"]:
+        print(nodename)
+        kubernetes_label_node("--overwrite", nodename, "mysql=active")
+
 # Label kubernetes worker nodes
 def kubernetes_label_worker(uncordon=False):
 
@@ -3754,10 +4051,34 @@ def start_kube_service(servicename):
         return
 
     default_launch_file = "launch_order"
-    start_kube_service_with_launch_order(dirname, default_launch_file)
-    for archtype in get_archtypes():
-        if archtype != "amd64":
-            start_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+    if os.path.exists(os.path.join(dirname, "only_one_arch")):
+        archtypes = get_master_archtypes()
+    else:
+        archtypes = get_archtypes()
+
+    service_set=OrderedDict()
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
+    get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+    start_kube_service_with_service_set(dirname, service_set)
+    return
+
+def get_service_list_from_launch_order(lauch_services_set, dirname, launch_filename):
+    if not os.path.exists(os.path.join(dirname, launch_filename)):
+        return
+    with open(os.path.join(dirname, launch_filename), 'r') as f:
+        allservices = f.readlines()
+        for filename in allservices:
+            if filename.startswith("SLEEP"):
+                time.sleep(int(filename.split(" ")[1]))
+            else:
+                filename = filename.strip('\n')
+                if filename != '':
+                    lauch_services_set[filename]=""
+    return
+
+def start_kube_service_with_service_set(dirname, service_set):
+    for service in service_set.keys():
+        start_one_kube_service(os.path.join(dirname, service))
     return
 
 def start_kube_service_with_launch_order(dirname, launch_filename):
@@ -3781,10 +4102,15 @@ def stop_kube_service(servicename):
         return
 
     default_launch_file = "launch_order"
-    stop_kube_service_with_launch_order(dirname, default_launch_file)
-    for archtype in get_archtypes():
-        if archtype != "amd64":
-            stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + archtype)
+    if os.path.exists(os.path.join(dirname, "only_one_arch")):
+        archtypes = get_master_archtypes()
+    else:
+        archtypes = get_archtypes()
+    if "arm64" in archtypes:
+        stop_kube_service_with_launch_order(dirname, default_launch_file + "_" + "arm64")
+    if "amd64" in archtypes:
+        stop_kube_service_with_launch_order(dirname, default_launch_file)
+
     return
 
 def stop_kube_service_with_launch_order(dirname, launch_filename):
@@ -4021,10 +4347,111 @@ def install_ssh_key_by_nodes(all_nodes):
 
     return
 
+def scale_up_worker(config, node_name, node_info):
+
+    domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
+    node = node_name + domain
+
+    os = node_info["os"].lower()
+    role = node_info["role"].lower()
+    device_type = node_info["type"].lower()
+    vendor = node_info["vendor"].lower()
+    archtype = node_info["archtype"].lower()
+
+    if node_name in k8s_nodes:
+        print("%s is in the cluster, skip it" % (node))
+        return
+    else:
+        pass
+
+    if os != "ubuntu":
+        print("os %s not supported" % (os))
+    else:
+        pass
+
+    print(node_info)
+
+    ## install necessary software
+    run_script(node, ["./scripts/prepare_ubuntu.sh"], sudo = True)
+
+    ## wait for node to reboot
+    print("waiting for 2 seconds...")
+    time.sleep(2)
+
+    while True:
+        cmd = "ping -c 1 node &> /dev/null; echo $?"
+        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+        output = output.strip()
+        print(output)
+
+        if output == "0":
+            print("%s started! wait for 10 more seconds and continue" % (node))
+            time.sleep(10)
+            break
+        else:
+            print("waiting for %s to reboot" % (node))
+            time.sleep(1)
+
+    run_script(node, ["./scripts/prepare_ubuntu.sh continue"], sudo = True)
+    run_script(node, ["./scripts/install_kubeadm.sh"], sudo = True)
+
+    ## turn off swap
+    output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)
+    print(output)
+
+    cmd = "sudo sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab"
+    output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+
+    cmd = "sudo swapoff -a"
+    output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
+    print(output)
+
+    ## join worker
+    update_worker_nodes_by_kubeadm_2([node])
+
+    ## label service
+    kubernetes_label_nodes_2(node_name, "active", [], False)
+
+    ## label worker
+    kubernetes_label_worker_2(node_name, node_info)
+
+    return
+
+def scale_up_ha_master(config, node_name, node_info):
+
+    domain = get_domain()
+    k8s_nodes = get_cluster_k8s_node_list()
+    node = node_name + domain
+
+    write_nodelist_yaml()
+    kubernetes_masters = config["kubernetes_master_node"]
+    kubernetes_master0 = kubernetes_masters[0]
+    kubernetes_master_user = config["kubernetes_master_ssh_user"]
+
+    worker_ssh_user = config["admin_username"]
+    k8sAPIport = config["k8sAPIport"]
+
+    tokencmd = "sudo kubeadm token create"
+    tokenresult = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,tokencmd)
+    token = tokenresult.split("\n")[0]
+    hashcmd = "openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'"
+    hash = utils.SSH_exec_cmd_with_output(config["ssh_cert"], kubernetes_master_user ,kubernetes_master0,hashcmd)
+
+    print("Token === %s, hash == %s" % (token, hash) )
+    workercmd = "sudo kubeadm join --token %s %s:%s --discovery-token-ca-cert-hash sha256:%s" % (token, kubernetes_master0, k8sAPIport, hash)
+    if verbose:
+        print(workercmd)
+    else:
+        pass
+
+    utils.SSH_exec_cmd_with_output(config["ssh_cert"], worker_ssh_user ,node,workercmd)
+    return
+
+
 def scale_up(config):
 
     #pdb.set_trace()
-
     if "scale_up" not in config:
         print("Error: not scale_up config\n")
         return
@@ -4034,92 +4461,16 @@ def scale_up(config):
     ## install sshkey
     all_nodes = get_scale_nodes(config, "scale_up")
     install_ssh_key_by_nodes(all_nodes)
-    domain = get_domain()
-    k8s_nodes = get_cluster_k8s_node_list()
 
     ## scaling up
     for node_name in config["scale_up"]:
 
         node_info = config["scale_up"][node_name]
-        node = node_name + domain
 
-        os = node_info["os"].lower()
-        role = node_info["role"].lower()
-        device_type = node_info["type"].lower()
-        vendor = node_info["vendor"].lower()
-        archtype = node_info["archtype"].lower()
-
-        if node_name in k8s_nodes:
-            print("%s is in the cluster, skip it" % (node))
-            continue
+        if node_info["role"] == "infrastructure" or node_info["role"] == "infra":
+            scale_up_ha_master(config, node_name, node_info)
         else:
-            pass
-
-        if os != "ubuntu":
-            print("os %s not supported" % (os))
-        else:
-            pass
-
-        print(node_info)
-
-        ## install necessary software
-        run_script(node, ["./scripts/prepare_ubuntu.sh"], sudo = True)
-
-        ## wait for node to reboot
-        print("waiting for 2 seconds...")
-        time.sleep(2)
-
-        while True:
-            cmd = "ping -c 1 node &> /dev/null; echo $?"
-            output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
-            output = output.strip()
-            print(output)
-
-            if output == "0":
-                print("%s started! wait for 10 more seconds and continue" % (node))
-                time.sleep(10)
-                break
-            else:
-                print("waiting for %s to reboot" % (node))
-                time.sleep(1)
-
-        #while true;
-        #do
-        #    if ping -c 1 node &> /dev/null
-        #    then
-        #        echo "$node started! wait for 10 more seconds and continue"
-        #        sleep 10
-        #        break
-        #    else
-        #        echo "wating for $node to start!"
-        #    fi
-
-        #    sleep 1;
-        #done
-
-        run_script(node, ["./scripts/prepare_ubuntu.sh continue"], sudo = True)
-        run_script(node, ["./scripts/install_kubeadm.sh"], sudo = True)
-
-        ## turn off swap
-        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, "swapoff -a", False)
-        print(output)
-
-        cmd = "sudo sed -i.bak '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab"
-        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
-
-        cmd = "sudo swapoff -a"
-        output = utils.SSH_exec_cmd_with_output(config["ssh_cert"], config["admin_username"], node, cmd, False)
-        print(output)
-
-        ## join worker
-        update_worker_nodes_by_kubeadm_2([node])
-
-        ## label service
-        kubernetes_label_nodes_2(node_name, "active", [], False)
-
-        ## label worker
-        kubernetes_label_worker_2(node_name, node_info)
-
+            scale_up_worker(config, node_name, node_info)
 
     return
 
@@ -4165,6 +4516,32 @@ def create_job_service_account():
     nodes = get_node_lists_for_service("restfulapi")
     if len(nodes)>=1:
         run_script(nodes[0], ["./scripts/create_service_account.sh"], True)
+
+# functions which are senstive to order can keep
+# their ordered data via this method and fetch them
+# via get_order_data
+def set_order_data(config_file, config_data):
+
+    ordered_data = {}
+    with open(config_file) as f:
+        merge_config(ordered_data, utils.ordered_load(f, yaml.SafeLoader))
+        f.close()
+
+    # machine names
+    if "machines" in ordered_data:
+        config_data[CONFIG_KEY_ORDERED_HOSTS] = ordered_data["machines"].keys()
+    else:
+        pass
+
+    return
+
+def get_order_data(config_data, key):
+
+    if key in config_data:
+        return config_data[key]
+    else:
+        return None
+
 
 def run_command( args, command, nargs, parser ):
 
@@ -4219,6 +4596,9 @@ def run_command( args, command, nargs, parser ):
     with open(config_file) as f:
         merge_config(config, yaml.load(f, Loader=yaml.FullLoader))
         f.close()
+
+    # preserve ordered data
+    set_order_data(config_file, config)
 
     docker_image_versions_file = os.path.join(dirpath, "docker_image_versions.yaml")
     if not os.path.exists(docker_image_versions_file):
@@ -4351,9 +4731,30 @@ def run_command( args, command, nargs, parser ):
     elif command == "kubeadm":
         if len(nargs) > 0:
             if nargs[0] == "init":
+                if len(nargs) > 1:
+                    if nargs[1] == "ha":
+                        deploy_cluster_with_kubevip_by_kubeadm(force=args.force)
+                        print("##########################")
+                        print("#### HA init finish ######")
+                        print("##########################")
+                        exit()
+                    else:
+                        print ("Error: too much arguments!")
+                        exit()
                 # Setup cluster by kubeadm
                 deploy_ETCD_master_by_kubeadm(force=args.force)
             elif nargs[0] == "join":
+                if len(nargs) > 1:
+                    if nargs[1] == "ha":
+                        update_HA_master_nodes_by_kubeadm( nargs[1:])
+                        update_HA_worker_nodes_by_kubeadm( nargs[1:])
+                        print("#################################")
+                        print("#### HA master join finish ######")
+                        print("#################################")
+                        exit()
+                    else:
+                        print ("Error: too much arguments!")
+                        exit()
                 # Join worker nodes by kubeadm
                 update_worker_nodes_by_kubeadm( nargs[1:] )
             elif nargs[0] == "reset":
@@ -4974,6 +5375,11 @@ def run_command( args, command, nargs, parser ):
     elif command == "labelvc":
         kubernetes_label_vc()
 
+    elif command == "labelstorage":
+        check_master_ETCD_status()
+        gen_configs()
+        kubernetes_label_storage()
+
     elif command == "genscripts":
         gen_platform_wise_config()
         gen_dns_config_script()
@@ -5114,6 +5520,12 @@ def run_command( args, command, nargs, parser ):
 
     elif command == "upload_dns_config_to_unifi":
         upload_dns_config_to_unifi()
+
+    elif command == "renderservice":
+        render_service_templates()
+
+    elif command == "renderimage":
+        render_docker_images()
 
     elif command == "create_job_service_account":
         create_job_service_account()
@@ -5419,7 +5831,11 @@ Command:
   runscriptonall [script] Execute the shell/python script on all nodes.
   listmac   display mac address of the cluster notes
   checkconfig   display config items
+
   rendertemplate template_file target_file
+  renderservice
+  renderimage
+
   upgrade_masters Upgrade the master nodes.
   upgrade_workers [nodes] Upgrade the worker nodes. If no additional node is specified, all nodes will be updated.
   upgrade [nodes] Upgrade the cluster and nodes. If no additional node is specified, all nodes will be updated.

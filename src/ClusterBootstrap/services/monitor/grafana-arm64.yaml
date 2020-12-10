@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: kube-system
+spec:
+  ports:
+  - port: {{cnf["grafana"]["port"]}}
+  selector:
+    app: grafana
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,6 +39,11 @@ spec:
         - containerPort: {{cnf["grafana"]["port"]}}
           protocol: TCP
         volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-storage
+        - mountPath: /etc/grafana/grafana.ini
+          name: grafana-ini-conf
+          subPath: grafana.ini
         - mountPath: /grafana-configuration
           name: grafana-confg-volume
         - mountPath: /etc/ssl/certs
@@ -65,6 +81,9 @@ spec:
         - name: GF_SECURITY_ALLOW_EMBEDDING
           value: "true"
       volumes:
+      - name: grafana-ini-conf
+        configMap:
+          name: grafana-ini
       - name: grafana-confg-volume
         configMap:
           name: grafana-configuration
@@ -74,6 +93,9 @@ spec:
       - name: hostname-fqdn
         hostPath:
           path: /etc/hostname-fqdn
+      - name: grafana-storage
+        hostPath:
+          path: {{cnf["grafana_data_path"]}}
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

@@ -1,0 +1,74 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: pods-device-plugin
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ascend-device-plugin-daemonset
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: a910-device-plugin
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+      labels:
+        app: a910-device-plugin
+    spec:
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: huawei.com/Ascend910
+          operator: Exists
+          effect: NoSchedule
+        - key: "ascendplugin"
+          operator: "Equal"
+          value: "v2"
+          effect: NoSchedule
+      priorityClassName: "system-node-critical"
+      nodeSelector:
+        gpuType: huawei_npu_arm64
+      containers:
+      - image: {{cnf["private_docker_registry"]}}ascend-k8sdeviceplugin:v0.0.1-arm64
+        name: device-plugin-01
+        command: [ "/bin/bash", "-c", "--"]
+        args: [ "./build/build_in_docker.sh;ascendplugin  --useAscendDocker=${USE_ASCEND_DOCKER} --volcanoType=true" ]
+        securityContext:
+          privileged: true
+        imagePullPolicy: Never
+        volumeMounts:
+          - name: device-plugin
+            mountPath: /var/lib/kubelet/device-plugins
+          - name: hiai-driver
+            mountPath: /usr/local/Ascend/driver
+          - name: log-path
+            mountPath: /var/log/devicePlugin
+        env:
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: hiai-driver
+          hostPath:
+            path: /usr/local/Ascend/driver
+        - name: log-path
+          hostPath:
+            path: /var/log/devicePlugin

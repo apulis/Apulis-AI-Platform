@@ -56,6 +56,10 @@ const template = {
   selectTemplate: 'Select Template',
   cancel: 'CANCEL',
   templateSaved: 'Template saved',
+  scopedUser: 'Scope user: Only yourself can use this template.',
+  scopedTeam: 'Scope team: Everyone in the virtual cluster can use this template.',
+  user: 'User',
+  team: 'virtual cluster',
 }
 export default {
   ...index,

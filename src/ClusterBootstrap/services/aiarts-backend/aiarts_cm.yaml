@@ -1,0 +1,85 @@
+apiVersion: v1
+data:
+  config.yaml: |+
+    port: 9000
+
+    log:
+      writefile: true
+      filedir: logs
+      filename: ai_arts_backend.log
+
+    db:
+      username: root
+      password: apulis#2019#wednesday
+      {% if cnf["db_archtype"] == "amd64" %}
+      host: mysql.kube-system
+      {% elif cnf["db_archtype"] == "arm64" %}
+      host: mysql-arm64.kube-system
+      {% else %}
+      host: mysql.kube-system
+      {% endif %}
+      port: 3306
+      database: ai_arts
+      maxopenconns: 10
+      maxidleconns: 2
+
+    file:
+      datasetdir: /data/dataset
+      modeldir: /data/model
+      sizelimit: 1000000000
+
+    Anno:
+      backendUrl: http://{{cnf["kube-vip"]}}/data-platform-backend
+
+    Infer:
+      backendUrl: http://{{cnf["kube-vip"]}}
+
+    auth:
+      url: http://{{cnf["kube-vip"]}}:80/
+      key: "Sign key for JWT"
+      {% if cnf["saml_idp_metadata_url"] %}
+      samlRootUrl: {{cnf["saml_root_url"]}}
+      samlIdpMetadataURL: {{cnf["saml_idp_metadata_url"]}}
+      samlPrivateKey: /root/saml-certs/tls.key
+      samlCertificate: /root/saml-certs/tls.crt
+      {% endif %}
+
+    DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
+    image:
+      tensorflow:
+        - image: apulistech/ubuntu:18.04-amd64
+          desc: "测试1"
+        - image: apulistech/tensorflow:2.3.0-gpu-py3
+          desc: "测试2"
+        - image: apulistech/tensorflow:1.14.0-gpu-py3
+          desc: "测试3"
+        - image: apulistech/tensorflow:1.15.2-gpu-py3
+          desc: "测试4"
+        - image: apulistech/tf:1.15-arm-rc1
+          desc: "测试5"
+      pytorch:
+        - image: apulistech/pytorch:1.5
+          desc: "测试6"
+      mxnet:
+        - image: apulistech/mxnet:2.0.0-gpu-py3
+          desc: "测试7"
+      mindspore:
+        - image: apulistech/mindspore:0.2.0-alpha
+          desc: "测试8"
+      caffe:
+        - image: apulistech/caffe:BVLC
+          desc: "测试9"
+
+    InteractiveModeJob: false
+    PrivateRegistry: {{cnf["private_docker_registry"]}}
+    imagesave:
+      k8sconf: /root/.kube/config
+      sshkey: /root/.ssh/id_rsa
+      sshuser: dlwsadmin
+      sshport: 22
+
+
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: aiarts-cm

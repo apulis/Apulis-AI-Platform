@@ -5,6 +5,7 @@ const Service = require('./service')
 
 const clustersConfig = config.get('clusters')
 const userGroup = config.get('userGroup')
+const aiartsUrl = config.get('aiarts_url')
 
 /**
  * @typedef {Object} State
@@ -290,7 +291,7 @@ class Cluster extends Service {
     this.context.log.debug(data, 'Got endpoints')
     const protocol = require('config').get('extranet_protocol')
     data.forEach(val => {
-      val.protocol = protocol ? 'https' : 'http'
+      val.protocol = protocol
     })
     return data
   }
@@ -660,10 +661,24 @@ class Cluster extends Service {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(job)
-    });
-    const text = await response.text();
+    })
+    const text = await response.text()
     this.context.assert(response.ok, response.status, response.statusText);
-    return text;
+    return text
+  }
+
+  async saveImage (image, token) {
+    const saveImageUrl = aiartsUrl + '/saved_imgs/'
+    const response = await fetch(saveImageUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(image)
+    })
+    const data = await response.json()
+    return data
   }
 }
 

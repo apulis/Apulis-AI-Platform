@@ -30,7 +30,7 @@ spec:
       containers:
       - name: restfulapi
         image: {{cnf["dockers"]["container"]["restfulapi2"]["fullname"]}}-arm64
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         volumeMounts:
         - mountPath: /usr/bin/kubectl
           name: kubectl-binary
@@ -46,6 +46,8 @@ spec:
           name: dlwsdatawork
         - mountPath: /var/log/apache2
           name: log
+        - mountPath: /home
+          name: home
         - mountPath: /data
           name: data
         ports:
@@ -84,6 +86,9 @@ spec:
       - name: log
         hostPath:
           path: /var/log/restfulapi
+      - name: home
+        hostPath:
+          path: /dlwsdata/work
       - name: data
         hostPath:
           path: /dlwsdata/storage

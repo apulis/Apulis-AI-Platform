@@ -1,0 +1,85 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: aiarts-backend
+  namespace: default
+  labels:
+     run: dlwsaiarts-backend
+spec:
+  selector:
+    matchLabels:
+      aiarts-backend-node: pod
+  template:
+    metadata:
+      name: aiarts-backend
+      labels:
+        aiarts-backend-node: pod
+        app: aiarts-backend
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      nodeSelector:
+        aiarts-backend: active
+        archType: amd64
+      containers:
+      - name: aiarts-backend
+        image: {{cnf["dockers"]["container"]["aiarts-backend"]["fullname"]}}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9000
+          hostPort: 9000
+          name: main
+        volumeMounts:
+        - mountPath: /root/config.yaml
+          name: appconfig
+          subPath: config.yaml
+        - mountPath: /home
+          name: dlwsdatawork
+        - mountPath: /data
+          name: dlwsdatadata
+        - mountPath: /etc/kubernetes
+          name: cluster-conf
+        - mountPath: /root/logs
+          name: applog
+        - mountPath: /root/.kube/config
+          name: kubeconf
+        - mountPath: /root/.ssh
+          name: sshkey
+        {% if cnf["saml_idp_metadata_url"] %}  
+        - mountPath: /root/saml-certs
+          name: saml-secret
+        {% endif %}
+      volumes:
+      {% if cnf["saml_idp_metadata_url"] %}
+      - name: saml-secret
+        secret:
+          secretName: saml-sp-secret
+      {% endif %}    
+      - name: appconfig
+        configMap:
+          name: aiarts-cm
+      - name: dlwsdatawork
+        hostPath:
+          path: {{cnf["storage-mount-path"]}}/work
+      - name: dlwsdatadata
+        hostPath:
+          path: {{cnf["storage-mount-path"]}}/storage      
+      - name: cluster-conf
+        hostPath:
+          path: /etc/kubernetes
+          type: DirectoryOrCreate
+      - name: applog
+        hostPath:
+          path: /var/log/aiarts-backend
+      - name: kubeconf
+        hostPath:
+          path: /etc/kubernetes/admin.conf
+      - name: sshkey
+        hostPath:
+          path: /home/dlwsadmin/.ssh
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

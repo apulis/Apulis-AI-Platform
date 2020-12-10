@@ -4,6 +4,7 @@ const userActions = {
     pause: '暂停',
     resume:'继续',
     kill:'终止',
+    saveImage:'保存为镜像',
     isBeingApproved:'正被批准',
     approveRequestIsAccepted:'的批准请求已接受',
     isFailedToApprove:'批准失败',

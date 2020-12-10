@@ -1,6 +1,6 @@
 # These are the default configuration parameter
 default_config_parameters = {
-    "supported_platform": ["azure_cluster", "onpremise"],
+    "supported_platform": ["onpremise"],
     "allroles": {"infra", "infrastructure", "worker", "nfs", "sql", "dev", "etcd", "kubernetes_master", "mysqlserver", "elasticsearch", "samba"},
     # Kubernetes setting
     "service_cluster_ip_range": "10.3.0.0/16",
@@ -44,6 +44,7 @@ default_config_parameters = {
     "node-exporter": { "port": 9100 },
     "watchdog": { "port": 9101 },
     "grafana": { "port": 3000, "prometheus-ip": "localhost" },
+    "grafana-zh": { "port": 3001, "prometheus-ip": "localhost" },
     "alert-manager": {
         "port": 9093,
         "configured": False,
@@ -68,9 +69,14 @@ default_config_parameters = {
 
     "mysql_port": "3306",
     "mysql_username": "root",
-    "mysql_data_path": "/var/lib/mysql",
+
+    "mysql_data_path": "/mntdlws/service/mysql/data",
+    "grafana_data_path": "/mntdlws/service/grafana/data",
+    "prometheus_data_path": "/mntdlws/service/prometheus/data",
 
     "extranet_protocol":"https",
+    "apt_mirror_url": "http:\/\/mirrors.aliyun.com",
+    "ssh_port": 22,
 
     "datasource": "MySQL",
     "defalt_virtual_cluster_name": "platform",
@@ -82,7 +88,7 @@ default_config_parameters = {
     "etcd3port1": "2379",  # Etcd3port1 will be used by App to call Etcd
     "etcd3port2": "4001",  # Etcd3port2 is established for legacy purpose.
     "etcd3portserver": "2380",  # Server port for etcd
-    "k8sAPIport": "1443",  # Server port for apiserver
+    "k8sAPIport": "6443",  # Server port for apiserver
     "nvidiadriverversion": "375.20",
     # Default port for WebUI, Restful API,
     # Port webUI will run upon, nginx will forward to this port.
@@ -94,7 +100,7 @@ default_config_parameters = {
     "repairmanager": "repairmanager",
     "repairmanageretcd": "repairmanageretcd",
     "ssh_cert": "./deploy/sshkey/id_rsa",
-    "admin_username": "core",
+    "admin_username": "dlwsadmin",
     # the path of where dfs/nfs is source linked and consumed on each node,
     # default /dlwsdata
     "nfs-mnt-src-path": "/data/share",
@@ -110,7 +116,7 @@ default_config_parameters = {
     "physical-mount-path-vc": "/mntdlts/nfs",
 
     # required storage folder under storage-mount-path
-    "default-storage-folders": ["jobfiles", "storage", "work"],
+    "default-storage-folders": ["jobfiles", "storage", "work", "service"],
     "per_user_gpu_limit": "-1",
 
     # the path of where nvidia driver is installed on each node, default
@@ -126,6 +132,7 @@ default_config_parameters = {
         "nbconvert-extensions.tpl": True,
         "launch_glusterfs.pyc": True,
         "bootstrap_hdfs.pyc": True,
+
     },
     "render-by-copy-ext": {
         ".png": True,
@@ -245,6 +252,12 @@ default_config_parameters = {
     #   - label : etcd_node <tag to be applied to etcd node only >
     #   - label : worker_node <tag to be applied to worker node only >
     #   - label : all <tag to be applied to all nodes
+    # Types of node include:
+    #   - etcd_node, etcd_node_1, etcd_node_2 ...
+    #   - worker_node
+    #   - elasticsearch_node
+    #   - mysqlserver_node
+    #   - nfs_node
     "kubelabels": {
         "infrastructure": "etcd_node",
 
@@ -255,17 +268,19 @@ default_config_parameters = {
         "namenode1": "etcd_node_1",
         "namenode2": "etcd_node_2",
 
+        "repairmanager": "etcd_node",
+
         "datanode": "all",
-        "webportal": "etcd_node_1",
-        "restfulapi": "etcd_node_1",
-        "jobmanager": "etcd_node_1",
-        "repairmanager": "etcd_node_1",
+
         "grafana": "etcd_node_1",
         "prometheus": "etcd_node_1",
-        "alert-manager": "etcd_node_1",
         "watchdog": "etcd_node_1",
+        "alert-manager": "etcd_node_1",
+
         "elasticsearch": "elasticsearch_node",
         "kibana": "etcd_node_1",
+
+        ## storage server
         "mysql": "etcd_node_1",
         "mysql-server": "mysqlserver_node",
         "storagemanager": "nfs_node",
@@ -276,17 +291,21 @@ default_config_parameters = {
         "glusterfs": "worker_node",
         "FragmentGPUJob": "all",
         "a910-device-plugin": "worker_node",
+        "node-cleaner": "worker_node",
 
         ## applications
         "nginx": "all",
-        "webportal": "etcd_node_1",
-        "restfulapi": "etcd_node_1",
-        "jobmanager": "etcd_node_1",
-        "repairmanager": "etcd_node_1",
+        "webportal": "etcd_node",
+        "restfulapi": "etcd_node",
+        "jobmanager": "etcd_node",
 
-        "webui3": "etcd_node_1",
-        "restfulapi2": "etcd_node_1",
-        "jobmanager2": "etcd_node_1",
+        "image-label": "etcd_node",
+        "aiarts-frontend": "etcd_node",
+        "aiarts-backend": "etcd_node",
+
+        "webui3": "etcd_node",
+        "restfulapi2": "etcd_node",
+        "jobmanager2": "etcd_node",
 
         ## default labels
         "all": "all",
@@ -515,12 +534,20 @@ default_config_parameters = {
 
     "k8s-bld": "k8s-temp-bld",
     "k8s-gitrepo": "kubernetes/kubernetes",
-    "k8s-gitbranch": "v1.9.1",
+    "k8s-gitbranch": "v1.19.0",
     "k8scri-gitrepo": "Microsoft/KubeGPU",
     "k8scri-gitbranch": "master",
     "kube_custom_cri": False,
     "kube_custom_scheduler": False,
-    "kubepresleep": 60,
+
+    "scheduler_name": "",
+    "kubepresleep": 1,
+    "etcd_node_num": 1,
+    "deploy_method": "kubeadm",
+
+    # used by user-dashboard service
+    "enable_vc": "true",
+    "i18n": "true",
 
     "Authentications": {
         "Live-login-windows": {
@@ -643,6 +670,10 @@ default_config_parameters = {
             "url" : "grafana",
             "port": 3000,
         },
+        "grafana-zh": {
+            "url" : "grafana-zh",
+            "port": 3001,
+        },
         "hdfs": {
             "port": 50070,
         },
@@ -665,18 +696,27 @@ default_config_parameters = {
     "dockerprefix": "",
     "dockertag": "latest",
     "jwt":{
-        "secret_key":"Sign key for JWT"
+        "secret_key":"Sign key for JWT",
+        "algorithm": "HS256"
     },
 
     # inferenceJob config
     "inference":{
-      "tensorflow":[{"version":"1.15",
-                     "support":
-                         [
-                             {"image":"emacski/tensorflow-serving:1.15.0","device":"CPU"},
-                             {"image":"tensorflow/serving:1.15.0-gpu","device":"GPU"}
-                          ]
-                     }]
+      "tensorflow":{
+            "allowedImageVersions": [
+               "1.15.0",
+               "1.15.0-arm64",
+               "1.15.0-gpu",
+               "2.2.0",
+               "2.2.0-arm64",
+               "2.2.0-gpu"
+            ]
+      },
+        "apulisVision": {
+            "allowedImageVersions": [
+               "1.0.0"
+            ]
+        }
     },
 
     # System dockers.
@@ -747,10 +787,16 @@ default_config_parameters = {
             "node-exporter": {"fullname": "prom/node-exporter:v0.18.1"},
             "bash": {"fullname": "bash:5"},
             "prometheus": {"fullname": "prom/prometheus:v2.18.0"},
-            "grafana": {"fullname": "apulistech/grafana:6.7.3"},
+            "grafana": {"fullname": "apulistech/grafana:6.7.4"},
+            "grafana-zh": {"fullname": "apulistech/grafana-zh:6.7.4"},
             "alertmanager": {"fullname": "prom/alertmanager:v0.20.0"},
             "prometheus-operator": {"fullname": "jessestuart/prometheus-operator:v0.38.0"},
             "k8s-prometheus-adapter": {"fullname": "directxman12/k8s-prometheus-adapter:v0.7.0"},
+            "nvidia-device-plugin": {"fullname": "nvidia/k8s-device-plugin:1.11"},
+            "aiarts-frontend": {"fullname": "apulistech/dlworkspace_aiarts-frontend:1.0.0"},
+            "aiarts-backend": {"fullname": "apulistech/dlworkspace_aiarts-backend:1.0"},
+            "data-platform": {"fullname": "apulistech/dlworkspace_data-platform-backend:latest"},
+            "node-cleaner": {"fullname": "apulistech/node-cleaner:1.0"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

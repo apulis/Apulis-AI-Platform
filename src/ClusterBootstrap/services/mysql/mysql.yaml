@@ -29,12 +29,15 @@ spec:
       {% else %}
         mysql: active
       {% endif %}
+        archType: amd64
       hostNetwork: true    
       containers:
       - image: {{cnf["dockers"]["container"]["mysql"]["fullname"]}}
         name: mysql
         env:
           # Use secret in real usage
+        - name: MYSQL_ROOT_HOST
+          value: "%"
         - name: MYSQL_ROOT_PASSWORD
           value: "{{cnf["mysql_password"]}}"
         ports:
@@ -44,7 +47,7 @@ spec:
         - name: mysql-storage
           mountPath: /var/lib/mysql
         - name: mysql-log
-          mountPath: /var/log/mysql          
+          mountPath: /var/log/mysql
       {% if cnf["private_docker_registry_username"] %}
       imagePullSecrets:
       - name: svccred

@@ -23,11 +23,11 @@ install_preparation() {
     sudo dpkg --configure -a
 }
 
-# set source mirrors 
+# set source mirrors
 set_apt_mirror() {
 
-    #sudo rm /var/lib/apt/lists/* -vf 
-    sudo cat <<EOF | sudo tee /etc/apt/sources.list 
+    #sudo rm /var/lib/apt/lists/* -vf
+    sudo cat <<EOF | sudo tee /etc/apt/sources.list
         deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
         deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
 
@@ -65,13 +65,13 @@ pull_k8s_images() {
     sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/coredns:1.6.7 k8s.gcr.io/coredns:1.6.7
     sudo docker tag registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2 k8s.gcr.io/pause:3.2
 
-    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:${k8s_version} 
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-apiserver:${k8s_version}
     sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-controller-manager:${k8s_version}
     sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:${k8s_version}
-    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:${k8s_version} 
-    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0 
-    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/coredns:1.6.7 
-    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2 
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/kube-proxy:${k8s_version}
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/etcd:3.4.3-0
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/coredns:1.6.7
+    sudo docker rmi registry.cn-hangzhou.aliyuncs.com/google_containers/pause:3.2
 }
 
 # Install python on CoreOS base image
@@ -121,7 +121,7 @@ install_shell_utils() {
     yes | sudo apt-get install -y bison curl parted
     set_install_flag "install_shell_utils"
 }
-    
+
 install_docker() {
 
     ## 检查本步骤是否已安装过
@@ -133,7 +133,7 @@ install_docker() {
     # Install docker
     which docker
     if [ $? -eq 0 ]
-    then 
+    then
         docker --version
         ## docker already installed
     else
@@ -149,11 +149,12 @@ install_docker() {
         ## 增加国内数据源
         sudo rm -f /etc/docker/daemon.json
         if  lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*" ;
-        then 
+        then
             ## gpu驱动
-            sudo mkdir -p /etc/docker 
+            sudo mkdir -p /etc/docker
             sudo echo '
                 {
+                    "default-runtime": "nvidia",
                     "registry-mirrors": [
                         "https://registry.docker-cn.com"
                     ],
@@ -167,9 +168,10 @@ install_docker() {
                 }
             ' > /etc/docker/daemon.json
         else
-            sudo mkdir -p /etc/docker 
+            sudo mkdir -p /etc/docker
             sudo echo '
                 {
+                    "default-runtime": "nvidia",
                     "registry-mirrors": [
                         "https://registry.docker-cn.com"
                     ],
@@ -180,7 +182,7 @@ install_docker() {
     fi
 
     yes | sudo pip install --upgrade pip
-    # pip doesn't install python for root account, causing issues. 
+    # pip doesn't install python for root account, causing issues.
     # sudo pip install setuptools
     # sudo pip install pyyaml jinja2 argparse
 
@@ -207,16 +209,16 @@ set_network() {
 install_gpu_utils() {
 
     ## Check if this node has gpu
-    if  lspci -vnnn | perl -lne 'print if /^\d+\:.+(\[\S+\:\S+\])/' | grep VGA | grep -i NVIDIA; 
+    if  lspci -vnnn | perl -lne 'print if /^\d+\:.+(\[\S+\:\S+\])/' | grep VGA | grep -i NVIDIA;
     then
 
         ## install from the beginning
         if ! resume_mode;
         then
-        
+
             ## check if driver is installed
             if [[ -z `nvidia-smi -x -q | grep -i driver_version|grep 440` ]];
-            then 
+            then
                 echo "nvidia driver not found. to install next"
             else
                 echo "nvidia driver found. "
@@ -224,8 +226,8 @@ install_gpu_utils() {
             fi
 
             # https://askubuntu.com/questions/481414/install-nvidia-driver-instead-of-nouveau
-            # Start from 10/05/2017 the following is needed. 
-            if ! grep -q "blacklist nouveau" -F /etc/modprobe.d/blacklist.conf; then 
+            # Start from 10/05/2017 the following is needed.
+            if ! grep -q "blacklist nouveau" -F /etc/modprobe.d/blacklist.conf; then
                     echo "blacklist vga16fb" | sudo tee --append /etc/modprobe.d/blacklist.conf > /dev/null
                     echo "blacklist nouveau" | sudo tee --append /etc/modprobe.d/blacklist.conf > /dev/null
                     echo "blacklist rivafb" | sudo tee --append /etc/modprobe.d/blacklist.conf > /dev/null
@@ -270,11 +272,11 @@ install_gpu_utils() {
             sudo apt-get update
             yes | sudo apt-get install -y nvidia-driver-440
 
-            show_continue_msg 
-            sudo shutdown -r
+            show_continue_msg
+            #sudo shutdown -r
             return 0
 
-        ## resume the installation, 
+        ## resume the installation,
         ## usually it's done after a reboot
         else
             yes | sudo apt install -y nvidia-modprobe
@@ -331,7 +333,7 @@ resume_mode() {
     if [ "$exec_mode" = "continue" ]
     then
         true
-    else 
+    else
         false
     fi
 }
@@ -341,14 +343,14 @@ set_install_flag() {
     then
         sudo mkdir -p "${install_dir}"
         sudo touch "${install_dir}/$1"
-    fi 
+    fi
 }
 
 del_install_flag() {
     if [ -n $1 ]
     then
         sudo rm -f "${install_dir}/$1"
-    fi 
+    fi
 }
 
 installed() {
@@ -357,7 +359,7 @@ installed() {
         true
     else
         false
-    fi 
+    fi
 }
 
 # 删除安装标记位
@@ -366,7 +368,7 @@ purge_install_flags() {
 
     # 只在重新安装时，才移除旧的安装进度
     if ! resume_mode;
-    then 
+    then
         del_install_flag  "install_preparation"
         del_install_flag  "install_python"
         del_install_flag  "install_shell_utils"
@@ -400,13 +402,13 @@ main () {
     install_preparation
 
     #set_apt_mirror
-    
+
     install_docker
     #pull_k8s_images
-    
+
     install_python
     install_shell_utils
-    
+
     set_network
     install_gpu_utils
     set_kubernetes

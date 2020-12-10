@@ -12,6 +12,7 @@ function M.auth(claim_specs)
     if not cookie then
         ngx.log(ngx.ERR, err)
         ngx.exit(ngx.HTTP_UNAUTHORIZED)
+        return nil
     end
 
     -- get single cookie
@@ -19,6 +20,7 @@ function M.auth(claim_specs)
     if not token then
         ngx.log(ngx.ERR, err)
         ngx.exit(ngx.HTTP_UNAUTHORIZED)
+        return nil
     end
     -- ngx.log(ngx.INFO, "Authorization: " .. auth_header)
 
@@ -28,18 +30,18 @@ function M.auth(claim_specs)
     if token == nil then
         ngx.log(ngx.WARN, "Missing token")
         ngx.exit(ngx.HTTP_UNAUTHORIZED)
+        return nil
     end
-
-    ngx.log(ngx.INFO, "Token: " .. token)
 
     local jwt_obj = jwt:verify(secret, token)
     if jwt_obj.verified == false then
         ngx.log(ngx.WARN, "Invalid token: ".. jwt_obj.reason)
         ngx.exit(ngx.HTTP_UNAUTHORIZED)
+        return nil
     end
 
     ngx.log(ngx.INFO, "JWT: " .. cjson.encode(jwt_obj))
-
+    return jwt_obj
 end
 
 return M

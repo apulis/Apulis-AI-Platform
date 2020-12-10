@@ -29,11 +29,11 @@ import redis
 import logging
 import logging.config
 from job import Job, JobSchema
-from job_launcher import JobDeployer, JobRole, PythonLauncher
-
+from job_launcher import JobDeployer, JobRole, PythonLauncher,InferenceServiceJobDeployer
 from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time, record
-
 from job_launcher import get_job_status_detail, job_status_detail_with_finished_time
+import common
+import JobRestAPIUtils
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +169,7 @@ def get_scheduling_job_details(details):
                 pod_detail["podPhase"] = pod_phase
                 if pod_phase == "Pending":
                     message = {}
-                    if "conditions" in status:
+                    if "conditions" in status and status["conditions"]:
                         conditions = status["conditions"]
                         for condition in conditions:
                             condition["last_transition_time"] = str(condition["last_transition_time"])
@@ -184,9 +184,17 @@ def get_scheduling_job_details(details):
 
 
 def GetJobTotalGpu(jobParams):
+    
     numWorkers = 1
     if "numpsworker" in jobParams:
         numWorkers = int(jobParams["numpsworker"])
+        if numWorkers == 0:
+            numWorkers = 1
+        else:
+            pass
+    else:
+        pass
+    
     return int(jobParams["resourcegpu"]) * numWorkers
 
 
@@ -286,6 +294,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         dataHandler = DataHandler()
     else:
         dataHandler = dataHandlerOri
+
     jobParams = json.loads(base64.b64decode(job["jobParams"]))
 
     result, details = check_job_status(job["jobId"])
@@ -319,37 +328,121 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         # if jobDescriptionPath is not None and os.path.isfile(jobDescriptionPath):
         #     k8sUtils.kubectl_delete(jobDescriptionPath)
 
-        job_deployer = JobDeployer()
+        jobType = dataHandler.GetJobTextField(job["jobId"], "jobType")
+        if jobType == "InferenceJob":
+            job_deployer = InferenceServiceJobDeployer()
+        else:
+            job_deployer = JobDeployer()
         job_deployer.delete_job(job["jobId"], force=True)
 
         if notifier is not None:
             notifier.notify(notify.new_job_state_change_message(
                 job["userName"], job["jobId"], result.strip()))
+
     elif result == "Running":
+
         update_job_state_latency(redis_conn, job["jobId"], "running")
+
         if job["jobStatus"] != "running":
             started_at = k8sUtils.localize_time(datetime.datetime.now())
             detail = [{"startedAt": started_at, "message": "started at {}".format(started_at)}]
+            last_updated = datetime.datetime.now()
 
             dataFields = {
                 "jobStatusDetail": base64.b64encode(json.dumps(detail)),
-                "jobStatus":"running"
+                "jobStatus":"running",
+                "lastUpdated": last_updated.isoformat(),
             }
+
+
+            job["lastUpdated"] = last_updated
             conditionFields = {"jobId": job["jobId"]}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+
             if notifier is not None:
                 notifier.notify(notify.new_job_state_change_message(
                     job["userName"], job["jobId"], result.strip()))
+            else:
+                pass
+
+        else:
+            ## running job
+            pass
+
+        ## read job time from vc configuration
+        vc_name = jobParams["vcName"].strip()
+        vc_meta = common.walk_json(dataHandler.GetVC(vc_name), "metadata")
+        vc_meta = {} if vc_meta is None else json.loads(vc_meta)
+        vc_max_time = common.walk_json(vc_meta, "admin", "job_max_time_second")
+
+        logger.info("vc_max_time: %s for job %s. ", str(vc_max_time), job["jobId"])
+        logger.info("vc_meta: %s for job %s. ", str(vc_meta), job["jobId"])
+
+        ## 1. use job time config from vc
+        ## 2. use user's own job time config, if is not set for vc 
+        max_time = 0
+        if vc_max_time is not None:
+            max_time = int(vc_max_time)
+
+        else:
+            user_data = JobRestAPIUtils.GetUserData(job["userName"])
+            if "jobMaxTimeSecond" in user_data:
+                max_time = int(user_data["jobMaxTimeSecond"])
+            else:
+                max_time = 999999999 # no limit
+
+            logger.info("user_data: %s for job %s", str(user_data), job["jobId"])
+            logger.info("max_time: %s for job %s", str(max_time), job["jobId"])
+            
+        ## read user's setting
+        if type(max_time) != int:
+            if max_time is not None:
+                logger.info("unknown maxTimeSec %s for job %s", max_time,
+                            job["jobId"])
+
+        else:
+            start_time = int(common.to_seconds_from_isodate_str(job["lastUpdated"]))
+            now = common.to_seconds_from_date(datetime.datetime.now())
+            logger.info("start_time: %s, current_time: %s, max_time: %s for job %s", str(start_time), str(now), str(max_time), job["jobId"])
+
+            if start_time + max_time < now:
+                logger.info(
+                    "killing job %s for its running time exceed maxTimeSec %ss, start %s, now %s",
+                    job["jobId"], max_time, start_time, now)
+
+                error_msg = "running exceed pre-defined %ss" % (max_time)
+                dataFields = {
+                    "errorMsg": error_msg,
+                }
+
+                conditionFields = {"jobId": job["jobId"]}
+                dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+                launcher.kill_job(job["jobId"], "killed")
+
+                if notifier is not None:
+                    notifier.notify(
+                        notify.new_job_killed_message(job["userName"],
+                                                      job["jobId"], error_msg))
+
+                else:
+                    pass
+
+            else:
+                pass
+
     elif result == "Restart":
         logger.warning("Job %s request resources failed, return to queued...", job["jobId"])
         retries = dataHandler.AddandGetJobRetries(job["jobId"])
+
         if retries >= 500:
             dataFields = {
                 "jobStatus": "error",
                 "errorMsg": "can't allocate resources",
             }
+
             conditionFields = {"jobId": job["jobId"]}
             dataHandler.UpdateJobTextFields(conditionFields, dataFields)
+
         else:
            dataHandler.UpdateJobTextField(job["jobId"], "jobStatus", "queued")
 
@@ -378,7 +471,11 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
         # if jobDescriptionPath is not None and os.path.isfile(jobDescriptionPath):
         #     k8sUtils.kubectl_delete(jobDescriptionPath)
         if "enable_jobmanager_debug_mode" not in config or not config["enable_jobmanager_debug_mode"]:
-            job_deployer = JobDeployer()
+            jobType = dataHandler.GetJobTextField(job["jobId"], "jobType")
+            if jobType == "InferenceJob":
+                job_deployer = InferenceServiceJobDeployer()
+            else:
+                job_deployer = JobDeployer()
             job_deployer.delete_job(job["jobId"], force=True)
 
     elif result == "Unknown" or result == "NotFound":
@@ -423,7 +520,11 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                         conditionFields = {"jobId": job["jobId"]}
                         dataHandler.UpdateJobTextFields(conditionFields, dataFields)
                         if "enable_jobmanager_debug_mode" not in config or not config["enable_jobmanager_debug_mode"]:
-                            job_deployer = JobDeployer()
+                            jobType = dataHandler.GetJobTextField(job["jobId"], "jobType")
+                            if jobType == "InferenceJob":
+                                job_deployer = InferenceServiceJobDeployer()
+                            else:
+                                job_deployer = JobDeployer()
                             job_deployer.delete_job(job["jobId"], force=True)
                         jump = True
                         break
@@ -521,6 +622,7 @@ def get_job_priority(priority_dict, job_id):
 @record
 def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     vc_list = data_handler.ListVCs()
+
     cluster_status, _ = data_handler.GetClusterStatus()
     cluster_total = cluster_status["gpu_capacity"]
     cluster_available = cluster_status["gpu_avaliable"]
@@ -558,13 +660,16 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     logger.info("Job priority dict: {}".format(priority_dict))
 
     for vc in vc_list:
+
         vc_name = vc["vcName"]
         vc_metadata = json.loads(vc["metadata"])
         vc_schedulable = {}
         vc_user_quota_allocable = {}
+
         for gpu_type, total in vc_total[vc_name].items():
             vc_schedulable[gpu_type] = total - vc_unschedulable[vc_name][gpu_type]
             vc_user_quota_allocable[gpu_type] = vc_metadata[gpu_type]["user_quota"] if gpu_type in vc_metadata and "user_quota" in vc_metadata[gpu_type] else 9999
+        
         vc_resources[vc_name] = ResourceInfo(vc_schedulable)
         vc_user_quota_resources[vc_name] = ResourceInfo(vc_user_quota_allocable)
 
@@ -588,7 +693,10 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             singleJobInfo["jobtrainingtype"] = job_params["jobtrainingtype"]
             singleJobInfo["resourcegpu"] = job_params["resourcegpu"]
             singleJobInfo["numpsworker"] = job_params["numpsworker"] if "numpsworker" in job_params else 1
-            singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])/int(job_params["numpsworker"])
+            if "numpsworker" in job_params and int(job_params["numpsworker"]):
+                singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])/int(job_params["numpsworker"])
+            else:
+                singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])
 
             # Job lists will be sorted based on and in the order of below
             # 1. non-preemptible precedes preemptible
@@ -636,9 +744,11 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             else:
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatus", "killed")
             continue
+
         vc_resource = vc_resources[vc_name]
         vc_user_quota_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
         logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource,vc_name])
+        
         if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
             if sji["job"]["jobStatus"] == "queued":
                 if sji["deviceType"] in detail_resources:
@@ -647,6 +757,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                     else:
                         if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["pernoderesource"]:
                             continue
+                        
             vc_resource.Subtract(sji["globalResInfo"])
             vc_user_quota_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
@@ -661,7 +772,7 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
                 logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]])
                 if sji["job"]["jobStatus"] == "queued":
                     if sji["deviceType"] in detail_resources:
-                        if sji["jobtrainingtype"] == "PSDistJob" and  quota.caculate_n_th_max(detail_resources[sji["deviceType"]],sji["numpsworker"]) < sji["pernoderesource"]:
+                        if sji["jobtrainingtype"] == "PSDistJob" and quota.caculate_n_th_max(detail_resources[sji["deviceType"]],sji["numpsworker"]) < sji["pernoderesource"]:
                             continue
                         else:
                             if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["pernoderesource"]:
@@ -675,20 +786,25 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
     logger.info("TakeJobActions : global resources : %s" % (globalResInfo.CategoryToCountMap))
 
     for sji in jobsInfo:
+
         try:
+
             if sji["job"]["jobStatus"] == "queued" and (sji["allowed"] is True):
                 launcher.submit_job(sji["job"])
                 update_job_state_latency(redis_conn, sji["jobId"], "scheduling")
                 logger.info("TakeJobActions : submitting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
             elif sji["preemptionAllowed"] and (sji["job"]["jobStatus"] == "scheduling" or sji["job"]["jobStatus"] == "running") and (sji["allowed"] is False):
                 launcher.kill_job(sji["job"]["jobId"], "queued")
                 logger.info("TakeJobActions : pre-empting job : %s : %s" % (sji["jobId"], sji["sortKey"]))
+
             elif sji["job"]["jobStatus"] == "queued" and sji["allowed"] is False:
                 vc_name = sji["job"]["vcName"]
                 available_resource = vc_pre_user_quota_resources[sji["job"]["userName"]][vc_name]
                 requested_resource = sji["globalResInfo"]
                 detail = [{"message": "waiting for available resource. requested: %s. available: %s" % (requested_resource,available_resource.GetMinValue(vc_resources[vc_name]))}]
                 data_handler.UpdateJobTextField(sji["jobId"], "jobStatusDetail", base64.b64encode(json.dumps(detail)))
+
         except Exception as e:
             logger.error("Process job failed {}".format(sji["job"]), exc_info=True)
 

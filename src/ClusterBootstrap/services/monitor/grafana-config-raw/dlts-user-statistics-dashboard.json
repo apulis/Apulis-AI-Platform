@@ -2262,7 +2262,7 @@
           "expr": "(sum(avg by (instance,uuid) ((task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'} > bool 0) * task_device_mem_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'})) / count(avg by (instance,uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(GPU)",
+          "legendFormat": "vc(GPU)",
           "refId": "B"
         },
         {
@@ -2276,7 +2276,7 @@
           "expr": "(sum(avg by (instance,uuid) ((task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'} > bool 0) * task_device_mem_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'})) / count(avg by (instance,uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(NPU)",
+          "legendFormat": "vc(NPU)",
           "refId": "D"
         }
       ],
@@ -2363,7 +2363,7 @@
           "expr": "(sum(avg by (instance) (task_cpu_percent{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0) / 100)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(GPU)",
+          "legendFormat": "vc(GPU)",
           "refId": "B"
         },
         {
@@ -2377,7 +2377,7 @@
           "expr": "(sum(avg by (instance) (task_cpu_percent{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0) / 100)) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(NPU)",
+          "legendFormat": "vc(NPU)",
           "refId": "D"
         }
       ],
@@ -2464,7 +2464,7 @@
           "expr": "(sum(avg by (instance) (task_mem_usage_byte{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='nvidia.com/gpu'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(GPU)",
+          "legendFormat": "vc(GPU)",
           "refId": "B"
         },
         {
@@ -2478,7 +2478,7 @@
           "expr": "(sum(avg by (instance) (task_mem_usage_byte{vc_name=\"$vc_name\"})) / count(avg by (instance,uuid) (task_device_percent{vc_name=\"$vc_name\",device_str='npu.huawei.com/NPU'}>0))) OR on() vector(0)",
           "format": "time_series",
           "intervalFactor": 2,
-          "legendFormat": "VC(NPU)",
+          "legendFormat": "vc(NPU)",
           "refId": "D"
         }
       ],

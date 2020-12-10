@@ -26,6 +26,7 @@ from shutil import copyfile, copytree
 import urllib
 import socket,struct
 import pdb
+from collections import OrderedDict
 
 
 verbose = False
@@ -92,7 +93,7 @@ def render_template(template_file, target_file, config, verbose=False):
             print(e)
             pass
 
-def render_template_directory(template_dir, target_dir,config, verbose=False, exclude_dir=None):
+def render_template_directory(template_dir, target_dir,config, verbose=False, exclude_dir=None,use_service=None):
     if target_dir in StaticVariable.rendered_target_directory:
         return
     else:
@@ -105,7 +106,9 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
             open( markfile, 'w').close()
         if os.path.isfile(os.path.join(template_dir, "pre-render.sh")):
             pre_reder = os.path.join(template_dir, "pre-render.sh")
-            os.system("sh " + pre_reder)
+            if not use_service:
+                use_service = ""
+            os.system("use_service="+use_service + " sh " + pre_reder)
         filenames = os.listdir(template_dir)
         for filename in filenames:
             if filename == "copy_dir":
@@ -118,7 +121,7 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
                     # print "To render via copy %s" % fullname_copy_dir
                     # Allow target directory to be re-rendered
                     StaticVariable.rendered_target_directory.pop(target_dir, None)
-                    render_template_directory(fullname_copy_dir, target_dir,config, verbose, exclude_dir=template_dir)
+                    render_template_directory(fullname_copy_dir, target_dir,config, verbose, exclude_dir=template_dir,use_service=use_service)
             elif os.path.isfile(os.path.join(template_dir, filename)):
                 if exclude_dir is not None:
                     check_file = os.path.join(exclude_dir, filename)
@@ -133,10 +136,10 @@ def render_template_directory(template_dir, target_dir,config, verbose=False, ex
                     os.system( "cp -r %s %s" %(srcdir, dstdir))
                 else:
                     if exclude_dir is None:
-                        render_template_directory(srcdir, dstdir,config, verbose)
+                        render_template_directory(srcdir, dstdir,config, verbose,use_service=use_service)
                     else:
                         exdir = os.path.join(exclude_dir, filename)
-                        render_template_directory(srcdir, dstdir,config, verbose, exclude_dir=exdir)
+                        render_template_directory(srcdir, dstdir,config, verbose, exclude_dir=exdir,use_service=use_service)
 
 # Execute a remote SSH cmd with identity file (private SSH key), user, host
 def SSH_exec_cmd(identity_file, user,host,cmd,showCmd=True):
@@ -360,8 +363,8 @@ def get_mac_address( identity_file, user, host, show=True ):
 # and then remove the temporary folder.
 # Command should assume that it starts srcdir, and execute a shell script in there.
 # If dstdir is given, the remote command will be executed at dstdir, and its content won't be removed
-def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd, 
-        supressWarning = False, preRemove = True, 
+def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd,
+        supressWarning = False, preRemove = True,
         removeAfterExecution = True, dstdir = None,
         background=False):
 
@@ -377,14 +380,14 @@ def SSH_exec_cmd_with_directory( identity_file, user, host, srcdir, cmd,
 
     scp( identity_file, srcdir, tmpdir, user, host)
     dstcmd = "cd "+tmpdir + "; "
-    
+
     # background process needs be exec immediately
     if background:
-        dstcmd += "nohup " 
+        dstcmd += "nohup "
         dstcmd += cmd + "  > foo.out 2> foo.err < /dev/null & "
         print(dstcmd)
         SSH_exec_cmd( identity_file, user, host, dstcmd )
-        
+
         # cannot delete src file for backgroud jobs
         return
 
@@ -734,3 +737,34 @@ def keep_widest_subnet(ips):
 
 def random_str(length):
     return ''.join(random.choice(string.ascii_lowercase) for x in range(length))
+
+# usage example:
+# ordered_load(stream, yaml.SafeLoader)
+def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+
+    return yaml.load(stream, OrderedLoader)
+
+# usage:
+# ordered_dump(data, Dumper=yaml.SafeDumper)
+def ordered_dump(data, stream=None, Dumper=yaml.Dumper, **kwds):
+    class OrderedDumper(Dumper):
+        pass
+
+    def _dict_representer(dumper, data):
+        return dumper.represent_mapping(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+            data.items())
+
+    OrderedDumper.add_representer(OrderedDict, _dict_representer)
+    return yaml.dump(data, stream, OrderedDumper, **kwds)
+

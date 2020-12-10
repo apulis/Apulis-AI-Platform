@@ -93,13 +93,11 @@ administrators:
 {% endfor %}
 
 inference:
-  {% for framework,items in cnf["inference"].items() %}{{framework}}:{% for one in items %}
-    - version: {{one["version"]}}
-      support: {% for one_support in one["support"] %}
-      - image: {{one_support["image"]}}
-        device: {{one_support["device"]}}
+  {% for framework,items in cnf["inference"].items() %}{{framework}}:
+    allowedImageVersions:
+      {% for one in items["allowedImageVersions"] %}
+      - {{one}}
       {% endfor %}
-    {% endfor %}
   {% endfor %}
 
 usermanagerapi: http://{{cnf["webportal_node"]}}/custom-user-dashboard-backend
@@ -107,7 +105,11 @@ usermanagerapitoken: {{cnf["usermanagerapitoken"]}}
 
 enable_jobmanager_debug_mode: {{cnf["enable_jobmanager_debug_mode"]}}
 
+{% if "kube-vip" in cnf and cnf["kube-vip"] %}
+extranet_port: 80
+{% else %}
 extranet_port: {{cnf["extranet_port"]}}
+{% endif %}
 extranet_protocol: {{cnf["extranet_protocol"]}}
 
 defalt_virtual_cluster_device_type_list:
@@ -115,8 +117,14 @@ defalt_virtual_cluster_device_type_list:
   - {{ one }}
 {%endfor%}
 
-{% if "endpoint_use_private_ip" in cnf and cnf["endpoint_use_private_ip"] %}
-master_private_ip: {% if "master_private_ip" in cnf %} {{ cnf["master_private_ip"] }} {% else %} {{cnf["etcd_private_ip"]}} {% endif %}
+{% if "kube-vip" in cnf and cnf["kube-vip"] %}
+master_private_ip: {{cnf["kube-vip"]}}
+{% elif "endpoint_use_private_ip" in cnf and cnf["endpoint_use_private_ip"] %}
+master_private_ip:  {{cnf["etcd_private_ip"]}}
+{% elif "master_private_ip" in cnf %}
+master_private_ip:  {{ cnf["master_private_ip"] }}
 {% endif %}
 
 data_platform_path: {{cnf["data_platform_path"]}}
+private_docker_registry: {{cnf["private_docker_registry"]}}
+endpoint_use_short_domian: {{cnf["endpoint_use_short_domian"]}}

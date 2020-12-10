@@ -119,7 +119,7 @@ def object_detaction_auto_label(model_id, data):
     service_ip = query_service_domain('istio-ingressgateway.istio-system.svc.cluster.local')
     inference_url = "http://{}/v1/models/".format(service_ip)+model_id+":predict"
     r = requests.post(inference_url,headers=headers,
-                      data=json.loads(data),
+                      data=data,
                       )
     if r.status_code!=200:
         logging.error(r.content)

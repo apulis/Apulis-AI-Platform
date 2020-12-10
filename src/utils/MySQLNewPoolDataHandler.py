@@ -1274,7 +1274,7 @@ class DataHandler(object):
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "training":
+                    if record["jobType"] == "training" or record["jobType"] == "codeEnv":
                         ret["runningJobs"].append(record)
                     elif record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)

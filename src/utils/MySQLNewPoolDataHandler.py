@@ -1148,7 +1148,7 @@ class DataHandler(object):
     def GetJobList(self, userName, vcName, num=None, pageSize=None, pageNum=None, jobName=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1 and isDeleted=0" % (
+            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta`, `lastUpdated` FROM `%s` where 1 and isDeleted=0" % (
                 self.jobtablename)
             params = []
             if jobName != None:

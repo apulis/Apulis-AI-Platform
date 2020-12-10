@@ -31,4 +31,4 @@ def to_seconds_from_date(date):
     return time.mktime(date.timetuple())
 
 def to_seconds_from_isodate_str(date_str):
-    return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
+    return to_seconds_from_date(datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f"))

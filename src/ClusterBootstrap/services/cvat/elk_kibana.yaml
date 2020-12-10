@@ -1,0 +1,42 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: kibana
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: kibana
+      labels:
+        jobmanager-node: pod
+        app: kibana
+    spec:
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      hostNetwork: true
+      containers:
+        - name: kibana
+          image: {{cnf["dockers"]["container"]["cvat_kibana"]["fullname"]}}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5601
+              hostPort: 5601
+              name: kibana-port
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 30
+            successThreshold: 1
+            tcpSocket:
+              port: 5601
+            timeoutSeconds: 10
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule

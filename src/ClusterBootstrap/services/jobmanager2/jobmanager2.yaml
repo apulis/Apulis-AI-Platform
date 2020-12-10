@@ -54,8 +54,6 @@ spec:
           name: folderautoshare
         - mountPath: /var/log/dlworkspace
           name: log
-        - mountPath: {{cnf["data_platform_path"]}}
-          name: label
         ports:
         - containerPort: 9200
           hostPort: 9200
@@ -137,9 +135,6 @@ spec:
       - name: log
         hostPath:
           path: /var/log/clustermanager
-      - name: label
-        hostPath:
-          path: {{cnf["data_platform_path"]}}
       - name: resolv
         hostPath:
           path: /etc/resolv.conf

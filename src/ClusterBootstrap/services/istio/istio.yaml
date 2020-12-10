@@ -3,7 +3,7 @@ kind: IstioOperator
 spec:
   addonComponents:
     grafana:
-      enabled: false
+      enabled: true
       k8s:
         replicaCount: 1
     istiocoredns:
@@ -373,7 +373,7 @@ spec:
       env: {}
       envSecrets: {}
       image:
-        repository: grafana/grafana
+        repository: {{cnf["private_docker_registry"]}}apulistech/grafana
         tag: 6.7.4
       nodeSelector:
         restfulapi: active
@@ -415,7 +415,7 @@ spec:
         secretName: kiali
         usernameKey: username
         viewOnlyMode: false
-      hub: quay.io/kiali
+      hub: {{cnf["private_docker_registry"]}}prom
       nodeSelector:
         restfulapi: active
         archType: amd64

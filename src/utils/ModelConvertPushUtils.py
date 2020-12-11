@@ -61,10 +61,10 @@ def fd_create_file(modconvertInfo, fdinfo):
             dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
             return True
         else:
-            dataHandler.UpdateClusterStatus(modconvertInfo["jobId"], "push failed")
+            dataHandler.UpdateModelConversionFileId(modconvertInfo["jobId"], "push failed")
             return False
     except Exception as e:
-        dataHandler.UpdateClusterStatus(modconvertInfo["jobId"], "push failed")
+        dataHandler.UpdateModelConversionFileId(modconvertInfo["jobId"], "push failed")
         return False
 
 def fd_push_file(modconvertInfo, fdinfo):

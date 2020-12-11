@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+  namespace: default
+spec:
+  ports:
+  - port: 9010
+  selector:
+    app: mlflow
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mlflow
+  namespace: default
+  labels:
+     app: mlflow
+spec:
+  selector:
+    matchLabels:
+      mlflow-node: pod
+  template:
+    metadata:
+      name: mlflow
+      labels:
+        mlflow-node: pod
+        app: mlflow
+    spec:
+      nodeSelector:
+        mlflow:   active
+        archType: amd64
+      containers:
+      - name: mlflow
+        image: harbor.sigsus.cn:8443/sz_gongdianju/apulistech/mlflow
+        imagePullPolicy: Always
+        command: ["mlflow", "server", "--backend-store-uri", "mysql://root:apulis#2019#wednesday@mysql.kube-system/mlflow", "--default-artifact-root", "file:///app/mlflow-data", "--port", "9010", "--host" ,"0.0.0.0"]
+        ports:
+        - containerPort: 9010
+          hostPort:      9010
+          name: main
+        volumeMounts:
+        #{% if cnf["saml_idp_metadata_url"] %}  
+        #- mountPath: /root/saml-certs
+        #  name: saml-secret
+        #{% endif %}
+      volumes:
+        #{% if cnf["saml_idp_metadata_url"] %}
+        #- name: saml-secret
+        #  secret:
+        #    secretName: saml-sp-secret
+        #{% endif %}    
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+

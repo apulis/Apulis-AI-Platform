@@ -1,3 +1,4 @@
+pyrsistent==0.16.1
 marshmallow==2.19.5
 kubernetes==10.0.0
 PyYAML>=5.1.1

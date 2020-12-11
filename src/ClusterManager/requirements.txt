@@ -13,3 +13,4 @@ PyJWT
 flask-jwt-extended
 Werkzeug==0.16.0
 flask_restplus
+pyrsistent==0.16.1

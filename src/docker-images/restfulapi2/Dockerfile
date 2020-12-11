@@ -26,8 +26,9 @@ COPY ClusterManager/requirements.txt /
 # install requirements
 RUN rm -rf /usr/lib/python2.7/dist-packages/yaml
 RUN rm -rf /usr/lib/python2.7/dist-packages/PyYAML-*
-RUN pip install -r /requirements.txt
 RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+RUN pip config set install.trusted-host mirrors.aliyun.com
+RUN pip install -r /requirements.txt
 RUN pip install MySQL-python DBUtils==1.3 Pillow futures six numpy matplotlib pycocotools dnspython opencv-python==4.2.0.32
 
 ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete

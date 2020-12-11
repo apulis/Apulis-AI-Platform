@@ -309,11 +309,14 @@ def get_cluster_status():
         for one_device_type in list(remveDeviceMapping):
 
             # check if fakeData is allowed
-            logger.info("fake_device(%s)", str(config["fake_device"]))
+            if "fake_device" in config:
+                logger.info("fake_device(%s)", str(config["fake_device"]))
+
             if "fake_device" in config and config["fake_device"]:
                 pass
             else:
                 dataHandler.DeleteDeviceType(one_device_type)
+                logger.info("delete deviceType(%s)", str(one_device_type))
 
     for gpuType,gpuStrDict in gpuMapping.items():
         if gpuType:

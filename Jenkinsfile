@@ -1,7 +1,7 @@
 @Library('apulis-build@master') _
 
 buildPlugin ( {
-    repoName = "jenkins-pipeline"
+    repoName = "DLWorkspace"
     dockerImages = [
         [
             "imageName": "dlworkspace",

@@ -202,7 +202,7 @@ class PodTemplate():
                 if pod["gpuStr"] == "npu.huawei.com/NPU":
                     pod["mount_npu_log"] = True
                 else:
-                    pod["mount_npu_log"] = False
+                    pod["mount_npu_log"] = False 
 
             elif "gpuStr" in pod:
 

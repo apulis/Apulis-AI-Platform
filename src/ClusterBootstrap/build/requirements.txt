@@ -1,4 +1,6 @@
-pyrsistent==0.16.1
+subprocess32
+tzlocal
+pycurl
 marshmallow==2.19.5
 kubernetes==10.0.0
 PyYAML>=5.1.1
@@ -13,5 +15,3 @@ subprocess32
 PyJWT
 flask-jwt-extended
 Werkzeug==0.16.0
-flask_restplus
-pyrsistent==0.16.1

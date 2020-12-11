@@ -38,5 +38,6 @@ ADD ClusterManager /DLWorkspace/src/ClusterManager
 
 # add version info
 ADD version-info /
+RUN pip install --ignore-installed mysql-connector-python
 
 CMD /run.sh

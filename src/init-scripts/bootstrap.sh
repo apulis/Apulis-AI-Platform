@@ -1,6 +1,7 @@
 #! /bin/bash
 set -ex
 
+
 ## set npu device configs
 function setup_npu_config() {
 
@@ -184,7 +185,6 @@ echo "=========================setup path done!============================="&>>
 echo "===========================begin to setup npu config=============================="&>> ${LOG_DIR}/bootstrap.log
 setup_npu_config
 echo "===========================setup npu config done!=============================="&>> ${LOG_DIR}/bootstrap.log
-
 
 echo bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log
 set +e

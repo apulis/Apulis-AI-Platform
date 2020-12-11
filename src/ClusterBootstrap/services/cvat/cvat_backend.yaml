@@ -75,7 +75,7 @@ spec:
             - name: KFSERVING_GATEWAY
               value: "http://localhost"
             - name: reduce_task_visibility
-              value: true
+              value: "true"
           volumeMounts:
             - mountPath: /home/django/data
               name: cvat-data

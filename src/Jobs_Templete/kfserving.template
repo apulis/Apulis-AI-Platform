@@ -44,9 +44,10 @@ spec:
         resources:
           limits:
             {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
-            memory: 5G
+            memory: 2G
           requests:
             cpu: 100m
+            memory: 100m
         {% if job["framework"] == "custom" %}
         container:
           name: kfserving-container

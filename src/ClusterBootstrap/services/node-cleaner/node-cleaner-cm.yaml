@@ -1,0 +1,17 @@
+apiVersion: v1
+data:
+  config.yaml: |+
+    StashPath: /data
+
+    LogEntries:
+      - enable: true
+        dir: /root/logs
+        interval: 
+        fnPattern: device-.*.log
+        policy: 12
+
+
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: node-cleaner-cm

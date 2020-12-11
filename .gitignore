@@ -37,6 +37,8 @@ src/ClusterBootstrap/cloudinit.tar
 src/ClusterBootstrap/scripts/deploy_framework.sh
 src/ClusterBootstrap/scripts/add_machines.sh
 src/ClusterBootstrap/scripts/pass_secret.sh
+src/ClusterBootstrap/build/pythonenv2.7/*
+src/ClusterBootstrap/build/restfulapi2/*
 
 #ASP.NET core
 src/**/dotnet/.vs/**
@@ -88,3 +90,4 @@ src/ClusterBootstrap/template/*config.yaml.template
 .vscode
 .idea
 venv
+/src/ClusterManager/*.orig

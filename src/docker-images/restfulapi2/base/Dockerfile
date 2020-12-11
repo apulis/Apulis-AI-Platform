@@ -18,8 +18,9 @@ RUN apt-get update; apt-get install -y --no-install-recommends apt-transport-htt
         bison \
         curl \
         nfs-common \
-        apt-utils
-
+        apt-utils \
+        libcurl4-openssl-dev \
+        libssl-dev
 
 RUN pip install --upgrade pip;
 

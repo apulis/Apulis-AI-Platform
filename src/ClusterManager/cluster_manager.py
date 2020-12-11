@@ -173,12 +173,15 @@ def work(cmds, childs, FNULL):
 
 
 if __name__ == "__main__":
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("--tictoc", help="how many seconds to wait until kill subprocess", type=int, default=600)
+
     parser.add_argument("-j1", help="port of job_manager", type=int, default=9200)
     parser.add_argument("-j2", help="port of job_manager", type=int, default=9206)
     parser.add_argument("-j3", help="port of job_manager", type=int, default=9207)
     parser.add_argument("-j4", help="port of job_manager", type=int, default=9208)
+
     parser.add_argument("-u", help="port of user_manager", type=int, default=9201)
     parser.add_argument("-n", help="port of node_manager", type=int, default=9202)
     parser.add_argument("-l", help="port of joblog_manager", type=int, default=9203)

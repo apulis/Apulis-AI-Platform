@@ -136,6 +136,9 @@ spec:
     - name: DLWS_HOST_NETWORK
       value: "enable"
     {% endif %}
+  {% if job["schedulerName"]|length > 0 %}
+  schedulerName: {{ job["schedulerName"] }}
+  {% endif %}
   containers:
   - name: {{ job["podName"] }}
     image: {{ job["image"] }}
@@ -174,7 +177,7 @@ spec:
         memory: {{ job["memoryrequest"] }}
       {% endif %}
     volumeMounts:
-	- name: time-zone-info
+    - name: time-zone-info
       mountPath: /etc/localtime
       readOnly: true
     - mountPath: /dlts-runtime
@@ -223,9 +226,8 @@ spec:
       {% endif %}
     {% endif %}
     {% if job["mount_npu_log"] %}
-    - mountPath: /var/log/npu/
+    - mountPath: /var/log/npulog/
       name: npulog
-      readOnly: true
     {% endif %}
     env:
     - name: FAMILY_TOKEN

@@ -1,0 +1,57 @@
+apiVersion: "serving.kubeflow.org/v1alpha2"
+kind: "InferenceService"
+metadata:
+  name: "{{ job["model_name"] }}"
+  namespace: kfserving-pod
+  labels:
+    run: {{ job["jobId"] }}
+    podName: {{ job["podName"] }}
+    jobId: {{ job["jobId"] }}
+    jobRole: {{ jobRole }}
+    userName: "{{ job["user"] }}"
+    vcName: "{{ job["vcName"] }}"
+    type: InferenceService
+    'gpu-request': '{{ job["gpuLimit"]|int }}'
+
+
+  {% for label in job["labels"] %}
+    {{label.name}}: "{{label.value}}"
+  {% endfor %}
+
+  {% if "gpuType" in job %}
+    {% if job['gpuType'] and job["gpuType"]|length > 0 %}
+    gpuType: {{ job["gpuType"] }}
+    {% endif %}
+  {% endif %}
+    preemptionAllowed: "{{ job["preemptionAllowed"] }}"
+
+  {% if "annotations" in job %}
+  annotations:
+    {% for annotationKey,annotationVal in job["annotations"].items() %}
+      {{ annotationKey }}: {{ annotationVal }}
+    {% endfor %}
+  {% endif %}
+
+spec:
+  default:
+    predictor:
+      minReplicas: {{ job["minReplicas"] }}
+      maxReplicas: {{ job["maxReplicas"] }}
+      {{ job["framework"] }}:
+        storageUri: "file://{{ job["model_base_path"] }}"
+        {% if "version" in job %}runtimeVersion: {{ job["version"] }}{% endif %}
+        {% if job["framework"] == "pytorch" %}modelClassName: {{ job["model_class_name"] }}{% endif %}
+        resources:
+          limits:
+            {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
+            memory: 5G
+          requests:
+            cpu: 100m
+        {% if job["framework"] == "custom" %}
+        container:
+          name: kfserving-container
+          image: {{ job["image"] }}
+          env:
+            - name: STORAGE_URI
+              value: "file://{{ job["model_base_path"] }}"
+        {% endif %}

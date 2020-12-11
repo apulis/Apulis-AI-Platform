@@ -101,6 +101,9 @@ spec:
         value: arm64
         effect: NoSchedule
       serviceAccountName: custom-metrics-apiserver
+      nodeSelector:
+        prometheus: active
+        archType: amd64
       containers:
       - name: custom-metrics-server
         image: {{cnf["dockers"]["container"]["k8s-prometheus-adapter"]["fullname"]}}

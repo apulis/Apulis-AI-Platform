@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#!/usr/bin/env python
 # Automatic monitoring mount process
 # The program will run as root, as service started by systemd
 import time
@@ -173,9 +173,11 @@ def mount_fileshare(verbose=True):
     with open("mounting.yaml", 'r') as datafile:
         config = yaml.load(datafile)
         datafile.close()
+
 #    print config
     allmountpoints = config["mountpoints"]
     nMounts = 0
+
     for k,v in allmountpoints.iteritems():
         if "curphysicalmountpoint" in v and istrue(v, "autoshare", True):
             physicalmountpoint = v["curphysicalmountpoint"] 
@@ -211,39 +213,59 @@ def mount_fileshare(verbose=True):
                         umounts.append( words[2] )
                     else:
                         existmounts.append( words[2])
+
             umounts.sort()
+
             # Examine mount point, unmount those file shares that fails. 
             for um in umounts:
                 cmd = "umount -v %s" % um
                 logging.debug( "Mount fails, to examine mount %s " % um )                
                 exec_with_output( cmd, verbose=verbose )
                 time.sleep(3)
+
             if len(existmounts) <= 0:
+
                 nMounts += 1
                 if v["type"] == "azurefileshare":
                     exec_with_output( "mount -t cifs %s %s -o %s " % (v["url"], physicalmountpoint, v["options"] ), verbose=verbose )
+                
                 elif v["type"] == "glusterfs":
                     mount_glusterfs( v, physicalmountpoint, verbose=verbose)
                     exec_with_output( "mount -t glusterfs -o %s %s:%s %s " % (v["options"], v["node"], v["filesharename"], physicalmountpoint ), verbose=verbose )
+                
                 elif v["type"] == "nfs":
                     exec_with_output( "mount %s:%s %s -o %s " % (v["server"], v["filesharename"], physicalmountpoint, v["options"]), verbose=verbose )
+                
+                elif v["type"] == "ceph":
+                    exec_with_output( "%s" % (v["mountcmd"]), verbose=verbose)
+
                 elif v["type"] == "hdfs":
                     mount_hdfs( v, physicalmountpoint, verbose=verbose )
+                
                 elif v["type"] == "local" or v["type"] == "localHDD":
                     exec_with_output( "mount %s %s " % ( v["device"], physicalmountpoint ), verbose=verbose )
+                
+                elif v["type"] == "ceph":
+                    exec_with_output( "%s" % (v["mountcmd"]), verbose=verbose)                
+                
                 else:
                     nMounts -= 1
+
     if nMounts > 0:
         time.sleep(1)
 
 def link_fileshare():
+
     with open("mounting.yaml", 'r') as datafile:
         config = yaml.load(datafile)
         datafile.close()
+
 #    print config
     allmountpoints = config["mountpoints"]
     (retcode, output, err) = exec_with_output("sudo mount")
+
     for k,v in allmountpoints.iteritems():
+
         if "mountpoints" in v and v["type"]!="emptyDir":
             if output.find(v["curphysicalmountpoint"]) < 0:
                 logging.debug("!!!Warning!!! %s has not been mounted at %s " % (k, v["curphysicalmountpoint"]))
@@ -253,6 +275,7 @@ def link_fileshare():
                     dirname = os.path.join(v["curphysicalmountpoint"], basename )
                     exec_wo_output("sudo mkdir -p %s; " % dirname)
                     exec_wo_output("sudo chmod ugo+rwx %s; " % dirname)
+
             for basename in v["mountpoints"]:
                 dirname = os.path.join(v["curphysicalmountpoint"], basename )
                 storage_mount_path = config["storage-mount-path"]

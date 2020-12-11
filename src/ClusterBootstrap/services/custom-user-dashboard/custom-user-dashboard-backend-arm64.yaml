@@ -17,13 +17,12 @@ spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
-      hostNetwork: true
       nodeSelector:
         jobmanager: active
         archType: arm64
       containers:
       - name: redis
-        image: {{cnf["dockers"]["container"]["redis"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["redis"]["fullname"]}}-arm64
         imagePullPolicy: Always
         command: ["redis-server", "--port", "9301", "--maxmemory", "100mb", "--maxmemory-policy", "allkeys-lru"]
         ports:

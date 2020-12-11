@@ -4,6 +4,7 @@ const userActions = {
     pause: 'Pause',
     resume:'Resume',
     kill:'Kill',
+    saveImage:'Save',
     isBeingApproved:'is being approved.',
     approveRequestIsAccepted:'\'s approve request is accepted.',
     isFailedToApprove:' is failed to approve.',

@@ -1,0 +1,56 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: node-cleaner
+  namespace: default
+  labels:
+     run: node-cleaner
+spec:
+  selector:
+    matchLabels:
+      app: node-cleaner
+  template:
+    metadata:
+      labels:
+        app: node-cleaner
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      {% if true %}
+      hostNetwork: true
+      {% endif %}
+      nodeSelector:
+        gpuType: huawei_npu_arm64
+      containers:
+      - name: node-cleaner
+        image: {{cnf["dockers"]["container"]["node-cleaner"]["fullname"]}}-arm64
+        imagePullPolicy: Always
+        volumeMounts:
+        - mountPath: /root/config.yaml
+          name: appconfig
+          subPath: config.yaml
+        - mountPath: /data
+          name: dlwsdatadata
+        - mountPath: /root/logs
+          name: npulog
+      env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+      volumes:
+      - name: appconfig
+        configMap:
+          name: node-cleaner-cm
+      - name: dlwsdatadata
+        hostPath:
+          path: {{cnf["storage-mount-path"]}}/storage      
+      - name: npulog
+        hostPath:
+          path: /var/log/npu/slog
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

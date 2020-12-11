@@ -1,0 +1,71 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: data-platform-backend-arm64
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: dotnet-server-arm64
+  template:
+    metadata:
+      name: dotnet-server-arm64
+      labels:
+        app: dotnet-server-arm64
+        dotnet-server: active
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        restfulapi: active
+        archType: arm64
+      containers:
+      - name: data-platform-backend-arm64
+        image: {{cnf["dockers"]["container"]["data-platform-backend"]["fullname"]}}
+        imagePullPolicy: Always
+        command: ["dotnet", "WebUI.dll",'--urls=http://*:3088']
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        ports:
+        - containerPort: 3088
+          name: main
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          tcpSocket:
+            port: 3088
+          timeoutSeconds: 10
+        volumeMounts:
+        - mountPath: /var/log/webui
+          name: dotnet-log
+        - mountPath: /app/appsettings.json
+          name: dotnet-config
+        - mountPath: /mntdlws/nfs/label
+          name: data
+        - mountPath: /data
+          name: dataset
+        - mountPath: /home
+          name: home
+      volumes:
+      - name: dotnet-log
+        hostPath:
+          path: /var/log/webui
+      - name: dotnet-config
+        hostPath:
+          path: /etc/RestfulAPI/appsettings.json
+      - name: data
+        hostPath:
+          path: /mntdlws/nfs/label
+      - name: dataset
+        hostPath:
+          path: /mntdlws/storage
+      - name: home
+        hostPath:
+          path: /mntdlws/work
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

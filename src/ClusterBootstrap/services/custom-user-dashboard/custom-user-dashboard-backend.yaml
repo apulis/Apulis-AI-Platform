@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-dashboard
+  namespace: default
+spec:
+  ports:
+  - port: 5001
+  selector:
+    app: custom-user-dashboard-backend
+---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
@@ -17,7 +28,6 @@ spec:
       {% if cnf["dnsPolicy"] %}
       dnsPolicy: {{cnf["dnsPolicy"]}}
       {% endif %}
-      hostNetwork: true
       nodeSelector:
         jobmanager: active
         archType: amd64

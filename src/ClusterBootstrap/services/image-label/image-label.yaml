@@ -1,0 +1,37 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: image-label
+  namespace: default
+  labels:
+     run: dlwsimage-label
+spec:
+  selector:
+    matchLabels:
+      image-label-node: pod
+  template:
+    metadata:
+      name: image-label
+      labels:
+        image-label-node: pod
+        app: image-label
+    spec:
+      {% if cnf["dnsPolicy"] %}
+      dnsPolicy: {{cnf["dnsPolicy"]}}
+      {% endif %}
+      nodeSelector:
+        image-label: active
+        archType: amd64
+      containers:
+      - name: image-label
+        image: {{cnf["dockers"]["container"]["image-label"]["fullname"]}}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3085
+          hostPort: 3085
+          name: main
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

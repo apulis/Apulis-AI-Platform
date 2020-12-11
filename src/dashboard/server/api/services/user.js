@@ -280,7 +280,7 @@ class User extends Service {
     }
   }
 
-  static async getCurrentUserFromUserDashboard(context, token) {
+  static async getCurrentUserFromUserDashboard (context, token) {
     const getCurrentUserURL = userGroup.domain + userGroup.backEndPath + '/auth/currentUser'
     const response = await fetch(getCurrentUserURL, {
       headers: {

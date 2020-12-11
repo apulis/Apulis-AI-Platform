@@ -130,6 +130,7 @@ spec:
           mountPath: /prometheus-data
       - name: gpu-reporter
         image: {{cnf["dockers"]["container"]["gpu-reporter"]["fullname"]}}
+        imagePullPolicy: Always
         args:
           - 'python'
           - '/gpu-reporter/reporter.py'
@@ -149,7 +150,7 @@ spec:
           name: prometheus-alert
       - name: prometheus-data
         hostPath:
-          path: /data/prometheus/data
+          path: {{cnf["prometheus_data_path"]}}
       tolerations:
       - key: node.kubernetes.io/memory-pressure
         operator: "Exists"

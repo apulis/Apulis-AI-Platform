@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Redirect, Route, RouteComponentProps, Switch } from "react-router-dom"
 import 'typeface-roboto';
 import 'typeface-roboto-mono';
 import Helmet from 'react-helmet';
+import axios from 'axios';
 import { Box, CssBaseline, createMuiTheme, CircularProgress } from '@material-ui/core';
 import * as H from 'history';
 import { ThemeProvider } from "@material-ui/styles";
@@ -100,7 +101,7 @@ const Contexts: React.FC<BootstrapProps> = ({ uid, id, openId, group, nickName, 
         <UserProvider uid={uid} openId={openId} group={group} nickName={nickName} userName={userName} isAdmin={isAdmin} isAuthorized={isAuthorized} administrators={administrators} permissionList={permissionList} currentRole={currentRole} userGroupPath={userGroupPath} >
           <ConfirmProvider>
             <AuthProvider userName={userName} id={id} userGroupPath={userGroupPath} permissionList={permissionList} currentRole={currentRole}>
-              <TeamProvider permissionList={permissionList} administrators={administrators}>
+              <TeamProvider permissionList={permissionList} administrators={administrators} userGroupPath={userGroupPath}>
                 <ClustersProvider>
                   <ThemeProvider theme={theme}>
                     {children}
@@ -119,7 +120,6 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
   return (
     <DrawerProvider>
       <Content>
-        <AppBar />
         <Drawer />
         <React.Suspense fallback={Loading}>
           <Switch location={location}>
@@ -146,15 +146,26 @@ const Layout: React.FC<RouteComponentProps> = ({ location, history }) => {
 }
 
 const App: React.FC<BootstrapProps> = (props) => {
-  const { t } = useTranslation();
+  const [platformName, setPlatformName] = useState<string>('');
+
+  const getPlatformName = async () => {
+    const res = await axios.get<{i18n: string | boolean; platformName: string}>('/platform-config');
+    const { platformName } = res.data;
+    setPlatformName(platformName);
+  }
+
+  useEffect(() => {
+    getPlatformName()
+  }, [])
   return (
     <SnackbarProvider>
       <Contexts {...props} >
       <Helmet
-        titleTemplate={t('tips.deepLearningPlatform')}
-        defaultTitle={t('tips.deepLearningPlatform')}
+        titleTemplate={platformName}
+        defaultTitle={platformName}
       />
       <CssBaseline/>
+      <AppBar platformName={platformName} />
       <Box display="flex" minHeight="100vh" maxWidth="100vw">
         <React.Suspense fallback={Loading}>
           <Switch>

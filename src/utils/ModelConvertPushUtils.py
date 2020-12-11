@@ -47,15 +47,27 @@ def fd_create_file(modconvertInfo, fdinfo):
         dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
         return True
     # create file from fd
+    current_version = fd_get_version_num(modconvertInfo["fileId"], fdinfo)
+    if current_version >= 32:
+        ret["success"] = False
+        ret["msg"] = "fd only support less than 32 versions"
+        return ret
+
+    version = 'v' + str(current_version + 1)
+
     url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles"
     auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
+    headers = {
+        "Version": version,
+        "Description": modconvertInfo["jobId"] + " model file",
+    }
     data = {
         'Name': get_filename(modconvertInfo["outputPath"]),
         'Description': modconvertInfo["jobId"] + " model file",
         'Type': 'model_file'
     }
     try:
-        resp = requests.post(url, auth=auth, verify=False, data=json.dumps(data))
+        resp = requests.post(url, headers=headers,auth=auth, verify=False, data=json.dumps(data))
         if resp.status_code == 201:
             fileId = resp.json()['FileID']
             dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)

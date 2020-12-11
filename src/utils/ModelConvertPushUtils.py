@@ -3,6 +3,7 @@ import ntpath
 import json
 import time
 from DataHandler import DataHandler, DataManager
+from datetime import datetime
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -46,19 +47,11 @@ def fd_create_file(modconvertInfo, fdinfo):
         fileId = existPathInfo["fileId"]
         dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
         return True
-    # create file from fd
-    current_version = fd_get_version_num(modconvertInfo["fileId"], fdinfo)
-    if current_version >= 32:
-        ret["success"] = False
-        ret["msg"] = "fd only support less than 32 versions"
-        return ret
-
-    version = 'v' + str(current_version + 1)
 
     url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles"
     auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
     headers = {
-        "Version": version,
+        "Version": "v" + datetime.now().strftime("%Y%m%d%H%M%S"),
         "Description": modconvertInfo["jobId"] + " model file",
     }
     data = {
@@ -93,7 +86,7 @@ def fd_push_file(modconvertInfo, fdinfo):
     url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles/" + modconvertInfo["fileId"] + '/Versions'
     auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
     headers = {
-        "Version": version,
+        "Version": "v" + datetime.now().strftime("%Y%m%d%H%M%S"),
         "Description": modconvertInfo["jobId"] + " model file",
     }
     files = {

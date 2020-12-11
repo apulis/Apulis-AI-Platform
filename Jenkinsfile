@@ -17,7 +17,7 @@ buildPlugin ( {
                 ["src/ClusterBootstrap/build/restfulapi2", "cp -r ../../../RestAPI RestAPI"],
                 ["src/ClusterBootstrap/build/restfulapi2", "cp -r ../../../ClusterManager ClusterManager"],
                 ["src/ClusterBootstrap/build/restfulapi2", "cp ../../../../version-info version-info"]
-            ]
+            ],
             "imageName": "apulistech/restfulapi2",
             "directory": "src/ClusterBootstrap/build/restfulapi2"
         ]

@@ -5,7 +5,7 @@ buildPlugin ( {
     dockerImages = [
         [
             'imageName': 'cicd/dlworkspace-compile',
-            'directory': 'dlworkspace-comile',
+            'directory': 'dlworkspace-compile',
             'arch': ['amd64']
         ],
         [

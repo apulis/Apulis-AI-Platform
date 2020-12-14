@@ -5,7 +5,8 @@ buildPlugin ( {
     dockerImages = [
         [
             'imageName': 'cicd/dlworkspace-compile',
-            'directory': 'dlworkspace-comile'
+            'directory': 'dlworkspace-comile',
+            'arch': ['amd64']
         ],
         [
             'compileContainer': 'cicd/dlworkspace-compile',
@@ -24,7 +25,8 @@ buildPlugin ( {
                 ['src/ClusterBootstrap/build/restfulapi2', 'cp ../../../../version-info version-info']
             ],
             'imageName': 'apulistech/restfulapi2',
-            'directory': 'src/ClusterBootstrap/build/restfulapi2'
+            'directory': 'src/ClusterBootstrap/build/restfulapi2',
+            'arch': ['amd64']
         ]
     ]
 })

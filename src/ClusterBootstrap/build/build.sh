@@ -31,9 +31,9 @@ function prebuild(){
         virtualenv -p python2.7 pythonenv2.7
         . pythonenv2.7/bin/activate
 
-	sudo apt install libcurl4-openssl-dev libssl-dev
-	sudo apt-get install python-dev gcc
-	sudo apt-get install python3-dev default-libmysqlclient-dev build-essential
+	sudo apt install libcurl4-openssl-dev libssl-dev -y
+	sudo apt-get install python-dev gcc -y
+	sudo apt-get install python3-dev default-libmysqlclient-dev build-essential -y
 
         pip install -r requirements.txt
     else

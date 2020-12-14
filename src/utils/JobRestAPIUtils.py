@@ -1941,7 +1941,7 @@ def GetInferenceModel(model_id):
     models = []
     if "items" in deploys:
         for deploy in deploys["items"]:
-            if deploy["status"].get("availableReplicas",0)>0:
+            if "status" in deploy and deploy["status"].get("availableReplicas",0)>0:
                 models.append({
                     "description":deploy["metadata"]['annotations'].get('description',""),
                     "id":deploy["metadata"]['annotations'].get('id',""),

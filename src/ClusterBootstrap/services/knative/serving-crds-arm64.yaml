@@ -1,0 +1,9 @@
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: knative-serving
+  labels:
+    # TODO(mattmoor): We should not require any istio annotations.
+    istio-injection: disabled
+    serving.knative.dev/release: "v0.15.0"

@@ -6,6 +6,7 @@ from DataHandler import DataHandler, DataManager
 from datetime import datetime
 import requests
 from requests.auth import HTTPBasicAuth
+import logging
 
 def SetFDInfo(params):
     dataHandler = DataHandler()
@@ -31,6 +32,7 @@ def PushModelToFD(params):
         ret["err"] = "Job not exists"
         return ret
     fileId = modconvertInfo["fileId"]
+    logging.info("modconvertInfo: %s", modconvertInfo)
     if fileId is None or fileId == '' or fileId == 'None':
         create_file_res = fd_create_file(modconvertInfo, fdinfo)
         if create_file_res is False:
@@ -43,7 +45,7 @@ def fd_create_file(modconvertInfo, fdinfo):
     dataHandler = DataHandler()
     # if outpath exists, use the same file id.
     existPathInfo = dataHandler.GetModelConvertInfoByOutputpath(modconvertInfo["outputPath"])
-    if existPathInfo is not None:
+    if existPathInfo is not None and existPathInfo["fileId"] != "push failed":
         fileId = existPathInfo["fileId"]
         dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
         return True
@@ -61,6 +63,7 @@ def fd_create_file(modconvertInfo, fdinfo):
     }
     try:
         resp = requests.post(url, headers=headers,auth=auth, verify=False, data=json.dumps(data))
+        logging.info("fd_create_file: %d, %s", resp.status_code, resp.json())
         if resp.status_code == 201:
             fileId = resp.json()['FileID']
             dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
@@ -94,6 +97,7 @@ def fd_push_file(modconvertInfo, fdinfo):
     }
     try:
         resp = requests.post(url, auth=auth, verify=False, headers=headers, files=files)
+        logging.info("fd_push_file: %d, %s", resp.status_code, resp.json())
         if resp.status_code == 201:
             ret["success"] = True
             dataHandler.UpdateModelConversionStatus(modconvertInfo['jobId'], "push success")

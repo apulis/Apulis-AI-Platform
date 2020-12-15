@@ -235,9 +235,13 @@ class PodTemplate():
                         pod["version"] += "-npu"
                     else:
                         pod["version"] += "-arm64"
+                    pod["archType"] = "arm64"
+                else:
+                    pod["archType"] = "amd64"
 
                 pod["minReplicas"] = params["minReplicas"] if "minReplicas" in params else 1
                 pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])
+
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
             # mount /pod

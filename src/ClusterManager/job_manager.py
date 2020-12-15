@@ -401,7 +401,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
                             job["jobId"])
 
         else:
-            start_time = int(common.to_seconds_from_date(job["ListJobsV3"]))
+            start_time = int(common.to_seconds_from_date(job["lastUpdated"]))
             now = common.to_seconds_from_date(datetime.datetime.now())
             logger.info("start_time: %s, current_time: %s, max_time: %s for job %s", str(start_time), str(now), str(max_time), job["jobId"])
 

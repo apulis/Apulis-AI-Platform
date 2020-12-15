@@ -5,7 +5,7 @@ set -x
 # 镜像名和代码分支配置
 image_name=restfulapi2
 tag_name=rc0
-branch_name=dev-pbf
+branch_name=v1.3.0
 image_fullname=${image_name}:${branch_name}-${tag_name}
 
 # 推送到harbor
@@ -17,7 +17,8 @@ local_harbor_fullname=harbor.sigsus.cn:8443/sz_gongdianju/apulistech/dlworkspace
 
 # 拷贝到其它机器
 # (ip port)
-remote_machine=(219.133.167.42 52080)
+#remote_machine=(219.133.167.42 52080)
+remote_machine=(192.168.1.200 22)
 #remote_machine=(192.168.1.176 22)
 tar_name=`sed 's|:|_|g' <<< ${image_fullname}`.tar
 

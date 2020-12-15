@@ -237,7 +237,7 @@ class PodTemplate():
                     pod["version"] += "-arm64"
                     pod["archType"] = "arm64"
                 else:
-                    if pod["resourcegpu"] > 0 and pod["framework"] not in ["pytorch"]:
+                    if pod["resourcegpu"] > 0 and pod["framework"].lower() in ["tensorflow"]:
                         pod["version"] += "-gpu"
                     pod["archType"] = "amd64"
 

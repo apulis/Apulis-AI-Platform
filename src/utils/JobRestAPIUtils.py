@@ -432,15 +432,13 @@ def GetModelConversionTypes():
 
 def BuildModelConversionArgs(conversionArgs):
     arg_str = ""
-    string_type_args = [
-        "input_shape", "output_type", "dynamic_batch_size", "dynamic_image_size"
-    ]
+    not_string_type_args = []
     for key, value in conversionArgs.items():
         if value is not None or value != "":
-            if key in string_type_args:
-                value = '"' + value + '"'
-            else:
+            if key in not_string_type_args:
                 value = "".join(value.split())
+            else:
+                value = '\\"' + value + '\\"'
             arg_str = arg_str + " --" + key + "=" + value
     return arg_str
 
@@ -493,6 +491,7 @@ def PostModelConversionJob(jobParamsJsonStr):
 
         jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s && chmod 777 %s"' % (raw_cmd, output_dir, output_path + ".om")
 
+        logger.info("cmd: %s", jobParams["cmd"])
     else:
         ret["error"] = "ERROR: .. convert type " + jobParams["conversionType"] + " not supported"
         return ret

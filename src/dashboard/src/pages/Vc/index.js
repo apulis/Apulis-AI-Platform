@@ -81,7 +81,7 @@ class Vc extends React.Component {
         if (result) {
           result.forEach(vc => {
             const metadata = JSON.parse(vc.metadata);
-            vc.jobMaxTimeSecond = metadata.admin?.job_max_time_second;
+            vc.jobMaxTimeSecond = Math.floor((metadata.admin?.job_max_time_second || 0) / 3600);
           })
         }
         if (!result.length && totalNum) {
@@ -127,7 +127,7 @@ class Vc extends React.Component {
         qSelectData,
         mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
         clickItem: item,
-        jobMaxTimeSecond: JSON.parse(metadata).admin?.job_max_time_second || null,
+        jobMaxTimeSecond: Math.floor((JSON.parse(metadata).admin?.job_max_time_second || 0) / 3600) || null,
       })
     });
   }
@@ -159,7 +159,7 @@ class Vc extends React.Component {
       quota = _.cloneDeep(qSelectData);
       metadata = _.cloneDeep(mSelectData);
       metadata.admin = {}
-      metadata.admin.job_max_time_second = jobMaxTimeSecond;
+      metadata.admin.job_max_time_second = jobMaxTimeSecond * 3600;
       Object.keys(quota).forEach(i => {
         if (!allDevice[i]) { 
           delete quota[i];
@@ -388,8 +388,10 @@ class Vc extends React.Component {
   }
 
   onJobMaxTimeSecondChange = (e) => {
+    const value = e.target.value;
+    
     this.setState({
-      jobMaxTimeSecond: e.target.value,
+      jobMaxTimeSecond: Math.floor(value),
     });
   }
 
@@ -521,7 +523,10 @@ class Vc extends React.Component {
                   onChange={this.onJobMaxTimeSecondChange}
                   type="number"
                   variant="outlined"
-                  defaultValue={isEdit ? jobMaxTimeSecond : 5 * 60}
+                  min={1}
+                  
+                  style={{ width: '87%' }}
+                  defaultValue={isEdit ? jobMaxTimeSecond : 5}
                   error={maxJobTimeValidator.error}
                   helperText={maxJobTimeValidator.text}
                 />

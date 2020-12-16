@@ -1,9 +1,9 @@
 # This workflow will sync DLWorkspace branch develop updates to public repo
-# Notice: the branch 'develop' is the main branch for public updates
-# And synd when source_repo has been pushed
-# Before sync, merge-repo steps will merge branch `develop` to `to_public`
-# Editor haiyuan
-# Update time: 2020-09-07
+# Notice: The branch 'develop' is the main branch for public updates
+# And synd when source_repo has been pushed or pull-request
+# Before sync, merge-repo steps will merge branch `develop` to `public` to replace the public docs.
+# Editor: haiyuan
+# Update: 2020-09-07
 
 name: sync_public_when_pushed
 
@@ -22,25 +22,27 @@ jobs:
     steps:
     - name: update repo
       run: |
-        git clone -b to_public https://banrieen:18209188642git@github.com/apulis/DLWorkspace.git
+        git clone -b public https://haiyuan.bian:apulis18c@apulis-gitlab.apulis.cn/apulis/DLWorkspace.git
         cd DLWorkspace
-        git config --global user.email "banrieen@173.com"
-        git config --global user.name "banrieen"
-        git merge origin/develop -X theirs --no-ff
-        git push origin to_public
+        git config --global user.email "thomas@apulis.com"
+        git config --global user.name "thomas"
+        git merge remotes/origin/develop -X theirs --no-ff
+        git remote rm origin
+        git remote add origin  https://haiyuan.bian:apulis18c@apulis-gitlab.apulis.cn/apulis/DLWorkspace.git
+        git push origin public
   sync-repo:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         repository: apulis/DLWorkspace
-        ref: to_public
+        ref: public
         persist-credentials: false
     - name: repo-sync to github apulis_platform
       uses: wei/git-sync@v2
       with:
-        source_repo: "https://banrieen:18209188642git@github.com/apulis/DLWorkspace.git"
-        source_branch: "to_public"
+        source_repo: "https://haiyuan.bian:apulis18c@apulis-gitlab.apulis.cn/apulis/DLWorkspace.git"
+        source_branch: "public"
         destination_repo: "https://banrieen:18209188642git@github.com/apulis/apulis_platform.git"
         destination_branch: "master"
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -48,8 +50,8 @@ jobs:
     - name: repo-sync to gitee apulis_platform
       uses: wei/git-sync@v2
       with:
-        source_repo: "https://banrieen:18209188642git@github.com/apulis/DLWorkspace.git"
-        source_branch: "to_public" 
+        source_repo: "https://haiyuan.bian:apulis18c@apulis-gitlab.apulis.cn/apulis/DLWorkspace.git"
+        source_branch: "public"
         destination_repo: "https://banrieen:18209188642git@gitee.com/apulis/apulis_platform.git"
         destination_branch: "master"
         github_token: ${{ secrets.GITHUB_TOKEN }}

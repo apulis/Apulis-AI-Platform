@@ -45,6 +45,7 @@ data:
       {% endif %}
 
     DltsUrl: http://{{cnf["kube-vip"]}}:80/apis
+    TrackingUrl: http://localhost:9010/api/2.0/mlflow
     image:
       tensorflow:
         - image: apulistech/ubuntu:18.04-amd64

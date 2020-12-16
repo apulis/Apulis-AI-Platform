@@ -4,12 +4,12 @@ set -x
 
 # 镜像名和代码分支配置
 image_name=restfulapi2
-tag_name=rc5
-branch_name=v1.2.0
+tag_name=rc0
+branch_name=v1.3.0
 image_fullname=${image_name}:${branch_name}-${tag_name}
 
 # 推送到harbor
-harbor_path=harbor.sigsus.cn:8443/library/apulistech/
+harbor_path=harbor.sigsus.cn:8443/develop/apulistech/
 harbor_fullname=${harbor_path}${image_fullname}
 
 # 目标集群上harbor仓库中镜像全名
@@ -17,7 +17,8 @@ local_harbor_fullname=harbor.sigsus.cn:8443/sz_gongdianju/apulistech/dlworkspace
 
 # 拷贝到其它机器
 # (ip port)
-remote_machine=(219.133.167.42 52080)
+#remote_machine=(219.133.167.42 52080)
+remote_machine=(192.168.1.200 22)
 #remote_machine=(192.168.1.176 22)
 tar_name=`sed 's|:|_|g' <<< ${image_fullname}`.tar
 
@@ -27,11 +28,15 @@ function prebuild(){
 
     # 1. 创建虚拟环境
     if [ ! -d "pythonenv2.7" ]; then
+	    
         virtualenv -p python2.7 pythonenv2.7
         . pythonenv2.7/bin/activate
 
-        pip install -r ../scripts/requirements.txt
-        pip install -r ../../ClusterManager/requirements.txt
+	sudo apt install libcurl4-openssl-dev libssl-dev -y
+	sudo apt-get install python-dev gcc -y
+	sudo apt-get install python3-dev default-libmysqlclient-dev build-essential -y
+
+        pip install -r requirements.txt
     else
         . pythonenv2.7/bin/activate
     fi

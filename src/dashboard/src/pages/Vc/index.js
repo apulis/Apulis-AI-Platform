@@ -45,7 +45,12 @@ class Vc extends React.Component {
       size: 10,
       count: 0,
       loading: false,
-      allVcList: []
+      allVcList: [],
+      jobMaxTimeSecond: null,
+      maxJobTimeValidator: {
+        error: false,
+        text: '',
+      }
     }
   }
 
@@ -73,6 +78,12 @@ class Vc extends React.Component {
     axios.get(`/${this.context.selectedCluster}/listVc?page=${page}&size=${isAll ? 9999 : size}`)
       .then((res) => {
         const { totalNum, result } = res.data;
+        if (result) {
+          result.forEach(vc => {
+            const metadata = JSON.parse(vc.metadata);
+            vc.jobMaxTimeSecond = Math.floor((metadata.admin?.job_max_time_second || 0) / 3600);
+          })
+        }
         if (!result.length && totalNum) {
           this.setState({ page: 1 }, () => {
             this.getVcList();
@@ -98,7 +109,8 @@ class Vc extends React.Component {
     this.setState({
       modifyFlag: !modifyFlag,
       isEdit: 0,
-      vcName: ''
+      vcName: '',
+      jobMaxTimeSecond: null,
     })
   }
 
@@ -114,13 +126,14 @@ class Vc extends React.Component {
         vcName: vcName,
         qSelectData,
         mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
-        clickItem: item
+        clickItem: item,
+        jobMaxTimeSecond: Math.floor((JSON.parse(metadata).admin?.job_max_time_second || 0) / 3600) || null,
       })
     });
   }
 
   save = async () => {
-    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj } = this.state;
+    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj, jobMaxTimeSecond } = this.state;
     const { t } = this.props;
     const tTip = t('vcName is required！')
     const { selectedCluster, getTeams } = this.context;
@@ -145,6 +158,8 @@ class Vc extends React.Component {
     if (Object.keys(allDevice).length > 0) {
       quota = _.cloneDeep(qSelectData);
       metadata = _.cloneDeep(mSelectData);
+      metadata.admin = {}
+      metadata.admin.job_max_time_second = jobMaxTimeSecond * 3600;
       Object.keys(quota).forEach(i => {
         if (!allDevice[i]) { 
           delete quota[i];
@@ -372,6 +387,14 @@ class Vc extends React.Component {
     });
   }
 
+  onJobMaxTimeSecondChange = (e) => {
+    const value = e.target.value;
+    
+    this.setState({
+      jobMaxTimeSecond: Math.floor(value),
+    });
+  }
+
   onSizeChange = (e) => {
     this.setState({
       size: Number(e.target.value),
@@ -402,7 +425,7 @@ class Vc extends React.Component {
 
   render() {
     const { vcList, modifyFlag, isEdit, vcName, deleteModifyFlag, btnLoading, qSelectData, mSelectData, 
-      allDevice, vcNameValidateObj, page, count, size, loading } = this.state;
+      allDevice, vcNameValidateObj, page, count, size, loading, jobMaxTimeSecond, maxJobTimeValidator } = this.state;
 
     if (loading) return <Loading/>
 
@@ -430,6 +453,9 @@ class Vc extends React.Component {
                     <div className="helpWrap">{t('UserCount')}<Help fontSize="small" /></div>
                   </Tooltip>
                 </TableCell>
+                <TableCell> 
+                  <div className="helpWrap">{t('max job time second')}</div>
+                </TableCell>
                 <TableCell>{t('Users')}</TableCell>
                 <AuthzHOC needPermission={'MANAGE_VC'}><TableCell>{t('actions')}</TableCell></AuthzHOC>
               </TableRow>
@@ -442,6 +468,7 @@ class Vc extends React.Component {
                   <TableCell>{this.getDeviceTypeContent(item.quota, true)}</TableCell>
                   <TableCell>{this.getDeviceTypeContent(item.metadata, true, true)}</TableCell>
                   <TableCell>{item.userNum}</TableCell>
+                  <TableCell>{item.jobMaxTimeSecond || '-'}</TableCell>
                   <TableCell style={{ maxWidth: 250 }}><div className="textEllipsis" title={item.userNameList}>{this.getUsrnameList(item.userNameList)}</div></TableCell>
                   <AuthzHOC needPermission={'MANAGE_VC'}>
                     <TableCell>
@@ -490,6 +517,19 @@ class Vc extends React.Component {
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(1)}
                 <h3>{t('MaxAvailable')}</h3>
                 {Object.keys(allDevice).length > 0 && this.getSelectHtml(2)}
+                <TextField
+                  label={t('max job time second')}
+                  value={jobMaxTimeSecond}
+                  onChange={this.onJobMaxTimeSecondChange}
+                  type="number"
+                  variant="outlined"
+                  min={1}
+                  
+                  style={{ width: '87%' }}
+                  defaultValue={isEdit ? jobMaxTimeSecond : 5}
+                  error={maxJobTimeValidator.error}
+                  helperText={maxJobTimeValidator.text}
+                />
               </form>
             </DialogContent>
             <DialogActions>

@@ -703,7 +703,7 @@ class ListJobsV3(Resource):
                         set_duration(job)
         else:
             pass
-
+        
         resp = generate_response(jobs)
         return resp
 
@@ -753,7 +753,7 @@ class ListAllJobs(Resource):
 
         for job in jobs:
             set_duration(job)
-
+                
         resp = generate_response(jobs)
         return resp
 

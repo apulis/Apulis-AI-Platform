@@ -1381,6 +1381,7 @@ class DataHandler(object):
 
                 if record["jobStatusDetail"] is not None:                    
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))                        
+
                 else:
                     pass
 

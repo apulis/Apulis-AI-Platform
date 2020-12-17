@@ -49,11 +49,11 @@ export default [
     component: ClusterStatus,
     needPermission: ['VIEW_CLUSTER_STATUS']
   },
-  {
-    path: '/vc',
-    component: Vc,
-    needPermission: ['VIEW_VC', 'MANAGE_VC']
-  },
+  // {
+  //   path: '/vc',
+  //   component: Vc,
+  //   needPermission: ['VIEW_VC', 'MANAGE_VC']
+  // },
   {
     path: '/model',
     component: Model,

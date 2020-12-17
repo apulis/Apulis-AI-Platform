@@ -36,5 +36,6 @@ export default {
     'vcName *': '虚拟集群名称 *',
     'max number of devices available to each user': '每个用户最大设备配额',
     'The number of users who own this VC resource': '当前可用使用该 VC 的用户数量',
+    'max job time second': '单个任务最大使用时间（小时）',
 
   }

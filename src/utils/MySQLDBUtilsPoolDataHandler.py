@@ -24,7 +24,7 @@ data_handler_fn_histogram = Histogram("datahandler_fn_latency_seconds",
         buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0,
             7.5, 10.0, 12.5, 15.0, 17.5, 20.0, float("inf")),
         labelnames=("fn_name",))
-
+ddd
 db_connect_histogram = Histogram("db_connect_latency_seconds",
         "latency for connecting to db (seconds)",
         buckets=(.05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, float("inf")))

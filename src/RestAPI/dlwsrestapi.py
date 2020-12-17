@@ -751,10 +751,8 @@ class ListAllJobs(Resource):
                 args["pageNum"], args["pageSize"],
                 args["searchWord"], args["orderBy"], args["order"])
 
-        for _, joblist in jobs.items():
-            if isinstance(joblist, list):
-                for job in joblist:
-                    set_duration(job)
+        for job in jobs:
+            set_duration(job)
 
         resp = generate_response(jobs)
         return resp

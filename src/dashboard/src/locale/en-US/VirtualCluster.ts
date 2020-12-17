@@ -36,5 +36,5 @@ export default {
   'max number of devices available to each user': 'Maximum number of devices available to each user',
   'The number of users who own this VC resource': 'The number of users who own this VC resource',
   'max job time second': 'Job Running Max Time(Hours)',
-
+  'JobMaxTime is required': '',
 }

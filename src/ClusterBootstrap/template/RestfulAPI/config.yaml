@@ -132,3 +132,9 @@ endpoint_use_short_domian: {{cnf["endpoint_use_short_domian"]}}
 {% if "fake_device" in cnf and cnf["fake_device"] %}
 fake_device: {{cnf["fake_device"]}}
 {% endif %}
+
+{% if "storage_type" in cnf %}
+storage_type: {{cnf["storage_type"]}}
+{% else %}
+storage_type: nfs
+{% endif %}

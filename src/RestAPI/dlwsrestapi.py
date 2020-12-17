@@ -691,7 +691,7 @@ class ListJobsV3(Resource):
                         remove_creds(job)
         else:
             pass
-
+        
         resp = generate_response(jobs)
         return resp
 
@@ -738,7 +738,7 @@ class ListAllJobs(Resource):
                 args["jobType"], args["jobStatus"],
                 args["pageNum"], args["pageSize"],
                 args["searchWord"], args["orderBy"], args["order"])
-
+                
         resp = generate_response(jobs)
         return resp
 

@@ -12,6 +12,7 @@ import base64
 import yaml
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
+import storage
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,7 @@ class Job:
         '''
         if mountpoint is None:
             return
+            
         if self.mountpoints is None:
             self.mountpoints = []
 
@@ -111,20 +113,157 @@ class Job:
     def get_homefolder_hostpath(self):
         return self.get_hostpath(self.get_alias())
 
+    def ssh_path_mountpoints(self):
+
+        volume_name = ""
+        subPath = ""
+        containerPath = ""
+        mount_points = []
+
+        storage_type = self._get_cluster_config("storage_type")
+
+        if storage_type is not None:
+            volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        else:
+            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
+            return None
+
+        if len(volume_name) == 0:
+            logger.warn("invalid arg(volume name) (%s)" % (storage_type))
+            return None
+        else:
+            pass
+
+        # 1) for mounting .ssh folder
+        containerPath = "/home/" + self.params["userName"] + "/.ssh"
+        subPath = "work/" + self.params["userName"] + "/.ssh"
+        mount_points.append(
+            {   
+                "name": volume_name, 
+                "containerPath": containerPath,
+                "subPath": subPath
+            }
+        )
+
+        # 2) for mounting id_rsa
+        containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa"
+        subPath = "work/" + self.params["userName"] + "/.ssh/id_rsa"
+        mount_points.append(
+            {   
+                "name": volume_name, 
+                "containerPath": containerPath,
+                "subPath": subPath,
+                "readOnly": True
+            }
+        )
+
+        # 3) for mounting id_rsa.pub
+        containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa.pub"
+        subPath = "work/" + self.params["userName"] + "/.ssh/id_rsa.pub"
+        mount_points.append(
+            {   
+                "name": volume_name, 
+                "containerPath": containerPath,
+                "subPath": subPath,
+                "readOnly": True
+            }
+        )
+
+        # 4) for mounting authorized_keys
+        containerPath = "/home/" + self.params["userName"] + "/.ssh/authorized_keys"
+        subPath = "work/" + self.params["userName"] + "/.ssh/authorized_keys"
+        mount_points.append(
+            {   
+                "name": volume_name, 
+                "containerPath": containerPath,
+                "subPath": subPath,
+                "readOnly": True
+            }
+        )
+
+        return mount_points
+
+
     def job_path_mountpoint(self):
-        assert(len(self.job_path) > 0)
+
         job_host_path = self.get_hostpath(self.job_path)
-        return {"name": "job", "containerPath": "/job", "hostPath": job_host_path, "enabled": True}
+        storage_type = self._get_cluster_config("storage_type")
+
+        volume_name = ""
+        subPath = ""
+
+        if storage_type is not None:
+            volume_name = storage.StorageConfig.get_pv_name(storage_type)
+            subPath = "work/" + self.params["userName"] + "/job"
+        else:
+            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
+            return None
+
+        if len(volume_name) == 0 or len(subPath) == 0:
+            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
+            return None
+        else:
+            pass
+
+        return {"name": volume_name, 
+                "containerPath": "/job", 
+                "hostPath": job_host_path, 
+                "enabled": True,
+                "subPath": subPath}
 
     def work_path_mountpoint(self):
-        assert(len(self.work_path) > 0)
+
         work_host_path = self.get_hostpath(self.work_path)
-        return {"name": "work", "containerPath": "/work", "hostPath": work_host_path, "enabled": True}
+        storage_type = self._get_cluster_config("storage_type")
+
+        volume_name = ""
+        subPath = ""
+
+        if storage_type is not None:
+            volume_name = storage.StorageConfig.get_pv_name(storage_type)
+            subPath = "work/" + self.params["userName"]
+        else:
+            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
+            return None
+
+        if len(volume_name) == 0 or len(subPath) == 0:
+            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
+            return None
+        else:
+            pass
+
+        return {"name": volume_name, 
+                "containerPath": "/work", 
+                "hostPath": work_host_path, 
+                "enabled": True,
+                "subPath": subPath}
 
     def data_path_mountpoint(self):
-        assert(self.data_path is not None)
+
         data_host_path = os.path.join(self.cluster["storage-mount-path"], "storage", self.data_path)
-        return {"name": "data", "containerPath": "/data", "hostPath": data_host_path, "enabled": True}
+        storage_type = self._get_cluster_config("storage_type")
+
+        volume_name = ""
+        subPath = ""
+
+        if storage_type is not None:
+            volume_name = storage.StorageConfig.get_pv_name(storage_type)
+            subPath = "storage/"
+        else:
+            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
+            return None
+
+        if len(volume_name) == 0 or len(subPath) == 0:
+            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
+            return None
+        else:
+            pass
+
+        return {"name": volume_name, 
+                "containerPath": "/data", 
+                "hostPath": data_host_path, 
+                "enabled": True,
+                "subPath": subPath}
 
     def vc_custom_storage_mountpoints(self):
         vc_name = self.params["vcName"]
@@ -134,12 +273,15 @@ class Job:
 
         vc_custom_mounts = []
         for mount in custom_mounts:
+
             name = mount.get("name")
             container_path = mount.get("containerPath")
             host_path = mount.get("hostPath")
             vc = mount.get("vc")
+
             if vc is None or vc != vc_name:
                 continue
+
             if name is None or host_path is None or container_path is None:
                 logger.warn("Ignore invalid mount %s" % mount)
                 continue
@@ -149,11 +291,13 @@ class Job:
                 "hostPath": host_path,
                 "enabled": True
             }
+
             vc_custom_mounts.append(vc_mount)
 
         return vc_custom_mounts
 
     def vc_storage_mountpoints(self):
+
         vc_name = self.params["vcName"]
         dltsdata_vc_path = os.path.join(self.cluster["dltsdata-storage-mount-path"], vc_name)
         if not os.path.isdir(dltsdata_vc_path):

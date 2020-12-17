@@ -13,6 +13,13 @@ from pod_template_utils import enable_cpu_config
 from config import config
 from DataHandler import DataHandler
 
+import logging
+import logging.config
+import storage
+
+logger = logging.getLogger(__name__)
+
+
 class PodTemplate():
     def __init__(self, template, deployment_template=None, enable_custom_scheduler=False, secret_templates=None):
         self.template = template
@@ -95,22 +102,42 @@ class PodTemplate():
         job.job_path = params["jobPath"]
         job.work_path = params["workPath"]
         job.data_path = params["dataPath"]
+
         # TODO user's mountpoints first, but should after 'job_path'
+        job.add_mountpoints(job.ssh_path_mountpoints())   # added a list of mount points
         job.add_mountpoints(job.job_path_mountpoint())
+
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
             job.add_mountpoints({"name": "home", "containerPath": "/home/{}".format(
                 job.get_alias()), "hostPath": job.get_homefolder_hostpath(), "enabled": True})
+
         if "mountpoints" in params:
             job.add_mountpoints(params["mountpoints"])
+
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
             job.add_mountpoints(job.work_path_mountpoint())
             job.add_mountpoints(job.data_path_mountpoint())
+
         job.add_mountpoints(job.vc_custom_storage_mountpoints())
         job.add_mountpoints(job.vc_storage_mountpoints())
-        params["mountpoints"] = job.mountpoints
+        
+        # TODO: remove following log statement
+        logger.info("jobid-%s mount points(%s)" % (job.job_id, str(job.mountpoints)))
 
+        # add storage info which used for rendering job template 
+        storage_type = config["storage_type"]
+        params["storage-pv-name"] = storage.StorageConfig.get_pv_name(storage_type)
+        params["storage-pvc-name"] = storage.StorageConfig.get_pvc_name(storage_type)
+
+        if len(storage_type) == 0 or params["storage-pv-name"] is None or params["storage-pvc-name"] is None:
+            logger.error("invailid config. storge-type(%s), storage-pv-name(%s), storage-pvc-name(%s)" % (str(storage_type), 
+            str(params["storage-pv-name"]), str(params["storage-pvc-name"])))
+        else:
+            pass
+
+        params["mountpoints"] = job.mountpoints
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()
         params["pod_ip_range"] = job.get_pod_ip_range()
@@ -120,6 +147,7 @@ class PodTemplate():
 
         if "nodeSelector" not in params:
             params["nodeSelector"] = {}
+
         if "gpuType" in params and params["gpuType"]:
             params["nodeSelector"]["gpuType"] = params["gpuType"]
 
@@ -217,14 +245,17 @@ class PodTemplate():
             if params["jobtrainingtype"] == "InferenceJob":
                 if pod["resourcegpu"]>=1:
                     pod["gpuLimit"] = 1
+
                 if "inference_port" not in pod:
                     pod["inference_port"] = 8080
+
                 # pod["model_name"] = pod["jobName"]
                 pod["model_name"] = "ifs-"+pod["jobId"]
                 pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/path/noExist"
                 pod["model_base_path"] = re.sub("^/data", config["storage-mount-path"]+"/storage", pod["model_base_path"])
                 pod["model_base_path"] = re.sub("^/home", config["storage-mount-path"]+"/work", pod["model_base_path"])
                 pod["framework"] = params["framework"]
+                
                 if "version" in params:
                     pod["version"] = params["version"]
                 if "-" in params["framework"]:

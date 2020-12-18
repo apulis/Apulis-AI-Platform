@@ -386,7 +386,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
 
         else:
             user_data = JobRestAPIUtils.GetUserData(job["userName"])
-            if "jobMaxTimeSecond" in user_data:
+            if "jobMaxTimeSecond" in user_data and type(user_data["jobMaxTimeSecond"]) == int:
                 max_time = int(user_data["jobMaxTimeSecond"])
             else:
                 max_time = 999999999 # no limit

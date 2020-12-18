@@ -1318,6 +1318,8 @@ def GetUserData(userName):
     res = requests.get(url=config["usermanagerapi"] + "/open/user-info?userName=" + userName, headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
     if res.status_code == 200:
         ret = res.json()
+        logger.info(config["usermanagerapi"] + "/open/user-info?userName=" + userName)
+        logger.info(str(ret))
     else:
         msg = "userName(%s), call /custom-user-dashboard-backend/open/user-info failed(%s)" %(userName, str(res.status_code))
         logger.error(msg)

@@ -751,6 +751,9 @@ class ListAllJobs(Resource):
                 args["pageNum"], args["pageSize"],
                 args["searchWord"], args["orderBy"], args["order"])
 
+        for job in jobs:
+            set_duration(job)
+
         resp = generate_response(jobs)
         return resp
 

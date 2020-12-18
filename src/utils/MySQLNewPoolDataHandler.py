@@ -80,7 +80,7 @@ def record(fn):
             logger.exception('mysql Exception: %s', str(e))
         finally:
             elapsed = timeit.default_timer() - start
-            logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
+            ##logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
             data_handler_fn_histogram.labels(fn.__name__).observe(elapsed)
 
     return wrapped
@@ -111,7 +111,7 @@ class DataHandler(object):
         self.pool = SingletonDBPool.instance()
 
         elapsed = timeit.default_timer() - start_time
-        logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
+        ##logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
         self.CreateDatabase()
         self.CreateTable()
 
@@ -1184,7 +1184,7 @@ class DataHandler(object):
                 rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
-            logger.info("(fetchall time: %f)", fetch_elapsed)
+            ##logger.info("(fetchall time: %f)", fetch_elapsed)
             for one in rets:
                 ret.append(one)
         except Exception as e:

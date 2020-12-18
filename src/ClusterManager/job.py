@@ -13,8 +13,9 @@ import yaml
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 import storage
+import log_utils
 
-logger = logging.getLogger(__name__)
+logger = log_utils.get_log_instance(__name__)
 
 def invalid_entry(s):
     return s is None or \

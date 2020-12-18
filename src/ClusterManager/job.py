@@ -23,7 +23,6 @@ def invalid_entry(s):
            s.lower() == "null" or \
            s.lower() == "none"
 
-
 def dedup_add(item, entries, identical):
     assert isinstance(entries, list)
     for entry in entries:
@@ -99,6 +98,7 @@ class Job:
                 logger.warn("Current mountpoint: %s is a duplicate of mountpoint: %s" % (mountpoint, item))
                 return
 
+        logger.info("append mountpoint(%s)" % (str(mountpoint)))
         self.mountpoints.append(mountpoint)
 
     def add_plugins(self, plugins):
@@ -125,6 +125,7 @@ class Job:
 
         if storage_type is not None:
             volume_name = storage.StorageConfig.get_pv_name(storage_type)
+            logger.info("volume name (%s)" % (str(volume_name)))
         else:
             logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
             return None
@@ -182,6 +183,7 @@ class Job:
             }
         )
 
+        logger.info("return mount point, subPath(%s)" % (subPath))
         return mount_points
 
 
@@ -189,7 +191,7 @@ class Job:
 
         job_host_path = self.get_hostpath(self.job_path)
         storage_type = self._get_cluster_config("storage_type")
-
+        
         volume_name = ""
         subPath = ""
 
@@ -206,6 +208,7 @@ class Job:
         else:
             pass
 
+        logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": "/job", 
                 "hostPath": job_host_path, 
@@ -233,6 +236,7 @@ class Job:
         else:
             pass
 
+        logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": "/work", 
                 "hostPath": work_host_path, 
@@ -260,6 +264,7 @@ class Job:
         else:
             pass
 
+        logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": "/data", 
                 "hostPath": data_host_path, 

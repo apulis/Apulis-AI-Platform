@@ -109,14 +109,14 @@ class PodTemplate():
 
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
-            job.add_mountpoints({"name": "home", "containerPath": "/home/{}".format(
-                job.get_alias()), "hostPath": job.get_homefolder_hostpath(), "enabled": True})
+            job.add_mountpoints(job.home_path_mountpoint())
 
         if "mountpoints" in params:
             job.add_mountpoints(params["mountpoints"])
 
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
+            logger.info("jobid-%s to mount work path and data path")
             job.add_mountpoints(job.work_path_mountpoint())
             job.add_mountpoints(job.data_path_mountpoint())
 
@@ -271,9 +271,10 @@ class PodTemplate():
                 pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
+
             # mount /pod
-            pod_path = job.get_hostpath(job.job_path, "master")
-            pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
+            pod["mountpoints"].append(job.pod_path_mountpoint(os.path.join(job.job_path, "master")))
+
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")

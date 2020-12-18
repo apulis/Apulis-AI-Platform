@@ -41,6 +41,22 @@ def PushModelToFD(params):
         modconvertInfo = GetModelConversionInfo(jobId)
     return fd_push_file(modconvertInfo, fdinfo)
 
+def check_FD_image_file_is_created(modconvertInfo,fdinfo):
+    headers = {
+        "Version": "v" + datetime.now().strftime("%Y%m%d%H%M%S"),
+        "Description": modconvertInfo["jobId"] + " model file",
+    }
+    url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles/"+modconvertInfo["fileId"]
+    auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
+    try:
+        resp = requests.get(url, headers=headers,auth=auth, verify=False)
+        logging.info("fd_create_file: %d, %s", resp.status_code, resp.json())
+        if resp.status_code == 200:
+            return True
+    except Exception as e:
+        pass
+    return False
+
 def fd_create_file(modconvertInfo, fdinfo):
     dataHandler = DataHandler()
     # if outpath exists, use the same file id.
@@ -48,7 +64,9 @@ def fd_create_file(modconvertInfo, fdinfo):
     if existPathInfo is not None and existPathInfo["fileId"] != "push failed":
         fileId = existPathInfo["fileId"]
         dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
-        return True
+        if check_FD_image_file_is_created(existPathInfo,fdinfo):
+            return True
+
 
     url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles"
     auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
@@ -59,7 +77,7 @@ def fd_create_file(modconvertInfo, fdinfo):
     data = {
         'Name': get_filename(modconvertInfo["outputPath"]),
         'Description': modconvertInfo["jobId"] + " model file",
-        'Type': 'model_file'
+        # 'Type': 'model_file'
     }
     try:
         resp = requests.post(url, headers=headers,auth=auth, verify=False, data=json.dumps(data))

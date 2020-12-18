@@ -96,6 +96,10 @@ spec:
                     custom:
                       description: Spec for a custom explainer
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:
@@ -136,6 +140,10 @@ spec:
                     custom:
                       description: Spec for a custom predictor
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:
@@ -361,6 +369,10 @@ spec:
                     custom:
                       description: Spec for a custom explainer
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:
@@ -401,6 +413,10 @@ spec:
                     custom:
                       description: Spec for a custom predictor
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:

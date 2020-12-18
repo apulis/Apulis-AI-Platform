@@ -277,7 +277,7 @@ class Job:
         if storage_type is not None:
             volume_name = storage.StorageConfig.get_pv_name(storage_type)
             subPath = "work/" + self.params["userName"]
-            containerPath="/home/" + self.params["userName"
+            containerPath="/home/" + self.params["userName"]
         else:
             logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
             return None

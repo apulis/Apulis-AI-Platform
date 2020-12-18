@@ -43,7 +43,6 @@ class StorageConfig(object):
     @staticmethod
     def get_pv_name(storage_type):
         
-        storage_type = storage_type.lower()
         if StorageConfig._storage_supported(storage_type):
             return StorageConfig._get_storage_name(storage_type)
         else:
@@ -51,11 +50,11 @@ class StorageConfig(object):
 
     @staticmethod
     def _get_pvc(storage_type):
-        return storage_info[storage_type]["pvc"]
+        return StorageConfig.storage_info[storage_type]["pvc"]
 
     @staticmethod
     def _get_storage_name(storage_type):
-        return storage_info[storage_type]["pv"]
+        return StorageConfig.storage_info[storage_type]["pv"]
 
     @staticmethod
     def _storage_supported(storage_type):

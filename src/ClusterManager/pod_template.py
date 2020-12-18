@@ -125,18 +125,7 @@ class PodTemplate():
         
         # TODO: remove following log statement
         logger.info("jobid-%s mount points(%s)" % (job.job_id, str(job.mountpoints)))
-
-        # add storage info which used for rendering job template 
-        storage_type = config["storage_type"]
-        params["storage-pv-name"] = storage.StorageConfig.get_pv_name(storage_type)
-        params["storage-pvc-name"] = storage.StorageConfig.get_pvc_name(storage_type)
-
-        if len(storage_type) == 0 or params["storage-pv-name"] is None or params["storage-pvc-name"] is None:
-            logger.error("invailid config. storge-type(%s), storage-pv-name(%s), storage-pvc-name(%s)" % (str(storage_type), 
-            str(params["storage-pv-name"]), str(params["storage-pvc-name"])))
-        else:
-            pass
-
+        
         params["mountpoints"] = job.mountpoints
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()

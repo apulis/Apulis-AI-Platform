@@ -121,17 +121,14 @@ class Job:
         containerPath = ""
         mount_points = []
 
-        storage_type = self._get_cluster_config("storage_type")
+        storage_type = storage.STORAGE_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
-        if storage_type is not None:
-            volume_name = storage.StorageConfig.get_pv_name(storage_type)
-            logger.info("volume name (%s)" % (str(volume_name)))
-        else:
-            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
-            return None
+        logger.info("volume name (%s)" % (str(volume_name)))
 
-        if len(volume_name) == 0:
-            logger.warn("invalid arg(volume name) (%s)" % (storage_type))
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
             return None
         else:
             pass
@@ -143,7 +140,8 @@ class Job:
             {   
                 "name": volume_name, 
                 "containerPath": containerPath,
-                "subPath": subPath
+                "subPath": subPath,
+                "pvcName": pvc_name
             }
         )
 
@@ -157,7 +155,8 @@ class Job:
                 "name": volume_name, 
                 "containerPath": containerPath,
                 "subPath": subPath,
-                "readOnly": True
+                "readOnly": True,
+                "pvcName": pvc_name
             }
         )
 
@@ -171,7 +170,8 @@ class Job:
                 "name": volume_name, 
                 "containerPath": containerPath,
                 "subPath": subPath,
-                "readOnly": True
+                "readOnly": True,
+                "pvcName": pvc_name
             }
         )
 
@@ -183,7 +183,8 @@ class Job:
                 "name": volume_name, 
                 "containerPath": containerPath,
                 "subPath": subPath,
-                "readOnly": True
+                "readOnly": True,
+                "pvcName": pvc_name
             }
         )
 
@@ -193,134 +194,129 @@ class Job:
 
     def job_path_mountpoint(self):
 
-        storage_type = self._get_cluster_config("storage_type")
         volume_name = ""
         subPath = ""
 
-        if storage_type is not None:
-            volume_name = storage.StorageConfig.get_pv_name(storage_type)
-            subPath = "work/" + self.params["userName"] + "/job"
-        else:
-            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
-            return None
+        storage_type = storage.STORAGE_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
-        if len(volume_name) == 0 or len(subPath) == 0:
-            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
             return None
         else:
-            pass
+            subPath = "work/" + self.params["userName"] + "/job"
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": "/job", 
                 "enabled": True,
-                "subPath": subPath}
+                "subPath": subPath,
+                "pvcName": pvc_name}
 
     def work_path_mountpoint(self):
 
-        storage_type = self._get_cluster_config("storage_type")
         volume_name = ""
         subPath = ""
 
-        if storage_type is not None:
-            volume_name = storage.StorageConfig.get_pv_name(storage_type)
-            subPath = "work/" + self.params["userName"]
-        else:
-            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
-            return None
+        storage_type = storage.STORAGE_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
-        if len(volume_name) == 0 or len(subPath) == 0:
-            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
             return None
         else:
-            pass
+            subPath = "work/" + self.params["userName"]
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": "/work", 
                 "enabled": True,
-                "subPath": subPath}
+                "subPath": subPath,
+                "pvcName": pvc_name}
 
     def data_path_mountpoint(self):
 
-        storage_type = self._get_cluster_config("storage_type")
         volume_name = ""
         subPath = ""
 
-        if storage_type is not None:
-            volume_name = storage.StorageConfig.get_pv_name(storage_type)
-            subPath = "storage/"
-        else:
-            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
-            return None
+        storage_type = storage.STORAGE_TYPE_MODEL_DATA
+        volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
-        if len(volume_name) == 0 or len(subPath) == 0:
-            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
             return None
         else:
-            pass
+            subPath = "storage/"
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": "/data", 
                 "enabled": True,
-                "subPath": subPath}
+                "subPath": subPath,
+                "pvcName": pvc_name}
 
     def home_path_mountpoint(self):
 
-        storage_type = self._get_cluster_config("storage_type")
-
         volume_name = ""
         subPath = ""
         containerPath=""
 
-        if storage_type is not None:
-            volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        storage_type = storage.STORAGE_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
             subPath = "work/" + self.params["userName"]
             containerPath="/home/" + self.params["userName"]
-        else:
-            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
-            return None
 
-        if len(volume_name) == 0 or len(subPath) == 0:
-            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
-            return None
-        else:
-            pass
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": containerPath, 
                 "enabled": True,
-                "subPath": subPath}
+                "subPath": subPath,
+                "pvcName": pvc_name}
 
     def pod_path_mountpoint(self, relative_path):
 
-        storage_type = self._get_cluster_config("storage_type")
         volume_name = ""
         subPath = ""
         containerPath=""
 
-        if storage_type is not None:
-            volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        storage_type = storage.STORAGE_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
             subPath = "work/" + self.params["userName"] + "/" + relative_path
             containerPath="/pod"
-        else:
-            logger.error("invalid storage type!! cluster config(%s)" % (str(self.cluster)))
-            return None
-
-        if len(volume_name) == 0 or len(subPath) == 0:
-            logger.warn("invalid arg(volume name, subPath) (%s, %s)" % (storage_type, subPath))
-            return None
-        else:
-            pass
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
-                "containerPath": containerPath, 
+                "containerPath": containerPath,
                 "enabled": True,
-                "subPath": subPath}
-
+                "subPath": subPath,
+                "pvcName": pvc_name}
+                
     def vc_custom_storage_mountpoints(self):
         vc_name = self.params["vcName"]
         custom_mounts = self.get_custom_mounts()

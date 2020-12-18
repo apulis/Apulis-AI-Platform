@@ -305,6 +305,17 @@ spec:
   - name: {{ job["storage-pv-name"] }}
     persistentVolumeClaim:
       claimName: {{ job["storage-pvc-name"] }}
+  {% for mp in job["mountpoints"] %}
+  {% if mp.enabled %}
+  - name: {{ mp.name }}
+    {% if mp.emptydir %}
+    emptyDir: {}
+    {% else %}
+    persistentVolumeClaim:
+      claimName: {{ mp.pvcName }}
+    {% endif %}
+  {% endif %}
+  {% endfor %}
   {% if job["usefreeflow"] %}
   - name: freeflow
     hostPath:

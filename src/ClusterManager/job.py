@@ -291,7 +291,6 @@ class Job:
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": containerPath, 
-                "hostPath": work_host_path, 
                 "enabled": True,
                 "subPath": subPath}
 

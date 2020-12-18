@@ -94,7 +94,7 @@ class Job:
         # skip duplicate entry
         # NOTE: mountPath "/data" is the same as "data" in k8s
         for item in self.mountpoints:
-            if item["name"] == mountpoint["name"] or item["containerPath"].strip("/") == mountpoint["containerPath"].strip("/"):
+            if item["name"] == mountpoint["name"] and item["containerPath"].strip("/") == mountpoint["containerPath"].strip("/"):
                 logger.warn("Current mountpoint: %s is a duplicate of mountpoint: %s" % (mountpoint, item))
                 return
 
@@ -147,6 +147,8 @@ class Job:
             }
         )
 
+        logger.info("added .ssh folder. subPath(%s)" % (str(subPath)))
+
         # 2) for mounting id_rsa
         containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa"
         subPath = "work/" + self.params["userName"] + "/.ssh/id_rsa"
@@ -158,6 +160,8 @@ class Job:
                 "readOnly": True
             }
         )
+
+        logger.info("added id_rsa file. subPath(%s)" % (str(subPath)))
 
         # 3) for mounting id_rsa.pub
         containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa.pub"

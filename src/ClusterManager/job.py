@@ -138,7 +138,8 @@ class Job:
         subPath = "work/" + self.params["userName"] + "/.ssh"
         mount_points.append(
             {   
-                "name": volume_name, 
+                "name": volume_name,
+                "enabled": True, 
                 "containerPath": containerPath,
                 "subPath": subPath,
                 "pvcName": pvc_name
@@ -153,6 +154,7 @@ class Job:
         mount_points.append(
             {   
                 "name": volume_name, 
+                "enabled": True,
                 "containerPath": containerPath,
                 "subPath": subPath,
                 "readOnly": True,
@@ -168,6 +170,7 @@ class Job:
         mount_points.append(
             {   
                 "name": volume_name, 
+                "enabled": True,
                 "containerPath": containerPath,
                 "subPath": subPath,
                 "readOnly": True,
@@ -181,6 +184,7 @@ class Job:
         mount_points.append(
             {   
                 "name": volume_name, 
+                "enabled": True,
                 "containerPath": containerPath,
                 "subPath": subPath,
                 "readOnly": True,

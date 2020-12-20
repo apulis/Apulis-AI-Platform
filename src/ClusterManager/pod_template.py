@@ -125,8 +125,10 @@ class PodTemplate():
         
         # TODO: remove following log statement
         logger.info("jobid-%s mount points(%s)" % (job.job_id, str(job.mountpoints)))
-        
+
         params["mountpoints"] = job.mountpoints
+        params["mountpoints_pvc"] = job.get_pvc_mountpoints()  # pvc deduplication
+
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()
         params["pod_ip_range"] = job.get_pod_ip_range()

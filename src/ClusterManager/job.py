@@ -246,7 +246,7 @@ class Job:
         subPath = ""
 
         storage_type = storage.STORAGE_TYPE_MODEL_DATA
-        volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
         logger.info("volume name (%s)" % (str(volume_name)))
@@ -271,7 +271,7 @@ class Job:
         containerPath=""
 
         storage_type = storage.STORAGE_TYPE_APP_DATA
-        volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
         logger.info("volume name (%s)" % (str(volume_name)))
@@ -298,7 +298,7 @@ class Job:
         containerPath=""
 
         storage_type = storage.STORAGE_TYPE_APP_DATA
-        volume_name = storage.StorageConfig.get_pv_name(storage_type)
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
         logger.info("volume name (%s)" % (str(volume_name)))
@@ -316,7 +316,28 @@ class Job:
                 "enabled": True,
                 "subPath": subPath,
                 "pvcName": pvc_name}
-                
+
+    def get_pvc_mountpoints(self):
+
+        pvc_mountpoints = []
+        pvcs = []
+
+        # add each items in the list one by one
+        if isinstance(self.mountpoints, list):
+            for m in self.mountpoints:
+                if "pvcName" in m and "name" in m:
+                    pvc = (m["name"].lower(), m["pvcName"].lower())
+                    
+                    if pvc not in pvcs:
+                        pvc_mountpoints.append(m)
+                        pvcs.append(pvc)
+                    else:
+                        pass
+                else:
+                    pass
+
+        return pvc_mountpoints
+
     def vc_custom_storage_mountpoints(self):
         vc_name = self.params["vcName"]
         custom_mounts = self.get_custom_mounts()

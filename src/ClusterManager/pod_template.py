@@ -116,7 +116,7 @@ class PodTemplate():
 
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
-            logger.info("jobid-%s to mount work path and data path")
+            logger.info("job-%s to mount work path and data path" % (job.job_id))
             job.add_mountpoints(job.work_path_mountpoint())
             job.add_mountpoints(job.data_path_mountpoint())
 
@@ -124,10 +124,11 @@ class PodTemplate():
         job.add_mountpoints(job.vc_storage_mountpoints())
         
         # TODO: remove following log statement
-        logger.info("jobid-%s mount points(%s)" % (job.job_id, str(job.mountpoints)))
+        logger.info("job-%s mount points(%s)" % (job.job_id, str(job.mountpoints)))
 
         params["mountpoints"] = job.mountpoints
         params["mountpoints_pvc"] = job.get_pvc_mountpoints()  # pvc deduplication
+        logger.info("job-%s  pvcs(%s)" % (job.job_id, str(params["mountpoints_pvc"])))
 
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()

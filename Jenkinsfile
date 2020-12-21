@@ -4,11 +4,6 @@ buildPlugin ( {
     repoName = 'DLWorkspace'
     dockerImages = [
         [
-            'imageName': 'cicd/dlworkspace-compile',
-            'directory': 'dlworkspace-compile',
-            'arch': ['amd64']
-        ],
-        [
             'compileContainer': 'cicd/dlworkspace-compile',
             'preBuild':[
                 ['src/ClusterBootstrap', 'mkdir -p build'],

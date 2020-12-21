@@ -1,7 +1,7 @@
 @Library('apulis-build@master') _
 
 buildPlugin ( {
-    repoName = "DLWorkspace"
+    repoName = 'DLWorkspace'
     dockerImages = [
         [
             'imageName': 'cicd/dlworkspace-compile',
@@ -38,8 +38,9 @@ buildPlugin ( {
                 ['src/ClusterBootstrap', 'cp config.yaml.template config.yaml'],
                 ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/* .']
             ],
-            "imageName": "apulistech/restfulapi2",
-            "directory": "src/ClusterBootstrap/build/restfulapi2"
+            'imageName': 'apulistech/webui3',
+            'directory': 'src/ClusterBootstrap/build/webui3',
+            'arch': ['amd64']
         ]
     ]
 })

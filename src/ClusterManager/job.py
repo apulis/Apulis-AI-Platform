@@ -146,7 +146,7 @@ class Job:
         #     }
         # )
 
-        logger.info("added .ssh folder. subPath(%s)" % (str(subPath)))
+        # logger.info("added .ssh folder. subPath(%s)" % (str(subPath)))
 
         # 2) for mounting id_rsa
         containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa"

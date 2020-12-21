@@ -33,7 +33,7 @@ def PushModelToFD(params):
         return ret
     fileId = modconvertInfo["fileId"]
     logging.info("modconvertInfo: %s", modconvertInfo)
-    if fileId is None or fileId == '' or fileId == 'None':
+    if fileId is None or fileId == '' or fileId == 'None' or fileId == "push failed":
         create_file_res = fd_create_file(modconvertInfo, fdinfo)
         if create_file_res is False:
             ret["err"] = "Faild to create file from fd"
@@ -77,7 +77,7 @@ def fd_create_file(modconvertInfo, fdinfo):
     data = {
         'Name': get_filename(modconvertInfo["outputPath"]),
         'Description': modconvertInfo["jobId"] + " model file",
-        # 'Type': 'model_file'
+        'Type': 'model_file'
     }
     try:
         resp = requests.post(url, headers=headers,auth=auth, verify=False, data=json.dumps(data))

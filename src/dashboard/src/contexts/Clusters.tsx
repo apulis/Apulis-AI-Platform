@@ -68,6 +68,7 @@ export const Provider: FunctionComponent = ({ children }) => {
   if (clusters.length) {
     const cluster = clusters.find(c => c.id === selectedCluster);
     if (cluster) {
+      delete cluster.gpus.admin;
       Object.keys(cluster.gpus).forEach(gpu => {
         availbleGpu.push({
           type: gpu,

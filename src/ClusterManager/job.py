@@ -134,17 +134,17 @@ class Job:
             pass
 
         # 1) for mounting .ssh folder
-        containerPath = "/home/" + self.params["userName"] + "/.ssh"
-        subPath = "work/" + self.params["userName"] + "/.ssh"
-        mount_points.append(
-            {   
-                "name": volume_name,
-                "enabled": True, 
-                "containerPath": containerPath,
-                "subPath": subPath,
-                "pvcName": pvc_name
-            }
-        )
+        # containerPath = "/home/" + self.params["userName"] + "/.ssh"
+        # subPath = "work/" + self.params["userName"] + "/.ssh"
+        # mount_points.append(
+        #     {   
+        #         "name": volume_name,
+        #         "enabled": True, 
+        #         "containerPath": containerPath,
+        #         "subPath": subPath,
+        #         "pvcName": pvc_name
+        #     }
+        # )
 
         logger.info("added .ssh folder. subPath(%s)" % (str(subPath)))
 

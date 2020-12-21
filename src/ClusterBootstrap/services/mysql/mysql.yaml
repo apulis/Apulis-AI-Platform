@@ -46,7 +46,7 @@ spec:
         volumeMounts:
         - name: mysql-log
           mountPath: /var/log/mysql
-        - name: aiplatform-component-data-pv
+        - name: aiplatform-component-data-pvc
           mountPath:  /var/lib/mysql
           subPath: mysql/
       {% if cnf["private_docker_registry_username"] %}

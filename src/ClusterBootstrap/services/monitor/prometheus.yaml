@@ -128,7 +128,7 @@ spec:
           mountPath: /etc/prometheus-alert
         - name: prometheus-data
           mountPath: /prometheus-data
-        - name: aiplatform-component-data-pv
+        - name: aiplatform-component-data-pvc
           mountPath:  /prometheus-data
           subPath: prometheus/
       - name: gpu-reporter

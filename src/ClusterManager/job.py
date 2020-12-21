@@ -133,22 +133,7 @@ class Job:
         else:
             pass
 
-        # 1) for mounting .ssh folder
-        # containerPath = "/home/" + self.params["userName"] + "/.ssh"
-        # subPath = "work/" + self.params["userName"] + "/.ssh"
-        # mount_points.append(
-        #     {   
-        #         "name": volume_name,
-        #         "enabled": True, 
-        #         "containerPath": containerPath,
-        #         "subPath": subPath,
-        #         "pvcName": pvc_name
-        #     }
-        # )
-
-        # logger.info("added .ssh folder. subPath(%s)" % (str(subPath)))
-
-        # 2) for mounting id_rsa
+        # 1) for mounting id_rsa
         containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa"
         subPath = "work/" + self.params["userName"] + "/.ssh/id_rsa"
         mount_points.append(
@@ -164,7 +149,7 @@ class Job:
 
         logger.info("added id_rsa file. subPath(%s)" % (str(subPath)))
 
-        # 3) for mounting id_rsa.pub
+        # 2) for mounting id_rsa.pub
         containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa.pub"
         subPath = "work/" + self.params["userName"] + "/.ssh/id_rsa.pub"
         mount_points.append(
@@ -178,7 +163,7 @@ class Job:
             }
         )
 
-        # 4) for mounting authorized_keys
+        # 3) for mounting authorized_keys
         containerPath = "/home/" + self.params["userName"] + "/.ssh/authorized_keys"
         subPath = "work/" + self.params["userName"] + "/.ssh/authorized_keys"
         mount_points.append(
@@ -259,13 +244,12 @@ class Job:
             logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
             return None
         else:
-            subPath = "storage/"
+            pass
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 
                 "containerPath": "/data", 
                 "enabled": True,
-                "subPath": subPath,
                 "pvcName": pvc_name}
 
     def home_path_mountpoint(self):

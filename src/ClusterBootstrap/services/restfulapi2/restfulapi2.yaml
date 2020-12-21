@@ -53,7 +53,6 @@ spec:
           subPath: work/
         - mountPath: /dlwsdata/storage
           name: aiplatform-model-data-pvc
-          subPath: storage/
         ports:
         - containerPort: 5000
           hostPort: 5000

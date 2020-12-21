@@ -191,7 +191,9 @@ spec:
     {% if mp.enabled %}
     - mountPath: {{ mp.containerPath }}
       name: {{ mp.name }}
+      {% if mp["subPath"]|length > 0 %}
       subPath: {{ mp.subPath }}
+      {% endif %}
       {% if mp.readOnly %}
       readOnly: true
       {% endif %}

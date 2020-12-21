@@ -47,7 +47,6 @@ spec:
           subPath: work/
         - mountPath: /dlwsdata/storage
           name: aiplatform-model-data-pvc
-          subPath: storage/
         - mountPath:  /dlwsdata/jobfiles
           name: aiplatform-app-data-pvc
           subPath: jobfiles/

@@ -126,8 +126,6 @@ spec:
           mountPath: /etc/prometheus
         - name: rules-volume
           mountPath: /etc/prometheus-alert
-        - name: prometheus-data
-          mountPath: /prometheus-data
         - name: aiplatform-component-data-pvc
           mountPath:  /prometheus-data
           subPath: prometheus/

@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aiplatform-label-data-pv
+spec:
+  capacity:
+    storage: 300Mi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: manual
+  mountOptions:
+    - rsize=8192
+    - timeo=14
+    - intr
+    - tcp
+    - nfsvers=4.1
+  nfs:
+    server: master01
+    path: /mnt/local/aiplatform-label-data
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: aiplatform-label-data-pvc
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi

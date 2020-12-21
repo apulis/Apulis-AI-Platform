@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aiplatform-component-data-pv
+spec:
+  capacity:
+    storage: 300Mi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: manual
+  mountOptions:
+    - rsize=8192
+    - timeo=14
+    - intr
+    - tcp
+    - nfsvers=4.1
+  nfs:
+    server: master01
+    path: /mnt/local/aiplatform-component-data
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: aiplatform-component-data-pvc
+  namespace: kube-system
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi

@@ -28,15 +28,17 @@ import redis
 
 import logging
 import logging.config
+
 from job import Job, JobSchema
 from job_launcher import JobDeployer, JobRole, PythonLauncher,InferenceServiceJobDeployer
 from cluster_manager import setup_exporter_thread, manager_iteration_histogram, register_stack_trace_dump, update_file_modification_time, record
 from job_launcher import get_job_status_detail, job_status_detail_with_finished_time
+
 import common
 import JobRestAPIUtils
+import log_utils
 
-logger = logging.getLogger(__name__)
-
+logger = log_utils.get_log_instance(__name__)
 
 job_state_change_histogram = Histogram("job_state_change_latency_seconds",
         """latency for job to change state(seconds).
@@ -386,7 +388,7 @@ def UpdateJobStatus(redis_conn, launcher, job, notifier=None, dataHandlerOri=Non
 
         else:
             user_data = JobRestAPIUtils.GetUserData(job["userName"])
-            if "jobMaxTimeSecond" in user_data:
+            if "jobMaxTimeSecond" in user_data and type(user_data["jobMaxTimeSecond"]) == int:
                 max_time = int(user_data["jobMaxTimeSecond"])
             else:
                 max_time = 999999999 # no limit

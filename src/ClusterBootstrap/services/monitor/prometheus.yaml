@@ -128,6 +128,9 @@ spec:
           mountPath: /etc/prometheus-alert
         - name: prometheus-data
           mountPath: /prometheus-data
+        - name: aiplatform-component-data-pv
+          mountPath:  /prometheus-data
+          subPath: prometheus/
       - name: gpu-reporter
         image: {{cnf["dockers"]["container"]["gpu-reporter"]["fullname"]}}
         imagePullPolicy: Always
@@ -148,9 +151,9 @@ spec:
       - name: rules-volume
         configMap:
           name: prometheus-alert
-      - name: prometheus-data
-        hostPath:
-          path: {{cnf["prometheus_data_path"]}}
+      - name: aiplatform-component-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-component-data-pvc
       tolerations:
       - key: node.kubernetes.io/memory-pressure
         operator: "Exists"

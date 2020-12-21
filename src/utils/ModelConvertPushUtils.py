@@ -57,6 +57,19 @@ def check_FD_image_file_is_created(modconvertInfo,fdinfo):
         pass
     return False
 
+def find_file_id(name,fdinfo):
+    url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles"
+    auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
+    try:
+        resp = requests.get(url, auth=auth, verify=False)
+        if resp.status_code == 200:
+            for one in resp.json().get("Members",[]):
+                if one["Name"] == name:
+                    return one["FileID"]
+    except Exception as e:
+        pass
+    return None
+
 def fd_create_file(modconvertInfo, fdinfo):
     dataHandler = DataHandler()
     # if outpath exists, use the same file id.
@@ -66,7 +79,6 @@ def fd_create_file(modconvertInfo, fdinfo):
         dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
         if check_FD_image_file_is_created(existPathInfo,fdinfo):
             return True
-
 
     url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles"
     auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
@@ -86,6 +98,11 @@ def fd_create_file(modconvertInfo, fdinfo):
             fileId = resp.json()['FileID']
             dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
             return True
+        elif resp.status_code == 400:
+            if resp.json()['error']["@Message.ExtendedInfo"][0]["MessageId"]=="Base.1.0.ResourceAlreadyExists":
+                fileId = find_file_id(get_filename(modconvertInfo["outputPath"]),fdinfo)
+                dataHandler.UpdateModelConversionFileId(modconvertInfo['jobId'], fileId)
+                return True
         else:
             dataHandler.UpdateModelConversionFileId(modconvertInfo["jobId"], "push failed")
             return False

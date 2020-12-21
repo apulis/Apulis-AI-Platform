@@ -44,7 +44,6 @@ spec:
           name: apiconfig
         - mountPath: /var/log/apache2
           name: log
-        
         - mountPath: /dlwsdata/work
           name: aiplatform-app-data-pvc
           subPath: work/

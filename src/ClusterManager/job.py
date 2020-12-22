@@ -295,7 +295,8 @@ class Job:
             logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
             return None
         else:
-            subPath = "work/" + self.params["userName"] + "/" + relative_path
+            # relative_path resembles realUserName/xxxx/xxx
+            subPath = "work/" + relative_path
             containerPath="/pod"
 
         logger.info("return mount point, subPath(%s)" % (subPath))

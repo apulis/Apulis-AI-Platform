@@ -12,7 +12,7 @@ metadata:
     vcName: "{{ job["vcName"] }}"
     type: InferenceService
     'gpu-request': '{{ job["gpuLimit"]|int }}'
-
+    archType: "{{ job["archType"] }}"
 
   {% for label in job["labels"] %}
     {{label.name}}: "{{label.value}}"
@@ -44,9 +44,10 @@ spec:
         resources:
           limits:
             {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
-            memory: 5G
+            memory: 4G
           requests:
             cpu: 100m
+            memory: 100m
         {% if job["framework"] == "custom" %}
         container:
           name: kfserving-container

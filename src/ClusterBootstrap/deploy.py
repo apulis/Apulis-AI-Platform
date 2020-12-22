@@ -3550,6 +3550,14 @@ def get_master_archtypes():
             archtypes.add(machines[key]["archtype"])
     return archtypes
 
+def get_worker_archtypes():
+    machines = config["machines"]
+    archtypes = set()
+    for key in machines.keys():
+        if machines[key].has_key("archtype") and machines[key].get("role")=="worker":
+            archtypes.add(machines[key]["archtype"])
+    return archtypes
+
 def get_service_name(service_config_file):
     f = open(service_config_file)
     try:
@@ -4060,6 +4068,15 @@ def start_kube_service(servicename):
 
         if "amd64" in archtypes:
             get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+
+    elif os.path.exists(os.path.join(dirname, "only_one_arch_worker")):
+        archtypes = get_worker_archtypes()
+        if "arm64" in archtypes:
+            get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
+
+        if "amd64" in archtypes:
+            get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+
 
     else:
         # start services for both archs

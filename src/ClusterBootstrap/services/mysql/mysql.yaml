@@ -44,22 +44,22 @@ spec:
         - containerPort: {{cnf["mysql_port"]}}
           name: mysql
         volumeMounts:
-        - name: mysql-storage
-          mountPath: /var/lib/mysql
         - name: mysql-log
           mountPath: /var/log/mysql
+        - name: aiplatform-component-data-pvc
+          mountPath:  /var/lib/mysql
+          subPath: mysql/
       {% if cnf["private_docker_registry_username"] %}
       imagePullSecrets:
       - name: svccred
       {% endif %}
       volumes:
-      - name: mysql-storage
-        hostPath:
-          path: {{cnf["mysql_data_path"]}}
       - name: mysql-log
         hostPath:
           path: /var/log/mysql
-          
+      - name: aiplatform-component-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-component-data-pvc
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

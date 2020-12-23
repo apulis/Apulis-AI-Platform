@@ -1,0 +1,31 @@
+apiVersion: 'serving.kubeflow.org/v1alpha2'
+kind: 'InferenceService'
+metadata:
+  name: dextr
+  namespace: kfserving-system
+  annotations:
+    name: DEXTR
+    type: interactor
+    spec: ''
+    id: dextr
+    framework: openvino
+    min_pos_points: '4'
+    description: 'Deep Extreme Cut'
+  labels:
+    inference: system
+
+spec:
+  default:
+    predictor:
+      minReplicas: 1
+      maxReplicas: 1
+      custom:
+        resources:
+          limits:
+            memory: 5G
+          requests:
+            cpu: 100m
+        container:
+          name: kfserving-container
+          image: {{cnf["private_docker_registry"]}}apulistech/openvino.dextr
+          args: ['--model_name=dextr']

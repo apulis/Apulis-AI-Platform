@@ -36,14 +36,7 @@ buildPlugin ( {
                 ['src/ClusterManager', 'pip install -r requirements.txt'],
                 ['src/ClusterBootstrap/build', 'cp -r ../../docker-images/webui3 .'],
                 ['src/ClusterBootstrap', 'cp config.yaml.template config.yaml'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/package.json .'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/yarn.lock .'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/config .'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/public .'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/server .'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/public .'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/src .'],
-                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/scripts .']
+                ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/* .']
             ],
             'imageName': 'apulistech/webui3',
             'directory': 'src/ClusterBootstrap/build/webui3',

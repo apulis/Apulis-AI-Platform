@@ -254,13 +254,19 @@ class PodTemplate():
                     pod["framework"],pod["version"] = params["framework"].rsplit("-")
 
                 if "gpuType" in pod and pod["gpuType"] and pod["gpuType"].endswith("arm64"):
-                    if pod["resourcegpu"]>0:
-                        pod["version"] += "-npu"
-                    else:
-                        pod["version"] += "-arm64"
+                    # if pod["resourcegpu"]>0:
+                    #     pod["version"] += "-npu"
+                    # else:
+                    pod["version"] += "-arm64"
+                    pod["archType"] = "arm64"
+                else:
+                    if pod["resourcegpu"] > 0 and pod["framework"].lower() in ["tensorflow"]:
+                        pod["version"] += "-gpu"
+                    pod["archType"] = "amd64"
 
                 pod["minReplicas"] = params["minReplicas"] if "minReplicas" in params else 1
                 pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])
+
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
 

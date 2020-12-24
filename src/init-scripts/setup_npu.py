@@ -284,6 +284,18 @@ def get_os_flag():
 
     return osflag
 
+def get_gnu_arch_flag():
+
+    osflag="x86-64"
+
+    if platform.machine() == "aarch64":
+        osflag = "aarch64"
+    else:
+        pass
+
+    return osflag
+
+
 def get_random_num(length):
     return ''.join(random.choice(string.digits) for _ in range(length))
 
@@ -343,10 +355,11 @@ def handle_mindspore():
     ## 设置随机参数
     envs["RANDOM"] = get_random_num(6)
     envs["osflag"] = get_os_flag()
+    envs["gnu_arch"] = get_gnu_arch_flag()
 
     tensorflow_envs = [
         "PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
-        "LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:$LD_LIBRARY_PATH",
+        "LD_LIBRARY_PATH=/usr/lib/${gnu_arch}-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:$LD_LIBRARY_PATH",
         "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe",
         "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/",
         "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp",
@@ -433,11 +446,12 @@ def handle_tensorflow():
     ## 设置随机参数
     envs["RANDOM"] = get_random_num(6)
     envs["osflag"] = get_os_flag()
+    envs["gnu_arch"] = get_gnu_arch_flag()
 
 
     tensorflow_envs = [
         "PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
-        "LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:$LD_LIBRARY_PATH",
+        "LD_LIBRARY_PATH=/usr/lib/${gnu_arch}-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:$LD_LIBRARY_PATH",
         "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe",
         "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/",
         "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp",

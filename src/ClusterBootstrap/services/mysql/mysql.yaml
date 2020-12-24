@@ -46,9 +46,8 @@ spec:
         volumeMounts:
         - name: mysql-log
           mountPath: /var/log/mysql
-        - name: aiplatform-component-data-pvc
+        - name: mysql-lib
           mountPath:  /var/lib/mysql
-          subPath: mysql/
       {% if cnf["private_docker_registry_username"] %}
       imagePullSecrets:
       - name: svccred
@@ -57,9 +56,9 @@ spec:
       - name: mysql-log
         hostPath:
           path: /var/log/mysql
-      - name: aiplatform-component-data-pvc
-        persistentVolumeClaim:
-          claimName: aiplatform-component-data-pvc
+      - name: mysql-lib
+        hostPath:
+          path: /var/lib/mysql
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

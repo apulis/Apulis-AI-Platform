@@ -275,7 +275,7 @@ def add_env(path, envs):
 
 def get_os_flag():
 
-    osflag="x86-64"
+    osflag="x86_64"
 
     if platform.machine() == "aarch64":
         osflag = "arm64"
@@ -286,7 +286,7 @@ def get_os_flag():
 
 def get_gnu_arch_flag():
 
-    osflag="x86-64"
+    osflag="x86_64"
 
     if platform.machine() == "aarch64":
         osflag = "aarch64"

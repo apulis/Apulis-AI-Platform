@@ -70,9 +70,9 @@ default_config_parameters = {
     "mysql_port": "3306",
     "mysql_username": "root",
 
-    "mysql_data_path": "/mntdlws/service/mysql/data",
-    "grafana_data_path": "/mntdlws/service/grafana/data",
-    "prometheus_data_path": "/mntdlws/service/prometheus/data",
+    "mysql_data_path": "/var/lib/mysql",
+    "grafana_data_path": "/var/lib/grafana/data",
+    "prometheus_data_path": "/var/lib/prometheus/data",
 
     "extranet_protocol":"https",
     "apt_mirror_url": "http:\/\/mirrors.aliyun.com",

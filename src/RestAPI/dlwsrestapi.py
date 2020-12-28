@@ -1211,6 +1211,20 @@ class GetJobLog(Resource):
 ##
 api.add_resource(GetJobLog, '/GetJobLog')
 
+class GetJobRawLog(Resource):
+    @api.doc(params=model.GetJobLog.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId', required=True)
+        parser.add_argument('userName', required=True)
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        userName = args["userName"]
+        return JobRestAPIUtils.GetJobLog(userName, jobId)
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetJobRawLog, '/GetJobRawLog')
 
 class GetJobStatus(Resource):
     @api.doc(params=model.GetJobStatus.params)

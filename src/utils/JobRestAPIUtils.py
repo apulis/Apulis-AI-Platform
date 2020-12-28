@@ -1036,6 +1036,19 @@ def GetJobLog(userName, jobId,page=1):
         "max_page":0
     }
 
+def GetJobRawLog(userName, jobId):
+    dataHandler = DataHandler()
+    jobs = dataHandler.GetJob(jobId=jobId)
+    if len(jobs) == 1:
+        if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
+            #return JobLogUtils.GetJobRawLog(jobId)
+            return jobs[0]["jobPath"]
+        else:
+            return 403
+    else:
+        return 404
+
+
 def GetClusterStatus():
     cluster_status,last_update_time =  DataManager.GetClusterStatus()
     return cluster_status,last_update_time

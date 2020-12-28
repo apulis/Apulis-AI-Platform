@@ -1220,7 +1220,11 @@ class GetJobRawLog(Resource):
         args = parser.parse_args()
         jobId = args["jobId"]
         userName = args["userName"]
-        return JobRestAPIUtils.GetJobRawLog(userName, jobId)
+        response = JobRestAPIUtils.GetJobRawLog(userName, jobId)
+        if type(response) is int:
+            return Response(status=response, content_type="text/plain")
+        else:
+            return Response(response, content_type="text/plain")
 ##
 ## Actually setup the Api resource routing here
 ##

@@ -1,4 +1,6 @@
 FROM ubuntu:18.04
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
+RUN sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
 RUN  apt-get update
 
 RUN apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common git  && \

@@ -1055,14 +1055,16 @@ def GetJobRawLog(userName, jobId):
                     with open(file, "r") as f:
                         log = f.read()
                         rawLog += log
-                return Response(rawLog, content_type="text/plain")
+                return {
+                    "log": rawLog
+                }
             except Exception as e:
                 logger.exception(e)
                 pass
-        else:
-            return Response(403, content_type="text/plain")
-    else:
-        return Response(404, content_type="text/plain")
+    return {
+        "log": ""
+    }
+
 
 
 def GetClusterStatus():

@@ -34,10 +34,13 @@ spec:
         - mountPath: /root/config.yaml
           name: appconfig
           subPath: config.yaml
+
         - mountPath: /home
-          name: dlwsdatawork
+          name: aiplatform-app-data-pvc
+          subPath: work/
         - mountPath: /data
-          name: dlwsdatadata
+          name: aiplatform-model-data-pvc
+
         - mountPath: /etc/kubernetes
           name: cluster-conf
         - mountPath: /root/logs
@@ -59,12 +62,12 @@ spec:
       - name: appconfig
         configMap:
           name: aiarts-cm
-      - name: dlwsdatawork
-        hostPath:
-          path: {{cnf["storage-mount-path"]}}/work
-      - name: dlwsdatadata
-        hostPath:
-          path: {{cnf["storage-mount-path"]}}/storage      
+      - name: aiplatform-app-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-app-data-pvc
+      - name: aiplatform-model-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-model-data-pvc
       - name: cluster-conf
         hostPath:
           path: /etc/kubernetes

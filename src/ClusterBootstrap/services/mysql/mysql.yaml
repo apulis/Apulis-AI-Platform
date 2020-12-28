@@ -44,22 +44,21 @@ spec:
         - containerPort: {{cnf["mysql_port"]}}
           name: mysql
         volumeMounts:
-        - name: mysql-storage
-          mountPath: /var/lib/mysql
         - name: mysql-log
           mountPath: /var/log/mysql
+        - name: mysql-lib
+          mountPath:  /var/lib/mysql
       {% if cnf["private_docker_registry_username"] %}
       imagePullSecrets:
       - name: svccred
       {% endif %}
       volumes:
-      - name: mysql-storage
-        hostPath:
-          path: {{cnf["mysql_data_path"]}}
       - name: mysql-log
         hostPath:
           path: /var/log/mysql
-          
+      - name: mysql-lib
+        hostPath:
+          path: /var/lib/mysql
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

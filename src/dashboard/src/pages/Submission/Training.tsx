@@ -436,7 +436,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       const job: any = {
         userName: userName,
         userId: uid,
-        jobType: 'training',
+        jobType: 'codeEnv',
+        codePath: '/home/' + userName,
         gpuType: gpuType,
         vcName: selectedTeam,
         containerUserId: 0,

@@ -133,7 +133,7 @@ class Vc extends React.Component {
   }
 
   save = async () => {
-    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj, jobMaxTimeSecond } = this.state;
+    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj, jobMaxTimeSecond, maxJobTimeValidator } = this.state;
     const { t } = this.props;
     const tTip = t('vcName is required！')
     const { selectedCluster, getTeams } = this.context;
@@ -146,6 +146,14 @@ class Vc extends React.Component {
         }
       })
       return;
+    }
+    if (!jobMaxTimeSecond) {
+      this.setState({
+        maxJobTimeValidator: {
+          error: true,
+          text: t('')
+        }
+      })
     }
     Object.keys(quotaValidateObj).forEach(i => {
       if (quotaValidateObj[i].error) flag = false;
@@ -389,10 +397,17 @@ class Vc extends React.Component {
 
   onJobMaxTimeSecondChange = (e) => {
     const value = e.target.value;
-    
-    this.setState({
-      jobMaxTimeSecond: Math.floor(value),
-    });
+    if (typeof value !== 'undefined' && value < 1 && value !== '') {
+      this.setState({
+        jobMaxTimeSecond: 1,
+      });
+      return;
+    } else if (typeof value === 'undefined') {
+      this.setState({
+        jobMaxTimeSecond: null,
+      });
+      return;
+    }
   }
 
   onSizeChange = (e) => {
@@ -523,8 +538,7 @@ class Vc extends React.Component {
                   onChange={this.onJobMaxTimeSecondChange}
                   type="number"
                   variant="outlined"
-                  min={1}
-                  
+                  inputProps={{ inputProps: { min: 1 } }}
                   style={{ width: '87%' }}
                   defaultValue={isEdit ? jobMaxTimeSecond : 5}
                   error={maxJobTimeValidator.error}

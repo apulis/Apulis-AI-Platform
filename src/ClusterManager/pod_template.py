@@ -13,6 +13,13 @@ from pod_template_utils import enable_cpu_config
 from config import config
 from DataHandler import DataHandler
 
+import logging
+import logging.config
+import storage
+
+logger = logging.getLogger(__name__)
+
+
 class PodTemplate():
     def __init__(self, template, deployment_template=None, enable_custom_scheduler=False, secret_templates=None):
         self.template = template
@@ -95,21 +102,33 @@ class PodTemplate():
         job.job_path = params["jobPath"]
         job.work_path = params["workPath"]
         job.data_path = params["dataPath"]
+
         # TODO user's mountpoints first, but should after 'job_path'
+        job.add_mountpoints(job.ssh_path_mountpoints())   # added a list of mount points
         job.add_mountpoints(job.job_path_mountpoint())
+
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
-            job.add_mountpoints({"name": "home", "containerPath": "/home/{}".format(
-                job.get_alias()), "hostPath": job.get_homefolder_hostpath(), "enabled": True})
+            job.add_mountpoints(job.home_path_mountpoint())
+
         if "mountpoints" in params:
             job.add_mountpoints(params["mountpoints"])
+
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
+            logger.info("job-%s to mount work path and data path" % (job.job_id))
             job.add_mountpoints(job.work_path_mountpoint())
             job.add_mountpoints(job.data_path_mountpoint())
+
         job.add_mountpoints(job.vc_custom_storage_mountpoints())
         job.add_mountpoints(job.vc_storage_mountpoints())
+        
+        # TODO: remove following log statement
+        logger.info("job-%s mount points(%s)" % (job.job_id, str(job.mountpoints)))
+
         params["mountpoints"] = job.mountpoints
+        params["mountpoints_pvc"] = job.get_pvc_mountpoints()  # pvc deduplication
+        logger.info("job-%s  pvcs(%s)" % (job.job_id, str(params["mountpoints_pvc"])))
 
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()
@@ -120,6 +139,7 @@ class PodTemplate():
 
         if "nodeSelector" not in params:
             params["nodeSelector"] = {}
+
         if "gpuType" in params and params["gpuType"]:
             params["nodeSelector"]["gpuType"] = params["gpuType"]
 
@@ -217,14 +237,17 @@ class PodTemplate():
             if params["jobtrainingtype"] == "InferenceJob":
                 if pod["resourcegpu"]>=1:
                     pod["gpuLimit"] = 1
+
                 if "inference_port" not in pod:
                     pod["inference_port"] = 8080
+
                 # pod["model_name"] = pod["jobName"]
                 pod["model_name"] = "ifs-"+pod["jobId"]
                 pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/path/noExist"
                 pod["model_base_path"] = re.sub("^/data", config["storage-mount-path"]+"/storage", pod["model_base_path"])
                 pod["model_base_path"] = re.sub("^/home", config["storage-mount-path"]+"/work", pod["model_base_path"])
                 pod["framework"] = params["framework"]
+                
                 if "version" in params:
                     pod["version"] = params["version"]
                 if "-" in params["framework"]:
@@ -246,9 +269,10 @@ class PodTemplate():
 
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
+
             # mount /pod
-            pod_path = job.get_hostpath(job.job_path, "master")
-            pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": pod_path, "enabled": True})
+            pod["mountpoints"].append(job.pod_path_mountpoint(os.path.join(job.job_path, "master")))
+
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True
                 pod["init-container"] =os.environ.get("INIT_CONTAINER_IMAGE")

@@ -1,5 +1,6 @@
 FROM ubuntu:18.04
-RUN apt-get install -y ca-certificates apt-transport-https
+RUN apt-get install --reinstall ca-certificates
+RUN apt-get update
 RUN cp -a /etc/apt/sources.list /etc/apt/sources.list.bak
 RUN echo "deb https://repo.huaweicloud.com/ubuntu-ports/ bionic main restricted universe multiverse" >/etc/apt/sources.list && \
 echo "deb-src https://repo.huaweicloud.com/ubuntu-ports/ bionic main restricted universe multiverse" >>/etc/apt/sources.list && \

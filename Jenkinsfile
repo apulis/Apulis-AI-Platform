@@ -27,7 +27,7 @@ buildPlugin ( {
             ],
             'imageName': 'apulistech/restfulapi2',
             'directory': 'src/ClusterBootstrap/build/restfulapi2',
-            'arch': ['amd64']
+            'arch': ['amd64','arm64']
         ],
         [
             'compileContainer': 'cicd/dlworkspace-compile',
@@ -41,7 +41,7 @@ buildPlugin ( {
             ],
             'imageName': 'apulistech/webui3',
             'directory': 'src/ClusterBootstrap/build/webui3',
-            'arch': ['amd64']
+            'arch': ['amd64','arm64']
         ]
     ]
 })

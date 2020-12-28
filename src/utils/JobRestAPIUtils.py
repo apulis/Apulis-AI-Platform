@@ -38,6 +38,8 @@ import logging
 from cachetools import cached, TTLCache
 from threading import Lock
 
+import glob
+
 DEFAULT_JOB_PRIORITY = 100
 USER_JOB_PRIORITY_RANGE = (100, 200)
 ADMIN_JOB_PRIORITY_RANGE = (1, 1000)
@@ -1041,12 +1043,22 @@ def GetJobRawLog(userName, jobId):
     jobs = dataHandler.GetJob(jobId=jobId)
     if len(jobs) == 1:
         if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
-            #return JobLogUtils.GetJobRawLog(jobId)
-            jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
-            jobPath = "work/"+jobParams["jobPath"]
-            localJobPath = os.path.join(config["storage-mount-path"], jobPath)
-            logPath = os.path.join(localJobPath, "logs")
-            return logPath
+            try:
+                jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
+                jobPath = "work/"+jobParams["jobPath"]
+                localJobPath = os.path.join(config["storage-mount-path"], jobPath)
+                logPath = os.path.join(localJobPath, "logs")
+                var files = glob.glob(os.path.join(logPath, "log-container-" + jobId + ".txt.*"))
+                files.sort()
+                rawLog = ""
+                for file in files:
+                    with open(file, "r") as f:
+                        log = f.read()
+                        rawLog += log
+                return Response(rawLog, content_type="text/plain")
+            except Exception as e:
+                logger.exception(e)
+                pass
         else:
             return Response(403, content_type="text/plain")
     else:

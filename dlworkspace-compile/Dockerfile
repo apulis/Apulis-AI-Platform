@@ -1,19 +1,20 @@
 FROM ubuntu:18.04
-RUN echo '' > /etc/apt/sources.list && \
-    echo 'deb http://mirrors.163.com/ubuntu/ bionic main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://mirrors.163.com/ubuntu/ bionic-security main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://mirrors.163.com/ubuntu/ bionic-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://mirrors.163.com/ubuntu/ bionic-proposed main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb http://mirrors.163.com/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.163.com/ubuntu/ bionic main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-security main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-proposed main restricted universe multiverse' >> /etc/apt/sources.list && \
-    echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
-    apt-get update
+ARG TARGETARCH
+# RUN echo '' > /etc/apt/sources.list && \
+#     echo 'deb http://mirrors.163.com/ubuntu/ bionic main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb http://mirrors.163.com/ubuntu/ bionic-security main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb http://mirrors.163.com/ubuntu/ bionic-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb http://mirrors.163.com/ubuntu/ bionic-proposed main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb http://mirrors.163.com/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb-src http://mirrors.163.com/ubuntu/ bionic main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-security main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-updates main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-proposed main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     echo 'deb-src http://mirrors.163.com/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list && \
+#     apt-get update
 RUN apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common git  && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
-    add-apt-repository "deb [arch=amd64] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/ubuntu $(lsb_release -cs) stable"  && \
+    add-apt-repository "deb [arch=${TARGETARCH}] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/ubuntu $(lsb_release -cs) stable"  && \
     apt-get update && \
     apt-get install docker-ce-cli
 RUN apt-get -y install python-mysqldb build-essential python-dev libmysqlclient-dev python-pip net-tools libcurl4-openssl-dev

@@ -1043,11 +1043,14 @@ def GetJobRawLog(userName, jobId):
         if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
             #return JobLogUtils.GetJobRawLog(jobId)
             jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
-            return jobParams["jobPath"]
+            jobPath = "work/"+jobParams["jobPath"]
+            localJobPath = os.path.join(config["storage-mount-path"], jobPath)
+            logPath = os.path.join(localJobPath, "logs")
+            return logPath
         else:
-            return 403
+            return Response(403, content_type="text/plain")
     else:
-        return 404
+        return Response(404, content_type="text/plain")
 
 
 def GetClusterStatus():

@@ -6,7 +6,7 @@ buildPlugin ( {
         [
             'imageName': 'cicd/dlworkspace-compile',
             'directory': 'dlworkspace-compile',
-            'arch': ['amd64']
+            'arch': ['amd64','arm64']
         ],
         [
             'compileContainer': 'cicd/dlworkspace-compile',

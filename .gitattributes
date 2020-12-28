@@ -1,0 +1,5 @@
+docs    merge=ours
+Readme* merge=ours
+README* merge=ours
+readme* merge=ours
+License* merge=ours

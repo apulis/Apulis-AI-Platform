@@ -52,7 +52,7 @@ spec:
           subPath: jobfiles/
         - mountPath: /var/log/dlworkspace
           name: log
-        - mountPath:  /mntdlws/nfs/label/
+        - mountPath: /mntdlws/nfs/label/
           name: aiplatform-label-data-pvc
         ports:
         - containerPort: 9200

@@ -1,0 +1,5 @@
+source "drivers/hisi/npu/drivers/dev_core/device_manager/device_manager_slave/devdrv_driver_slave/Kconfig"
+
+config HOST_DEVDRV_DEVDRIVER
+	tristate "HOST DEVDRV DEVDRIVER"
+	default m

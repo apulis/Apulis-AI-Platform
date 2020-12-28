@@ -80,7 +80,6 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
         for gpu_type, quota in gpu_info.items():
             vc_quota = quota - int(ratio_unschedulable[vc_name][gpu_type])
             used = vc_usage.get(vc_name, {}).get(gpu_type, 0)
-
             ratio[vc_name][gpu_type] = max(vc_quota - used, 0)
 
     ratio_sum = collections.defaultdict(lambda : 0 )

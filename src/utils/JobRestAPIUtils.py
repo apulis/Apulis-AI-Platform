@@ -1042,7 +1042,8 @@ def GetJobRawLog(userName, jobId):
     if len(jobs) == 1:
         if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
             #return JobLogUtils.GetJobRawLog(jobId)
-            return jobs[0]["jobPath"]
+            jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
+            return jobParams["jobPath"]
         else:
             return 403
     else:

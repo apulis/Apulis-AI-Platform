@@ -154,6 +154,16 @@ def remove_creds(job):
             i_p.pop("username", None)
             i_p.pop("password", None)
 
+def set_duration(job):
+
+    if job["jobStatus"] in ["running","killing","pausing"]:
+        if "startedAt" in job["jobStatusDetail"][0]:
+            job["duration"] = int(time.time()) - int(time.mktime(time.strptime(job["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S")))
+    elif job["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in job["jobStatusDetail"][0] and "startedAt" in job["jobStatusDetail"][0]:
+        job["duration"] = int(time.mktime(time.strptime(job["jobStatusDetail"][0]["finishedAt"][:19],"%Y-%m-%dT%H:%M:%S"))) - int(time.mktime(time.strptime(job["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S")))
+
+    return
+
 def generate_response(result):
     resp = jsonify(result)
     resp.headers["Access-Control-Allow-Origin"] = "*"
@@ -654,6 +664,7 @@ class ListJobsV2(Resource):
             if isinstance(joblist, list):
                 for job in joblist:
                     remove_creds(job)
+                    set_duration(job)
 
         resp = generate_response(jobs)
         return resp
@@ -676,10 +687,11 @@ class ListJobsV3(Resource):
         parser.add_argument('searchWord')
         parser.add_argument('orderBy')
         parser.add_argument('order')
+        parser.add_argument('jobGroup')
 
         args = parser.parse_args()
         jobs = JobRestAPIUtils.GetJobListV3(args["userName"], args["vcName"], args["jobOwner"],
-                args["jobType"], args["jobStatus"],
+                args["jobType"], args["jobStatus"],args["jobGroup"],
                 args["pageNum"], args["pageSize"],
                 args["searchWord"], args["orderBy"], args["order"])
 
@@ -688,9 +700,10 @@ class ListJobsV3(Resource):
                 if isinstance(joblist, list):
                     for job in joblist:
                         remove_creds(job)
+                        set_duration(job)
         else:
             pass
-
+        
         resp = generate_response(jobs)
         return resp
 
@@ -738,6 +751,9 @@ class ListAllJobs(Resource):
                 args["pageNum"], args["pageSize"],
                 args["searchWord"], args["orderBy"], args["order"])
 
+        for job in jobs:
+            set_duration(job)
+                
         resp = generate_response(jobs)
         return resp
 
@@ -875,8 +891,11 @@ class ListModelConversionJob(Resource):
             if isinstance(joblist, list):
                 for job in joblist:
                     remove_creds(job)
+                    set_duration(job)
+
         resp = generate_response(jobs)
         return resp
+
 api.add_resource(ListModelConversionJob, '/ListModelConversionJob')
 
 class CountJobByStatus(Resource):
@@ -1192,6 +1211,20 @@ class GetJobLog(Resource):
 ##
 api.add_resource(GetJobLog, '/GetJobLog')
 
+class GetJobRawLog(Resource):
+    @api.doc(params=model.GetJobLog.params)
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('jobId', required=True)
+        parser.add_argument('userName', required=True)
+        args = parser.parse_args()
+        jobId = args["jobId"]
+        userName = args["userName"]
+        return JobRestAPIUtils.GetJobRawLog(userName, jobId)
+##
+## Actually setup the Api resource routing here
+##
+api.add_resource(GetJobRawLog, '/GetJobRawLog')
 
 class GetJobStatus(Resource):
     @api.doc(params=model.GetJobStatus.params)
@@ -2333,6 +2366,6 @@ class GetPlatformVersionInfo(Resource):
 api.add_resource(GetPlatformVersionInfo, '/VersionInfo')
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGUSR2, dumpstacks)
+    #signal.signal(signal.SIGUSR2, dumpstacks)
     app.run(debug=False,host="0.0.0.0",threaded=True)
 

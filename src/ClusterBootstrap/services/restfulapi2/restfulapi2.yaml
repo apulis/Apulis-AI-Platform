@@ -42,31 +42,20 @@ spec:
           name: resolv
         - mountPath: /RestfulAPI
           name: apiconfig
-        - mountPath: {{cnf["storage-mount-path"]}}/work
-          name: dlwsdatawork
         - mountPath: /var/log/apache2
           name: log
+        - mountPath: /dlwsdata/work
+          name: aiplatform-app-data-pvc
+          subPath: work/
         - mountPath: /home
-          name: home
-        - mountPath: /data
-          name: data
+          name: aiplatform-app-data-pvc
+          subPath: work/
+        - mountPath: /dlwsdata/storage
+          name: aiplatform-model-data-pvc
         ports:
         - containerPort: 5000
           hostPort: 5000
           name: main
-        {% if False %}
-        {% for volume in cnf["mountpoints"] %}
-        {% if cnf["mountpoints"][volume]["mountpoints"] is string and cnf["mountpoints"][volume]["mountpoints"]!="" %}
-        - mountPath: {{cnf["storage-mount-path"]}}/{{cnf["mountpoints"][volume]["mountpoints"]}}
-          name: {{cnf["mountpoints"][volume]["mountpoints"]}}
-        {% else %}
-        {% for mp in cnf["mountpoints"][volume]["mountpoints"] %}
-        - mountPath: {{cnf["storage-mount-path"]}}/{{mp}}
-          name: {{mp}}
-        {% endfor %}
-        {% endif %}
-        {% endfor %}
-        {% endif %}
       volumes:
       - name: kubectl-binary
         hostPath:
@@ -83,30 +72,12 @@ spec:
       - name: log
         hostPath:
           path: /var/log/restfulapi
-      - name: dlwsdatawork
-        hostPath:
-          path: {{cnf["storage-mount-path"]}}/work
-      - name: home
-        hostPath:
-          path: /dlwsdata/work
-      - name: data
-        hostPath:
-          path: /dlwsdata/storage
-      {% if False %}
-      {% for volume in cnf["mountpoints"] %}
-      {% if cnf["mountpoints"][volume]["mountpoints"] is string and cnf["mountpoints"][volume]["mountpoints"]!="" %}
-      - name: {{cnf["mountpoints"][volume]["mountpoints"]}}
-        hostPath:
-          path: {{cnf["storage-mount-path"]}}/{{cnf["mountpoints"][volume]["mountpoints"]}}
-      {% else %}
-      {% for mp in cnf["mountpoints"][volume]["mountpoints"] %}
-      - name: {{mp}}
-        hostPath:
-          path: {{cnf["storage-mount-path"]}}/{{mp}}
-      {% endfor %}
-      {% endif %}
-      {% endfor %}
-      {% endif %}
+      - name: aiplatform-app-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-app-data-pvc
+      - name: aiplatform-model-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-model-data-pvc
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

@@ -1,4 +1,4 @@
-cluster_name: skypulis1
+cluster_name: dlworkspace
 azure_cluster:
   skypulis1:
     azure_location: [ "chinanorth2" ]

@@ -304,15 +304,28 @@ def get_cluster_status():
         logger.info("nothing changed in cluster, skipping the cluster status update...")
 
     config["cluster_status"] = copy.deepcopy(cluster_status)
+
     # update newest device type info
     currentDeviceMapping = dataHandler.GetAllDevice()
     remveDeviceMapping = set(currentDeviceMapping.keys()).difference(set(gpuMapping.keys()))
+
     if remveDeviceMapping:
         for one_device_type in list(remveDeviceMapping):
-            dataHandler.DeleteDeviceType(one_device_type)
+
+            # check if fakeData is allowed
+            if "fake_device" in config:
+                logger.info("fake_device(%s)", str(config["fake_device"]))
+
+            if "fake_device" in config and config["fake_device"]:
+                pass
+            else:
+                dataHandler.DeleteDeviceType(one_device_type)
+                logger.info("delete deviceType(%s)", str(one_device_type))
+
     for gpuType,gpuStrDict in gpuMapping.items():
         if gpuType:
             dataHandler.AddDevice(gpuType,gpuStrDict["deviceStr"],gpuStrDict["capacity"],gpuStrDict["detail"])
+
     dataHandler.Close()
     return cluster_status
 

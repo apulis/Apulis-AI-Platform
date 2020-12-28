@@ -38,6 +38,8 @@ import logging
 from cachetools import cached, TTLCache
 from threading import Lock
 
+import glob
+
 DEFAULT_JOB_PRIORITY = 100
 USER_JOB_PRIORITY_RANGE = (100, 200)
 ADMIN_JOB_PRIORITY_RANGE = (1, 1000)
@@ -432,15 +434,13 @@ def GetModelConversionTypes():
 
 def BuildModelConversionArgs(conversionArgs):
     arg_str = ""
-    string_type_args = [
-        "input_shape", "output_type", "dynamic_batch_size", "dynamic_image_size"
-    ]
+    not_string_type_args = []
     for key, value in conversionArgs.items():
         if value is not None or value != "":
-            if key in string_type_args:
-                value = '"' + value + '"'
-            else:
+            if key in not_string_type_args:
                 value = "".join(value.split())
+            else:
+                value = '\\"' + value + '\\"'
             arg_str = arg_str + " --" + key + "=" + value
     return arg_str
 
@@ -493,6 +493,7 @@ def PostModelConversionJob(jobParamsJsonStr):
 
         jobParams["cmd"] = 'sudo bash -E -c "source /pod.env && %s && chmod 777 %s && chmod 777 %s"' % (raw_cmd, output_dir, output_path + ".om")
 
+        logger.info("cmd: %s", jobParams["cmd"])
     else:
         ret["error"] = "ERROR: .. convert type " + jobParams["conversionType"] + " not supported"
         return ret
@@ -696,7 +697,7 @@ def GetJobListV2(userName, vcName, jobOwner, num=None):
             dataHandler.Close()
     return jobs
 
-def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order):
+def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus,jobGroup, pageNum, pageSize, searchWord, orderBy, order):
 
     jobs = {}
     dataHandler = None
@@ -708,7 +709,7 @@ def GetJobListV3(userName, vcName, jobOwner, jobType, jobStatus, pageNum, pageSi
         # if user needs to access all jobs, and has been authorized,
         # he could get all pending jobs; otherwise, he could get his
         # own jobs with all status
-        jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus, pageNum, pageSize, searchWord, orderBy, order)
+        jobs = dataHandler.GetJobListV3(userName, vcName, jobType, jobStatus,jobGroup, pageNum, pageSize, searchWord, orderBy, order)
 
     except Exception as e:
         logger.error('get job list V2 Exception: user: %s, ex: %s', userName, str(e))
@@ -1037,6 +1038,33 @@ def GetJobLog(userName, jobId,page=1):
         "max_page":0
     }
 
+def GetJobRawLog(userName, jobId):
+    dataHandler = DataHandler()
+    jobs = dataHandler.GetJob(jobId=jobId)
+    if len(jobs) == 1:
+        if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
+            try:
+                jobParams = json.loads(base64.b64decode(jobs[0]["jobParams"]))
+                jobPath = "work/"+jobParams["jobPath"]
+                localJobPath = os.path.join(config["storage-mount-path"], jobPath)
+                logPath = os.path.join(localJobPath, "logs")
+                var files = glob.glob(os.path.join(logPath, "log-container-" + jobId + ".txt.*"))
+                files.sort()
+                rawLog = ""
+                for file in files:
+                    with open(file, "r") as f:
+                        log = f.read()
+                        rawLog += log
+                return Response(rawLog, content_type="text/plain")
+            except Exception as e:
+                logger.exception(e)
+                pass
+        else:
+            return Response(403, content_type="text/plain")
+    else:
+        return Response(404, content_type="text/plain")
+
+
 def GetClusterStatus():
     cluster_status,last_update_time =  DataManager.GetClusterStatus()
     return cluster_status,last_update_time
@@ -1315,6 +1343,19 @@ def GetVcsUserCount():
     res = requests.get(url=config["usermanagerapi"] + "/open/vc/user/name",headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
     if res.status_code == 200:
         ret = res.json()["vcUserNames"]
+    return ret
+
+def GetUserData(userName):
+    ret = {}
+    res = requests.get(url=config["usermanagerapi"] + "/open/user-info?userName=" + userName, headers={"Authorization": "Bearer " + config["usermanagerapitoken"]})
+    if res.status_code == 200:
+        ret = res.json()
+        logger.info(config["usermanagerapi"] + "/open/user-info?userName=" + userName)
+        logger.info(str(ret))
+    else:
+        msg = "userName(%s), call /custom-user-dashboard-backend/open/user-info failed(%s)" %(userName, str(res.status_code))
+        logger.error(msg)
+
     return ret
 
 def ListVCs(userName,page=None,size=None,name=None):

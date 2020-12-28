@@ -42,10 +42,13 @@ spec:
           name: dotnet-log
         - mountPath: /app/appsettings.json
           name: dotnet-config
+
         - mountPath: /mntdlws/nfs/label
-          name: data
+          name: aiplatform-label-data-pvc
+
         - mountPath: /data
-          name: dataset
+          name: aiplatform-model-data-pvc
+
         - mountPath: /home
           name: home
       volumes:
@@ -61,6 +64,15 @@ spec:
       - name: dataset
         hostPath:
           path: /mntdlws/storage
+
+      - name: aiplatform-label-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-label-data-pvc
+
+      - name: aiplatform-model-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-model-data-pvc
+
       - name: home
         hostPath:
           path: /mntdlws/work

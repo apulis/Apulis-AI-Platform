@@ -1000,11 +1000,14 @@ class PythonLauncher(Launcher):
         self.queue.put(("submit_job", (job,), {}))
 
     def submit_job_impl(self, job):
+        
         # check if existing any pod with label: run=job_id
         assert("jobId" in job)
         job_id = job["jobId"]
+
         job["cluster"] = config
         job_object, errors = JobSchema().load(job)
+
         # TODO assert job_object is a Job
         assert isinstance(job_object, Job), "job_object is not of Job, but " + str(type(job_object))
         job_object.params = json.loads(base64.b64decode(job["jobParams"]))
@@ -1067,6 +1070,18 @@ class PythonLauncher(Launcher):
                                               {"userName":job_object.params["userName"],"uid":user_info["uid"]}
             )})
 
+            ### add support for job group
+            if "jobGroup" in job:
+               job_object.params["envs"].append({"name":"DLWS_JOB_GROUP","value":job["jobGroup"]})
+
+            ### add support for job tracking
+            if "track" in job_object.params and int(job_object.params["track"]) == 1:
+               job_object.params["envs"].append({"name":"DLWS_JOB_TRACK","value":"1"})
+               job_object.params["envs"].append({"name":"MLFLOW_TRACKING_URI","value":"http://mlflow.default:9010"})
+               job_object.params["envs"].append({"name":"MLFLOW_EXPERIMENT_NAME","value": "ai_arts_" + job["jobGroup"]})
+               job_object.params["envs"].append({"name":"MLFLOW_RUN_ID","value":job_id})
+
+
             enable_custom_scheduler = job_object.is_custom_scheduler_enabled()
             blobfuse_secret_template = job_object.get_blobfuse_secret_template()
             image_pull_secret_template = job_object.get_image_pull_secret_template()
@@ -1074,6 +1089,7 @@ class PythonLauncher(Launcher):
                 "blobfuse": blobfuse_secret_template,
                 "imagePull": image_pull_secret_template
             }
+            
             if job_object.params["jobtrainingtype"] == "RegularJob":
                 pod_template = PodTemplate(job_object.get_template(),
                                            enable_custom_scheduler=enable_custom_scheduler,

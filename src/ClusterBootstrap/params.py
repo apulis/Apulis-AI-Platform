@@ -70,9 +70,9 @@ default_config_parameters = {
     "mysql_port": "3306",
     "mysql_username": "root",
 
-    "mysql_data_path": "/mntdlws/service/mysql/data",
-    "grafana_data_path": "/mntdlws/service/grafana/data",
-    "prometheus_data_path": "/mntdlws/service/prometheus/data",
+    "mysql_data_path": "/var/lib/mysql",
+    "grafana_data_path": "/var/lib/grafana/data",
+    "prometheus_data_path": "/var/lib/prometheus/data",
 
     "extranet_protocol":"https",
     "apt_mirror_url": "http:\/\/mirrors.aliyun.com",
@@ -796,6 +796,7 @@ default_config_parameters = {
             "aiarts-frontend": {"fullname": "apulistech/dlworkspace_aiarts-frontend:1.0.0"},
             "aiarts-backend": {"fullname": "apulistech/dlworkspace_aiarts-backend:1.0"},
             "data-platform": {"fullname": "apulistech/dlworkspace_data-platform-backend:latest"},
+            "mlflow":{"fullname":"apulistech/mlflow:latest"},
             "node-cleaner": {"fullname": "apulistech/node-cleaner:1.0"},
             "postgres": {"fullname": "postgres:10-alpine"},
             "cvat-redis": {"fullname": "redis:4.0-alpine"},

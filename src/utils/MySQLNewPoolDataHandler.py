@@ -80,7 +80,7 @@ def record(fn):
             logger.exception('mysql Exception: %s', str(e))
         finally:
             elapsed = timeit.default_timer() - start
-            logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
+            ##logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
             data_handler_fn_histogram.labels(fn.__name__).observe(elapsed)
 
     return wrapped
@@ -109,8 +109,9 @@ class DataHandler(object):
         self.monitormetricsTableName = "monitormetrics"
         self.monitorchannelTableName = "monitorchannel"
         self.pool = SingletonDBPool.instance()
+
         elapsed = timeit.default_timer() - start_time
-        logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
+        ##logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
         self.CreateDatabase()
         self.CreateTable()
 
@@ -185,6 +186,7 @@ class DataHandler(object):
                     `retries`             int    NULL DEFAULT 0,
                     `isDeleted`             int    NULL DEFAULT 0,
                     `lastUpdated` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    `jobGroup`    varchar(255) NULL,
                     PRIMARY KEY (`id`),
                     UNIQUE(`jobId`),
                     INDEX (`userName`),
@@ -192,7 +194,8 @@ class DataHandler(object):
                     INDEX (`jobId`),
                     INDEX (`vcName`),
                     INDEX (`jobStatus`),
-                    INDEX (`jobType`)
+                    INDEX (`jobType`),
+                    INDEX (`jobGroup`)
                 );
                 """ % (self.jobtablename)
 
@@ -430,7 +433,7 @@ class DataHandler(object):
                     ]
                 }, 
                 "ipython": True,
-                "gpus": 1, 
+                "gpus": 1,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
                 "type": "RegularJob", 
                 "image": "ubuntu:18.04", 
                 "enableDataPath": True,
@@ -536,6 +539,7 @@ class DataHandler(object):
             with MysqlConn() as conn:
                 conn.insert_one(sql)
                 conn.commit()
+
     @record
     def AddDevice(self,deviceType, deviceStr, capacity,detail):
         ret = False
@@ -1008,12 +1012,12 @@ class DataHandler(object):
     def AddJob(self, jobParams):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.jobtablename + "` (jobId, familyToken, isParent, jobName, userName, vcName, jobType,jobParams ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+            sql = "INSERT INTO `" + self.jobtablename + "` (jobId, familyToken, isParent, jobName, userName, vcName, jobType,jobParams,jobGroup) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             jobParam = base64.b64encode(json.dumps(jobParams))
             with MysqlConn() as conn:
                 conn.insert_one(sql, (
                     jobParams["jobId"], jobParams["familyToken"], jobParams["isParent"], jobParams["jobName"],
-                    jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam))
+                    jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam,jobParams.get("jobGroup",None)))
                 conn.commit()
             ret = True
         except Exception as e:
@@ -1146,7 +1150,7 @@ class DataHandler(object):
     def GetJobList(self, userName, vcName, num=None, pageSize=None, pageNum=None, jobName=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1 and isDeleted=0" % (
+            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta`, `lastUpdated` ,`jobGroup` FROM `%s` where 1 and isDeleted=0" % (
                 self.jobtablename)
             params = []
             if jobName != None:
@@ -1180,7 +1184,7 @@ class DataHandler(object):
                 rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
-            logger.info("(fetchall time: %f)", fetch_elapsed)
+            ##logger.info("(fetchall time: %f)", fetch_elapsed)
             for one in rets:
                 ret.append(one)
         except Exception as e:
@@ -1240,7 +1244,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority FROM {} left join {} on {}.jobId = {}.jobId where jobType='training' and isDeleted=0".format(
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority FROM {} left join {} on {}.jobId = {}.jobId where isDeleted=0".format(
                 self.jobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
@@ -1272,7 +1276,7 @@ class DataHandler(object):
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "training":
+                    if record["jobType"] == "training" or record["jobType"] == "codeEnv":
                         ret["runningJobs"].append(record)
                     elif record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)
@@ -1295,7 +1299,7 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetJobListV3(self, userName, vcName, jobType, jobStatus, pageNum,
+    def GetJobListV3(self, userName, vcName, jobType, jobStatus,jobGroup,pageNum,
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
 
         ret = {}
@@ -1313,9 +1317,13 @@ class DataHandler(object):
             cursor = conn.cursor()
 
             query = """SELECT count(*) OVER() AS total, jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
-                        jobType, jobTime, jobParams FROM {}  
+                        jobType, jobTime, jobParams, errorMsg FROM {}  
                         where jobType='{}' and isDeleted=0""".format(self.jobtablename,
                         jobType)
+            ## add support for `jobGroup` filter :
+            if jobGroup and int(jobGroup) > 0:
+                query += " and jobGroup='{}'".format(jobGroup)
+
 
             ## all jobs
             if jobStatus.lower() != "all":
@@ -1371,8 +1379,9 @@ class DataHandler(object):
 
                 record = dict(zip(columns, item))
 
-                if record["jobStatusDetail"] is not None:
-                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
+                if record["jobStatusDetail"] is not None:                    
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))                        
+
                 else:
                     pass
 
@@ -1401,7 +1410,7 @@ class DataHandler(object):
             conn.commit()
 
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('GetJobListV3 Exception: %s', str(e))
 
         finally:
             if cursor is not None:
@@ -1898,7 +1907,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT `jobId`,`familyToken`,`isParent`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta`  FROM `%s` where `%s` = %s " % (
+            query = "SELECT `jobId`,`familyToken`,`isParent`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` ,`jobGroup` FROM `%s` where `%s` = %s " % (
             self.jobtablename, key, "%s")
             cursor.execute(query,[expected])
             columns = [column[0] for column in cursor.description]
@@ -2558,7 +2567,7 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 and userName='%s'" % (self.jobtablename, userName)
+            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 " % self.jobtablename
 
             if vcName is not None and vcName != "":
                 query += " and vcName = '%s'" % vcName

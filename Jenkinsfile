@@ -12,6 +12,7 @@ buildPlugin ( {
             'compileContainer': 'cicd/dlworkspace-compile',
             'preBuild':[
                 ['src/ClusterBootstrap', 'mkdir -p build'],
+                ['src/ClusterBootstrap/build', 'rm -rf restfulapi2'],
                 ['src/ClusterBootstrap', 'pip install -r scripts/requirements.txt'],
                 ['src/ClusterManager', 'pip install -r requirements.txt'],
                 ['src/ClusterBootstrap/build', 'cp -r ../../docker-images/restfulapi2 .'],

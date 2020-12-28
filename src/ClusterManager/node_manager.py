@@ -117,11 +117,15 @@ def get_cluster_status():
                         node_status["gpuType"] = s
 
                 canUseGpuStrSet = set(node["status"]["allocatable"].keys()).intersection(gpuStrList)
+
+                # default to nvidia.com/gpu,which can make cluster to start job
                 gpuStr = list(canUseGpuStrSet)[0] if canUseGpuStrSet else "reserved/cpu"
+
                 if node_status["gpuType"]:
                     if node_status["gpuType"] not in gpuMapping:
                         if gpuStr!="reserved/cpu":
                             gpuMapping[node_status["gpuType"]] = {"deviceStr":gpuStr,"capacity":0,"detail":[]}
+
                 if canUseGpuStrSet:
                     node_status["gpu_allocatable"] = ResourceInfo({node_status["gpuType"]: int(node["status"]["allocatable"][gpuStr])}).ToSerializable()
                 else:

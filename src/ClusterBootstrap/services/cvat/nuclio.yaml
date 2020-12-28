@@ -1,0 +1,207 @@
+# Copyright 2017 The Nuclio Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+# Define a "function" custom resource definition - extending the k8s API to allow management of "function" resources
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: nucliofunctions.nuclio.io
+spec:
+  group: nuclio.io
+  names:
+    kind: NuclioFunction
+    plural: nucliofunctions
+    singular: nucliofunction
+  scope: Namespaced
+  version: v1beta1
+
+---
+# Define a "project" custom resource definition - extending the k8s API to allow management of "project" resources
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: nuclioprojects.nuclio.io
+spec:
+  group: nuclio.io
+  names:
+    kind: NuclioProject
+    plural: nuclioprojects
+    singular: nuclioproject
+  scope: Namespaced
+  version: v1beta1
+
+---
+# Define a "functionevent" custom resource definition - extending the k8s API to allow management of "functionevent" resources
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: nucliofunctionevents.nuclio.io
+spec:
+  group: nuclio.io
+  names:
+    kind: NuclioFunctionEvent
+    plural: nucliofunctionevents
+    singular: nucliofunctionevent
+  scope: Namespaced
+  version: v1beta1
+
+---
+
+# Define "apigateway" custom resource definition - extending the k8s API to allow management of "apigateway" resources
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: nuclioapigateways.nuclio.io
+spec:
+  group: nuclio.io
+  names:
+    kind: NuclioAPIGateway
+    plural: nuclioapigateways
+    singular: nuclioapigateway
+  scope: Namespaced
+  version: v1beta1
+
+---
+
+# All Nuclio services are bound to the "nuclio" service account. In RBAC enabled setups, this service account is
+# bound to specific roles limiting what the services can do
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nuclio
+  namespace: nuclio
+
+---
+# The nuclio controller listens for changes on the function CRD and creates the proper deployment, service, etc
+# for the function
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nuclio-controller
+  namespace: nuclio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      nuclio.io/app: controller
+      nuclio.io/env: test
+      nuclio.io/class: service
+  template:
+    metadata:
+      labels:
+        nuclio.io/env: test
+        nuclio.io/app: controller
+        nuclio.io/class: service
+      annotations:
+        nuclio.io/version: 1.5.4
+    spec:
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      containers:
+        - name: nuclio-controller
+          image: {{cnf["dockers"]["container"]["nuclio_controller"]["fullname"]}}
+          env:
+            - name: NUCLIO_CONTROLLER_IMAGE_PULL_SECRETS
+              value: registry-credentials
+      serviceAccountName: nuclio
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+
+---
+# The Nuclio dashboard offers a UI to manage functions
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nuclio-dashboard
+  namespace: nuclio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      nuclio.io/env: test
+      nuclio.io/app: dashboard
+      nuclio.io/class: service
+  template:
+    metadata:
+      labels:
+        nuclio.io/env: test
+        nuclio.io/app: dashboard
+        nuclio.io/class: service
+        app: nuclio
+      annotations:
+        nuclio.io/version: 1.5.4
+    spec:
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      containers:
+        - name: nuclio-dashboard
+          image: {{cnf["dockers"]["container"]["nuclio_dashboard"]["fullname"]}}
+          ports:
+            - containerPort: 8070
+              hostPort: 8070
+              name: nuclio-ds-port
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+            - mountPath: /tmp
+              name: tmp
+          env:
+            - name: NUCLIO_CHECK_FUNCTION_CONTAINERS_HEALTHINESS
+              value: 'true'
+            - name: no_proxy
+              value: 172.28.0.1,${no_proxy}
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 30
+            successThreshold: 1
+            tcpSocket:
+              port: 8070
+            timeoutSeconds: 10
+      volumes:
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+        - name: tmp
+          hostPath:
+            path: /tmp
+      serviceAccountName: nuclio
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nuclio-dashboard
+  namespace: nuclio
+spec:
+  selector:
+    nuclio.io/app: dashboard
+  ports:
+    - name: admin
+      port: 8070
+      protocol: TCP
+---
+

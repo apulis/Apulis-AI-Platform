@@ -1,0 +1,5 @@
+source "drivers/hisi/npu/drivers/dev_plat/hdcdrv/hdc_host/Kconfig"
+
+config HOST_HDC_DEVDRV
+	tristate "HOST HDC DEVDRV"
+	default m

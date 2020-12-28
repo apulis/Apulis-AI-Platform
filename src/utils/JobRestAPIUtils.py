@@ -18,6 +18,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 from config import config
 from DataHandler import DataHandler,DataManager
+import k8sUtils
 import base64
 import re
 import requests
@@ -36,7 +37,6 @@ import copy
 import logging
 from cachetools import cached, TTLCache
 from threading import Lock
-
 
 DEFAULT_JOB_PRIORITY = 100
 USER_JOB_PRIORITY_RANGE = (100, 200)
@@ -144,7 +144,7 @@ def SubmitJob(jobParamsJsonStr):
         jobParams["isParent"] = 1
 
     userName = getAlias(jobParams["userName"])
-        
+
     # return if there is not enough devices
     #if "gpuType" in jobParams:
     #    valid, msg = ValidateDeviceRequest(jobParams["gpuType"], jobParams["resourcegpu"], jobParams["vcName"].strip())
@@ -1036,6 +1036,19 @@ def GetJobLog(userName, jobId,page=1):
         "max_page":0
     }
 
+def GetJobRawLog(userName, jobId):
+    dataHandler = DataHandler()
+    jobs = dataHandler.GetJob(jobId=jobId)
+    if len(jobs) == 1:
+        if jobs[0]["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, jobs[0]["vcName"], Permission.Collaborator):
+            #return JobLogUtils.GetJobRawLog(jobId)
+            return jobs[0]["jobPath"]
+        else:
+            return 403
+    else:
+        return 404
+
+
 def GetClusterStatus():
     cluster_status,last_update_time =  DataManager.GetClusterStatus()
     return cluster_status,last_update_time
@@ -1069,6 +1082,9 @@ def Infer(jobId,image,signature_name):
         ret = "can't get job for jobid: " + jobId
     return ret
 
+
+def AutoLabel(model_id, data):
+    return inference.object_detaction_auto_label(model_id, data)
 
 def AddUser(username,uid,gid,groups):
     ret = None
@@ -1344,17 +1360,17 @@ def ListVCs(userName,page=None,size=None,name=None):
     return ret
 
 def GetVCConfig(vcName):
-    
+
     ret = {}
     ret["quota"]={}
     ret["user_quota"]={}
 
     config = DataHandler().GetVC(vcName)
     if config is None:
-        return ret 
+        return ret
     else:
         pass
-    
+
     if "quota" in config and len(config["quota"]) > 0:
         quota = json.loads(config["quota"])
         ret["quota"] = quota
@@ -1366,7 +1382,7 @@ def GetVCConfig(vcName):
         ret["user_quota"] = user_quota
     else:
         pass
-    
+
     return ret
 
 def ValidateDeviceRequest(devType, devNum, vcName):
@@ -1384,7 +1400,7 @@ def ValidateDeviceRequest(devType, devNum, vcName):
         msg = "vc not exists(%s)" %(vcName)
         logger.info(msg)
         return False, msg
-    
+
     if "quota" not in vc_config:
         msg = "req(%s), incorrect vc config(%s)" %(req_info, str(vc_config))
         logger.info(msg)
@@ -1408,7 +1424,7 @@ def ValidateDeviceRequest(devType, devNum, vcName):
                 msg = "req(%s), target dev type not included by user_quota(%s)" % (req_info, str(vc_config["user_quota"]))
                 logger.info(msg)
                 return False, msg
-            
+
             elif "user_quota" in vc_config["user_quota"][devType] and int(vc_config["user_quota"][devType]["user_quota"]) < devNum:
                 msg = "req(%s), request num(%d) more than user_quota(%d)" % (req_info, devNum, int(vc_config["user_quota"][devType]["user_quota"]))
                 logger.info(msg)
@@ -1944,12 +1960,36 @@ def GetJobSummary(userName, jobType, vcName):
     return None
 
 
+def GetInferenceModel(model_id):
+    output = k8sUtils.kubectl_exec("get deploy -n kfserving-system -l inference=system -o json")
+    deploys = json.loads(output)
+    models = []
+    if "items" in deploys:
+        for deploy in deploys["items"]:
+            if "status" in deploy and deploy["status"].get("availableReplicas",0)>0:
+                models.append({
+                    "description":deploy["metadata"]['annotations'].get('description',""),
+                    "id":deploy["metadata"]['annotations'].get('id',""),
+                    "kind":deploy["metadata"]['annotations'].get('type'),
+                    "labels": [item['name'] for item in json.loads(deploy['metadata']['annotations'].get('spec') or '[]')],
+                    "min_pos_points":int(deploy['metadata']['annotations'].get('min_pos_points', 1)),
+                    "name":deploy['metadata']['annotations'].get('name', deploy["metadata"]["name"]),
+                    "state":"ready" if deploy['status'].get('readyReplicas',0)>=1 else "error",
+                    "framework":deploy['metadata']['annotations'].get('framework'),
+                })
+    if model_id:
+        models = [i for i in models if i["id"]==model_id]
+        if models:
+            return models[0]
+        else:
+            return "not found"
+    return models
 
 
 
 
 def GetVersionInfo():
-    
+
     if ( os.path.isfile('/version-info')):
         with open('/version-info') as f:
             all_version = yaml.load(f.read())

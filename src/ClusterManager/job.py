@@ -121,7 +121,7 @@ class Job:
         containerPath = ""
         mount_points = []
 
-        storage_type = storage.STORAGE_TYPE_APP_DATA
+        storage_type = storage.PVC_TYPE_APP_DATA
         volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
@@ -186,7 +186,7 @@ class Job:
         volume_name = ""
         subPath = ""
 
-        storage_type = storage.STORAGE_TYPE_APP_DATA
+        storage_type = storage.PVC_TYPE_APP_DATA
         volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
@@ -210,7 +210,7 @@ class Job:
         volume_name = ""
         subPath = ""
 
-        storage_type = storage.STORAGE_TYPE_APP_DATA
+        storage_type = storage.PVC_TYPE_APP_DATA
         volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
@@ -234,7 +234,7 @@ class Job:
         volume_name = ""
         subPath = ""
 
-        storage_type = storage.STORAGE_TYPE_MODEL_DATA
+        storage_type = storage.PVC_TYPE_MODEL_DATA
         volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
@@ -258,7 +258,7 @@ class Job:
         subPath = ""
         containerPath=""
 
-        storage_type = storage.STORAGE_TYPE_APP_DATA
+        storage_type = storage.PVC_TYPE_APP_DATA
         volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 
@@ -285,7 +285,7 @@ class Job:
         subPath = ""
         containerPath=""
 
-        storage_type = storage.STORAGE_TYPE_APP_DATA
+        storage_type = storage.PVC_TYPE_APP_DATA
         volume_name = storage.StorageConfig.get_pvc_name(storage_type)
         pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
 

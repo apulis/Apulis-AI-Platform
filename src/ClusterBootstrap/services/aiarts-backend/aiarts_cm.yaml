@@ -50,26 +50,39 @@ data:
       tensorflow:
         - image: apulistech/ubuntu:18.04-amd64
           desc: "测试1"
+          category: "normal"
         - image: apulistech/tensorflow:2.3.0-gpu-py3
           desc: "测试2"
+          category: "normal"
         - image: apulistech/tensorflow:1.14.0-gpu-py3
           desc: "测试3"
+          category: "normal"
         - image: apulistech/tensorflow:1.15.2-gpu-py3
           desc: "测试4"
+          category: "normal"
         - image: apulistech/tf:1.15-arm-rc1
           desc: "测试5"
+          category: "normal"
       pytorch:
         - image: apulistech/pytorch:1.5
           desc: "测试6"
+          category: "normal"
       mxnet:
         - image: apulistech/mxnet:2.0.0-gpu-py3
           desc: "测试7"
+          category: "normal"
       mindspore:
         - image: apulistech/mindspore:0.2.0-alpha
           desc: "测试8"
+          category: "normal"
       caffe:
         - image: apulistech/caffe:BVLC
           desc: "测试9"
+          category: "normal"
+      hyperparameters:
+        - image: apulistech/nni:v1.9
+          desc: "测试9"
+          category: "hyperparameters"
 
     InteractiveModeJob: false
     PrivateRegistry: {{cnf["private_docker_registry"]}}

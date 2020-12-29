@@ -5,13 +5,19 @@ buildPlugin ( {
     dockerImages = [
         [
             'imageName': 'cicd/dlworkspace-compile',
-            'directory': 'dlworkspace-compile',
+            'directory': 'dlworkspace-compile/dlworkspace-compile-amd64',
             'arch': ['amd64']
+        ],
+        [
+            'imageName': 'cicd/dlworkspace-compile',
+            'directory': 'dlworkspace-compile/dlworkspace-compile-arm64',
+            'arch': ['arm64']
         ],
         [
             'compileContainer': 'cicd/dlworkspace-compile',
             'preBuild':[
                 ['src/ClusterBootstrap', 'mkdir -p build'],
+                ['src/ClusterBootstrap/build', 'rm -rf restfulapi2'],
                 ['src/ClusterBootstrap', 'pip install -r scripts/requirements.txt'],
                 ['src/ClusterManager', 'pip install -r requirements.txt'],
                 ['src/ClusterBootstrap/build', 'cp -r ../../docker-images/restfulapi2 .'],
@@ -26,7 +32,7 @@ buildPlugin ( {
             ],
             'imageName': 'apulistech/restfulapi2',
             'directory': 'src/ClusterBootstrap/build/restfulapi2',
-            'arch': ['amd64']
+            'arch': ['amd64','arm64']
         ],
         [
             'compileContainer': 'cicd/dlworkspace-compile',
@@ -40,7 +46,7 @@ buildPlugin ( {
             ],
             'imageName': 'apulistech/webui3',
             'directory': 'src/ClusterBootstrap/build/webui3',
-            'arch': ['amd64']
+            'arch': ['amd64','arm64']
         ]
     ]
 })

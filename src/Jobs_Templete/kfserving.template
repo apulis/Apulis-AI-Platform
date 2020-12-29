@@ -54,5 +54,5 @@ spec:
           image: {{ job["image"] }}
           env:
             - name: STORAGE_URI
-              value: "file://{{ job["model_base_path"] }}"
+              value: "pvc://{{ job["model_path_pvc"] }}/{{ job["model_extra_path"] }}"
         {% endif %}

@@ -243,9 +243,14 @@ class PodTemplate():
 
                 # pod["model_name"] = pod["jobName"]
                 pod["model_name"] = "ifs-"+pod["jobId"]
-                pod["model_base_path"] = pod["model_base_path"] if "model_base_path" in pod else "/path/noExist"
-                pod["model_base_path"] = re.sub("^/data", config["storage-mount-path"]+"/storage", pod["model_base_path"])
-                pod["model_base_path"] = re.sub("^/home", config["storage-mount-path"]+"/work", pod["model_base_path"])
+
+                assert "model_base_path" in pod
+                pod["model_extra_path"] = pod["model_base_path"]
+                pod["model_extra_path"] = re.sub("^/data", "", pod["model_extra_path"])
+                pod["model_extra_path"] = re.sub("^/home", "", pod["model_extra_path"])
+
+                pod["model_path_pvc"] = storage.StorageConfig.get_pvc_name(storage.STORAGE_TYPE_MODEL_DATA)
+
                 pod["framework"] = params["framework"]
                 
                 if "version" in params:

@@ -38,7 +38,7 @@ spec:
       minReplicas: {{ job["minReplicas"] }}
       maxReplicas: {{ job["maxReplicas"] }}
       {{ job["framework"] }}:
-        storageUri: "file://{{ job["model_base_path"] }}"
+        storageUri: "pvc://{{ job["model_path_pvc"] }}/{{ job["model_extra_path"] }}"
         {% if "version" in job %}runtimeVersion: {{ job["version"] }}{% endif %}
         {% if job["framework"] == "pytorch" %}modelClassName: {{ job["model_class_name"] }}{% endif %}
         resources:

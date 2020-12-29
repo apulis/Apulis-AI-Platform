@@ -70,6 +70,10 @@ data:
       caffe:
         - image: apulistech/caffe:BVLC
           desc: "测试9"
+      hyperparameters:
+        - image: apulistech/nni:v1.9
+          desc: "测试9"
+          category: hyperparameters
 
     InteractiveModeJob: false
     PrivateRegistry: {{cnf["private_docker_registry"]}}

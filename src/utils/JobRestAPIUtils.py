@@ -1048,21 +1048,23 @@ def GetJobRawLog(userName, jobId):
                 jobPath = "work/"+jobParams["jobPath"]
                 localJobPath = os.path.join(config["storage-mount-path"], jobPath)
                 logPath = os.path.join(localJobPath, "logs")
-                var files = glob.glob(os.path.join(logPath, "log-container-" + jobId + ".txt.*"))
+                files = glob.glob(os.path.join(logPath, "log-container-" + jobId + ".txt.*"))
                 files.sort()
                 rawLog = ""
                 for file in files:
                     with open(file, "r") as f:
                         log = f.read()
                         rawLog += log
-                return Response(rawLog, content_type="text/plain")
+                return {
+                    "log": rawLog
+                }
             except Exception as e:
                 logger.exception(e)
                 pass
-        else:
-            return Response(403, content_type="text/plain")
-    else:
-        return Response(404, content_type="text/plain")
+    return {
+        "log": ""
+    }
+
 
 
 def GetClusterStatus():

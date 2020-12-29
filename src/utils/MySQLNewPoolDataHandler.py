@@ -1274,12 +1274,11 @@ class DataHandler(object):
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
-
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "training" or record["jobType"] == "codeEnv":
+                    if record["jobType"] == "visualization":
+                        ret["visualizationJobs"].append(record)   
+                    else:
                         ret["runningJobs"].append(record)
-                    elif record["jobType"] == "visualization":
-                        ret["visualizationJobs"].append(record)
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
                     "jobStatus"] == "unapproved":
                     ret["queuedJobs"].append(record)

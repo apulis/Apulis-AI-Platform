@@ -1,13 +1,8 @@
 FROM ubuntu:18.04
-RUN cp -a /etc/apt/sources.list /etc/apt/sources.list.bak
-RUN echo "deb https://repo.huaweicloud.com/ubuntu-ports/ bionic main restricted universe multiverse" >/etc/apt/sources.list && \
-echo "deb-src https://repo.huaweicloud.com/ubuntu-ports/ bionic main restricted universe multiverse" >>/etc/apt/sources.list && \
-echo "deb https://repo.huaweicloud.com/ubuntu-ports/ bionic-security main restricted universe multiverse" >>/etc/apt/sources.list && \
-echo "deb-src https://repo.huaweicloud.com/ubuntu-ports/ bionic-security main restricted universe multiverse" >>/etc/apt/sources.list && \
-echo "deb https://repo.huaweicloud.com/ubuntu-ports/ bionic-updates main restricted universe multiverse" >>/etc/apt/sources.list && \
-echo "deb-src https://repo.huaweicloud.com/ubuntu-ports/ bionic-updates main restricted universe multiverse" >>/etc/apt/sources.list && \
-echo "deb https://repo.huaweicloud.com/ubuntu-ports/ bionic-backports main restricted universe multiverse" >>/etc/apt/sources.list && \
-apt update
+RUN cp /etc/apt/sources.list /etc/apt/sources.list.bak
+RUN sed -Ei 's/^# deb-src /deb-src /' /etc/apt/sources.list
+RUN  apt-get update
+
 RUN apt-get install -y apt-transport-https ca-certificates curl gnupg2 software-properties-common git  && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
     add-apt-repository "deb [arch=arm64] https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/ubuntu $(lsb_release -cs) stable"  && \

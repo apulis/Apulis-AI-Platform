@@ -17,6 +17,7 @@ from prometheus_client import Histogram
 import threading
 from postgresql_conn_pool import PostgresqlConn,db_connect_histogram
 import EndpointUtils
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 PostgresqlConn.config_pool(risk_config={"max_connections":5})
 
@@ -135,12 +136,11 @@ class DataHandler(object):
             cursor = conn.cursor()
             cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = '%s'" % self.database)
             exists = cursor.fetchone()
-            if not exists[0]:
-                cursor.execute("""
-                CREATE DATABASE "%s"
-                """ % (self.database))
+            if not exists:
+                conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+                cursor.execute("""CREATE DATABASE "{}" """.format(self.database))
 
-            conn.commit()
+                conn.commit()
             cursor.close()
             conn.close()
 
@@ -171,13 +171,15 @@ class DataHandler(object):
                     "isAuthorized" int NOT NULL,
                     "time" timestamp NOT NULL DEFAULT now()
                 );
-                alter table "%s" add constraint unique-"%s"-openId-group unique("openId","group");
+                alter table "%s" add constraint "unique-%s-openId-group" unique("openId","group");
                 """ % (self.accounttablename,self.accounttablename,self.accounttablename)
+
             try:
                 cursor.execute(sql)
                 conn.commit()
             except:
                 logger.info("Table %s already exists" %self.accounttablename)
+
 
             sql = """
                 CREATE TABLE  "%s"
@@ -194,7 +196,7 @@ class DataHandler(object):
                     "jobType"               varchar(255) NOT NULL,
                     "jobDescriptionPath"    TEXT NULL,
                     "jobDescription"        TEXT  NULL,
-                    "jobTime"               DATETIME DEFAULT now() NOT NULL,
+                    "jobTime"               timestamp  without time zone DEFAULT now() NOT NULL,
                     "endpoints"             TEXT  NULL,
                     "errorMsg"              TEXT  NULL,
                     "jobParams"             TEXT  NOT NULL,
@@ -202,16 +204,16 @@ class DataHandler(object):
                     "jobLog"                TEXT  NULL,
                     "retries"               int   NULL DEFAULT 0,
                     "isDeleted"             int    NULL DEFAULT 0,
-                    "lastUpdated"           timestamp     DEFAULT now() NOT NULL,
+                    "lastUpdated"           timestamp  without time zone DEFAULT now() NOT NULL,
                     "jobGroup"              varchar(255) NULL
                 );
-                CREATE INDEX index-"%s"-userName ON "%s" USING btree (userName);
-                CREATE INDEX index-"%s"-jobTime ON "%s" USING btree (jobTime);
-                CREATE INDEX index-"%s"-jobId ON "%s" USING btree (jobId);
-                CREATE INDEX index-"%s"-vcName ON "%s" USING btree (vcName);
-                CREATE INDEX index-"%s"-jobStatus ON "%s" USING btree (jobStatus);
-                CREATE INDEX index-"%s"-jobType ON "%s" USING btree (jobType);
-                CREATE INDEX index-"%s"-jobGroup ON "%s" USING btree (jobGroup);
+                CREATE INDEX "index-%s-userName" ON "%s" USING btree ("userName");
+                CREATE INDEX "index-%s-jobTime" ON "%s" USING btree ("jobTime");
+                CREATE INDEX "index-%s-jobId" ON "%s" USING btree ("jobId");
+                CREATE INDEX "index-%s-vcName" ON "%s" USING btree ("vcName");
+                CREATE INDEX "index-%s-jobStatus" ON "%s" USING btree ("jobStatus");
+                CREATE INDEX "index-%s-jobType" ON "%s" USING btree ("jobType");
+                CREATE INDEX "index-%s-jobGroup" ON "%s" USING btree ("jobGroup");
                 """ % (self.jobtablename,self.jobtablename,self.jobtablename,
                 self.jobtablename,self.jobtablename,
                 self.jobtablename,self.jobtablename,
@@ -253,15 +255,16 @@ class DataHandler(object):
                     "type"       varchar(255) NOT NULL,
                     "status"     varchar(255) NOT NULL,
                     "fileId"     varchar(255)
-                )
-                CREATE INDEX index-"%s"-jobId ON "%s" USING btree (jobId);
-                CREATE INDEX index-"%s"-type ON "%s" USING btree (type);
-                CREATE INDEX index-"%s"-status ON "%s" USING btree (status);
+                );
+                CREATE INDEX "index-%s-jobId" ON "%s" USING btree ("jobId");
+                CREATE INDEX "index-%s-type" ON "%s" USING btree (type);
+                CREATE INDEX "index-%s-status" ON "%s" USING btree (status);
                 """ % (self.modelconversionjobtablename,self.modelconversionjobtablename
                 ,self.modelconversionjobtablename,self.modelconversionjobtablename
                 ,self.modelconversionjobtablename,self.modelconversionjobtablename,
                 self.modelconversionjobtablename)
             try:
+
                 cursor.execute(sql)
                 conn.commit()
             except:
@@ -290,10 +293,13 @@ class DataHandler(object):
                     "id"        serial primary key,
                     "status"    TEXT NOT NULL,
                     "time"      timestamp DEFAULT now() NOT NULL
-                )
-                CREATE INDEX index-"%s"-time ON "%s" USING btree (time);
+                );
+
+                CREATE INDEX "index-%s-time" ON "%s" USING btree (time);
                 """ % (self.clusterstatustablename,self.clusterstatustablename,self.clusterstatustablename)
             try:
+                cursor.execute("ROLLBACK")
+                conn.commit()
                 cursor.execute(sql)
                 conn.commit()
             except:
@@ -305,10 +311,10 @@ class DataHandler(object):
                     "id"        serial primary key,   
                     "jobId"     varchar(50)   NOT NULL,
                     "status"    varchar(255) NOT NULL DEFAULT 'pending',
-                    "time"      timestamp DEFAULT now() NOT NULL,
+                    "time"      timestamp without time zone DEFAULT now() NOT NULL,
                     "command"   TEXT NOT NULL,
                     "output"    TEXT NULL
-                )
+                );
                 """ % (self.commandtablename)
 
             try:
@@ -326,10 +332,11 @@ class DataHandler(object):
                     "metadata"         TEXT NOT NULL,
                     "vcName"           varchar(255) NOT NULL,
                     "defaultMountPath" varchar(255) NOT NULL,
-                    "time"             timestamp DEFAULT now() NOT NULL
+                    "time"             timestamp without time zone DEFAULT now() NOT NULL
                 )
-                alter table "%s" add constraint unique-"%s"-vcName-url unique("vcName","url");
-                alter table "%s" add constraint unique-"%s"-vcName-defaultMountPath unique("vcName","defaultMountPath");
+                ;
+                alter table "%s" add constraint "unique-%s-vcName-url" unique("vcName","url");
+                alter table "%s" add constraint "unique-%s-vcName-defaultMountPath" unique("vcName","defaultMountPath");
                 """ % (self.storagetablename,self.storagetablename,self.storagetablename,
                 self.storagetablename,self.storagetablename)
 
@@ -356,9 +363,10 @@ class DataHandler(object):
                     "parent"    varchar(255) DEFAULT NULL,
                     "quota"     varchar(255) NOT NULL,
                     "metadata"  TEXT NOT NULL,
-                    "time"      timestamp DEFAULT now() NOT NULL
+                    "time"      timestamp without time zone DEFAULT now() NOT NULL
                 )
-                AS SELECT \'%s\' AS vcName, NULL AS parent, '%s' AS quota, '{}' AS metadata;
+                ;
+                INSERT into vc ("vcName","parent","quota","metadata") VALUES ('%s',NULL,'%s','{}')
                 """ % (self.vctablename, config['defalt_virtual_cluster_name'],default_type)
             try:
                 cursor.execute(sql)
@@ -374,7 +382,7 @@ class DataHandler(object):
                     "uid"           INT NOT NULL,
                     "gid"           INT NOT NULL,
                     "groups"        TEXT NOT NULL,
-                    "time"          timestamp DEFAULT now() NOT NULL
+                    "time"          timestamp  without time zone DEFAULT now() NOT NULL
                 )
                 """ % (self.identitytablename)
 
@@ -394,9 +402,9 @@ class DataHandler(object):
                     "resource"       varchar(255) NOT NULL,
                     "permissions"    INT NOT NULL,
                     "isDeny"         INT NOT NULL,
-                    "time"           timestamp DEFAULT now() NOT NULL
-                )
-                alter table "%s" add constraint identityName_resource unique("identityName","resource");
+                    "time"           timestamp without time zone  DEFAULT now() NOT NULL
+                );
+                alter table "%s" add constraint "identityName_resource" unique("identityName","resource");
                 """ % (self.acltablename,self.acltablename)
             try:
                 cursor.execute(sql)
@@ -411,10 +419,10 @@ class DataHandler(object):
                     "name"  VARCHAR(255) NOT NULL,
                     "scope" VARCHAR(255) NOT NULL ,
                     "json"  TEXT         NOT NULL,
-                    "isDefault"  TINYINT(1)  DEFAULT 0,
-                    "time"  timestamp DEFAULT now() NOT NULL
-                )
-                alter table "%s" add constraint name_scope unique("name", "scope");
+                    "isDefault"  smallint  DEFAULT 0,
+                    "time"  timestamp  without time zone DEFAULT now() NOT NULL
+                );
+                alter table "%s" add constraint "name_scope" unique("name", "scope");
                 """ % (self.templatetablename,self.templatetablename)
 
             try:
@@ -422,53 +430,53 @@ class DataHandler(object):
                 conn.commit()
 
                 default_job_json={
-                    "workPath": "", 
-                    "interactivePorts": "", 
-                    "name": "Default Job", 
-                    "gpuType": "", 
-                    "workers": 0, 
-                    "jobPath": "", 
-                    "dataPath": "", 
-                    "gpuNumPerDevice": 0, 
+                    "workPath": "",
+                    "interactivePorts": "",
+                    "name": "Default Job",
+                    "gpuType": "",
+                    "workers": 0,
+                    "jobPath": "",
+                    "dataPath": "",
+                    "gpuNumPerDevice": 0,
                     "enableWorkPath": True,
                     "preemptible": False,
                     "enableJobPath": True,
-                    "command": " while true; do echo \"job running\"; sleep 1; done", 
-                    "environmentVariables": [], 
+                    "command": " while true; do echo \"job running\"; sleep 1; done",
+                    "environmentVariables": [],
                     "tensorboard": False,
                     "plugins": {
                         "blobfuse": [
                             {
-                                "accountKey": "", 
-                                "containerName": "", 
-                                "mountPath": "", 
-                                "mountOptions": "", 
+                                "accountKey": "",
+                                "containerName": "",
+                                "mountPath": "",
+                                "mountOptions": "",
                                 "accountName": ""
                             }
-                        ], 
+                        ],
                         "imagePull": [
                             {
-                                "username": "", 
-                                "password": "", 
+                                "username": "",
+                                "password": "",
                                 "registry": ""
                             }
                         ]
-                    }, 
+                    },
                     "ipython": True,
-                    "gpus": 1,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-                    "type": "RegularJob", 
-                    "image": "ubuntu:18.04", 
+                    "gpus": 1,
+                    "type": "RegularJob",
+                    "image": "ubuntu:18.04",
                     "enableDataPath": True,
                     "ssh": True
                 }
 
                 sql = """
                     insert into %s (
-                        id, name, scope, json, isDefault
+                        id, name, scope, json, "isDefault"
                     )
                     values(
-                        0, "default_template", "vc:platform", "%s", 1
-                    ) on duplicate key update id=0
+                        0, 'default_template', 'vc:platform', '%s', 1
+                    ) ON CONFLICT (id) DO UPDATE SET  id=0
                 """ %(self.templatetablename, json.dumps(default_job_json))
 
                 try:
@@ -488,9 +496,9 @@ class DataHandler(object):
                     "id"        serial primary key,
                     "jobId"     varchar(50)   NOT NULL,
                     "priority"  INT NOT NULL,
-                    "time"      timestamp DEFAULT now() NOT NULL
-                )
-                alter table "%s" add constraint identityName_jobId unique("jobId");
+                    "time"      timestamp  without time zone DEFAULT now() NOT NULL
+                );
+                alter table "%s" add constraint "identityName_jobId" unique("jobId");
                 """ % (self.jobprioritytablename,self.jobprioritytablename)
 
             try:
@@ -502,12 +510,12 @@ class DataHandler(object):
             sql = """
                     CREATE TABLE   "%s"
                     (
-                        `id`            serial primary key,
-                        `deviceType`    varchar(50) UNIQUE  NOT NULL,
-                        `deviceStr`     varchar(50)   NOT NULL,
-                        `capacity`      INT NOT NULL,
-                        `detail`        TEXT NOT NULL,
-                        `time`          timestamp DEFAULT now() NOT NULL
+                        "id"            serial primary key,
+                        "deviceType"    varchar(50) UNIQUE  NOT NULL,
+                        "deviceStr"     varchar(50)   NOT NULL,
+                        "capacity"      INT NOT NULL,
+                        "detail"        TEXT NOT NULL,
+                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
                     )
                     """ % (self.deviceStatusTableName)
             try:
@@ -520,7 +528,7 @@ class DataHandler(object):
                     (
                         "id"                serial primary key,
                         "configuration"     TEXT   NOT NULL,
-                        "time"              timestamp DEFAULT now() NOT NULL
+                        "time"              timestamp without time zone  DEFAULT now() NOT NULL
                     )
                     """ % (self.monitorConfigTableName)
             try:
@@ -535,7 +543,7 @@ class DataHandler(object):
                         "id"            serial primary key,
                         "name"          varchar(50)   NOT NULL,
                         "query"         varchar(255)   NOT NULL,
-                        "time"          timestamp DEFAULT now() NOT NULL
+                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
                     )
                     """ % (self.monitormetricsTableName)
             try:
@@ -549,7 +557,7 @@ class DataHandler(object):
                         "id"            serial primary key,
                         "name"          varchar(50)   NOT NULL,
                         "fields"        TEXT      NOT NULL,
-                        "time"          timestamp DEFAULT now() NOT NULL
+                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
                     )
                     """ % (self.monitorchannelTableName)
             try:
@@ -569,11 +577,11 @@ class DataHandler(object):
                     "outPath"       varchar(255) NULL,
                     "status"        varchar(255) NOT NULL DEFAULT 'queued',
                     "errorMsg"      TEXT  NULL,
-                    "time"          timestamp DEFAULT now() NOT NULL
-                )
-                CREATE INDEX index-"%s"-projectId ON "%s" USING btree (projectId);
-                CREATE INDEX index-"%s"-datasetId ON "%s" USING btree (datasetId);
-                CREATE INDEX index-"%s"-status ON "%s" USING btree (status);
+                    "time"          timestamp  without time zone DEFAULT now() NOT NULL
+                );
+                CREATE INDEX "index-%s-projectId" ON "%s" USING btree ("projectId");
+                CREATE INDEX "index-%s-datasetId" ON "%s" USING btree ("datasetId");
+                CREATE INDEX "index-%s-status" ON "%s" USING btree ("status");
                 """ % (self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert)
 
             try:
@@ -581,6 +589,7 @@ class DataHandler(object):
                 conn.commit()
             except:
                 logger.info("Table %s already exists" %self.dataconvert)
+
 
     @record
     def AddDevice(self,deviceType, deviceStr, capacity,detail):

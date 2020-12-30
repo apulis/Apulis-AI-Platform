@@ -31,6 +31,9 @@ RUN pip config set install.trusted-host mirrors.aliyun.com
 RUN pip install -r /requirements.txt
 RUN pip install MySQL-python DBUtils==1.3 Pillow futures six numpy matplotlib pycocotools dnspython opencv-python==4.2.0.32
 
+RUN apt-get install libpq-dev -y
+RUN pip install psycopg2
+
 ADD Jobs_Templete /DLWorkspace/src/Jobs_Templete
 ADD utils /DLWorkspace/src/utils
 ADD RestAPI /DLWorkspace/src/RestAPI

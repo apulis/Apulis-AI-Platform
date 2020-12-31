@@ -21,7 +21,7 @@ spec:
       hostNetwork: true
       {% endif %}
       nodeSelector:
-        gpuType: huawei_npu_arm64
+        gpuType: huawei_npu_amd64
       containers:
       - name: node-cleaner
         image: {{cnf["dockers"]["container"]["node-cleaner"]["fullname"]}}

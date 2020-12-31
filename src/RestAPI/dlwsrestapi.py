@@ -36,8 +36,12 @@ import model
 import authorization
 from config import global_vars
 from DataHandler import DataHandler
-from mysql_conn_pool import MysqlConn
 from jwt_authorization import create_jwt_token_with_message
+
+if "datasource" in config and config["datasource"] == "PostgreSQL":
+    from postgresql_conn_pool import PostgresqlConn
+else:
+    from mysql_conn_pool import MysqlConn
 
 CONTENT_TYPE_LATEST = str("text/plain; version=0.0.4; charset=utf-8")
 
@@ -2230,7 +2234,12 @@ api.add_resource(JobPriority, '/jobs/priorities')
 def dumpstacks(signal, frame):
     code = []
     logging.info("received signum %d", signal)
-    logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+
+    if "datasource" in config and config["datasource"] == "PostgreSQL":
+        logging.info("db pools connections: [%s]", str(PostgresqlConn.connection_statics()))
+    else:
+        logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))
+
     # logging.info("\nfeature_count:\n{}".format(feature_count))
     for threadId, stack in sys._current_frames().items():
         code.append("n# Thread: %d" % (threadId))

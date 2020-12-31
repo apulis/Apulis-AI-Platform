@@ -901,7 +901,8 @@ def ResumeJob(userName, jobId):
     ret = False
     job = dataHandler.GetJobTextFields(jobId, ["userName", "vcName", "jobStatus"])
     if job is not None and job["jobStatus"] == "paused":
-        if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Collaborator):
+        # if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Collaborator):
+        if job["userName"] == userName:
             ret = dataHandler.UpdateJobTextField(jobId, "jobStatus", "unapproved")
     dataHandler.Close()
     return ret
@@ -912,7 +913,8 @@ def PauseJob(userName, jobId):
     ret = False
     job = dataHandler.GetJobTextFields(jobId, ["userName", "vcName", "jobStatus"])
     if job is not None and job["jobStatus"] in ["unapproved", "queued", "scheduling", "running"]:
-        if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Admin):
+        # if job["userName"] == userName or AuthorizationManager.HasAccess(userName, ResourceType.VC, job["vcName"], Permission.Admin):
+        if job["userName"] == userName:
             ret = dataHandler.UpdateJobTextField(jobId,"jobStatus","pausing")
     dataHandler.Close()
     return ret

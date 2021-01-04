@@ -475,7 +475,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       // }
       
       if (gpus > gpuAvailable) {
-        const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
+        const msg = window.confirm(t('submission.noEnoughResource'));
         if (!msg) return;
       }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
@@ -1053,7 +1053,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       inputRef={register({
                         pattern: {
                           value: HttpsReg,
-                          message: HttpsErrorText
+                          message: t('submission.HttpsErrorText')
                         }
                       })}
                     />

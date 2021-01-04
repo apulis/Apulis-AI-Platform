@@ -2411,7 +2411,11 @@ class DataHandler(object):
             return ret
 
         try:
-            sql = """select ",%s" from  %s  where "jobId"=%s """ % (fields,self.jobtablename,jobId)
+            fieldsStr = ""
+            for field in fields:
+                fieldsStr += '"%s", ' %(field)
+            fieldsStr = fieldsStr[:-2]
+            sql = """select %s from  %s  where "jobId"='%s' """ % (fieldsStr,self.jobtablename,jobId)
             conn = self.pool.get_connection()
             cursor = conn.cursor()
             logger.info(sql)

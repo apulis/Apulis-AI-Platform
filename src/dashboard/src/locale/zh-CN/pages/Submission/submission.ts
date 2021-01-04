@@ -39,6 +39,8 @@ const advance = {
   name: '名称',
   value: '变量值',
   environmentVariableName: '环境变量名称',
+  noEnoughResource: '当前没有足够的设备，Job 将会进入等待队列\n是否继续',
+  HttpsErrorText: '必须以https://开头',
   environmentVariableValue: '环境变量值',
   jobNameIsRequired: '请输入任务名',
   dockerImageIsRequired: '请输入docker镜像',

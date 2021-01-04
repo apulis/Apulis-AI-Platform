@@ -1866,7 +1866,6 @@ class DataHandler(object):
                 params.append(str(num))
 
             with PostgresqlConn() as conn:
-                logger.info(query,params)
                 rets = conn.select_many(query,params)
 
             for record in rets:

@@ -617,7 +617,7 @@ class DataHandler(object):
     def GetAllDevice(self):
         ret = {}
         try:
-            sql = """select "deviceType", "deviceStr", capacity,detail from "%s".%s  """ %(self.database,self.deviceStatusTableName)
+            sql = """select "deviceType", "deviceStr", capacity,detail from %s  """ %(self.deviceStatusTableName)
             with PostgresqlConn() as conn:
                 logger.info(sql)
                 rets = conn.select_many(sql)
@@ -754,7 +754,7 @@ class DataHandler(object):
     def ListVCs(self,page=None,size=None,name=None):
         ret = []
         try:
-            query = """SELECT "vcName",quota,metadata FROM "%s".%s """% (self.database,self.vctablename)
+            query = """SELECT "vcName",quota,metadata FROM %s """% (self.vctablename)
             if name:
                 query += """ WHERE "vcName" like '%%%s%%' """ %(name)
             if page and size:
@@ -1255,7 +1255,7 @@ class DataHandler(object):
     def GetJobList(self, userName, vcName, num=None, pageSize=None, pageNum=None, jobName=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta", "lastUpdated" ,"jobGroup" FROM %s where 1 and isDeleted=0""" % (
+            query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta", "lastUpdated" ,"jobGroup" FROM %s where isDeleted=0""" % (
                 self.jobtablename)
             params = []
             if jobName != None:
@@ -1301,7 +1301,7 @@ class DataHandler(object):
     def GetInferenceJobList(self, userName, vcName, num=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta" FROM %s where 1""" % (
+            query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta" FROM %s where true""" % (
                 self.inferencejobtablename)
             params = []
             if userName != "all":
@@ -1425,9 +1425,8 @@ class DataHandler(object):
             cursor = conn.cursor()
 
             query = """SELECT count(*) OVER() AS total, "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail",
-                        "jobType", "jobTime", "jobParams", "errorMsg" FROM "{}".{}  
-                        where "jobType"='{}' and "isDeleted"=0""".format(self.database,self.jobtablename,
-                        jobType)
+                        "jobType", "jobTime", "jobParams", "errorMsg" FROM {}  
+                        where "jobType"='{}' and "isDeleted"=0""".format(self.jobtablename, jobType)
             ## add support for jobGroup filter :
             if jobGroup and int(jobGroup) > 0:
                 query += """ and "jobGroup"='{}'""".format(jobGroup)
@@ -1723,7 +1722,7 @@ class DataHandler(object):
             conn.commit()
 
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('GetUserJobs Exception: %s', str(e))
 
         finally:
 
@@ -1750,7 +1749,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", priority,endpoints FROM {} left join {} on {}."jobId" = {}."jobId" left join {} on {}."jobId" = {}."jobId" where 1 and "isDeleted"=0""".format(
+            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", priority,endpoints FROM {} left join {} on {}."jobId" = {}."jobId" left join {} on {}."jobId" = {}."jobId" where "isDeleted"=0""".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             if userName != "all":
@@ -1771,7 +1770,7 @@ class DataHandler(object):
                     query += " and ( %s ) " % status_statement
 
             if not orderBy:
-                orderBy = """ "jobTime" """
+                orderBy = "jobTime"
             if order:
                 if order not in ["desc", "asc"]:
                     order = "desc"
@@ -1811,7 +1810,7 @@ class DataHandler(object):
                     ret["finishedJobs"].append(record)
             conn.commit()
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('ListInferenceJob Exception: %s', str(e))
         finally:
             if cursor is not None:
                 cursor.close()
@@ -1827,7 +1826,7 @@ class DataHandler(object):
         ret = []
         try:
 
-            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", priority,endpoints FROM {} left join {} on {}."jobId" = {}."jobId" left join {} on {}."jobId" = {}."jobId" where 1 and "isDeleted"=0""".format(
+            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", priority,endpoints FROM {} left join {} on {}."jobId" = {}."jobId" left join {} on {}."jobId" = {}."jobId" where "isDeleted"=0""".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             params = []
@@ -1854,13 +1853,13 @@ class DataHandler(object):
                     params.append(status_statement)
 
             if not orderBy:
-                orderBy = """ "jobTime" """
+                orderBy = "jobTime"
             if order:
                 if order not in ["desc", "asc"]:
                     order = "desc"
             else:
                 order = "desc"
-            if orderBy:
+            if orderBy != "":
                 query += """ order by "%s" %s""" %(orderBy,order)
             if num is not None:
                 query += " limit %s " % "%s"
@@ -1882,7 +1881,7 @@ class DataHandler(object):
 
                 ret.append(record)
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('ListInferenceJobV2 Exception: %s', str(e))
         return ret
 
     @record
@@ -1900,7 +1899,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT count(*) OVER() as total, j."jobId" as "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", "inputPath", "outputPath", m.type as "modelconversionType", m.status as "modelconversionStatus", priority FROM {} as m left join {} as j on m."jobId" = j."jobId" left join {} as p on m."jobId" = p."jobId" where 1 and "isDeleted"=0""".format(
+            query = """SELECT count(*) OVER() as total, j."jobId" as "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", "inputPath", "outputPath", m.type as "modelconversionType", m.status as "modelconversionStatus", priority FROM {} as m left join {} as j on m."jobId" = j."jobId" left join {} as p on m."jobId" = p."jobId" where "isDeleted"=0""".format(
                 self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
                 query += """ and "userName" = '%s'""" % userName
@@ -2678,7 +2677,7 @@ class DataHandler(object):
     def getConvertList(self,targetStatus=None):
         ret = []
         try:
-            query = """select id,"projectId", "datasetId", type,"targetFormat",status,time,"outPath" FROM %s where 1""" % (self.dataconvert,)
+            query = """select id,"projectId", "datasetId", type,"targetFormat",status,time,"outPath" FROM %s where true""" % (self.dataconvert,)
             params = []
             if targetStatus:
                 if "," in targetStatus:
@@ -2733,7 +2732,7 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = """select "jobStatus", count(*) as count from "%s".%s where "isDeleted"=0 """ % (self.database, self.jobtablename)
+            query = """select "jobStatus", count(*) as count from %s where "isDeleted"=0 """ % (self.jobtablename)
 
             if userName is not None and userName != "":
                 query += """ and "userName" = '%s' """% (userName)

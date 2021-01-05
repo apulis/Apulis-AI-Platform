@@ -204,11 +204,14 @@ def GetLog(jobId, tail=None,jobType=None):
     # assume our job only one container per pod.
 
     selector = "run=" + jobId
+
+    # support different namespace and custom cmd
     namespace = None
     cmd = ""
     if jobType and jobType=="InferenceJob":
         namespace = "kfserving-pod"
         cmd =  " -c kfserving-container -n " + namespace
+
     podInfo = GetPod(selector,namespace)
     logs = []
 

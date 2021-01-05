@@ -700,25 +700,6 @@ default_config_parameters = {
         "algorithm": "HS256"
     },
 
-    # inferenceJob config
-    "inference":{
-      "tensorflow":{
-            "allowedImageVersions": [
-               "1.15.0",
-               "1.15.0-arm64",
-               "1.15.0-gpu",
-               "2.2.0",
-               "2.2.0-arm64",
-               "2.2.0-gpu"
-            ]
-      },
-        "apulisVision": {
-            "allowedImageVersions": [
-               "1.0.0"
-            ]
-        }
-    },
-
     # System dockers.
     # These dockers are agnostic of cluster, and can be built once and reused upon multiple clusters.
     # We will gradually migrate mroe and more docker in DLWorkspace to system

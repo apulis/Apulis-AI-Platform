@@ -396,8 +396,12 @@ def PostInferenceJob(jobParamsJsonStr):
     jobParams["jobPath"] = os.path.realpath(os.path.join("/",jobParams["jobPath"]))[1:]
 
     try:
-        result = os.system("kubectl get configmap -n kfserving-system inferenceservice-config -o json")
-        data = json.loads(result)["data"]["predictors"]
+        result = vc_cache.get("inference-config")
+        if not result:
+            result = k8sUtils.kubectl_exec(" get configmap -n kfserving-system inferenceservice-config -o json")
+            vc_cache["inference-config"] = result
+
+        data = json.loads(json.loads(result)["data"]["predictors"])
         jobParams["image"] = data[jobParams["framework"]]["image"]+":"+jobParams["version"]
 
         if jobParams["gpuType"].endswith("amd64"):

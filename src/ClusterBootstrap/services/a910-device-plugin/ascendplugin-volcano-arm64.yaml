@@ -14,7 +14,7 @@ roleRef:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: ascend-device-plugin-daemonset
+  name: ascend-device-plugin-daemonset-arm64
   namespace: kube-system
 spec:
   selector:

@@ -52,9 +52,9 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
   const { t } = useTranslation();
  const saveSelectedTeam = (team: SetStateAction<string>) => {
     setSelectedTeam(team);
-    localStorage.setItem('team',team.toString());
+    localStorage.setItem('team', team.toString());
     if (clusterId && window.location.pathname.split(`${clusterId}/`)[1]) {
-      window.location.href = `/jobs-v2/${clusterId}/`;
+      window.location.href = `/expert/jobs-v2/${clusterId}/`;
     } else {
       window.location.reload();
     }
@@ -130,7 +130,7 @@ export const Provider: React.FC<{permissionList?: string[], administrators?: str
   }
   if (teams !== undefined && teams.length === 0) {
     return <Context.Provider
-      value={{ teams, selectedTeam ,saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList, administrators  }}
+      value={{ teams, selectedTeam, saveSelectedTeam, clusterId, saveClusterId, getTeams, permissionList, administrators  }}
       children={<EmptyTeam />}
     />;
   }

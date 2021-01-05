@@ -8,20 +8,30 @@ data:
       filedir: logs
       filename: ai_arts_backend.log
 
+    database: postgres
     db:
-      username: root
-      password: apulis#2019#wednesday
-      {% if cnf["db_archtype"] == "amd64" %}
-      host: mysql.kube-system
-      {% elif cnf["db_archtype"] == "arm64" %}
-      host: mysql-arm64.kube-system
-      {% else %}
-      host: mysql.kube-system
-      {% endif %}
-      port: 3306
-      database: ai_arts
-      maxopenconns: 10
-      maxidleconns: 2
+      mysql:
+        username: root
+        password: apulis#2019#wednesday
+        {% if cnf["db_archtype"] == "amd64" %}
+        host: mysql.kube-system
+        {% elif cnf["db_archtype"] == "arm64" %}
+        host: mysql-arm64.kube-system
+        {% else %}
+        host: mysql.kube-system
+        {% endif %}
+        port: 3306
+        database: ai_arts
+        maxopenconns: 10
+        maxidleconns: 2
+      postgresql:
+        username: postgres
+        password: postgres
+        host: postgres.kube-system
+        port: 5432
+        database: ai_arts
+        maxopenconns: 10
+        maxidleconns: 2
 
     file:
       datasetdir: /data/dataset
@@ -50,26 +60,39 @@ data:
       tensorflow:
         - image: apulistech/ubuntu:18.04-amd64
           desc: "测试1"
+          category: "normal"
         - image: apulistech/tensorflow:2.3.0-gpu-py3
           desc: "测试2"
+          category: "normal"
         - image: apulistech/tensorflow:1.14.0-gpu-py3
           desc: "测试3"
+          category: "normal"
         - image: apulistech/tensorflow:1.15.2-gpu-py3
           desc: "测试4"
+          category: "normal"
         - image: apulistech/tf:1.15-arm-rc1
           desc: "测试5"
+          category: "normal"
       pytorch:
         - image: apulistech/pytorch:1.5
           desc: "测试6"
+          category: "normal"
       mxnet:
         - image: apulistech/mxnet:2.0.0-gpu-py3
           desc: "测试7"
+          category: "normal"
       mindspore:
         - image: apulistech/mindspore:0.2.0-alpha
           desc: "测试8"
+          category: "normal"
       caffe:
         - image: apulistech/caffe:BVLC
           desc: "测试9"
+          category: "normal"
+      hyperparameters:
+        - image: apulistech/nni:v1.9
+          desc: "测试9"
+          category: "hyperparameters"
 
     InteractiveModeJob: false
     PrivateRegistry: {{cnf["private_docker_registry"]}}

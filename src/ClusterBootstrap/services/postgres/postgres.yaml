@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: kube-system
+  labels:
+    app: gitlab
+spec:
+  ports:
+    - port: 5432
+      protocol: TCP
+  selector:
+    app: gitlab
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: postgres
+  namespace: kube-system
+  labels:
+    app: gitlab
+spec:
+  selector:
+    matchLabels:
+      app: postgres-amd64
+  template:
+    metadata:
+      labels:
+        app: postgres-amd64
+    spec:
+      hostNetwork: true
+      containers:
+      - image: postgres:11.10-alpine
+        name: postgres
+        env:
+          - name: POSTGRES_USER
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: postgres
+        ports:
+          - containerPort: 5432
+            name: postgres
+        volumeMounts:
+          - name: postgres
+            mountPath: /var/lib/postgres/data
+      volumes:
+      - name: postgres
+        hostPath:
+          path: /data/postgres

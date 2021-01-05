@@ -14,13 +14,15 @@ import {
 
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import JobStatus from '../../components/JobStatus';
+import UserContext from '../../contexts/User';
 
 import Context from './Context';
 import { useTranslation } from "react-i18next";
 
 const Brief: FunctionComponent = () => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const { cluster, job } = useContext(Context);
+  const { userName } = React.useContext(UserContext);
   return (
     <List dense>
       <ListItem>
@@ -49,15 +51,15 @@ const Brief: FunctionComponent = () => {
       </ListItem>
       <CopyableTextListItem
         primary={t('jobV2.dataPath')}
-        secondary={`${cluster['dataStorage'] || ''}/${job['jobParams']['dataPath']}`}
+        secondary={`/data/`}
       />
       <CopyableTextListItem
         primary={t('jobV2.workPath')}
-        secondary={`${cluster['workStorage'] || ''}/${job['jobParams']['workPath']}`}
+        secondary={`/home/${userName}/${job['jobParams']['workPath']}`}
       />
       <CopyableTextListItem
         primary={t('jobV2.jobPath')}
-        secondary={`${cluster['workStorage'] || ''}/${job['jobParams']['jobPath']}`}
+        secondary={`/home/${userName}/${job['jobParams']['jobPath']}`}
       />
       <ListItem>
         <ListItemText

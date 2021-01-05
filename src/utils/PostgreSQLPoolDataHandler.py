@@ -3,23 +3,23 @@ import base64
 import os
 import logging
 import functools
-import mysql.connector
 import timeit
 import time
 from itertools import chain
 from Queue import Queue
-import MySQLdb
 from DBUtils.PooledDB import PooledDB
 from config import config
 from config import global_vars
 import requests
-
+import psycopg2
+from datetime import datetime
 from prometheus_client import Histogram
 import threading
-from mysql_conn_pool import MysqlConn,db_connect_histogram
+from postgresql_conn_pool import PostgresqlConn,db_connect_histogram
 import EndpointUtils
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-MysqlConn.config_pool(risk_config={"max_connections":5})
+PostgresqlConn.config_pool(risk_config={"max_connections":5})
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +46,22 @@ def sql_injection_parse(name):
         return " "
     return name.strip()
 
+
+
 class SingletonDBPool(object):
     __instance_lock = threading.Lock()
 
     def __init__(self, *args, **kwargs):
+        logger.info("init postgreSQL DBUtils pool start")
         database = "DLWSCluster-%s" % config["clusterId"]
-        server = config["mysql"]["hostname"]
-        username = config["mysql"]["username"]
-        password = config["mysql"]["password"]
+        server = config["postgresql"]["hostname"]
+        username = config["postgresql"]["username"]
+        password = config["postgresql"]["password"]
         with db_connect_histogram.time():
-            self.pool = PooledDB(creator=MySQLdb, maxconnections=150, blocking=False,
-                                 host=server, db=database, user=username, passwd=password)
-            logger.info("init MySQL DBUtils pool succeed")
+            self.pool = PooledDB(creator=psycopg2, maxconnections=150, blocking=False,
+                                 host=server, database=database, user=username, password=password)
+
+            logger.info("init postgreSQL DBUtils pool succeed")
 
     @classmethod
     def instance(cls, *args, **kwargs):
@@ -70,6 +74,7 @@ class SingletonDBPool(object):
     def get_connection(self):
         return self.pool.connection()
 
+
 def record(fn):
     @functools.wraps(fn)
     def wrapped(*args, **kwargs):
@@ -77,7 +82,7 @@ def record(fn):
         try:
             return fn(*args, **kwargs)
         except Exception as e:
-            logger.exception('mysql Exception: %s', str(e))
+            logger.exception('PostgreSQL Exception: %s', str(e))
         finally:
             elapsed = timeit.default_timer() - start
             ##logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
@@ -115,21 +120,27 @@ class DataHandler(object):
         self.CreateDatabase()
         self.CreateTable()
 
+
     def CreateDatabase(self):
         if "initSQLDB" not in global_vars or not global_vars["initSQLDB"]:
             logger.info("===========init SQL database===============")
             global_vars["initSQLDB"] = True
 
-            server = config["mysql"]["hostname"]
-            username = config["mysql"]["username"]
-            password = config["mysql"]["password"]
+            server = config["postgresql"]["hostname"]
+            username = config["postgresql"]["username"]
+            password = config["postgresql"]["password"]
 
-            conn = mysql.connector.connect(user=username, password=password,
-                                          host=server)
-            sql = " CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET 'utf8' " % (self.database)
+            conn = psycopg2.connect(user=username, password=password,
+                                          host=server, sslmode='disable')
+
             cursor = conn.cursor()
-            cursor.execute(sql)
-            conn.commit()
+            cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = '%s'" % self.database)
+            exists = cursor.fetchone()
+            if not exists:
+                conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+                cursor.execute("""CREATE DATABASE "{}" """.format(self.database))
+
+                conn.commit()
             cursor.close()
             conn.close()
 
@@ -138,176 +149,203 @@ class DataHandler(object):
             logger.info("===========init SQL Tables ===============")
             global_vars["initSQLTable"] = True
 
-            sql = """
-                CREATE TABLE IF NOT EXISTS `%s`
-                (
-                    `uid` int(11) NOT NULL AUTO_INCREMENT,
-                    `openId` varchar(64) NOT NULL,
-                    `group` varchar(64) NOT NULL,
-                    `nickName` varchar(64) NOT NULL,
-                    `userName` varchar(64) NOT NULL,
-                    `password` varchar(64) NOT NULL,
-                    `phoneNumber` varchar(64) DEFAULT NULL,
-                    `email` varchar(64) DEFAULT NULL,
-                    `isAdmin` int(11) NOT NULL,
-                    `isAuthorized` int(11) NOT NULL,
-                    `time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (`uid`) USING BTREE,
-                    UNIQUE KEY `userName` (`userName`) USING BTREE,
-                    UNIQUE KEY `openId-group` (`openId`,`group`) USING BTREE
-                ) AUTO_INCREMENT=30001;
-                """ % (self.accounttablename)
-
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
-                conn.commit()
+            database = "DLWSCluster-%s" % config["clusterId"]
+            server = config["postgresql"]["hostname"]
+            username = config["postgresql"]["username"]
+            password = config["postgresql"]["password"]
+            conn = psycopg2.connect(host=server, database=database, user=username, password=password)
+            cursor = conn.cursor()
 
             sql = """
-                CREATE TABLE IF NOT EXISTS `%s`
+                CREATE TABLE  "%s"
                 (
-                    `id`        INT          NOT NULL AUTO_INCREMENT,
-                    `jobId` varchar(50)   NOT NULL,
-                    `familyToken` varchar(50)   NOT NULL,
-                    `isParent` INT   NOT NULL,
-                    `jobName`         varchar(1024) NOT NULL,
-                    `userName`         varchar(255) NOT NULL,
-                    `vcName`         varchar(255) NOT NULL,
-                    `jobStatus`         varchar(255) NOT NULL DEFAULT 'unapproved',
-                    `jobStatusDetail` LONGTEXT  NULL,
-                    `jobType`         varchar(255) NOT NULL,
-                    `jobDescriptionPath`  TEXT NULL,
-                    `jobDescription`  LONGTEXT  NULL,
-                    `jobTime` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    `endpoints` LONGTEXT  NULL,
-                    `errorMsg` LONGTEXT  NULL,
-                    `jobParams` LONGTEXT  NOT NULL,
-                    `jobMeta` LONGTEXT  NULL,
-                    `jobLog` LONGTEXT  NULL,
-                    `retries`             int    NULL DEFAULT 0,
-                    `isDeleted`             int    NULL DEFAULT 0,
-                    `lastUpdated` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    `jobGroup`    varchar(255) NULL,
-                    PRIMARY KEY (`id`),
-                    UNIQUE(`jobId`),
-                    INDEX (`userName`),
-                    INDEX (`jobTime`),
-                    INDEX (`jobId`),
-                    INDEX (`vcName`),
-                    INDEX (`jobStatus`),
-                    INDEX (`jobType`),
-                    INDEX (`jobGroup`)
+                    "uid" serial primary key,
+                    "openId" varchar(64) NOT NULL,
+                    "group" varchar(64) NOT NULL,
+                    "nickName" varchar(64) NOT NULL,
+                    "userName" varchar(64) UNIQUE NOT NULL,
+                    "password" varchar(64) NOT NULL,
+                    "phoneNumber" varchar(64) DEFAULT NULL,
+                    "email" varchar(64) DEFAULT NULL,
+                    "isAdmin" int NOT NULL,
+                    "isAuthorized" int NOT NULL,
+                    "time" timestamp NOT NULL DEFAULT now()
                 );
-                """ % (self.jobtablename)
+                alter table "%s" add constraint "unique-%s-openId-group" unique("openId","group");
+                """ % (self.accounttablename,self.accounttablename,self.accounttablename)
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.accounttablename)
+
 
             sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE  "%s"
                 (
-                    `id`             INT     NOT NULL AUTO_INCREMENT,
-                    `jobId`   varchar(50)   NOT NULL,
-                    `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    CONSTRAINT identityName_jobId UNIQUE(`jobId`)
+                    "id"                    serial primary key,
+                    "jobId"                 varchar(50) UNIQUE  NOT NULL,
+                    "familyToken"           varchar(50)   NOT NULL,
+                    "isParent"              INT  NOT NULL,
+                    "jobName"               varchar(1024) NOT NULL,
+                    "userName"              varchar(255) NOT NULL,
+                    "vcName"                varchar(255) NOT NULL,
+                    "jobStatus"             varchar(255) NOT NULL DEFAULT 'unapproved',
+                    "jobStatusDetail"       TEXT  NULL,
+                    "jobType"               varchar(255) NOT NULL,
+                    "jobDescriptionPath"    TEXT NULL,
+                    "jobDescription"        TEXT  NULL,
+                    "jobTime"               timestamp  without time zone DEFAULT now() NOT NULL,
+                    "endpoints"             TEXT  NULL,
+                    "errorMsg"              TEXT  NULL,
+                    "jobParams"             TEXT  NOT NULL,
+                    "jobMeta"               TEXT  NULL,
+                    "jobLog"                TEXT  NULL,
+                    "retries"               int   NULL DEFAULT 0,
+                    "isDeleted"             int    NULL DEFAULT 0,
+                    "lastUpdated"           timestamp  without time zone DEFAULT now() NOT NULL,
+                    "jobGroup"              varchar(255) NULL
+                );
+                CREATE INDEX "index-%s-userName" ON "%s" USING btree ("userName");
+                CREATE INDEX "index-%s-jobTime" ON "%s" USING btree ("jobTime");
+                CREATE INDEX "index-%s-jobId" ON "%s" USING btree ("jobId");
+                CREATE INDEX "index-%s-vcName" ON "%s" USING btree ("vcName");
+                CREATE INDEX "index-%s-jobStatus" ON "%s" USING btree ("jobStatus");
+                CREATE INDEX "index-%s-jobType" ON "%s" USING btree ("jobType");
+                CREATE INDEX "index-%s-jobGroup" ON "%s" USING btree ("jobGroup");
+                """ % (self.jobtablename,self.jobtablename,self.jobtablename,
+                self.jobtablename,self.jobtablename,
+                self.jobtablename,self.jobtablename,
+                self.jobtablename,self.jobtablename,
+                self.jobtablename,self.jobtablename,
+                self.jobtablename,self.jobtablename,
+                self.jobtablename,self.jobtablename
+                )
+
+            try:
+                cursor.execute(sql)
+                conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.jobtablename)
+
+
+            sql = """
+                CREATE TABLE   "%s"
+                (
+                    "id"      serial primary key,
+                    "jobId"   varchar(50) UNIQUE  NOT NULL,
+                    "time"    timestamp DEFAULT now() NOT NULL
                 )
                 """ % (self.inferencejobtablename)
-
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
-
-            sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
-                (
-                    `id`         INT     NOT NULL AUTO_INCREMENT,
-                    `jobId`      varchar(50)   NOT NULL,
-                    `inputPath`  TEXT NOT NULL,
-                    `outputPath` TEXT NOT NULL,
-                    `type`       varchar(255) NOT NULL,
-                    `status`     varchar(255) NOT NULL,
-                    `fileId`     varchar(255),
-                    PRIMARY KEY (`id`),
-                    INDEX (`jobId`),
-                    INDEX (`type`),
-                    INDEX (`status`),
-                    CONSTRAINT identityName_jobId UNIQUE(`jobId`)
-                )
-                """ % (self.modelconversionjobtablename)
-
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
-                conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.inferencejobtablename)
 
 
             sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE   "%s"
                 (
-                    `id`         INT     NOT NULL AUTO_INCREMENT,
-                    `name`       varchar(50)   NOT NULL UNIQUE,
-                    `username`   varchar(50)   NOT NULL,
-                    `password`   varchar(50)   NOT NULL,
-                    `url`        varchar(255) NOT NULL,
-                    PRIMARY KEY (`id`)
+                    "id"         serial primary key,
+                    "jobId"      varchar(50) UNIQUE NOT NULL,
+                    "inputPath"  TEXT NOT NULL,
+                    "outputPath" TEXT NOT NULL,
+                    "type"       varchar(255) NOT NULL,
+                    "status"     varchar(255) NOT NULL,
+                    "fileId"     varchar(255)
+                );
+                CREATE INDEX "index-%s-jobId" ON "%s" USING btree ("jobId");
+                CREATE INDEX "index-%s-type" ON "%s" USING btree (type);
+                CREATE INDEX "index-%s-status" ON "%s" USING btree (status);
+                """ % (self.modelconversionjobtablename,self.modelconversionjobtablename
+                ,self.modelconversionjobtablename,self.modelconversionjobtablename
+                ,self.modelconversionjobtablename,self.modelconversionjobtablename,
+                self.modelconversionjobtablename)
+            try:
+
+                cursor.execute(sql)
+                conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.modelconversionjobtablename)
+
+
+            sql = """
+                CREATE TABLE   "%s"
+                (
+                    "id"         serial primary key,
+                    "name"       varchar(50)   NOT NULL UNIQUE,
+                    "username"   varchar(50)   NOT NULL,
+                    "password"   varchar(50)   NOT NULL,
+                    "url"        varchar(255)  NOT NULL
                 )
                 """ % (self.fdserverinfotablename)
-
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.fdserverinfotablename)
 
             sql = """
-                CREATE TABLE IF NOT EXISTS `%s`
+                CREATE TABLE  "%s"
                 (
-                    `id`        INT   NOT NULL AUTO_INCREMENT,
-                    `status`         LONGTEXT NOT NULL,
-                    `time` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    INDEX (`time`)
-                )
-                """ % (self.clusterstatustablename)
+                    "id"        serial primary key,
+                    "status"    TEXT NOT NULL,
+                    "time"      timestamp DEFAULT now() NOT NULL
+                );
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+                CREATE INDEX "index-%s-time" ON "%s" USING btree (time);
+                """ % (self.clusterstatustablename,self.clusterstatustablename,self.clusterstatustablename)
+            try:
+                cursor.execute("ROLLBACK")
                 conn.commit()
+                cursor.execute(sql)
+                conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.clusterstatustablename)
 
             sql = """
-                CREATE TABLE IF NOT EXISTS `%s`
+                CREATE TABLE  "%s"
                 (
-                    `id`        INT     NOT NULL AUTO_INCREMENT,
-                    `jobId` varchar(50)   NOT NULL,
-                    `status`         varchar(255) NOT NULL DEFAULT 'pending',
-                    `time` DATETIME     DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    `command` TEXT NOT NULL,
-                    `output` TEXT NULL,
-                    PRIMARY KEY (`id`)
-                )
+                    "id"        serial primary key,   
+                    "jobId"     varchar(50)   NOT NULL,
+                    "status"    varchar(255) NOT NULL DEFAULT 'pending',
+                    "time"      timestamp without time zone DEFAULT now() NOT NULL,
+                    "command"   TEXT NOT NULL,
+                    "output"    TEXT NULL
+                );
                 """ % (self.commandtablename)
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.commandtablename)
 
             sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE   "%s"
                 (
-                    `id`               INT     NOT NULL AUTO_INCREMENT,
-                    `storageType`      varchar(255) NOT NULL,
-                    `url`              varchar(255) NOT NULL,
-                    `metadata`         TEXT NOT NULL,
-                    `vcName`           varchar(255) NOT NULL,
-                    `defaultMountPath` varchar(255) NOT NULL,
-                    `time`             DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    CONSTRAINT vc_url UNIQUE(`vcName`,`url`),
-                    CONSTRAINT vc_mountPath UNIQUE(`vcName`,`defaultMountPath`)
+                    "id"               serial primary key, 
+                    "storageType"      varchar(255) NOT NULL,
+                    "url"              varchar(255) NOT NULL,
+                    "metadata"         TEXT NOT NULL,
+                    "vcName"           varchar(255) NOT NULL,
+                    "defaultMountPath" varchar(255) NOT NULL,
+                    "time"             timestamp without time zone DEFAULT now() NOT NULL
                 )
-                """ % (self.storagetablename)
+                ;
+                alter table "%s" add constraint "unique-%s-vcName-url" unique("vcName","url");
+                alter table "%s" add constraint "unique-%s-vcName-defaultMountPath" unique("vcName","defaultMountPath");
+                """ % (self.storagetablename,self.storagetablename,self.storagetablename,
+                self.storagetablename,self.storagetablename)
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.storagetablename)
+
 
             # when the VC has vm of same GPU type but different VMsizes, e.g., when VC has Standard_NC6s_v3 and Standard_NC12s_v3 both?
             # impossible since there's no way to do it with current config mechanism
@@ -318,235 +356,255 @@ class DataHandler(object):
             default_type = json.dumps({one:0 for one in config["defalt_virtual_cluster_device_type_list"] }  if config["defalt_virtual_cluster_device_type_list"] else {})
             logging.info([config['defalt_virtual_cluster_name'],default_type])
             sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE   "%s"
                 (
-                    `id`        INT     NOT NULL AUTO_INCREMENT,
-                    `vcName`    varchar(255) NOT NULL UNIQUE,
-                    `parent`    varchar(255) DEFAULT NULL,
-                    `quota`     varchar(255) NOT NULL,
-                    `metadata`  TEXT NOT NULL,
-                    `time`      DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`)
+                    "id"        serial primary key,
+                    "vcName"    varchar(255) UNIQUE NOT NULL,
+                    "parent"    varchar(255) DEFAULT NULL,
+                    "quota"     varchar(255) NOT NULL,
+                    "metadata"  TEXT NOT NULL,
+                    "time"      timestamp without time zone DEFAULT now() NOT NULL
                 )
-                AS SELECT \'%s\' AS vcName, NULL AS parent, '%s' AS quota, '{}' AS metadata;
+                ;
+                INSERT into vc ("vcName","parent","quota","metadata") VALUES ('%s',NULL,'%s','{}')
                 """ % (self.vctablename, config['defalt_virtual_cluster_name'],default_type)
-
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.vctablename)
 
             sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE   "%s"
                 (
-                    `id`            INT     NOT NULL AUTO_INCREMENT,
-                    `identityName`  varchar(255) NOT NULL UNIQUE,
-                    `uid`           INT NOT NULL,
-                    `gid`           INT NOT NULL,
-                    `groups`        MEDIUMTEXT NOT NULL,
-                    `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`)
+                    "id"            serial primary key,
+                    "identityName"  varchar(255) NOT NULL UNIQUE,
+                    "uid"           INT NOT NULL,
+                    "gid"           INT NOT NULL,
+                    "groups"        TEXT NOT NULL,
+                    "time"          timestamp  without time zone DEFAULT now() NOT NULL
                 )
                 """ % (self.identitytablename)
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.identitytablename)
+
 
             sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE   "%s"
                 (
-                    `id`             INT     NOT NULL AUTO_INCREMENT,
-                    `identityName`   varchar(255) NOT NULL,
-                    `identityId`     INT NOT NULL,
-                    `resource`       varchar(255) NOT NULL,
-                    `permissions`    INT NOT NULL,
-                    `isDeny`         INT NOT NULL,
-                    `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    CONSTRAINT identityName_resource UNIQUE(`identityName`,`resource`)
-                )
-                """ % (self.acltablename)
-
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+                    "id"             serial primary key,
+                    "identityName"   varchar(255) NOT NULL,
+                    "identityId"     INT NOT NULL,
+                    "resource"       varchar(255) NOT NULL,
+                    "permissions"    INT NOT NULL,
+                    "isDeny"         INT NOT NULL,
+                    "time"           timestamp without time zone  DEFAULT now() NOT NULL
+                );
+                alter table "%s" add constraint "identityName_resource" unique("identityName","resource");
+                """ % (self.acltablename,self.acltablename)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.acltablename)
 
             sql = """
-                CREATE TABLE IF NOT EXISTS `%s`
+                CREATE TABLE  "%s"
                 (
-                    `id`    INT          NOT NULL AUTO_INCREMENT,
-                    `name`  VARCHAR(255) NOT NULL,
-                    `scope` VARCHAR(255) NOT NULL COMMENT '"master", "vc:vcname" or "user:username"',
-                    `json`  TEXT         NOT NULL,
-                    `isDefault`  TINYINT(1)  DEFAULT 0,
-                    `time`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    PRIMARY KEY (`id`),
-                    CONSTRAINT name_scope UNIQUE(`name`, `scope`)
-                )
-                """ % (self.templatetablename)
+                    "id"    serial primary key,
+                    "name"  VARCHAR(255) NOT NULL,
+                    "scope" VARCHAR(255) NOT NULL ,
+                    "json"  TEXT         NOT NULL,
+                    "isDefault"  smallint  DEFAULT 0,
+                    "time"  timestamp  without time zone DEFAULT now() NOT NULL
+                );
+                alter table "%s" add constraint "name_scope" unique("name", "scope");
+                """ % (self.templatetablename,self.templatetablename)
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
 
-            # insert a default template
+                default_job_json={
+                    "workPath": "",
+                    "interactivePorts": "",
+                    "name": "Default Job",
+                    "gpuType": "",
+                    "workers": 0,
+                    "jobPath": "",
+                    "dataPath": "",
+                    "gpuNumPerDevice": 0,
+                    "enableWorkPath": True,
+                    "preemptible": False,
+                    "enableJobPath": True,
+                    "command": " while true; do echo \"job running\"; sleep 1; done",
+                    "environmentVariables": [],
+                    "tensorboard": False,
+                    "plugins": {
+                        "blobfuse": [
+                            {
+                                "accountKey": "",
+                                "containerName": "",
+                                "mountPath": "",
+                                "mountOptions": "",
+                                "accountName": ""
+                            }
+                        ],
+                        "imagePull": [
+                            {
+                                "username": "",
+                                "password": "",
+                                "registry": ""
+                            }
+                        ]
+                    },
+                    "ipython": True,
+                    "gpus": 1,
+                    "type": "RegularJob",
+                    "image": "ubuntu:18.04",
+                    "enableDataPath": True,
+                    "ssh": True
+                }
+
+                sql = """
+                    insert into %s (
+                        id, name, scope, json, "isDefault"
+                    )
+                    values(
+                        0, 'default_template', 'vc:platform', '%s', 1
+                    ) ON CONFLICT (id) DO UPDATE SET  id=0
+                """ %(self.templatetablename, json.dumps(default_job_json))
+
+                try:
+                    cursor.execute(sql)
+                    conn.commit()
+                except:
+                    logger.error("Table %s insert fall" %self.templatetablename)
+
+
+            except:
+                logger.info("Table %s already exists" %self.templatetablename)
+
 
             sql = """
-                insert into %s (
-                    id, name, scope, json, isDefault
-                )
-                values(
-                    0, "default_template", "vc:platform", %s, 1
-                ) on duplicate key update id=0
-            """ %(self.templatetablename, "%s")
-            default_job_json={
-                "workPath": "", 
-                "interactivePorts": "", 
-                "name": "Default Job", 
-                "gpuType": "", 
-                "workers": 0, 
-                "jobPath": "", 
-                "dataPath": "", 
-                "gpuNumPerDevice": 0, 
-                "enableWorkPath": True,
-                "preemptible": False,
-                "enableJobPath": True,
-                "command": " while true; do echo \"job running\"; sleep 1; done", 
-                "environmentVariables": [], 
-                "tensorboard": False,
-                "plugins": {
-                    "blobfuse": [
-                        {
-                            "accountKey": "", 
-                            "containerName": "", 
-                            "mountPath": "", 
-                            "mountOptions": "", 
-                            "accountName": ""
-                        }
-                    ], 
-                    "imagePull": [
-                        {
-                            "username": "", 
-                            "password": "", 
-                            "registry": ""
-                        }
-                    ]
-                }, 
-                "ipython": True,
-                "gpus": 1,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-                "type": "RegularJob", 
-                "image": "ubuntu:18.04", 
-                "enableDataPath": True,
-                "ssh": True
-            }
-            with MysqlConn() as conn:
-                conn.insert_one(sql,(json.dumps(default_job_json),))
-                conn.commit()
-            
-            sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE   "%s"
                 (
-                    `id`             INT     NOT NULL AUTO_INCREMENT,
-                    `jobId`   varchar(50)   NOT NULL,
-                    `priority`     INT NOT NULL,
-                    `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    CONSTRAINT identityName_jobId UNIQUE(`jobId`)
-                )
-                """ % (self.jobprioritytablename)
+                    "id"        serial primary key,
+                    "jobId"     varchar(50)   NOT NULL,
+                    "priority"  INT NOT NULL,
+                    "time"      timestamp  without time zone DEFAULT now() NOT NULL
+                );
+                alter table "%s" add constraint "identityName_jobId" unique("jobId");
+                """ % (self.jobprioritytablename,self.jobprioritytablename)
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.jobprioritytablename)
 
             sql = """
-                    CREATE TABLE IF NOT EXISTS  `%s`
+                    CREATE TABLE   "%s"
                     (
-                        `id`            INT    NOT NULL AUTO_INCREMENT,
-                        `deviceType`    varchar(50)   NOT NULL,
-                        `deviceStr`     varchar(50)   NOT NULL,
-                        `capacity`      INT NOT NULL,
-                        `detail`        LONGTEXT NOT NULL,
-                        `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                        PRIMARY KEY (`id`),
-                        UNIQUE KEY (`deviceType`)
+                        "id"            serial primary key,
+                        "deviceType"    varchar(50) UNIQUE  NOT NULL,
+                        "deviceStr"     varchar(50)   NOT NULL,
+                        "capacity"      INT NOT NULL,
+                        "detail"        TEXT NOT NULL,
+                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
                     )
                     """ % (self.deviceStatusTableName)
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
-
+            except:
+                logger.info("Table %s already exists" %self.deviceStatusTableName)
             sql = """
-                    CREATE TABLE IF NOT EXISTS  `%s`
+                    CREATE TABLE   "%s"
                     (
-                        `id`            INT    NOT NULL AUTO_INCREMENT,
-                        `configuration` LONGTEXT   NOT NULL,
-                        `time`           DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                        PRIMARY KEY (`id`)
+                        "id"                serial primary key,
+                        "configuration"     TEXT   NOT NULL,
+                        "time"              timestamp without time zone  DEFAULT now() NOT NULL
                     )
                     """ % (self.monitorConfigTableName)
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.monitorConfigTableName)
 
             sql = """
-                    CREATE TABLE IF NOT EXISTS  `%s`
+                    CREATE TABLE   "%s"
                     (
-                        `id`            INT    NOT NULL AUTO_INCREMENT,
-                        `name`          varchar(50)   NOT NULL,
-                        `query`         varchar(255)   NOT NULL,
-                        `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                        PRIMARY KEY (`id`)
+                        "id"            serial primary key,
+                        "name"          varchar(50)   NOT NULL,
+                        "query"         varchar(255)   NOT NULL,
+                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
                     )
                     """ % (self.monitormetricsTableName)
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
-
+            except:
+                logger.info("Table %s already exists" %self.monitormetricsTableName)
             sql = """
-                    CREATE TABLE IF NOT EXISTS  `%s`
+                    CREATE TABLE   "%s"
                     (
-                        `id`            INT    NOT NULL AUTO_INCREMENT,
-                        `name`          varchar(50)   NOT NULL,
-                        `fields`        LONGTEXT      NOT NULL,
-                        `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                        PRIMARY KEY (`id`)
+                        "id"            serial primary key,
+                        "name"          varchar(50)   NOT NULL,
+                        "fields"        TEXT      NOT NULL,
+                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
                     )
                     """ % (self.monitorchannelTableName)
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.monitorchannelTableName)
 
             sql = """
-                CREATE TABLE IF NOT EXISTS  `%s`
+                CREATE TABLE   "%s"
                 (
-                    `id`         INT     NOT NULL AUTO_INCREMENT,
-                    `projectId`      varchar(50)   NOT NULL,
-                    `datasetId`      varchar(50)   NOT NULL,
-                    `targetFormat`      varchar(50)   NOT NULL,
-                    `type`       varchar(255) NOT NULL,
-                    `outPath`    varchar(255) NULL,
-                    `status`     varchar(255) NOT NULL DEFAULT 'queued',
-                    `errorMsg`      LONGTEXT  NULL,
-                    `time`          DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                    PRIMARY KEY (`id`),
-                    INDEX (`projectId`),
-                    INDEX (`datasetId`),
-                    INDEX (`status`)
-                )
-                """ % (self.dataconvert)
+                    "id"            serial primary key,
+                    "projectId"     varchar(50)   NOT NULL,
+                    "datasetId"     varchar(50)   NOT NULL,
+                    "targetFormat"  varchar(50)   NOT NULL,
+                    "type"          varchar(255) NOT NULL,
+                    "outPath"       varchar(255) NULL,
+                    "status"        varchar(255) NOT NULL DEFAULT 'queued',
+                    "errorMsg"      TEXT  NULL,
+                    "time"          timestamp  without time zone DEFAULT now() NOT NULL
+                );
+                CREATE INDEX "index-%s-projectId" ON "%s" USING btree ("projectId");
+                CREATE INDEX "index-%s-datasetId" ON "%s" USING btree ("datasetId");
+                CREATE INDEX "index-%s-status" ON "%s" USING btree ("status");
+                """ % (self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert,self.dataconvert)
 
-            with MysqlConn() as conn:
-                conn.insert_one(sql)
+            try:
+                cursor.execute(sql)
                 conn.commit()
+            except:
+                logger.info("Table %s already exists" %self.dataconvert)
+
 
     @record
     def AddDevice(self,deviceType, deviceStr, capacity,detail):
+        #TODO
         ret = False
         try:
-            sql = "INSERT INTO `" + self.deviceStatusTableName + "` (deviceType, deviceStr, capacity,`detail`) VALUES (%s,%s,%s,%s) " \
-                                                                 "ON DUPLICATE KEY UPDATE deviceStr=values(deviceStr),capacity=values(capacity),`detail`=values(`detail`) "
-            with MysqlConn() as conn:
+            sql = """
+            INSERT INTO "%s" 
+            ("deviceType", "deviceStr", capacity,detail) 
+            VALUES (%s,%s,%s,%s) 
+            ON DUPLICATE KEY UPDATE deviceStr=values(deviceStr),capacity=values(capacity),detail=values(detail) 
+            """%(self.deviceStatusTableName,self.deviceStatusTableName,self.deviceStatusTableName,self.deviceStatusTableName,self.deviceStatusTableName)
+
+            with PostgresqlConn() as conn:
+                logger.info(sql, (deviceType, deviceStr, capacity,json.dumps(detail)))
                 conn.insert_one(sql, (deviceType, deviceStr, capacity,json.dumps(detail)))
                 conn.commit()
             ret = True
@@ -554,25 +612,27 @@ class DataHandler(object):
             logger.exception('AddStorage Exception: %s', str(e))
         return ret
 
+
     @record
     def GetAllDevice(self):
         ret = {}
         try:
-            sql = """select deviceType, deviceStr, capacity,`detail` from `%s`""" %(self.deviceStatusTableName)
-            with MysqlConn() as conn:
+            sql = """select "deviceType", "deviceStr", capacity,detail from %s  """ %(self.deviceStatusTableName)
+            with PostgresqlConn() as conn:
+                logger.info(sql)
                 rets = conn.select_many(sql)
             for one in rets:
                 ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"],"detail":json.loads(one["detail"])}
         except Exception as e:
             logger.exception('AddStorage Exception: %s', str(e))
         return ret
-
     @record
     def DeleteDeviceType(self,deviceType):
         ret = True
         try:
-            sql = "DELETE FROM `%s` where `deviceType`=%s" % (self.deviceStatusTableName,"%s")
-            with MysqlConn() as conn:
+            sql = """DELETE FROM "%s" where "deviceType"= %s """ % (self.deviceStatusTableName,"%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[deviceType])
                 conn.insert_one(sql,[deviceType])
                 conn.commit()
         except Exception as e:
@@ -582,16 +642,17 @@ class DataHandler(object):
 
     @record
     def CountJobByStatus(self,vcName,status=None):
-        sql  = """select count(1) from `%s` where vcName=%s""" % (self.jobtablename,"%s")
+        sql  = """select count(1) from "%s" where "vcName"=%s""" % (self.jobtablename,"%s")
         params = [vcName]
         if status is not None:
             if "," not in status:
-                sql += " and jobStatus = %s"
+                sql += """ and "jobStatus" = %s"""
                 params.append(status)
             else:
-                sql += " and jobStatus in %s"
+                sql += """ and "jobStatus" in %s"""
                 params.append([s for s in status.split(",")])
-        with MysqlConn() as conn:
+        with PostgresqlConn() as conn:
+            logger.info(sql,params)
             ret = conn.select_one_value(sql, params)
         return ret
 
@@ -599,8 +660,9 @@ class DataHandler(object):
     def AddStorage(self, vcName, url, storageType, metadata, defaultMountPath):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.storagetablename + "` (storageType, url, metadata, vcName, defaultMountPath) VALUES (%s,%s,%s,%s,%s)"
-            with MysqlConn() as conn:
+            sql = "INSERT INTO " + self.storagetablename + " (storageType, url, metadata, vcName, defaultMountPath) VALUES (%s,%s,%s,%s,%s)"
+            with PostgresqlConn() as conn:
+                logger.info(sql,(storageType, url, metadata, vcName, defaultMountPath))
                 conn.insert_one(sql,(storageType, url, metadata, vcName, defaultMountPath))
                 conn.commit()
             ret = True
@@ -612,8 +674,9 @@ class DataHandler(object):
     def DeleteStorage(self, vcName, url):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE url = %s and vcName = %s" % (self.storagetablename,"%s","%s")
-            with MysqlConn() as conn:
+            sql = "DELETE FROM %s WHERE url = %s and vcName = %s" % (self.storagetablename,"%s","%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[url, vcName])
                 conn.insert_one(sql,[ url, vcName])
                 conn.commit()
             ret = True
@@ -625,9 +688,10 @@ class DataHandler(object):
     def ListStorages(self, vcName):
         ret = []
         try:
-            query = "SELECT `storageType`,`url`,`metadata`,`vcName`,`defaultMountPath` FROM `%s` WHERE vcName = %s " % (
+            query = "SELECT storageType,url,metadata,vcName,defaultMountPath FROM %s WHERE vcName = %s " % (
             self.storagetablename,"%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,[vcName])
                 rets = conn.select_many(query,[vcName])
             for one in rets:
                 ret.append(one)
@@ -639,9 +703,10 @@ class DataHandler(object):
     def UpdateStorage(self, vcName, url, storageType, metadata, defaultMountPath):
         ret = False
         try:
-            sql = """update `%s` set storageType = %s, metadata = %s, defaultMountPath = %s where vcName = %s and url = %s """ % (
+            sql = """update %s set storageType = %s, metadata = %s, defaultMountPath = %s where vcName = %s and url = %s """ % (
             self.storagetablename,"%s","%s","%s","%s","%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql,[storageType, metadata, defaultMountPath, vcName, url])
                 conn.update(sql,[storageType, metadata, defaultMountPath, vcName, url])
                 conn.commit()
             ret = True
@@ -653,8 +718,9 @@ class DataHandler(object):
     def AddVC(self, vcName, quota, metadata):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.vctablename + "` (vcName, quota, metadata) VALUES (%s,%s,%s)"
-            with MysqlConn() as conn:
+            sql = "INSERT INTO " + self.vctablename + " (vcName, quota, metadata) VALUES (%s,%s,%s)"
+            with PostgresqlConn() as conn:
+                logger.info(sql, (vcName, quota, metadata))
                 conn.insert_one(sql, (vcName, quota, metadata))
                 conn.commit()
             ret = True
@@ -666,14 +732,15 @@ class DataHandler(object):
     def GetVC(self, vcName):
 
         try:
-            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+            query = "SELECT vcName,quota,metadata FROM %s" % (self.vctablename)
 
             if vcName:
                 query += " WHERE vcName = '%s'" %(vcName)
             else:
                 pass
 
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
 
             for one in rets:
@@ -683,32 +750,32 @@ class DataHandler(object):
             logger.exception('GetVC Exception: %s', str(e))
 
         return None
-
     @record
     def ListVCs(self,page=None,size=None,name=None):
         ret = []
         try:
-            query = "SELECT `vcName`,`quota`,`metadata` FROM `%s`" % (self.vctablename)
+            query = """SELECT "vcName",quota,metadata FROM %s """% (self.vctablename)
             if name:
-                query += " WHERE vcName like '%%%s%%'" %(name)
+                query += """ WHERE "vcName" like '%%%s%%' """ %(name)
             if page and size:
                 query += " limit %d offset %d" % (int(size),(int(page)-1)*int(size))
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
         except Exception as e:
             logger.exception('ListVCs Exception: %s', str(e))
         return ret
-
     @record
     def CountVCs(self,name=None):
         ret = None
         try:
-            query = "SELECT count(1) FROM `%s`" % (self.vctablename)
+            query = "SELECT count(1) FROM %s" % (self.vctablename)
             if name:
-                query += " WHERE vcName like '%%%s%%'" %(name)
-            with MysqlConn() as conn:
+                query += """ WHERE "vcName" like '%%%s%%' """ %(name)
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 ret = conn.select_one_value(query)
         except Exception as e:
             logger.exception('ListVCs Exception: %s', str(e))
@@ -718,8 +785,9 @@ class DataHandler(object):
     def DeleteVC(self, vcName):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE vcName = %s" % (self.vctablename, "%s")
-            with MysqlConn() as conn:
+            sql = """DELETE FROM %s WHERE "vcName" = %s""" % (self.vctablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[vcName])
                 conn.insert_one(sql,[vcName])
                 conn.commit()
             ret = True
@@ -731,9 +799,10 @@ class DataHandler(object):
     def UpdateVC(self, vcName, quota, metadata):
         ret = False
         try:
-            sql = """update `%s` set quota = %s, metadata = %s where vcName = %s """ % (
+            sql = """update %s set quota = %s, metadata = %s where "vcName" = %s """ % (
             self.vctablename,"%s","%s","%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql,[ quota, metadata, vcName])
                 conn.update(sql,[ quota, metadata, vcName])
                 conn.commit()
             ret = True
@@ -743,10 +812,11 @@ class DataHandler(object):
 
     @record
     def ListUser(self):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s`" % (self.accounttablename)
+        query = """SELECT uid,"openId", "group" ,"nickName","userName",password,"isAdmin","isAuthorized" FROM %s """ % (self.accounttablename)
         ret = []
         try:
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -756,10 +826,11 @@ class DataHandler(object):
 
     @record
     def DeleteUser(self,userName):
-        query = "Delete FROM `%s` where `userName`=%s" % (self.accounttablename,"%s")
+        query = """Delete FROM %s where "userName"=%s""" % (self.accounttablename,"%s")
         ret = False
         try:
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,[userName])
                 conn.insert_one(query,[userName])
                 conn.commit()
                 ret = True
@@ -768,39 +839,42 @@ class DataHandler(object):
         return ret
 
     @record
-    def GetAccountByOpenId(self, openId, group):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = %s and `group` = %s" % (self.accounttablename,"%s","%s" )
+    def GetAccountByopenId(self, openId, group):
+        query = """SELECT uid,"openId", "group","nickName","userName",password,"isAdmin","isAuthorized",email,"phoneNumber" FROM %s where "openId" = %s and "group" = %s""" % (self.accounttablename,"%s","%s" )
         ret = []
         try:
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,[openId, group])
                 rets = conn.select_many(query,[openId, group])
             for one in rets:
                 ret.append(one)
 
         except Exception as e:
-            logger.exception('GetAccountByOpenId Exception: %s', str(e))
+            logger.exception('GetAccountByopenId Exception: %s', str(e))
         return ret
 
     @record
-    def GetAccountByOpenIdAndPassword(self, openId,group,password):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s` where `openId` = %s and `group` = %s and `password`=%s" % (self.accounttablename,"%s","%s","%s")
+    def GetAccountByopenIdAndPassword(self, openId,group,password):
+        query = """SELECT uid,"openId","group","nickName","userName",password,"isAdmin","isAuthorized",email,"phoneNumber" FROM %s where "openId" = %s and group = %s and password=%s""" % (self.accounttablename,"%s","%s","%s")
         ret = []
         try:
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,[openId, group,password])
                 rets = conn.select_many(query,[openId, group,password])
             for one in rets:
                 ret.append(one)
 
         except Exception as e:
-            logger.exception('GetAccountByOpenId Exception: %s', str(e))
+            logger.exception('GetAccountByopenId Exception: %s', str(e))
         return ret
 
     @record
     def GetAccountByUserName(self, userName):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized` FROM `%s` where `userName` = %s" % (self.accounttablename,"%s")
+        query = """SELECT uid,"openId","group","nickName","userName",password,"isAdmin","isAuthorized" FROM %s where "userName" = %s """ % (self.accounttablename,"%s")
         ret = []
         try:
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,[userName])
                 rets = conn.select_many(query,[userName])
             for one in rets:
                 ret.append(one)
@@ -811,14 +885,16 @@ class DataHandler(object):
     @record
     def UpdateAccountInfo(self, openId, group, nickName, userName, password, isAdmin, isAuthorized):
         try:
-            if len(self.GetAccountByOpenId(openId, group)) == 0:
-                sql = "INSERT INTO `"+self.accounttablename+"` (`openId`, `group`, `nickName`, `userName`, `password`, `isAdmin`, `isAuthorized`) VALUES (%s,%s,%s,%s,%s,%s,%s)"
-                with MysqlConn() as conn:
+            if len(self.GetAccountByopenId(openId, group)) == 0:
+                sql = """INSERT INTO "+self.accounttablename+" ("openId", "group", "nickName", "userName", password, "isAdmin", "isAuthorized") VALUES (%s,%s,%s,%s,%s,%s,%s)"""
+                with PostgresqlConn() as conn:
+                    logger.info(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
                     conn.insert_one(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
                     conn.commit()
             else:
-                sql = "update `%s` set `nickName` = %s, `userName` = %s, `password` = %s, `isAdmin` = %s, isAuthorized = %s where `openId` = %s and `group` = %s"
-                with MysqlConn() as conn:
+                sql = """update %s set "nickName" = %s, "userName" = %s, "password" = %s, "isAdmin" = %s, "isAuthorized" = %s where "openId" = %s and "group" = %s"""
+                with PostgresqlConn() as conn:
+                    logger.info(sql % (self.accounttablename,"%s","%s","%s","%s","%s","%s","%s"),[nickName, userName, password, isAdmin, isAuthorized, openId, group])
                     conn.insert_one(sql % (self.accounttablename,"%s","%s","%s","%s","%s","%s","%s"),[nickName, userName, password, isAdmin, isAuthorized, openId, group])
                     conn.commit()
             return True
@@ -829,11 +905,12 @@ class DataHandler(object):
     @record
     def UpdateEmailAndPhone(self,openId, group,email,phone):
         try:
-            if len(self.GetAccountByOpenId(openId, group)) == 0:
+            if len(self.GetAccountByopenId(openId, group)) == 0:
                 return False
             else:
-                sql = "update `%s` set `email` = %s, `phoneNumber` = %s where `openId` = %s and `group` = %s" % (self.accounttablename,"%s","%s","%s","%s")
-                with MysqlConn() as conn:
+                sql = """update %s set "email" = %s, "phoneNumber" = %s where "openId" = %s and "group" = %s""" % (self.accounttablename,"%s","%s","%s","%s")
+                with PostgresqlConn() as conn:
+                    logger.info(sql,[email,phone,openId, group])
                     conn.insert_one(sql,[email,phone,openId, group])
                     conn.commit()
             return True
@@ -844,8 +921,9 @@ class DataHandler(object):
     @record
     def UpdateAccountPermission(self,userName, isAdmin,isAuthorized):
         try:
-            sql = "update `%s` set `isAdmin` = %s, `isAuthorized` = %s where `userName` = %s" % (self.accounttablename,"%s","%s","%s")
-            with MysqlConn() as conn:
+            sql = """update %s set "isAdmin" = %s, "isAuthorized" = %s where "userName" = %s""" % (self.accounttablename,"%s","%s","%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[int(isAdmin),int(isAuthorized),userName])
                 conn.insert_one(sql,[int(isAdmin),int(isAuthorized),userName])
                 conn.commit()
             return True
@@ -857,9 +935,9 @@ class DataHandler(object):
     def GetIdentityInfo(self, identityName):
         ret = []
         try:
-            # query = "SELECT `identityName`,`uid`,`gid`,`groups` FROM `%s` where `identityName` = %s" % (
+            # query = "SELECT identityName,uid,gid,groups FROM %s where identityName = %s" % (
             # self.identitytablename, "%s")
-            # with MysqlConn() as conn:
+            # with PostgresqlConn() as conn:
             #     rets = conn.select_many(query,[identityName])
             # for one in rets:
             #     one["groups"] = json.loads(one["groups"])
@@ -878,15 +956,17 @@ class DataHandler(object):
             if (isinstance(groups, list)):
                 groups = json.dumps(groups)
             if len(self.GetIdentityInfo(identityName)) == 0:
-                sql = "insert into {0} (`identityName`, `uid`, `gid`, `groups`) values ('{1}', '{2}', '{3}', '{4}') on duplicate key update `uid`='{2}', `gid`='{3}', `groups`='{4}'".format(
+                sql = """insert into {0} ("identityName", uid, gid, groups) values ('{1}', '{2}', '{3}', '{4}') on CONFLICT (id)  DO UPDATE SET uid='{2}', gid='{3}', groups='{4}'""".format(
                     self.identitytablename, identityName, uid, gid, groups)
-                with MysqlConn() as conn:
+                with PostgresqlConn() as conn:
+                    logger.info(sql)
                     conn.insert_one(sql)
                     conn.commit()
             else:
-                sql = """update `%s` set `uid` = %s, `gid` = %s, `groups` = %s where `identityName` = %s """ % (
+                sql = """update %s set uid = %s, gid = %s, groups = %s where "identityName" = %s """ % (
                 self.identitytablename, "%s", "%s", "%s", "%s")
-                with MysqlConn() as conn:
+                with PostgresqlConn() as conn:
+                    logger.info(sql,[uid, gid, groups, identityName])
                     conn.insert_one(sql,[uid, gid, groups, identityName])
                     conn.commit()
             ret = True
@@ -897,8 +977,9 @@ class DataHandler(object):
     @record
     def UpdateIdentityInfoPerm(self, identityName, isAdmin, isAuthorized):
         try:
-            sql = """update `%s` set isAdmin = %s, isAuthorized = %s where `userName` = %s """ % (self.accounttablename, "%s", "%s", "%s")
-            with MysqlConn() as conn:
+            sql = """update %s set "isAdmin" = %s, "isAuthorized" = %s where "userName" = %s """ % (self.accounttablename, "%s", "%s", "%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[isAdmin, isAuthorized, identityName])
                 conn.update(sql,[isAdmin, isAuthorized, identityName])
                 conn.commit()
             return True
@@ -909,8 +990,9 @@ class DataHandler(object):
 
     @record
     def GetAceCount(self, identityName, resource):
-        query = "SELECT count(ALL id) as c FROM `%s` where `identityName` = %s and `resource` = %s" % (self.acltablename,"%s", "%s")
-        with MysqlConn() as conn:
+        query = """SELECT count(ALL id) as c FROM %s where "identityName" = %s and resource = %s""" % (self.acltablename,"%s", "%s")
+        with PostgresqlConn() as conn:
+            logger.info(query,[identityName, resource])
             rets = conn.select_many(query,[identityName, resource])
         ret = 0
         for c in rets:
@@ -923,15 +1005,17 @@ class DataHandler(object):
         try:
             existingAceCount = self.GetAceCount(identityName, resource)
             if existingAceCount == 0:
-                sql = "insert into {0} (identityName, identityId, resource, permissions, isDeny) values ('{1}', '{2}', '{3}', '{4}', '{5}') on duplicate key update permissions='{4}'".format(
+                sql = """insert into {0} ("identityName", "identityId", resource, permissions, "isDeny") values ('{1}', '{2}', '{3}', '{4}', '{5}') on duplicate key update permissions='{4}'""".format(
                     self.acltablename, identityName, identityId, resource, permissions, isDeny)
-                with MysqlConn() as conn:
+                with PostgresqlConn() as conn:
+                    logger.info(sql)
                     conn.insert_one(sql)
                     conn.commit()
             else:
-                sql = """update `%s` set permissions = %s where `identityName` = %s and `resource` = %s """ % (
+                sql = """update %s set permissions = %s where "identityName" = %s and resource = %s """ % (
                 self.acltablename, "%s", "%s", "%s")
-                with MysqlConn() as conn:
+                with PostgresqlConn() as conn:
+                    logger.info(sql,[permissions, identityName, resource])
                     conn.insert_one(sql,[permissions, identityName, resource])
                     conn.commit()
             ret = True
@@ -943,9 +1027,10 @@ class DataHandler(object):
     def UpdateAclIdentityId(self, identityName, identityId):
         ret = False
         try:
-            sql = """update `%s` set identityId = %s where `identityName` = %s """ % (
+            sql = """update %s set "identityId" = %s where "identityName" = %s """ % (
             self.acltablename, "%s", "%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql,[identityId, identityName])
                 conn.update(sql,[identityId, identityName])
                 conn.commit()
             ret = True
@@ -957,8 +1042,9 @@ class DataHandler(object):
     def DeleteResourceAcl(self, resource):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE `resource` = %s" % (self.acltablename, "%s")
-            with MysqlConn() as conn:
+            sql = "DELETE FROM %s WHERE resource = %s" % (self.acltablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[resource])
                 conn.insert_one(sql,[resource])
                 conn.commit()
             ret = True
@@ -970,9 +1056,10 @@ class DataHandler(object):
     def DeleteAce(self, identityName, resource):
         ret = False
         try:
-            sql = "DELETE FROM `%s` WHERE `identityName` = %s and `resource` = %s" % (
+            sql = """DELETE FROM %s WHERE "identityName" = %s and resource = %s""" % (
             self.acltablename, "%s", "%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql,[identityName, resource])
                 conn.insert_one(sql,[identityName, resource])
                 conn.commit()
             ret = True
@@ -984,9 +1071,10 @@ class DataHandler(object):
     def GetAcl(self):
         ret = []
         try:
-            query = "SELECT `identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s`" % (
+            query = """SELECT "identityName","identityId",resource,permissions,"isDeny" FROM %s""" % (
                 self.acltablename)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -998,9 +1086,10 @@ class DataHandler(object):
     def GetResourceAcl(self, resource):
         ret = []
         try:
-            query = "SELECT `identityName`,`identityId`,`resource`,`permissions`,`isDeny` FROM `%s` where `resource` = %s" % (
+            query = """SELECT "identityName","identityId",resource,permissions,"isDeny" FROM %s where resource = %s""" % (
             self.acltablename, "%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,[resource])
                 rets = conn.select_many(query,[resource])
             for one in rets:
                 ret.append(one)
@@ -1012,9 +1101,12 @@ class DataHandler(object):
     def AddJob(self, jobParams):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.jobtablename + "` (jobId, familyToken, isParent, jobName, userName, vcName, jobType,jobParams,jobGroup) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            sql = """INSERT INTO %s ("jobId", "familyToken", "isParent", "jobName", "userName", "vcName", "jobType","jobParams","jobGroup") VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)""" % (self.jobtablename,"%s","%s","%s","%s","%s","%s","%s","%s","%s")
             jobParam = base64.b64encode(json.dumps(jobParams))
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql, (
+                    jobParams["jobId"], jobParams["familyToken"], jobParams["isParent"], jobParams["jobName"],
+                    jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam,jobParams.get("jobGroup",None)))
                 conn.insert_one(sql, (
                     jobParams["jobId"], jobParams["familyToken"], jobParams["isParent"], jobParams["jobName"],
                     jobParams["userName"], jobParams["vcName"], jobParams["jobType"], jobParam,jobParams.get("jobGroup",None)))
@@ -1028,9 +1120,11 @@ class DataHandler(object):
     def AddInferenceJob(self, jobParams):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.inferencejobtablename + "` (jobId) VALUES (%s)"
+            sql = """INSERT INTO %s ("jobId") VALUES (%s)""" % (self.inferencejobtablename,"%s")
             jobParam = base64.b64encode(json.dumps(jobParams))
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql, (
+                    jobParams["jobId"],))
                 conn.insert_one(sql, (
                     jobParams["jobId"],))
                 conn.commit()
@@ -1044,9 +1138,11 @@ class DataHandler(object):
     def AddModelConversionJob(self, jobParams):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.modelconversionjobtablename + "` (jobId, inputPath, outputPath, type, status) VALUES (%s, %s, %s, %s, %s)"
+            sql = """INSERT INTO %s (jobId, inputPath, outputPath, type, status) VALUES (%s, %s, %s, %s, %s)""" % (self.modelconversionjobtablename,"%s", "%s", "%s", "%s", "%s")
             jobParam = base64.b64encode(json.dumps(jobParams))
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql, (
+                    jobParams["jobId"], jobParams["inputPath"], jobParams["outputPath"], jobParams["conversionType"], "converting"))
                 conn.insert_one(sql, (
                     jobParams["jobId"], jobParams["inputPath"], jobParams["outputPath"], jobParams["conversionType"], "converting"))
                 conn.commit()
@@ -1059,8 +1155,9 @@ class DataHandler(object):
     def UpdateModelConversionFileId(self, jobId, fileId):
         ret = False
         try:
-            sql = "UPDATE `%s` SET fileId='%s' WHERE jobID='%s'" % (self.modelconversionjobtablename, fileId, jobId)
-            with MysqlConn() as conn:
+            sql = """UPDATE %s SET "fileId"='%s' WHERE "jobID"='%s'""" % (self.modelconversionjobtablename, fileId, jobId)
+            with PostgresqlConn() as conn:
+                logger.info(sql)
                 conn.update(sql)
                 conn.commit()
             ret = True
@@ -1072,8 +1169,9 @@ class DataHandler(object):
     def UpdateModelConversionStatus(self, jobId, status):
         ret = False
         try:
-            sql = "UPDATE `%s` SET status='%s' WHERE jobID='%s'" % (self.modelconversionjobtablename, status, jobId)
-            with MysqlConn() as conn:
+            sql = """UPDATE %s SET status='%s' WHERE "jobID"='%s'""" % (self.modelconversionjobtablename, status, jobId)
+            with PostgresqlConn() as conn:
+                logger.info(sql)
                 conn.update(sql)
                 conn.commit()
             ret = True
@@ -1088,12 +1186,16 @@ class DataHandler(object):
             name = "default"
             sql = ""
             if self.GetFDInfo() is None:
-                sql = "INSERT INTO `" + self.fdserverinfotablename + "` (username, password, url, name) VALUES (%s, %s, %s, %s)"
+                sql = """INSERT INTO %s (userName, password, url, name) VALUES (%s, %s, %s, %s)"""  %(self.fdserverinfotablename,"%s", "%s", "%s", "%s")
             else:
-                sql = "UPDATE " + self.fdserverinfotablename + " SET username=%s, password=%s, url=%s WHERE name=%s"
-            with MysqlConn() as conn:
+                sql = """UPDATE %s SET userName=%s, password=%s, url=%s WHERE name=%s""" % (self.fdserverinfotablename,"%s", "%s", "%s", "%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql, (
+                    params["userName"], params["password"], params["url"], name
+                ))
+
                 conn.insert_one(sql, (
-                    params["username"], params["password"], params["url"], name
+                    params["userName"], params["password"], params["url"], name
                 ))
                 conn.commit()
             ret = True
@@ -1106,10 +1208,11 @@ class DataHandler(object):
         ret = None
         try:
             name = "default"
-            query = "SELECT name, username, password, url FROM %s where name='%s'" % (
+            query = """SELECT name, "userName", password, url FROM %s where name='%s'""" % (
                 self.fdserverinfotablename, name
             )
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 ret = conn.select_one(query)
         except Exception as e:
             logger.exception('GetFDInfo Exception: %s', str(e))
@@ -1119,10 +1222,11 @@ class DataHandler(object):
     def GetModelConvertInfo(self, jobId):
         ret = None
         try:
-            query = "SELECT `jobId`, `inputPath`, `outputPath`, `type`, `status`, `fileId` FROM `%s` where jobId='%s'" % (
+            query = """SELECT "jobId", "inputPath", "outputPath", type, status, "fileId" FROM %s where "jobId"='%s'""" % (
                 self.modelconversionjobtablename, jobId
             )
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 ret = conn.select_one(query)
         except Exception as e:
             logger.exception("Get ModelConvert info exception: %s", str(e))
@@ -1132,10 +1236,11 @@ class DataHandler(object):
     def GetModelConvertInfoByOutputpath(self, outputpath):
         ret = None
         try:
-            query = "SELECT `jobId`, `inputPath`, `outputPath`, `type`, `status`, `fileId` FROM `%s` where outputPath='%s' ORDER BY id DESC" % (
+            query = """SELECT "jobId", inputPath", "outputPath", type, status, "fileId" FROM %s where "outputPath"='%s' ORDER BY id DESC""" % (
                 self.modelconversionjobtablename, outputpath
             )
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
                 for ret in rets:
                     fileId = ret["fileId"]
@@ -1150,37 +1255,38 @@ class DataHandler(object):
     def GetJobList(self, userName, vcName, num=None, pageSize=None, pageNum=None, jobName=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta`, `lastUpdated` ,`jobGroup` FROM `%s` where 1 and isDeleted=0" % (
+            query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta", "lastUpdated" ,"jobGroup" FROM %s where isDeleted=0""" % (
                 self.jobtablename)
             params = []
             if jobName != None:
-                query += " and `jobName` = %s"
+                query += """ and "jobName" = %s"""
                 params.append(jobName)
             if userName != "all":
-                query += " and `userName` = %s"
+                query += """ and "userName" = %s"""
                 params.append(userName)
             if vcName != "all":
-                query += " and `vcName` = %s"
+                query += """ and "vcName" = %s"""
                 params.append(vcName)
             if status is not None:
                 if "," not in status:
-                    query += " and `jobStatus` %s %s" % (op[0], "%s")
+                    query += """ and "jobStatus" %s %s""" % (op[0], "%s")
                     params.append(status)
                 else:
-                    status_list = [" `jobStatus` %s %s " % (op[0], "%s") for _ in status.split(',')]
+                    status_list = [""" "jobStatus" %s %s """ % (op[0], "%s") for _ in status.split(',')]
                     for s in status.split(','):
                         params.append(s)
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            query += " order by `jobTime` Desc"
+            query += """ order by "jobTime" Desc"""
 
             if num is not None:
                 query += " limit %s " % str(num)
             elif pageNum != None and pageSize != None:
                 offset = (pageNum - 1)*pageSize
                 query += " limit %s offset %s " % (str(pageSize), str(offset))
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,params)
                 rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
@@ -1195,31 +1301,32 @@ class DataHandler(object):
     def GetInferenceJobList(self, userName, vcName, num=None, status=None, op=("=", "or")):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where 1" % (
+            query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta" FROM %s where true""" % (
                 self.inferencejobtablename)
             params = []
             if userName != "all":
-                query += " and `userName` = %s"
+                query += """ and "userName" = %s"""
                 params.append(userName)
             if vcName != "all":
-                query += " and `vcName` = %s"
+                query += """ and "vcName" = %s"""
                 params.append(vcName)
             if status is not None:
                 if "," not in status:
-                    query += " and `jobStatus` %s %s" % (op[0], "%s")
+                    query += """ and "jobStatus" %s %s"""% (op[0], "%s")
                     params.append(status)
                 else:
-                    status_list = [" `jobStatus` %s %s " % (op[0], "%s") for _ in status.split(',')]
+                    status_list = [""" "jobStatus" %s %s """ % (op[0], "%s") for _ in status.split(',')]
                     for s in status.split(','):
                         params.append(s)
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            query += " order by `jobTime` Desc"
+            query += """ order by "jobTime" Desc"""
 
             if num is not None:
                 query += " limit %s " % str(num)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,params)
                 rets = conn.select_many(query, params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
@@ -1233,7 +1340,7 @@ class DataHandler(object):
     @record
     def GetJobListV2(self, userName, vcName, num=None, status=None, op=("=", "or")):
         ret = {}
-        ret["queuedJobs"] = []
+        ret["queuedjobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
@@ -1244,26 +1351,27 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority FROM {} left join {} on {}.jobId = {}.jobId where isDeleted=0".format(
+            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", "priority" FROM {} left join {} on {}."jobId" = {}.jobId where "isDeleted"=0""".format(
                 self.jobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,self.jobprioritytablename)
             if userName != "all":
-                query += " and userName = '%s'" % userName
+                query += """ and "userName" = '%s'""" % userName
 
             if vcName != "all":
-                query += " and vcName = '%s'" % vcName
+                query += """ and "vcName" = '%s'""" % vcName
 
             if status is not None:
                 if "," not in status:
-                    query += " and jobStatus %s '%s'" % (op[0], status)
+                    query += """ and "jobStatus" %s '%s'""" % (op[0], status)
                 else:
-                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_list = [""" "jobStatus" %s '%s' """ % (op[0], s) for s in status.split(',')]
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
-            query += " order by jobTime Desc"
+            query += """ order by "jobTime" Desc"""
 
             if num is not None:
                 query += " limit %s " % str(num)
+            logger.info(query)
             cursor.execute(query)
 
             columns = [column[0] for column in cursor.description]
@@ -1274,14 +1382,15 @@ class DataHandler(object):
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
+
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "visualization":
-                        ret["visualizationJobs"].append(record)   
-                    else:
+                    if record["jobType"] == "training" or record["jobType"] == "codeEnv":
                         ret["runningJobs"].append(record)
+                    elif record["jobType"] == "visualization":
+                        ret["visualizationJobs"].append(record)
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
                     "jobStatus"] == "unapproved":
-                    ret["queuedJobs"].append(record)
+                    ret["queuedjobs"].append(record)
                 else:
                     ret["finishedJobs"].append(record)
             conn.commit()
@@ -1293,7 +1402,7 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
+        ret["meta"] = {"queuedjobs": len(ret["queuedjobs"]), "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
         return ret
 
@@ -1302,7 +1411,7 @@ class DataHandler(object):
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
 
         ret = {}
-        ret["queuedJobs"] = []
+        ret["queuedjobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
@@ -1315,28 +1424,27 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT count(*) OVER() AS total, jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
-                        jobType, jobTime, jobParams, errorMsg FROM {}  
-                        where jobType='{}' and isDeleted=0""".format(self.jobtablename,
-                        jobType)
-            ## add support for `jobGroup` filter :
+            query = """SELECT count(*) OVER() AS total, "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail",
+                        "jobType", "jobTime", "jobParams", "errorMsg" FROM {}  
+                        where "jobType"='{}' and "isDeleted"=0""".format(self.jobtablename, jobType)
+            ## add support for jobGroup filter :
             if jobGroup and int(jobGroup) > 0:
-                query += " and jobGroup='{}'".format(jobGroup)
+                query += """ and "jobGroup"='{}'""".format(jobGroup)
 
 
             ## all jobs
-            if jobStatus.lower() != "all":
-                query += " and jobStatus = '%s'" % jobStatus
+            if jobGroup and jobStatus.lower() != "all":
+                query += """ and "jobStatus" = '%s'""" % jobStatus
             else:
                 pass
 
-            query += " and userName = '%s'" % userName
+            query += """ and "userName" = '%s'""" % userName
 
             if vcName is not None and vcName != "":
-                query += " and vcName = '%s'" % vcName
+                query += """ and "vcName" = '%s'""" % vcName
 
             if searchWord is not None and len(searchWord) > 0:
-                query += " and jobName like '%"
+                query += """ and "jobName" like '%"""
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
             else:
@@ -1345,9 +1453,9 @@ class DataHandler(object):
             if status is not None:
 
                 if "," not in status:
-                    query += " and jobStatus %s '%s'" % (op[0], status)
+                    query += """ and "jobStatus" %s '%s'""" % (op[0], status)
                 else:
-                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_list = [""" "jobStatus" %s '%s' """ % (op[0], s) for s in status.split(',')]
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
@@ -1358,28 +1466,32 @@ class DataHandler(object):
                 order = "desc"
 
             if orderBy is None or orderBy == "":
-                query += " order by jobTime Desc"
+                query += """ order by "jobTime" Desc"""
             else:
                 query += "order by %s %s" % (orderBy, order)
 
             #query += " order by jobTime Desc"
             if pageNum is not None and pageSize is not None:
-                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+                query += " limit %d OFFSET %d " % (int(pageSize), (int(pageNum) - 1) * int(pageSize)+1)
             else:
                 pass
 
-            print(query)
+            logger.info(query)
             cursor.execute(query)
+
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
+            result = [[str(item) for item in row] for row in data]
+
             total = 0
 
-            for item in data:
+
+            for item in result:
 
                 record = dict(zip(columns, item))
 
-                if record["jobStatusDetail"] is not None:                    
-                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))                        
+                if record["jobStatusDetail"] is not None:
+                    record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
 
                 else:
                     pass
@@ -1417,7 +1529,7 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]),
+        ret["meta"] = {"queuedjobs": len(ret["queuedjobs"]),
                        "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]),
                        "visualizationJobs": len(ret["visualizationJobs"]),
@@ -1433,27 +1545,27 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT count(*) AS total FROM {} where isDeleted=0""".format(self.jobtablename)
-            
+            query = """SELECT count(*) AS total FROM {} where "isDeleted"=0""".format(self.jobtablename)
+
             if jobType.lower() != "all" and len(jobType) > 0:
-                query += " and jobType = '%s'" % jobType
+                query += """ and "jobType" = '%s'""" % jobType
 
             ## all jobs
             if jobStatus.lower() != "all" and len(jobStatus) > 0:
-                query += " and jobStatus = '%s'" % jobStatus
+                query += """ and "jobStatus" = '%s'""" % jobStatus
             else:
                 pass
 
             if vcName is not None and vcName != "":
-                query += " and vcName = '%s' " % vcName
+                query += """ and "vcName" = '%s' """ % vcName
             else:
                 pass
 
             if searchWord is not None and len(searchWord) > 0:
-                query += " and (jobName like '%"
+                query += """ and ("jobName" like '%"""
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
-                query += " or userName like '%"
+                query += """ or "userName" like '%"""
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
                 query += ") "
@@ -1485,33 +1597,37 @@ class DataHandler(object):
         conn = None
         cursor = None
 
+        logger.info("test")
+        logger.info(vcName)
+        logger.info(jobType)
+        logger.info(jobStatus)
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail,
-                        jobType, jobTime, jobParams, priority FROM {} left join {}
-                        on {}.jobId =  {}.jobId where isDeleted=0""".format(self.jobtablename,
+            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail",
+                        "jobType", "jobTime", "jobParams", priority FROM {} left join {}
+                        on {}."jobId" =  {}."jobId" where "isDeleted"=0""".format(self.jobtablename,
                         self.jobtablename, self.jobprioritytablename,
                         self.jobtablename, self.jobprioritytablename)
-            
+
             if jobType.lower() != "all" and len(jobType) > 0:
-                query += " and jobType = '%s'" % jobType
+                query += """ and "jobType" = '%s'""" % jobType
 
             ## all jobs
             if jobStatus.lower() != "all" and len(jobStatus) > 0:
-                query += " and jobStatus = '%s'" % jobStatus
+                query += """ and "jobStatus" = '%s'""" % jobStatus
             else:
                 pass
 
             if vcName is not None and len(vcName) > 0:
-                query += " and vcName = '%s'  " % vcName
+                query += """ and "vcName" = '%s'  """ % vcName
 
             if searchWord is not None and len(searchWord) > 0:
-                query += " and (jobName like '%"
+                query += """ and ("jobName" like '%"""
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
-                query += " or userName like '%"
+                query += """ or "userName" like '%"""
                 query += "%s" % (sql_injection_parse(searchWord))
                 query += "%'"
                 query += ") "
@@ -1522,12 +1638,12 @@ class DataHandler(object):
                 order = "desc"
 
             if orderBy is None or orderBy == "":
-                query += " order by jobTime Desc"
+                query += """ order by "jobTime" Desc"""
             else:
-                query += " order by %s %s" % (orderBy, order)
+                query += """ order by %s %s""" % (orderBy, order)
 
             if pageNum is not None and pageSize is not None:
-                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+                query += " limit %d offset %d " % ((int(pageNum)-1)*int(pageSize), int(pageSize))
             else:
                 pass
 
@@ -1576,23 +1692,23 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = """SELECT jobName, jobId FROM {} where """.format(self.jobtablename)
+            query = """SELECT "jobName", "jobId" FROM {} where """.format(self.jobtablename)
             if "," not in vcName:
-                query += 'vcName="%s" ' % (vcName)
+                query += """ "vcName"="%s" """ % (vcName)
             else:
-                query += "vcName in (%s) " % (','.join(['"'+s+'"' for s in vcName.split(",")]))
+                query += """ "vcName" in (%s) """ % (','.join(['"'+s+'"' for s in vcName.split(",")]))
 
             if "," not in jobStatus:
-                query += 'and jobStatus="%s" ' % (jobStatus)
+                query += """and "jobStatus"="%s" """ % (jobStatus)
             else:
-                query += "and jobStatus in (%s) " % (','.join(['"'+s+'"' for s in jobStatus.split(",")]))
-            
-            if "," not in userName:
-                query += 'and userName="%s" ' % (userName)
-            else:
-                query += "and userName in (%s) " % (','.join(['"'+s+'"' for s in userName.split(",")]))
+                query += """and "jobStatus" in (%s) """ % (','.join(['"'+s+'"' for s in jobStatus.split(",")]))
 
-            query += ' and isDeleted=0 '           
+            if "," not in userName:
+                query += """and "userName"="%s" """ % (userName)
+            else:
+                query += """and "userName" in (%s) """ % (','.join(['"'+s+'"' for s in userName.split(",")]))
+
+            query += """ and "isDeleted"=0 """
             logger.info("GetUserJobs, sql: %s" %(query))
             cursor.execute(query)
 
@@ -1606,9 +1722,10 @@ class DataHandler(object):
             conn.commit()
 
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('GetUserJobs Exception: %s', str(e))
 
         finally:
+
             if cursor is not None:
                 cursor.close()
             if conn is not None:
@@ -1620,7 +1737,7 @@ class DataHandler(object):
     @record
     def ListInferenceJob(self, userName, vcName, num=None, status=None, op=("=", "or"),jobName=None,order=None,orderBy=None):
         ret = {}
-        ret["queuedJobs"] = []
+        ret["queuedjobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
@@ -1632,23 +1749,23 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1 and isDeleted=0".format(
+            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", priority,endpoints FROM {} left join {} on {}."jobId" = {}."jobId" left join {} on {}."jobId" = {}."jobId" where "isDeleted"=0""".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             if userName != "all":
-                query += " and userName = '%s'" % userName
+                query += """ and "userName" = '%s'""" % userName
 
             if vcName != "all":
-                query += " and vcName = '%s'" % vcName
+                query += """ and "vcName" = '%s'""" % vcName
 
             if jobName:
-                query += " and jobName like '%%%s%%'" % sql_injection_parse(jobName)
+                query += """ and "jobName" like '%%%s%%'""" % sql_injection_parse(jobName)
 
             if status:
                 if "," not in status:
-                    query += " and jobStatus %s '%s'" % (op[0], status)
+                    query += """ and "jobStatus" %s '%s'""" % (op[0], status)
                 else:
-                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_list = [""" "jobStatus" %s '%s' """ % (op[0], s) for s in status.split(',')]
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
@@ -1660,11 +1777,12 @@ class DataHandler(object):
             else:
                 order = "desc"
             if orderBy:
-                query += " order by %s %s" %(orderBy,order)
+                query += """ order by "%s" %s""" %(orderBy,order)
 
             if num is not None:
                 query += " limit %s " % str(num)
             cursor.execute(query)
+            logger.info(query)
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
@@ -1687,19 +1805,19 @@ class DataHandler(object):
                         ret["visualizationJobs"].append(record)
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
                     "jobStatus"] == "unapproved":
-                    ret["queuedJobs"].append(record)
+                    ret["queuedjobs"].append(record)
                 else:
                     ret["finishedJobs"].append(record)
             conn.commit()
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('ListInferenceJob Exception: %s', str(e))
         finally:
             if cursor is not None:
                 cursor.close()
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
+        ret["meta"] = {"queuedjobs": len(ret["queuedjobs"]), "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
         return ret
 
@@ -1708,28 +1826,28 @@ class DataHandler(object):
         ret = []
         try:
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority,endpoints FROM {} left join {} on {}.jobId = {}.jobId left join {} on {}.jobId = {}.jobId where 1 and isDeleted=0".format(
+            query = """SELECT {}."jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", priority,endpoints FROM {} left join {} on {}."jobId" = {}."jobId" left join {} on {}."jobId" = {}."jobId" where "isDeleted"=0""".format(
                 self.jobtablename,self.inferencejobtablename,self.jobtablename,self.inferencejobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,
                 self.jobprioritytablename)
             params = []
             if userName != "all":
-                query += " and userName = %s" % "%s"
+                query += """ and "userName" = %s""" % "%s"
                 params.append(userName)
 
             if vcName != "all":
-                query += " and vcName = %s" % "%s"
+                query += """ and "vcName" = %s""" % "%s"
                 params.append(vcName)
 
             if jobName:
-                query += " and jobName like %s" % "%s"
+                query += """ and "jobName" like %s""" % "%s"
                 params.append("%%%s%%" % sql_injection_parse(jobName))
 
             if status:
                 if "," not in status:
-                    query += " and jobStatus %s %s" % (op[0], "%s")
+                    query += """ and "jobStatus" %s %s""" % (op[0], "%s")
                     params.append(status)
                 else:
-                    status_list = [" jobStatus %s %s" % (op[0], s) for s in status.split(',')]
+                    status_list = [""" "jobStatus" %s %s""" % (op[0], s) for s in status.split(',')]
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % "%s"
                     params.append(status_statement)
@@ -1741,13 +1859,13 @@ class DataHandler(object):
                     order = "desc"
             else:
                 order = "desc"
-            if orderBy:
-                query += " order by %s %s" %(orderBy,order)
+            if orderBy != "":
+                query += """ order by "%s" %s""" %(orderBy,order)
             if num is not None:
                 query += " limit %s " % "%s"
                 params.append(str(num))
 
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
                 rets = conn.select_many(query,params)
 
             for record in rets:
@@ -1762,13 +1880,13 @@ class DataHandler(object):
 
                 ret.append(record)
         except Exception as e:
-            logger.exception('GetJobListV2 Exception: %s', str(e))
+            logger.exception('ListInferenceJobV2 Exception: %s', str(e))
         return ret
 
     @record
     def ListModelConversionJob(self, userName, vcName, status=None, op=("=", "or"), pageNum=None, pageSize=None, name=None, type=None, order=None, orderBy=None, convStatus=None):
         ret = {}
-        ret["queuedJobs"] = []
+        ret["queuedjobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
@@ -1780,25 +1898,25 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT count(*) OVER() as total, j.jobId as jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, inputPath, outputPath, m.type as modelconversionType, m.status as modelconversionStatus, priority FROM {} as m left join {} as j on m.jobId = j.jobId left join {} as p on m.jobId = p.jobId where 1 and isDeleted=0".format(
+            query = """SELECT count(*) OVER() as total, j."jobId" as "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams", "inputPath", "outputPath", m.type as "modelconversionType", m.status as "modelconversionStatus", priority FROM {} as m left join {} as j on m."jobId" = j."jobId" left join {} as p on m."jobId" = p."jobId" where "isDeleted"=0""".format(
                 self.modelconversionjobtablename, self.jobtablename, self.jobprioritytablename)
             if userName != "all":
-                query += " and userName = '%s'" % userName
+                query += """ and "userName" = '%s'""" % userName
 
             if vcName != "all":
-                query += " and vcName = '%s'" % vcName
+                query += """ and "vcName" = '%s'""" % vcName
 
             if name is not None:
-                query += " and jobName like '%%%s%%'" % sql_injection_parse(name)
+                query += """ and "jobName" like '%%%s%%'""" % sql_injection_parse(name)
 
             if type is not None:
                 query += " and m.type = '%s'" % type
 
             if status is not None:
                 if "," not in status:
-                    query += " and jobStatus %s '%s'" % (op[0], status)
+                    query += """ and "jobStatus" %s '%s'""" % (op[0], status)
                 else:
-                    status_list = [" jobStatus %s '%s' " % (op[0], s) for s in status.split(',')]
+                    status_list = [""" "jobStatus" %s '%s' """ % (op[0], s) for s in status.split(',')]
                     status_statement = (" " + op[1] + " ").join(status_list)
                     query += " and ( %s ) " % status_statement
 
@@ -1809,16 +1927,16 @@ class DataHandler(object):
                 order = "desc"
 
             if orderBy is None or orderBy == "":
-                query += " order by jobTime Desc"
+                query += """ order by "jobTime" Desc"""
             else:
-                query += "order by %s %s" % (orderBy, order)
+                query += """order by "%s" %s""" % (orderBy, order)
 
             if pageNum is not None and pageSize is not None:
-                query += " limit %d, %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
+                query += " limit %d offset %d " % ((int(pageNum) - 1) * int(pageSize), int(pageSize))
             if pageNum is not None and pageSize is None:
                 query += " limit %s " % pageNum
             cursor.execute(query)
-
+            logger.info(query)
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
 
@@ -1836,7 +1954,7 @@ class DataHandler(object):
                         ret["visualizationJobs"].append(record)
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
                     "jobStatus"] == "unapproved":
-                    ret["queuedJobs"].append(record)
+                    ret["queuedjobs"].append(record)
                 else:
                     ret["finishedJobs"].append(record)
 
@@ -1853,7 +1971,7 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
+        ret["meta"] = {"queuedjobs": len(ret["queuedjobs"]), "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
         ret["total"] = total
         return ret
@@ -1862,9 +1980,10 @@ class DataHandler(object):
     def GetActiveJobList(self):
         ret = []
         try:
-            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running' and isDeleted=0" % (
+            query = """SELECT "jobId", "userName", "vcName", "jobParams", "jobStatus" FROM %s WHERE "jobStatus" = 'scheduling' OR "jobStatus" = 'running' and "isDeleted"=0""" % (
                 self.jobtablename)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -1877,9 +1996,10 @@ class DataHandler(object):
     def GetGpuTypeActiveJobCount(self):
         ret = {}
         try:
-            query = "SELECT `jobId`, `userName`, `vcName`, `jobParams`, `jobStatus` FROM `%s` WHERE `jobStatus` = 'scheduling' OR `jobStatus` = 'running' and isDeleted=0" % (
+            query = """SELECT "jobId", "userName", "vcName", "jobParams", "jobStatus" FROM %s WHERE "jobStatus" = 'scheduling' OR "jobStatus" = 'running' and "isDeleted"=0""" % (
                 self.jobtablename)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 jobParam = json.loads(base64.b64decode(one["jobParams"]))
@@ -1906,8 +2026,9 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT `jobId`,`familyToken`,`isParent`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` ,`jobGroup` FROM `%s` where `%s` = %s " % (
+            query = """SELECT "jobId","familyToken","isParent","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta" ,"jobGroup" FROM %s where "%s" = %s """ % (
             self.jobtablename, key, "%s")
+            logger.info(query,[expected])
             cursor.execute(query,[expected])
             columns = [column[0] for column in cursor.description]
             ret = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -1929,8 +2050,9 @@ class DataHandler(object):
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()
-            query = "SELECT `jobId`, `jobName`, `userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobTime`, `jobParams`  FROM `%s` where `jobId` = %s " % (
+            query = """SELECT "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams"  FROM %s where "jobId" = %s """ % (
             self.jobtablename, "%s")
+            logger.info(query,[jobId])
             cursor.execute(query,[jobId])
 
             columns = [column[0] for column in cursor.description]
@@ -1960,8 +2082,9 @@ class DataHandler(object):
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()
-            query = "SELECT `jobId`, `jobName`, `userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobTime`, `jobParams`,`endpoints`  FROM `%s` where `jobId` = %s " % (
+            query = """SELECT "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams",endpoints  FROM %s where "jobId" = %s """ % (
             self.jobtablename, "%s")
+            logger.info(query,[jobId])
             cursor.execute(query,[jobId])
 
             columns = [column[0] for column in cursor.description]
@@ -1990,12 +2113,13 @@ class DataHandler(object):
         return ret
 
     @record
-    def DeleteJobByVc(self,vcname):
+    def DeleteJobByVc(self,vcName):
         try:
-            sql = "DELETE FROM `%s` WHERE `vcName`= %s " %(self.jobtablename,"%s")
-            print sql
-            with MysqlConn() as conn:
-                conn.insert_one(sql, [vcname])
+            sql = """DELETE FROM %s WHERE "vcName"= %s """ %(self.jobtablename,"%s")
+            print(sql)
+            with PostgresqlConn() as conn:
+                logger.info(sql, [vcName])
+                conn.insert_one(sql, [vcName])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -2004,12 +2128,13 @@ class DataHandler(object):
         return ret
 
     @record
-    def DeleteJobByVcExcludeKilling(self,vcname):
+    def DeleteJobByVcExcludeKilling(self,vcName):
         try:
-            sql = "DELETE FROM `%s` WHERE `vcName`= %s and jobStatus<>'killing'" %(self.jobtablename,"%s")
-            print sql
-            with MysqlConn() as conn:
-                conn.insert_one(sql, [vcname])
+            sql = """DELETE FROM %s WHERE "vcName"= %s and "jobStatus"<>'killing'""" %(self.jobtablename,"%s")
+            print(sql)
+            with PostgresqlConn() as conn:
+                logger.info(sql, [vcName])
+                conn.insert_one(sql, [vcName])
                 conn.commit()
             ret = True
         except Exception as e:
@@ -2021,8 +2146,9 @@ class DataHandler(object):
     def AddCommand(self, jobId, command):
         ret = False
         try:
-            sql = "INSERT INTO `" + self.commandtablename + "` (jobId, command) VALUES (%s,%s)"
-            with MysqlConn() as conn:
+            sql = """INSERT INTO %s  ("jobId", command) VALUES (%s,%s)""" %(self.commandtablename,"%s","%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql, (jobId, command))
                 conn.insert_one(sql, (jobId, command))
                 conn.commit()
             ret = True
@@ -2035,9 +2161,10 @@ class DataHandler(object):
     def GetPendingCommands(self):
         ret = []
         try:
-            query = "SELECT `id`, `jobId`, `command` FROM `%s` WHERE `status` = 'pending' order by `time`" % (
+            query = """SELECT id, "jobId", command FROM %s WHERE status = 'pending' order by time""" % (
                 self.commandtablename)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -2049,8 +2176,9 @@ class DataHandler(object):
     def FinishCommand(self, commandId):
         ret = True
         try:
-            sql = """update `%s` set status = 'run' where `id` = %s """ % (self.commandtablename, "%s")
-            with MysqlConn() as conn:
+            sql = """update %s set status = 'run' where id = %s """ % (self.commandtablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[commandId])
                 conn.update(sql,[commandId])
                 conn.commit()
             ret = True
@@ -2062,9 +2190,10 @@ class DataHandler(object):
     def GetCommands(self, jobId):
         ret = []
         try:
-            query = "SELECT `time`, `command`, `status`, `output` FROM `%s` WHERE `jobId` = %s order by `time`" % (
+            query = """SELECT time, command, status, output FROM %s WHERE "jobId" = %s order by time""" % (
             self.commandtablename, "%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,[jobId])
                 rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret.append(one)
@@ -2086,9 +2215,10 @@ class DataHandler(object):
     def GetPendingEndpoints(self):
         ret = {}
         try:
-            query = "SELECT `endpoints`,`jobId` from `%s` where `jobStatus` = \"%s\" and `endpoints` is not null" % (
+            query = """SELECT endpoints,"jobId" from %s where "jobStatus" = \"%s\" and endpoints is not null""" % (
             self.jobtablename, "running")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
@@ -2107,8 +2237,9 @@ class DataHandler(object):
     def GetJobEndpoints(self, job_id):
         ret = {}
         try:
-            query = "SELECT `endpoints` from `%s` where `jobId` = %s" % (self.jobtablename, "%s")
-            with MysqlConn() as conn:
+            query = """SELECT endpoints from %s where "jobId" = %s""" % (self.jobtablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,[jobId])
                 rets = conn.select_many(query,[job_id])
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
@@ -2124,8 +2255,9 @@ class DataHandler(object):
         ret = {}
         try:
             # TODO we need job["lastUpdated"] for filtering
-            query = "SELECT `endpoints` FROM jobs WHERE `jobStatus` <> 'running' and `jobStatus` <> 'pending' and `jobStatus` <> 'queued' and `jobStatus` <> 'scheduling' order by `jobTime` DESC"
-            with MysqlConn() as conn:
+            query = """SELECT endpoints FROM jobs WHERE "jobStatus" <> 'running' and "jobStatus" <> 'pending' and "jobStatus" <> 'queued' and "jobStatus" <> 'scheduling' order by "jobTime" DESC"""
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 endpoint_list = {k: v for k, v in self.load_json(one["endpoints"]).items() if v["status"] == "running"}
@@ -2143,8 +2275,9 @@ class DataHandler(object):
             # update jobEndpoints
             job_endpoints[endpoint["id"]] = endpoint
 
-            sql = "UPDATE jobs SET endpoints=%s where jobId=%s"
-            with MysqlConn() as conn:
+            sql = """UPDATE jobs SET endpoints=%s where "jobId"=%s"""
+            with PostgresqlConn() as conn:
+                logger.info(query, (json.dumps(job_endpoints), endpoint["jobId"]))
                 conn.update(sql, (json.dumps(job_endpoints), endpoint["jobId"]))
                 conn.commit()
             ret = True
@@ -2156,9 +2289,10 @@ class DataHandler(object):
     def GetPendingJobs(self):
         ret = []
         try:
-            query = "SELECT `jobId`,`jobName`,`userName`, `vcName`, `jobStatus`, `jobStatusDetail`, `jobType`, `jobDescriptionPath`, `jobDescription`, `jobTime`, `endpoints`, `jobParams`,`errorMsg` ,`jobMeta` FROM `%s` where `jobStatus` <> 'error' and `jobStatus` <> 'failed' and `jobStatus` <> 'finished' and `jobStatus` <> 'killed' and isDeleted=0 order by `jobTime` DESC" % (
+            query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta" FROM %s where "jobStatus" <> 'error' and "jobStatus" <> 'failed' and "jobStatus" <> 'finished' and "jobStatus" <> 'killed' and "isDeleted"=0 order by "jobTime" DESC""" % (
                 self.jobtablename)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -2170,9 +2304,11 @@ class DataHandler(object):
     def SetJobError(self, jobId, errorMsg):
         ret = False
         try:
-            sql = """update `%s` set jobStatus = 'error', `errorMsg` = %s where `jobId` = %s """ % (
+            sql = """update %s set "jobStatus" = 'error', "errorMsg" = %s where "jobId" = %s """ % (
             self.jobtablename, "%s", "%s")
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(sql,[ errorMsg, jobId])
+
                 conn.update(sql,[ errorMsg, jobId])
                 conn.commit()
             ret = True
@@ -2184,8 +2320,9 @@ class DataHandler(object):
     def UpdateJobTextField(self, jobId, field, value):
         ret = False
         try:
-            sql = "update `%s` set `%s` = %s where `jobId` = %s " % (self.jobtablename, field, "%s", "%s")
-            with MysqlConn() as conn:
+            sql = """update %s set "%s" = %s where "jobId" = %s """ % (self.jobtablename, field, "%s", "%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[ value, jobId])
                 conn.update(sql,[value, jobId])
                 conn.commit()
             ret = True
@@ -2196,10 +2333,12 @@ class DataHandler(object):
 
     @record
     def GetJobTextField(self, jobId, field):
-        query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = %s " % (field, self.jobtablename, jobId)
+        query = """SELECT "jobId", "%s" FROM %s where "jobId" = %s """ % (field, self.jobtablename, jobId)
         ret = None
         try:
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
+
                 rets = conn.select_many(query)
             for one in rets:
                 ret = one[field]
@@ -2210,13 +2349,14 @@ class DataHandler(object):
 
     @record
     def AddandGetJobRetries(self, jobId):
-        sql = """update `%s` set `retries` = `retries` + 1 where `jobId` = %s """ % (self.jobtablename, "%s")
-        with MysqlConn() as conn:
+        sql = """update %s set retries = retries + 1 where "jobId" = %s """ % (self.jobtablename, "%s")
+        with PostgresqlConn() as conn:
             conn.update(sql,[jobId])
             conn.commit()
 
-        query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = %s " % (self.jobtablename, "%s")
-        with MysqlConn() as conn:
+        query = """SELECT "jobId", retries FROM %s where "jobId" = %s """ % (self.jobtablename, "%s")
+        with PostgresqlConn() as conn:
+            logger.info(query,[jobId])
             rets = conn.select_many(query,[jobId])
         ret = None
 
@@ -2234,10 +2374,11 @@ class DataHandler(object):
         try:
             dataFields_keys,dataFields_values = zip(*[[k,v] for k,v in dataFields.items()]) if len(dataFields)>0 else ([],[])
             conditionFields_keys,conditionFields_values = zip(*[[k,v] for k,v in conditionFields.items()]) if len(conditionFields)>0 else ([],[])
-            sql = "update `%s` set" % (self.jobtablename) + ",".join(
-                [" `%s` = %s" % (field, "%s") for field in dataFields_keys]) + " where" + "and".join(
-                [" `%s` = %s" % (field, "%s") for field in conditionFields_keys])
-            with MysqlConn() as conn:
+            sql = "update %s set" % (self.jobtablename) + ",".join(
+                [" %s = %s" % (field, "%s") for field in dataFields_keys]) + " where" + "and".join(
+                [" %s = %s" % (field, "%s") for field in conditionFields_keys])
+            with PostgresqlConn() as conn:
+                logger.info(query,chain(dataFields_values,conditionFields_values))
                 conn.update(sql,chain(dataFields_values,conditionFields_values))
                 conn.commit()
             ret = True
@@ -2249,8 +2390,9 @@ class DataHandler(object):
     def GetJobTextField(self, jobId, field):
         ret = None
         try:
-            query = "SELECT `jobId`, `%s` FROM `%s` where `jobId` = %s " % (field, self.jobtablename, "%s")
-            with MysqlConn() as conn:
+            query = """SELECT "jobId", "%s" FROM %s where "jobId" = %s """ % (field, self.jobtablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,[jobId])
                 rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret = one[field]
@@ -2267,9 +2409,10 @@ class DataHandler(object):
             return ret
 
         try:
-            sql = "select " + ",".join(fields) + " from " + self.jobtablename + " where jobId=\"%s\"" % (jobId)
+            sql = """select ",%s" from  %s  where "jobId"=%s """ % (fields,self.jobtablename,jobId)
             conn = self.pool.get_connection()
             cursor = conn.cursor()
+            logger.info(sql)
             cursor.execute(sql)
 
             columns = [column[0] for column in cursor.description]
@@ -2289,13 +2432,15 @@ class DataHandler(object):
     def AddandGetJobRetries(self, jobId):
         ret = None
         try:
-            sql = """update `%s` set `retries` = `retries` + 1 where `jobId` = %s """ % (self.jobtablename, "%s")
-            with MysqlConn() as conn:
+            sql = """update %s set retries = retries + 1 where "jobId" = %s """ % (self.jobtablename, "%s")
+            with PostgresqlConn() as conn:
                 conn.update(sql,[jobId])
                 conn.commit()
 
-            query = "SELECT `jobId`, `retries` FROM `%s` where `jobId` = %s " % (self.jobtablename, "%s")
-            with MysqlConn() as conn:
+            query = """SELECT "jobId", retries FROM %s where "jobId" = %s """ % (self.jobtablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,[jobId])
+
                 rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret = one["retries"]
@@ -2307,8 +2452,9 @@ class DataHandler(object):
     def UpdateClusterStatus(self, clusterStatus):
         try:
             status = base64.b64encode(json.dumps(clusterStatus))
-            sql = "INSERT INTO `%s` (status) VALUES (%s)" % (self.clusterstatustablename, "%s")
-            with MysqlConn() as conn:
+            sql = """INSERT INTO %s (status) VALUES (%s)""" % (self.clusterstatustablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(sql,[status])
                 conn.insert_one(sql,[status])
                 conn.commit()
             ret = True
@@ -2322,8 +2468,9 @@ class DataHandler(object):
         ret = None
         time = None
         try:
-            query = "SELECT `time`, `status` FROM `%s` order by `time` DESC limit 1" % (self.clusterstatustablename)
-            with MysqlConn() as conn:
+            query = """SELECT time, status FROM %s order by time DESC limit 1""" % (self.clusterstatustablename)
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret = json.loads(base64.b64decode(one["status"]))
@@ -2334,10 +2481,11 @@ class DataHandler(object):
 
     @record
     def GetAllAccountUser(self):
-        query = "SELECT `uid`,`openId`,`group`,`nickName`,`userName`,`password`,`isAdmin`,`isAuthorized`,`email`,`phoneNumber` FROM `%s`" % (self.accounttablename)
+        query = """SELECT uid,"openId","group","nickName","userName",password,"isAdmin","isAuthorized",email,"phoneNumber" FROM %s""" % (self.accounttablename)
         ret = []
         try:
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -2350,8 +2498,8 @@ class DataHandler(object):
     def GetUsers(self):
         ret = []
         try:
-            # query = "SELECT `identityName`,`uid` FROM `%s`" % (self.identitytablename)
-            # with MysqlConn() as conn:
+            # query = "SELECT identityName,uid FROM %s" % (self.identitytablename)
+            # with PostgresqlConn() as conn:
             #     rets = conn.select_many(query)
             # for one in rets:
             #     ret.append((one["identityName"],one["uid"]))
@@ -2368,8 +2516,9 @@ class DataHandler(object):
     def GetActiveJobsCount(self):
         ret = 0
         try:
-            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running' and isDeleted=0" % (self.jobtablename)
-            with MysqlConn() as conn:
+            query = """SELECT count(ALL id) as c FROM %s where "jobStatus" = 'running' and "isDeleted"=0""" % (self.jobtablename)
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
@@ -2381,8 +2530,9 @@ class DataHandler(object):
     def GetActiveJobsCount(self):
         ret = 0
         try:
-            query = "SELECT count(ALL id) as c FROM `%s` where `jobStatus` = 'running' and isDeleted=0" % (self.jobtablename)
-            with MysqlConn() as conn:
+            query = """SELECT count(ALL id) as c FROM %s where "jobStatus" = 'running' and "isDeleted"=0""" % (self.jobtablename)
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
@@ -2394,8 +2544,9 @@ class DataHandler(object):
     def GetALLJobsCount(self):
         ret = 0
         try:
-            query = "SELECT count(ALL id) as c FROM `%s` where isDeleted=0" % (self.jobtablename)
-            with MysqlConn() as conn:
+            query = """SELECT count(ALL id) as c FROM %s where "isDeleted"=0""" % (self.jobtablename)
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
@@ -2407,8 +2558,9 @@ class DataHandler(object):
     def GetTemplates(self, scope):
         ret = []
         try:
-            query = "SELECT `name`, `json`, `isDefault` FROM `%s` WHERE `scope` = %s" % (self.templatetablename, "%s")
-            with MysqlConn() as conn:
+            query = """SELECT name, json, "isDefault" FROM %s WHERE scope = %s""" % (self.templatetablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,[scope])
                 rets = conn.select_many(query,[scope])
             for one in rets:
                 one["scope"] = "user" if scope.split(":")[0]=="user" else "team" if scope.split(":")[0]=="vc" else "master"
@@ -2421,8 +2573,9 @@ class DataHandler(object):
     def UpdateTemplate(self, name, scope, json):
         ret = False
         try:
-            query = "INSERT INTO `" + self.templatetablename + "`(`name`, `scope`, `json`) VALUES(%s, %s, %s) ON DUPLICATE KEY UPDATE `json` = %s"
-            with MysqlConn() as conn:
+            query = """INSERT INTO %s (name, scope, json) VALUES(%s, %s, %s)  ON CONFLICT (id) DO UPDATE SET json = %s""" %(self.templatetablename,"%s", "%s", "%s","%s")
+            with PostgresqlConn() as conn:
+                logger.info(query, (name, scope, json, json))
                 conn.insert_one(query, (name, scope, json, json))
                 conn.commit()
             ret = True
@@ -2434,8 +2587,10 @@ class DataHandler(object):
     def HasCurrentActiveJob(self,name):
         ret = False
         try:
-            query = """SELECT count(1) FROM """ + self.jobtablename + """ WHERE jobStatus in ('queued', 'scheduling', 'running', 'unapproved', 'pausing', 'paused') and userName = %s  and isDeleted=0"""
-            with MysqlConn() as conn:
+            query = """SELECT count(1) FROM  WHERE "jobStatus" in ('queued', 'scheduling', 'running', 'unapproved', 'pausing', 'paused') and "userName" = %s  and "isDeleted"=0"""%(self.jobtablename,"%s")
+            with PostgresqlConn() as conn:
+                logger.info(query ,(name,))
+
                 cnt = conn.select_one_value(query,(name,))
                 if int(cnt)>0:
                     ret = True
@@ -2447,8 +2602,10 @@ class DataHandler(object):
     def DeleteTemplate(self, name, scope):
         ret = False
         try:
-            query = "DELETE FROM `" + self.templatetablename + "` WHERE `name` = %s and `scope` = %s"
-            with MysqlConn() as conn:
+            query = """DELETE FROM %s WHERE name = %s and scope = %s""" %(self.templatetablename,"%s","%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,  (name, scope))
+
                 conn.insert_one(query, (name, scope))
                 conn.commit()
             ret = True
@@ -2460,8 +2617,9 @@ class DataHandler(object):
     def DeleteTemplateByVc(self, scope):
         ret = False
         try:
-            query = "DELETE FROM `" + self.templatetablename + "` WHERE `scope` = %s"
-            with MysqlConn() as conn:
+            query = """DELETE FROM %s  WHERE scope = %s""" %(self.templatetablename,"%s")
+            with PostgresqlConn() as conn:
+                logger.info(query, (scope,))
                 conn.insert_one(query, (scope,))
                 conn.commit()
             ret = True
@@ -2473,9 +2631,10 @@ class DataHandler(object):
     def get_job_priority(self):
         ret = {}
         try:
-            query = "select jobId, priority from {} where jobId in (select jobId from {} where jobStatus in (\"queued\", \"scheduling\", \"running\", \"unapproved\", \"pausing\", \"paused\"))".format(
+            query = """select "jobId", priority from {} where "jobId" in (select "jobId" from {} where "jobStatus" in (\"queued\", \"scheduling\", \"running\", \"unapproved\", \"pausing\", \"paused\"))""".format(
                 self.jobprioritytablename, self.jobtablename)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret[one["jobId"]] = one["priority"]
@@ -2488,9 +2647,10 @@ class DataHandler(object):
         ret = False
         try:
             for job_id, priority in job_priorites.items():
-                query = "INSERT INTO {0}(jobId, priority, time) VALUES('{1}', {2}, SYSDATE()) ON DUPLICATE KEY UPDATE jobId='{1}', priority='{2}' ".format(
+                query = """INSERT INTO {0}("jobId", priority, time) VALUES('{1}', {2}, SYSDATE()) ON CONFLICT (id) DO UPDATE SET "jobId"='{1}', priority='{2}' """.format(
                     self.jobprioritytablename, job_id, priority)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
                 conn.insert_one(query)
                 conn.commit()
             ret = True
@@ -2502,8 +2662,9 @@ class DataHandler(object):
     def ConvertDataFormat(self,projectId, datasetId,datasetType,targetFormat):
         ret = False
         try:
-            query = "INSERT INTO `%s` (projectId, datasetId, `type`,`targetFormat`) VALUES(%s,%s,%s,%s) ON DUPLICATE KEY UPDATE `status`='queued'" % (self.dataconvert,"%s","%s","%s","%s")
-            with MysqlConn() as conn:
+            query = """INSERT INTO %s ("projectId", "datasetId", type,"targetFormat") VALUES(%s,%s,%s,%s) ON CONFLICT (id) DO UPDATE SET status='queued'""" % (self.dataconvert,"%s","%s","%s","%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,(projectId,datasetId,datasetType,targetFormat))
                 conn.insert_one(query,(projectId,datasetId,datasetType,targetFormat))
                 conn.commit()
             ret = True
@@ -2515,16 +2676,17 @@ class DataHandler(object):
     def getConvertList(self,targetStatus=None):
         ret = []
         try:
-            query = "select `id`,projectId, datasetId, `type`,`targetFormat`,`status`,`time`,`outPath` FROM `%s` where 1" % (self.dataconvert,)
+            query = """select id,"projectId", "datasetId", type,"targetFormat",status,time,"outPath" FROM %s where true""" % (self.dataconvert,)
             params = []
             if targetStatus:
                 if "," in targetStatus:
-                    query += " and `status` in %s"
+                    query += " and status in %s"
                     params.extend(targetStatus.split(","))
                 else:
-                    query += " and `status` = %s"
+                    query += " and status = %s"
                     params.append(targetStatus)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,params)
                 ret = conn.select_many(query,params)
         except Exception as e:
             logger.exception('add ConvertDataFormat Exception: %s', str(e))
@@ -2534,8 +2696,10 @@ class DataHandler(object):
     def GetConvertDetail(self,projectId,datasetId):
         ret = []
         try:
-            query = "select `id`,`type`,`targetFormat`,`status`,`time`,`outPath` FROM `%s` where `projectId`=%s and `datasetId`=%s " % (self.dataconvert,"%s","%s")
-            with MysqlConn() as conn:
+            query = """select id,type,"targetFormat",status,time,"outPath" FROM %s where "projectId"=%s and "datasetId"=%s """ % (self.dataconvert,"%s","%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,[projectId,datasetId])
+
                 ret = conn.select_many(query,[projectId,datasetId])
         except Exception as e:
             logger.exception('add ConvertDataFormat Exception: %s', str(e))
@@ -2546,56 +2710,63 @@ class DataHandler(object):
         ret = []
         try:
             if errMsg:
-                query = "update `%s` set `status`=%s,`errorMsg`=%s where id=%s" % (self.dataconvert,"%s","%s","%s")
+                query = """update %s set status=%s,"errorMsg"=%s where id=%s""" % (self.dataconvert,"%s","%s","%s")
                 params = (targetStatus,errMsg, id)
             elif outPath:
-                query = "update `%s` set `status`=%s,`outPath`=%s where id=%s" % (self.dataconvert, "%s", "%s", "%s")
+                query = "update %s set status=%s,outPath=%s where id=%s" % (self.dataconvert, "%s", "%s", "%s")
                 params = (targetStatus, outPath, id)
             else:
-                query = "update `%s` set `status`=%s where id=%s" % (self.dataconvert, "%s", "%s")
+                query = "update %s set status=%s where id=%s" % (self.dataconvert, "%s", "%s")
                 params = (targetStatus, id)
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query,params)
+
                 conn.insert_one(query,params)
                 conn.commit()
         except Exception as e:
             logger.exception('add ConvertDataFormat Exception: %s', str(e))
         return ret
-
     @record
     def get_job_summary(self, userName, jobType, vcName):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 " % self.jobtablename
+            query = """select "jobStatus", count(*) as count from %s where "isDeleted"=0 """ % (self.jobtablename)
 
             if userName is not None and userName != "":
-                query += " and userName = '%s'" % userName
+                query += """ and "userName" = '%s' """% (userName)
             if vcName is not None and vcName != "":
-                query += " and vcName = '%s'" % vcName
+                query += """ and "vcName" = '%s' """% (vcName)
             if len(jobType) > 0:
-                query += " and jobType='%s'" % (jobType)
+                query += """ and "jobType"='%s' """% (jobType)
 
-            query += " group by jobStatus;"
+            query += """ group by "jobStatus";""" 
 
             logger.info(query)
 
-            with MysqlConn() as conn:
+            with PostgresqlConn() as conn:
+                logger.info(query)
+
                 records = conn.select_many(query)
 
             for one in records:
-                ret[one["jobStatus"]] = one["count"]
+                ret[one["jobStatus"]] = int(one["count"])
 
         except Exception as e:
             logger.exception('get_job_priority Exception: %s', str(e))
 
         return ret
 
+
+
     @record
     def DeleteJob(self,jobId):
         ret = False
         try:
-            query = "UPDATE `%s` set isDeleted=1 where jobId=%s" % (self.jobtablename, "%s")
-            with MysqlConn() as conn:
+            query = """UPDATE %s set "isDeleted"=1 where "jobId"=%s """ % (self.jobtablename, "%s")
+            with PostgresqlConn() as conn:
+                logger.info(query,[jobId])
+
                 conn.insert_one(query,[jobId])
                 conn.commit()
             ret = True

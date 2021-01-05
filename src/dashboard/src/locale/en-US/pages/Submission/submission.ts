@@ -39,6 +39,8 @@ const advance = {
   name: 'Name',
   value: 'Value',
   environmentVariableName: 'Environment Variable Name',
+  noEnoughResource: 'There won\'t be enough device nums match your request, job will be in queue status.\nProceed?',
+  HttpsErrorText: 'Registry must start with https://',
   environmentVariableValue: 'Environment Variable Value',
   jobNameIsRequired: 'Job Name is required',
   dockerImageIsRequired: 'Docker Image is required',

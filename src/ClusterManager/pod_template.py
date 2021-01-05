@@ -249,7 +249,7 @@ class PodTemplate():
                 pod["model_extra_path"] = re.sub("^/data", "", pod["model_extra_path"])
                 pod["model_extra_path"] = re.sub("^/home", "", pod["model_extra_path"])
 
-                pod["model_path_pvc"] = storage.StorageConfig.get_pvc_name(storage.STORAGE_TYPE_MODEL_DATA)
+                pod["model_path_pvc"] = storage.StorageConfig.get_pvc_name(storage.PVC_TYPE_MODEL_DATA_KFSERVING_POD)
 
                 pod["framework"] = params["framework"]
                 

@@ -18,6 +18,7 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, Template
 from config import config
 from DataHandler import DataHandler,DataManager
+import k8sUtils
 import base64
 import re
 import requests
@@ -632,8 +633,12 @@ def GetAllSupportInference():
     try:
         dataHandler = DataHandler()
         resources = dataHandler.GetAllDevice()
-        result = os.system("kubectl get configmap -n kfserving-system inferenceservice-config -o json")
-        for framework, items in json.loads(result)["data"]["predictors"].items():
+        result = vc_cache.get("inference-config")
+        if not result:
+            result = k8sUtils.kubectl_exec(" get configmap -n kfserving-system inferenceservice-config -o json")
+            vc_cache["inference-config"] = result
+
+        for framework, items in json.loads(json.loads(result)["data"]["predictors"]).items():
             versionlist = items['allowedImageVersions']
             tmp=collections.defaultdict(lambda :[])
             if versionlist:

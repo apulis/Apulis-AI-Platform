@@ -205,8 +205,10 @@ def GetLog(jobId, tail=None,jobType=None):
 
     selector = "run=" + jobId
     namespace = None
+    cmd = ""
     if jobType and jobType=="InferenceJob":
         namespace = "kfserving-pod"
+        cmd =  " -c kfserving-container -n " + namespace
     podInfo = GetPod(selector,namespace)
     logs = []
 
@@ -220,9 +222,9 @@ def GetLog(jobId, tail=None,jobType=None):
                     containerID = item["status"]["containerStatuses"][0]["containerID"].replace("docker://", "")
                     log["containerID"] = containerID
                     if tail is not None:
-                        log["containerLog"] = kubectl_exec(" logs %s --tail=%s" % (log["podName"], str(tail)))
+                        log["containerLog"] = kubectl_exec(" logs %s --tail=%s" % (log["podName"], str(tail))+cmd)
                     else:
-                        log["containerLog"] = kubectl_exec(" logs " + log["podName"])
+                        log["containerLog"] = kubectl_exec(" logs " + log["podName"] + cmd)
                     logs.append(log)
     return logs
 

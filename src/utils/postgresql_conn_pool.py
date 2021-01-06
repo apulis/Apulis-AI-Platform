@@ -167,20 +167,21 @@ class PostgresqlConn(object):
         return result
 
 
-    def insert_one(self, sql, params=None, return_auto_increament_id=False):
+    def insert_one(self, sql, params=None):
         self._cur.execute(sql, params)
-        if return_auto_increament_id:
-            return self._cur.lastrowid
+        self._conn.commit()
 
     def insert_many(self, sql, params):
-        count = self._cur.executemany(sql, params)
-        return count
+        self._cur.executemany(sql, params)
+        self._conn.commit()
 
     def update(self, sql, param=None):
-        return self._cur.execute(sql, param)
+        self._cur.execute(sql, param)
+        self._conn.commit()
 
     def delete(self,sql,param=None):
-        return self._cur.execute(sql,param)
+        self._cur.execute(sql,param)
+        self._conn.commit()
 
     def commit(self):
         self._conn.commit()
@@ -195,7 +196,8 @@ class PostgresqlConn(object):
     def executed(self):
         """获取刚刚执行的SQL语句
         _cur._executed 是私有属性，可能会在没有警告的情况下改变，所以本方法仅适用于调试时使用"""
-        return self._cur._executed
+        self._cur._executed
+        self._conn.commit()
 
     def __enter__(self):
         return self

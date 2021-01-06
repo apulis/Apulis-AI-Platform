@@ -8,20 +8,30 @@ data:
       filedir: logs
       filename: ai_arts_backend.log
 
+    database: postgres
     db:
-      username: root
-      password: apulis#2019#wednesday
-      {% if cnf["db_archtype"] == "amd64" %}
-      host: mysql.kube-system
-      {% elif cnf["db_archtype"] == "arm64" %}
-      host: mysql-arm64.kube-system
-      {% else %}
-      host: mysql.kube-system
-      {% endif %}
-      port: 3306
-      database: ai_arts
-      maxopenconns: 10
-      maxidleconns: 2
+      mysql:
+        username: root
+        password: apulis#2019#wednesday
+        {% if cnf["db_archtype"] == "amd64" %}
+        host: mysql.kube-system
+        {% elif cnf["db_archtype"] == "arm64" %}
+        host: mysql-arm64.kube-system
+        {% else %}
+        host: mysql.kube-system
+        {% endif %}
+        port: 3306
+        database: ai_arts
+        maxopenconns: 10
+        maxidleconns: 2
+      postgresql:
+        username: postgres
+        password: postgres
+        host: postgres.kube-system
+        port: 5432
+        database: ai_arts
+        maxopenconns: 10
+        maxidleconns: 2
 
     file:
       datasetdir: /data/dataset
@@ -29,7 +39,7 @@ data:
       sizelimit: 1000000000
 
     Anno:
-      backendUrl: http://{{cnf["kube-vip"]}}/annotations
+      backendUrl: http://{{cnf["kube-vip"]}}/data-platform-backend
 
     Infer:
       backendUrl: http://{{cnf["kube-vip"]}}

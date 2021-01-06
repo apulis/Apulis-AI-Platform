@@ -1473,12 +1473,11 @@ class DataHandler(object):
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
-            result = [[str(item) for item in row] for row in data]
+            #result = [[str(item) for item in row] for row in data]
 
             total = 0
 
-
-            for item in result:
+            for item in data:
 
                 record = dict(zip(columns, item))
 

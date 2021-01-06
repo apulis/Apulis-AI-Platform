@@ -1182,16 +1182,12 @@ class DataHandler(object):
             name = "default"
             sql = ""
             if self.GetFDInfo() is None:
-                sql = """INSERT INTO %s (userName, password, url, name) VALUES (%s, %s, %s, %s)"""  %(self.fdserverinfotablename,"%s", "%s", "%s", "%s")
+                sql = """INSERT INTO %s (username, password, url, name) VALUES (%s, %s, %s, %s)"""  %(self.fdserverinfotablename,"%s", "%s", "%s", "%s")
             else:
-                sql = """UPDATE %s SET userName=%s, password=%s, url=%s WHERE name=%s""" % (self.fdserverinfotablename,"%s", "%s", "%s", "%s")
+                sql = """UPDATE %s SET username=%s, password=%s, url=%s WHERE name=%s""" % (self.fdserverinfotablename,"%s", "%s", "%s", "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql, (
-                    params["userName"], params["password"], params["url"], name
-                ))
-
                 conn.insert_one(sql, (
-                    params["userName"], params["password"], params["url"], name
+                    params["username"], params["password"], params["url"], name
                 ))
                 conn.commit()
             ret = True
@@ -1204,7 +1200,7 @@ class DataHandler(object):
         ret = None
         try:
             name = "default"
-            query = """SELECT name, "userName", password, url FROM %s where name='%s'""" % (
+            query = """SELECT name, username, password, url FROM %s where name='%s'""" % (
                 self.fdserverinfotablename, name
             )
             with PostgresqlConn() as conn:
@@ -1636,7 +1632,7 @@ class DataHandler(object):
             if orderBy is None or orderBy == "":
                 query += """ order by "jobTime" Desc"""
             else:
-                query += """ order by %s %s""" % (orderBy, order)
+                query += """ order by "%s" %s""" % (orderBy, order)
 
             if pageNum is not None and pageSize is not None:
                 query += " limit %d offset %d " % (int(pageSize),(int(pageNum)-1)*int(pageSize))
@@ -2232,9 +2228,8 @@ class DataHandler(object):
     def GetJobEndpoints(self, job_id):
         ret = {}
         try:
-            query = """SELECT endpoints from %s where "jobId" = %s""" % (self.jobtablename, "%s")
+            query = """SELECT endpoints from %s where "jobId" = %s """ % (self.jobtablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[jobId])
                 rets = conn.select_many(query,[job_id])
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)

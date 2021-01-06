@@ -14,7 +14,7 @@ import {
 
 import CopyableTextListItem from '../../components/CopyableTextListItem';
 import JobStatus from '../../components/JobStatus';
-import UserContext from '../contexts/User';
+import UserContext from '../../contexts/User';
 
 import Context from './Context';
 import { useTranslation } from "react-i18next";

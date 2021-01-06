@@ -1332,7 +1332,7 @@ class DataHandler(object):
     @record
     def GetJobListV2(self, userName, vcName, num=None, status=None, op=("=", "or")):
         ret = {}
-        ret["queuedjobs"] = []
+        ret["queuedJobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
@@ -1376,13 +1376,13 @@ class DataHandler(object):
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
 
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "training" or record["jobType"] == "codeEnv":
-                        ret["runningJobs"].append(record)
-                    elif record["jobType"] == "visualization":
+                    if record["jobType"] == "visualization":
                         ret["visualizationJobs"].append(record)
+                    else:
+                        ret["runningJobs"].append(record)
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
                     "jobStatus"] == "unapproved":
-                    ret["queuedjobs"].append(record)
+                    ret["queuedJobs"].append(record)
                 else:
                     ret["finishedJobs"].append(record)
             conn.commit()
@@ -1394,7 +1394,7 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedjobs": len(ret["queuedjobs"]), "runningJobs": len(ret["runningJobs"]),
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]), "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]), "visualizationJobs": len(ret["visualizationJobs"])}
         return ret
 
@@ -1403,7 +1403,7 @@ class DataHandler(object):
             pageSize, searchWord, orderBy, order, status=None, op=("=", "or")):
 
         ret = {}
-        ret["queuedjobs"] = []
+        ret["queuedJobs"] = []
         ret["runningJobs"] = []
         ret["finishedJobs"] = []
         ret["visualizationJobs"] = []
@@ -1520,7 +1520,7 @@ class DataHandler(object):
             if conn is not None:
                 conn.close()
 
-        ret["meta"] = {"queuedjobs": len(ret["queuedjobs"]),
+        ret["meta"] = {"queuedJobs": len(ret["queuedJobs"]),
                        "runningJobs": len(ret["runningJobs"]),
                        "finishedJobs": len(ret["finishedJobs"]),
                        "visualizationJobs": len(ret["visualizationJobs"]),
@@ -2635,7 +2635,7 @@ class DataHandler(object):
         ret = False
         try:
             for job_id, priority in job_priorites.items():
-                query = """INSERT INTO {0}("jobId", priority, time) VALUES('{1}', {2}, SYSDATE()) ON CONFLICT ("jobId") DO UPDATE SET  priority='{2}' """.format(
+                query = """INSERT INTO {0}("jobId", priority) VALUES('{1}', {2}) ON CONFLICT ("jobId") DO UPDATE SET  priority='{2}' """.format(
                     self.jobprioritytablename, job_id, priority)
             with PostgresqlConn() as conn:
                 logger.info(query)

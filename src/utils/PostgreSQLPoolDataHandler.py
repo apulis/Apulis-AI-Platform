@@ -169,7 +169,7 @@ class DataHandler(object):
                     "email" varchar(64) DEFAULT NULL,
                     "isAdmin" int NOT NULL,
                     "isAuthorized" int NOT NULL,
-                    "time" timestamp NOT NULL DEFAULT now()
+                    "time" timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 );
                 alter table "%s" add constraint "unique-%s-openId-group" unique("openId","group");
                 """ % (self.accounttablename,self.accounttablename,self.accounttablename)
@@ -204,7 +204,7 @@ class DataHandler(object):
                     "jobLog"                TEXT  NULL,
                     "retries"               int   NULL DEFAULT 0,
                     "isDeleted"             int    NULL DEFAULT 0,
-                    "lastUpdated"           timestamp  without time zone DEFAULT now() NOT NULL,
+                    "lastUpdated"           timestamp NOT NULL DEFAULT timezone('gmt'::text, now()),
                     "jobGroup"              varchar(255) NULL
                 );
                 CREATE INDEX "index-%s-userName" ON "%s" USING btree ("userName");
@@ -292,7 +292,7 @@ class DataHandler(object):
                 (
                     "id"        serial primary key,
                     "status"    TEXT NOT NULL,
-                    "time"      timestamp DEFAULT now() NOT NULL
+                    "time"      timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 );
 
                 CREATE INDEX "index-%s-time" ON "%s" USING btree (time);
@@ -311,7 +311,7 @@ class DataHandler(object):
                     "id"        serial primary key,   
                     "jobId"     varchar(50)   NOT NULL,
                     "status"    varchar(255) NOT NULL DEFAULT 'pending',
-                    "time"      timestamp without time zone DEFAULT now() NOT NULL,
+                    "time"      timestamp NOT NULL DEFAULT timezone('gmt'::text, now()),
                     "command"   TEXT NOT NULL,
                     "output"    TEXT NULL
                 );
@@ -332,7 +332,7 @@ class DataHandler(object):
                     "metadata"         TEXT NOT NULL,
                     "vcName"           varchar(255) NOT NULL,
                     "defaultMountPath" varchar(255) NOT NULL,
-                    "time"             timestamp without time zone DEFAULT now() NOT NULL
+                    "time"             timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 )
                 ;
                 alter table "%s" add constraint "unique-%s-vcName-url" unique("vcName","url");
@@ -363,7 +363,7 @@ class DataHandler(object):
                     "parent"    varchar(255) DEFAULT NULL,
                     "quota"     varchar(255) NOT NULL,
                     "metadata"  TEXT NOT NULL,
-                    "time"      timestamp without time zone DEFAULT now() NOT NULL
+                    "time"      timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 )
                 ;
                 INSERT into vc ("vcName","parent","quota","metadata") VALUES ('%s',NULL,'%s','{}')
@@ -382,7 +382,7 @@ class DataHandler(object):
                     "uid"           INT NOT NULL,
                     "gid"           INT NOT NULL,
                     "groups"        TEXT NOT NULL,
-                    "time"          timestamp  without time zone DEFAULT now() NOT NULL
+                    "time"          timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 )
                 """ % (self.identitytablename)
 
@@ -402,7 +402,7 @@ class DataHandler(object):
                     "resource"       varchar(255) NOT NULL,
                     "permissions"    INT NOT NULL,
                     "isDeny"         INT NOT NULL,
-                    "time"           timestamp without time zone  DEFAULT now() NOT NULL
+                    "time"           timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 );
                 alter table "%s" add constraint "identityName_resource" unique("identityName","resource");
                 """ % (self.acltablename,self.acltablename)
@@ -420,7 +420,7 @@ class DataHandler(object):
                     "scope" VARCHAR(255) NOT NULL ,
                     "json"  TEXT         NOT NULL,
                     "isDefault"  smallint  DEFAULT 0,
-                    "time"  timestamp  without time zone DEFAULT now() NOT NULL
+                    "time"  timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 );
                 alter table "%s" add constraint "name_scope" unique("name", "scope");
                 """ % (self.templatetablename,self.templatetablename)
@@ -496,7 +496,7 @@ class DataHandler(object):
                     "id"        serial primary key,
                     "jobId"     varchar(50)   NOT NULL,
                     "priority"  INT NOT NULL,
-                    "time"      timestamp  without time zone DEFAULT now() NOT NULL
+                    "time"      timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 );
                 alter table "%s" add constraint "identityName_jobId" unique("jobId");
                 """ % (self.jobprioritytablename,self.jobprioritytablename)
@@ -515,7 +515,7 @@ class DataHandler(object):
                         "deviceStr"     varchar(50)   NOT NULL,
                         "capacity"      INT NOT NULL,
                         "detail"        TEXT NOT NULL,
-                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
+                        "time"          timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                     )
                     """ % (self.deviceStatusTableName)
             try:
@@ -528,7 +528,7 @@ class DataHandler(object):
                     (
                         "id"                serial primary key,
                         "configuration"     TEXT   NOT NULL,
-                        "time"              timestamp without time zone  DEFAULT now() NOT NULL
+                        "time"              timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                     )
                     """ % (self.monitorConfigTableName)
             try:
@@ -543,7 +543,7 @@ class DataHandler(object):
                         "id"            serial primary key,
                         "name"          varchar(50)   NOT NULL,
                         "query"         varchar(255)   NOT NULL,
-                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
+                        "time"          timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                     )
                     """ % (self.monitormetricsTableName)
             try:
@@ -557,7 +557,7 @@ class DataHandler(object):
                         "id"            serial primary key,
                         "name"          varchar(50)   NOT NULL,
                         "fields"        TEXT      NOT NULL,
-                        "time"          timestamp  without time zone DEFAULT now() NOT NULL
+                        "time"          timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                     )
                     """ % (self.monitorchannelTableName)
             try:
@@ -577,7 +577,7 @@ class DataHandler(object):
                     "outPath"       varchar(255) NULL,
                     "status"        varchar(255) NOT NULL DEFAULT 'queued',
                     "errorMsg"      TEXT  NULL,
-                    "time"          timestamp  without time zone DEFAULT now() NOT NULL
+                    "time"          timestamp NOT NULL DEFAULT timezone('gmt'::text, now())
                 );
                 CREATE INDEX "index-%s-projectId" ON "%s" USING btree ("projectId");
                 CREATE INDEX "index-%s-datasetId" ON "%s" USING btree ("datasetId");
@@ -1102,7 +1102,7 @@ class DataHandler(object):
     def AddModelConversionJob(self, jobParams):
         ret = False
         try:
-            sql = """INSERT INTO %s (jobId, inputPath, outputPath, type, status) VALUES (%s, %s, %s, %s, %s)""" % (self.modelconversionjobtablename,"%s", "%s", "%s", "%s", "%s")
+            sql = """INSERT INTO %s ("jobId", "inputPath", "outputPath", type, status) VALUES (%s, %s, %s, %s, %s)""" % (self.modelconversionjobtablename,"%s", "%s", "%s", "%s", "%s")
             jobParam = base64.b64encode(json.dumps(jobParams))
             with PostgresqlConn() as conn:
 
@@ -1165,7 +1165,7 @@ class DataHandler(object):
         ret = None
         try:
             name = "default"
-            query = """SELECT name, username, password, url FROM %s where name='%s'""" % (
+            query = """SELECT name, username, password, url FROM %s where name='%s' """ % (
                 self.fdserverinfotablename, name
             )
             with PostgresqlConn() as conn:

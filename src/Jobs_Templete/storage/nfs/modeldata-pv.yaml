@@ -13,12 +13,12 @@ spec:
     - timeo=14
     - intr
     - tcp
-    - nfsvers=4.1
   nfs:
-    server: master01
-    path: /mnt/local/aiplatform-model-data
+    server: master
+    path: /mnt/local/pvc/aiplatform-model-data
 
 ---
+apiVersion: v1
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -30,3 +30,39 @@ spec:
   resources:
     requests:
       storage: 200Mi
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: aiplatform-model-data-pv-kfserving-pod
+  namespace: kfserving-pod
+spec:
+  capacity:
+    storage: 300Mi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: manual
+  mountOptions:
+    - rsize=8192
+    - timeo=14
+    - intr
+    - tcp
+  nfs:
+    server: master
+    path: /mnt/local/pvc/aiplatform-model-data
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: aiplatform-model-data-pvc-kfserving-pod
+  namespace: kfserving-pod
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+

@@ -1,0 +1,53 @@
+apiVersion: 'serving.kubeflow.org/v1alpha2'
+kind: 'InferenceService'
+metadata:
+  name: semantic-segmentation-adas-0001
+  namespace: kfserving-system
+  annotations:
+    name: Semantic segmentation for ADAS
+    type: detector
+    id: semantic-segmentation-adas-0001
+    spec: |
+      [
+        { "id": 0, "name": "road" },
+        { "id": 1, "name": "sidewalk" },
+        { "id": 2, "name": "building" },
+        { "id": 3, "name": "wall" },
+        { "id": 4, "name": "fence" },
+        { "id": 5, "name": "pole" },
+        { "id": 6, "name": "traffic light" },
+        { "id": 7, "name": "traffic sign" },
+        { "id": 8, "name": "vegetation" },
+        { "id": 9, "name": "terrain" },
+        { "id": 10, "name": "sky" },
+        { "id": 11, "name": "person" },
+        { "id": 12, "name": "rider" },
+        { "id": 13, "name": "car" },
+        { "id": 14, "name": "truck" },
+        { "id": 15, "name": "bus" },
+        { "id": 16, "name": "train" },
+        { "id": 17, "name": "motorcycle" },
+        { "id": 18, "name": "bicycle" },
+        { "id": 19, "name": "ego-vehicle" },
+        { "id": 20, "name": "background" }
+      ]
+    framework: openvino
+    description: 'Segmentation network to classify each pixel into typical 20 classes for ADAS'
+  labels:
+    inference: system
+
+spec:
+  default:
+    predictor:
+      minReplicas: 1
+      maxReplicas: 1
+      custom:
+        resources:
+          limits:
+            memory: 5G
+          requests:
+            cpu: 100m
+        container:
+          name: kfserving-container
+          image: {{cnf["private_docker_registry"]}}apulistech/openvino.omz.intel.semantic-segmentation-adas-0001
+          args: ['--model_name=semantic-segmentation-adas-0001']

@@ -1,0 +1,30 @@
+apiVersion: 'serving.kubeflow.org/v1alpha2'
+kind: 'InferenceService'
+metadata:
+  name: person-reidentification-retail-0300
+  namespace: kfserving-system
+  annotations:
+    name: Person reidentification
+    type: reid
+    id: person-reidentification-retail-0300
+    spec: ''
+    framework: openvino
+    description: 'Person reidentification model for a general scenario'
+  labels:
+    inference: system
+
+spec:
+  default:
+    predictor:
+      minReplicas: 1
+      maxReplicas: 1
+      custom:
+        resources:
+          limits:
+            memory: 5G
+          requests:
+            cpu: 100m
+        container:
+          name: kfserving-container
+          image: {{cnf["private_docker_registry"]}}apulistech/openvino.omz.intel.person-reidentification-retail-0300
+          args: ['--model_name=person-reidentification-retail-0300']

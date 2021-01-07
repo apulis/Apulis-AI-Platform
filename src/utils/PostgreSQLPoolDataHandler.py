@@ -651,7 +651,6 @@ class DataHandler(object):
                 sql += """ and "jobStatus" in %s"""
                 params.append([s for s in status.split(",")])
         with PostgresqlConn() as conn:
-            logger.info(sql,params)
             ret = conn.select_one_value(sql, params)
         return ret
 
@@ -661,7 +660,6 @@ class DataHandler(object):
         try:
             sql = "INSERT INTO " + self.storagetablename + " (storageType, url, metadata, vcName, defaultMountPath) VALUES (%s,%s,%s,%s,%s)"
             with PostgresqlConn() as conn:
-                logger.info(sql,(storageType, url, metadata, vcName, defaultMountPath))
                 conn.insert_one(sql,(storageType, url, metadata, vcName, defaultMountPath))
                 conn.commit()
             ret = True
@@ -675,7 +673,6 @@ class DataHandler(object):
         try:
             sql = "DELETE FROM %s WHERE url = %s and vcName = %s" % (self.storagetablename,"%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[url, vcName])
                 conn.insert_one(sql,[ url, vcName])
                 conn.commit()
             ret = True
@@ -690,7 +687,6 @@ class DataHandler(object):
             query = "SELECT storageType,url,metadata,vcName,defaultMountPath FROM %s WHERE vcName = %s " % (
             self.storagetablename,"%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[vcName])
                 rets = conn.select_many(query,[vcName])
             for one in rets:
                 ret.append(one)
@@ -705,7 +701,6 @@ class DataHandler(object):
             sql = """update %s set storageType = %s, metadata = %s, defaultMountPath = %s where vcName = %s and url = %s """ % (
             self.storagetablename,"%s","%s","%s","%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[storageType, metadata, defaultMountPath, vcName, url])
                 conn.update(sql,[storageType, metadata, defaultMountPath, vcName, url])
                 conn.commit()
             ret = True
@@ -717,9 +712,8 @@ class DataHandler(object):
     def AddVC(self, vcName, quota, metadata):
         ret = False
         try:
-            sql = "INSERT INTO " + self.vctablename + " (vcName, quota, metadata) VALUES (%s,%s,%s)"
+            sql = """INSERT INTO %s ("vcName", quota, metadata) VALUES (%s,%s,%s)""" %  (self.vctablename,"%s","%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(sql, (vcName, quota, metadata))
                 conn.insert_one(sql, (vcName, quota, metadata))
                 conn.commit()
             ret = True
@@ -739,7 +733,6 @@ class DataHandler(object):
                 pass
 
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
 
             for one in rets:
@@ -759,7 +752,6 @@ class DataHandler(object):
             if page and size:
                 query += " limit %d offset %d" % (int(size),(int(page)-1)*int(size))
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -774,7 +766,6 @@ class DataHandler(object):
             if name:
                 query += """ WHERE "vcName" like '%%%s%%' """ %(name)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 ret = conn.select_one_value(query)
         except Exception as e:
             logger.exception('ListVCs Exception: %s', str(e))
@@ -786,7 +777,6 @@ class DataHandler(object):
         try:
             sql = """DELETE FROM %s WHERE "vcName" = %s""" % (self.vctablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[vcName])
                 conn.insert_one(sql,[vcName])
                 conn.commit()
             ret = True
@@ -801,7 +791,6 @@ class DataHandler(object):
             sql = """update %s set quota = %s, metadata = %s where "vcName" = %s """ % (
             self.vctablename,"%s","%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[ quota, metadata, vcName])
                 conn.update(sql,[ quota, metadata, vcName])
                 conn.commit()
             ret = True
@@ -815,7 +804,6 @@ class DataHandler(object):
         ret = []
         try:
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -829,7 +817,6 @@ class DataHandler(object):
         ret = False
         try:
             with PostgresqlConn() as conn:
-                logger.info(query,[userName])
                 conn.insert_one(query,[userName])
                 conn.commit()
                 ret = True
@@ -843,7 +830,6 @@ class DataHandler(object):
         ret = []
         try:
             with PostgresqlConn() as conn:
-                logger.info(query,[openId, group])
                 rets = conn.select_many(query,[openId, group])
             for one in rets:
                 ret.append(one)
@@ -858,7 +844,6 @@ class DataHandler(object):
         ret = []
         try:
             with PostgresqlConn() as conn:
-                logger.info(query,[openId, group,password])
                 rets = conn.select_many(query,[openId, group,password])
             for one in rets:
                 ret.append(one)
@@ -873,7 +858,6 @@ class DataHandler(object):
         ret = []
         try:
             with PostgresqlConn() as conn:
-                logger.info(query,[userName])
                 rets = conn.select_many(query,[userName])
             for one in rets:
                 ret.append(one)
@@ -887,13 +871,11 @@ class DataHandler(object):
             if len(self.GetAccountByopenId(openId, group)) == 0:
                 sql = """INSERT INTO "+self.accounttablename+" ("openId", "group", "nickName", "userName", password, "isAdmin", "isAuthorized") VALUES (%s,%s,%s,%s,%s,%s,%s)"""
                 with PostgresqlConn() as conn:
-                    logger.info(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
                     conn.insert_one(sql, (openId, group, nickName, userName, password, isAdmin, isAuthorized))
                     conn.commit()
             else:
                 sql = """update %s set "nickName" = %s, "userName" = %s, "password" = %s, "isAdmin" = %s, "isAuthorized" = %s where "openId" = %s and "group" = %s"""
                 with PostgresqlConn() as conn:
-                    logger.info(sql % (self.accounttablename,"%s","%s","%s","%s","%s","%s","%s"),[nickName, userName, password, isAdmin, isAuthorized, openId, group])
                     conn.insert_one(sql % (self.accounttablename,"%s","%s","%s","%s","%s","%s","%s"),[nickName, userName, password, isAdmin, isAuthorized, openId, group])
                     conn.commit()
             return True
@@ -909,7 +891,6 @@ class DataHandler(object):
             else:
                 sql = """update %s set "email" = %s, "phoneNumber" = %s where "openId" = %s and "group" = %s""" % (self.accounttablename,"%s","%s","%s","%s")
                 with PostgresqlConn() as conn:
-                    logger.info(sql,[email,phone,openId, group])
                     conn.insert_one(sql,[email,phone,openId, group])
                     conn.commit()
             return True
@@ -922,7 +903,6 @@ class DataHandler(object):
         try:
             sql = """update %s set "isAdmin" = %s, "isAuthorized" = %s where "userName" = %s""" % (self.accounttablename,"%s","%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[int(isAdmin),int(isAuthorized),userName])
                 conn.insert_one(sql,[int(isAdmin),int(isAuthorized),userName])
                 conn.commit()
             return True
@@ -958,14 +938,12 @@ class DataHandler(object):
                 sql = """insert into {0} ("identityName", uid, gid, groups) values ('{1}', '{2}', '{3}', '{4}') on CONFLICT (id)  DO UPDATE SET uid='{2}', gid='{3}', groups='{4}'""".format(
                     self.identitytablename, identityName, uid, gid, groups)
                 with PostgresqlConn() as conn:
-                    logger.info(sql)
                     conn.insert_one(sql)
                     conn.commit()
             else:
                 sql = """update %s set uid = %s, gid = %s, groups = %s where "identityName" = %s """ % (
                 self.identitytablename, "%s", "%s", "%s", "%s")
                 with PostgresqlConn() as conn:
-                    logger.info(sql,[uid, gid, groups, identityName])
                     conn.insert_one(sql,[uid, gid, groups, identityName])
                     conn.commit()
             ret = True
@@ -978,7 +956,6 @@ class DataHandler(object):
         try:
             sql = """update %s set "isAdmin" = %s, "isAuthorized" = %s where "userName" = %s """ % (self.accounttablename, "%s", "%s", "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[isAdmin, isAuthorized, identityName])
                 conn.update(sql,[isAdmin, isAuthorized, identityName])
                 conn.commit()
             return True
@@ -991,7 +968,6 @@ class DataHandler(object):
     def GetAceCount(self, identityName, resource):
         query = """SELECT count(ALL id) as c FROM %s where "identityName" = %s and resource = %s""" % (self.acltablename,"%s", "%s")
         with PostgresqlConn() as conn:
-            logger.info(query,[identityName, resource])
             rets = conn.select_many(query,[identityName, resource])
         ret = 0
         for c in rets:
@@ -1007,14 +983,12 @@ class DataHandler(object):
                 sql = """insert into {0} ("identityName", "identityId", resource, permissions, "isDeny") values ('{1}', '{2}', '{3}', '{4}', '{5}') on duplicate key update permissions='{4}'""".format(
                     self.acltablename, identityName, identityId, resource, permissions, isDeny)
                 with PostgresqlConn() as conn:
-                    logger.info(sql)
                     conn.insert_one(sql)
                     conn.commit()
             else:
                 sql = """update %s set permissions = %s where "identityName" = %s and resource = %s """ % (
                 self.acltablename, "%s", "%s", "%s")
                 with PostgresqlConn() as conn:
-                    logger.info(sql,[permissions, identityName, resource])
                     conn.insert_one(sql,[permissions, identityName, resource])
                     conn.commit()
             ret = True
@@ -1029,7 +1003,6 @@ class DataHandler(object):
             sql = """update %s set "identityId" = %s where "identityName" = %s """ % (
             self.acltablename, "%s", "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[identityId, identityName])
                 conn.update(sql,[identityId, identityName])
                 conn.commit()
             ret = True
@@ -1043,7 +1016,6 @@ class DataHandler(object):
         try:
             sql = "DELETE FROM %s WHERE resource = %s" % (self.acltablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[resource])
                 conn.insert_one(sql,[resource])
                 conn.commit()
             ret = True
@@ -1058,7 +1030,6 @@ class DataHandler(object):
             sql = """DELETE FROM %s WHERE "identityName" = %s and resource = %s""" % (
             self.acltablename, "%s", "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[identityName, resource])
                 conn.insert_one(sql,[identityName, resource])
                 conn.commit()
             ret = True
@@ -1073,7 +1044,6 @@ class DataHandler(object):
             query = """SELECT "identityName","identityId",resource,permissions,"isDeny" FROM %s""" % (
                 self.acltablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -1088,7 +1058,6 @@ class DataHandler(object):
             query = """SELECT "identityName","identityId",resource,permissions,"isDeny" FROM %s where resource = %s""" % (
             self.acltablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[resource])
                 rets = conn.select_many(query,[resource])
             for one in rets:
                 ret.append(one)
@@ -1119,8 +1088,7 @@ class DataHandler(object):
             sql = """INSERT INTO %s ("jobId") VALUES (%s)""" % (self.inferencejobtablename,"%s")
             jobParam = base64.b64encode(json.dumps(jobParams))
             with PostgresqlConn() as conn:
-                logger.info(sql, (
-                    jobParams["jobId"],))
+
                 conn.insert_one(sql, (
                     jobParams["jobId"],))
                 conn.commit()
@@ -1137,8 +1105,7 @@ class DataHandler(object):
             sql = """INSERT INTO %s (jobId, inputPath, outputPath, type, status) VALUES (%s, %s, %s, %s, %s)""" % (self.modelconversionjobtablename,"%s", "%s", "%s", "%s", "%s")
             jobParam = base64.b64encode(json.dumps(jobParams))
             with PostgresqlConn() as conn:
-                logger.info(sql, (
-                    jobParams["jobId"], jobParams["inputPath"], jobParams["outputPath"], jobParams["conversionType"], "converting"))
+
                 conn.insert_one(sql, (
                     jobParams["jobId"], jobParams["inputPath"], jobParams["outputPath"], jobParams["conversionType"], "converting"))
                 conn.commit()
@@ -1153,7 +1120,6 @@ class DataHandler(object):
         try:
             sql = """UPDATE %s SET "fileId"='%s' WHERE "jobID"='%s'""" % (self.modelconversionjobtablename, fileId, jobId)
             with PostgresqlConn() as conn:
-                logger.info(sql)
                 conn.update(sql)
                 conn.commit()
             ret = True
@@ -1167,7 +1133,6 @@ class DataHandler(object):
         try:
             sql = """UPDATE %s SET status='%s' WHERE "jobID"='%s'""" % (self.modelconversionjobtablename, status, jobId)
             with PostgresqlConn() as conn:
-                logger.info(sql)
                 conn.update(sql)
                 conn.commit()
             ret = True
@@ -1204,7 +1169,6 @@ class DataHandler(object):
                 self.fdserverinfotablename, name
             )
             with PostgresqlConn() as conn:
-                logger.info(query)
                 ret = conn.select_one(query)
         except Exception as e:
             logger.exception('GetFDInfo Exception: %s', str(e))
@@ -1218,7 +1182,6 @@ class DataHandler(object):
                 self.modelconversionjobtablename, jobId
             )
             with PostgresqlConn() as conn:
-                logger.info(query)
                 ret = conn.select_one(query)
         except Exception as e:
             logger.exception("Get ModelConvert info exception: %s", str(e))
@@ -1232,7 +1195,6 @@ class DataHandler(object):
                 self.modelconversionjobtablename, outputpath
             )
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
                 for ret in rets:
                     fileId = ret["fileId"]
@@ -1278,7 +1240,6 @@ class DataHandler(object):
                 offset = (pageNum - 1)*pageSize
                 query += " limit %s offset %s " % (str(pageSize), str(offset))
             with PostgresqlConn() as conn:
-                logger.info(query,params)
                 rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
@@ -1318,7 +1279,6 @@ class DataHandler(object):
             if num is not None:
                 query += " limit %s " % str(num)
             with PostgresqlConn() as conn:
-                logger.info(query,params)
                 rets = conn.select_many(query, params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
@@ -1363,7 +1323,6 @@ class DataHandler(object):
 
             if num is not None:
                 query += " limit %s " % str(num)
-            logger.info(query)
             cursor.execute(query)
 
             columns = [column[0] for column in cursor.description]
@@ -1468,7 +1427,6 @@ class DataHandler(object):
             else:
                 pass
 
-            logger.info(query)
             cursor.execute(query)
 
             columns = [column[0] for column in cursor.description]
@@ -1563,7 +1521,6 @@ class DataHandler(object):
             else:
                 pass
 
-            logger.info(query)
             cursor.execute(query)
             total = cursor.fetchone()[0]
 
@@ -1637,7 +1594,6 @@ class DataHandler(object):
                 query += " limit %d offset %d " % (int(pageSize),(int(pageNum)-1)*int(pageSize))
             else:
                 pass
-            logger.info(query)
             cursor.execute(query)
             data = cursor.fetchall()
 
@@ -1684,19 +1640,19 @@ class DataHandler(object):
 
             query = """SELECT "jobName", "jobId" FROM {} where """.format(self.jobtablename)
             if "," not in vcName:
-                query += """ "vcName"="%s" """ % (vcName)
+                query += """ "vcName"='%s' """ % (vcName)
             else:
-                query += """ "vcName" in (%s) """ % (','.join(['"'+s+'"' for s in vcName.split(",")]))
+                query += """ "vcName" in (%s) """ % (','.join(["'"+s+"'" for s in vcName.split(",")]))
 
             if "," not in jobStatus:
-                query += """and "jobStatus"="%s" """ % (jobStatus)
+                query += """and "jobStatus"='%s' """ % (jobStatus)
             else:
-                query += """and "jobStatus" in (%s) """ % (','.join(['"'+s+'"' for s in jobStatus.split(",")]))
+                query += """and "jobStatus" in (%s) """ % (','.join(["'"+s+"'" for s in jobStatus.split(",")]))
 
             if "," not in userName:
-                query += """and "userName"="%s" """ % (userName)
+                query += """and "userName"='%s' """ % (userName)
             else:
-                query += """and "userName" in (%s) """ % (','.join(['"'+s+'"' for s in userName.split(",")]))
+                query += """and "userName" in (%s) """ % (','.join(["'"+s+"'" for s in userName.split(",")]))
 
             query += """ and "isDeleted"=0 """
             logger.info("GetUserJobs, sql: %s" %(query))
@@ -1772,7 +1728,6 @@ class DataHandler(object):
             if num is not None:
                 query += " limit %s " % str(num)
             cursor.execute(query)
-            logger.info(query)
 
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
@@ -1926,7 +1881,6 @@ class DataHandler(object):
             if pageNum is not None and pageSize is None:
                 query += " limit %s " % pageNum
             cursor.execute(query)
-            logger.info(query)
             columns = [column[0] for column in cursor.description]
             data = cursor.fetchall()
 
@@ -1973,7 +1927,6 @@ class DataHandler(object):
             query = """SELECT "jobId", "userName", "vcName", "jobParams", "jobStatus" FROM %s WHERE "jobStatus" = 'scheduling' OR "jobStatus" = 'running' and "isDeleted"=0""" % (
                 self.jobtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -1989,7 +1942,6 @@ class DataHandler(object):
             query = """SELECT "jobId", "userName", "vcName", "jobParams", "jobStatus" FROM %s WHERE "jobStatus" = 'scheduling' OR "jobStatus" = 'running' and "isDeleted"=0""" % (
                 self.jobtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 jobParam = json.loads(base64.b64decode(one["jobParams"]))
@@ -2018,7 +1970,6 @@ class DataHandler(object):
 
             query = """SELECT "jobId","familyToken","isParent","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta" ,"jobGroup" FROM %s where "%s" = %s """ % (
             self.jobtablename, key, "%s")
-            logger.info(query,[expected])
             cursor.execute(query,[expected])
             columns = [column[0] for column in cursor.description]
             ret = [dict(zip(columns, row)) for row in cursor.fetchall()]
@@ -2042,7 +1993,6 @@ class DataHandler(object):
             cursor = conn.cursor()
             query = """SELECT "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams"  FROM %s where "jobId" = %s """ % (
             self.jobtablename, "%s")
-            logger.info(query,[jobId])
             cursor.execute(query,[jobId])
 
             columns = [column[0] for column in cursor.description]
@@ -2074,7 +2024,6 @@ class DataHandler(object):
             cursor = conn.cursor()
             query = """SELECT "jobId", "jobName", "userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobTime", "jobParams",endpoints  FROM %s where "jobId" = %s """ % (
             self.jobtablename, "%s")
-            logger.info(query,[jobId])
             cursor.execute(query,[jobId])
 
             columns = [column[0] for column in cursor.description]
@@ -2108,7 +2057,6 @@ class DataHandler(object):
             sql = """DELETE FROM %s WHERE "vcName"= %s """ %(self.jobtablename,"%s")
             print(sql)
             with PostgresqlConn() as conn:
-                logger.info(sql, [vcName])
                 conn.insert_one(sql, [vcName])
                 conn.commit()
             ret = True
@@ -2123,7 +2071,6 @@ class DataHandler(object):
             sql = """DELETE FROM %s WHERE "vcName"= %s and "jobStatus"<>'killing'""" %(self.jobtablename,"%s")
             print(sql)
             with PostgresqlConn() as conn:
-                logger.info(sql, [vcName])
                 conn.insert_one(sql, [vcName])
                 conn.commit()
             ret = True
@@ -2138,7 +2085,6 @@ class DataHandler(object):
         try:
             sql = """INSERT INTO %s  ("jobId", command) VALUES (%s,%s)""" %(self.commandtablename,"%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(sql, (jobId, command))
                 conn.insert_one(sql, (jobId, command))
                 conn.commit()
             ret = True
@@ -2154,7 +2100,6 @@ class DataHandler(object):
             query = """SELECT id, "jobId", command FROM %s WHERE status = 'pending' order by time""" % (
                 self.commandtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -2168,7 +2113,6 @@ class DataHandler(object):
         try:
             sql = """update %s set status = 'run' where id = %s """ % (self.commandtablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[commandId])
                 conn.update(sql,[commandId])
                 conn.commit()
             ret = True
@@ -2183,7 +2127,6 @@ class DataHandler(object):
             query = """SELECT time, command, status, output FROM %s WHERE "jobId" = %s order by time""" % (
             self.commandtablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[jobId])
                 rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret.append(one)
@@ -2208,7 +2151,6 @@ class DataHandler(object):
             query = """SELECT endpoints,"jobId" from %s where "jobStatus" = \'%s\' and endpoints is not null""" % (
             self.jobtablename, "running")
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             # [ {endpoint1:{},endpoint2:{}}, {endpoint3:{}, ... }, ... ]
             endpoints = map(lambda job: self.load_json(job["endpoints"]), rets)
@@ -2246,7 +2188,6 @@ class DataHandler(object):
             # TODO we need job["lastUpdated"] for filtering
             query = """SELECT endpoints FROM jobs WHERE "jobStatus" <> 'running' and "jobStatus" <> 'pending' and "jobStatus" <> 'queued' and "jobStatus" <> 'scheduling' order by "jobTime" DESC"""
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 endpoint_list = {k: v for k, v in self.load_json(one["endpoints"]).items() if v["status"] == "running"}
@@ -2260,10 +2201,8 @@ class DataHandler(object):
         ret = False
         try:
             job_endpoints = self.GetJobEndpoints(endpoint["jobId"])
-
             # update jobEndpoints
             job_endpoints[endpoint["id"]] = endpoint
-
             sql = """UPDATE jobs SET endpoints=%s where "jobId"=%s"""
             with PostgresqlConn() as conn:
                 conn.update(sql, (json.dumps(job_endpoints), endpoint["jobId"]))
@@ -2280,7 +2219,6 @@ class DataHandler(object):
             query = """SELECT "jobId","jobName","userName", "vcName", "jobStatus", "jobStatusDetail", "jobType", "jobDescriptionPath", "jobDescription", "jobTime", endpoints, "jobParams","errorMsg" ,"jobMeta" FROM %s where "jobStatus" <> 'error' and "jobStatus" <> 'failed' and "jobStatus" <> 'finished' and "jobStatus" <> 'killed' and "isDeleted"=0 order by "jobTime" DESC""" % (
                 self.jobtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -2295,7 +2233,6 @@ class DataHandler(object):
             sql = """update %s set "jobStatus" = 'error', "errorMsg" = %s where "jobId" = %s """ % (
             self.jobtablename, "%s", "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[ errorMsg, jobId])
 
                 conn.update(sql,[ errorMsg, jobId])
                 conn.commit()
@@ -2310,7 +2247,6 @@ class DataHandler(object):
         try:
             sql = """update %s set "%s" = %s where "jobId" = %s """ % (self.jobtablename, field, "%s", "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[value, jobId])
                 conn.update(sql,[value, jobId])
                 conn.commit()
             ret = True
@@ -2321,12 +2257,10 @@ class DataHandler(object):
 
     @record
     def GetJobTextField(self, jobId, field):
-        query = """SELECT "jobId", "%s" FROM %s where "jobId" = %s """ % (field, self.jobtablename, jobId)
+        query = """SELECT "jobId", "%s" FROM %s where "jobId" = '%s'  """ % (field, self.jobtablename, jobId)
         ret = None
         try:
             with PostgresqlConn() as conn:
-                logger.info(query)
-
                 rets = conn.select_many(query)
             for one in rets:
                 ret = one[field]
@@ -2344,7 +2278,6 @@ class DataHandler(object):
 
         query = """SELECT "jobId", retries FROM %s where "jobId" = %s """ % (self.jobtablename, "%s")
         with PostgresqlConn() as conn:
-            logger.info(query,[jobId])
             rets = conn.select_many(query,[jobId])
         ret = None
 
@@ -2362,7 +2295,6 @@ class DataHandler(object):
         try:
             sql = "update %s set" % (self.jobtablename) + ",".join([""" "%s" = '%s' """ % (field, value) for field, value in dataFields.items()]) + " where" + "and".join([""" "%s" = '%s' """ % (field, value) for field, value in conditionFields.items()])
             with PostgresqlConn() as conn:
-                logger.info(sql)
                 conn.update(sql)
                 conn.commit()
             ret = True
@@ -2376,7 +2308,6 @@ class DataHandler(object):
         try:
             query = """SELECT "jobId", "%s" FROM %s where "jobId" = %s """ % (field, self.jobtablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[jobId])
                 rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret = one[field]
@@ -2400,7 +2331,6 @@ class DataHandler(object):
             sql = """select %s from  %s  where "jobId"='%s' """ % (fieldsStr,self.jobtablename,jobId)
             conn = self.pool.get_connection()
             cursor = conn.cursor()
-            logger.info(sql)
             cursor.execute(sql)
 
             columns = [column[0] for column in cursor.description]
@@ -2427,8 +2357,6 @@ class DataHandler(object):
 
             query = """SELECT "jobId", retries FROM %s where "jobId" = %s """ % (self.jobtablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[jobId])
-
                 rets = conn.select_many(query,[jobId])
             for one in rets:
                 ret = one["retries"]
@@ -2442,7 +2370,6 @@ class DataHandler(object):
             status = base64.b64encode(json.dumps(clusterStatus))
             sql = """INSERT INTO %s (status) VALUES (%s)""" % (self.clusterstatustablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[status])
                 conn.insert_one(sql,[status])
                 conn.commit()
             ret = True
@@ -2458,7 +2385,6 @@ class DataHandler(object):
         try:
             query = """SELECT time, status FROM %s order by time DESC limit 1""" % (self.clusterstatustablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret = json.loads(base64.b64decode(one["status"]))
@@ -2473,7 +2399,6 @@ class DataHandler(object):
         ret = []
         try:
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret.append(one)
@@ -2506,7 +2431,6 @@ class DataHandler(object):
         try:
             query = """SELECT count(ALL id) as c FROM %s where "jobStatus" = 'running' and "isDeleted"=0""" % (self.jobtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
@@ -2520,7 +2444,6 @@ class DataHandler(object):
         try:
             query = """SELECT count(ALL id) as c FROM %s where "jobStatus" = 'running' and "isDeleted"=0""" % (self.jobtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
@@ -2534,7 +2457,6 @@ class DataHandler(object):
         try:
             query = """SELECT count(ALL id) as c FROM %s where "isDeleted"=0""" % (self.jobtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for c in rets:
                 ret = c["c"]
@@ -2548,7 +2470,6 @@ class DataHandler(object):
         try:
             query = """SELECT name, json, "isDefault" FROM %s WHERE scope = %s""" % (self.templatetablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[scope])
                 rets = conn.select_many(query,[scope])
             for one in rets:
                 one["scope"] = "user" if scope.split(":")[0]=="user" else "team" if scope.split(":")[0]=="vc" else "master"
@@ -2563,7 +2484,6 @@ class DataHandler(object):
         try:
             query = """INSERT INTO %s (name, scope, json) VALUES(%s, %s, %s)  ON CONFLICT (id) DO UPDATE SET json = %s""" %(self.templatetablename,"%s", "%s", "%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(query, (name, scope, json, json))
                 conn.insert_one(query, (name, scope, json, json))
                 conn.commit()
             ret = True
@@ -2577,8 +2497,6 @@ class DataHandler(object):
         try:
             query = """SELECT count(1) FROM  WHERE "jobStatus" in ('queued', 'scheduling', 'running', 'unapproved', 'pausing', 'paused') and "userName" = %s  and "isDeleted"=0"""%(self.jobtablename,"%s")
             with PostgresqlConn() as conn:
-                logger.info(query ,(name,))
-
                 cnt = conn.select_one_value(query,(name,))
                 if int(cnt)>0:
                     ret = True
@@ -2592,8 +2510,6 @@ class DataHandler(object):
         try:
             query = """DELETE FROM %s WHERE name = %s and scope = %s""" %(self.templatetablename,"%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(query,  (name, scope))
-
                 conn.insert_one(query, (name, scope))
                 conn.commit()
             ret = True
@@ -2607,7 +2523,6 @@ class DataHandler(object):
         try:
             query = """DELETE FROM %s  WHERE scope = %s""" %(self.templatetablename,"%s")
             with PostgresqlConn() as conn:
-                logger.info(query, (scope,))
                 conn.insert_one(query, (scope,))
                 conn.commit()
             ret = True
@@ -2622,7 +2537,6 @@ class DataHandler(object):
             query = """select "jobId", priority from {} where "jobId" in (select "jobId" from {} where "jobStatus" in (\'queued\', \'scheduling\', \'running\', \'unapproved\', \'pausing\', \'paused\'))""".format(
                 self.jobprioritytablename, self.jobtablename)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 rets = conn.select_many(query)
             for one in rets:
                 ret[one["jobId"]] = one["priority"]
@@ -2635,10 +2549,9 @@ class DataHandler(object):
         ret = False
         try:
             for job_id, priority in job_priorites.items():
-                query = """INSERT INTO {0}("jobId", priority) VALUES('{1}', {2}) ON CONFLICT ("jobId") DO UPDATE SET  priority='{2}' """.format(
+                query = """INSERT INTO {0}("jobId", priority) VALUES('{1}', '{2}') ON CONFLICT ("jobId") DO UPDATE SET  priority='{2}' """.format(
                     self.jobprioritytablename, job_id, priority)
             with PostgresqlConn() as conn:
-                logger.info(query)
                 conn.insert_one(query)
                 conn.commit()
             ret = True
@@ -2652,7 +2565,6 @@ class DataHandler(object):
         try:
             query = """INSERT INTO %s ("projectId", "datasetId", type,"targetFormat") VALUES(%s,%s,%s,%s) ON CONFLICT (id) DO UPDATE SET status='queued'""" % (self.dataconvert,"%s","%s","%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(query,(projectId,datasetId,datasetType,targetFormat))
                 conn.insert_one(query,(projectId,datasetId,datasetType,targetFormat))
                 conn.commit()
             ret = True
@@ -2674,7 +2586,6 @@ class DataHandler(object):
                     query += " and status = %s"
                     params.append(targetStatus)
             with PostgresqlConn() as conn:
-                logger.info(query,params)
                 ret = conn.select_many(query,params)
         except Exception as e:
             logger.exception('add ConvertDataFormat Exception: %s', str(e))
@@ -2686,8 +2597,6 @@ class DataHandler(object):
         try:
             query = """select id,type,"targetFormat",status,time,"outPath" FROM %s where "projectId"=%s and "datasetId"=%s """ % (self.dataconvert,"%s","%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[projectId,datasetId])
-
                 ret = conn.select_many(query,[projectId,datasetId])
         except Exception as e:
             logger.exception('add ConvertDataFormat Exception: %s', str(e))
@@ -2707,8 +2616,6 @@ class DataHandler(object):
                 query = "update %s set status=%s where id=%s" % (self.dataconvert, "%s", "%s")
                 params = (targetStatus, id)
             with PostgresqlConn() as conn:
-                logger.info(query,params)
-
                 conn.insert_one(query,params)
                 conn.commit()
         except Exception as e:
@@ -2728,13 +2635,9 @@ class DataHandler(object):
             if len(jobType) > 0:
                 query += """ and "jobType"='%s' """% (jobType)
 
-            query += """ group by "jobStatus";""" 
-
-            logger.info(query)
+            query += """ group by "jobStatus";"""
 
             with PostgresqlConn() as conn:
-                logger.info(query)
-
                 records = conn.select_many(query)
 
             for one in records:
@@ -2753,7 +2656,6 @@ class DataHandler(object):
         try:
             query = """UPDATE %s set "isDeleted"=1 where "jobId"=%s """ % (self.jobtablename, "%s")
             with PostgresqlConn() as conn:
-                logger.info(query,[jobId])
 
                 conn.insert_one(query,[jobId])
                 conn.commit()

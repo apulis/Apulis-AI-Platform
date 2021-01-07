@@ -186,10 +186,13 @@ def GetServiceAddress(jobId):
     return ret
 
 
-def GetPod(selector):
+def GetPod(selector,namespace=None):
     podInfo = {}
     try:
-        output = kubectl_exec(" get pod -o yaml -l " + selector)
+        cmd = " get pod -o yaml -l " + selector
+        if namespace:
+            cmd += " -n "+namespace
+        output = kubectl_exec(cmd)
         podInfo = yaml.load(output)
     except Exception as e:
         logger.exception("kubectl get pod")
@@ -197,11 +200,19 @@ def GetPod(selector):
     return podInfo
 
 
-def GetLog(jobId, tail=None):
+def GetLog(jobId, tail=None,jobType=None):
     # assume our job only one container per pod.
 
     selector = "run=" + jobId
-    podInfo = GetPod(selector)
+
+    # support different namespace and custom cmd
+    namespace = None
+    cmd = ""
+    if jobType and jobType=="InferenceJob":
+        namespace = "kfserving-pod"
+        cmd =  " -c kfserving-container -n " + namespace
+
+    podInfo = GetPod(selector,namespace)
     logs = []
 
     if podInfo is not None and "items" in podInfo:
@@ -214,9 +225,9 @@ def GetLog(jobId, tail=None):
                     containerID = item["status"]["containerStatuses"][0]["containerID"].replace("docker://", "")
                     log["containerID"] = containerID
                     if tail is not None:
-                        log["containerLog"] = kubectl_exec(" logs %s --tail=%s" % (log["podName"], str(tail)))
+                        log["containerLog"] = kubectl_exec(" logs %s --tail=%s" % (log["podName"], str(tail))+cmd)
                     else:
-                        log["containerLog"] = kubectl_exec(" logs " + log["podName"])
+                        log["containerLog"] = kubectl_exec(" logs " + log["podName"] + cmd)
                     logs.append(log)
     return logs
 

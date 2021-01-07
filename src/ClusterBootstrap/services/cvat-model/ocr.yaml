@@ -1,0 +1,33 @@
+apiVersion: 'serving.kubeflow.org/v1alpha2'
+kind: 'InferenceService'
+metadata:
+  name: text-detection-0004
+  namespace: kfserving-system
+  annotations:
+    name: Text detection v4
+    type: detector
+    id: text-detection-0004
+    spec: |
+      [
+        { "id": 1, "name": "text" }
+      ]
+    framework: openvino
+    description: 'Text detector based on PixelLink architecture with MobileNetV2-like as a backbone for indoor/outdoor scenes.'
+  labels:
+    inference: system
+
+spec:
+  default:
+    predictor:
+      minReplicas: 1
+      maxReplicas: 1
+      custom:
+        resources:
+          limits:
+            memory: 5G
+          requests:
+            cpu: 100m
+        container:
+          name: kfserving-container
+          image: {{cnf["private_docker_registry"]}}apulistech/openvino.omz.intel.text-detection-0004
+          args: ['--model_name=text-detection-0004']

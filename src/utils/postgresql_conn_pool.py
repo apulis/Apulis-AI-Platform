@@ -145,11 +145,14 @@ class PostgresqlConn(object):
 
     def select_one(self, sql, params=None):
         self._cur.execute(sql, params)
-        result = [[item for item in row] for row in self._cur.fetchone()]
-        coloumns = [row[0] for row in self._cur.description]
-        result = [dict(zip(coloumns, row)) for row in result][0]
-        return result
-
+        result= self._cur.fetchone()
+        if result:
+            result = [row for row in result]
+            coloumns = [row[0] for row in self._cur.description]
+            result = dict(zip(coloumns,result))
+            return result
+        else:
+            return None
 
     def select_one_value(self, sql, params=None):
         self._cur.execute(sql, params)

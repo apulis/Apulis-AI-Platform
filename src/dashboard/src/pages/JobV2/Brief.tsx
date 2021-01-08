@@ -55,7 +55,7 @@ const Brief: FunctionComponent = () => {
       />
       <CopyableTextListItem
         primary={t('jobV2.workPath')}
-        secondary={`/home/${userName}/${job['jobParams']['workPath']}`}
+        secondary={`/home/${job['jobParams']['workPath']}`}
       />
       <CopyableTextListItem
         primary={t('jobV2.jobPath')}

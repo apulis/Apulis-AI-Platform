@@ -56,7 +56,7 @@ def save_log(jobLogDir,containerID,userId,log,order=1):
         logger.exception("write container log failed")
 
 @record
-def extract_job_log(jobId,logPath,userId):
+def extract_job_log(jobId,logPath,userId,jobType=None):
     try:
         dataHandler = DataHandler()
 
@@ -65,7 +65,8 @@ def extract_job_log(jobId,logPath,userId):
         jupyterLog = k8sUtils.getJupyterInfo(jobId)
     
         # TODO: Replace joblog manager with elastic search
-        logs = k8sUtils.GetLog(jobId, tail=None)
+
+        logs = k8sUtils.GetLog(jobId, tail=None,jobType=jobType)
 
         # Do not overwrite existing logs with empty log
         # DLTS bootstrap will generate logs for all containers.
@@ -132,7 +133,7 @@ def update_job_logs():
                         localJobPath = os.path.join(config["storage-mount-path"],jobPath)
                         logPath = os.path.join(localJobPath,"logs/joblog.txt")
 
-                        extract_job_log(job["jobId"],logPath,jobParams["userId"])
+                        extract_job_log(job["jobId"],logPath,jobParams["userId"],jobParams["jobType"])
                 except Exception as e:
                     logger.exception("handling logs from %s", job["jobId"])
         except Exception as e:

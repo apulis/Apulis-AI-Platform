@@ -396,6 +396,29 @@ def PostInferenceJob(jobParamsJsonStr):
     jobParams["workPath"] = os.path.realpath(os.path.join("/",jobParams["workPath"]))[1:]
     jobParams["jobPath"] = os.path.realpath(os.path.join("/",jobParams["jobPath"]))[1:]
 
+    try:
+        result = vc_cache.get("inference-config")
+        if not result:
+            result = k8sUtils.kubectl_exec(" get configmap -n kfserving-system inferenceservice-config -o json")
+            vc_cache["inference-config"] = result
+
+        data = json.loads(json.loads(result)["data"]["predictors"])
+        jobParams["image"] = data[jobParams["framework"]]["image"]+":"+jobParams["version"]
+
+        if jobParams["gpuType"].endswith("amd64"):
+            if jobParams["resourcegpu"] > 0:
+                jobParams["image"] += "-gpu"
+        elif jobParams["gpuType"].endswith("arm64"):
+            if jobParams["resourcegpu"] > 0:
+                jobParams["image"] += "-npu"
+            else:
+                jobParams["image"] += "-arm64"
+
+        jobParams["cmd"] = "image entrypoint"
+
+    except Exception as e:
+        logger.exception(e)
+
     dataHandler = DataHandler()
 
     if "error" not in ret:
@@ -615,30 +638,34 @@ def GetAllSupportInference():
     try:
         dataHandler = DataHandler()
         resources = dataHandler.GetAllDevice()
-        if "inference" in config:
-            for framework, items in config["inference"].items():
-                versionlist = items['allowedImageVersions']
-                tmp=collections.defaultdict(lambda :[])
-                if versionlist:
-                    for one in versionlist:
-                        if "-" in one:
-                            version,suffix = one.split("-")
-                            if suffix=="arm64":
-                                suffix = "cpu"
-                                details = get_type_and_num(resources,gpuStrList["npu"])
-                            else:
-                                details = get_type_and_num(resources, gpuStrList[suffix])
+        result = vc_cache.get("inference-config")
+        if not result:
+            result = k8sUtils.kubectl_exec(" get configmap -n kfserving-system inferenceservice-config -o json")
+            vc_cache["inference-config"] = result
 
-                        else:
-                            version,suffix = one,"amd64"
+        for framework, items in json.loads(json.loads(result)["data"]["predictors"]).items():
+            versionlist = items['allowedImageVersions']
+            tmp=collections.defaultdict(lambda :[])
+            if versionlist:
+                for one in versionlist:
+                    if "-" in one:
+                        version,suffix = one.split("-")
+                        if suffix=="arm64":
                             suffix = "cpu"
-                            details = get_type_and_num(resources, gpuStrList["gpu"])
+                            details = get_type_and_num(resources,gpuStrList["npu"])
+                        else:
+                            details = get_type_and_num(resources, gpuStrList[suffix])
 
-                        tmp[version].append({"image":"","device":suffix,"details":details})
+                    else:
+                        version,suffix = one,"amd64"
+                        suffix = "cpu"
+                        details = get_type_and_num(resources, gpuStrList["gpu"])
 
-                for current_version,item_list in tmp.items():
-                    for one in item_list:
-                        ret[framework][current_version].update(one["details"])
+                    tmp[version].append({"image":"","device":suffix,"details":details})
+
+            for current_version,item_list in tmp.items():
+                for one in item_list:
+                    ret[framework][current_version].update(one["details"])
 
                 # if "custom" in config["inference"]:
                 #     ret["custom"]["cpu"].update(get_type_and_num(resources,gpuStrList["npu"]))

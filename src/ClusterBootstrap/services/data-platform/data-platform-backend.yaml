@@ -37,6 +37,7 @@ spec:
           tcpSocket:
             port: 3088
           timeoutSeconds: 10
+
         volumeMounts:
         - mountPath: /var/log/webui
           name: dotnet-log
@@ -50,7 +51,8 @@ spec:
           name: aiplatform-model-data-pvc
 
         - mountPath: /home
-          name: home
+          name: aiplatform-model-data-pvc
+
       volumes:
       - name: dotnet-log
         hostPath:
@@ -58,12 +60,6 @@ spec:
       - name: dotnet-config
         hostPath:
           path: /etc/RestfulAPI/appsettings.json
-      - name: data
-        hostPath:
-          path: /mntdlws/nfs/label
-      - name: dataset
-        hostPath:
-          path: /mntdlws/storage
 
       - name: aiplatform-label-data-pvc
         persistentVolumeClaim:
@@ -72,6 +68,10 @@ spec:
       - name: aiplatform-model-data-pvc
         persistentVolumeClaim:
           claimName: aiplatform-model-data-pvc
+
+      - name: aiplatform-app-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-app-data-pvc
 
       - name: home
         hostPath:

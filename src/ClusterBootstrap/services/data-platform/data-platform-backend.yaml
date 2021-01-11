@@ -52,6 +52,7 @@ spec:
 
         - mountPath: /home
           name: aiplatform-model-data-pvc
+          subPath: work/
 
       volumes:
       - name: dotnet-log

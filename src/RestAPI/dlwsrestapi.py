@@ -38,7 +38,7 @@ from config import global_vars
 from DataHandler import DataHandler
 from jwt_authorization import create_jwt_token_with_message
 
-if "datasource" in config and config["datasource"] == "PostgreSQL":
+if "datasource" in config and config["datasource"] == "postgres":
     from postgresql_conn_pool import PostgresqlConn
 else:
     from mysql_conn_pool import MysqlConn
@@ -2235,7 +2235,7 @@ def dumpstacks(signal, frame):
     code = []
     logging.info("received signum %d", signal)
 
-    if "datasource" in config and config["datasource"] == "PostgreSQL":
+    if "datasource" in config and config["datasource"] == "postgres":
         logging.info("db pools connections: [%s]", str(PostgresqlConn.connection_statics()))
     else:
         logging.info("db pools connections: [%s]", str(MysqlConn.connection_statics()))

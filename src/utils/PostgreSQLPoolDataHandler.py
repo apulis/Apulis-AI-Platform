@@ -2627,9 +2627,7 @@ class DataHandler(object):
 
         try:
             query = """select "jobStatus", count(*) as count from %s where "isDeleted"=0 """ % (self.jobtablename)
-
-            if userName is not None and userName != "":
-                query += """ and "userName" = '%s' """% (userName)
+            
             if vcName is not None and vcName != "":
                 query += """ and "vcName" = '%s' """% (vcName)
             if len(jobType) > 0:

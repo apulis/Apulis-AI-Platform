@@ -618,7 +618,6 @@ class DataHandler(object):
         try:
             sql = """select "deviceType", "deviceStr", capacity,detail from %s  """ %(self.deviceStatusTableName)
             with PostgresqlConn() as conn:
-                logger.info(sql)
                 rets = conn.select_many(sql)
             for one in rets:
                 ret[one["deviceType"]] = {"deviceStr":one["deviceStr"],"capacity":one["capacity"],"detail":json.loads(one["detail"])}
@@ -631,7 +630,6 @@ class DataHandler(object):
         try:
             sql = """DELETE FROM "%s" where "deviceType"= %s """ % (self.deviceStatusTableName,"%s")
             with PostgresqlConn() as conn:
-                logger.info(sql,[deviceType])
                 conn.insert_one(sql,[deviceType])
                 conn.commit()
         except Exception as e:
@@ -1545,10 +1543,6 @@ class DataHandler(object):
         conn = None
         cursor = None
 
-        logger.info("test")
-        logger.info(vcName)
-        logger.info(jobType)
-        logger.info(jobStatus)
         try:
             conn = self.pool.get_connection()
             cursor = conn.cursor()

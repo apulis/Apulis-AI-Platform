@@ -142,6 +142,7 @@ class DistPodTemplate():
         pods = []
         gpuMapping = DataHandler().GetAllDevice()
         nums = {"ps": int(params["numps"]), "worker": int(params["numpsworker"])}
+
         for role in ["ps", "worker"]:
             for idx in range(nums[role]):
 
@@ -167,8 +168,20 @@ class DistPodTemplate():
                 # mount /pod
                 local_pod_path = job.get_hostpath(job.job_path, "%s-%d" % (role, idx))
                 pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": local_pod_path, "enabled": True})
+
                 if role == "ps":
                     pod["hostNetwork"] = False
+
+                    if "masterCmd" in params and len(params["masterCmd"]) > 0:
+                        pod["cmd"] = params["masterCmd"]
+                    else:
+                        pass
+                else:
+                    if "workerCmd" in params and len(params["workerCmd"]) > 0:
+                        pod["cmd"] = params["workerCmd"]
+                    else:
+                        pass
+
                 pods.append(pod)
 
         k8s_pods = []

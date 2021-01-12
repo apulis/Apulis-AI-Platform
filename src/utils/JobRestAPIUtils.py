@@ -411,8 +411,6 @@ def PostInferenceJob(jobParamsJsonStr):
         elif jobParams["gpuType"].endswith("arm64"):
             if jobParams["resourcegpu"] > 0:
                 jobParams["image"] += "-npu"
-            else:
-                jobParams["image"] += "-arm64"
 
         jobParams["cmd"] = "image entrypoint"
 

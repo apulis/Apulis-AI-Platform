@@ -20,7 +20,7 @@ spec:
         archType: arm64
       containers:
       - name: data-platform-backend-arm64
-        image: {{cnf["dockers"]["container"]["data-platform-backend"]["fullname"]}}
+        image: {{cnf["dockers"]["container"]["data-platform-backend"]["fullname"]}}-arm64
         imagePullPolicy: Always
         command: ["dotnet", "WebUI.dll",'--urls=http://*:3088']
         env:

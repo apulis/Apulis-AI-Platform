@@ -80,11 +80,7 @@ class DistPodTemplate():
 
         # TODO user's mountpoints first, but should after 'job_path'
         job.add_mountpoints(job.job_path_mountpoint())
-
-        # TODO: Refactor special VC dependency
-        if params["vcName"] not in vc_without_shared_storage:
-            job.add_mountpoints({"name": "home", "containerPath": "/home/{}".format(
-                job.get_alias()), "hostPath": job.get_homefolder_hostpath(), "enabled": True})
+        job.add_mountpoints(job.ssh_path_mountpoints())
 
         if "mountpoints" in params:
             job.add_mountpoints(params["mountpoints"])
@@ -93,6 +89,7 @@ class DistPodTemplate():
         if params["vcName"] not in vc_without_shared_storage:
             job.add_mountpoints(job.work_path_mountpoint())
             job.add_mountpoints(job.data_path_mountpoint())
+            job.add_mountpoints(job.home_path_mountpoint())
 
         job.add_mountpoints(job.vc_custom_storage_mountpoints())
         job.add_mountpoints(job.vc_storage_mountpoints())
@@ -101,6 +98,8 @@ class DistPodTemplate():
         params["mountpoints"] = job.mountpoints
         params["mountpoints_pvc"] = job.get_pvc_mountpoints()  # pvc deduplication
         params["init-container"] = os.environ["INIT_CONTAINER_IMAGE"]
+
+
 
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()
@@ -174,8 +173,8 @@ class DistPodTemplate():
                 pod = enable_cpu_config(pod, job.cluster)
                 
                 # mount /pod
-                local_pod_path = job.get_hostpath(job.job_path, "%s-%d" % (role, idx))
-                pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": local_pod_path, "enabled": True})
+                local_pod_path = os.path.join(job.job_path, "%s-%d" % (role, idx))
+                pod["mountpoints"].append(job.pod_path_mountpoint(local_pod_path))
 
                 if role == "ps":
                     pod["hostNetwork"] = False

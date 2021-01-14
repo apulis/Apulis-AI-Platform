@@ -158,7 +158,10 @@ then
             exit 1
         fi
     done
+
+    create_distributing_envs()
 fi
+
 
 HOST_CONFIG_FILE=/job/.hosts
 if [ "$DLWS_ROLE_NAME" = "ps" ];then

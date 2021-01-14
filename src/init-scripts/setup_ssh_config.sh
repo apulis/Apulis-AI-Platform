@@ -154,12 +154,11 @@ then
                 sleep 1
             fi
         done
+
         if [ "$succ" = "false" ] ; then
             exit 1
         fi
     done
-
-    create_distributing_envs()
 fi
 
 

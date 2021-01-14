@@ -159,7 +159,7 @@ then
         fi
     done
 
-    create_distributing_envs()
+#    create_distributing_envs()
 fi
 
 

@@ -52,12 +52,23 @@ then
     fi
 
     # TODO add ib ip to ~/.ssh/config to do "ssh ib-worker-x" without password
-    role=${host%%-*}
-    idx=${host##*-}
-    port_key=DLWS_SD_${role}${idx}_SSH_PORT
+    port_key=DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_SSH_PORT
     port=$(printenv $port_key)
 
 cat >>${SSH_CONFIG_FILE} <<EOF
+
+Host ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
+  HostName ${interface_ip}
+  Port ${port}
+  User ${DLWS_USER_NAME}
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+EOF
+
+WORKER_IB_CONFIG_FILE=/job/.ib_config
+if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
+cat >>${WORKER_IB_CONFIG_FILE} <<EOF
 
 Host ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
   HostName ${interface_ip}
@@ -80,3 +91,12 @@ EOF
   fi
 fi
 
+HOST_CONFIG_FILE=/job/.hosts
+WORKER_IB_CONFIG_FILE=/job/.ib_config
+if [ "$DLWS_ROLE_NAME" = "ps" ];then
+  if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
+  cat $HOST_CONFIG_FILE >> /etc/hosts
+
+  if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
+  cat $WORKER_IB_CONFIG_FILE >> $SSH_CONFIG_FILE
+fi

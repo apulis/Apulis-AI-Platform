@@ -2287,7 +2287,7 @@ class DataHandler(object):
             return ret
 
         try:
-            sql = "update %s set" % (self.jobtablename) + ",".join([""" "%s" = '%s' """ % (field, value) for field, value in dataFields.items()]) + " where" + "and".join([""" "%s" = '%s' """ % (field, value) for field, value in conditionFields.items()])
+            sql = "update %s set" % (self.jobtablename) + ",".join([""" "%s" = E'%s' """ % (field, value) for field, value in dataFields.items()]) + " where" + "and".join([""" "%s" = E'%s' """ % (field, value) for field, value in conditionFields.items()])
             with PostgresqlConn() as conn:
                 conn.update(sql)
                 conn.commit()

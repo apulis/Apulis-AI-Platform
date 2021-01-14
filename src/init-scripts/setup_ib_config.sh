@@ -5,6 +5,8 @@ set -x
 # find ib ip, if there is no ib interface, select an available interface
 HOST_CONFIG_FILE=/job/.hosts
 IB_CONFIG_FILE=/job/ib_config
+SSH_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/config
+
 if [ "$DLWS_ROLE_NAME" = "worker" ] && command -v ifconfig ;
 then
   interface_ip=
@@ -40,18 +42,41 @@ then
   if [ -n "$interface_ip" ]; then
     if [ ! -f $IB_CONFIG_FILE ];then touch $IB_CONFIG_FILE;fi
     if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
+
+
     if ! cat $IB_CONFIG_FILE |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX};
     then
       echo "ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}" >> $IB_CONFIG_FILE
     else
       sed "s/#ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}.*/'ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} slots=${DLWS_NUM_GPU_PER_WORKER}'/g" -i $IB_CONFIG_FILE
     fi
+
+    # TODO add ib ip to ~/.ssh/config to do "ssh ib-worker-x" without password
+    role=${host%%-*}
+    idx=${host##*-}
+    port_key=DLWS_SD_${role}${idx}_SSH_PORT
+    port=$(printenv $port_key)
+
+cat >>${SSH_CONFIG_FILE} <<EOF
+
+Host ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
+  HostName ${interface_ip}
+  Port ${port}
+  User ${DLWS_USER_NAME}
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+
+EOF
+
+    # add entry to /etc/hosts
     if ! cat $HOST_CONFIG_FILE |grep ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX} ;
     then
       echo -e "${interface_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}" >> $HOST_CONFIG_FILE
     else
       sed "s/.*ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/${interface_ip}\tib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}/" -i $HOST_CONFIG_FILE
     fi
+
+
   fi
 fi
 

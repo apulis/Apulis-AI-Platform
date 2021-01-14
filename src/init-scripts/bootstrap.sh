@@ -174,6 +174,7 @@ fi
 
 # setup npu device info for npu distributing jobs
 npu_info_dir=/home/${DLWS_USER_NAME}/.npu/${DLWS_JOB_ID}
+if [ -d /home/${DLWS_USER_NAME}/.npu ]; then chmod +w /home/${DLWS_USER_NAME}/.npu;fi
 runuser -l ${DLWS_USER_NAME} -c "mkdir -p ${npu_info_dir}"
 echo "=========================setup path done!============================="&>> ${LOG_DIR}/bootstrap.log
 

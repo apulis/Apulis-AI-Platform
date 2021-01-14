@@ -15,6 +15,8 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../uti
 import storage
 import log_utils
 
+import time
+
 logger = log_utils.get_log_instance(__name__)
 
 def invalid_entry(s):
@@ -196,7 +198,7 @@ class Job:
             logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
             return None
         else:
-            subPath = "work/" + self.params["userName"] + "/job"
+            subPath = "work/" + self.params["userName"] + "/jobs/" + time.strftime("%y%m%d")+"/"+ self.job_id
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name, 

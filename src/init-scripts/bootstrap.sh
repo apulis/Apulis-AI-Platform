@@ -192,6 +192,10 @@ set +e
 # distributing job
 if [ "$DLWS_NUM_PS" != "0" ] ; then
 
+    if [ -z "$DLWS_LAUNCH_CMD" ]; then
+	 DLWS_LAUNCH_CMD="sleep infinity"
+    fi
+
     echo $DLWS_LAUNCH_CMD
     printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
     chmod ugo+rx /pod/job_command.sh

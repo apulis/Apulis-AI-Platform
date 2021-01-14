@@ -30,6 +30,9 @@ spec:
         app: postgres-amd64
     spec:
       hostNetwork: true
+      nodeSelector:
+        postgres: active
+        archType: amd64
       containers:
       - image: postgres:11.10-alpine
         name: postgres
@@ -48,3 +51,8 @@ spec:
       - name: postgres
         hostPath:
           path: /data/postgres
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule

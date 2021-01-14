@@ -1757,7 +1757,8 @@ def UpdateEndpoints(userName, jobId, requested_endpoints, arguments, interactive
                 # For a distributed job, we set up jupyter on first worker node.
                 # PS node does not have GPU access.
                 # TODO: Simplify code logic after removing PS
-                pod_name = pod_names[1]
+                # 20210114,change to ps0,for horovod run
+                pod_name = pod_names[0]
 
             endpoint_id = "e-" + jobId + "-ipython"
 

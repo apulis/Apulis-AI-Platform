@@ -187,8 +187,23 @@ echo bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log
 set +e
 
 # Execute user's command for the job
-if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
+# distributing job
+if [ "$DLWS_NUM_PS" != "0" ] ; then
+
+    echo $DLWS_LAUNCH_CMD
+    printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
+    chmod ugo+rx /pod/job_command.sh
+    chmod ugo+rx /pod.env
+    cat /pod/job_command.sh
+
+    runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh
+    # Save exit code
+    EXIT_CODE=$?
+    echo  `date` ": ${EXIT_CODE}"  > ${PROC_DIR}/EXIT_CODE
+
+elif ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
 then
+
     runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
 else
 #    if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);

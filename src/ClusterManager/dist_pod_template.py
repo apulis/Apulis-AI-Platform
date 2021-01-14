@@ -14,6 +14,13 @@ from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
 from DataHandler import DataHandler
 
+import logging
+import logging.config
+import storage
+
+logger = logging.getLogger(__name__)
+
+
 class DistPodTemplate():
     def __init__(self, template, enable_custom_scheduler=False, secret_templates=None):
         self.template = template
@@ -47,6 +54,7 @@ class DistPodTemplate():
         pod_yaml = self.template.render(job=pod)
         pod_obj = yaml.full_load(pod_yaml)
         pod_obj["spec"]["containers"][0]["env"].append({"name": "DLWS_LAUNCH_CMD", "value": pod["cmd"]})
+
         return pod_obj
 
     def generate_pods(self, job):
@@ -177,6 +185,7 @@ class DistPodTemplate():
                 pod["mountpoints"].append(job.pod_path_mountpoint(local_pod_path))
 
                 if role == "ps":
+
                     pod["hostNetwork"] = False
 
                     if "masterCmd" in params and len(params["masterCmd"]) > 0:
@@ -184,6 +193,9 @@ class DistPodTemplate():
                     else:
                         pass
                 else:
+
+                    pod["hostNetwork"] = True
+                    
                     if "workerCmd" in params and len(params["workerCmd"]) > 0:
                         pod["cmd"] = params["workerCmd"]
                     else:

@@ -16,7 +16,7 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: postgres
+  name: postgres-arm64
   namespace: kube-system
   labels:
     app: gitlab

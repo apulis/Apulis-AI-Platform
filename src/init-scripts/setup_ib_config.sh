@@ -52,9 +52,7 @@ then
     fi
 
     # TODO add ib ip to ~/.ssh/config to do "ssh ib-worker-x" without password
-    role=${host%%-*}
-    idx=${host##*-}
-    port_key=DLWS_SD_${role}${idx}_SSH_PORT
+    port_key=DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_SSH_PORT
     port=$(printenv $port_key)
 
 cat >>${SSH_CONFIG_FILE} <<EOF

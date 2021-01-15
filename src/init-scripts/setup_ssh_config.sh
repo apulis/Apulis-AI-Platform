@@ -154,12 +154,18 @@ then
                 sleep 1
             fi
         done
+
         if [ "$succ" = "false" ] ; then
             exit 1
         fi
     done
+fi
 
-#    create_distributing_envs()
+
+HOST_CONFIG_FILE=/job/.hosts
+if [ "$DLWS_ROLE_NAME" = "ps" ];then
+  if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
+  cat $HOST_CONFIG_FILE >> /etc/hosts
 fi
 
 

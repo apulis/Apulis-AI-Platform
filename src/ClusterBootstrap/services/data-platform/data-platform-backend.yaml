@@ -51,7 +51,7 @@ spec:
           name: aiplatform-model-data-pvc
 
         - mountPath: /home
-          name: aiplatform-model-data-pvc
+          name: aiplatform-app-data-pvc
           subPath: work/
 
       volumes:
@@ -74,9 +74,6 @@ spec:
         persistentVolumeClaim:
           claimName: aiplatform-app-data-pvc
 
-      - name: home
-        hostPath:
-          path: /mntdlws/work
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

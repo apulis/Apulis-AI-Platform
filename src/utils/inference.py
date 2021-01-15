@@ -56,7 +56,7 @@ def read_class_names2(class_file_name):
 
 def query_service_domain(domain):
     my_resolver = dns.resolver.Resolver()
-    my_resolver.nameservers = ['10.96.0.10']
+    my_resolver.nameservers = ['10.68.0.2']
     answer = my_resolver.query(domain)
     for i in answer:
         return i.to_text()

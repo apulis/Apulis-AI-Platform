@@ -85,7 +85,7 @@ spec:
           topologyKey: "failure-domain.beta.kubernetes.io/region"
     podAntiAffinity:
       preferredDuringSchedulingIgnoredDuringExecution:
-      - weight: {% if jobRole == "worker" %}100{% else %}50{% endif %}
+      - weight: 50
         podAffinityTerm:
           labelSelector:
             matchExpressions:
@@ -93,7 +93,7 @@ spec:
               operator: In
               values:
               - "{{ job["jobId"] }}"
-          topologyKey: {% if jobRole == "worker" %}"kubernetes.io/hostname"{% else %}"failure-domain.beta.kubernetes.io/zone"{% endif %}
+          topologyKey: "failure-domain.beta.kubernetes.io/zone"
       {% endif %}
   {% endif %}
   {% if job["dnsPolicy"] %}

@@ -704,10 +704,10 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             singleJobInfo["jobtrainingtype"] = job_params["jobtrainingtype"]
             singleJobInfo["resourcegpu"] = job_params["resourcegpu"]
             singleJobInfo["numpsworker"] = job_params["numpsworker"] if "numpsworker" in job_params else 1
-            if "numpsworker" in job_params and int(job_params["numpsworker"]):
-                singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])/int(job_params["numpsworker"])
-            else:
-                singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])
+            # if "numpsworker" in job_params and int(job_params["numpsworker"]):
+            #     singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])/int(job_params["numpsworker"])
+            # else:
+            #     singleJobInfo["pernoderesource"] = int(job_params["resourcegpu"])
 
             # Job lists will be sorted based on and in the order of below
             # 1. non-preemptible precedes preemptible
@@ -761,14 +761,6 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
         logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]],vc_user_quota_resource,vc_name])
         
         if not sji["preemptionAllowed"] and vc_resource.CanSatisfy(sji["globalResInfo"]) and vc_user_quota_resource.CanSatisfy(sji["globalResInfo"]):
-            if sji["job"]["jobStatus"] == "queued":
-                if sji["deviceType"] in detail_resources:
-                    if sji["jobtrainingtype"] == "PSDistJob" and quota.caculate_n_th_max(detail_resources[sji["deviceType"]],sji["numpsworker"]) < sji["pernoderesource"]:
-                        continue
-                    else:
-                        if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["pernoderesource"]:
-                            continue
-                        
             vc_resource.Subtract(sji["globalResInfo"])
             vc_user_quota_resource.Subtract(sji["globalResInfo"])
             globalResInfo.Subtract(sji["globalResInfo"])
@@ -780,14 +772,6 @@ def TakeJobActions(data_handler, redis_conn, launcher, jobs):
             vc_name = sji["job"]["vcName"]
             vc_resource = vc_resources[vc_name]
             if vc_resource.CanSatisfy(sji["globalResInfo"]):
-                logger.info([sji["jobtrainingtype"], detail_resources,sji["deviceType"], sji["resourcegpu"],(sji["globalResInfo"].CategoryToCountMap)[sji["deviceType"]]])
-                if sji["job"]["jobStatus"] == "queued":
-                    if sji["deviceType"] in detail_resources:
-                        if sji["jobtrainingtype"] == "PSDistJob" and quota.caculate_n_th_max(detail_resources[sji["deviceType"]],sji["numpsworker"]) < sji["pernoderesource"]:
-                            continue
-                        else:
-                            if sji["jobtrainingtype"] != "PSDistJob" and max(detail_resources[sji["deviceType"]]) < sji["pernoderesource"]:
-                                continue
                 logger.info("TakeJobActions : job : %s : %s" % (sji["jobId"], sji["globalResInfo"].CategoryToCountMap))
                 # Strict FIFO policy not required for global (bonus) tokens since these jobs are anyway pre-emptible.
                 vc_resource.Subtract(sji["globalResInfo"])

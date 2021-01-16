@@ -201,6 +201,12 @@ class DistPodTemplate():
                     else:
                         pass
 
+                # add ai framework type to envs
+                if "frameworkType" in params:
+                    pod["envs"].append({"name": "aiframework", "value": params["frameworkType"]})
+                else:
+                    pass
+
                 pods.append(pod)
 
         k8s_pods = []

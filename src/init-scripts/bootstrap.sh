@@ -18,6 +18,10 @@ function setup_npu_config() {
 		echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
 
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		## worker pod, generate hccl.json
+                if  [ -x "$(command -v python)" ] ; then
+                     python ${SCRIPT_DIR}/setup_npu.py
+                fi
 
 	## npu distributed job - master
 	elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];

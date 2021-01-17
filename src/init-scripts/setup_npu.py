@@ -436,9 +436,12 @@ def handle_mindspore():
     # 将环境变量更新写入 root
     set_bashrc("root")
 
+    ## 3) 生成hccl_tf.json
+    if need_create_hccl() is True:
+        create_hccl_mindspore()
+    else:
+        pass
 
-    # 3) 创建hccl_ms.json
-    create_hccl_mindspore()
     return
 
 
@@ -542,8 +545,28 @@ def handle_tensorflow():
     set_bashrc("root")
 
     ## 3) 生成hccl_tf.json
-    create_hccl_tensorflow()
+    if need_create_hccl() is True:
+        create_hccl_tensorflow()
+    else:
+        pass
+
     return
+
+
+# 1) 单机训练中，需要创建hccl文件
+# 2）多机多卡中，需要在ps pod创建hccl文件, 此文件会被worker pod共同读取
+def need_create_hccl():
+    
+
+    if "DLWS_ROLE_NAME" in os.environ:
+        dlws_role_name = string.lower(os.environ["DLWS_ROLE_NAME"].strip())
+
+        ## master表示单机POD
+        ## Ps表示多机多卡ps pod
+        if dlws_role_name == "ps" or dlws_role_name == "master":
+            return True
+
+    return False
 
 
 if __name__ == "__main__":
@@ -569,6 +592,7 @@ if __name__ == "__main__":
 
     else:
 
+        # 兼容版本<v1.3.0
         create_hccl_mindspore()
         create_hccl_tensorflow()
 

@@ -57,8 +57,8 @@ then
 
     ENV_FILE=/pod.env
     SSH_ENVIRONMENT_FILE=/home/${DLWS_USER_NAME}/.ssh/environment
-    printf "export DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}" >> "${ENV_FILE}";
-    printf "export DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}" >> "${SSH_ENVIRONMENT_FILE}";
+    printf "export DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${ENV_FILE}";
+    printf "DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${SSH_ENVIRONMENT_FILE}";
 
 WORKER_IB_CONFIG_FILE=/job/.ib_config
 if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi

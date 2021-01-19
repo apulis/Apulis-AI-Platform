@@ -53,11 +53,13 @@ grep -qx "^\s*. ${ENV_FILE}" /home/${DLWS_USER_NAME}/.profile || cat << SCRIPT >
 if [ -f ${ENV_FILE} ]; then
     . ${ENV_FILE}
 fi
+
+SCRIPT
+grep -qx "^\s*. ${ENVIRONMENT_FILE}" /home/${DLWS_USER_NAME}/.profile || cat << SCRIPT >> "/home/${DLWS_USER_NAME}/.profile"
 if [ -f ${ENVIRONMENT_FILE} ]; then
     . ${ENVIRONMENT_FILE}
 fi
 SCRIPT
-
 
 
 # any command should run as ${DLWS_USER_NAME}

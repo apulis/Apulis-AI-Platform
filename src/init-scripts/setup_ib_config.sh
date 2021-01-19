@@ -55,6 +55,10 @@ then
     port_key=DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_SSH_PORT
     port=$(printenv $port_key)
 
+    ENV_FILE=/pod.env
+    printf "export DLWS_SD_${DLWS_ROLE_IDX}_SSH_PORT=${port}" >> "${ENV_FILE}" ;
+    printf "export DLWS_SD_${DLWS_ROLE_IDX}_IB_IP=${interface_ip}" >> "${ENV_FILE}" ;
+
 cat >>${SSH_CONFIG_FILE} <<EOF
 
 Host ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}

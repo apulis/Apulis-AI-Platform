@@ -183,6 +183,7 @@ class DistPodTemplate():
                 # mount /pod
                 local_pod_path = os.path.join(job.job_path, "%s-%d" % (role, idx))
                 pod["mountpoints"].append(job.pod_path_mountpoint(local_pod_path))
+                pod["mountpoints"].append(job.ssh_config_path_mountpoint(job.job_path))
 
                 if role == "ps":
 

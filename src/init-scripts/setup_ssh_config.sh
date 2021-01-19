@@ -33,6 +33,7 @@ NPU_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/npu_config
 chown ${DLWS_USER_NAME} ${SSH_CONFIG_FILE}
 chmod 600 ${SSH_CONFIG_FILE}
 
+if [ "$DLWS_ROLE_NAME" = "ps" ];then
 for host in ${host_list}
 do
     if [ "$DLWS_ROLE_NAME" = "master" ];
@@ -72,6 +73,7 @@ EOF
     # also add entry to /etc/hosts
     echo -e "${ip}\t${host}" >> /etc/hosts
 done
+fi
 
 # generate npu info for distributed npu jobs
 if [ ! -z npu_ip_list ] && [ "$role" = "worker" ]; then

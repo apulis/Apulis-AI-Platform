@@ -308,6 +308,33 @@ class Job:
                 "subPath": subPath,
                 "pvcName": pvc_name}
 
+    def ssh_config_path_mountpoint(self, relative_path):
+
+        volume_name = ""
+        subPath = ""
+        containerPath=""
+
+        storage_type = storage.PVC_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            # relative_path resembles realUserName/xxxx/xxx
+            subPath = "work/" + relative_path
+            containerPath="/home/" + self.params["userName"] + "/.ssh/config"
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return {"name": volume_name,
+                "containerPath": containerPath,
+                "enabled": True,
+                "subPath": subPath,
+                "pvcName": pvc_name}
+
     def get_pvc_mountpoints(self):
 
         pvc_mountpoints = []

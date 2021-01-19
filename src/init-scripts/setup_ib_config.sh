@@ -96,7 +96,7 @@ WORKER_IB_CONFIG_FILE=/job/.ib_config
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
   if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
   cat $HOST_CONFIG_FILE >> /etc/hosts
-
-  if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
-  cat $WORKER_IB_CONFIG_FILE >> $SSH_CONFIG_FILE
 fi
+
+if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
+cat $WORKER_IB_CONFIG_FILE >> $SSH_CONFIG_FILE

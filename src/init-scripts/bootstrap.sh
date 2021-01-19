@@ -134,6 +134,11 @@ then
 	echo $$ > $PID_FILE
 fi
 
+# setup ib config
+echo "===========================begin to setup ib config=============================="&>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/setup_ib_config.sh &>> ${LOG_DIR}/bootstrap.log
+echo "===========================setup ib config done!================================="&>> ${LOG_DIR}/bootstrap.log
+
 # Setup container
 echo "==========================begin to create user and setup env =============" &>> ${LOG_DIR}/bootstrap.log
 bash ${SCRIPT_DIR}/init_user.sh &>> ${LOG_DIR}/bootstrap.log
@@ -163,10 +168,7 @@ then
 	touch ${PROC_DIR}/JOB_READY
 fi
 
-# setup ib config
-echo "===========================begin to setup ib config=============================="&>> ${LOG_DIR}/bootstrap.log
-bash ${SCRIPT_DIR}/setup_ib_config.sh &>> ${LOG_DIR}/bootstrap.log
-echo "===========================setup ib config done!================================="&>> ${LOG_DIR}/bootstrap.log
+
 
 # create path for training jobs
 echo "=========================begin to setup path!============================="&>> ${LOG_DIR}/bootstrap.log

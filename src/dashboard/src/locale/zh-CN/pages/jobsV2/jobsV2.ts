@@ -3,7 +3,7 @@ import MyJobs from "../../../../pages/JobsV2/MyJobs"
 const index = {
     chooseCluster:'选择集群',
     myJobs:'我的任务',
-    allJobs:'所有任务'
+    allJobs:'所有任务',
 }
 const priorityField ={
     priorityIsSetSuccessfully:'优先级设置成功',

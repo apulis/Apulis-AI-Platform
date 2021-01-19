@@ -59,17 +59,6 @@ then
     printf "export DLWS_SD_${DLWS_ROLE_IDX}_SSH_PORT=${port}" >> "${ENV_FILE}" ;
     printf "export DLWS_SD_${DLWS_ROLE_IDX}_IB_IP=${interface_ip}" >> "${ENV_FILE}" ;
 
-cat >>${SSH_CONFIG_FILE} <<EOF
-
-Host ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
-  HostName ${interface_ip}
-  Port ${port}
-  User ${DLWS_USER_NAME}
-  StrictHostKeyChecking no
-  UserKnownHostsFile /dev/null
-
-EOF
-
 WORKER_IB_CONFIG_FILE=/job/.ib_config
 if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
 cat >>${WORKER_IB_CONFIG_FILE} <<EOF

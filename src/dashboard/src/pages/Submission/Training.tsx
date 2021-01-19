@@ -606,11 +606,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           setGpuNumPerDeviceOptions([8]);
         }
         setCanDistributedJob(!(gpuCapacity < 16));
-      } else {
-        console.log('---', gpuCapacity, _max)
+      } else if (allDevice[gpuType].deviceStr === 'nvidia.com/gpu') {
         setCanDistributedJob(gpuCapacity > _max);
         if (type === 'PSDistJob') {
+          setCanDistributedJob(!(gpuCapacity > _max));
           setGpuNumPerDevice(_max);
+          setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         }
       }
     }

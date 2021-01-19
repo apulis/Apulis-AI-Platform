@@ -23,6 +23,7 @@ fi
 # generate host list
 host_list="${ps_host_list} ${worker_host_list}"
 
+if [ "$DLWS_ROLE_NAME" = "ps" ];then
 # generate ~/.ssh/config
 SSH_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/config
 NPU_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/npu_config
@@ -33,7 +34,6 @@ NPU_CONFIG_FILE=/home/${DLWS_USER_NAME}/.ssh/npu_config
 chown ${DLWS_USER_NAME} ${SSH_CONFIG_FILE}
 chmod 600 ${SSH_CONFIG_FILE}
 
-if [ "$DLWS_ROLE_NAME" = "ps" ];then
 for host in ${host_list}
 do
     if [ "$DLWS_ROLE_NAME" = "master" ];

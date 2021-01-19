@@ -21,6 +21,7 @@ const index = {
   cancel: '取消',
   numberOfNodes: '节点数量',
   totalNumberOfDevice: '全部设备数量',
+  totalOfDevice: '全部设备数量',
 
 }
 const endpoints = {

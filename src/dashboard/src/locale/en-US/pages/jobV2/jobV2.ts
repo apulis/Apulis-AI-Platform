@@ -21,6 +21,7 @@ const index = {
   cancel: 'Cancel',
   numberOfNodes: 'Number of Nodes',
   numberOfDevicesPerNode: 'Number of Devices Per Node',
+  totalOfDevice: 'Total Devices',
 }
 const endpoints = {
   newInteractivePort: 'New Interactive Port',

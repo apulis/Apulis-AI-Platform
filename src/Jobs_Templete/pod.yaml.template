@@ -185,8 +185,6 @@ spec:
     - name: "dlws-scripts"
       mountPath: /pod/scripts
       readOnly: true
-    - name: ssh-volume
-      mountPath: /home/{{ job["user"] }}/.ssh
     {% for mp in job["mountpoints"] %}
     {% if mp.enabled %}
     - mountPath: {{ mp.containerPath }}
@@ -295,8 +293,6 @@ spec:
   - name: "dlws-scripts"
     configMap:
       name: "dlws-scripts"
-  - name: ssh-volume
-    emptyDir: {}
   - name: dlts-runtime
     emptyDir: {}
   {% if not job["dnsPolicy"] %}

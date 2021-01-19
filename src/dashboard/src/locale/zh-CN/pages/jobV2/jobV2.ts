@@ -18,7 +18,10 @@ const index = {
   imageNameReg: '只允许数字，字母和下划线的组合',
   imageVersionReg: '只允许数字，字母和小数点',
   confirm: '确定',
-  cancel: '取消'
+  cancel: '取消',
+  numberOfNodes: '节点数量',
+  totalNumberOfDevice: '全部设备数量',
+  totalOfDevice: '全部设备数量',
 
 }
 const endpoints = {

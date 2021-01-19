@@ -58,6 +58,7 @@ then
     ENV_FILE=/pod.env
     SSH_ENVIRONMENT_FILE=/home/${DLWS_USER_NAME}/.ssh/environment
 #    printf "export DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${ENV_FILE}";
+    sed -i "/DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP/d" ${ENV_FILE}
     printf "DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${SSH_ENVIRONMENT_FILE}";
 
 WORKER_IB_CONFIG_FILE=/job/.ib_config

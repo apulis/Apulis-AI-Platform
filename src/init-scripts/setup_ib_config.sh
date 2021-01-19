@@ -56,8 +56,9 @@ then
     port=$(printenv $port_key)
 
     ENV_FILE=/pod.env
-    printf "export DLWS_SD_${DLWS_ROLE_IDX}_SSH_PORT=${port}" >> "${ENV_FILE}" ;
-    printf "export DLWS_SD_${DLWS_ROLE_IDX}_IB_IP=${interface_ip}" >> "${ENV_FILE}" ;
+    SSH_ENVIRONMENT_FILE=/home/${DLWS_USER_NAME}/.ssh/environment
+#    printf "export DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${ENV_FILE}";
+    printf "DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${SSH_ENVIRONMENT_FILE}";
 
 WORKER_IB_CONFIG_FILE=/job/.ib_config
 if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
@@ -91,5 +92,8 @@ if [ "$DLWS_ROLE_NAME" = "ps" ];then
   cat $HOST_CONFIG_FILE >> /etc/hosts
   if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
   cat $WORKER_IB_CONFIG_FILE >> $SSH_CONFIG_FILE
+
 fi
 
+ENV_FILE=/pod.env
+sed -i "/_IB_IP/d" ${ENV_FILE}

@@ -92,6 +92,7 @@ if [ "$DLWS_ROLE_NAME" = "ps" ];then
   cat $HOST_CONFIG_FILE >> /etc/hosts
   if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
   cat $WORKER_IB_CONFIG_FILE >> $SSH_CONFIG_FILE
+  ENV_FILE=/pod.env
   sed -i "/_IB_IP/d" ${ENV_FILE}
 fi
 

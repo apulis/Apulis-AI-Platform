@@ -325,15 +325,16 @@ class Job:
             return None
         else:
             # relative_path resembles realUserName/xxxx/xxx
-            subPath = "work/" + relative_path
-            containerPath="/home/" + self.params["userName"] + "/.ssh/config"
+            subPath = "work/" + relative_path + "/.ssh"
+            containerPath="/home/" + self.params["userName"] + "/.ssh/"
 
         logger.info("return mount point, subPath(%s)" % (subPath))
         return {"name": volume_name,
                 "containerPath": containerPath,
                 "enabled": True,
                 "subPath": subPath,
-                "pvcName": pvc_name}
+                "pvcName": pvc_name,
+                "type": "FileOrCreate"}
 
     def get_pvc_mountpoints(self):
 

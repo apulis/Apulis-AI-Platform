@@ -14,4 +14,3 @@ module.exports = compose([
   serve('build', { maxage: 10 * 60 * 1000 }),
   index
 ])
-

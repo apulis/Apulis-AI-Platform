@@ -1382,7 +1382,7 @@ class DataHandler(object):
 
 
             ## all jobs
-            if jobGroup and jobStatus.lower() != "all":
+            if jobStatus.lower() != "all" and len(jobStatus) > 0:
                 query += """ and "jobStatus" = '%s'""" % jobStatus
             else:
                 pass

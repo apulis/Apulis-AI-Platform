@@ -1,6 +1,16 @@
+* release-v1.5.0
+
+    + 预置模型和数据集
+    + 模型评估
+    + 中心推理
+    + 支持Jyputerlab, ssh，tensorboard等交互式开发
+    + 支持自定义镜像管理
+    + 支持自定义镜像库
+    + 支持任务管理
+    + 升级UI，更好的使用体验
+
 * release-0.1.0
 
-Apulis Platform 初创版本！同时支持x86-amd64 GPU，华为昇腾服务器atlas NPU的训练作业！
     + 支持GPU,NPU异构资源管理
     + 支持单机多卡，多机多卡训练业务
     + 支持训练参数管理，作业管理
@@ -11,12 +21,12 @@ Apulis Platform 初创版本！同时支持x86-amd64 GPU，华为昇腾服务器
 
 * release-0.1.3-beta
 
-  + 修复Bug
-  + 优化试用体验
-  + 预置 Tensorflow 1.15 NPU训练模板和镜像；Mindspor 0.5.0 训练模板和镜像；须联系技术支持团队
+    + 修复Bug
+    + 优化试用体验
+    + 预置 Tensorflow 1.15 NPU训练模板和镜像；Mindspor 0.5.0 训练模板和镜像；须联系技术支持团队
 
 * release-0.1.6
 
-  + 新增用户权限和用户资源限制
-  + 灵活调度npu,gpu资源
-  + 修复Bug,平台优化
+    + 新增用户权限和用户资源限制
+    + 灵活调度npu,gpu资源
+    + 修复Bug,平台优化

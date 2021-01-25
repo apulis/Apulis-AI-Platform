@@ -184,6 +184,7 @@ DLWS_ROLE_NAME
 DLWS_ROLE_IDX
 )
 
+if [ "$role" = "ps" ];then
 SSH_ENVIRONMENT_FILE=/home/${DLWS_USER_NAME}/.ssh/environment
 for env_key in "${envs[@]}" ; do
     if [ "`printenv $env_key`" != "" ] ; then
@@ -194,6 +195,7 @@ for env_key in "${envs[@]}" ; do
 done
 chown ${DLWS_USER_NAME} ${SSH_ENVIRONMENT_FILE}
 chmod 600 ${SSH_ENVIRONMENT_FILE}
+fi
 }
 
 

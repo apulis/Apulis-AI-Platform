@@ -83,7 +83,7 @@ HOST_CONFIG_FILE=/job/.hosts
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
   files=/job/.ib_config-worker-*
   files_list=${files[@]}
-  until [ ${#files_list[@]} != ${DLWS_NUM_WORKER} ]; do
+  until [ ${#files_list[@]} == ${DLWS_NUM_WORKER} ]; do
       echo "waiting for all worker write ib ip done"
       sleep 1
   done

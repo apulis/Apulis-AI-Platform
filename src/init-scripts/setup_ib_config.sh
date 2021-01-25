@@ -86,6 +86,8 @@ if [ "$DLWS_ROLE_NAME" = "ps" ];then
   until [ ${#files_list[@]} == ${DLWS_NUM_WORKER} ]; do
       echo "waiting for all worker write ib ip done"
       sleep 1
+      files=/job/.ib_config-worker-*
+      files_list=${files[@]}
   done
 
   if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi

@@ -10,6 +10,11 @@ import string
 import random
 
 
+# 此脚本与create_script.sh由算法同事
+# 帮忙维护，当代码变更时需更新此版本号
+code_version="1.0"
+
+
 def create_hccl_mindspore():
 
     done = 0
@@ -391,24 +396,24 @@ def handle_mindspore():
     envs["osflag"] = get_os_flag()
     envs["gnu_arch"] = get_gnu_arch_flag()
 
-    # tensorflow环境变量模板
-    tensorflow_envs = [
-
-        "PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
-        "LD_LIBRARY_PATH=/usr/lib/${gnu_arch}-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:$LD_LIBRARY_PATH",
-        "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe",
-        "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/",
-        "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp",
-
-        "SOC_VERSION=Ascend910",
-        "RANK_SIZE=1",
-        "POD_NAME=${DLWS_JOB_ID}",
-        "JOB_ID=${RANDOM}"
+    # mindspore环境变量模板
+    mindspore_envs = [
+      "PYTHONPATH=/usr/local/lib/python3.7/site-packages/mindspore/lib:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
+      "LD_LIBRARY_PATH=/usr/lib/${gnu_arch}-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/fwkacllib/lib64:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/opp/op_impl/built-in/ai_core/tbe/op_tiling:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:/usr/local/Ascend/fwkacllib/lib64/:/usr/local/lib/python3.7/site-packages/mindspore/lib/:/usr/local/lib:/home/clang+llvm/lib/:$LD_LIBRARY_PATH",
+      "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:/usr/local/Ascend/ascend-toolkit/latest/opp/op_impl/built-in/ai_core/tbe",
+      "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/fwkacllib/ccec_compiler/bin/:/home/clang+llvm/bin/",
+      "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/opp",
+      "LLVM_CONFIG=/home/clang+llvm/bin/llvm-config",
+      "SOC_VERSION=Ascend910",
+      "POD_NAME=${DLWS_JOB_ID}",
+      "JOB_ID=${RANDOM}",
+      "RANK_SIZE=1",
+      "ASCEND_GLOBAL_LOG_LEVEL=3",
+      "ASCEND_GLOBAL_EVENT_ENABLE=0"
     ]
 
-
     # 模板渲染
-    for item in tensorflow_envs:
+    for item in mindspore_envs:
 
         tpl = string.Template(item)
         new_item = tpl.safe_substitute(envs)
@@ -439,6 +444,16 @@ def handle_mindspore():
     ## 3) 生成hccl_tf.json
     if need_create_hccl() is True:
         create_hccl_mindspore()
+    else:
+        pass
+
+    # 4) 分布式训练任务，环境配置同步
+    if is_distributed_job() is True and is_ps_pod() is True:
+        notify()
+
+    elif is_distributed_job() is True and is_worker_pod() is True:
+        wait()
+
     else:
         pass
 
@@ -499,16 +514,18 @@ def handle_tensorflow():
 
     # 模板配置
     tensorflow_envs = [
-        "PYTHONPATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
-        "LD_LIBRARY_PATH=/usr/lib/${gnu_arch}-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:$LD_LIBRARY_PATH",
-        "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe",
-        "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/",
-        "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp",
-
-        "SOC_VERSION=Ascend910",
-        "RANK_SIZE=1",
-        "POD_NAME=${DLWS_JOB_ID}",
-        "JOB_ID=${RANDOM}"
+      "PYTHONPATH=/usr/local/lib/python3.7/site-packages/mindspore/lib:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:${PYTHONPATH}",
+      "LD_LIBRARY_PATH=/usr/lib/${gnu_arch}-linux-gnu/hdf5/serial:/usr/local/Ascend/add-ons/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/fwkacllib/lib64:/usr/local/Ascend/add-ons:/home/HwHiAiUser/Ascend/nnae/latest/fwkacllib/lib64:/usr/local/Ascend/driver/lib64/common/:/usr/local/Ascend/driver/lib64/driver/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/opp/op_impl/built-in/ai_core/tbe/op_tiling:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/atc/lib64:/usr/local/Ascend/fwkacllib/lib64/:/usr/local/lib/python3.7/site-packages/mindspore/lib/:/usr/local/lib:/home/clang+llvm/lib/:$LD_LIBRARY_PATH",
+      "TBE_IMPL_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/opp/op_impl/built-in/ai_core/tbe:/usr/local/Ascend/ascend-toolkit/latest/opp/op_impl/built-in/ai_core/tbe",
+      "PATH=$PATH:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/${osflag}-linux/fwkacllib/ccec_compiler/bin/:/home/HwHiAiUser/Ascend/ascend-toolkit/latest/fwkacllib/ccec_compiler/bin/:/home/clang+llvm/bin/",
+      "ASCEND_OPP_PATH=/home/HwHiAiUser/Ascend/ascend-toolkit/latest/opp",
+      "LLVM_CONFIG=/home/clang+llvm/bin/llvm-config",
+      "SOC_VERSION=Ascend910",
+      "POD_NAME=${DLWS_JOB_ID}",
+      "JOB_ID=${RANDOM}",
+      "RANK_SIZE=1",
+      "ASCEND_GLOBAL_LOG_LEVEL=3",
+      "ASCEND_GLOBAL_EVENT_ENABLE=0"
     ]
 
     envs_to_add["DEVICE_ID"] = device_id
@@ -544,13 +561,101 @@ def handle_tensorflow():
     # 更新用户bash脚本
     set_bashrc("root")
 
-    ## 3) 生成hccl_tf.json
+    # 3) 生成hccl_tf.json
     if need_create_hccl() is True:
         create_hccl_tensorflow()
     else:
         pass
 
+    # 4) 分布式训练任务，环境配置同步
+    if is_distributed_job() is True and is_ps_pod() is True:
+        notify()
+
+    elif is_distributed_job() is True and is_worker_pod() is True:
+        wait()
+
+    else:
+        pass
+
+
     return
+
+# 是否分布式训练任务
+def is_distributed_job():
+
+    if "DLWS_NUM_PS" in os.environ:
+        dlws_num_ps = os.environ["DLWS_NUM_PS"].strip().lower()
+
+        if len(dlws_num_ps) > 0 and int(dlws_num_ps) >0:
+            print("is_distributed_job return true")
+            return True
+
+    return False
+
+# 是否master节点
+def is_ps_pod():
+
+    if "DLWS_ROLE_NAME" in os.environ:
+        dlws_role_name = os.environ["DLWS_ROLE_NAME"].strip().lower()
+
+        ## Ps表示多机多卡ps pod
+        if dlws_role_name == "ps":
+            return True
+
+    return False
+
+
+# 是否worker节点
+def is_worker_pod():
+
+    if "DLWS_ROLE_NAME" in os.environ:
+        dlws_role_name = os.environ["DLWS_ROLE_NAME"].strip().lower()
+
+        ## Ps表示多机多卡ps pod
+        if dlws_role_name == "worker":
+            return True
+
+    return False
+
+
+# 分布式训练任务 
+# ps节点在环境预备结束后，创建setup_environment_done文件
+# 用作环境准备完成的标识
+def notify():
+
+    # 单机训练任务，只有一个POD不需要做协同
+    if is_distributed_job() is False:
+        return
+
+    setup_environment_done = "/home/" + os.environ["DLWS_USER_NAME"] + "/.npu/" + os.environ["DLWS_JOB_ID"] + "/setup_environment_done"
+
+    # 多机多卡训练，ps节点预备环境
+    if not os.path.exists(setup_environment_done):
+        open(setup_environment_done, 'a').close()
+
+    return
+
+# 分布式训练任务 
+# worker节点通过检查setup_environment_done文件
+# 来判断环境准备是否结束
+def wait():
+
+    # 单机训练任务，只有一个POD不需要等待环境
+    if is_distributed_job() is False:
+        return
+
+    setup_environment_done = "/home/" + os.environ["DLWS_USER_NAME"] + "/.npu/" + os.environ["DLWS_JOB_ID"] + "/setup_environment_done"
+
+    # 多机多卡训练，ps节点预备环境
+    while True:
+        if not os.path.exists(setup_environment_done):
+            print("===========", setup_environment_done, " not found. wait")
+            time.sleep(1)
+        else:
+            break
+
+    return
+
 
 
 # 1) 单机训练中，需要创建hccl文件
@@ -559,7 +664,7 @@ def need_create_hccl():
     
 
     if "DLWS_ROLE_NAME" in os.environ:
-        dlws_role_name = string.lower(os.environ["DLWS_ROLE_NAME"].strip())
+        dlws_role_name = os.environ["DLWS_ROLE_NAME"].strip().lower()
 
         ## master表示单机POD
         ## Ps表示多机多卡ps pod
@@ -579,7 +684,7 @@ if __name__ == "__main__":
     #    仅在JOB为单机节点或者 分布式任务的PS节点被执行
     if "aiframework" in os.environ:
 
-        framework = string.lower(os.environ["aiframework"].strip())
+        framework = os.environ["aiframework"].strip().lower()
 
         if framework == "tensorflow":
             handle_tensorflow()

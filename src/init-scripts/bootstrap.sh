@@ -159,18 +159,21 @@ if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
 then
   echo "=========================begin to setup ssh!============================="&>> ${LOG_DIR}/bootstrap.log
     bash ${SCRIPT_DIR}/setup_ssh_config.sh &>> ${LOG_DIR}/bootstrap.log
+
 	touch ${PROC_DIR}/ROLE_READY
 	echo "=========================setup ssh done!================================"&>> ${LOG_DIR}/bootstrap.log
+
+# setup ib config
+echo "===========================begin to setup ib config=============================="&>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/setup_ib_config.sh &>> ${LOG_DIR}/bootstrap.log
+echo "===========================setup ib config done!================================="&>> ${LOG_DIR}/bootstrap.log
 
 	# Setup job
 	# TODO
 	touch ${PROC_DIR}/JOB_READY
 fi
 
-# setup ib config
-echo "===========================begin to setup ib config=============================="&>> ${LOG_DIR}/bootstrap.log
-bash ${SCRIPT_DIR}/setup_ib_config.sh &>> ${LOG_DIR}/bootstrap.log
-echo "===========================setup ib config done!================================="&>> ${LOG_DIR}/bootstrap.log
+
 
 
 # create path for training jobs

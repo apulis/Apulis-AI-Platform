@@ -10,7 +10,6 @@ WORKER_IB_CONFIG_FILE=/job/.ib_config-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
 
 
 if [ ! -f $IB_CONFIG_FILE ];then touch $IB_CONFIG_FILE;fi
-if [ ! -f $WORKER_IB_CONFIG_FILE ];then touch $WORKER_IB_CONFIG_FILE;fi
 
 get_ib_ip(){
   interface_ip=
@@ -63,9 +62,6 @@ then
     port=$(printenv $port_key)
 
     ENV_FILE=/pod.env
-    SSH_PRE_ENVIRONMENT_FILE=/job/.sshenv-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
-    printf "DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${SSH_PRE_ENVIRONMENT_FILE}";
-
     ENVIRONMENT_FILE=/job/.env-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
     printf "export DLWS_SD_${DLWS_ROLE_NAME}${DLWS_ROLE_IDX}_IB_IP=${interface_ip}\n" >> "${ENVIRONMENT_FILE}";
 
@@ -80,6 +76,21 @@ Host ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
 
 EOF
 
+# wait for 3600 seconds
+for i in `seq 1 3600` ; do
+
+   echo "checking $signal_file"
+
+   if test -f "$signal_file"; then
+       succ=true
+       echo "$signal_file has been created "
+       break
+   else
+       echo "$signal_file not found. wait 1 second"
+       sleep 1
+   fi
+done
+
   fi
 fi
 
@@ -89,18 +100,25 @@ if [ "$DLWS_ROLE_NAME" = "ps" ];then
   cat $HOST_CONFIG_FILE >> /etc/hosts
 
   for i in /job/.ib_config-worker-*;do
+    ((config_cnt++))
     cat $i >> $SSH_CONFIG_FILE
   done
 
-  for i in /job/.sshenv-worker-*;do
-    cat $i >> $SSH_ENVIRONMENT_FILE
-  done
-
   for i in /job/.env-worker-*;do
+    ((env_cnt++))
     cat $i >> /job/.env
   done
 
+  echo 1 > /job/ib_ready
+fi
+
+if [ "$DLWS_ROLE_NAME" = "worker" ];then
+  until [ -f $HOST_CONFIG_FILE ]; do
+      echo "waiting for ps0 sync ib message"
+      sleep 1
+  done
 fi
 
 ENV_FILE=/pod.env
 sed -i "/_IB_IP/d" ${ENV_FILE}
+

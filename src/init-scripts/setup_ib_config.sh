@@ -113,7 +113,7 @@ if [ "$DLWS_ROLE_NAME" = "ps" ];then
 fi
 
 if [ "$DLWS_ROLE_NAME" = "worker" ];then
-  until [ -f $HOST_CONFIG_FILE ]; do
+  until [ -f /job/ib_ready ]; do
       echo "waiting for ps0 sync ib message"
       sleep 1
   done

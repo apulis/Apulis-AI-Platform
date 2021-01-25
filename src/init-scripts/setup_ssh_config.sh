@@ -196,59 +196,8 @@ chown ${DLWS_USER_NAME} ${SSH_ENVIRONMENT_FILE}
 chmod 600 ${SSH_ENVIRONMENT_FILE}
 }
 
-# for distributing job,
-# worker pods must wait for ps pod to setup ssh config
-# wait for ssh config
-function wait_signal() {
-
-   succ=false
-   signal_file=/home/${DLWS_USER_NAME}/.ssh/setup_ssh_done
-   
-   # wait for 3600 seconds
-   for i in `seq 1 3600` ; do
-
-       echo "checking $signal_file"
-
-       if test -f "$signal_file"; then
-           succ=true
-           echo "$signal_file has been created "
-           break
-       else
-           echo "$signal_file not found. wait 1 second"
-           sleep 1
-       fi
-   done
-
-   if [ "$succ" = "false" ] ; then
-       echo "$signal_file not found. exit"
-       exit 1
-   fi
-}
-
-
-# notify worker pods setting ssh config complete
-function notify() {
-
-   signal_file=/home/${DLWS_USER_NAME}/.ssh/setup_ssh_done
-   touch $signal_file
-}
 
 function setup_root_ssh() {
-  
-    # if this is worker pod, we need to wait for 
-    # ps pod to setup ssh config file
-
-    # there are 3 types of pods: 
-    # 1) master - single machine job
-    # 2) ps     - admin pod of distributed job
-    # 3) worker - worker pod of distributed job
-    if is_worker_pod ; then
-        wait_signal 
-
-    else
-	notify
-    fi
-
     # set up ssh config for root user
     mkdir -p /root/.ssh && cp /home/${DLWS_USER_NAME}/.ssh/* /root/.ssh/ && chown root /root/.ssh/* && chmod 600 /root/.ssh/*
 }

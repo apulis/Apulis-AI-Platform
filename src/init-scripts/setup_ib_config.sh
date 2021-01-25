@@ -81,16 +81,21 @@ fi
 
 HOST_CONFIG_FILE=/job/.hosts
 if [ "$DLWS_ROLE_NAME" = "ps" ];then
+  files=/job/.ib_config-worker-*
+  files_list=${files[@]}
+  until [ ${#files_list[@]} != ${DLWS_NUM_WORKER} ]; do
+      echo "waiting for all worker write ib ip done"
+      sleep 1
+  done
+
   if [ ! -f $HOST_CONFIG_FILE ];then touch $HOST_CONFIG_FILE;fi
   cat $HOST_CONFIG_FILE >> /etc/hosts
 
   for i in /job/.ib_config-worker-*;do
-    ((config_cnt++))
     cat $i >> $SSH_CONFIG_FILE
   done
 
   for i in /job/.env-worker-*;do
-    ((env_cnt++))
     cat $i >> /job/.env
   done
 

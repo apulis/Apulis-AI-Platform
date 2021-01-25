@@ -76,21 +76,6 @@ Host ib-${DLWS_ROLE_NAME}-${DLWS_ROLE_IDX}
 
 EOF
 
-# wait for 3600 seconds
-for i in `seq 1 3600` ; do
-
-   echo "checking $signal_file"
-
-   if test -f "$signal_file"; then
-       succ=true
-       echo "$signal_file has been created "
-       break
-   else
-       echo "$signal_file not found. wait 1 second"
-       sleep 1
-   fi
-done
-
   fi
 fi
 

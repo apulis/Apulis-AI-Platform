@@ -30,7 +30,7 @@ buildPlugin ( {
                 ['src/ClusterBootstrap/build/restfulapi2', 'cp -r ../../../ClusterManager ClusterManager'],
                 ['src/ClusterBootstrap/build/restfulapi2', 'cp ../../../../version-info version-info']
             ],
-            'imageName': 'apulistech/restfulapi2',
+            'imageName': 'apulistech/dlworkspace-restfulapi2',
             'directory': 'src/ClusterBootstrap/build/restfulapi2',
             'arch': ['amd64','arm64']
         ],
@@ -44,7 +44,7 @@ buildPlugin ( {
                 ['src/ClusterBootstrap', 'cp config.yaml.template config.yaml'],
                 ['src/ClusterBootstrap/build/webui3', 'cp -rf ../../../dashboard/* .']
             ],
-            'imageName': 'apulistech/webui3',
+            'imageName': 'apulistech/dlworkspace-webui3',
             'directory': 'src/ClusterBootstrap/build/webui3',
             'arch': ['amd64','arm64']
         ]

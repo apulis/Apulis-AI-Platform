@@ -22,6 +22,7 @@ else
     adduser --force-badname --home /home/${DLWS_USER_NAME} --shell /bin/bash --uid ${DLWS_UID}  -gecos '' --gid ${DLWS_GID} --disabled-password ${DLWS_USER_NAME}
     usermod -p $(echo ${DLTS_JOB_TOKEN} | openssl passwd -1 -stdin) ${DLWS_USER_NAME}
 
+    rm /home/${DLWS_USER_NAME}/.ssh/* -rf
     chown ${DLWS_USER_NAME} /home/${DLWS_USER_NAME}/ /home/${DLWS_USER_NAME}/.profile /home/${DLWS_USER_NAME}/.ssh || /bin/true
     chmod 700 /home/${DLWS_USER_NAME}/.ssh || /bin/true
     chmod 755 /home/${DLWS_USER_NAME} || /bin/true

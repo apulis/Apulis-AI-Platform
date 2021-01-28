@@ -9,7 +9,7 @@ from jinja2 import Template
 from job import Job
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
-from config import config
+import config
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
 from DataHandler import DataHandler

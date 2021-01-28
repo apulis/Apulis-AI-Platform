@@ -10,7 +10,7 @@ import re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
-from config import config
+import config
 from DataHandler import DataHandler
 
 import logging

@@ -37,7 +37,7 @@ def GetResourceLimit(device_type, resource_type):
             return limits[ResourceLimit.CPU]
 
         elif resource_type == ResourceLimit.MEM and ResourceLimit.MEM in limits:
-            return limits[ResourceLimit.CPU]
+            return limits[ResourceLimit.MEM]
 
         else:
             pass

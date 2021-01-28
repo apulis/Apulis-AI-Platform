@@ -211,7 +211,7 @@ class PodTemplate():
             quota = config.GetResourceLimit(device_type, config.ResourceLimit.CPU)
             if quota is not None:
                 pod["cpulimit"]=quota
-                logger.info("job-%s quota(%s)" % (job.job_id, str(quota)))
+                logger.info("job-%s cpu quota(%s)" % (job.job_id, str(quota)))
             else:
                 logger.info("job-%s cpu quota is none" % (job.job_id))
 
@@ -219,7 +219,7 @@ class PodTemplate():
             quota = config.GetResourceLimit(device_type, config.ResourceLimit.MEM)
             if quota is not None:
                 pod["memorylimit"]=quota
-                logger.info("job-%s quota(%s)" % (job.job_id, str(quota)))
+                logger.info("job-%s mem quota(%s)" % (job.job_id, str(quota)))
             else:
                 logger.info("job-%s mem quota is none" % (job.job_id))
 

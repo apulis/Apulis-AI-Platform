@@ -158,15 +158,31 @@ def remove_creds(job):
             i_p.pop("username", None)
             i_p.pop("password", None)
 
+def can_fetch_list_head(config, field):
+
+    if field in config and type(config[field]) == list and len(config[field]) > 0:
+        return True
+    
+    else:
+        return False
+
 def set_duration(job):
 
     if job["jobStatus"] in ["running","killing","pausing"]:
-        if "startedAt" in job["jobStatusDetail"][0]:
+        if can_fetch_list_head(job, "jobStatusDetail") is True and "startedAt" in job["jobStatusDetail"][0]:
             job["duration"] = int(time.time()) - int(time.mktime(time.strptime(job["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S")))
-    elif job["jobStatus"] in ["failed","finished","paused","killed"] and "finishedAt" in job["jobStatusDetail"][0] and "startedAt" in job["jobStatusDetail"][0]:
+
+        else:
+            logger.info("you cant set duration due to jobStatusDetail err. job is %s" % (str(job)))
+    
+    elif job["jobStatus"] in ["failed","finished","paused","killed"] and can_fetch_list_head(job, "jobStatusDetail") is True and "finishedAt" in job["jobStatusDetail"][0] and "startedAt" in job["jobStatusDetail"][0]:
         job["duration"] = int(time.mktime(time.strptime(job["jobStatusDetail"][0]["finishedAt"][:19],"%Y-%m-%dT%H:%M:%S"))) - int(time.mktime(time.strptime(job["jobStatusDetail"][0]["startedAt"][:19],"%Y-%m-%dT%H:%M:%S")))
 
+    else: 
+        logger.info("you cant set duration. job is %s" % (str(job)))
+
     return
+
 
 def generate_response(result):
     resp = jsonify(result)

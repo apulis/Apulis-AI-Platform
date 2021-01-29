@@ -10,7 +10,7 @@ import re
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
-from config import config
+import config
 from DataHandler import DataHandler
 
 import logging
@@ -75,6 +75,7 @@ class PodTemplate():
         # because user's cmd can be multiple lines, should add after yaml load
         resource_obj = yaml.full_load(pod_yaml)
         return resource_obj
+
 
     def generate_pods(self, job):
         """
@@ -198,9 +199,30 @@ class PodTemplate():
         gpuMapping = DataHandler().GetAllDevice()
 
         for idx,pod in enumerate(pods):
+
             pod["numps"] = 0
             pod["numworker"] = 1
             pod["fragmentGpuJob"] = True
+
+            # set cpu limits and memory limits
+            device_type = params["gpuType"] 
+
+            # cpu
+            quota = config.GetResourceLimit(device_type, config.ResourceLimit.CPU)
+            if quota is not None:
+                pod["cpulimit"]=quota
+                logger.info("job-%s cpu quota(%s)" % (job.job_id, str(quota)))
+            else:
+                logger.info("job-%s cpu quota is none" % (job.job_id))
+
+            # memory
+            quota = config.GetResourceLimit(device_type, config.ResourceLimit.MEM)
+            if quota is not None:
+                pod["memorylimit"]=quota
+                logger.info("job-%s mem quota(%s)" % (job.job_id, str(quota)))
+            else:
+                logger.info("job-%s mem quota is none" % (job.job_id))
+
 
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]

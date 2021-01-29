@@ -1116,7 +1116,7 @@ class DataHandler(object):
     def UpdateModelConversionFileId(self, jobId, fileId):
         ret = False
         try:
-            sql = """UPDATE %s SET "fileId"='%s' WHERE "jobID"='%s'""" % (self.modelconversionjobtablename, fileId, jobId)
+            sql = """UPDATE %s SET "fileId"='%s' WHERE "jobId"='%s'""" % (self.modelconversionjobtablename, fileId, jobId)
             with PostgresqlConn() as conn:
                 conn.update(sql)
                 conn.commit()
@@ -1129,7 +1129,7 @@ class DataHandler(object):
     def UpdateModelConversionStatus(self, jobId, status):
         ret = False
         try:
-            sql = """UPDATE %s SET status='%s' WHERE "jobID"='%s'""" % (self.modelconversionjobtablename, status, jobId)
+            sql = """UPDATE %s SET status='%s' WHERE "jobId"='%s'""" % (self.modelconversionjobtablename, status, jobId)
             with PostgresqlConn() as conn:
                 conn.update(sql)
                 conn.commit()
@@ -1189,7 +1189,7 @@ class DataHandler(object):
     def GetModelConvertInfoByOutputpath(self, outputpath):
         ret = None
         try:
-            query = """SELECT "jobId", inputPath", "outputPath", type, status, "fileId" FROM %s where "outputPath"='%s' ORDER BY id DESC""" % (
+            query = """SELECT "jobId", "inputPath", "outputPath", type, status, "fileId" FROM %s where "outputPath"='%s' ORDER BY id DESC""" % (
                 self.modelconversionjobtablename, outputpath
             )
             with PostgresqlConn() as conn:

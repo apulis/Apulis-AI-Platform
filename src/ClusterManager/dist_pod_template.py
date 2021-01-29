@@ -9,7 +9,7 @@ from jinja2 import Template
 from job import Job
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
-from config import config
+import config
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
 from DataHandler import DataHandler
@@ -179,7 +179,26 @@ class DistPodTemplate():
                 pod["distRoleIdx"] = idx
                 pod["distId"] = "%s%d" % (role, idx)
                 pod = enable_cpu_config(pod, job.cluster)
-                
+
+                # set cpu limits and memory limits
+                device_type = params["gpuType"]
+
+                # cpu
+                quota = config.GetResourceLimit(device_type, config.ResourceLimit.CPU)
+                if quota is not None:
+                    pod["cpulimit"]=quota
+                    logger.info("job-%s cpu quota(%s)" % (job.job_id, str(quota)))
+                else:
+                    logger.info("job-%s cpu quota is none" % (job.job_id))
+
+                # memory
+                quota = config.GetResourceLimit(device_type, config.ResourceLimit.MEM)
+                if quota is not None:
+                    pod["memorylimit"]=quota
+                    logger.info("job-%s mem quota(%s)" % (job.job_id, str(quota)))
+                else:
+                    logger.info("job-%s mem quota is none" % (job.job_id))
+
                 # mount /pod
                 local_pod_path = os.path.join(job.job_path, "%s-%d" % (role, idx))
                 pod["mountpoints"].append(job.pod_path_mountpoint(local_pod_path))

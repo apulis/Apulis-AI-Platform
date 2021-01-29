@@ -81,16 +81,20 @@ def fd_create_file(modconvertInfo, fdinfo):
             return True
 
     url = fdinfo["url"] + "/redfish/v1/rich/AppDeployService/ResourceFiles"
+    logging.info("fd_url:  %s", url)
     auth = HTTPBasicAuth(fdinfo['username'], fdinfo['password'])
+    logging.info(auth)
     headers = {
         "Version": "v" + datetime.now().strftime("%Y%m%d%H%M%S"),
         "Description": modconvertInfo["jobId"] + " model file",
     }
+    logging.info("headers:  %s",headers)
     data = {
         'Name': get_filename(modconvertInfo["outputPath"]),
         'Description': modconvertInfo["jobId"] + " model file",
         'Type': 'model_file'
     }
+    logging.info("data:  %s",data)
     try:
         resp = requests.post(url, headers=headers,auth=auth, verify=False, data=json.dumps(data))
         logging.info("fd_create_file: %d, %s", resp.status_code, resp.json())

@@ -184,7 +184,7 @@ DLWS_ROLE_NAME
 DLWS_ROLE_IDX
 )
 
-if [ "$role" = "ps" ];then
+if [ "$DLWS_ROLE_NAME" = "master" ] || [ "$DLWS_ROLE_NAME" = "ps" ];then
 SSH_ENVIRONMENT_FILE=/home/${DLWS_USER_NAME}/.ssh/environment
 for env_key in "${envs[@]}" ; do
     if [ "`printenv $env_key`" != "" ] ; then

@@ -1189,7 +1189,7 @@ class DataHandler(object):
     def GetModelConvertInfoByOutputpath(self, outputpath):
         ret = None
         try:
-            query = """SELECT "jobId", inputPath", "outputPath", type, status, "fileId" FROM %s where "outputPath"='%s' ORDER BY id DESC""" % (
+            query = """SELECT "jobId", "inputPath", "outputPath", type, status, "fileId" FROM %s where "outputPath"='%s' ORDER BY id DESC""" % (
                 self.modelconversionjobtablename, outputpath
             )
             with PostgresqlConn() as conn:

@@ -40,7 +40,7 @@ const Brief: FunctionComponent = () => {
       <ListItem>
         <ListItemText
           primary={t('jobV2.command')}
-          secondary={job['jobParams']['cmd']}
+          secondary={job['jobParams']['cmd'] || '-'}
           secondaryTypographyProps={{ component: 'div' }}
           style={{
             wordWrap:'break-word',

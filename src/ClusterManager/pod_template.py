@@ -223,6 +223,9 @@ class PodTemplate():
             else:
                 logger.info("job-%s mem quota is none" % (job.job_id))
 
+            # default: memory request
+            pod["memoryrequest"] = "100Mi"
+
 
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]

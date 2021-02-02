@@ -4,4 +4,4 @@
 
 * [依瞳人工智能开放平台用户手册（中文版）V1.3.0](依瞳人工智能平台用户手册_20210113-v1.3.0.pdf)
 
-* [Apulis Platform User Maunal V1.3.0](Apulis AI Platform User Maunal_20210113-v1.3.0.pdf)
+* [Apulis Platform User Maunal V1.3.0](Apulis_Platform_User_Maunal_20210113-v1.3.0.pdf)

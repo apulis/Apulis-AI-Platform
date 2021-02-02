@@ -62,8 +62,13 @@ const ClusterStatus: FC = () => {
 
     response['getIdleGPUPerUserUrl'] = getIdleGPUPerUser;
     response['ClusterName'] = cluster;
-    response['GranaUrl'] = `${grafana}dashboard/db/device-usage?refresh=30s&orgId=1&_=${Date.now()}&kiosk=tv`;
-    response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-device-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}&kiosk=tv`;
+    if (localStorage.language === 'zh-CN') {
+      response['GranaUrl'] = `/endpoints/grafana_zh/d/cluster-status-zh/ji-qun-zhuang-tai?orgId=1&_=${Date.now()}&kiosk=tv&refresh=30s`;
+      response['GPUStatisticPerVC'] = `/endpoints/grafana_zh/d/per-vc-gpu-statistic-zh/mei-ge-vcshe-bei-tong-ji-xin-xi?var-vc_name=${selectedTeam}&_=${Date.now()}&kiosk=tv`;
+    } else {
+      response['GranaUrl'] = `${grafana}dashboard/db/device-usage?refresh=30s&orgId=1&_=${Date.now()}&kiosk=tv`;
+      response['GPUStatisticPerVC'] = `${grafana}dashboard/db/per-vc-device-statistic?var-vc_name=${selectedTeam}&_=${Date.now()}&kiosk=tv`;
+    }
     return response;
   }
   const fetchClusterStatus = (mount: boolean) => {

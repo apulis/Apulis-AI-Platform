@@ -39,7 +39,7 @@ const warnConstants = {
     SUCCESSFULTEMPLATEDSAVE : "保存模板成功",
 }
 const global = {
-    deepLearningPlatform:'Apulis 深度学习平台 ',
+    deepLearningPlatform:'注意',
 }
 export default{
     ...allJobTips,

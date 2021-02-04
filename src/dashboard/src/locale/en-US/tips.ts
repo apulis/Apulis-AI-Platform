@@ -40,7 +40,7 @@ const warnConstants = {
     SUCCESSFULTEMPLATEDSAVE : "Template saved",
 }
 const global = {
-    deepLearningPlatform:'Apulis Deep Learning Platform ',
+    deepLearningPlatform:'Notice',
 }
 export default{
     ...global,

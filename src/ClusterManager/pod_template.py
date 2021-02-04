@@ -223,6 +223,9 @@ class PodTemplate():
             else:
                 logger.info("job-%s mem quota is none" % (job.job_id))
 
+            # default: memory request
+            pod["memoryrequest"] = "100Mi"
+
 
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
@@ -298,6 +301,7 @@ class PodTemplate():
 
             # mount /pod
             pod["mountpoints"].append(job.pod_path_mountpoint(os.path.join(job.job_path, "master")))
+            pod["mountpoints"].append(job.ssh_config_path_mountpoint(job.job_path))
 
             if os.environ.get("INIT_CONTAINER_IMAGE"):
                 pod["initialize"]=True

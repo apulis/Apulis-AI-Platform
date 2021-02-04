@@ -199,6 +199,9 @@ class DistPodTemplate():
                 else:
                     logger.info("job-%s mem quota is none" % (job.job_id))
 
+                # default: memory request
+                pod["memoryrequest"] = "100Mi"
+
                 # mount /pod
                 local_pod_path = os.path.join(job.job_path, "%s-%d" % (role, idx))
                 pod["mountpoints"].append(job.pod_path_mountpoint(local_pod_path))

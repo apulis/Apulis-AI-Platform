@@ -204,29 +204,6 @@ class PodTemplate():
             pod["numworker"] = 1
             pod["fragmentGpuJob"] = True
 
-            # set cpu limits and memory limits
-            device_type = params["gpuType"] 
-
-            # cpu
-            quota = config.GetResourceLimit(device_type, config.ResourceLimit.CPU)
-            if quota is not None:
-                pod["cpulimit"]=quota
-                logger.info("job-%s cpu quota(%s)" % (job.job_id, str(quota)))
-            else:
-                logger.info("job-%s cpu quota is none" % (job.job_id))
-
-            # memory
-            quota = config.GetResourceLimit(device_type, config.ResourceLimit.MEM)
-            if quota is not None:
-                pod["memorylimit"]=quota
-                logger.info("job-%s mem quota(%s)" % (job.job_id, str(quota)))
-            else:
-                logger.info("job-%s mem quota is none" % (job.job_id))
-
-            # default: memory request
-            pod["memoryrequest"] = "100Mi"
-
-
             if "gpuLimit" not in pod:
                 pod["gpuLimit"] = pod["resourcegpu"]
 
@@ -296,6 +273,40 @@ class PodTemplate():
                 pod["minReplicas"] = params["minReplicas"] if "minReplicas" in params else 1
                 pod["maxReplicas"] = max(params["maxReplicas"] if "maxReplicas" in params else 1,pod["minReplicas"])
 
+            else:
+
+                pass # inference job
+
+            # set cpu limits and memory limits
+            device_type = params["gpuType"] 
+
+            # cpu
+            device_num = int(pod["gpuLimit"])
+            if device_num == 0:
+                quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.CPU, 1)
+            else:
+                quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.CPU, int(pod["gpuLimit"]))
+
+            if quota is not None:
+                pod["cpulimit"]=quota
+                logger.info("job-%s cpu quota(%s)" % (job.job_id, str(quota)))
+            else:
+                logger.info("job-%s cpu quota is none" % (job.job_id))
+
+            # memory
+            if device_num == 0:
+                quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.MEM, 1)
+            else:
+                quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.MEM, int(pod["gpuLimit"]))
+            
+            if quota is not None:
+                pod["memorylimit"]=quota
+                logger.info("job-%s mem quota(%s)" % (job.job_id, str(quota)))
+            else:
+                logger.info("job-%s mem quota is none" % (job.job_id))
+
+            # default: memory request
+            pod["memoryrequest"] = "100Mi"
 
             pod["jobtrainingtype"]=params["jobtrainingtype"]
 

@@ -63,7 +63,7 @@ def GetResourceLimitByDevice(device_type, resource_type, device_num):
 
             num, unit = ParseValueUnit(limits[ResourceLimit.MEM])
             if num is not None and unit is not None:
-                num = int(num) * device_num)
+                num = int(num) * int(device_num)
                 return str(num) + unit
             else:
                 pass

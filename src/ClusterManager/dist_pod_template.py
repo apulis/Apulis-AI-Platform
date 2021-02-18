@@ -212,6 +212,9 @@ class DistPodTemplate():
                 # set cpu limits and memory limits
                 device_type = params["gpuType"]
 
+                if "gpuLimit" not in pod:
+                    pod["gpuLimit"] = pod["resourcegpu"]
+
                 # cpu
                 device_num = int(pod["gpuLimit"])
                 if device_num == 0:

@@ -13,6 +13,7 @@ metadata:
     type: InferenceService
     'gpu-request': '{{ job["gpuLimit"]|int }}'
     archType: "{{ job["archType"] }}"
+    imageVersion: "{{ job["version"] }}"
 
   {% for label in job["labels"] %}
     {{label.name}}: "{{label.value}}"

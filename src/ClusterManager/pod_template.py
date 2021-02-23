@@ -247,7 +247,6 @@ class PodTemplate():
                 pod["model_name"] = "ifs-"+pod["jobId"]
 
                 assert "model_base_path" in pod
-                aiplatform - app - data
                 pod["model_extra_path"] = pod["model_base_path"]
                 pod["model_extra_path"] = re.sub("^/data", "/aiplatform-model-data", pod["model_extra_path"])
                 pod["model_extra_path"] = re.sub("^/home", "/aiplatform-app-data/work", pod["model_extra_path"])

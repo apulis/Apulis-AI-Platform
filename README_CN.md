@@ -121,4 +121,4 @@
 
 ### 许可证
 
-**[MIT](LICENSE)**
+**所有开源代码和文档遵从[MIT License](LICENSE)**

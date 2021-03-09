@@ -46,3 +46,6 @@ The platform adopts the lightweight virtualization technologies, such as Docker 
     |-- user-synchronizer
     `-- utils                       utility module
 ```
+**License**
+
+The entire codebase is under [MIT license](LICENSE)

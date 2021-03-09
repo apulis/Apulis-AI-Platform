@@ -1,5 +1,5 @@
 [![build](https://img.shields.io/badge/Build-success-brightgreen.svg)](https://gitee.com/apulisplatform/apulis_platform/releases)
-[![license](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/git/git-scm.com/blob/master/MIT-LICENSE.txt)
+[![license](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)
 [![release](https://img.shields.io/badge/Release-1.5.0-blue.svg)](https://gitee.com/apulisplatform/apulis_platform/releases/Latest)
 [![docs](https://img.shields.io/badge/doc-passing-blueviolet.svg)](https://gitee.com/apulisplatform/apulis_platform/tree/v1.5.0/docs/tutorial)
 [![python](https://img.shields.io/badge/python-3.7.5-blue.svg)](https://www.python.org/dev/peps/pep-0537/#id4)
@@ -61,7 +61,6 @@
    请查看[依瞳人工智能平台快速使用指导](docs/)
 
 ### 文档
-----------------------------------------------------------------------------
 
 有关安装指南、教程和API的更多详细信息，请参阅[apulis wiki](https://gitee.com/apulis/apulis_platform/wikis/Home)
 
@@ -82,6 +81,7 @@
 - 微信公众号
 - QQ交流群：
 - 微博：
+- 知乎：
 
 
 ### 贡献

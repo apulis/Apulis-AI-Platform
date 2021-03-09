@@ -1,8 +1,8 @@
 [![build](https://img.shields.io/badge/Build-success-brightgreen.svg)](https://gitee.com/apulisplatform/apulis_platform/releases)
-![license](https://img.shields.io/badge/License-MIT-brightgreen.svg)
-![release](https://img.shields.io/badge/Release-1.5.0-blue.svg)
-![docs](https://img.shields.io/badge/doc-passing-blueviolet.svg)
-![python](https://img.shields.io/badge/python-3.7.5-blue.svg)
+[![license](https://img.shields.io/badge/License-MIT-brightgreen.svg)](LICENSE)
+[![release](https://img.shields.io/badge/Release-1.5.0-blue.svg)](https://gitee.com/apulisplatform/apulis_platform/releases/Latest)
+[![docs](https://img.shields.io/badge/doc-passing-blueviolet.svg)](https://gitee.com/apulisplatform/apulis_platform/tree/v1.5.0/docs/tutorial)
+[![python](https://img.shields.io/badge/python-3.7.5-blue.svg)](https://www.python.org/dev/peps/pep-0537/#id4)
 
 ![Apulis标志](docs/img/apulis-logo.png "Apulis logo")
 

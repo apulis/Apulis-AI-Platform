@@ -58,7 +58,7 @@
 
 ### 快速入门
 
-   请查看[依瞳人工智能平台快速使用指导](docs/tutorial/Quick_Start.md)
+   请查看[依瞳人工智能平台快速使用指导](docs/Quick_Start.md)
 
 ### 文档
 

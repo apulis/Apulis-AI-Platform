@@ -62,13 +62,13 @@
 
 ### 文档
 
-有关安装指南、教程和API的更多详细信息，请参阅[apulis wiki](https://gitee.com/apulis/apulis_platform/wikis/Home)
+有关安装指南、教程和API的更多详细信息，请参阅*apulis wiki 正在筹备更新中~！*
 
 ### 社区
 
 #### 治理
 
-请查看[依瞳人工智能平台开放治理](https://gitee.com/mindspore/community/blob/master/governance.md)。
+请查看[依瞳人工智能平台开放治理](docs/governance.md)。
 
 #### 交流
 

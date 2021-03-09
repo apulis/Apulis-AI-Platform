@@ -1,4 +1,4 @@
-# Apulis Platform contributing guidelines
+# Apulis AI Platform Contributing Guidelines
 
 
 ## Getting Started

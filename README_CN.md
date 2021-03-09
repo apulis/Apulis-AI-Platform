@@ -72,7 +72,7 @@
 
 #### 交流
 
-- [Apulis Slack]() 开发者交流平台。
+- *Apulis Slack ~ 待开放中*
 - `#Apulis`IRC频道（仅用于会议记录）
 - 视频会议：待定
 - 官网：[依瞳科技](http://www.apulis.cn)

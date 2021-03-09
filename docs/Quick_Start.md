@@ -22,11 +22,11 @@
 
 [6 模型训练](#模型训练)
 
-[7 运行单机训练(TensorFlow)](#运行单机训练(TensorFlow))
+[7 运行单机训练-TensorFlow](#运行单机训练-TensorFlow)
 
-[8 运行分布式训练(BERT-TensorFlow)](#运行分布式训练(BERT-TensorFlow))
+[8 运行分布式训练-BERT-TensorFlow](#运行分布式训练-BERT-TensorFlow)
 
-[9 运行GPU模型训练(Lenet-TensorFlow)](#运行GPU模型训练(Lenet-TensorFlow))
+[9 运行GPU模型训练-Lenet-TensorFlow](#运行GPU模型训练-Lenet-TensorFlow)
 
 [10 运行MindSpore单机训练](#运行MindSpore单机训练)
 
@@ -258,7 +258,7 @@
 -   描述：描述信息。
 
 
-### 运行单机训练(TensorFlow)
+### 运行单机训练-TensorFlow
 
 * 前提条件
     - 已经准备好适配TensorFlow的脚本。
@@ -314,7 +314,7 @@
 > ![](img/Quick_Start/media/image27.png)
 
 
-### 运行分布式训练(BERT-TensorFlow)
+### 运行分布式训练-BERT-TensorFlow
 
 * 前提条件
 
@@ -459,7 +459,7 @@
     - 使用预置模型启动多机多卡，worker节点命令添加
     `cd /data/model-gallery/models/npu/tensorflow/bert_base && bash train.sh --data_path /data/dataset/storage/bookscorpus`
 
-### 运行GPU模型训练(Lenet-TensorFlow)
+### 运行GPU模型训练-Lenet-TensorFlow
 
 * 前提条件
 

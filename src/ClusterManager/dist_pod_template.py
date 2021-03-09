@@ -9,10 +9,17 @@ from jinja2 import Template
 from job import Job
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
-from config import config
+import config
 from osUtils import mkdirsAsUser
 from pod_template_utils import enable_cpu_config
 from DataHandler import DataHandler
+
+import logging
+import logging.config
+import storage
+
+logger = logging.getLogger(__name__)
+
 
 class DistPodTemplate():
     def __init__(self, template, enable_custom_scheduler=False, secret_templates=None):
@@ -47,6 +54,7 @@ class DistPodTemplate():
         pod_yaml = self.template.render(job=pod)
         pod_obj = yaml.full_load(pod_yaml)
         pod_obj["spec"]["containers"][0]["env"].append({"name": "DLWS_LAUNCH_CMD", "value": pod["cmd"]})
+
         return pod_obj
 
     def generate_pods(self, job):
@@ -77,25 +85,29 @@ class DistPodTemplate():
         job.job_path = params["jobPath"]
         job.work_path = params["workPath"]
         job.data_path = params["dataPath"]
+
         # TODO user's mountpoints first, but should after 'job_path'
         job.add_mountpoints(job.job_path_mountpoint())
-        # TODO: Refactor special VC dependency
-        if params["vcName"] not in vc_without_shared_storage:
-            job.add_mountpoints({"name": "home", "containerPath": "/home/{}".format(
-                job.get_alias()), "hostPath": job.get_homefolder_hostpath(), "enabled": True})
+        job.add_mountpoints(job.ssh_path_mountpoints())
+
         if "mountpoints" in params:
             job.add_mountpoints(params["mountpoints"])
+
         # TODO: Refactor special VC dependency
         if params["vcName"] not in vc_without_shared_storage:
             job.add_mountpoints(job.work_path_mountpoint())
             job.add_mountpoints(job.data_path_mountpoint())
+            job.add_mountpoints(job.home_path_mountpoint())
+
         job.add_mountpoints(job.vc_custom_storage_mountpoints())
         job.add_mountpoints(job.vc_storage_mountpoints())
         job.add_mountpoints(job.infiniband_mountpoints())
+
         params["mountpoints"] = job.mountpoints
+        params["mountpoints_pvc"] = job.get_pvc_mountpoints()  # pvc deduplication
         params["init-container"] = os.environ["INIT_CONTAINER_IMAGE"]
-        if params["gpuType"].endswith("arm64"):
-            params["init-container"] += "-arm64"
+
+
 
         params["user_email"] = params["userName"]
         params["homeFolderHostpath"] = job.get_homefolder_hostpath()
@@ -106,6 +118,7 @@ class DistPodTemplate():
 
         if "nodeSelector" not in params:
             params["nodeSelector"] = {}
+
         if "gpuType" in params:
             params["nodeSelector"]["gpuType"] = params["gpuType"]
 
@@ -129,8 +142,8 @@ class DistPodTemplate():
 
         if "envs" not in params:
             params["envs"] = []
-        params["envs"].append({"name": "DLWS_NUM_GPU_PER_WORKER", "value": params["resourcegpu"]})
 
+        params["envs"].append({"name": "DLWS_NUM_GPU_PER_WORKER", "value": params["resourcegpu"]})
         params["envs"].append({"name": "DLWS_WORKER_NUM", "value": params["numworker"]})
 
         job.add_plugins(job.get_plugins())
@@ -144,6 +157,7 @@ class DistPodTemplate():
         pods = []
         gpuMapping = DataHandler().GetAllDevice()
         nums = {"ps": int(params["numps"]), "worker": int(params["numpsworker"])}
+
         for role in ["ps", "worker"]:
             for idx in range(nums[role]):
 
@@ -165,12 +179,70 @@ class DistPodTemplate():
                 pod["distRoleIdx"] = idx
                 pod["distId"] = "%s%d" % (role, idx)
                 pod = enable_cpu_config(pod, job.cluster)
-                
+
+
                 # mount /pod
-                local_pod_path = job.get_hostpath(job.job_path, "%s-%d" % (role, idx))
-                pod["mountpoints"].append({"name": "pod", "containerPath": "/pod", "hostPath": local_pod_path, "enabled": True})
+                local_pod_path = os.path.join(job.job_path, "%s-%d" % (role, idx))
+                pod["mountpoints"].append(job.pod_path_mountpoint(local_pod_path))
+                pod["mountpoints"].append(job.ssh_config_path_mountpoint(job.job_path))
+
                 if role == "ps":
+
                     pod["hostNetwork"] = False
+
+                    if "masterCmd" in params and len(params["masterCmd"]) > 0:
+                        pod["cmd"] = params["masterCmd"]
+                    else:
+                        pass
+                else:
+
+                    pod["hostNetwork"] = True
+                    
+                    if "workerCmd" in params and len(params["workerCmd"]) > 0:
+                        pod["cmd"] = params["workerCmd"]
+                    else:
+                        pass
+
+                # add ai framework type to envs
+                if "frameworkType" in params:
+                    pod["envs"].append({"name": "aiframework", "value": params["frameworkType"]})
+                else:
+                    pass
+
+                # set cpu limits and memory limits
+                device_type = params["gpuType"]
+
+                if "gpuLimit" not in pod:
+                    pod["gpuLimit"] = pod["resourcegpu"]
+
+                # cpu
+                device_num = int(pod["gpuLimit"])
+                if device_num == 0:
+                    quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.CPU, 1)
+                else:
+                    quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.CPU, int(pod["gpuLimit"]))
+
+                if quota is not None:
+                    pod["cpulimit"]=quota
+                    logger.info("job-%s cpu quota(%s)" % (job.job_id, str(quota)))
+                else:
+                    logger.info("job-%s cpu quota is none" % (job.job_id))
+
+                # memory
+                if device_num == 0:
+                    quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.MEM, 1)
+                else:
+                    quota = config.GetResourceLimitByDevice(device_type, config.ResourceLimit.MEM, int(pod["gpuLimit"]))
+                
+                if quota is not None:
+                    pod["memorylimit"]=quota
+                    logger.info("job-%s mem quota(%s)" % (job.job_id, str(quota)))
+                else:
+                    logger.info("job-%s mem quota is none" % (job.job_id))
+
+                # default: memory request
+                pod["memoryrequest"] = "100Mi"
+
                 pods.append(pod)
 
         k8s_pods = []

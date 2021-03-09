@@ -39,8 +39,8 @@ spec:
         - containerPort: {{cnf["grafana"]["port"]}}
           protocol: TCP
         volumeMounts:
-        - mountPath: /var/lib/grafana
-          name: grafana-storage
+        - name: grafana-storage
+          mountPath:  /var/lib/grafana
         - mountPath: /etc/grafana/grafana.ini
           name: grafana-ini-conf
           subPath: grafana.ini

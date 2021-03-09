@@ -96,6 +96,10 @@ spec:
                     custom:
                       description: Spec for a custom explainer
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:
@@ -136,6 +140,10 @@ spec:
                     custom:
                       description: Spec for a custom predictor
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:
@@ -361,6 +369,10 @@ spec:
                     custom:
                       description: Spec for a custom explainer
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:
@@ -401,6 +413,10 @@ spec:
                     custom:
                       description: Spec for a custom predictor
                       properties:
+                        resources:
+                          description: Defaults to requests and limits of 1CPU, 2Gb
+                            MEM.
+                          type: object
                         container:
                           type: object
                       required:
@@ -887,43 +903,7 @@ data:
                "1.15.0-gpu",
                "2.2.0",
                "2.2.0-arm64",
-               "2.2-gpu"
-            ]
-        },
-        "onnx": {
-            "image": "{{cnf["private_docker_registry"]}}mcr.microsoft.com/onnxruntime/server",
-            "defaultImageVersion": "v0.5.1",
-            "allowedImageVersions": [
-               "v0.5.1"
-            ]
-        },
-        "sklearn": {
-            "image": "{{cnf["private_docker_registry"]}}gcr.io/kfserving/sklearnserver",
-            "defaultImageVersion": "0.2.2",
-            "allowedImageVersions": [
-               "0.2.2"
-            ]
-        },
-        "xgboost": {
-            "image": "{{cnf["private_docker_registry"]}}gcr.io/kfserving/xgbserver",
-            "defaultImageVersion": "0.2.2",
-            "allowedImageVersions": [
-               "0.2.2"
-            ]
-        },
-        "pytorch": {
-            "image": "{{cnf["private_docker_registry"]}}apulistech/kfserving-pytorchserver",
-            "defaultImageVersion": "1.5.1",
-            "allowedImageVersions": [
-               "1.5.1",
-               "1.5.1-gpu"
-            ]
-        },
-        "tensorrt": {
-            "image": "{{cnf["private_docker_registry"]}}nvcr.io/nvidia/tensorrtserver",
-            "defaultImageVersion": "19.05-py3",
-            "allowedImageVersions": [
-               "19.05-py3"
+               "2.2.0-gpu"
             ]
         },
         "apulisVision": {

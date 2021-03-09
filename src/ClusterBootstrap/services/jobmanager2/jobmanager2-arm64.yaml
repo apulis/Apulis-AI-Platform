@@ -55,6 +55,8 @@ spec:
           name: folderautoshare
         - mountPath: /var/log/dlworkspace
           name: log
+        - mountPath: /home/django/data
+          name: label
         ports:
         - containerPort: 9200
           hostPort: 9200
@@ -136,6 +138,9 @@ spec:
       - name: log
         hostPath:
           path: /var/log/clustermanager
+      - name: label
+        hostPath:
+          path: /dlwsdata/storage/cvat/data
       - name: resolv
         hostPath:
           path: /etc/resolv.conf

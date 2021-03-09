@@ -1,3 +1,4 @@
+# coding=utf8
 import math
 import collections
 import logging
@@ -31,29 +32,31 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
     vc_available = collections.defaultdict(lambda : {})
     vc_unschedulable = collections.defaultdict(lambda : {})
 
-    vc_quota_sum = 0
+    # 计算每种device type的总数，用于后续计算
+    vc_quota_sum = collections.defaultdict(lambda : 0)
     for vc_name, gpu_info in vc_info.items():
         for gpu_type, total in gpu_info.items():
             vc_total[vc_name][gpu_type] = total
-            vc_quota_sum += total
-
+            vc_quota_sum[gpu_type] += total
 
     # key is vc_name, value is a map with key to be gpu_type and value to be real
     # quota
     ratio = collections.defaultdict(lambda : {})
-    # use for judge case:  1/3   1/3   1/3 ,decide the unschedule 1 belong to which vc:
     ratio_unschedulable = collections.defaultdict(lambda : {})
 
+    # 计算每个vc的不可调度的数量，会将总不可调度的数量平摊到每个vc，依赖前面计算的vc_quota_sum
     for vc_name, gpu_info in vc_info.items():
         for gpu_type, quota in gpu_info.items():
-            if vc_quota_sum == 0:
+            if vc_quota_sum[gpu_type] == 0:
                 unschedulable = 0
             else:
                 cluster_schedulable_num = cluster_total.get(gpu_type,0)-cluster_unschedulable.get(gpu_type, 0)
-                cluster_unschedulable_num = max(vc_quota_sum - cluster_schedulable_num,0)
-                unschedulable = float(cluster_unschedulable_num) * quota / vc_quota_sum
+                cluster_unschedulable_num = max(vc_quota_sum[gpu_type] - cluster_schedulable_num,0)
+                unschedulable = float(cluster_unschedulable_num) * quota / vc_quota_sum[gpu_type]
             ratio_unschedulable[vc_name][gpu_type] = unschedulable
 
+    # use for judge case:  1/3   1/3   1/3 ,decide the unschedule 1 belong to which vc:
+    # 此函数主要计算不可调度的数量平均到每个vc后，还剩余除不尽的余数，按照字母顺序，分派到靠前的vc上
     def caculate_unschedulable(ratio_unschedulable):
         unschedulables = []
         for vc_name, gpu_info in ratio_unschedulable.items():
@@ -76,13 +79,14 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
 
     caculate_unschedulable(ratio_unschedulable)
 
+    # 计算每个vc的可调度数量，该循环依赖于前面的ratio_unschedulable计算结果
     for vc_name, gpu_info in vc_info.items():
         for gpu_type, quota in gpu_info.items():
             vc_quota = quota - int(ratio_unschedulable[vc_name][gpu_type])
             used = vc_usage.get(vc_name, {}).get(gpu_type, 0)
-
             ratio[vc_name][gpu_type] = max(vc_quota - used, 0)
 
+    # 计算每个device type的分别总数
     ratio_sum = collections.defaultdict(lambda : 0 )
     for vc_name, gpu_info in ratio.items():
         for gpu_type, cur_ratio in gpu_info.items():
@@ -92,6 +96,7 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
     logger.debug("ratio %s, ratio_sum %s", ratio, ratio_sum)
 
     # calculate vc_used,vc_available and vc_unschedulable of vc not having running job and having a gputype which has not running job
+    # 先计算未使用过的device type的情况
     for vc_name, gpu_info in ratio.items():
         for gpu_type, cur_ratio in gpu_info.items():
             if vc_usage.get(vc_name, {}).get(gpu_type, 0) == 0:
@@ -107,6 +112,7 @@ def calculate_vc_gpu_counts(cluster_total, cluster_available, cluster_unschedula
                 vc_available[vc_name][gpu_type] = available
                 vc_unschedulable[vc_name][gpu_type] = max(0, quota - available)
     # calculate vc_used,vc_available and vc_unschedulable of vc having a gputype which has not running job
+    # 再计算至少使用过一个数量的device type的情况
     for vc_name, vc_usage_info in vc_usage.items():
         for gpu_type, vc_usage in vc_usage_info.items():
             if vc_name not in vc_info:

@@ -56,7 +56,7 @@ def read_class_names2(class_file_name):
 
 def query_service_domain(domain):
     my_resolver = dns.resolver.Resolver()
-    my_resolver.nameservers = ['10.96.0.10']
+    my_resolver.nameservers = ['10.68.0.2']
     answer = my_resolver.query(domain)
     for i in answer:
         return i.to_text()
@@ -113,3 +113,14 @@ def object_detaction_infer2(inference_url,imageFile,signature_name,jobParams):
         imgByteArr = imgByteArr.getvalue()
         imgByteArr = base64.b64encode(imgByteArr)
         return {"data":imgByteArr,"type":"detection"}
+
+def object_detaction_auto_label(model_id, data):
+    headers = {"Content-type": "application/json","Host":"{}-predictor-default.kfserving-system.example.com".format(model_id)}
+    service_ip = query_service_domain('istio-ingressgateway.istio-system.svc.cluster.local')
+    inference_url = "http://{}/v1/models/".format(service_ip)+model_id+":predict"
+    r = requests.post(inference_url,headers=headers,
+                      data=data,
+                      )
+    if r.status_code!=200:
+        logging.error(r.content)
+    return r.content

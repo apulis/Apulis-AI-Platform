@@ -18,10 +18,10 @@ function setup_npu_config() {
 		echo "host=${host_ip}" >> ${npu_info_dir}/npu_${DLWS_ROLE_IDX}.info
 
 		usermod -a -G HwHiAiUser ${DLWS_USER_NAME}
+		## worker pod, generate hccl.json
                 if  [ -x "$(command -v python)" ] ; then
-                     python ${SCRIPT_DIR}/setup_npu.py 
+                     python ${SCRIPT_DIR}/setup_npu.py
                 fi
-
 
 	## npu distributed job - master
 	elif [ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ];
@@ -144,27 +144,37 @@ then
 	touch ${PROC_DIR}/CONTAINER_READY
 fi
 
+
+
+# Setup ssh listening port and start ssh process
+echo "===========================begin to start ssh=============================="&>> ${LOG_DIR}/bootstrap.log
+bash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log
+echo "===========================start ssh done!================================="&>> ${LOG_DIR}/bootstrap.log
+
+
+
+
+# setup ssh configuration
+if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
+then
+  echo "=========================begin to setup ssh!============================="&>> ${LOG_DIR}/bootstrap.log
+    bash ${SCRIPT_DIR}/setup_ssh_config.sh &>> ${LOG_DIR}/bootstrap.log
+
+	touch ${PROC_DIR}/ROLE_READY
+	echo "=========================setup ssh done!================================"&>> ${LOG_DIR}/bootstrap.log
+
 # setup ib config
 echo "===========================begin to setup ib config=============================="&>> ${LOG_DIR}/bootstrap.log
 bash ${SCRIPT_DIR}/setup_ib_config.sh &>> ${LOG_DIR}/bootstrap.log
 echo "===========================setup ib config done!================================="&>> ${LOG_DIR}/bootstrap.log
 
-# Setup roles
-echo "===========================begin to start ssh=============================="&>> ${LOG_DIR}/bootstrap.log
-bash ${SCRIPT_DIR}/setup_sshd.sh &>> ${LOG_DIR}/bootstrap.log
-echo "===========================start ssh done!================================="&>> ${LOG_DIR}/bootstrap.log
-
-if [ "$DLWS_ROLE_NAME" != "inferenceworker" ];
-then
-  echo "=========================begin to setup ssh!============================="&>> ${LOG_DIR}/bootstrap.log
-    bash ${SCRIPT_DIR}/setup_ssh_config.sh &>> ${LOG_DIR}/bootstrap.log
-	touch ${PROC_DIR}/ROLE_READY
-	echo "=========================setup ssh done!================================"&>> ${LOG_DIR}/bootstrap.log
-
 	# Setup job
 	# TODO
 	touch ${PROC_DIR}/JOB_READY
 fi
+
+
+
 
 # create path for training jobs
 echo "=========================begin to setup path!============================="&>> ${LOG_DIR}/bootstrap.log
@@ -178,6 +188,7 @@ fi
 
 # setup npu device info for npu distributing jobs
 npu_info_dir=/home/${DLWS_USER_NAME}/.npu/${DLWS_JOB_ID}
+if [ -d /home/${DLWS_USER_NAME}/.npu ]; then chmod a+w /home/${DLWS_USER_NAME}/.npu;fi
 runuser -l ${DLWS_USER_NAME} -c "mkdir -p ${npu_info_dir}"
 echo "=========================setup path done!============================="&>> ${LOG_DIR}/bootstrap.log
 
@@ -190,8 +201,27 @@ echo bootstrap ends at `date` &>> ${LOG_DIR}/bootstrap.log
 set +e
 
 # Execute user's command for the job
-if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
+# distributing job
+if [ "$DLWS_NUM_PS" != "0" ] ; then
+
+    if [ -z "$DLWS_LAUNCH_CMD" ]; then
+	 DLWS_LAUNCH_CMD="sleep infinity"
+    fi
+
+    echo $DLWS_LAUNCH_CMD
+    printenv DLWS_LAUNCH_CMD > /pod/job_command.sh
+    chmod ugo+rx /pod/job_command.sh
+    chmod ugo+rx /pod.env
+    cat /pod/job_command.sh
+
+    runuser -l ${DLWS_USER_NAME} -c /pod/job_command.sh
+    # Save exit code
+    EXIT_CODE=$?
+    echo  `date` ": ${EXIT_CODE}"  > ${PROC_DIR}/EXIT_CODE
+
+elif ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "false" ]) || ([ "$DLWS_ROLE_NAME" = "ps" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);
 then
+
     runuser -l ${DLWS_USER_NAME} -c "sleep infinity"
 else
 #    if ([ "$DLWS_ROLE_NAME" = "worker" ] && [ "$DLWS_IS_NPU_JOB" = "true" ]);

@@ -12,7 +12,8 @@ metadata:
     vcName: "{{ job["vcName"] }}"
     type: InferenceService
     'gpu-request': '{{ job["gpuLimit"]|int }}'
-
+    archType: "{{ job["archType"] }}"
+    imageVersion: "{{ job["version"] }}"
 
   {% for label in job["labels"] %}
     {{label.name}}: "{{label.value}}"
@@ -38,20 +39,21 @@ spec:
       minReplicas: {{ job["minReplicas"] }}
       maxReplicas: {{ job["maxReplicas"] }}
       {{ job["framework"] }}:
-        storageUri: "file://{{ job["model_base_path"] }}"
+        storageUri: "pvc://{{ job["model_path_pvc"] }}/{{ job["model_extra_path"] }}"
         {% if "version" in job %}runtimeVersion: {{ job["version"] }}{% endif %}
         {% if job["framework"] == "pytorch" %}modelClassName: {{ job["model_class_name"] }}{% endif %}
         resources:
           limits:
             {{ job["gpuStr"] }}: {{ job["gpuLimit"] }}
-            memory: 5G
+            memory: 4G
           requests:
             cpu: 100m
+            memory: 100m
         {% if job["framework"] == "custom" %}
         container:
           name: kfserving-container
           image: {{ job["image"] }}
           env:
             - name: STORAGE_URI
-              value: "file://{{ job["model_base_path"] }}"
+              value: "pvc://{{ job["model_path_pvc"] }}/{{ job["model_extra_path"] }}"
         {% endif %}

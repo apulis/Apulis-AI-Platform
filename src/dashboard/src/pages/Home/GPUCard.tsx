@@ -285,8 +285,8 @@ const GPUCard: FC<{ cluster: string }> = ({ cluster }) => {
     const data = await request.get('');
     if (data) {
       const name = typeof userName === 'string' ?  userName.split('@', 1)[0] : userName;
-      setDataStorage(data.dataStorage);
-      setWorkStorage(`${data.workStorage}/${name}`);
+      setDataStorage('/data');
+      setWorkStorage(`/home/${name}`);
       return data;
     }
   }

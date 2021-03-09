@@ -37,17 +37,23 @@ spec:
           tcpSocket:
             port: 3088
           timeoutSeconds: 10
+
         volumeMounts:
         - mountPath: /var/log/webui
           name: dotnet-log
         - mountPath: /app/appsettings.json
           name: dotnet-config
+
         - mountPath: /mntdlws/nfs/label
-          name: data
+          name: aiplatform-label-data-pvc
+
         - mountPath: /data
-          name: dataset
+          name: aiplatform-model-data-pvc
+
         - mountPath: /home
-          name: home
+          name: aiplatform-app-data-pvc
+          subPath: work/
+
       volumes:
       - name: dotnet-log
         hostPath:
@@ -55,15 +61,19 @@ spec:
       - name: dotnet-config
         hostPath:
           path: /etc/RestfulAPI/appsettings.json
-      - name: data
-        hostPath:
-          path: /mntdlws/nfs/label
-      - name: dataset
-        hostPath:
-          path: /mntdlws/storage
-      - name: home
-        hostPath:
-          path: /mntdlws/work
+
+      - name: aiplatform-label-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-label-data-pvc
+
+      - name: aiplatform-model-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-model-data-pvc
+
+      - name: aiplatform-app-data-pvc
+        persistentVolumeClaim:
+          claimName: aiplatform-app-data-pvc
+
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

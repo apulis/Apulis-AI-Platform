@@ -70,9 +70,9 @@ default_config_parameters = {
     "mysql_port": "3306",
     "mysql_username": "root",
 
-    "mysql_data_path": "/mntdlws/service/mysql/data",
-    "grafana_data_path": "/mntdlws/service/grafana/data",
-    "prometheus_data_path": "/mntdlws/service/prometheus/data",
+    "mysql_data_path": "/var/lib/mysql",
+    "grafana_data_path": "/var/lib/grafana/data",
+    "prometheus_data_path": "/var/lib/prometheus/data",
 
     "extranet_protocol":"https",
     "apt_mirror_url": "http:\/\/mirrors.aliyun.com",
@@ -700,25 +700,6 @@ default_config_parameters = {
         "algorithm": "HS256"
     },
 
-    # inferenceJob config
-    "inference":{
-      "tensorflow":{
-            "allowedImageVersions": [
-               "1.15.0",
-               "1.15.0-arm64",
-               "1.15.0-gpu",
-               "2.2.0",
-               "2.2.0-arm64",
-               "2.2.0-gpu"
-            ]
-      },
-        "apulisVision": {
-            "allowedImageVersions": [
-               "1.0.0"
-            ]
-        }
-    },
-
     # System dockers.
     # These dockers are agnostic of cluster, and can be built once and reused upon multiple clusters.
     # We will gradually migrate mroe and more docker in DLWorkspace to system
@@ -798,6 +779,15 @@ default_config_parameters = {
             "data-platform": {"fullname": "apulistech/dlworkspace_data-platform-backend:latest"},
             "mlflow":{"fullname":"apulistech/mlflow:latest"},
             "node-cleaner": {"fullname": "apulistech/node-cleaner:1.0"},
+            "postgres": {"fullname": "postgres:10-alpine"},
+            "cvat-redis": {"fullname": "redis:4.0-alpine"},
+            "cvat-backend": {"fullname": "cvat/backend"},
+            "cvat-frontend": {"fullname": "cvat/frontend"},
+            "cvat_elasticsearch": {"fullname": "cvat_elasticsearch"},
+            "cvat_kibana": {"fullname": "cvat_kibana"},
+            "cvat_logstash": {"fullname": "cvat_logstash"},
+            "nuclio_controller": {"fullname": "nuclio/controller:1.5.4-amd64"},
+            "nuclio_dashboard": {"fullname": "nuclio/dashboard:1.5.4-amd64"},
         },
         "infrastructure": {
             "pxe-ubuntu": {},

@@ -80,7 +80,7 @@ def record(fn):
             logger.exception('mysql Exception: %s', str(e))
         finally:
             elapsed = timeit.default_timer() - start
-            logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
+            ##logger.info("DataHandler: %s, time elapsed %.2fs", fn.__name__, elapsed)
             data_handler_fn_histogram.labels(fn.__name__).observe(elapsed)
 
     return wrapped
@@ -111,7 +111,7 @@ class DataHandler(object):
         self.pool = SingletonDBPool.instance()
 
         elapsed = timeit.default_timer() - start_time
-        logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
+        ##logger.info("DB Utils DataHandler initialization, time elapsed %f s", elapsed)
         self.CreateDatabase()
         self.CreateTable()
 
@@ -1059,7 +1059,7 @@ class DataHandler(object):
     def UpdateModelConversionFileId(self, jobId, fileId):
         ret = False
         try:
-            sql = "UPDATE `%s` SET fileId='%s' WHERE jobID='%s'" % (self.modelconversionjobtablename, fileId, jobId)
+            sql = "UPDATE `%s` SET fileId='%s' WHERE jobId='%s'" % (self.modelconversionjobtablename, fileId, jobId)
             with MysqlConn() as conn:
                 conn.update(sql)
                 conn.commit()
@@ -1072,7 +1072,7 @@ class DataHandler(object):
     def UpdateModelConversionStatus(self, jobId, status):
         ret = False
         try:
-            sql = "UPDATE `%s` SET status='%s' WHERE jobID='%s'" % (self.modelconversionjobtablename, status, jobId)
+            sql = "UPDATE `%s` SET status='%s' WHERE jobId='%s'" % (self.modelconversionjobtablename, status, jobId)
             with MysqlConn() as conn:
                 conn.update(sql)
                 conn.commit()
@@ -1184,7 +1184,7 @@ class DataHandler(object):
                 rets = conn.select_many(query,params)
             fetch_start_time = timeit.default_timer()
             fetch_elapsed = timeit.default_timer() - fetch_start_time
-            logger.info("(fetchall time: %f)", fetch_elapsed)
+            ##logger.info("(fetchall time: %f)", fetch_elapsed)
             for one in rets:
                 ret.append(one)
         except Exception as e:
@@ -1244,7 +1244,7 @@ class DataHandler(object):
             conn = self.pool.get_connection()
             cursor = conn.cursor()
 
-            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority FROM {} left join {} on {}.jobId = {}.jobId where jobType='training' and isDeleted=0".format(
+            query = "SELECT {}.jobId, jobName, userName, vcName, jobStatus, jobStatusDetail, jobType, jobTime, jobParams, priority FROM {} left join {} on {}.jobId = {}.jobId where isDeleted=0".format(
                 self.jobtablename, self.jobtablename, self.jobprioritytablename, self.jobtablename,self.jobprioritytablename)
             if userName != "all":
                 query += " and userName = '%s'" % userName
@@ -1274,12 +1274,11 @@ class DataHandler(object):
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))
                 if record["jobParams"] is not None:
                     record["jobParams"] = self.load_json(base64.b64decode(record["jobParams"]))
-
                 if record["jobStatus"] == "running":
-                    if record["jobType"] == "training":
+                    if record["jobType"] == "visualization":
+                        ret["visualizationJobs"].append(record)   
+                    else:
                         ret["runningJobs"].append(record)
-                    elif record["jobType"] == "visualization":
-                        ret["visualizationJobs"].append(record)
                 elif record["jobStatus"] == "queued" or record["jobStatus"] == "scheduling" or record[
                     "jobStatus"] == "unapproved":
                     ret["queuedJobs"].append(record)
@@ -1381,6 +1380,7 @@ class DataHandler(object):
 
                 if record["jobStatusDetail"] is not None:                    
                     record["jobStatusDetail"] = self.load_json(base64.b64decode(record["jobStatusDetail"]))                        
+
                 else:
                     pass
 
@@ -2566,8 +2566,10 @@ class DataHandler(object):
         ret = {}
 
         try:
-            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 and userName='%s'" % (self.jobtablename, userName)
+            query = "select jobStatus, count(*) as count from `%s` where isDeleted=0 " % self.jobtablename
 
+            if userName is not None and userName != "":
+                query += " and userName = '%s'" % userName
             if vcName is not None and vcName != "":
                 query += " and vcName = '%s'" % vcName
             if len(jobType) > 0:

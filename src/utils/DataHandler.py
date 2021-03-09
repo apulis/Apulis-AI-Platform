@@ -7,6 +7,8 @@ elif "datasource" in config and config["datasource"] == "MySQLPool":
     from MySQLPoolDataHandler import DataHandler
 elif "datasource" in config and config["datasource"] == "MySQLDBUtilsPool":
     from MySQLDBUtilsPoolDataHandler import DataHandler
+elif "datasource" in config and config["datasource"] == "postgres":
+    from PostgreSQLPoolDataHandler import DataHandler
 else:
     from SQLDataHandler import DataHandler
 

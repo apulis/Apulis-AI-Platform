@@ -1,0 +1,53 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: cvat-proxy
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      jobmanager-node: pod
+  template:
+    metadata:
+      name: cvat-proxy
+      labels:
+        jobmanager-node: pod
+        app: cvat-proxy
+    spec:
+      nodeSelector:
+        jobmanager: active
+        archType: amd64
+      hostNetwork: true
+      containers:
+        - name: cvat-proxy
+          image: harbor.sigsus.cn:8443/library/nginx:stable-alpine
+          imagePullPolicy: Always
+          command:
+            [
+              '/bin/sh',
+              '-c',
+              "envsubst '$$CVAT-HOST' < /etc/nginx/conf.d/cvat.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'",
+            ]
+          ports:
+            - containerPort: 80
+              hostPort: 80
+              name: cvat-proxy-port
+              protocol: TCP
+          env:
+            - name: CVAT-HOST
+              value: localhost
+
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 3
+            periodSeconds: 30
+            successThreshold: 1
+            tcpSocket:
+              port: 80
+            timeoutSeconds: 10
+
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule

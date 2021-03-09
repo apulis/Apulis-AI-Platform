@@ -12,15 +12,18 @@ import base64
 import yaml
 
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../utils"))
+import storage
+import log_utils
 
-logger = logging.getLogger(__name__)
+import time
+
+logger = log_utils.get_log_instance(__name__)
 
 def invalid_entry(s):
     return s is None or \
            s == "" or \
            s.lower() == "null" or \
            s.lower() == "none"
-
 
 def dedup_add(item, entries, identical):
     assert isinstance(entries, list)
@@ -75,6 +78,7 @@ class Job:
         '''
         if mountpoint is None:
             return
+            
         if self.mountpoints is None:
             self.mountpoints = []
 
@@ -92,10 +96,11 @@ class Job:
         # skip duplicate entry
         # NOTE: mountPath "/data" is the same as "data" in k8s
         for item in self.mountpoints:
-            if item["name"] == mountpoint["name"] or item["containerPath"].strip("/") == mountpoint["containerPath"].strip("/"):
+            if item["name"] == mountpoint["name"] and item["containerPath"].strip("/") == mountpoint["containerPath"].strip("/"):
                 logger.warn("Current mountpoint: %s is a duplicate of mountpoint: %s" % (mountpoint, item))
                 return
 
+        logger.info("append mountpoint(%s)" % (str(mountpoint)))
         self.mountpoints.append(mountpoint)
 
     def add_plugins(self, plugins):
@@ -111,20 +116,246 @@ class Job:
     def get_homefolder_hostpath(self):
         return self.get_hostpath(self.get_alias())
 
+    def ssh_path_mountpoints(self):
+
+        volume_name = ""
+        subPath = ""
+        containerPath = ""
+        mount_points = []
+
+        storage_type = storage.PVC_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            pass
+
+        # 1) for mounting id_rsa
+        containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa"
+        subPath = "work/" + self.params["userName"] + "/.ssh/id_rsa"
+        mount_points.append(
+            {   
+                "name": volume_name, 
+                "enabled": True,
+                "containerPath": containerPath,
+                "subPath": subPath,
+                "readOnly": True,
+                "pvcName": pvc_name
+            }
+        )
+
+        logger.info("added id_rsa file. subPath(%s)" % (str(subPath)))
+
+        # 2) for mounting id_rsa.pub
+        containerPath = "/home/" + self.params["userName"] + "/.ssh/id_rsa.pub"
+        subPath = "work/" + self.params["userName"] + "/.ssh/id_rsa.pub"
+        mount_points.append(
+            {   
+                "name": volume_name, 
+                "enabled": True,
+                "containerPath": containerPath,
+                "subPath": subPath,
+                "readOnly": True,
+                "pvcName": pvc_name
+            }
+        )
+
+        # 3) for mounting authorized_keys
+        containerPath = "/home/" + self.params["userName"] + "/.ssh/authorized_keys"
+        subPath = "work/" + self.params["userName"] + "/.ssh/authorized_keys"
+        mount_points.append(
+            {   
+                "name": volume_name, 
+                "enabled": True,
+                "containerPath": containerPath,
+                "subPath": subPath,
+                "readOnly": True,
+                "pvcName": pvc_name
+            }
+        )
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return mount_points
+
+
     def job_path_mountpoint(self):
-        assert(len(self.job_path) > 0)
-        job_host_path = self.get_hostpath(self.job_path)
-        return {"name": "job", "containerPath": "/job", "hostPath": job_host_path, "enabled": True}
+
+        volume_name = ""
+        subPath = ""
+
+        storage_type = storage.PVC_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            subPath = "work/" + self.params["userName"] + "/jobs/" + time.strftime("%y%m%d")+"/"+ self.job_id
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return {"name": volume_name, 
+                "containerPath": "/job", 
+                "enabled": True,
+                "subPath": subPath,
+                "pvcName": pvc_name}
 
     def work_path_mountpoint(self):
-        assert(len(self.work_path) > 0)
-        work_host_path = self.get_hostpath(self.work_path)
-        return {"name": "work", "containerPath": "/work", "hostPath": work_host_path, "enabled": True}
+
+        volume_name = ""
+        subPath = ""
+
+        storage_type = storage.PVC_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            subPath = "work/" + self.params["userName"]
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return {"name": volume_name, 
+                "containerPath": "/work", 
+                "enabled": True,
+                "subPath": subPath,
+                "pvcName": pvc_name}
 
     def data_path_mountpoint(self):
-        assert(self.data_path is not None)
-        data_host_path = os.path.join(self.cluster["storage-mount-path"], "storage", self.data_path)
-        return {"name": "data", "containerPath": "/data", "hostPath": data_host_path, "enabled": True}
+
+        volume_name = ""
+        subPath = ""
+
+        storage_type = storage.PVC_TYPE_MODEL_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            pass
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return {"name": volume_name, 
+                "containerPath": "/data", 
+                "enabled": True,
+                "pvcName": pvc_name}
+
+    def home_path_mountpoint(self):
+
+        volume_name = ""
+        subPath = ""
+        containerPath=""
+
+        storage_type = storage.PVC_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            subPath = "work/" + self.params["userName"]
+            containerPath="/home/" + self.params["userName"]
+
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return {"name": volume_name, 
+                "containerPath": containerPath, 
+                "enabled": True,
+                "subPath": subPath,
+                "pvcName": pvc_name}
+
+    def pod_path_mountpoint(self, relative_path):
+
+        volume_name = ""
+        subPath = ""
+        containerPath=""
+
+        storage_type = storage.PVC_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            # relative_path resembles realUserName/xxxx/xxx
+            subPath = "work/" + relative_path
+            containerPath="/pod"
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return {"name": volume_name, 
+                "containerPath": containerPath,
+                "enabled": True,
+                "subPath": subPath,
+                "pvcName": pvc_name}
+
+    def ssh_config_path_mountpoint(self, relative_path):
+
+        volume_name = ""
+        subPath = ""
+        containerPath=""
+
+        storage_type = storage.PVC_TYPE_APP_DATA
+        volume_name = storage.StorageConfig.get_pvc_name(storage_type)
+        pvc_name = storage.StorageConfig.get_pvc_name(storage_type)
+
+        logger.info("volume name (%s)" % (str(volume_name)))
+
+        if volume_name is None:
+            logger.warn("invalid arg(volume name), type(%d)" % (storage_type))
+            return None
+        else:
+            # relative_path resembles realUserName/xxxx/xxx
+            subPath = "work/" + relative_path + "/.ssh/"+time.strftime("%y%m%d%H%M%S")
+            containerPath="/home/" + self.params["userName"] + "/.ssh/"
+
+        logger.info("return mount point, subPath(%s)" % (subPath))
+        return {"name": volume_name,
+                "containerPath": containerPath,
+                "enabled": True,
+                "subPath": subPath,
+                "pvcName": pvc_name,
+                "type": "FileOrCreate"}
+
+    def get_pvc_mountpoints(self):
+
+        pvc_mountpoints = []
+        pvcs = []
+
+        # add each items in the list one by one
+        if isinstance(self.mountpoints, list):
+            for m in self.mountpoints:
+                if "pvcName" in m and "name" in m:
+                    pvc = (m["name"].lower(), m["pvcName"].lower())
+                    
+                    if pvc not in pvcs:
+                        pvc_mountpoints.append(m)
+                        pvcs.append(pvc)
+                    else:
+                        pass
+                else:
+                    pass
+
+        return pvc_mountpoints
 
     def vc_custom_storage_mountpoints(self):
         vc_name = self.params["vcName"]
@@ -134,12 +365,15 @@ class Job:
 
         vc_custom_mounts = []
         for mount in custom_mounts:
+
             name = mount.get("name")
             container_path = mount.get("containerPath")
             host_path = mount.get("hostPath")
             vc = mount.get("vc")
+
             if vc is None or vc != vc_name:
                 continue
+
             if name is None or host_path is None or container_path is None:
                 logger.warn("Ignore invalid mount %s" % mount)
                 continue
@@ -149,11 +383,13 @@ class Job:
                 "hostPath": host_path,
                 "enabled": True
             }
+
             vc_custom_mounts.append(vc_mount)
 
         return vc_custom_mounts
 
     def vc_storage_mountpoints(self):
+
         vc_name = self.params["vcName"]
         dltsdata_vc_path = os.path.join(self.cluster["dltsdata-storage-mount-path"], vc_name)
         if not os.path.isdir(dltsdata_vc_path):

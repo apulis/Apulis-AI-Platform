@@ -3,7 +3,7 @@
 
 ## Getting Started
 
-- Fork the repository on [gitee](https://gitee.com/apulis/apulis_platform) or [Gitee](https://gitee.com/apulis/apulis_platform).
+- Fork the repository on [Github](https://github.com/apulis_platform-ai/apulis_platform) or [Gitee](https://gitee.com/apulis_platform/apulis_platform).
 - Read the [README.md](README.md) and [install page](https://www.apulis_platform.cn/install/en) for project information and build instructions.
 
 ## Contribution Workflow
@@ -14,11 +14,11 @@ Please follow this style to make apulis_platform easy to review, maintain and de
 
 * Coding guidelines
 
-    The *Python* coding style suggested by [Python PEP 8 Coding Style](https://pep8.org/) and *C++* coding style suggested by [Google C++ Coding Guidelines](http://google.gitee.io/styleguide/cppguide.html) are used in apulis_platform community.
+    The *Python* coding style suggested by [Python PEP 8 Coding Style](https://pep8.org/) and *C++* coding style suggested by [Google C++ Coding Guidelines](http://google.github.io/styleguide/cppguide.html) are used in apulis_platform community.
 
 * Unittest guidelines
 
-    The *Python* unittest style suggested by [pytest](http://www.pytest.org/en/latest/) and *C++* unittest style suggested by [Googletest Primer](https://gitee.com/google/googletest/blob/master/googletest/docs/primer.md) are used in apulis_platform community.
+    The *Python* unittest style suggested by [pytest](http://www.pytest.org/en/latest/) and *C++* unittest style suggested by [Googletest Primer](https://github.com/google/googletest/blob/master/googletest/docs/primer.md) are used in apulis_platform community.
 
 ### Fork-Pull development model
 
@@ -30,12 +30,12 @@ Please follow this style to make apulis_platform easy to review, maintain and de
 
     If you want to download the code to the local machine, `git` is the best way:
     ```shell
-    # For gitee
-    git clone https://gitee.com/{insert_your_forked_repo}/apulis_platform.git
-    git remote add upstream https://gitee.com/apulis/apulis_platform.git
+    # For GitHub
+    git clone https://github.com/{insert_your_forked_repo}/apulis_platform.git
+    git remote add upstream https://github.com/apulis_platform-ai/apulis_platform.git
     # For Gitee
     git clone https://gitee.com/{insert_your_forked_repo}/apulis_platform.git
-    git remote add upstream https://gitee.com/apulis/apulis_platform.git
+    git remote add upstream https://gitee.com/apulis_platform/apulis_platform.git
     ```
 
 * Develop code locally
@@ -83,7 +83,7 @@ When reporting issues, refer to this format:
 
 ### Propose PRs
 
-* Raise your idea as an *issue* on [Gitee](https://gitee.com/apulis/apulis_platform/issues) or [github](https://github.com/apulis/apulis_platform/issues).
+* Raise your idea as an *issue* on [GitHub](https://github.com/apulis_platform-ai/apulis_platform/issues) or [Gitee](https://gitee.com/apulis_platform/apulis_platform/issues)
 * If it is a new feature that needs lots of design details, a design proposal should also be submitted.
 * After reaching consensus in the issue discussions and design proposal reviews, complete the development on the forked repo and submit a PR.
 * None of PRs is not permitted until it receives **2+ LGTM** from approvers. Please NOTICE that approver is NOT allowed to add *LGTM* on his own PR.

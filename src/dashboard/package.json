@@ -174,7 +174,7 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "/dashboard/",
+  "homepage": "/expert/",
   "jest": {
     "roots": [
       "<rootDir>/src"

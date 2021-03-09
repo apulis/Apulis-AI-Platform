@@ -81,7 +81,7 @@ class Vc extends React.Component {
         if (result) {
           result.forEach(vc => {
             const metadata = JSON.parse(vc.metadata);
-            vc.jobMaxTimeSecond = metadata.admin?.job_max_time_second;
+            vc.jobMaxTimeSecond = Math.floor((metadata.admin?.job_max_time_second || 0) / 3600);
           })
         }
         if (!result.length && totalNum) {
@@ -127,13 +127,13 @@ class Vc extends React.Component {
         qSelectData,
         mSelectData: Object.keys(_mSelectData).length > 0 ? _mSelectData : {},
         clickItem: item,
-        jobMaxTimeSecond: JSON.parse(metadata).admin?.job_max_time_second || null,
+        jobMaxTimeSecond: Math.floor((JSON.parse(metadata).admin?.job_max_time_second || 0) / 3600) || null,
       })
     });
   }
 
   save = async () => {
-    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj, jobMaxTimeSecond } = this.state;
+    const { isEdit, vcName, vcNameValidateObj, qSelectData, mSelectData, allDevice, quotaValidateObj, metadataValidateObj, jobMaxTimeSecond, maxJobTimeValidator } = this.state;
     const { t } = this.props;
     const tTip = t('vcName is required！')
     const { selectedCluster, getTeams } = this.context;
@@ -147,6 +147,14 @@ class Vc extends React.Component {
       })
       return;
     }
+    if (!jobMaxTimeSecond) {
+      this.setState({
+        maxJobTimeValidator: {
+          error: true,
+          text: t('')
+        }
+      })
+    }
     Object.keys(quotaValidateObj).forEach(i => {
       if (quotaValidateObj[i].error) flag = false;
     })
@@ -159,7 +167,7 @@ class Vc extends React.Component {
       quota = _.cloneDeep(qSelectData);
       metadata = _.cloneDeep(mSelectData);
       metadata.admin = {}
-      metadata.admin.job_max_time_second = jobMaxTimeSecond;
+      metadata.admin.job_max_time_second = jobMaxTimeSecond * 3600;
       Object.keys(quota).forEach(i => {
         if (!allDevice[i]) { 
           delete quota[i];
@@ -388,9 +396,18 @@ class Vc extends React.Component {
   }
 
   onJobMaxTimeSecondChange = (e) => {
-    this.setState({
-      jobMaxTimeSecond: e.target.value,
-    });
+    const value = e.target.value;
+    if (typeof value !== 'undefined' && value < 1 && value !== '') {
+      this.setState({
+        jobMaxTimeSecond: 1,
+      });
+      return;
+    } else if (typeof value === 'undefined') {
+      this.setState({
+        jobMaxTimeSecond: null,
+      });
+      return;
+    }
   }
 
   onSizeChange = (e) => {
@@ -521,7 +538,9 @@ class Vc extends React.Component {
                   onChange={this.onJobMaxTimeSecondChange}
                   type="number"
                   variant="outlined"
-                  defaultValue={isEdit ? jobMaxTimeSecond : 5 * 60}
+                  inputProps={{ inputProps: { min: 1 } }}
+                  style={{ width: '87%' }}
+                  defaultValue={isEdit ? jobMaxTimeSecond : 5}
                   error={maxJobTimeValidator.error}
                   helperText={maxJobTimeValidator.text}
                 />

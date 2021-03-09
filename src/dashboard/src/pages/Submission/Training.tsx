@@ -436,7 +436,8 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       const job: any = {
         userName: userName,
         userId: uid,
-        jobType: 'training',
+        jobType: 'codeEnv',
+        codePath: '/home/' + userName,
         gpuType: gpuType,
         vcName: selectedTeam,
         containerUserId: 0,
@@ -474,7 +475,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
       // }
       
       if (gpus > gpuAvailable) {
-        const msg = window.confirm('There won\'t be enough device nums match your request, job will be in queue status.\nProceed?')
+        const msg = window.confirm(t('submission.noEnoughResource'));
         if (!msg) return;
       }
       postJob(`/clusters/${selectedCluster}/jobs`, job);
@@ -605,11 +606,12 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
           setGpuNumPerDeviceOptions([8]);
         }
         setCanDistributedJob(!(gpuCapacity < 16));
-      } else {
-        console.log('---', gpuCapacity, _max)
+      } else if (allDevice[gpuType].deviceStr === 'nvidia.com/gpu') {
         setCanDistributedJob(gpuCapacity > _max);
         if (type === 'PSDistJob') {
+          setCanDistributedJob(!(gpuCapacity > _max));
           setGpuNumPerDevice(_max);
+          setGpuNumPerDeviceOptions(Array.from(new Set(options)));
         }
       }
     }
@@ -1052,7 +1054,7 @@ const Training: React.ComponentClass = withRouter(({ history }) => {
                       inputRef={register({
                         pattern: {
                           value: HttpsReg,
-                          message: HttpsErrorText
+                          message: t('submission.HttpsErrorText')
                         }
                       })}
                     />

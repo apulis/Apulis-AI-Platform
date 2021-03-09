@@ -950,7 +950,7 @@ def gen_device_type_config(config):
 def gen_usermanagerapitoken(config):
     print("==========start to generate jwt token for restfulapi==============")
     cmd = """jwt_header=$(echo -n '{"alg":"HS256","typ":"JWT"}' | base64 | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
-    cmd += """payload=$(echo -n '{"uid":30000,"exp":""" + str(time.time()+3600*24*30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
+    cmd += """payload=$(echo -n '{"uid":30000,"username":"admin","exp":""" + str(int(time.time())+3600*24*30*12*10)+"""}' | base64 | sed s/\+/-/g |sed 's/\//_/g' |  sed -E s/=+$//);"""
     cmd += """secret=\""""+config["jwt"]["secret_key"] + "\";"
     cmd += """hexsecret=$(echo -n "$secret" | xxd -p | paste -sd "");"""
     cmd += """hmac_signature=$(echo -n "${jwt_header}.${payload}" |  openssl dgst -sha256 -mac HMAC -macopt hexkey:$hexsecret -binary | base64  | sed s/\+/-/g | sed 's/\//_/g' | sed -E s/=+$//);"""
@@ -3550,6 +3550,14 @@ def get_master_archtypes():
             archtypes.add(machines[key]["archtype"])
     return archtypes
 
+def get_worker_archtypes():
+    machines = config["machines"]
+    archtypes = set()
+    for key in machines.keys():
+        if machines[key].has_key("archtype") and machines[key].get("role")=="worker":
+            archtypes.add(machines[key]["archtype"])
+    return archtypes
+
 def get_service_name(service_config_file):
     f = open(service_config_file)
     try:
@@ -4051,16 +4059,33 @@ def start_kube_service(servicename):
         return
 
     default_launch_file = "launch_order"
+    service_set=OrderedDict()
+
     if os.path.exists(os.path.join(dirname, "only_one_arch")):
         archtypes = get_master_archtypes()
-    else:
-        archtypes = get_archtypes()
+        if "arm64" in archtypes:
+            get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
 
-    service_set=OrderedDict()
-    get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
-    get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+        if "amd64" in archtypes:
+            get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+
+    elif os.path.exists(os.path.join(dirname, "only_one_arch_worker")):
+        archtypes = get_worker_archtypes()
+        if "arm64" in archtypes:
+            get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
+
+        if "amd64" in archtypes:
+            get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+
+
+    else:
+        # start services for both archs
+        get_service_list_from_launch_order(service_set, dirname, default_launch_file + "_" + "arm64")
+        get_service_list_from_launch_order(service_set, dirname, default_launch_file )
+
     start_kube_service_with_service_set(dirname, service_set)
     return
+
 
 def get_service_list_from_launch_order(lauch_services_set, dirname, launch_filename):
     if not os.path.exists(os.path.join(dirname, launch_filename)):

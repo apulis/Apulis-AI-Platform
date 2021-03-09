@@ -46,7 +46,7 @@ const JobsTable: FunctionComponent<JobsTableProps> = ({ title, jobs }) => {
     { title: t('jobsV2.status'), type: 'string', field: 'jobStatus', render: renderStatus, sorting: false },
     { title: t('jobsV2.deviceNumber'), type: 'numeric',
       render: renderGPU, customSort: sortGPU },
-    { title: t('jobsV2.user'), type: 'string', render: renderUser},
+    { title: t('jobsV2.user'), type: 'string', render: renderUser, sorting: false },
     { title: t('jobsV2.preemptible'), type: 'boolean', field: 'jobParams.preemptionAllowed'},
     { title: t('jobsV2.priority'), type: 'numeric',sorting: false,
       render: (job: any) => (<PriorityField job={job} key={job.jobId} />), disableClick: true },
@@ -164,7 +164,9 @@ const AllJobs: FunctionComponent = () => {
       {unapprovedJobs && <JobsTable title="Unapproved Jobs" jobs={unapprovedJobs}/>}
       {pausedJobs && <JobsTable title="Pauses Jobs" jobs={pausedJobs}/>} */}
       {jobs.length === 0 ?
-        <h3 style={{marginLeft: '10px'}}>Only Running/Queuing/Unapproved/Pauses jobs will be shown and will not show Finished jobs</h3> :
+        <h3 style={{marginLeft: '10px'}}>
+          {t('tips.OnlyRunningOrQueuingOrUnapprovedOrPausesjobswillbeshownandwillnotshowFinishedjobs')}
+        </h3> :
         <JobsTable title="All Jobs" jobs={jobs}/>}
     </>
   );

@@ -8,7 +8,7 @@ app.keys = ['some secret hurr...']
 app.use(Session(app))
 
 app.use(mount('/api', require('./api')))
-app.use(require('./frontend'))
+app.use(mount('/expert', require('./frontend')))
 
 /* istanbul ignore if */
 if (require.main === module) {

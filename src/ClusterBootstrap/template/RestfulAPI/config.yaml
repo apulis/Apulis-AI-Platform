@@ -132,3 +132,18 @@ endpoint_use_short_domian: {{cnf["endpoint_use_short_domian"]}}
 {% if "fake_device" in cnf and cnf["fake_device"] %}
 fake_device: {{cnf["fake_device"]}}
 {% endif %}
+
+{% if "storage_type" in cnf %}
+storage_type: {{cnf["storage_type"]}}
+{% else %}
+storage_type: nfs
+{% endif %}
+
+# 级别        数值
+# CRITICAL    50
+# ERROR       40
+# WARNING     30
+# INFO        20
+# DEBUG       10
+# NOTSET      0
+log_level: 30

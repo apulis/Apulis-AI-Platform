@@ -304,12 +304,12 @@ def main(args):
     for configmap in items:
         c_name = configmap.metadata.name
         role_idx = c_name.split("-")[-1]
-        if role_idx=="worker0":
-            PSD_port = json.loads(configmap.data["pod.json"])["ssh_port"]
-
-    if PSD_port and role == "worker":
-
-        envs["DLWS_SD_SELF_SSH_PORT"] = PSD_port
+    #     if role_idx=="worker0":
+    #         PSD_port = json.loads(configmap.data["pod.json"])["ssh_port"]
+    #
+    # if PSD_port and role == "worker":
+    #
+    #     envs["DLWS_SD_SELF_SSH_PORT"] = PSD_port
 
     for configmap in items:
         c_name = configmap.metadata.name
@@ -325,7 +325,7 @@ def main(args):
         ssh_port = sd_info["ssh_port"]
 
         envs["DLWS_SD_%s_IP" % role_idx] = ip
-        envs["DLWS_SD_%s_SSH_PORT" % role_idx] = PSD_port if PSD_port and role_name.find("worker")!=-1 else ssh_port
+        envs["DLWS_SD_%s_SSH_PORT" % role_idx] = ssh_port  # PSD_port if PSD_port and role_name.find("worker")!=-1 else
         envs["DLWS_SD_%s_IB_IP" % role_idx] = ib_ip
         envs["DLWS_SD_%s_NPU_IP_LIST" % role_idx] = npu_ip_str
         envs["DLWS_SD_%s_HOST_IP" % role_idx] = host_ip

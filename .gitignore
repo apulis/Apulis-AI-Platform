@@ -91,3 +91,5 @@ src/ClusterBootstrap/template/*config.yaml.template
 .idea
 venv
 /src/ClusterManager/*.orig
+/src/ClusterManager/*.orig
+/src/ClusterManager/*.pdf

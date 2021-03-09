@@ -18,7 +18,10 @@ const index = {
   imageVersionReg: 'Only numbers, English letters and decimal points are allowed',
   failedToFetchJob: 'Failed to fetch job:',
   confirm: 'Confirm',
-  cancel: 'Cancel'
+  cancel: 'Cancel',
+  numberOfNodes: 'Number of Nodes',
+  numberOfDevicesPerNode: 'Number of Devices Per Node',
+  totalOfDevice: 'Total Devices',
 }
 const endpoints = {
   newInteractivePort: 'New Interactive Port',

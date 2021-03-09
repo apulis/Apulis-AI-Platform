@@ -3,6 +3,7 @@
 [![release](https://img.shields.io/badge/Release-1.5.0-blue.svg)](https://gitee.com/apulisplatform/apulis_platform/releases/Latest)
 [![docs](https://img.shields.io/badge/doc-passing-blueviolet.svg)](https://gitee.com/apulisplatform/apulis_platform/tree/v1.5.0/docs/tutorial)
 [![python](https://img.shields.io/badge/python-3.7.5-blue.svg)](https://www.python.org/dev/peps/pep-0537/#id4)
+[![Gitter](https://badges.gitter.im/apulis-ai-platform/community.svg)](https://gitter.im/apulis-ai-platform/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ![Apulis标志](docs/img/apulis-logo.png "Apulis logo")
 

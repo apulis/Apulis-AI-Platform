@@ -52,7 +52,7 @@
 
   支持使用ansible交互式分层部署平台，也支持源码配置编译安装。
 
-  - [Ansible方式安装](docs/deployment/atlas_cluster_heterogeneous.md)
+  - *Ansible方式安装~待开放中！*
   - [源码编译方式安装](docs/deployment/atlas_cluster_heterogeneous.md)
   - [Docker镜像](docs/deployment/docker_images_pull_links.md)
 
@@ -86,7 +86,7 @@
 
 ### 贡献
 
-欢迎参与贡献。更多详情，请参阅我们的[贡献者Wiki](docs/CONTRIBUTING.md)。
+欢迎参与贡献。更多详情，请参阅我们的[贡献者指引](docs/CONTRIBUTING.md)。
 
 ### 分支维护策略
 

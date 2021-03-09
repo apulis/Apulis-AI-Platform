@@ -1,7 +1,7 @@
 依瞳人工智能平台安装镜像拉取链接
 
 拉取镜像命令（shell），无需账号密码。
-
+```bash
 docker pull registry.cn-shenzhen.aliyuncs.com/apulistech/openresty:latest
 docker pull registry.cn-shenzhen.aliyuncs.com/apulistech/restfulapi2:latest
 docker pull registry.cn-shenzhen.aliyuncs.com/apulistech/webui3:latest
@@ -98,3 +98,4 @@ docker pull registry.cn-shenzhen.aliyuncs.com/apulistech/redis:5.0.6-alpine
 docker pull registry.cn-shenzhen.aliyuncs.com/apulistech/node-exporter:v0.18.1
 docker pull registry.cn-shenzhen.aliyuncs.com/apulistech/node-exporter:v0.18.1
 docker pull registry.cn-shenzhen.aliyuncs.com/apulistech/k8s-device-plugin:1.11
+```
